@@ -1,7 +1,7 @@
 #ifndef FRIENDLIST_H_53I41IM
 #define FRIENDLIST_H_53I41IM
 
-#include "windows.h"
+#include "toxic_windows.h"
 #include "chat.h"
 
 ToxWindow new_friendlist();

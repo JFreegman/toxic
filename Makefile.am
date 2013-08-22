@@ -1,0 +1,4 @@
+SUBDIRS = build
+
+ACLOCAL_AMFLAGS = -I m4
+

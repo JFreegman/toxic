@@ -19,11 +19,11 @@
 #include <sys/types.h>
 #endif
 
-#include "../../core/Messenger.h"
-#include "../../core/network.h"
+#include "Messenger.h"
+#include "network.h"
 
 #include "configdir.h"
-#include "windows.h"
+#include "toxic_windows.h"
 #include "prompt.h"
 #include "friendlist.h"
 

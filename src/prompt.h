@@ -1,7 +1,7 @@
 #ifndef PROMPT_H_UZYGWFFL
 #define PROMPT_H_UZYGWFFL
 
-#include "windows.h"
+#include "toxic_windows.h"
 
 ToxWindow new_prompt();
 int add_req(uint8_t *public_key);

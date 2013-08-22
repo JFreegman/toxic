@@ -1,7 +1,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "dhtstatus.h"
-#include "windows.h"
+#include "toxic_windows.h"
 
 extern char *DATA_FILE;
 extern int store_data(Messenger *m, char *path);

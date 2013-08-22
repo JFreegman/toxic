@@ -1,7 +1,7 @@
 #include "dhtstatus.h"
 #include "string.h"
-#include "../../core/network.h"
-#include "../../core/DHT.h"
+#include "network.h"
+#include "DHT.h"
 
 typedef uint8_t ipbuf[3 * 4 + 3 + 1];
 static int num_selected = 0;

@@ -6,10 +6,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "../../core/Messenger.h"
-#include "../../core/network.h"
+#include "Messenger.h"
+#include "network.h"
 
-#include "windows.h"
 #include "prompt.h"
 
 extern char *DATA_FILE;

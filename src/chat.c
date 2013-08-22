@@ -9,10 +9,10 @@
 #include <time.h>
 #include <limits.h>
 
-#include "../../core/Messenger.h"
-#include "../../core/network.h"
+#include "Messenger.h"
+#include "network.h"
 
-#include "windows.h"
+#include "toxic_windows.h"
 #include "friendlist.h"
 #include "chat.h"
 

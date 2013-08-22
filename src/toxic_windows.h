@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <wctype.h>
 #include <wchar.h>
-#include "../../core/Messenger.h"
+#include "Messenger.h"
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
 #define MAX_STR_SIZE 256
