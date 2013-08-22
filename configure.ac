@@ -288,7 +288,12 @@ if test "x$GIT" != "xno"; then
 fi
 AC_SUBST(TOXIC_VERSION)
 
+eval PACKAGE_DATADIR="${datadir}/${PACKAGE}"
+eval PACKAGE_DATADIR="${PACKAGE_DATADIR}"
+AC_DEFINE_UNQUOTED(PACKAGE_DATADIR, "$PACKAGE_DATADIR", [toxic data directory])
+
  
 AC_CONFIG_FILES([Makefile
+                 misc/Makefile
                  build/Makefile])
 AC_OUTPUT

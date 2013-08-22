@@ -2,6 +2,10 @@
  * Toxic -- Tox Curses Client
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define _XOPEN_SOURCE_EXTENDED
 #include <curses.h>
 #include <errno.h>
@@ -294,7 +298,7 @@ int main(int argc, char *argv[])
 
         if (config_err) {
             DATA_FILE = strdup("data");
-            SRVLIST_FILE = strdup("../../other/DHTservers");
+            SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
             strcpy(DATA_FILE, user_config_dir);
