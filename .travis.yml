@@ -29,6 +29,7 @@ before_script:
   - git clone https://github.com/irungentoo/ProjectTox-Core.git core
   - cd core
   - mkdir build
+  - cd build
   - cmake ..
   - make -j2
   - cd ../..
