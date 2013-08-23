@@ -15,7 +15,8 @@ toxic_SOURCES = $(top_srcdir)/src/main.c \
                 $(top_srcdir)/src/dhtstatus.h \
                 $(top_srcdir)/src/dhtstatus.c
 
-toxic_CFLAGS =  $(NCURSES_CFLAGS) \
+toxic_CFLAGS =	-I$(top_srcdir) \
+				$(NCURSES_CFLAGS) \
 				$(LIBSODIUM_CFLAGS) \
 				$(LIBTOXCORE_CFLAGS)
 
