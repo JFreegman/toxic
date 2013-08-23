@@ -4,30 +4,28 @@
 
 #include "dhtstatus.h"
 #include "string.h"
-#include "network.h"
-#include "DHT.h"
 
 typedef uint8_t ipbuf[3 * 4 + 3 + 1];
 static int num_selected = 0;
 
-static void printip(ipbuf buf, IP ip)
+static void printip(ipbuf buf, tox_IP ip)
 {
     sprintf((char *)buf, "%u.%u.%u.%u", ip.c[0], ip.c[1], ip.c[2], ip.c[3]);
 }
 
-static void dhtstatus_onKey(ToxWindow *self, Messenger *m, wint_t key)
+static void dhtstatus_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     switch (key) {
         case KEY_UP:
         case 'k':
             if (--num_selected < 0)
-                num_selected = CLIENT_ID_SIZE - 1;
+                num_selected = TOX_CLIENT_ID_SIZE - 1;
 
             break;
 
         case KEY_DOWN:
         case 'j':
-            num_selected = (num_selected + 1) % CLIENT_ID_SIZE;
+            num_selected = (num_selected + 1) % TOX_CLIENT_ID_SIZE;
             break;
 
         case '\n':
@@ -38,9 +36,10 @@ static void dhtstatus_onKey(ToxWindow *self, Messenger *m, wint_t key)
     }
 }
 
-static void dhtstatus_onDraw(ToxWindow *self, Messenger *m)
+static void dhtstatus_onDraw(ToxWindow *self, Tox *m)
 {
-    Client_data   *close_clientlist = DHT_get_close_list(m->dht);
+    /*
+    Client_data *close_clientlist = DHT_get_close_list(m->dht);
     curs_set(0);
     werase(self->window);
 
@@ -52,6 +51,7 @@ static void dhtstatus_onDraw(ToxWindow *self, Messenger *m)
             now);
 
     for (i = 0; i < 32; i++) { /*Number of nodes in closelist*/
+    /*
         Client_data *client = close_clientlist + i;
 
         if (i == num_selected) wattron(self->window, COLOR_PAIR(3));
@@ -82,9 +82,10 @@ static void dhtstatus_onDraw(ToxWindow *self, Messenger *m)
     }
 
     wrefresh(self->window);
+    */
 }
 
-static void dhtstatus_onInit(ToxWindow *self, Messenger *m)
+static void dhtstatus_onInit(ToxWindow *self, Tox *m)
 {
 
 }

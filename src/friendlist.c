@@ -10,15 +10,14 @@
 #include <stdint.h>
 #include <ctype.h>
 
-#include "Messenger.h"
-#include "network.h"
+#include "tox.h"
 
 #include "friendlist.h"
 
 
 typedef struct {
-    uint8_t name[MAX_NAME_LENGTH];
-    uint8_t status[MAX_STATUSMESSAGE_LENGTH];
+    uint8_t name[TOX_MAX_NAME_LENGTH];
+    uint8_t status[TOX_MAX_STATUSMESSAGE_LENGTH];
     int num;
     int chatwin;
 } friend_t;
@@ -28,7 +27,7 @@ static int num_friends = 0;
 static int num_selected = 0;
 
 
-void friendlist_onMessage(ToxWindow *self, Messenger *m, int num, uint8_t *str, uint16_t len)
+void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
 {
     if (num >= num_friends)
         return;
@@ -40,7 +39,7 @@ void friendlist_onMessage(ToxWindow *self, Messenger *m, int num, uint8_t *str, 
 
 void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
-    if (len >= MAX_NAME_LENGTH || num >= num_friends)
+    if (len >= TOX_MAX_NAME_LENGTH || num >= num_friends)
         return;
 
     memcpy((char *) &friends[num].name, (char *) str, len);
@@ -49,14 +48,14 @@ void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t le
 
 void friendlist_onStatusChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
-    if (len >= MAX_STATUSMESSAGE_LENGTH || num >= num_friends)
+    if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num >= num_friends)
         return;
 
     memcpy((char *) &friends[num].status, (char *) str, len);
     friends[num].status[len] = 0;
 }
 
-int friendlist_onFriendAdded(Messenger *m, int num)
+int friendlist_onFriendAdded(Tox *m, int num)
 {
     if (num_friends == MAX_FRIENDS_NUM)
         return -1;
@@ -69,7 +68,7 @@ int friendlist_onFriendAdded(Messenger *m, int num)
     return 0;
 }
 
-static void friendlist_onKey(ToxWindow *self, Messenger *m, wint_t key)
+static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     if (key == KEY_UP) {
         if (--num_selected < 0)
@@ -87,7 +86,7 @@ static void friendlist_onKey(ToxWindow *self, Messenger *m, wint_t key)
     }
 }
 
-static void friendlist_onDraw(ToxWindow *self, Messenger *m)
+static void friendlist_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(0);
     werase(self->window);
@@ -125,7 +124,7 @@ void disable_chatwin(int f_num)
     friends[f_num].chatwin = -1;
 }
 
-static void friendlist_onInit(ToxWindow *self, Messenger *m)
+static void friendlist_onInit(ToxWindow *self, Tox *m)
 {
 
 }
