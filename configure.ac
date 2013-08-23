@@ -252,7 +252,7 @@ CPPFLAGS_SAVE="$CPPFLAGS"
 if test -n "$LIBTOXCORE_SEARCH_HEADERS"; then
     CFLAGS="$CFLAGS -I$LIBTOXCORE_SEARCH_HEADERS $LIBSODIUM_CFLAGS"
     CPPFLAGS="$CPPFLAGS -I$LIBTOXCORE_SEARCH_HEADERS $LIBSODIUM_CFLAGS"
-    AC_CHECK_HEADER([Messenger.h],
+    AC_CHECK_HEADER([tox.h],
         [
             LIBTOXCORE_CFLAGS="-I$LIBTOXCORE_SEARCH_HEADERS"
         ],
@@ -263,7 +263,7 @@ if test -n "$LIBTOXCORE_SEARCH_HEADERS"; then
 else
     CFLAGS="$CFLAGS $LIBSODIUM_CFLAGS"
     CPPFLAGS="$CPPFLAGS $LIBSODIUM_CFLAGS"
-    AC_CHECK_HEADER([Messenger.h],
+    AC_CHECK_HEADER([tox.h],
         [],
         [
             AC_MSG_ERROR([headers for the toxcore library were not found on your system])
@@ -279,7 +279,7 @@ LIBTOXCORE_LDFLAGS=
 LDFLAGS_SAVE="$LDFLAGS"
 if test -n "$LIBTOXCORE_SEARCH_LIBS"; then
     LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS -L$LIBTOXCORE_SEARCH_LIBS $LIBSODIUM_LIBS"
-    AC_CHECK_LIB([toxcore], [initMessenger],
+    AC_CHECK_LIB([toxcore], [tox_new],
         [
             LIBTOXCORE_LDFLAGS="-L$LIBTOXCORE_SEARCH_LIBS"
             LIBTOXCORE_LIBS="-ltoxcore"
@@ -290,7 +290,7 @@ if test -n "$LIBTOXCORE_SEARCH_LIBS"; then
     )
 else
     LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS $LIBSODIUM_LIBS"
-    AC_CHECK_LIB([toxcore], [initMessenger],
+    AC_CHECK_LIB([toxcore], [tox_new],
         [],
         [
             AC_MSG_ERROR([required library toxcore was not found on your system])
