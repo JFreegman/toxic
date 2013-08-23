@@ -31,7 +31,7 @@ before_script:
   - mkdir build
   - cd build
   - cmake ..
-  - make -j2
+  - make toxcore -j2
   - cd ../..
 script:
   - autoreconf -i
