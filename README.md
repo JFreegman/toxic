@@ -1,6 +1,6 @@
 ## Toxic - console client for [Tox](http://tox.im)
 
-The client formerly resided in the [Tox core repository](https://github.com/irungentoo/ProjectTox-Core) and is now available as a standalone verion.
+The client formerly resided in the [Tox core repository](https://github.com/irungentoo/ProjectTox-Core) and is now available as a standalone version.
 
 To compile, first generate the configure script by running the ```autoreconf -i``` command.
 
