@@ -2,18 +2,21 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "friendlist.h"
 #include "prompt.h"
 #include "dhtstatus.h"
 #include "toxic_windows.h"
 
 extern char *DATA_FILE;
-extern int store_data(Messenger *m, char *path);
+extern int store_data(Tox *m, char *path);
 
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
 static ToxWindow *prompt;
-static Messenger *m;
+static Tox *m;
 
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
@@ -36,7 +39,7 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
     }
 }
 
-void on_message(Messenger *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     int i;
 
@@ -46,7 +49,7 @@ void on_message(Messenger *m, int friendnumber, uint8_t *string, uint16_t length
     }
 }
 
-void on_action(Messenger *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     int i;
 
@@ -56,7 +59,7 @@ void on_action(Messenger *m, int friendnumber, uint8_t *string, uint16_t length,
     }
 }
 
-void on_nickchange(Messenger *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     wprintw(prompt->window, "\n(nickchange) %d: %s\n", friendnumber, string);
     int i;
@@ -67,7 +70,7 @@ void on_nickchange(Messenger *m, int friendnumber, uint8_t *string, uint16_t len
     }
 }
 
-void on_statuschange(Messenger *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_statuschange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     wprintw(prompt->window, "\n(statuschange) %d: %s\n", friendnumber, string);
     int i;
@@ -78,17 +81,17 @@ void on_statuschange(Messenger *m, int friendnumber, uint8_t *string, uint16_t l
     }
 }
 
-void on_friendadded(Messenger *m, int friendnumber)
+void on_friendadded(Tox *m, int friendnumber)
 {
     friendlist_onFriendAdded(m, friendnumber);
 
     if (store_data(m, DATA_FILE)) {
-        wprintw(prompt->window, "\nCould not store Messenger data\n");
+        wprintw(prompt->window, "\nCould not store Tox data\n");
     }
 }
 /* CALLBACKS END */
 
-int add_window(Messenger *m, ToxWindow w)
+int add_window(Tox *m, ToxWindow w)
 {
     if (LINES < 2)
         return -1;
@@ -226,7 +229,7 @@ void prepare_window(WINDOW *w)
     wresize(w, LINES - 2, COLS);
 }
 
-void draw_active_window(Messenger *m)
+void draw_active_window(Tox *m)
 {
 
     ToxWindow *a = active_window;

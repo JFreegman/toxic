@@ -5,7 +5,7 @@
 #include "chat.h"
 
 ToxWindow new_friendlist();
-int friendlist_onFriendAdded(Messenger *m, int num);
+int friendlist_onFriendAdded(Tox *m, int num);
 void disable_chatwin(int f_num);
 
 #endif /* end of include guard: FRIENDLIST_H_53I41IM */
