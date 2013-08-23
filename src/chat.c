@@ -13,8 +13,6 @@
 #include <time.h>
 #include <limits.h>
 
-#include "network.h"
-
 #include "toxic_windows.h"
 #include "friendlist.h"
 #include "chat.h"
@@ -50,7 +48,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     if (ctx->friendnum != num)
         return;
 
-    getname(m, num, (uint8_t *) &nick);
+    tox_getname(m, num, (uint8_t *) &nick);
     msg[len - 1] = '\0';
     nick[TOX_MAX_NAME_LENGTH - 1] = '\0';
 
@@ -232,7 +230,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wattroff(ctx->history, COLOR_PAIR(1));
                 wprintw(ctx->history, "%s\n", line);
 
-                if (m_sendmessage(m, ctx->friendnum, (uint8_t *) line, strlen(line) + 1) == 0) {
+                if (tox_sendmessage(m, ctx->friendnum, (uint8_t *) line, strlen(line) + 1) == 0) {
                     wattron(ctx->history, COLOR_PAIR(3));
                     wprintw(ctx->history, " * Failed to send message.\n");
                     wattroff(ctx->history, COLOR_PAIR(3));
@@ -289,7 +287,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         wprintw(ctx->history, msg);
         wattroff(ctx->history, COLOR_PAIR(5));
 
-        if (m_sendaction(m, ctx->friendnum, (uint8_t *) msg, strlen(msg) + 1) < 0) {
+        if (tox_sendaction(m, ctx->friendnum, (uint8_t *) msg, strlen(msg) + 1) < 0) {
             wattron(ctx->history, COLOR_PAIR(3));
             wprintw(ctx->history, " * Failed to send action\n");
             wattroff(ctx->history, COLOR_PAIR(3));
@@ -332,12 +330,12 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         msg = strchr(status, ' ');
 
         if (msg == NULL) {
-            m_set_userstatus(m, status_kind);
+            tox_set_userstatus(m, status_kind);
             wprintw(ctx->history, "Status set to: %s\n", status_text);
         } else {
             msg++;
-            m_set_userstatus(m, status_kind);
-            m_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
+            tox_set_userstatus(m, status_kind);
+            tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
             wprintw(ctx->history, "Status set to: %s, %s\n", status_text, msg);
         }
     }
@@ -352,7 +350,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         }
 
         nick++;
-        setname(m, (uint8_t *) nick, strlen(nick) + 1);
+        tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
         wprintw(ctx->history, "Nickname set to: %s\n", nick);
     }
 
@@ -437,7 +435,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onAction = &chat_onAction;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
-    getname(m, friendnum, (uint8_t *) &nick);
+    tox_getname(m, friendnum, (uint8_t *) &nick);
 
     snprintf(ret.title, sizeof(ret.title), "[%s (%d)]", nick, friendnum);
 

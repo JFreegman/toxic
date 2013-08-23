@@ -76,19 +76,19 @@ static Tox *init_tox()
     Tox *m = tox_new();
 
     /* Callbacks */
-    m_callback_friendrequest(m, on_request, NULL);
-    m_callback_friendmessage(m, on_message, NULL);
-    m_callback_namechange(m, on_nickchange, NULL);
-    m_callback_statusmessage(m, on_statuschange, NULL);
-    m_callback_action(m, on_action, NULL);
+    tox_callback_friendrequest(m, on_request, NULL);
+    tox_callback_friendmessage(m, on_message, NULL);
+    tox_callback_namechange(m, on_nickchange, NULL);
+    tox_callback_statusmessage(m, on_statuschange, NULL);
+    tox_callback_action(m, on_action, NULL);
 #ifdef __linux__
-    setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
+    tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
 #elif defined(WIN32)
-    setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
+    tox_setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
 #elif defined(__APPLE__)
-    setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
+    tox_setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
 #else
-    setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
+    tox_setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
 #endif
     return m;
 }

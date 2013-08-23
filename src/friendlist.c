@@ -61,7 +61,7 @@ int friendlist_onFriendAdded(Tox *m, int num)
         return -1;
 
     friends[num_friends].num = num;
-    getname(m, num, friends[num_friends].name);
+    tox_getname(m, num, friends[num_friends].name);
     strcpy((char *) friends[num_friends].name, "unknown");
     strcpy((char *) friends[num_friends].status, "unknown");
     friends[num_friends++].chatwin = -1;

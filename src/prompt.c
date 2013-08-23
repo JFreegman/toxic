@@ -244,7 +244,7 @@ void cmd_msg(ToxWindow *self, Tox *m, char **args)
     char *id = args[1];
     char *msg = args[2];
 
-    if (m_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
+    if (tox_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
         wprintw(self->window, "Error occurred while sending message.\n");
     else
         wprintw(self->window, "Message successfully sent.\n");
@@ -269,7 +269,7 @@ void cmd_myid(ToxWindow *self, Tox *m, char **args)
 void cmd_nick(ToxWindow *self, Tox *m, char **args)
 {
     char *nick = args[1];
-    setname(m, (uint8_t *) nick, strlen(nick) + 1);
+    tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
     wprintw(self->window, "Nickname set to: %s\n", nick);
 
     if (store_data(m, DATA_FILE)) {
@@ -309,11 +309,11 @@ void cmd_status(ToxWindow *self, Tox *m, char **args)
     char *msg = args[2];
 
     if (msg == NULL) {
-        m_set_userstatus(m, status_kind);
+        tox_set_userstatus(m, status_kind);
         wprintw(self->window, "Status set to: %s\n", status_text);
     } else {
-        m_set_userstatus(m, status_kind);
-        m_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
+        tox_set_userstatus(m, status_kind);
+        tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
         wprintw(self->window, "Status set to: %s, %s\n", status_text, msg);
     }
 }
@@ -321,7 +321,7 @@ void cmd_status(ToxWindow *self, Tox *m, char **args)
 void cmd_statusmsg(ToxWindow *self, Tox *m, char **args)
 {
     char *msg = args[1];
-    m_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
+    tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
     wprintw(self->window, "Status set to: %s\n", msg);
 }
 
