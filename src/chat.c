@@ -359,11 +359,10 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
 
     else if (!strcmp(cmd, "/myid")) {
         char id[FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
-        int i;
         uint8_t address[FRIEND_ADDRESS_SIZE];
         getaddress(m, address);
 
-        for (i = 0; i < FRIEND_ADDRESS_SIZE; i++) {
+        for (size_t i = 0; i < FRIEND_ADDRESS_SIZE; i++) {
             char xx[3];
             snprintf(xx, sizeof(xx), "%02X",  address[i] & 0xff);
             strcat(id, xx);
