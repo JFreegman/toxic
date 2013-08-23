@@ -75,9 +75,8 @@ unsigned char *hex_string_to_bin(char hex_string[])
     size_t len = strlen(hex_string);
     unsigned char *val = malloc(len);
     char *pos = hex_string;
-    int i;
 
-    for (i = 0; i < len; ++i, pos += 2)
+    for (size_t i = 0; i < len; ++i, pos += 2)
         sscanf(pos, "%2hhx", &val[i]);
 
     return val;
@@ -123,7 +122,7 @@ void cmd_add(ToxWindow *self, Messenger *m, char **args)
         return;
     }
 
-    int i;
+    size_t i;
 
     for (i = 0; i < FRIEND_ADDRESS_SIZE; ++i) {
         xx[0] = id[2 * i];
@@ -332,7 +331,7 @@ static void execute(ToxWindow *self, Messenger *m, char *u_cmd)
 {
     int newlines = 0;
     char cmd[MAX_STR_SIZE] = {0};
-    int i;
+    size_t i;
 
     for (i = 0; i < strlen(prompt_buf); ++i) {
         if (u_cmd[i] == '\n')
@@ -478,7 +477,7 @@ static void prompt_onDraw(ToxWindow *self, Messenger *m)
     int x, y;
     getyx(self->window, y, x);
     (void) x;
-    int i;
+    size_t i;
 
     for (i = 0; i < (strlen(prompt_buf)); ++i) {
         if ((prompt_buf[i] == '\n') && (y != 0))
