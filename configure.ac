@@ -108,11 +108,18 @@ AC_CHECK_FUNCS(
 # pkg-config based tests
 PKG_PROG_PKG_CONFIG
 
+NCURSES_WIDECHAR_SUPPORT="yes"
 if test -n "$PKG_CONFIG"; then
     if test "$WIN32" != "xyes"; then
-        PKG_CHECK_MODULES([NCURSES], [ncursesw], [],
+        PKG_CHECK_MODULES([NCURSES], [ncursesw],
+            [],
             [
-                AC_MSG_ERROR([required library ncursesw was not found on your system: $NCURSES_PKG_ERRORS])
+                NCURSES_WIDECHAR_SUPPORT="no"
+                PKG_CHECK_MODULES([NCURSES], [ncurses],
+                    [],
+                    [
+                        AC_MSG_ERROR([required library ncursesw was not found on your system: $NCURSES_PKG_ERRORS])
+                    ])
             ])
     fi
 else
@@ -129,6 +136,8 @@ if (test -z "$PKG_CONFIG") || (test "x$WIN32" = "xyes"); then
     )
 
     if test "x$WIN32" = "xyes"; then
+        dnl Check if pdcurses provides wide char support
+        NCURSES_WIDECHAR_SUPPORT="no"
         AC_CHECK_LIB([pdcurses], [clear],
             [],
             [
@@ -153,7 +162,22 @@ if (test -z "$PKG_CONFIG") || (test "x$WIN32" = "xyes"); then
                 AC_CHECK_LIB([ncursesw], [get_wch],
                     [],
                     [
-                        AC_MSG_ERROR([required library ncurses was not found on your system])
+                        NCURSES_WIDECHAR_SUPPORT="no"
+                        AC_CHECK_LIB([ncurses], [clear],
+                            [],
+                            [
+                                unset ac_cv_lib_ncursesw_get_wch
+                                AC_CHECK_LIB([ncurses], [clear],
+                                    [],
+                                    [
+                                        AC_MSG_ERROR([required library ncurses was not found on your system])
+                                    ],
+                                    [
+                                        -ltinfo
+                                    ]
+                                )
+                            ]
+                        )
                     ],
                     [
                         -ltinfo
@@ -292,6 +316,11 @@ eval PACKAGE_DATADIR="${datadir}/${PACKAGE}"
 eval PACKAGE_DATADIR="${PACKAGE_DATADIR}"
 AC_DEFINE_UNQUOTED(PACKAGE_DATADIR, "$PACKAGE_DATADIR", [toxic data directory])
 
+if test "x$NCURSES_WIDECHAR_SUPPORT" = "xyes"; then
+    AC_DEFINE([HAVE_WIDECHAR], [1], [ncurses wide char support available])
+    AC_DEFINE([_XOPEN_SOURCE_EXTENDED], [1],
+              [enable X/Open Portability Guide functionality])
+fi
  
 AC_CONFIG_FILES([Makefile
                  misc/Makefile

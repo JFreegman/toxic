@@ -2,6 +2,10 @@
  * Toxic -- Tox Curses Client
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>

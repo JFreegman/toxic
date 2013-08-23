@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "friendlist.h"
 #include "prompt.h"
 #include "dhtstatus.h"
@@ -234,7 +238,11 @@ void draw_active_window(Messenger *m)
     a->onDraw(a, m);
 
     /* Handle input */
+#ifdef HAVE_WIDECHAR
     get_wch(&ch);
+#else
+    ch = getch();
+#endif
 
     if (ch == '\t' || ch == KEY_BTAB)
         set_next_window((int) ch);
