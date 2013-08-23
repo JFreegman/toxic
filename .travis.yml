@@ -26,8 +26,8 @@ before_script:
 # installing check, needed for unit tests
   - sudo apt-get install check
   
-  - git clone https://github.com/irungentoo/ProjectTox-Core.git core
-  - cd core
+  - git clone https://github.com/irungentoo/ProjectTox-Core.git toxcore
+  - cd toxcore
   - mkdir build
   - cd build
   - cmake ..
@@ -35,7 +35,7 @@ before_script:
   - cd ../..
 script:
   - autoreconf -i
-  - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/core/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/core/build/core
+  - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/toxcore/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/toxcore/build/core
   - make -j2
 notifications:
   email: false
