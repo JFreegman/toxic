@@ -36,8 +36,6 @@
 char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
 
-static Tox *tox;
-
 void on_window_resize(int sig)
 {
     endwin();
