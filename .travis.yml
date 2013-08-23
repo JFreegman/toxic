@@ -33,7 +33,6 @@ before_script:
   - cmake ..
   - make -j2
   - cd ../..
-  - mv core $TRAVIS_BUILD_DIR/
 script:
   - autoreconf -i
   - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/core/build/core
