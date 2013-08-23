@@ -1,0 +1,48 @@
+language: c
+compiler:
+  - gcc
+  - clang
+
+before_script:
+# installing libsodium, needed for Core
+  - git clone git://github.com/jedisct1/libsodium.git
+  - cd libsodium
+  - git checkout tags/0.4.2
+  - ./autogen.sh
+  - ./configure && make check -j3
+  - sudo make install
+  - cd ..
+# installing libconfig, needed for DHT_bootstrap_daemon
+  - wget http://www.hyperrealm.com/libconfig/libconfig-1.4.9.tar.gz
+  - tar -xvzf libconfig-1.4.9.tar.gz
+  - cd libconfig-1.4.9
+  - ./configure && make -j3
+  - sudo make install
+  - cd ..
+# creating librarys' links and updating cache
+  - sudo ldconfig
+# installing sphinx, needed for documentation
+  - sudo apt-get install python-sphinx
+# installing check, needed for unit tests
+  - sudo apt-get install check
+  
+  - git clone https://github.com/irungentoo/ProjectTox-Core.git core
+  - cd core
+  - mkdir build
+  - cmake ..
+  - make -j2
+  - cd ../..
+  - mv core /tmp
+#Need an absolute path for autotools
+script:
+  - autoreconf -i
+  - ./configure --with-libtoxcore-headers=/tmp/core --with-libtoxcore-libs=/tmp/core/build/core
+  - make -j2
+notifications:
+  email: false
+
+  irc: 
+    channels:
+      - "chat.freenode.net#tox-dev"
+    on_success: always
+    on_failure: always
