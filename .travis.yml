@@ -33,11 +33,10 @@ before_script:
   - cmake ..
   - make -j2
   - cd ../..
-  - mv core /tmp
-#Need an absolute path for autotools
+  - mv core $TRAVIS_BUILD_DIR/
 script:
   - autoreconf -i
-  - ./configure --with-libtoxcore-headers=/tmp/core --with-libtoxcore-libs=/tmp/core/build/core
+  - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/core/build/core
   - make -j2
 notifications:
   email: false
