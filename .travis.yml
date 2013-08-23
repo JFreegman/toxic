@@ -35,7 +35,7 @@ before_script:
   - cd ../..
 script:
   - autoreconf -i
-  - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/core/build/core
+  - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/core/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/core/build/core
   - make -j2
 notifications:
   email: false
