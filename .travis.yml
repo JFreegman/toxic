@@ -28,14 +28,13 @@ before_script:
   
   - git clone https://github.com/irungentoo/ProjectTox-Core.git toxcore
   - cd toxcore
-  - mkdir build
-  - cd build
-  - cmake ..
-  - make toxcore -j2
-  - cd ../..
+  - autoreconf -i
+  - ./configure
+  - make -j2
+  - sudo make install
 script:
   - autoreconf -i
-  - ./configure --with-libtoxcore-headers=$TRAVIS_BUILD_DIR/toxcore/core --with-libtoxcore-libs=$TRAVIS_BUILD_DIR/toxcore/build/core
+  - ./configure
   - make -j2
 notifications:
   email: false

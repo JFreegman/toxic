@@ -10,7 +10,7 @@
 #include <wctype.h>
 #include <wchar.h>
 
-#include "tox.h"
+#include <tox/tox.h>
 
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100

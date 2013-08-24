@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <ctype.h>
 
-#include "tox.h"
+#include <tox/tox.h>
 
 #include "friendlist.h"
 
