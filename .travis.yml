@@ -32,6 +32,7 @@ before_script:
   - ./configure
   - make -j2
   - sudo make install
+  - cd ..
 script:
   - autoreconf -i
   - ./configure
