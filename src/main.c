@@ -32,6 +32,9 @@
 #include "prompt.h"
 #include "friendlist.h"
 
+#ifndef PACKAGE_DATADIR
+#define PACKAGE_DATADIR "."
+#endif
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
@@ -291,7 +294,7 @@ static void load_data(Tox *m, char *path)
 
         tox_load(m, buf, len);
 
-        uint32_t i;
+        uint32_t i = 0;
 
         char name[TOX_MAX_NAME_LENGTH];
         while (tox_getname(m, i, (uint8_t *)name) != -1) {

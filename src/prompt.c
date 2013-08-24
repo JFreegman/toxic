@@ -89,7 +89,7 @@ void cmd_accept(ToxWindow *self, Tox *m, char **args)
         return;
     }
 
-    num = m_addfriend_norequest(m, pending_requests[num]);
+    num = tox_addfriend_norequest(m, pending_requests[num]);
 
     if (num == -1)
         wprintw(self->window, "Failed to add friend.\n");
@@ -139,7 +139,7 @@ void cmd_add(ToxWindow *self, Tox *m, char **args)
         id[i] = toupper(id[i]);
     }
 
-    int num = m_addfriend(m, id_bin, (uint8_t *) msg, strlen(msg) + 1);
+    int num = tox_addfriend(m, id_bin, (uint8_t *) msg, strlen(msg) + 1);
 
     switch (num) {
         case TOX_FAERR_TOOLONG:
@@ -255,7 +255,7 @@ void cmd_myid(ToxWindow *self, Tox *m, char **args)
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     size_t i;
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
-    getaddress(m, address);
+    tox_getaddress(m, address);
 
     for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
         char xx[3];

@@ -220,7 +220,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                getself_name(m, selfname, sizeof(selfname));
+                tox_getselfname(m, selfname, sizeof(selfname));
 
                 wattron(ctx->history, COLOR_PAIR(2));
                 wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -279,7 +279,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         wattroff(ctx->history, COLOR_PAIR(2));
 
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        int len = getself_name(m, selfname, sizeof(selfname));
+        int len = tox_getselfname(m, selfname, sizeof(selfname));
         char msg[MAX_STR_SIZE - len - 4];
         snprintf(msg, sizeof(msg), "* %s %s\n", (uint8_t *) selfname, action);
 
@@ -358,7 +358,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
         int i;
         uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
-        getaddress(m, address);
+        tox_getaddress(m, address);
 
         for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; i++) {
             char xx[3];
