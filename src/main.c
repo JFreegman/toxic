@@ -50,7 +50,13 @@ static void init_term()
 {
     /* Setup terminal */
     signal(SIGWINCH, on_window_resize);
-    setlocale(LC_ALL, "");
+#if HAVE_WIDECHAR
+    if (setlocale(LC_ALL, "") == NULL) {
+        printf("Could not set your locale, plese check your locale settings or"
+               "disable wide char support\n");
+        exit(1);
+    }
+#endif
     initscr();
     cbreak();
     keypad(stdscr, 1);
