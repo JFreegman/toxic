@@ -113,7 +113,7 @@ AC_CHECK_FUNCS(
 PKG_PROG_PKG_CONFIG
 
 if test -n "$PKG_CONFIG"; then
-    if test "$WIN32" != "xyes"; then
+    if test "x$WIN32" != "xyes"; then
         PKG_CHECK_MODULES([NCURSES], [ncursesw],
             [
                 NCURSES_FOUND="yes"
@@ -132,7 +132,7 @@ else
     AC_MSG_WARN([pkg-config was not found on your sytem])
 fi
 
-if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
     AC_PATH_PROG([CURSES_CONFIG], [ncursesw5-config], [no])
     if test "x$CURSES_CONFIG" != "xno"; then
         AC_MSG_CHECKING(ncurses cflags)
@@ -150,7 +150,8 @@ if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
     fi
 fi
 
-if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    unset ac_cv_path_CURSES_CONFIG
     AC_PATH_PROG([CURSES_CONFIG], [ncursesw5.4-config], [no])
     if test "x$CURSES_CONFIG" != "xno"; then
         AC_MSG_CHECKING(ncurses cflags)
@@ -168,7 +169,8 @@ if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
     fi
 fi
 
-if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    unset ac_cv_path_CURSES_CONFIG
     AC_PATH_PROG([CURSES_CONFIG], [ncurses5-config], [no])
     if test "x$CURSES_CONFIG" != "xno"; then
         AC_MSG_CHECKING(ncurses cflags)
@@ -185,7 +187,8 @@ if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
     fi
 fi
 
-if (test "x$NCURSES_FOUND" = "xno") && (test "$WIN32" != "xyes"); then
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    unset ac_cv_path_CURSES_CONFIG
     AC_PATH_PROG([CURSES_CONFIG], [ncurses5.4-config], [no])
     if test "x$CURSES_CONFIG" != "xno"; then
         AC_MSG_CHECKING(ncurses cflags)
@@ -346,6 +349,9 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
             ],
             [
                 AC_MSG_ERROR([required library toxcore was not found on your system])
+            ],
+            [
+                $WINSOCK2_LIBS
             ]
         )
     else
@@ -354,6 +360,9 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
             [],
             [
                 AC_MSG_ERROR([required library toxcore was not found on your system])
+            ],
+            [
+                $WINSOCK2_LIBS
             ]
         )
     fi
