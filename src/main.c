@@ -25,7 +25,7 @@
 #include <sys/socket.h>
 #endif
 
-#include "tox.h"
+#include <tox/tox.h>
 
 #include "configdir.h"
 #include "toxic_windows.h"
