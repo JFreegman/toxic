@@ -14,16 +14,18 @@
 #include <stdint.h>
 #include <signal.h>
 #include <locale.h>
+#include <string.h>
+#include <netdb.h>
 
 #ifdef _win32
 #include <direct.h>
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #endif
 
-#include "Messenger.h"
-#include "network.h"
+#include "tox.h"
 
 #include "configdir.h"
 #include "toxic_windows.h"
@@ -68,27 +70,67 @@ static void init_term()
     refresh();
 }
 
-static Messenger *init_tox()
+static Tox *init_tox()
 {
     /* Init core */
-    Messenger *m = initMessenger();
+    Tox *m = tox_new();
 
     /* Callbacks */
-    m_callback_friendrequest(m, on_request, NULL);
-    m_callback_friendmessage(m, on_message, NULL);
-    m_callback_namechange(m, on_nickchange, NULL);
-    m_callback_statusmessage(m, on_statuschange, NULL);
-    m_callback_action(m, on_action, NULL);
+    tox_callback_friendrequest(m, on_request, NULL);
+    tox_callback_friendmessage(m, on_message, NULL);
+    tox_callback_namechange(m, on_nickchange, NULL);
+    tox_callback_statusmessage(m, on_statuschange, NULL);
+    tox_callback_action(m, on_action, NULL);
 #ifdef __linux__
-    setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
+    tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
 #elif defined(WIN32)
-    setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
+    tox_setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
 #elif defined(__APPLE__)
-    setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
+    tox_setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
 #else
-    setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
+    tox_setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
 #endif
     return m;
+}
+
+/*
+  resolve_addr():
+    address should represent IPv4 or a hostname with A record
+
+    returns a data in network byte order that can be used to set IP.i or IP_Port.ip.i
+    returns 0 on failure
+
+    TODO: Fix ipv6 support
+*/
+uint32_t resolve_addr(const char *address)
+{
+    struct addrinfo *server = NULL;
+    struct addrinfo  hints;
+    int              rc;
+    uint32_t         addr;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family   = AF_INET;    // IPv4 only right now.
+    hints.ai_socktype = SOCK_DGRAM; // type of socket Tox uses.
+
+    rc = getaddrinfo(address, "echo", &hints, &server);
+
+    // Lookup failed.
+    if (rc != 0) {
+        return 0;
+    }
+
+    // IPv4 records only..
+    if (server->ai_family != AF_INET) {
+        freeaddrinfo(server);
+        return 0;
+    }
+
+
+    addr = ((struct sockaddr_in *)server->ai_addr)->sin_addr.s_addr;
+
+    freeaddrinfo(server);
+    return addr;
 }
 
 #define MAXLINE 90    /* Approx max number of chars in a sever line (IP + port + key) */
@@ -96,11 +138,11 @@ static Messenger *init_tox()
 #define MAXSERVERS 50
 
 /* Connects to a random DHT server listed in the DHTservers file */
-int init_connection(Messenger *m)
+int init_connection(Tox *m)
 {
     FILE *fp = NULL;
 
-    if (DHT_isconnected(m->dht))
+    if (tox_isconnected(m))
         return 0;
 
     fp = fopen(SRVLIST_FILE, "r");
@@ -132,7 +174,7 @@ int init_connection(Messenger *m)
     if (!ip || !port || !key)
         return 3;
 
-    IP_Port dht;
+    tox_IP_Port dht;
     dht.port = htons(atoi(port));
     uint32_t resolved_address = resolve_addr(ip);
 
@@ -140,19 +182,19 @@ int init_connection(Messenger *m)
         return 0;
 
     dht.ip.i = resolved_address;
-    unsigned char *binary_string = hex_string_to_bin(key);
-    DHT_bootstrap(m->dht, dht, binary_string);
+    uint8_t *binary_string = hex_string_to_bin(key);
+    tox_bootstrap(m, dht, binary_string);
     free(binary_string);
     return 0;
 }
 
-static void do_tox(Messenger *m, ToxWindow *prompt)
+static void do_tox(Tox *m, ToxWindow *prompt)
 {
     static int conn_try = 0;
     static int conn_err = 0;
     static bool dht_on = false;
 
-    if (!dht_on && !DHT_isconnected(m->dht) && !(conn_try++ % 100)) {
+    if (!dht_on && !tox_isconnected(m) && !(conn_try++ % 100)) {
         if (!conn_err) {
             conn_err = init_connection(m);
             wprintw(prompt->window, "\nEstablishing connection...\n");
@@ -160,15 +202,15 @@ static void do_tox(Messenger *m, ToxWindow *prompt)
             if (conn_err)
                 wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
         }
-    } else if (!dht_on && DHT_isconnected(m->dht)) {
+    } else if (!dht_on && tox_isconnected(m)) {
         dht_on = true;
         wprintw(prompt->window, "\nDHT connected.\n");
-    } else if (dht_on && !DHT_isconnected(m->dht)) {
+    } else if (dht_on && !tox_isconnected(m)) {
         dht_on = false;
         wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
     }
 
-    doMessenger(m);
+    tox_do(m);
 }
 
 int f_loadfromfile;
@@ -180,7 +222,7 @@ int f_loadfromfile;
  * Return 2 opening path failed
  * Return 3 fwrite failed
  */
-int store_data(Messenger *m, char *path)
+int store_data(Tox *m, char *path)
 {
     if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
         return 0;
@@ -189,14 +231,14 @@ int store_data(Messenger *m, char *path)
     size_t len;
     uint8_t *buf;
 
-    len = Messenger_size(m);
+    len = tox_size(m);
     buf = malloc(len);
 
     if (buf == NULL) {
         return 1;
     }
 
-    Messenger_save(m, buf);
+    tox_save(m, buf);
 
     fd = fopen(path, "w");
 
@@ -216,7 +258,7 @@ int store_data(Messenger *m, char *path)
     return 0;
 }
 
-static void load_data(Messenger *m, char *path)
+static void load_data(Tox *m, char *path)
 {
     if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
         return;
@@ -247,12 +289,14 @@ static void load_data(Messenger *m, char *path)
             exit(1);
         }
 
-        Messenger_load(m, buf, len);
+        tox_load(m, buf, len);
 
         uint32_t i;
 
-        for (i = 0; i < m->numfriends; i++) {
+        char name[TOX_MAX_NAME_LENGTH];
+        while (tox_getname(m, i, (uint8_t *)name) != -1) {
             on_friendadded(m, i);
+            i++;
         }
 
         free(buf);
@@ -314,7 +358,7 @@ int main(int argc, char *argv[])
     free(user_config_dir);
 
     init_term();
-    Messenger *m = init_tox();
+    Tox *m = init_tox();
     ToxWindow *prompt = init_windows(m);
 
     if (f_loadfromfile)
@@ -342,7 +386,7 @@ int main(int argc, char *argv[])
         draw_active_window(m);
     }
 
-    cleanupMessenger(m);
+    tox_kill(m);
     free(DATA_FILE);
     free(SRVLIST_FILE);
     return 0;

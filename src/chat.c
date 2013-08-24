@@ -13,9 +13,6 @@
 #include <time.h>
 #include <limits.h>
 
-#include "Messenger.h"
-#include "network.h"
-
 #include "toxic_windows.h"
 #include "friendlist.h"
 #include "chat.h"
@@ -31,7 +28,7 @@ typedef struct {
 } ChatContext;
 
 void print_help(ChatContext *self);
-void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd);
+void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd);
 
 struct tm *get_time(void)
 {
@@ -42,18 +39,18 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
-static void chat_onMessage(ToxWindow *self, Messenger *m, int num, uint8_t *msg, uint16_t len)
+static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
     ChatContext *ctx = (ChatContext *) self->x;
-    uint8_t nick[MAX_NAME_LENGTH] = {0};
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
     struct tm *timeinfo = get_time();
 
     if (ctx->friendnum != num)
         return;
 
-    getname(m, num, (uint8_t *) &nick);
+    tox_getname(m, num, (uint8_t *) &nick);
     msg[len - 1] = '\0';
-    nick[MAX_NAME_LENGTH - 1] = '\0';
+    nick[TOX_MAX_NAME_LENGTH - 1] = '\0';
 
     wattron(ctx->history, COLOR_PAIR(2));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -67,7 +64,7 @@ static void chat_onMessage(ToxWindow *self, Messenger *m, int num, uint8_t *msg,
     beep();
 }
 
-static void chat_onAction(ToxWindow *self, Messenger *m, int num, uint8_t *action, uint16_t len)
+static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uint16_t len)
 {
     ChatContext *ctx = (ChatContext *) self->x;
     struct tm *timeinfo = get_time();
@@ -176,7 +173,7 @@ static char *wc_to_char(wchar_t ch)
     return ret;
 }
 
-static void chat_onKey(ToxWindow *self, Messenger *m, wint_t key)
+static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     ChatContext *ctx = (ChatContext *) self->x;
     struct tm *timeinfo = get_time();
@@ -222,7 +219,7 @@ static void chat_onKey(ToxWindow *self, Messenger *m, wint_t key)
         else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
-                uint8_t selfname[MAX_NAME_LENGTH];
+                uint8_t selfname[TOX_MAX_NAME_LENGTH];
                 getself_name(m, selfname, sizeof(selfname));
 
                 wattron(ctx->history, COLOR_PAIR(2));
@@ -233,7 +230,7 @@ static void chat_onKey(ToxWindow *self, Messenger *m, wint_t key)
                 wattroff(ctx->history, COLOR_PAIR(1));
                 wprintw(ctx->history, "%s\n", line);
 
-                if (m_sendmessage(m, ctx->friendnum, (uint8_t *) line, strlen(line) + 1) == 0) {
+                if (tox_sendmessage(m, ctx->friendnum, (uint8_t *) line, strlen(line) + 1) == 0) {
                     wattron(ctx->history, COLOR_PAIR(3));
                     wprintw(ctx->history, " * Failed to send message.\n");
                     wattroff(ctx->history, COLOR_PAIR(3));
@@ -247,7 +244,7 @@ static void chat_onKey(ToxWindow *self, Messenger *m, wint_t key)
     }
 }
 
-void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
+void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 {
     if (!strcmp(cmd, "/clear") || !strcmp(cmd, "/c")) {
         wclear(self->window);
@@ -281,7 +278,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
         wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         wattroff(ctx->history, COLOR_PAIR(2));
 
-        uint8_t selfname[MAX_NAME_LENGTH];
+        uint8_t selfname[TOX_MAX_NAME_LENGTH];
         int len = getself_name(m, selfname, sizeof(selfname));
         char msg[MAX_STR_SIZE - len - 4];
         snprintf(msg, sizeof(msg), "* %s %s\n", (uint8_t *) selfname, action);
@@ -290,7 +287,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
         wprintw(ctx->history, msg);
         wattroff(ctx->history, COLOR_PAIR(5));
 
-        if (m_sendaction(m, ctx->friendnum, (uint8_t *) msg, strlen(msg) + 1) < 0) {
+        if (tox_sendaction(m, ctx->friendnum, (uint8_t *) msg, strlen(msg) + 1) < 0) {
             wattron(ctx->history, COLOR_PAIR(3));
             wprintw(ctx->history, " * Failed to send action\n");
             wattroff(ctx->history, COLOR_PAIR(3));
@@ -308,20 +305,20 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
         }
 
         status++;
-        USERSTATUS status_kind;
+        TOX_USERSTATUS status_kind;
 
         if (!strncmp(status, "online", strlen("online"))) {
-            status_kind = USERSTATUS_NONE;
+            status_kind = TOX_USERSTATUS_NONE;
             status_text = "ONLINE";
         }
 
         else if (!strncmp(status, "away", strlen("away"))) {
-            status_kind = USERSTATUS_AWAY;
+            status_kind = TOX_USERSTATUS_AWAY;
             status_text = "AWAY";
         }
 
         else if (!strncmp(status, "busy", strlen("busy"))) {
-            status_kind = USERSTATUS_BUSY;
+            status_kind = TOX_USERSTATUS_BUSY;
             status_text = "BUSY";
         }
 
@@ -333,12 +330,12 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
         msg = strchr(status, ' ');
 
         if (msg == NULL) {
-            m_set_userstatus(m, status_kind);
+            tox_set_userstatus(m, status_kind);
             wprintw(ctx->history, "Status set to: %s\n", status_text);
         } else {
             msg++;
-            m_set_userstatus(m, status_kind);
-            m_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
+            tox_set_userstatus(m, status_kind);
+            tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
             wprintw(ctx->history, "Status set to: %s, %s\n", status_text, msg);
         }
     }
@@ -353,17 +350,17 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
         }
 
         nick++;
-        setname(m, (uint8_t *) nick, strlen(nick) + 1);
+        tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
         wprintw(ctx->history, "Nickname set to: %s\n", nick);
     }
 
     else if (!strcmp(cmd, "/myid")) {
-        char id[FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
+        char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
         int i;
-        uint8_t address[FRIEND_ADDRESS_SIZE];
+        uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
         getaddress(m, address);
 
-        for (i = 0; i < FRIEND_ADDRESS_SIZE; i++) {
+        for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; i++) {
             char xx[3];
             snprintf(xx, sizeof(xx), "%02X",  address[i] & 0xff);
             strcat(id, xx);
@@ -383,7 +380,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Messenger *m, char *cmd)
         wprintw(ctx->history, "Invalid command.\n");
 }
 
-static void chat_onDraw(ToxWindow *self, Messenger *m)
+static void chat_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
     int x, y;
@@ -394,7 +391,7 @@ static void chat_onDraw(ToxWindow *self, Messenger *m)
     wrefresh(self->window);
 }
 
-static void chat_onInit(ToxWindow *self, Messenger *m)
+static void chat_onInit(ToxWindow *self, Tox *m)
 {
     int x, y;
     ChatContext *ctx = (ChatContext *) self->x;
@@ -424,7 +421,7 @@ void print_help(ChatContext *self)
     wattroff(self->history, COLOR_PAIR(2));
 }
 
-ToxWindow new_chat(Messenger *m, int friendnum)
+ToxWindow new_chat(Tox *m, int friendnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
@@ -437,8 +434,8 @@ ToxWindow new_chat(Messenger *m, int friendnum)
     ret.onStatusChange = &chat_onStatusChange;
     ret.onAction = &chat_onAction;
 
-    uint8_t nick[MAX_NAME_LENGTH] = {0};
-    getname(m, friendnum, (uint8_t *) &nick);
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
+    tox_getname(m, friendnum, (uint8_t *) &nick);
 
     snprintf(ret.title, sizeof(ret.title), "[%s (%d)]", nick, friendnum);
 
