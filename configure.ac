@@ -122,7 +122,9 @@ if test -n "$PKG_CONFIG"; then
             [
                 NCURSES_WIDECHAR_SUPPORT="no"
                 PKG_CHECK_MODULES([NCURSES], [ncurses],
-                    [],
+                    [
+                        NCURSES_FOUND="yes"
+                    ],
                     [
                         AC_MSG_WARN([$NCURSES_PKG_ERRORS])
                     ])
