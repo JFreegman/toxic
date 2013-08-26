@@ -82,8 +82,12 @@ case $host_os in
     *mingw*)
         WIN32="yes"
     ;;
+    *freebsd*)
+        LDFLAGS="$LDFLAGS -L/usr/local/lib"
+        CFLAGS="$CFLAGS -I/usr/local/include"
+        CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+    ;;
 esac
-
 
 # Checks for programs.
 AC_PROG_CC
@@ -235,13 +239,13 @@ if test "x$NCURSES_FOUND" = "xno"; then
             ]
         )
     else
-        AC_CHECK_LIB([ncursesw], [get_wch],
+        AC_CHECK_LIB([ncursesw], [wget_wch],
             [
                 NCURSES_WIDECHAR_SUPPORT="yes"
             ],
             [
-                unset ac_cv_lib_ncursesw_get_wch
-                AC_CHECK_LIB([ncursesw], [get_wch],
+                unset ac_cv_lib_ncursesw_wget_wch
+                AC_CHECK_LIB([ncursesw], [wget_wch],
                     [
                         NCURSES_WIDECHAR_SUPPORT="yes"
                     ],
@@ -250,7 +254,7 @@ if test "x$NCURSES_FOUND" = "xno"; then
                         AC_CHECK_LIB([ncurses], [clear],
                             [],
                             [
-                                unset ac_cv_lib_ncursesw_get_wch
+                                unset ac_cv_lib_ncurses_clear
                                 AC_CHECK_LIB([ncurses], [clear],
                                     [],
                                     [
