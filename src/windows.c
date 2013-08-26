@@ -242,7 +242,7 @@ void draw_active_window(Tox *m)
 
     /* Handle input */
 #ifdef HAVE_WIDECHAR
-    get_wch(&ch);
+    wget_wch(a->window, &ch);
 #else
     ch = getch();
 #endif
