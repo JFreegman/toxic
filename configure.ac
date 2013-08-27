@@ -238,6 +238,8 @@ if test "x$NCURSES_FOUND" = "xno"; then
                 AC_MSG_ERROR([required library winsock2 was not found on the system, please check your MinGW installation])
             ]
         )
+        AC_DEFINE([_WIN32_WINNT], [0x501],
+                  [enable getaddrinfo/freeaddrinfo on XP and higher])
     else
         AC_CHECK_LIB([ncursesw], [wget_wch],
             [
