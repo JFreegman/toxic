@@ -151,9 +151,6 @@ int init_connection(Tox *m)
 {
     FILE *fp = NULL;
 
-    if (tox_isconnected(m))
-        return 0;
-
     fp = fopen(SRVLIST_FILE, "r");
 
     if (!fp)
