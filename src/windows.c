@@ -7,7 +7,6 @@
 
 #include "friendlist.h"
 #include "prompt.h"
-#include "dhtstatus.h"
 #include "toxic_windows.h"
 
 extern char *DATA_FILE;
@@ -167,9 +166,7 @@ ToxWindow *init_windows()
 {
     int n_prompt = add_window(m, new_prompt());
 
-    if (n_prompt == -1
-            || add_window(m, new_friendlist()) == -1
-            || add_window(m, new_dhtstatus()) == -1) {
+    if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
         fprintf(stderr, "add_window() failed.\n");
         endwin();
         exit(1);
