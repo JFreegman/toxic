@@ -20,7 +20,7 @@
 #include <locale.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef _WIN32
     #include <direct.h>
     #include <winsock2.h>
     #include <ws2tcpip.h>
@@ -98,7 +98,7 @@ static Tox *init_tox()
     tox_callback_action(m, on_action, NULL);
 #ifdef __linux__
     tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
-#elif defined(WIN32)
+#elif defined(_WIN32)
     tox_setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
 #elif defined(__APPLE__)
     tox_setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
@@ -128,7 +128,7 @@ uint32_t resolve_addr(const char *address)
     hints.ai_family   = AF_INET;    // IPv4 only right now.
     hints.ai_socktype = SOCK_DGRAM; // type of socket Tox uses.
 
-#ifdef __WIN32__
+#ifdef _WIN32
     int res;
     WSADATA wsa_data;
 
@@ -142,7 +142,7 @@ uint32_t resolve_addr(const char *address)
 
     // Lookup failed.
     if (rc != 0) {
-#ifdef __WIN32__
+#ifdef _WIN32
         WSACleanup();
 #endif
         return 0;
@@ -151,7 +151,7 @@ uint32_t resolve_addr(const char *address)
     // IPv4 records only..
     if (server->ai_family != AF_INET) {
         freeaddrinfo(server);
-#ifdef __WIN32__
+#ifdef _WIN32
         WSACleanup();
 #endif
         return 0;
@@ -161,7 +161,7 @@ uint32_t resolve_addr(const char *address)
     addr = ((struct sockaddr_in *)server->ai_addr)->sin_addr.s_addr;
 
     freeaddrinfo(server);
-#ifdef __WIN32__
+#ifdef _WIN32
         WSACleanup();
 #endif
     return addr;
