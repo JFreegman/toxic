@@ -73,7 +73,7 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].chatwin = -1;
             tox_getname(m, num, friends[i].name);
             strcpy((char *) friends[i].name, "unknown");
-            strcpy((char *) friends[i].status, "unknown");
+            strcpy((char *) friends[i].status, "Offline");
 
             if (i == num_friends)
                 ++num_friends;
@@ -121,7 +121,7 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     int i;
 
     for (i = num_friends; i != 0; --i) {
-        if (friends[i-1].active == true)
+        if (friends[i-1].active)
             break;
     }
 
@@ -166,11 +166,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     int i;
 
     for (i = 0; i < num_friends; ++i) {
-        if (friends[i].active == true) {
+        if (friends[i].active) {
             if (i == num_selected)
                 wattron(self->window, COLOR_PAIR(3));
 
-            wprintw(self->window, " > ", friends[i].num);
+            wprintw(self->window, " > ");
 
             if (i == num_selected)
                 wattroff(self->window, COLOR_PAIR(3));
