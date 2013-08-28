@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include <tox/tox.h>
 
@@ -61,7 +62,7 @@ void friendlist_onStatusChange(ToxWindow *self, int num, uint8_t *str, uint16_t 
 
 int friendlist_onFriendAdded(Tox *m, int num)
 {
-    if (num_friends == MAX_FRIENDS_NUM)
+    if (num_friends < 0 || num_friends >= MAX_FRIENDS_NUM)
         return -1;
 
     int i;
@@ -91,14 +92,18 @@ static void select_friend(wint_t key)
         return;
 
     int n = num_selected;
+    int f_inf = num_selected;
 
     if (key == KEY_UP) {
         while (true) {
-            if (--n < 0)
-                n = num_friends-1;
+            if (--n < 0) n = num_friends-1;
             if (friends[n].active) {
                 num_selected = n;
                 return;
+            }
+            if (n == f_inf) {
+                endwin();
+                exit(2);
             }
         }
     } else if (key == KEY_DOWN) {
@@ -107,6 +112,10 @@ static void select_friend(wint_t key)
             if (friends[n].active) {
                 num_selected = n;
                 return;
+            }
+            if (n == f_inf) {
+                endwin();
+                exit(2);
             }
         }
     }
@@ -120,7 +129,7 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     
     int i;
 
-    for (i = num_friends; i != 0; --i) {
+    for (i = num_friends; i > 0; --i) {
         if (friends[i-1].active)
             break;
     }
