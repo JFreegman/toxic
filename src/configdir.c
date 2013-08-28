@@ -49,7 +49,10 @@
 char *get_user_config_dir(void)
 {
     char *user_config_dir;
-#ifdef WIN32
+#ifdef __WIN32__
+#warning Please fix configdir for Win32
+    return NULL;
+#if 0
     char appdata[MAX_PATH];
     BOOL ok;
 
@@ -62,6 +65,7 @@ char *get_user_config_dir(void)
     user_config_dir = strdup(appdata);
 
     return user_config_dir;
+#endif
 
 #else /* WIN32 */
 
@@ -126,11 +130,10 @@ char *get_user_config_dir(void)
  */
 int create_user_config_dir(char *path)
 {
-
-    int mkdir_err;
-
-#ifdef WIN32
-
+#ifdef __WIN32__
+#warning Please fix configdir for Win32
+    return -1;
+#if 0
     char *fullpath = malloc(strlen(path) + strlen(CONFIGDIR) + 1);
     strcpy(fullpath, path);
     strcat(fullpath, CONFIGDIR);
@@ -143,7 +146,11 @@ int create_user_config_dir(char *path)
         return -1;
     }
 
+    free(fullpath);
+#endif
+
 #else
+    int mkdir_err;
 
     mkdir_err = mkdir(path, 0700);
     struct stat buf;
@@ -163,7 +170,7 @@ int create_user_config_dir(char *path)
         return -1;
     }
 
-#endif
     free(fullpath);
     return 0;
+#endif
 }
