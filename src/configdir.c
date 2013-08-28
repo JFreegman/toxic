@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <shlobj.h>
 #include <direct.h>
 #else /* WIN32 */
@@ -49,7 +49,7 @@
 char *get_user_config_dir(void)
 {
     char *user_config_dir;
-#ifdef __WIN32__
+#ifdef _WIN32
 #warning Please fix configdir for Win32
     return NULL;
 #if 0
@@ -130,7 +130,7 @@ char *get_user_config_dir(void)
  */
 int create_user_config_dir(char *path)
 {
-#ifdef __WIN32__
+#ifdef _WIN32
 #warning Please fix configdir for Win32
     return -1;
 #if 0
