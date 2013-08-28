@@ -6,6 +6,10 @@
 #include "config.h"
 #endif
 
+#ifndef SIGWINCH
+    #define SIGWINCH 28
+#endif
+
 #include <curses.h>
 #include <errno.h>
 #include <stdio.h>
@@ -15,11 +19,13 @@
 #include <signal.h>
 #include <locale.h>
 #include <string.h>
-#include <netdb.h>
 
-#ifdef _win32
-#include <direct.h>
+#ifdef WIN32
+    #include <direct.h>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
 #else
+#include <netdb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -122,16 +128,32 @@ uint32_t resolve_addr(const char *address)
     hints.ai_family   = AF_INET;    // IPv4 only right now.
     hints.ai_socktype = SOCK_DGRAM; // type of socket Tox uses.
 
+#ifdef __WIN32__
+    int res;
+    WSADATA wsa_data;
+
+    res = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+    if (res != 0)
+    {
+        return 0;
+    }
+#endif
     rc = getaddrinfo(address, "echo", &hints, &server);
 
     // Lookup failed.
     if (rc != 0) {
+#ifdef __WIN32__
+        WSACleanup();
+#endif
         return 0;
     }
 
     // IPv4 records only..
     if (server->ai_family != AF_INET) {
         freeaddrinfo(server);
+#ifdef __WIN32__
+        WSACleanup();
+#endif
         return 0;
     }
 
@@ -139,6 +161,9 @@ uint32_t resolve_addr(const char *address)
     addr = ((struct sockaddr_in *)server->ai_addr)->sin_addr.s_addr;
 
     freeaddrinfo(server);
+#ifdef __WIN32__
+        WSACleanup();
+#endif
     return addr;
 }
 
