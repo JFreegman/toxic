@@ -9,17 +9,21 @@
 #include <string.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #include <tox/tox.h>
 
 #include "friendlist.h"
 
+extern char *DATA_FILE;
+extern int store_data(Tox *m, char *path);
 
 typedef struct {
     uint8_t name[TOX_MAX_NAME_LENGTH];
     uint8_t status[TOX_MAX_STATUSMESSAGE_LENGTH];
     int num;
     int chatwin;
+    bool active;    
 } friend_t;
 
 static friend_t friends[MAX_FRIENDS_NUM];
@@ -33,7 +37,7 @@ void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16
         return;
 
     if (friends[num].chatwin == -1) {
-        friends[num].chatwin = add_window(m, new_chat(m, num));
+        friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
     }
 }
 
@@ -60,30 +64,87 @@ int friendlist_onFriendAdded(Tox *m, int num)
     if (num_friends == MAX_FRIENDS_NUM)
         return -1;
 
-    friends[num_friends].num = num;
-    tox_getname(m, num, friends[num_friends].name);
-    strcpy((char *) friends[num_friends].name, "unknown");
-    strcpy((char *) friends[num_friends].status, "unknown");
-    friends[num_friends++].chatwin = -1;
-    return 0;
+    int i;
+
+    for (i = 0; i <= num_friends; ++i) {
+        if (!friends[i].active) {
+            friends[i].num = num;
+            friends[i].active = true;
+            friends[i].chatwin = -1;
+            tox_getname(m, num, friends[i].name);
+            strcpy((char *) friends[i].name, "unknown");
+            strcpy((char *) friends[i].status, "unknown");
+
+            if (i == num_friends)
+                ++num_friends;
+
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+static void select_friend(wint_t key)
+{
+    if (num_friends < 1)
+        return;
+
+    int n = num_selected;
+
+    if (key == KEY_UP) {
+        while (true) {
+            if (--n < 0)
+                n = num_friends-1;
+            if (friends[n].active) {
+                num_selected = n;
+                return;
+            }
+        }
+    } else if (key == KEY_DOWN) {
+        while (true) {
+            n = (n + 1) % num_friends;
+            if (friends[n].active) {
+                num_selected = n;
+                return;
+            }
+        }
+    }
+}
+
+static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
+{
+    tox_delfriend(m, f_num);
+    memset(&(friends[f_num]), 0, sizeof(friend_t));
+    friends[f_num].active = false;
+    
+    int i;
+
+    for (i = num_friends; i != 0; --i) {
+        if (friends[i-1].active == true)
+            break;
+    }
+
+    if (store_data(m, DATA_FILE))
+        wprintw(self->window, "\nFailed to store messenger data\n");
+
+    num_friends = i;
+    select_friend(KEY_DOWN);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    if (key == KEY_UP) {
-        if (--num_selected < 0)
-            num_selected = num_friends - 1;
-    } else if (key == KEY_DOWN) {
-        if (num_friends != 0)
-            num_selected = (num_selected + 1) % num_friends;
+    if (key == KEY_UP || key == KEY_DOWN) {
+        select_friend(key);
     } else if (key == '\n') {
         /* Jump to chat window if already open */
         if (friends[num_selected].chatwin != -1) {
             set_active_window(friends[num_selected].chatwin);
         } else {
-            friends[num_selected].chatwin = add_window(m, new_chat(m, num_selected));
+            friends[num_selected].chatwin = add_window(m, new_chat(m, friends[num_selected].num));
         }
-    }
+    } else if (key == 0x107 || key == 0x8 || key == 0x7f)
+        delete_friend(m, self, num_selected, key);
 }
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
@@ -95,25 +156,31 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
         wattron(self->window, COLOR_PAIR(2) | A_BOLD);
-        wprintw(self->window, "Open chat with.. (up/down keys, enter)\n");
+        wprintw(self->window, " * Open chat with up/down keys and enter. ");
+        wprintw(self->window, "Delete friends with the backspace key\n");
         wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
     }
 
     wprintw(self->window, "\n");
+
     int i;
 
     for (i = 0; i < num_friends; ++i) {
-        if (i == num_selected) wattron(self->window, COLOR_PAIR(3));
+        if (friends[i].active == true) {
+            if (i == num_selected)
+                wattron(self->window, COLOR_PAIR(3));
 
-        wprintw(self->window, "  [#%d] ", friends[i].num);
+            wprintw(self->window, " > ", friends[i].num);
 
-        if (i == num_selected) wattroff(self->window, COLOR_PAIR(3));
+            if (i == num_selected)
+                wattroff(self->window, COLOR_PAIR(3));
 
-        attron(A_BOLD);
-        wprintw(self->window, "%s ", friends[i].name);
-        attroff(A_BOLD);
+            attron(A_BOLD);
+            wprintw(self->window, "%s ", friends[i].name);
+            attroff(A_BOLD);
 
-        wprintw(self->window, "(%s)\n", friends[i].status);
+            wprintw(self->window, "(%s)\n", friends[i].status);
+        }
     }
 
     wrefresh(self->window);

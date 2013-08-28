@@ -195,7 +195,7 @@ static void draw_bar()
 
     int i;
 
-    for (i = 0; i < (MAX_WINDOWS_NUM); ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].window) {
             if (windows + i == active_window)
                 attron(A_BOLD);
