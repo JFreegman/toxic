@@ -107,7 +107,8 @@ char *get_user_config_dir(void)
     snprintf(user_config_dir, len, "%s/Library/Application Support", home);
 # else /* __APPLE__ */
 
-    if (!(user_config_dir = getenv("XDG_CONFIG_HOME"))) {
+    const char *tmp;
+    if (!(tmp = getenv("XDG_CONFIG_HOME"))) {
         len = strlen(home) + strlen("/.config") + 1;
         user_config_dir = malloc(len);
 
@@ -116,6 +117,8 @@ char *get_user_config_dir(void)
         }
 
         snprintf(user_config_dir, len, "%s/.config", home);
+    } else {
+        user_config_dir = strdup(tmp);
     }
 
 # endif /* __APPLE__ */
