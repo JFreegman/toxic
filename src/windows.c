@@ -121,10 +121,6 @@ void del_window(ToxWindow *w)
 {
     active_window = windows; // Go to prompt screen
     delwin(w->window);
-
-    if (w->x)
-        free(w->x);
-
     w->window = NULL;
     memset(w, 0, sizeof(ToxWindow));
     clear();

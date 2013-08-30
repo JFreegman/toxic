@@ -125,7 +125,6 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
 {
     tox_delfriend(m, f_num);
     memset(&(friends[f_num]), 0, sizeof(friend_t));
-    friends[f_num].active = false;
     
     int i;
 
@@ -166,11 +165,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     } else {
         wattron(self->window, COLOR_PAIR(2) | A_BOLD);
         wprintw(self->window, " * Open chat with up/down keys and enter. ");
-        wprintw(self->window, "Delete friends with the backspace key\n");
+        wprintw(self->window, "Delete friends with the backspace key\n\n");
         wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
     }
-
-    wprintw(self->window, "\n");
 
     int i;
 
