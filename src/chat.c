@@ -238,8 +238,10 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             }
         }
 
-        ctx->line[0] = L'\0';
-        ctx->pos = 0;
+        if (strncmp(cmd, "/close", strlen("/close"))) {
+            ctx->line[0] = L'\0';
+            ctx->pos = 0;
+        }
         free(line);
     }
 }
