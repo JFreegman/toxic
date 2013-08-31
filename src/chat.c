@@ -72,6 +72,9 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     if (ctx->friendnum != num)
         return;
 
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
+    tox_getname(m, num, (uint8_t *) &nick);
+
     action[len - 1] = '\0';
 
     wattron(ctx->history, COLOR_PAIR(2));
@@ -79,7 +82,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     wattroff(ctx->history, COLOR_PAIR(2));
 
     wattron(ctx->history, COLOR_PAIR(5));
-    wprintw(ctx->history, "%s\n", action);
+    wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(5));
 
     self->blink = true;
@@ -187,7 +190,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 #else
     if (isprint(key)) {
 #endif
-        if (ctx->pos != sizeof(ctx->line) - 1) {
+        if (ctx->pos < MAX_STR_SIZE) {
             mvwaddstr(self->window, y, x, wc_to_char(key));
             ctx->line[ctx->pos++] = key;
             ctx->line[ctx->pos] = L'\0';
@@ -291,15 +294,13 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         wattroff(ctx->history, COLOR_PAIR(2));
 
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        int len = tox_getselfname(m, selfname, sizeof(selfname));
-        char msg[MAX_STR_SIZE - len - 4];
-        snprintf(msg, sizeof(msg), "* %s %s\n", (uint8_t *) selfname, action);
+        tox_getselfname(m, selfname, sizeof(selfname));
 
         wattron(ctx->history, COLOR_PAIR(5));
-        wprintw(ctx->history, msg);
+        wprintw(ctx->history, "* %s %s\n", selfname, action);
         wattroff(ctx->history, COLOR_PAIR(5));
 
-        if (tox_sendaction(m, ctx->friendnum, (uint8_t *) msg, strlen(msg) + 1) < 0) {
+        if (tox_sendaction(m, ctx->friendnum, (uint8_t *) action, strlen(action) + 1) == 0) {
             wattron(ctx->history, COLOR_PAIR(3));
             wprintw(ctx->history, " * Failed to send action\n");
             wattroff(ctx->history, COLOR_PAIR(3));
