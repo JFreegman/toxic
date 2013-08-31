@@ -120,9 +120,10 @@ int add_window(Tox *m, ToxWindow w)
 void del_window(ToxWindow *w)
 {
     active_window = windows; // Go to prompt screen
+    
     delwin(w->window);
-    w->window = NULL;
     memset(w, 0, sizeof(ToxWindow));
+
     clear();
     refresh();
 }
