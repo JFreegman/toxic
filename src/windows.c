@@ -120,13 +120,10 @@ int add_window(Tox *m, ToxWindow w)
 void del_window(ToxWindow *w)
 {
     active_window = windows; // Go to prompt screen
+    
     delwin(w->window);
-
-    if (w->x)
-        free(w->x);
-
-    w->window = NULL;
     memset(w, 0, sizeof(ToxWindow));
+
     clear();
     refresh();
 }
@@ -195,7 +192,7 @@ static void draw_bar()
 
     int i;
 
-    for (i = 0; i < (MAX_WINDOWS_NUM); ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].window) {
             if (windows + i == active_window)
                 attron(A_BOLD);
