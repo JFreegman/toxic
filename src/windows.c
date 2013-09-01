@@ -120,7 +120,7 @@ int add_window(Tox *m, ToxWindow w)
 void del_window(ToxWindow *w)
 {
     active_window = windows; // Go to prompt screen
-    
+
     delwin(w->window);
     memset(w, 0, sizeof(ToxWindow));
 
@@ -187,7 +187,7 @@ static void draw_bar()
     move(LINES - 1, 0);
 
     attron(COLOR_PAIR(4) | A_BOLD);
-    printw(" TOXIC " TOXICVER "|");
+    printw(" TOXIC " TOXICVER " |");
     attroff(COLOR_PAIR(4) | A_BOLD);
 
     int i;
