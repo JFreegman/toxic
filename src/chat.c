@@ -119,7 +119,6 @@ static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint1
     wattroff(ctx->history, COLOR_PAIR(2));
 
     status[len - 1] = '\0';
-    snprintf(self->title, sizeof(self->title), "[%s (%d)]", status, num);
 
     wattron(ctx->history, COLOR_PAIR(3));
     wprintw(ctx->history, "* Your partner changed status to '%s'\n", status);
@@ -213,10 +212,18 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
+        bool close_win = false;
 
-        if (line[0] == '/')
-            execute(self, ctx, m, line);
-        else {
+        if (line[0] == '/') {
+            if (close_win = !strncmp(line, "/close", strlen("/close"))) {
+                int f_num = ctx->friendnum;
+                delwin(ctx->linewin);
+                del_window(self);
+                disable_chatwin(f_num);
+            } else {
+                execute(self, ctx, m, line);
+            }
+        } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
@@ -238,8 +245,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             }
         }
 
-        ctx->line[0] = L'\0';
-        ctx->pos = 0;
+        if (close_win)
+            free(ctx);
+        else {
+            ctx->line[0] = L'\0';
+            ctx->pos = 0;
+        }
+
         free(line);
     }
 }
@@ -369,13 +381,6 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         wprintw(ctx->history, "%s\n", id);
     }
 
-    else if (strcmp(cmd, "/close") == 0) {
-        int f_num = ctx->friendnum;
-        delwin(ctx->linewin);
-        del_window(self);
-        disable_chatwin(f_num);
-    }
-
     else
         wprintw(ctx->history, "Invalid command.\n");
 }
@@ -440,7 +445,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     snprintf(ret.title, sizeof(ret.title), "[%s (%d)]", nick, friendnum);
 
     ChatContext *x = calloc(1, sizeof(ChatContext));
+    ret.x = x;
     x->friendnum = friendnum;
-    ret.x = (void *) x;
     return ret;
 }
