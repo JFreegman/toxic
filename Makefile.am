@@ -2,4 +2,4 @@ SUBDIRS = build misc
 
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CXXFLAGS = -wall -c89
+AM_CFLAGS = -wall -c89 -werror
