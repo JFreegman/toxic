@@ -1,6 +1,6 @@
 /*
-* Toxic -- Tox Curses Client
-*/
+ * Toxic -- Tox Curses Client
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -22,40 +22,39 @@ static char prompt_buf[MAX_STR_SIZE] = {0};
 static int prompt_buf_pos = 0;
 
 /* commands */
-void cmd_accept(ToxWindow *, Tox *m, char **);
-void cmd_add(ToxWindow *, Tox *m, char **);
-void cmd_clear(ToxWindow *, Tox *m, char **);
-void cmd_connect(ToxWindow *, Tox *m, char **);
-void cmd_help(ToxWindow *, Tox *m, char **);
-void cmd_msg(ToxWindow *, Tox *m, char **);
-void cmd_myid(ToxWindow *, Tox *m, char **);
-void cmd_nick(ToxWindow *, Tox *m, char **);
-void cmd_mynick(ToxWindow *, Tox *m, char **);
-void cmd_quit(ToxWindow *, Tox *m, char **);
-void cmd_status(ToxWindow *, Tox *m, char **);
-void cmd_statusmsg(ToxWindow *, Tox *m, char **);
+void cmd_accept(ToxWindow *, Tox *m, int, char **);
+void cmd_add(ToxWindow *, Tox *m, int, char **);
+void cmd_clear(ToxWindow *, Tox *m, int, char **);
+void cmd_connect(ToxWindow *, Tox *m, int, char **);
+void cmd_help(ToxWindow *, Tox *m, int, char **);
+void cmd_msg(ToxWindow *, Tox *m, int, char **);
+void cmd_myid(ToxWindow *, Tox *m, int, char **);
+void cmd_nick(ToxWindow *, Tox *m, int, char **);
+void cmd_mynick(ToxWindow *, Tox *m, int, char **);
+void cmd_quit(ToxWindow *, Tox *m, int, char **);
+void cmd_status(ToxWindow *, Tox *m, int, char **);
+void cmd_statusmsg(ToxWindow *, Tox *m, int, char **);
 
 #define NUM_COMMANDS 14
 
 static struct {
     char *name;
-    int numargs;
-    void (*func)(ToxWindow *, Tox *m, char **);
+    void (*func)(ToxWindow *, Tox *m, int, char **);
 } commands[] = {
-    { "accept",    1, cmd_accept    },
-    { "add",       1, cmd_add       },
-    { "clear",     0, cmd_clear     },
-    { "connect",   3, cmd_connect   },
-    { "exit",      0, cmd_quit      },
-    { "help",      0, cmd_help      },
-    { "msg",       2, cmd_msg       },
-    { "myid",      0, cmd_myid      },
-    { "nick",      1, cmd_nick      },
-    { "mynick",    0, cmd_mynick    },
-    { "q",         0, cmd_quit      },
-    { "quit",      0, cmd_quit      },
-    { "status",    2, cmd_status    },
-    { "statusmsg", 1, cmd_statusmsg },
+    { "accept",    cmd_accept    },
+    { "add",       cmd_add       },
+    { "clear",     cmd_clear     },
+    { "connect",   cmd_connect   },
+    { "exit",      cmd_quit      },
+    { "help",      cmd_help      },
+    { "msg",       cmd_msg       },
+    { "myid",      cmd_myid      },
+    { "nick",      cmd_nick      },
+    { "mynick",    cmd_mynick    },
+    { "q",         cmd_quit      },
+    { "quit",      cmd_quit      },
+    { "status",    cmd_status    },
+    { "statusmsg", cmd_statusmsg },
 };
 
 // XXX:
@@ -80,9 +79,18 @@ unsigned char *hex_string_to_bin(char hex_string[])
     return val;
 }
 
-void cmd_accept(ToxWindow *self, Tox *m, char **args)
+/* command functions */
+void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    int num = atoi(args[1]);
+    int num;
+
+    /* check arguments */
+    if (argc != 1) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
+    num = atoi(argv[1]);
 
     if (num >= num_requests) {
         wprintw(self->window, "Invalid syntax.\n");
@@ -99,28 +107,28 @@ void cmd_accept(ToxWindow *self, Tox *m, char **args)
     }
 }
 
-void cmd_add(ToxWindow *self, Tox *m, char **args)
+void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
     char xx[3];
     uint32_t x;
-    char *id = args[1];
-    char *msg = args[2];
+    char *id;
+    char *msg;
+    int i, num;
 
-    if (!id) {
-        wprintw(self->window, "Invalid command: add expected at least one argument.\n");
+    /* check arguments */
+    if (argc != 1 && argc != 2) {
+        wprintw(self->window, "Invalid syntax.\n");
         return;
     }
 
-    if (!msg)
-        msg = "";
+    id = argv[1];
+    msg = (argc == 2) ? argv[2] : "";
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
         wprintw(self->window, "Invalid ID length.\n");
         return;
     }
-
-    int i;
 
     for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
         xx[0] = id[2 * i];
@@ -139,7 +147,7 @@ void cmd_add(ToxWindow *self, Tox *m, char **args)
         id[i] = toupper(id[i]);
     }
 
-    int num = tox_addfriend(m, id_bin, (uint8_t *) msg, strlen(msg) + 1);
+    num = tox_addfriend(m, id_bin, (uint8_t *) msg, strlen(msg) + 1);
 
     switch (num) {
         case TOX_FAERR_TOOLONG:
@@ -177,17 +185,25 @@ void cmd_add(ToxWindow *self, Tox *m, char **args)
     }
 }
 
-void cmd_clear(ToxWindow *self, Tox *m, char **args)
+void cmd_clear(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     wclear(self->window);
 }
 
-void cmd_connect(ToxWindow *self, Tox *m, char **args)
+void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     tox_IP_Port dht;
-    char *ip = args[1];
-    char *port = args[2];
-    char *key = args[3];
+    char *ip, *port, *key;
+
+    /* check arguments */
+    if (argc != 3) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
+    ip = argv[1];
+    port = argv[2];
+    key = argv[3];
 
     if (atoi(port) == 0) {
         wprintw(self->window, "Invalid syntax.\n");
@@ -207,13 +223,13 @@ void cmd_connect(ToxWindow *self, Tox *m, char **args)
     free(binary_string);
 }
 
-void cmd_quit(ToxWindow *self, Tox *m, char **args)
+void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     endwin();
     exit(0);
 }
 
-void cmd_help(ToxWindow *self, Tox *m, char **args)
+void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     wclear(self->window);
     wattron(self->window, COLOR_PAIR(2) | A_BOLD);
@@ -239,10 +255,18 @@ void cmd_help(ToxWindow *self, Tox *m, char **args)
     wattroff(self->window, COLOR_PAIR(2));
 }
 
-void cmd_msg(ToxWindow *self, Tox *m, char **args)
+void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *id = args[1];
-    char *msg = args[2];
+    char *id, *msg;
+
+    /* check arguments */
+    if (argc != 2) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
+    id = argv[1];
+    msg = argv[2];
 
     if (tox_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
         wprintw(self->window, "Error occurred while sending message.\n");
@@ -250,7 +274,7 @@ void cmd_msg(ToxWindow *self, Tox *m, char **args)
         wprintw(self->window, "Message successfully sent.\n");
 }
 
-void cmd_myid(ToxWindow *self, Tox *m, char **args)
+void cmd_myid(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     size_t i;
@@ -266,9 +290,18 @@ void cmd_myid(ToxWindow *self, Tox *m, char **args)
     wprintw(self->window, "%s\n", id);
 }
 
-void cmd_nick(ToxWindow *self, Tox *m, char **args)
+void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *nick = args[1];
+    char *nick;
+
+    /* check arguments */
+    if (argc != 1) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
+    nick = argv[1];
+
     tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
     wprintw(self->window, "Nickname set to: %s\n", nick);
 
@@ -277,7 +310,7 @@ void cmd_nick(ToxWindow *self, Tox *m, char **args)
     }
 }
 
-void cmd_mynick(ToxWindow *self, Tox *m, char **args)
+void cmd_mynick(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     uint8_t *nick = malloc(TOX_MAX_NAME_LENGTH);
     tox_getselfname(m, nick, TOX_MAX_NAME_LENGTH);
@@ -285,10 +318,17 @@ void cmd_mynick(ToxWindow *self, Tox *m, char **args)
     free(nick);
 }
 
-void cmd_status(ToxWindow *self, Tox *m, char **args)
+void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *status = args[1];
-    char *status_text;
+    char *status, *status_text, *msg;
+
+    /* check arguments */
+    if (argc != 1 && argc != 2) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
+    status = argv[1];
 
     TOX_USERSTATUS status_kind;
 
@@ -306,7 +346,7 @@ void cmd_status(ToxWindow *self, Tox *m, char **args)
         return;
     }
 
-    char *msg = args[2];
+    msg = argv[2];
 
     if (msg == NULL) {
         tox_set_userstatus(m, status_kind);
@@ -318,9 +358,18 @@ void cmd_status(ToxWindow *self, Tox *m, char **args)
     }
 }
 
-void cmd_statusmsg(ToxWindow *self, Tox *m, char **args)
+void cmd_statusmsg(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *msg = args[1];
+    char *msg;
+
+    /* check arguments */
+    if (argc != 1) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
+    msg = argv[1];
+
     tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
     wprintw(self->window, "Status set to: %s\n", msg);
 }
@@ -355,76 +404,47 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
 
     /* insert \0 at argument boundaries */
     int numargs = 0;
-
     for (i = 0; i < MAX_STR_SIZE; i++) {
-        char quote_chr;
-        if (cmd[i] == '\"' || cmd[i] == '\'') {
-            quote_chr = cmd[i];
-            while (cmd[++i] != quote_chr && i < MAX_STR_SIZE); /* skip over strings */
-            /* Check if got qoute character */
-            if (cmd[i] != quote_chr) {
-                wprintw(self->window, "Missing terminating %c character\n", quote_chr);
-                return;
-            }
-	}
-
         if (cmd[i] == ' ') {
             cmd[i] = '\0';
-
-            int j = i;
-
-            while (++j < MAX_STR_SIZE && isspace(cmd[j]));
-
-            i = j - 1;
-
             numargs++;
+        }
+        /* skip over strings */
+        else if (cmd[i] == '\"') {
+            while (cmd[++i] != '\"') {
+                if (cmd[i] == '\n') {
+                    wprintw(self->window, "Invalid command: did you forget a closing \"?\n");
+                    return;
+                }
+            }
         }
     }
 
-    /* excessive arguments */
-    if (numargs > 3) {
-        wprintw(self->window, "Invalid command: too many arguments.\n");
-        return;
+    /* read arguments into array */
+    char **cmdargs = malloc((numargs + 1) * sizeof(char *));
+    if (!cmdargs) {
+      wprintw(self->window, "Invalid command: too many arguments.\n");
+      return;
     }
 
-    /* read arguments into array */
-    char *cmdargs[5];
     int pos = 0;
-
-    for (i = 0; i < 5; i++) {
+    
+    for (i = 0; i < numargs + 1; i++) {
         cmdargs[i] = cmd + pos;
         pos += strlen(cmdargs[i]) + 1;
-
-        while (isspace(cmd[pos]) && pos < MAX_STR_SIZE)
-            ++pos;
+        /* replace empty strings with NULL for easier error checking */
+        if (strlen(cmdargs[i]) == 0)
+            cmdargs[i] = NULL;
     }
 
     /* no input */
-    if (strlen(cmdargs[0]) == 0)
+    if (!cmdargs[0])
         return;
 
     /* match input to command list */
     for (i = 0; i < NUM_COMMANDS; i++) {
         if (!strcmp(cmdargs[0], commands[i].name)) {
-            /* check for missing arguments */
-            int j;
-
-            for (j = 0; j <= commands[i].numargs; j++) {
-                if (strlen(cmdargs[j]) == 0) {
-                    wprintw(self->window, "Invalid command: %s expected %d arguments, got %d.\n",
-                            commands[i].name, commands[i].numargs, j - 1);
-                    return;
-                }
-            }
-
-            /* check for excess arguments */
-            if (strcmp(cmdargs[0], "add") && strlen(cmdargs[j]) != 0) {
-                wprintw(self->window, "Invalid command: too many arguments to %s.\n", commands[i].name);
-                return;
-            }
-
-            /* pass arguments to command function */
-            (commands[i].func)(self, m, cmdargs);
+            (commands[i].func)(self, m, numargs, cmdargs);
             return;
         }
     }
@@ -493,7 +513,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     scrollok(self->window, 1);
-    cmd_help(self, m, NULL);
+    cmd_help(self, m, 0, NULL);
     wclrtoeol(self->window);
 }
 
