@@ -223,12 +223,12 @@ void cmd_help(ToxWindow *self, Tox *m, char **args)
     wprintw(self->window, "      connect <ip> <port> <key> : Connect to DHT server\n");
     wprintw(self->window, "      add <id> <message>        : Add friend\n");
     wprintw(self->window, "      status <type> <message>   : Set your status\n");
-    wprintw(self->window, "      statusmsg  <message>      : Set your status\n");
+    wprintw(self->window, "      statusmsg  <message>      : Set your status message\n");
     wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
     wprintw(self->window, "      mynick                    : Print your current nickname\n");
     wprintw(self->window, "      accept <number>           : Accept friend request\n");
     wprintw(self->window, "      myid                      : Print your ID\n");
-    wprintw(self->window, "      quit/exit                 : Exit program\n");
+    wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
     wprintw(self->window, "      help                      : Print this message again\n");
     wprintw(self->window, "      clear                     : Clear this window\n");
 
@@ -294,13 +294,13 @@ void cmd_status(ToxWindow *self, Tox *m, char **args)
 
     if (!strncmp(status, "online", strlen("online"))) {
         status_kind = TOX_USERSTATUS_NONE;
-        status_text = "ONLINE";
+        status_text = "Online";
     } else if (!strncmp(status, "away", strlen("away"))) {
         status_kind = TOX_USERSTATUS_AWAY;
-        status_text = "AWAY";
+        status_text = "Away";
     } else if (!strncmp(status, "busy", strlen("busy"))) {
         status_kind = TOX_USERSTATUS_BUSY;
-        status_text = "BUSY";
+        status_text = "Busy";
     } else {
         wprintw(self->window, "Invalid status.\n");
         return;
@@ -310,11 +310,11 @@ void cmd_status(ToxWindow *self, Tox *m, char **args)
 
     if (msg == NULL) {
         tox_set_userstatus(m, status_kind);
-        wprintw(self->window, "Status set to: %s\n", status_text);
+        wprintw(self->window, "Status message set to: %s\n", status_text);
     } else {
         tox_set_userstatus(m, status_kind);
         tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
-        wprintw(self->window, "Status set to: %s, %s\n", status_text, msg);
+        wprintw(self->window, "Status message set to: %s, %s\n", status_text, msg);
     }
 }
 
@@ -322,7 +322,7 @@ void cmd_statusmsg(ToxWindow *self, Tox *m, char **args)
 {
     char *msg = args[1];
     tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
-    wprintw(self->window, "Status set to: %s\n", msg);
+    wprintw(self->window, "Status message set to: %s\n", msg);
 }
 
 static void execute(ToxWindow *self, Tox *m, char *u_cmd)
