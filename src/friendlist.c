@@ -24,7 +24,7 @@ typedef struct {
     uint8_t status[TOX_MAX_STATUSMESSAGE_LENGTH];
     int num;
     int chatwin;
-    bool active;    
+    bool active;  
 } friend_t;
 
 static friend_t friends[MAX_FRIENDS_NUM];
@@ -72,9 +72,8 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].num = num;
             friends[i].active = true;
             friends[i].chatwin = -1;
-            tox_getname(m, num, friends[i].name);
+            //tox_getname(m, num, friends[i].name);
             strcpy((char *) friends[i].name, "unknown");
-            strcpy((char *) friends[i].status, "Offline");
 
             if (i == num_friends)
                 ++num_friends;
@@ -173,19 +172,43 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     for (i = 0; i < num_friends; ++i) {
         if (friends[i].active) {
-            if (i == num_selected)
-                wattron(self->window, COLOR_PAIR(3));
-
-            wprintw(self->window, " > ");
+            bool is_online = tox_friendstatus(m, i) == TOX_FRIEND_ONLINE;
+            TOX_USERSTATUS status = tox_get_userstatus(m, i);
 
             if (i == num_selected)
-                wattroff(self->window, COLOR_PAIR(3));
+                wprintw(self->window, " > ");
+            else
+                wprintw(self->window, "   ");
 
-            attron(A_BOLD);
-            wprintw(self->window, "%s ", friends[i].name);
-            attroff(A_BOLD);
+            if (is_online) {
+                int colour;
 
-            wprintw(self->window, "(%s)\n", friends[i].status);
+                switch(status) {
+                case TOX_USERSTATUS_NONE:
+                    colour = 1;
+                    break;
+
+                case TOX_USERSTATUS_AWAY:
+                    colour = 5;
+                    break;
+
+                case TOX_USERSTATUS_BUSY:
+                case TOX_USERSTATUS_INVALID:
+                default:
+                    colour = 3;
+                    break;
+                }
+
+                wattron(self->window, COLOR_PAIR(colour));
+                attron(A_BOLD);
+                wprintw(self->window, "%s \n", friends[i].name);
+                attroff(A_BOLD);
+                wattroff(self->window, COLOR_PAIR(colour));
+            } else {
+                attron(A_BOLD);
+                wprintw(self->window, "%s \n", friends[i].name);
+                attroff(A_BOLD);
+            }
         }
     }
 

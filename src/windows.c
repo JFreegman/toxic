@@ -84,9 +84,8 @@ void on_friendadded(Tox *m, int friendnumber)
 {
     friendlist_onFriendAdded(m, friendnumber);
 
-    if (store_data(m, DATA_FILE)) {
+    if (store_data(m, DATA_FILE))
         wprintw(prompt->window, "\nCould not store Tox data\n");
-    }
 }
 /* CALLBACKS END */
 
