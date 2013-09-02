@@ -182,7 +182,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
             if (is_online) {
                 TOX_USERSTATUS status = tox_get_userstatus(m, friends[i].num);
-                int colour = 3;
+                int colour;
 
                 switch(status) {
                 case TOX_USERSTATUS_NONE:
@@ -208,7 +208,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     wprintw(self->window, "(%s)\n", friends[i].statusmsg);
 
             } else {
-                wprintw(self->window, "(Offline)\n");
+                wprintw(self->window, "%s (Offline)\n", friends[i].name);
             }
         }
     }
