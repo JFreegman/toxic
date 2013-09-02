@@ -322,17 +322,17 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         if (!strncmp(status, "online", strlen("online"))) {
             status_kind = TOX_USERSTATUS_NONE;
-            status_text = "ONLINE";
+            status_text = "Online";
         }
 
         else if (!strncmp(status, "away", strlen("away"))) {
             status_kind = TOX_USERSTATUS_AWAY;
-            status_text = "AWAY";
+            status_text = "Away";
         }
 
         else if (!strncmp(status, "busy", strlen("busy"))) {
             status_kind = TOX_USERSTATUS_BUSY;
-            status_text = "BUSY";
+            status_text = "Busy";
         }
 
         else {
