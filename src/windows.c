@@ -60,7 +60,7 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
 
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(nickchange) %d: %s\n", friendnumber, string);
+    wprintw(prompt->window, "\n(nick change) %d: %s\n", friendnumber, string);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -71,7 +71,7 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
 void on_statuschange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(statuschange) %d: %s\n", friendnumber, string);
+    wprintw(prompt->window, "\n(message change) %d: %s\n", friendnumber, string);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -84,9 +84,8 @@ void on_friendadded(Tox *m, int friendnumber)
 {
     friendlist_onFriendAdded(m, friendnumber);
 
-    if (store_data(m, DATA_FILE)) {
+    if (store_data(m, DATA_FILE))
         wprintw(prompt->window, "\nCould not store Tox data\n");
-    }
 }
 /* CALLBACKS END */
 

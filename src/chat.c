@@ -104,9 +104,7 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     nick[len - 1] = '\0';
     snprintf(self->title, sizeof(self->title), "[%s (%d)]", nick, num);
 
-    wattron(ctx->history, COLOR_PAIR(3));
     wprintw(ctx->history, "* Your partner changed nick to '%s'\n", nick);
-    wattroff(ctx->history, COLOR_PAIR(3));
 }
 
 static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
@@ -123,10 +121,7 @@ static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint1
 
     status[len - 1] = '\0';
 
-    wattron(ctx->history, COLOR_PAIR(3));
-    wprintw(ctx->history, "* Your partner changed status to '%s'\n", status);
-    wattroff(ctx->history, COLOR_PAIR(3));
-
+    wprintw(ctx->history, "* Your partner changed status message to '%s'\n", status);
 }
 
 /* check that the string has one non-space character */
@@ -322,17 +317,17 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         if (!strncmp(status, "online", strlen("online"))) {
             status_kind = TOX_USERSTATUS_NONE;
-            status_text = "ONLINE";
+            status_text = "Online";
         }
 
         else if (!strncmp(status, "away", strlen("away"))) {
             status_kind = TOX_USERSTATUS_AWAY;
-            status_text = "AWAY";
+            status_text = "Away";
         }
 
         else if (!strncmp(status, "busy", strlen("busy"))) {
             status_kind = TOX_USERSTATUS_BUSY;
-            status_text = "BUSY";
+            status_text = "Busy";
         }
 
         else {
@@ -344,13 +339,20 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         if (msg == NULL) {
             tox_set_userstatus(m, status_kind);
-            wprintw(ctx->history, "Status set to: %s\n", status_text);
+            wprintw(ctx->history, "Status message set to: %s\n", status_text);
         } else {
             msg++;
             tox_set_userstatus(m, status_kind);
             tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
-            wprintw(ctx->history, "Status set to: %s, %s\n", status_text, msg);
+            wprintw(ctx->history, "Status message set to: %s, %s\n", status_text, msg);
         }
+    }
+
+    else if (!strncmp(cmd, "/statusmsg ", strlen("/statusmsg "))) {
+        char *msg = strchr(cmd, ' ');
+        msg++;
+        wprintw(ctx->history, "Status message set to: %s\n", msg);
+        tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
     }
 
     else if (!strncmp(cmd, "/nick ", strlen("/nick "))) {
@@ -416,12 +418,13 @@ void print_help(ChatContext *self)
     wattroff(self->history, A_BOLD);
 
     wprintw(self->history, "      /status <type> <message>   : Set your status\n");
+    wprintw(self->history, "      /statusmsg <message>       : Set your status message\n");
     wprintw(self->history, "      /nick <nickname>           : Set your nickname\n");
     wprintw(self->history, "      /me <action>               : Do an action\n");
     wprintw(self->history, "      /myid                      : Print your ID\n");
     wprintw(self->history, "      /clear                     : Clear the screen\n");
     wprintw(self->history, "      /close                     : Close the current chat window\n");
-    wprintw(self->history, "      /quit or /exit             : Exit program\n");
+    wprintw(self->history, "      /quit or /exit             : Exit Toxic\n");
     wprintw(self->history, "      /help                      : Print this message again\n\n");
 
     wattroff(self->history, COLOR_PAIR(2));
