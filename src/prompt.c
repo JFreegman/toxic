@@ -92,8 +92,8 @@ void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
 
     num = atoi(argv[1]);
 
-    if (num >= num_requests) {
-        wprintw(self->window, "Invalid syntax.\n");
+    if (num < 0 || num >= num_requests) {
+        wprintw(self->window, "No pending request with that number.\n");
         return;
     }
 
@@ -117,6 +117,10 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     int i, num;
 
     /* check arguments */
+    if (argv[2] && argv[2][0] != '\"') {
+        wprintw(self->window, "Strings must be enclosed in quotes.\n");
+        return;
+    }
     if (argc != 1 && argc != 2) {
         wprintw(self->window, "Invalid syntax.\n");
         return;
@@ -249,6 +253,7 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, "      clear                     : Clear this window\n");
 
     wattron(self->window, A_BOLD);
+    wprintw(self->window, "NOTE: Strings must be enclosed in quotation marks.\n");
     wprintw(self->window, "TIP: Use the TAB key to navigate through the tabs.\n\n");
     wattroff(self->window, A_BOLD);
 
@@ -323,9 +328,13 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
     char *status, *status_text, *msg;
 
     /* check arguments */
+    if (argv[2] && argv[2][0] != '\"') {
+        wprintw(self->window, "Strings must be enclosed in quotes.\n");
+        return;
+    }
     if (argc != 1 && argc != 2) {
-      wprintw(self->window, "Invalid syntax.\n");
-      return;
+        wprintw(self->window, "Wrong number of arguments.\n");
+        return;
     }
 
     status = argv[1];
@@ -363,9 +372,13 @@ void cmd_statusmsg(ToxWindow *self, Tox *m, int argc, char **argv)
     char *msg;
 
     /* check arguments */
+    if (argv[1] && argv[1][0] != '\"') {
+        wprintw(self->window, "Strings must be enclosed in quotes.\n");
+        return;
+    }
     if (argc != 1) {
-      wprintw(self->window, "Invalid syntax.\n");
-      return;
+        wprintw(self->window, "Wrong number of arguments.\n");
+        return;
     }
 
     msg = argv[1];
@@ -412,7 +425,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
         /* skip over strings */
         else if (cmd[i] == '\"') {
             while (cmd[++i] != '\"') {
-                if (cmd[i] == '\n') {
+                if (cmd[i] == '\0') {
                     wprintw(self->window, "Invalid command: did you forget a closing \"?\n");
                     return;
                 }
