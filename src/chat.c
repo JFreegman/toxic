@@ -353,6 +353,13 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         }
     }
 
+    else if (!strncmp(cmd, "/statusmsg ", strlen("/statusmsg "))) {
+        char *msg = strchr(cmd, ' ');
+        msg++;
+        wprintw(ctx->history, "Status message set to: %s\n", msg);
+        tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
+    }
+
     else if (!strncmp(cmd, "/nick ", strlen("/nick "))) {
         char *nick;
         nick = strchr(cmd, ' ');
@@ -416,12 +423,13 @@ void print_help(ChatContext *self)
     wattroff(self->history, A_BOLD);
 
     wprintw(self->history, "      /status <type> <message>   : Set your status\n");
+    wprintw(self->history, "      /statusmsg <message>       : Set your status message\n");
     wprintw(self->history, "      /nick <nickname>           : Set your nickname\n");
     wprintw(self->history, "      /me <action>               : Do an action\n");
     wprintw(self->history, "      /myid                      : Print your ID\n");
     wprintw(self->history, "      /clear                     : Clear the screen\n");
     wprintw(self->history, "      /close                     : Close the current chat window\n");
-    wprintw(self->history, "      /quit or /exit             : Exit program\n");
+    wprintw(self->history, "      /quit or /exit             : Exit Toxic\n");
     wprintw(self->history, "      /help                      : Print this message again\n\n");
 
     wattroff(self->history, COLOR_PAIR(2));

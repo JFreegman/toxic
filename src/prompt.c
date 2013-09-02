@@ -228,7 +228,7 @@ void cmd_help(ToxWindow *self, Tox *m, char **args)
     wprintw(self->window, "      mynick                    : Print your current nickname\n");
     wprintw(self->window, "      accept <number>           : Accept friend request\n");
     wprintw(self->window, "      myid                      : Print your ID\n");
-    wprintw(self->window, "      quit/exit                 : Exit program\n");
+    wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
     wprintw(self->window, "      help                      : Print this message again\n");
     wprintw(self->window, "      clear                     : Clear this window\n");
 
