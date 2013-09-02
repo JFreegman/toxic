@@ -104,9 +104,7 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     nick[len - 1] = '\0';
     snprintf(self->title, sizeof(self->title), "[%s (%d)]", nick, num);
 
-    wattron(ctx->history, COLOR_PAIR(3));
     wprintw(ctx->history, "* Your partner changed nick to '%s'\n", nick);
-    wattroff(ctx->history, COLOR_PAIR(3));
 }
 
 static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
@@ -123,10 +121,7 @@ static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint1
 
     status[len - 1] = '\0';
 
-    wattron(ctx->history, COLOR_PAIR(3));
-    wprintw(ctx->history, "* Your partner changed status to '%s'\n", status);
-    wattroff(ctx->history, COLOR_PAIR(3));
-
+    wprintw(ctx->history, "* Your partner changed status message to '%s'\n", status);
 }
 
 /* check that the string has one non-space character */
@@ -344,12 +339,12 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         if (msg == NULL) {
             tox_set_userstatus(m, status_kind);
-            wprintw(ctx->history, "Status set to: %s\n", status_text);
+            wprintw(ctx->history, "Status message set to: %s\n", status_text);
         } else {
             msg++;
             tox_set_userstatus(m, status_kind);
             tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
-            wprintw(ctx->history, "Status set to: %s, %s\n", status_text, msg);
+            wprintw(ctx->history, "Status message set to: %s, %s\n", status_text, msg);
         }
     }
 

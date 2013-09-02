@@ -173,7 +173,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     for (i = 0; i < num_friends; ++i) {
         if (friends[i].active) {
-            bool is_online = tox_friendstatus(m, i) == TOX_FRIEND_ONLINE;
+            bool is_online = tox_friendstatus(m, friends[i].num) == TOX_FRIEND_ONLINE;
 
             if (i == num_selected)
                 wprintw(self->window, " > ");
@@ -181,8 +181,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wprintw(self->window, "   ");
 
             if (is_online) {
-                TOX_USERSTATUS status = tox_get_userstatus(m, i);
-                int colour;
+                TOX_USERSTATUS status = tox_get_userstatus(m, friends[i].num);
+                int colour = 3;
 
                 switch(status) {
                 case TOX_USERSTATUS_NONE:
@@ -206,8 +206,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 if (strncmp(friends[i].statusmsg, NOSTATUSMSG, strlen(NOSTATUSMSG)))
                     wprintw(self->window, "(%s)\n", friends[i].statusmsg);
+
             } else {
-                wprintw(self->window, "%s (Offline)\n", friends[i].name);
+                wprintw(self->window, "(Offline)\n");
             }
         }
     }
