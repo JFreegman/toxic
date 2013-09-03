@@ -69,14 +69,14 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
     }
 }
 
-void on_statuschange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(message change) %d: %s\n", friendnumber, string);
+    wprintw(prompt->window, "\n(note change) %d: %s\n", friendnumber, string);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onStatusChange != NULL)
-            windows[i].onStatusChange(&windows[i], friendnumber, string, length);
+        if (windows[i].onStatusMessageChange != NULL)
+            windows[i].onStatusMessageChange(&windows[i], friendnumber, string, length);
     }
 }
 
