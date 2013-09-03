@@ -127,7 +127,12 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     id = argv[1];
-    msg = (argc == 2) ? argv[2] : "";
+
+    if (argc == 2) {
+        msg = argv[2];
+        msg[strlen(++msg)-1] = L'\0';
+    } else
+        msg = "";
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
         wprintw(self->window, "Invalid ID length.\n");
@@ -272,6 +277,7 @@ void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 
     id = argv[1];
     msg = argv[2];
+    msg[strlen(++msg)-1] = L'\0';
 
     if (tox_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
         wprintw(self->window, "Failed to send message.\n");
@@ -361,6 +367,7 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
     msg = argv[2];
 
     if (msg != NULL) {
+        msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
         tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
         wprintw(self->window, "Personal note set to: %s\n", msg);
     }
@@ -381,6 +388,7 @@ void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     msg = argv[1];
+    msg[strlen(++msg)-1] = L'\0';
 
     tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
     wprintw(self->window, "Personal note set to: %s\n", msg);
