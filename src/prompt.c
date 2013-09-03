@@ -331,17 +331,23 @@ void cmd_mynick(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *status, *status_text, *msg;
-
-    /* check arguments */
-    if (argv[2] && argv[2][0] != '\"') {
-        wprintw(self->window, "Messages must be enclosed in quotes.\n");
-        return;
-    }
     if (argc != 1 && argc != 2) {
         wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
+
+    char *status, *status_text;
+    char *msg = NULL;
+
+    /* check arguments */
+    if (argc == 2) {
+        msg = argv[2];
+        if (msg[0] != '\"') {
+            wprintw(self->window, "Messages must be enclosed in quotes.\n");
+            return;
+        }
+    }
+
 
     status = argv[1];
 
@@ -363,8 +369,6 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 
     wprintw(self->window, "Status set to: %s\n", status_text);
     tox_set_userstatus(m, status_kind);
-
-    msg = argv[2];
 
     if (msg != NULL) {
         msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
