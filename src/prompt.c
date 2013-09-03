@@ -109,6 +109,11 @@ void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 {
+    if (argc != 1 && argc != 2) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
+
     uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
     char xx[3];
     uint32_t x;
@@ -116,19 +121,14 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     char *msg;
     int i, num;
 
-    /* check arguments */
-    if (argv[2] && argv[2][0] != '\"') {
-        wprintw(self->window, "Messages must be enclosed in quotes.\n");
-        return;
-    }
-    if (argc != 1 && argc != 2) {
-        wprintw(self->window, "Invalid syntax.\n");
-        return;
-    }
-
     id = argv[1];
 
     if (argc == 2) {
+        if (argv[2][0] != '\"') {
+            wprintw(self->window, "Messages must be enclosed in quotes.\n");
+            return;
+        }
+
         msg = argv[2];
         msg[strlen(++msg)-1] = L'\0';
     } else
@@ -379,15 +379,16 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
 {
+    if (argc != 1) {
+        wprintw(self->window, "Wrong number of arguments.\n");
+        return;
+    }
+
     char *msg;
 
     /* check arguments */
     if (argv[1] && argv[1][0] != '\"') {
         wprintw(self->window, "Messages must be enclosed in quotes.\n");
-        return;
-    }
-    if (argc != 1) {
-        wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
 
