@@ -51,7 +51,7 @@ void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t le
     friends[num].name[len] = 0;
 }
 
-void friendlist_onStatusChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
+void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num >= num_friends)
         return;
@@ -164,8 +164,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
         wattron(self->window, COLOR_PAIR(2) | A_BOLD);
-        wprintw(self->window, " * Open chat with up/down keys and enter. ");
-        wprintw(self->window, "Delete friends with the backspace key\n\n");
+        wprintw(self->window, " * Open chat with up/down keys and enter.\n");
+        wprintw(self->window, " * Delete friends with the backspace key.\n\n");
         wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
     }
 
@@ -237,7 +237,7 @@ ToxWindow new_friendlist()
     ret.onMessage = &friendlist_onMessage;
     ret.onAction = &friendlist_onMessage;    // Action has identical behaviour to message
     ret.onNickChange = &friendlist_onNickChange;
-    ret.onStatusChange = &friendlist_onStatusChange;
+    ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
 
     strcpy(ret.title, "[friends]");
     return ret;

@@ -33,7 +33,7 @@ struct ToxWindow_ {
     void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
     void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onNickChange)(ToxWindow *, int, uint8_t *, uint16_t);
-    void(*onStatusChange)(ToxWindow *, int, uint8_t *, uint16_t);
+    void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     char title[256];
 
@@ -47,7 +47,7 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_statuschange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_friendadded(Tox *m, int friendnumber);
 ToxWindow *init_windows();
 void draw_active_window(Tox *m);
