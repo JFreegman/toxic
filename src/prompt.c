@@ -235,6 +235,7 @@ void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
 void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     endwin();
+    tox_kill(m);
     exit(0);
 }
 

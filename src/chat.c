@@ -270,6 +270,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
     else if (!strcmp(cmd, "/quit") || !strcmp(cmd, "/exit") || !strcmp(cmd, "/q")) {
         endwin();
+        tox_kill(m);
         exit(0);
     }
 
