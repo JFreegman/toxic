@@ -75,8 +75,6 @@ int friendlist_onFriendAdded(Tox *m, int num)
             if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
                 strcpy((char *) friends[i].name, "unknown");
 
-            tox_set_statusmessage(m, "\0", strlen("\0"));
-
             if (i == num_friends)
                 ++num_friends;
 
@@ -87,39 +85,34 @@ int friendlist_onFriendAdded(Tox *m, int num)
     return -1;
 }
 
-static void select_friend(wint_t key)
+static void select_friend(Tox *m, wint_t key)
 {
     if (num_friends < 1)
         return;
 
     int n = num_selected;
-    int f_inf = num_selected;
 
     if (key == KEY_UP) {
-        while (true) {
-            if (--n < 0) n = num_friends-1;
+        while (--n != num_selected) {
+            if (n < 0) n = num_friends - 1;
             if (friends[n].active) {
                 num_selected = n;
                 return;
-            }
-            if (n == f_inf) {
-                endwin();
-                exit(2);
             }
         }
     } else if (key == KEY_DOWN) {
-        while (true) {
-            n = (n + 1) % num_friends;
+        while ((n = (n + 1) % num_friends) != num_selected) {
             if (friends[n].active) {
                 num_selected = n;
                 return;
             }
-            if (n == f_inf) {
-                endwin();
-                exit(2);
-            }
         }
-    }
+    } else return;    /* Bad key input */
+
+    /* If we reach this something is wrong */
+    endwin();
+    tox_kill(m);
+    exit(2);
 }
 
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
@@ -138,13 +131,13 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
         wprintw(self->window, "\nFailed to store messenger data\n");
 
     num_friends = i;
-    select_friend(KEY_DOWN);
+    select_friend(m, KEY_DOWN);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     if (key == KEY_UP || key == KEY_DOWN) {
-        select_friend(key);
+        select_friend(m, key);
     } else if (key == '\n') {
         /* Jump to chat window if already open */
         if (friends[num_selected].chatwin != -1) {
@@ -174,14 +167,12 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     for (i = 0; i < num_friends; ++i) {
         if (friends[i].active) {
-            bool is_online = tox_friendstatus(m, friends[i].num) == TOX_FRIEND_ONLINE;
-
             if (i == num_selected)
                 wprintw(self->window, " > ");
             else
                 wprintw(self->window, "   ");
 
-            if (is_online) {
+            if (tox_friendstatus(m, friends[i].num) == TOX_FRIEND_ONLINE) {
                 TOX_USERSTATUS status = tox_get_userstatus(m, friends[i].num);
                 int colour = 7;    /* Invalid or other errors default to black */
 
@@ -203,7 +194,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattroff(self->window, COLOR_PAIR(colour));
                 wprintw(self->window, "] %s", friends[i].name);
 
-                if (friends[i].statusmsg[0] != '\0')
+                if (friends[i].statusmsg[0])
                     wprintw(self->window, " (%s)\n", friends[i].statusmsg);
                 else
                     wprintw(self->window, "\n");
@@ -212,7 +203,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             }
         }
     }
-
+    
     wrefresh(self->window);
 }
 
