@@ -72,8 +72,10 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].num = num;
             friends[i].active = true;
             friends[i].chatwin = -1;
-            //tox_getname(m, num, friends[i].name);
-            strcpy((char *) friends[i].name, "unknown");
+
+            if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
+                strcpy((char *) friends[i].name, "unknown");
+
             strcpy((char *) friends[i].statusmsg, NOSTATUSMSG);
 
             if (i == num_friends)
@@ -164,8 +166,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
         wattron(self->window, COLOR_PAIR(2) | A_BOLD);
-        wprintw(self->window, " * Open chat with up/down keys and enter.\n");
-        wprintw(self->window, " * Delete friends with the backspace key.\n\n");
+        wprintw(self->window, " Open chat with up/down keys and enter.\n");
+        wprintw(self->window, " Delete friends with the backspace key.\n\n");
         wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
     }
 
@@ -182,33 +184,31 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
             if (is_online) {
                 TOX_USERSTATUS status = tox_get_userstatus(m, friends[i].num);
-                int colour;
+                int colour = 7;    /* Invalid or other errors default to black */
 
                 switch(status) {
                 case TOX_USERSTATUS_NONE:
                     colour = 1;
                     break;
-
                 case TOX_USERSTATUS_AWAY:
                     colour = 5;
                     break;
-
                 case TOX_USERSTATUS_BUSY:
-                case TOX_USERSTATUS_INVALID:
-                default:
                     colour = 3;
                     break;
                 }
 
+                wprintw(self->window, "[");
                 wattron(self->window, COLOR_PAIR(colour));
-                wprintw(self->window, "%s ", friends[i].name);
+                wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour));
+                wprintw(self->window, "] %s ", friends[i].name);
 
                 if (strncmp(friends[i].statusmsg, NOSTATUSMSG, strlen(NOSTATUSMSG)))
                     wprintw(self->window, "(%s)\n", friends[i].statusmsg);
 
             } else {
-                wprintw(self->window, "%s (Offline)\n", friends[i].name);
+                wprintw(self->window, "[O] %s (Offline)\n", friends[i].name);
             }
         }
     }

@@ -102,7 +102,7 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     wattroff(ctx->history, COLOR_PAIR(2));
 
     nick[len - 1] = '\0';
-    snprintf(self->title, sizeof(self->title), "[%s (%d)]", nick, num);
+    snprintf(self->title, sizeof(self->title), "[%s]", nick);
 
     wprintw(ctx->history, "* Chat partner changed nick to '%s'\n", nick);
 }
@@ -444,7 +444,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
     tox_getname(m, friendnum, (uint8_t *) &nick);
 
-    snprintf(ret.title, sizeof(ret.title), "[%s (%d)]", nick, friendnum);
+    snprintf(ret.title, sizeof(ret.title), "[%s]", nick);
 
     ChatContext *x = calloc(1, sizeof(ChatContext));
     ret.x = x;
