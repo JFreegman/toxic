@@ -104,10 +104,10 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     nick[len - 1] = '\0';
     snprintf(self->title, sizeof(self->title), "[%s (%d)]", nick, num);
 
-    wprintw(ctx->history, "* Your partner changed nick to '%s'\n", nick);
+    wprintw(ctx->history, "* Chat partner changed nick to '%s'\n", nick);
 }
 
-static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
+static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
 {
     ChatContext *ctx = (ChatContext *) self->x;
     struct tm *timeinfo = get_time();
@@ -121,7 +121,7 @@ static void chat_onStatusChange(ToxWindow *self, int num, uint8_t *status, uint1
 
     status[len - 1] = '\0';
 
-    wprintw(ctx->history, "* Your partner changed status message to '%s'\n", status);
+    wprintw(ctx->history, "* Chat partner changed personal note to: %s\n", status);
 }
 
 /* check that the string has one non-space character */
@@ -335,23 +335,21 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
             return;
         }
 
-        msg = strchr(status, ' ');
+        wprintw(ctx->history, "Status set to: %s\n", status_text);
+        tox_set_userstatus(m, status_kind);
 
-        if (msg == NULL) {
-            tox_set_userstatus(m, status_kind);
-            wprintw(ctx->history, "Status message set to: %s\n", status_text);
-        } else {
+        msg = strchr(status, ' ');
+        if (msg != NULL) {
             msg++;
-            tox_set_userstatus(m, status_kind);
             tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
-            wprintw(ctx->history, "Status message set to: %s, %s\n", status_text, msg);
+            wprintw(ctx->history, "Personal note set to: %s\n", msg);
         }
     }
 
-    else if (!strncmp(cmd, "/statusmsg ", strlen("/statusmsg "))) {
+    else if (!strncmp(cmd, "/note ", strlen("/note "))) {
         char *msg = strchr(cmd, ' ');
         msg++;
-        wprintw(ctx->history, "Status message set to: %s\n", msg);
+        wprintw(ctx->history, "Personal note set to: %s\n", msg);
         tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
     }
 
@@ -417,8 +415,8 @@ void print_help(ChatContext *self)
     wprintw(self->history, "Commands:\n");
     wattroff(self->history, A_BOLD);
 
-    wprintw(self->history, "      /status <type> <message>   : Set your status\n");
-    wprintw(self->history, "      /statusmsg <message>       : Set your status message\n");
+    wprintw(self->history, "      /status <type> <message>   : Set your status with optional note\n");
+    wprintw(self->history, "      /note <message>            : Set a personal note\n");
     wprintw(self->history, "      /nick <nickname>           : Set your nickname\n");
     wprintw(self->history, "      /me <action>               : Do an action\n");
     wprintw(self->history, "      /myid                      : Print your ID\n");
@@ -440,7 +438,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onInit = &chat_onInit;
     ret.onMessage = &chat_onMessage;
     ret.onNickChange = &chat_onNickChange;
-    ret.onStatusChange = &chat_onStatusChange;
+    ret.onStatusMessageChange = &chat_onStatusMessageChange;
     ret.onAction = &chat_onAction;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};

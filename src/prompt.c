@@ -33,7 +33,7 @@ void cmd_nick(ToxWindow *, Tox *m, int, char **);
 void cmd_mynick(ToxWindow *, Tox *m, int, char **);
 void cmd_quit(ToxWindow *, Tox *m, int, char **);
 void cmd_status(ToxWindow *, Tox *m, int, char **);
-void cmd_statusmsg(ToxWindow *, Tox *m, int, char **);
+void cmd_note(ToxWindow *, Tox *m, int, char **);
 
 #define NUM_COMMANDS 14
 
@@ -54,7 +54,7 @@ static struct {
     { "q",         cmd_quit      },
     { "quit",      cmd_quit      },
     { "status",    cmd_status    },
-    { "statusmsg", cmd_statusmsg },
+    { "note",      cmd_note      },
 };
 
 // XXX:
@@ -109,6 +109,11 @@ void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 {
+    if (argc != 1 && argc != 2) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
+
     uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
     char xx[3];
     uint32_t x;
@@ -116,18 +121,18 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     char *msg;
     int i, num;
 
-    /* check arguments */
-    if (argv[2] && argv[2][0] != '\"') {
-        wprintw(self->window, "Strings must be enclosed in quotes.\n");
-        return;
-    }
-    if (argc != 1 && argc != 2) {
-        wprintw(self->window, "Invalid syntax.\n");
-        return;
-    }
-
     id = argv[1];
-    msg = (argc == 2) ? argv[2] : "";
+
+    if (argc == 2) {
+        if (argv[2][0] != '\"') {
+            wprintw(self->window, "Messages must be enclosed in quotes.\n");
+            return;
+        }
+
+        msg = argv[2];
+        msg[strlen(++msg)-1] = L'\0';
+    } else
+        msg = "";
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
         wprintw(self->window, "Invalid ID length.\n");
@@ -241,9 +246,9 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wattroff(self->window, A_BOLD);
 
     wprintw(self->window, "      connect <ip> <port> <key> : Connect to DHT server\n");
-    wprintw(self->window, "      add <id> <message>        : Add friend\n");
-    wprintw(self->window, "      status <type> <message>   : Set your status\n");
-    wprintw(self->window, "      statusmsg  <message>      : Set your status message\n");
+    wprintw(self->window, "      add <id> <message>        : Add friend with optional message\n");
+    wprintw(self->window, "      status <type> <message>   : Set your status with optional note\n");
+    wprintw(self->window, "      note  <message>           : Set a personal note\n");
     wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
     wprintw(self->window, "      mynick                    : Print your current nickname\n");
     wprintw(self->window, "      accept <number>           : Accept friend request\n");
@@ -253,8 +258,8 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, "      clear                     : Clear this window\n");
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, "NOTE: Strings must be enclosed in quotation marks.\n");
-    wprintw(self->window, "TIP: Use the TAB key to navigate through the tabs.\n\n");
+    wprintw(self->window, " * Messages must be enclosed in quotation marks.\n");
+    wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n\n");
     wattroff(self->window, A_BOLD);
 
     wattroff(self->window, COLOR_PAIR(2));
@@ -272,9 +277,10 @@ void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 
     id = argv[1];
     msg = argv[2];
+    msg[strlen(++msg)-1] = L'\0';
 
     if (tox_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
-        wprintw(self->window, "Error occurred while sending message.\n");
+        wprintw(self->window, "Failed to send message.\n");
     else
         wprintw(self->window, "Message successfully sent.\n");
 }
@@ -325,17 +331,23 @@ void cmd_mynick(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *status, *status_text, *msg;
-
-    /* check arguments */
-    if (argv[2] && argv[2][0] != '\"') {
-        wprintw(self->window, "Strings must be enclosed in quotes.\n");
-        return;
-    }
     if (argc != 1 && argc != 2) {
         wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
+
+    char *status, *status_text;
+    char *msg = NULL;
+
+    /* check arguments */
+    if (argc == 2) {
+        msg = argv[2];
+        if (msg[0] != '\"') {
+            wprintw(self->window, "Messages must be enclosed in quotes.\n");
+            return;
+        }
+    }
+
 
     status = argv[1];
 
@@ -355,36 +367,36 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    msg = argv[2];
+    wprintw(self->window, "Status set to: %s\n", status_text);
+    tox_set_userstatus(m, status_kind);
 
-    if (msg == NULL) {
-        tox_set_userstatus(m, status_kind);
-        wprintw(self->window, "Status message set to: %s\n", status_text);
-    } else {
-        tox_set_userstatus(m, status_kind);
+    if (msg != NULL) {
+        msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
         tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
-        wprintw(self->window, "Status message set to: %s, %s\n", status_text, msg);
+        wprintw(self->window, "Personal note set to: %s\n", msg);
     }
 }
 
-void cmd_statusmsg(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *msg;
-
-    /* check arguments */
-    if (argv[1] && argv[1][0] != '\"') {
-        wprintw(self->window, "Strings must be enclosed in quotes.\n");
-        return;
-    }
     if (argc != 1) {
         wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
 
+    char *msg;
+
+    /* check arguments */
+    if (argv[1] && argv[1][0] != '\"') {
+        wprintw(self->window, "Messages must be enclosed in quotes.\n");
+        return;
+    }
+
     msg = argv[1];
+    msg[strlen(++msg)-1] = L'\0';
 
     tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
-    wprintw(self->window, "Status message set to: %s\n", msg);
+    wprintw(self->window, "Personal note set to: %s\n", msg);
 }
 
 static void execute(ToxWindow *self, Tox *m, char *u_cmd)
