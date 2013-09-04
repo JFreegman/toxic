@@ -37,9 +37,8 @@ void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16
     if (num >= num_friends)
         return;
 
-    if (friends[num].chatwin == -1) {
+    if (friends[num].chatwin == -1)
         friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-    }
 }
 
 void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)

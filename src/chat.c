@@ -19,6 +19,9 @@
 
 #define CURS_Y_OFFSET 3
 
+extern char *DATA_FILE;
+extern int store_data(Tox *m, char *path);
+
 typedef struct {
     int friendnum;
     wchar_t line[MAX_STR_SIZE];
@@ -270,6 +273,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
     else if (!strcmp(cmd, "/quit") || !strcmp(cmd, "/exit") || !strcmp(cmd, "/q")) {
         endwin();
+        store_data(m, DATA_FILE);
         tox_kill(m);
         exit(0);
     }
