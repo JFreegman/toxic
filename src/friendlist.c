@@ -76,7 +76,7 @@ int friendlist_onFriendAdded(Tox *m, int num)
             if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
                 strcpy((char *) friends[i].name, "unknown");
 
-            strcpy((char *) friends[i].statusmsg, NOSTATUSMSG);
+            tox_set_statusmessage(m, "\0", strlen("\0"));
 
             if (i == num_friends)
                 ++num_friends;
@@ -202,13 +202,14 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattron(self->window, COLOR_PAIR(colour));
                 wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour));
-                wprintw(self->window, "] %s ", friends[i].name);
+                wprintw(self->window, "] %s", friends[i].name);
 
-                if (strncmp(friends[i].statusmsg, NOSTATUSMSG, strlen(NOSTATUSMSG)))
-                    wprintw(self->window, "(%s)\n", friends[i].statusmsg);
-
+                if (friends[i].statusmsg[0] != '\0')
+                    wprintw(self->window, " (%s)\n", friends[i].statusmsg);
+                else
+                    wprintw(self->window, "\n");
             } else {
-                wprintw(self->window, "[O] %s (Offline)\n", friends[i].name);
+                wprintw(self->window, "[O] %s\n", friends[i].name);
             }
         }
     }
