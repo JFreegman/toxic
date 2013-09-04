@@ -37,9 +37,8 @@ void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16
     if (num >= num_friends)
         return;
 
-    if (friends[num].chatwin == -1) {
+    if (friends[num].chatwin == -1)
         friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-    }
 }
 
 void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
@@ -72,9 +71,9 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].num = num;
             friends[i].active = true;
             friends[i].chatwin = -1;
-            //tox_getname(m, num, friends[i].name);
-            strcpy((char *) friends[i].name, "unknown");
-            strcpy((char *) friends[i].statusmsg, NOSTATUSMSG);
+
+            if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
+                strcpy((char *) friends[i].name, "unknown");
 
             if (i == num_friends)
                 ++num_friends;
@@ -86,39 +85,34 @@ int friendlist_onFriendAdded(Tox *m, int num)
     return -1;
 }
 
-static void select_friend(wint_t key)
+static void select_friend(Tox *m, wint_t key)
 {
     if (num_friends < 1)
         return;
 
     int n = num_selected;
-    int f_inf = num_selected;
 
     if (key == KEY_UP) {
-        while (true) {
-            if (--n < 0) n = num_friends-1;
+        while (--n != num_selected) {
+            if (n < 0) n = num_friends - 1;
             if (friends[n].active) {
                 num_selected = n;
                 return;
-            }
-            if (n == f_inf) {
-                endwin();
-                exit(2);
             }
         }
     } else if (key == KEY_DOWN) {
-        while (true) {
-            n = (n + 1) % num_friends;
+        while ((n = (n + 1) % num_friends) != num_selected) {
             if (friends[n].active) {
                 num_selected = n;
                 return;
             }
-            if (n == f_inf) {
-                endwin();
-                exit(2);
-            }
         }
-    }
+    } else return;    /* Bad key input */
+
+    /* If we reach this something is wrong */
+    endwin();
+    tox_kill(m);
+    exit(2);
 }
 
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
@@ -137,13 +131,13 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
         wprintw(self->window, "\nFailed to store messenger data\n");
 
     num_friends = i;
-    select_friend(KEY_DOWN);
+    select_friend(m, KEY_DOWN);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     if (key == KEY_UP || key == KEY_DOWN) {
-        select_friend(key);
+        select_friend(m, key);
     } else if (key == '\n') {
         /* Jump to chat window if already open */
         if (friends[num_selected].chatwin != -1) {
@@ -164,8 +158,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
         wattron(self->window, COLOR_PAIR(2) | A_BOLD);
-        wprintw(self->window, " * Open chat with up/down keys and enter.\n");
-        wprintw(self->window, " * Delete friends with the backspace key.\n\n");
+        wprintw(self->window, " Open chat with up/down keys and enter.\n");
+        wprintw(self->window, " Delete friends with the backspace key.\n\n");
         wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
     }
 
@@ -173,46 +167,43 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     for (i = 0; i < num_friends; ++i) {
         if (friends[i].active) {
-            bool is_online = tox_friendstatus(m, friends[i].num) == TOX_FRIEND_ONLINE;
-
             if (i == num_selected)
                 wprintw(self->window, " > ");
             else
                 wprintw(self->window, "   ");
 
-            if (is_online) {
+            if (tox_friendstatus(m, friends[i].num) == TOX_FRIEND_ONLINE) {
                 TOX_USERSTATUS status = tox_get_userstatus(m, friends[i].num);
-                int colour;
+                int colour = 7;    /* Invalid or other errors default to black */
 
                 switch(status) {
                 case TOX_USERSTATUS_NONE:
                     colour = 1;
                     break;
-
                 case TOX_USERSTATUS_AWAY:
                     colour = 5;
                     break;
-
                 case TOX_USERSTATUS_BUSY:
-                case TOX_USERSTATUS_INVALID:
-                default:
                     colour = 3;
                     break;
                 }
 
+                wprintw(self->window, "[");
                 wattron(self->window, COLOR_PAIR(colour));
-                wprintw(self->window, "%s ", friends[i].name);
+                wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour));
+                wprintw(self->window, "] %s", friends[i].name);
 
-                if (strncmp(friends[i].statusmsg, NOSTATUSMSG, strlen(NOSTATUSMSG)))
-                    wprintw(self->window, "(%s)\n", friends[i].statusmsg);
-
+                if (friends[i].statusmsg[0])
+                    wprintw(self->window, " (%s)\n", friends[i].statusmsg);
+                else
+                    wprintw(self->window, "\n");
             } else {
-                wprintw(self->window, "%s (Offline)\n", friends[i].name);
+                wprintw(self->window, "[O] %s\n", friends[i].name);
             }
         }
     }
-
+    
     wrefresh(self->window);
 }
 
