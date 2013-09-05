@@ -71,6 +71,7 @@ static void init_term()
 
     if (has_colors()) {
         start_color();
+        init_pair(0, COLOR_WHITE, COLOR_BLACK);
         init_pair(1, COLOR_GREEN, COLOR_BLACK);
         init_pair(2, COLOR_CYAN, COLOR_BLACK);
         init_pair(3, COLOR_RED, COLOR_BLACK);
@@ -79,7 +80,6 @@ static void init_term()
         init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
         init_pair(7, COLOR_BLACK, COLOR_BLACK);
         init_pair(8, COLOR_BLACK, COLOR_WHITE);
-
     }
 
     refresh();
@@ -398,17 +398,17 @@ int main(int argc, char *argv[])
         load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
-        attron(COLOR_PAIR(3) | A_BOLD);
+        attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "You passed '-f' without giving an argument.\n"
                 "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(3) | A_BOLD);
+        attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
     if (config_err) {
-        attron(COLOR_PAIR(3) | A_BOLD);
+        attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "Unable to determine configuration directory.\n"
                 "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(3) | A_BOLD);
+        attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
     while (true) {

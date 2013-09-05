@@ -243,7 +243,7 @@ void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
 void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     wclear(self->window);
-    wattron(self->window, COLOR_PAIR(2) | A_BOLD);
+    wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(self->window, "Commands:\n");
     wattroff(self->window, A_BOLD);
 
@@ -264,7 +264,7 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n\n");
     wattroff(self->window, A_BOLD);
 
-    wattroff(self->window, COLOR_PAIR(2));
+    wattroff(self->window, COLOR_PAIR(CYAN));
 }
 
 void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
@@ -530,9 +530,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             --y;
     }
 
-    wattron(self->window, COLOR_PAIR(1));
+    wattron(self->window, COLOR_PAIR(GREEN));
     mvwprintw(self->window, y, 0, "# ");
-    wattroff(self->window, COLOR_PAIR(1));
+    wattroff(self->window, COLOR_PAIR(GREEN));
     mvwprintw(self->window, y, 2, "%s", prompt_buf);
     wclrtoeol(self->window);
     wrefresh(self->window);

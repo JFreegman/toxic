@@ -180,10 +180,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     if (num_friends == 0) {
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
-        wattron(self->window, COLOR_PAIR(2) | A_BOLD);
+        wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
         wprintw(self->window, " Open chat with up/down keys and enter.\n");
         wprintw(self->window, " Delete friends with the backspace key.\n\n");
-        wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
+        wattroff(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     }
 
     int i;
@@ -197,17 +197,17 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
             if (friends[i].online) {
                 TOX_USERSTATUS status = friends[i].status;
-                int colour = 7;    /* Invalid or other errors default to black */
+                int colour = WHITE;
 
                 switch(status) {
                 case TOX_USERSTATUS_NONE:
-                    colour = 1;
+                    colour = GREEN;
                     break;
                 case TOX_USERSTATUS_AWAY:
-                    colour = 5;
+                    colour = YELLOW;
                     break;
                 case TOX_USERSTATUS_BUSY:
-                    colour = 3;
+                    colour = RED;
                     break;
                 }
 

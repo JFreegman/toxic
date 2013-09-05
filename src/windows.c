@@ -17,7 +17,7 @@ static ToxWindow *active_window;
 static ToxWindow *prompt;
 static Tox *m;
 
-#define unknown_name "Unknown"
+#define UNKNOWN_NAME "Unknown"
 
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
@@ -46,7 +46,7 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     tox_getname(m, friendnumber, (uint8_t *) &nick);
 
     if (!nick[0])
-        snprintf(nick, sizeof(nick), "%s", unknown_name);
+        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
     if (status == 1)
         wprintw(prompt->window, "\n%s has come online\n", nick, friendnumber);
@@ -99,7 +99,7 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
         tox_getname(m, friendnumber, (uint8_t *) &nick);
 
         if (!nick[0])
-            snprintf(nick, sizeof(nick), "%s", unknown_name);
+            snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
         wprintw(prompt->window, "\n%s set note to: %s\n", nick, string);
     }
@@ -118,7 +118,7 @@ void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *user
     tox_getname(m, friendnumber, (uint8_t *) &nick);
 
     if (!nick[0])
-        snprintf(nick, sizeof(nick), "%s", unknown_name);
+        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
     switch(status) {
     case TOX_USERSTATUS_NONE:
@@ -127,16 +127,16 @@ void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *user
 
     case TOX_USERSTATUS_BUSY:
         wprintw(prompt->window, "\n%s set status to ", nick);
-        wattron(prompt->window, COLOR_PAIR(3));
+        wattron(prompt->window, COLOR_PAIR(RED));
         wprintw(prompt->window, "[Busy]\n");
-        wattroff(prompt->window, COLOR_PAIR(3));
+        wattroff(prompt->window, COLOR_PAIR(RED));
         break;
 
     case TOX_USERSTATUS_AWAY:
         wprintw(prompt->window, "\n%s set status to ", nick);
-        wattron(prompt->window, COLOR_PAIR(5));
+        wattron(prompt->window, COLOR_PAIR(YELLOW));
         wprintw(prompt->window, "[Away]\n");
-        wattroff(prompt->window, COLOR_PAIR(5));
+        wattroff(prompt->window, COLOR_PAIR(YELLOW));
         break;
     }
     
@@ -247,15 +247,15 @@ static void draw_bar()
     static int odd = 0;
     int blinkrate = 30;
 
-    attron(COLOR_PAIR(4));
+    attron(COLOR_PAIR(BLUE));
     mvhline(LINES - 2, 0, '_', COLS);
-    attroff(COLOR_PAIR(4));
+    attroff(COLOR_PAIR(BLUE));
 
     move(LINES - 1, 0);
 
-    attron(COLOR_PAIR(4) | A_BOLD);
+    attron(COLOR_PAIR(BLUE) | A_BOLD);
     printw(" TOXIC " TOXICVER " |");
-    attroff(COLOR_PAIR(4) | A_BOLD);
+    attroff(COLOR_PAIR(BLUE) | A_BOLD);
 
     int i;
 
@@ -267,13 +267,13 @@ static void draw_bar()
             odd = (odd + 1) % blinkrate;
 
             if (windows[i].blink && (odd < (blinkrate / 2)))
-                attron(COLOR_PAIR(3));
+                attron(COLOR_PAIR(RED));
 
             clrtoeol();
             printw(" %s", windows[i].title);
 
             if (windows[i].blink && (odd < (blinkrate / 2)))
-                attroff(COLOR_PAIR(3));
+                attroff(COLOR_PAIR(RED));
 
             if (windows + i == active_window) {
                 attroff(A_BOLD);

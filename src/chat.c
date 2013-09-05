@@ -55,9 +55,9 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     msg[len-1] = '\0';
     nick[TOX_MAX_NAME_LENGTH-1] = '\0';
 
-    wattron(ctx->history, COLOR_PAIR(2));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(2));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
     wattron(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
@@ -75,9 +75,9 @@ void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
     if (ctx->friendnum != num)
         return;
 
-    wattron(ctx->history, COLOR_PAIR(2));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(2));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 
     if (status == 1)
         wprintw(ctx->history, "* Chat partner has come online\n");
@@ -98,13 +98,13 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
 
     action[len - 1] = '\0';
 
-    wattron(ctx->history, COLOR_PAIR(2));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(2));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 
-    wattron(ctx->history, COLOR_PAIR(5));
+    wattron(ctx->history, COLOR_PAIR(YELLOW));
     wprintw(ctx->history, "* %s %s\n", nick, action);
-    wattroff(ctx->history, COLOR_PAIR(5));
+    wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
     self->blink = true;
     beep();
@@ -118,9 +118,9 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     if (ctx->friendnum != num)
         return;
 
-    wattron(ctx->history, COLOR_PAIR(2));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(2));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 
     nick[len - 1] = '\0';
     snprintf(self->title, sizeof(self->title), "[%s]", nick);
@@ -136,31 +136,31 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS
     if (ctx->friendnum != num)
         return;
 
-    wattron(ctx->history, COLOR_PAIR(2));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(2));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 
     switch(status) {
 
     case TOX_USERSTATUS_NONE:
         wprintw(ctx->history, "* Chat partner set status to ");
-        wattron(ctx->history, COLOR_PAIR(1));
+        wattron(ctx->history, COLOR_PAIR(GREEN));
         wprintw(ctx->history, "[Online]\n");
-        wattroff(ctx->history, COLOR_PAIR(1));
+        wattroff(ctx->history, COLOR_PAIR(GREEN));
         break;
 
     case TOX_USERSTATUS_BUSY:
         wprintw(ctx->history, "* Chat partner set status to ");
-        wattron(ctx->history, COLOR_PAIR(3));
+        wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, "[Busy]\n");
-        wattroff(ctx->history, COLOR_PAIR(3));
+        wattroff(ctx->history, COLOR_PAIR(RED));
         break;
 
     case TOX_USERSTATUS_AWAY:
         wprintw(ctx->history, "* Chat partner set status to ");
-        wattron(ctx->history, COLOR_PAIR(5));
+        wattron(ctx->history, COLOR_PAIR(YELLOW));
         wprintw(ctx->history, "[Away]\n");
-        wattroff(ctx->history, COLOR_PAIR(5));
+        wattroff(ctx->history, COLOR_PAIR(YELLOW));
         break;
     }
 }
@@ -176,9 +176,9 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     status[len - 1] = '\0';
 
     if (strncmp(status, "Online", strlen("status"))) {    /* Ignore default "Online" message */
-        wattron(ctx->history, COLOR_PAIR(2));
+        wattron(ctx->history, COLOR_PAIR(CYAN));
         wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-        wattroff(ctx->history, COLOR_PAIR(2));
+        wattroff(ctx->history, COLOR_PAIR(CYAN));
         wprintw(ctx->history, "* Chat partner changed personal note to: %s\n", status);
     }
 }
@@ -286,18 +286,18 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
                 tox_getselfname(m, selfname, sizeof(selfname));
 
-                wattron(ctx->history, COLOR_PAIR(2));
+                wattron(ctx->history, COLOR_PAIR(CYAN));
                 wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-                wattroff(ctx->history, COLOR_PAIR(2));
-                wattron(ctx->history, COLOR_PAIR(1));
+                wattroff(ctx->history, COLOR_PAIR(CYAN));
+                wattron(ctx->history, COLOR_PAIR(GREEN));
                 wprintw(ctx->history, "%s: ", selfname);
-                wattroff(ctx->history, COLOR_PAIR(1));
+                wattroff(ctx->history, COLOR_PAIR(GREEN));
                 wprintw(ctx->history, "%s\n", line);
 
                 if (tox_sendmessage(m, ctx->friendnum, (uint8_t *) line, strlen(line) + 1) == 0) {
-                    wattron(ctx->history, COLOR_PAIR(3));
+                    wattron(ctx->history, COLOR_PAIR(RED));
                     wprintw(ctx->history, " * Failed to send message.\n");
-                    wattroff(ctx->history, COLOR_PAIR(3));
+                    wattroff(ctx->history, COLOR_PAIR(RED));
                 }
             }
         }
@@ -345,21 +345,21 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         action++;
 
-        wattron(ctx->history, COLOR_PAIR(2));
+        wattron(ctx->history, COLOR_PAIR(CYAN));
         wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-        wattroff(ctx->history, COLOR_PAIR(2));
+        wattroff(ctx->history, COLOR_PAIR(CYAN));
 
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
         tox_getselfname(m, selfname, sizeof(selfname));
 
-        wattron(ctx->history, COLOR_PAIR(5));
+        wattron(ctx->history, COLOR_PAIR(YELLOW));
         wprintw(ctx->history, "* %s %s\n", selfname, action);
-        wattroff(ctx->history, COLOR_PAIR(5));
+        wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
         if (tox_sendaction(m, ctx->friendnum, (uint8_t *) action, strlen(action) + 1) == 0) {
-            wattron(ctx->history, COLOR_PAIR(3));
+            wattron(ctx->history, COLOR_PAIR(RED));
             wprintw(ctx->history, " * Failed to send action\n");
-            wattroff(ctx->history, COLOR_PAIR(3));
+            wattroff(ctx->history, COLOR_PAIR(RED));
         }
     }
 
@@ -379,25 +379,25 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         if (!strncmp(status, "online", strlen("online"))) {
             status_kind = TOX_USERSTATUS_NONE;
             wprintw(ctx->history, "Status set to ");
-            wattron(ctx->history, COLOR_PAIR(1));
+            wattron(ctx->history, COLOR_PAIR(GREEN));
             wprintw(ctx->history, "[Online]\n");
-            wattroff(ctx->history, COLOR_PAIR(1));
+            wattroff(ctx->history, COLOR_PAIR(GREEN));
         }
 
         else if (!strncmp(status, "away", strlen("away"))) {
             status_kind = TOX_USERSTATUS_AWAY;
             wprintw(ctx->history, "Status set to ");
-            wattron(ctx->history, COLOR_PAIR(5));
+            wattron(ctx->history, COLOR_PAIR(YELLOW));
             wprintw(ctx->history, "[Away]\n");
-            wattroff(ctx->history, COLOR_PAIR(5));
+            wattroff(ctx->history, COLOR_PAIR(YELLOW));
         }
 
         else if (!strncmp(status, "busy", strlen("busy"))) {
             status_kind = TOX_USERSTATUS_BUSY;
             wprintw(ctx->history, "Status set to ");
-            wattron(ctx->history, COLOR_PAIR(3));
+            wattron(ctx->history, COLOR_PAIR(RED));
             wprintw(ctx->history, "[Busy]\n");
-            wattroff(ctx->history, COLOR_PAIR(3));
+            wattroff(ctx->history, COLOR_PAIR(RED));
         }
 
         else {
@@ -480,7 +480,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
 void print_help(ChatContext *self)
 {
-    wattron(self->history, COLOR_PAIR(2) | A_BOLD);
+    wattron(self->history, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(self->history, "Commands:\n");
     wattroff(self->history, A_BOLD);
 
@@ -494,7 +494,7 @@ void print_help(ChatContext *self)
     wprintw(self->history, "      /quit or /exit             : Exit Toxic\n");
     wprintw(self->history, "      /help                      : Print this message again\n\n");
 
-    wattroff(self->history, COLOR_PAIR(2));
+    wattroff(self->history, COLOR_PAIR(CYAN));
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)

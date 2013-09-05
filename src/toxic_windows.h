@@ -24,6 +24,16 @@
 #define TOXICVER "NOVER" //Use the -D flag to set this
 #endif
 
+/* Curses foreground colours (background is black) */
+#define WHITE 0
+#define GREEN 1
+#define CYAN 2
+#define RED 3
+#define BLUE 4
+#define YELLOW 5
+#define MAGENTA 6
+#define BLACK 7
+
 typedef struct ToxWindow_ ToxWindow;
 
 struct ToxWindow_ {
