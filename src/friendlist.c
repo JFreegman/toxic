@@ -93,7 +93,7 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].active = true;
             friends[i].chatwin = -1;
             friends[i].online = false;
-            friends[i].status = TOX_USERSTATUS_INVALID;
+            friends[i].status = TOX_USERSTATUS_NONE;
 
             if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
                 strcpy((char *) friends[i].name, "unknown");
@@ -150,10 +150,9 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
             break;
     }
 
-    if (store_data(m, DATA_FILE))
-        wprintw(self->window, "\nFailed to store messenger data\n");
-
     num_friends = i;
+
+    store_data(m, DATA_FILE);
     select_friend(m, KEY_DOWN);
 }
 
@@ -212,9 +211,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 }
 
                 wprintw(self->window, "[");
-                wattron(self->window, COLOR_PAIR(colour));
+                wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "O");
-                wattroff(self->window, COLOR_PAIR(colour));
+                wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "] %s", friends[i].name);
 
                 if (friends[i].statusmsg[0])

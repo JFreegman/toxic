@@ -32,7 +32,7 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
     }
 
     wprintw(prompt->window, "\nWith the message: %s\n", data);
-    wprintw(prompt->window, "\nUse \"accept %d\" to accept it.\n", n);
+    wprintw(prompt->window, "Type \"accept %d\" to accept it.\n", n);
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
@@ -48,10 +48,18 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     if (!nick[0])
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
-    if (status == 1)
-        wprintw(prompt->window, "\n%s has come online\n", nick, friendnumber);
-    else
-        wprintw(prompt->window, "\n%s went offline\n", nick, friendnumber);
+    if (status == 1) {
+        wattron(prompt->window, A_BOLD);
+        wprintw(prompt->window, "\n%s ", nick);
+        wattroff(prompt->window, A_BOLD);
+        wprintw(prompt->window, "has come online\n");
+    } else {
+        wattron(prompt->window, A_BOLD);
+        wprintw(prompt->window, "\n%s ", nick);
+        wattroff(prompt->window, A_BOLD);
+        wprintw(prompt->window, "has gone offline\n");
+
+    }
 
     int i;
 
@@ -93,17 +101,6 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
 void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    /* Don't show default "Online" status message */
-    if (strncmp(string, "Online", strlen(string))) {
-        uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
-        tox_getname(m, friendnumber, (uint8_t *) &nick);
-
-        if (!nick[0])
-            snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
-
-        wprintw(prompt->window, "\n%s set note to: %s\n", nick, string);
-    }
-
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -114,32 +111,6 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
 
 void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata)
 {
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
-    tox_getname(m, friendnumber, (uint8_t *) &nick);
-
-    if (!nick[0])
-        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
-
-    switch(status) {
-    case TOX_USERSTATUS_NONE:
-        /* Disabled because it spams a second messages when user comes online */
-        break;
-
-    case TOX_USERSTATUS_BUSY:
-        wprintw(prompt->window, "\n%s set status to ", nick);
-        wattron(prompt->window, COLOR_PAIR(RED));
-        wprintw(prompt->window, "[Busy]\n");
-        wattroff(prompt->window, COLOR_PAIR(RED));
-        break;
-
-    case TOX_USERSTATUS_AWAY:
-        wprintw(prompt->window, "\n%s set status to ", nick);
-        wattron(prompt->window, COLOR_PAIR(YELLOW));
-        wprintw(prompt->window, "[Away]\n");
-        wattroff(prompt->window, COLOR_PAIR(YELLOW));
-        break;
-    }
-    
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {

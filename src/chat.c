@@ -136,32 +136,27 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS
     if (ctx->friendnum != num)
         return;
 
-    wattron(ctx->history, COLOR_PAIR(CYAN));
-    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    char *status_msg = NULL;
+    int colour = 0;
 
-    switch(status) {
+    if (status == TOX_USERSTATUS_BUSY) {
+        status_msg = "[Busy]";
+        colour = RED;
+    }
+    else if (status == TOX_USERSTATUS_AWAY) {
+        status_msg = "[Away]";
+        colour = YELLOW;
+    }
 
-    case TOX_USERSTATUS_NONE:
-        wprintw(ctx->history, "* Chat partner set status to ");
-        wattron(ctx->history, COLOR_PAIR(GREEN));
-        wprintw(ctx->history, "[Online]\n");
-        wattroff(ctx->history, COLOR_PAIR(GREEN));
-        break;
+    if (status_msg != NULL) {
+        wattron(ctx->history, COLOR_PAIR(CYAN));
+        wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+        wattroff(ctx->history, COLOR_PAIR(CYAN));
 
-    case TOX_USERSTATUS_BUSY:
-        wprintw(ctx->history, "* Chat partner set status to ");
-        wattron(ctx->history, COLOR_PAIR(RED));
-        wprintw(ctx->history, "[Busy]\n");
-        wattroff(ctx->history, COLOR_PAIR(RED));
-        break;
-
-    case TOX_USERSTATUS_AWAY:
-        wprintw(ctx->history, "* Chat partner set status to ");
-        wattron(ctx->history, COLOR_PAIR(YELLOW));
-        wprintw(ctx->history, "[Away]\n");
-        wattroff(ctx->history, COLOR_PAIR(YELLOW));
-        break;
+        wprintw(ctx->history, "* Chat partner set status to: ");
+        wattron(ctx->history, COLOR_PAIR(colour) | A_BOLD);
+        wprintw(ctx->history, "%s\n", status_msg);
+        wattroff(ctx->history, COLOR_PAIR(colour) | A_BOLD);
     }
 }
 
@@ -378,26 +373,26 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         if (!strncmp(status, "online", strlen("online"))) {
             status_kind = TOX_USERSTATUS_NONE;
-            wprintw(ctx->history, "Status set to ");
-            wattron(ctx->history, COLOR_PAIR(GREEN));
+            wprintw(ctx->history, "Status set to: ");
+            wattron(ctx->history, COLOR_PAIR(GREEN) | A_BOLD);
             wprintw(ctx->history, "[Online]\n");
-            wattroff(ctx->history, COLOR_PAIR(GREEN));
+            wattroff(ctx->history, COLOR_PAIR(GREEN) | A_BOLD);
         }
 
         else if (!strncmp(status, "away", strlen("away"))) {
             status_kind = TOX_USERSTATUS_AWAY;
-            wprintw(ctx->history, "Status set to ");
-            wattron(ctx->history, COLOR_PAIR(YELLOW));
+            wprintw(ctx->history, "Status set to: ");
+            wattron(ctx->history, COLOR_PAIR(YELLOW) | A_BOLD);
             wprintw(ctx->history, "[Away]\n");
-            wattroff(ctx->history, COLOR_PAIR(YELLOW));
+            wattroff(ctx->history, COLOR_PAIR(YELLOW) | A_BOLD);
         }
 
         else if (!strncmp(status, "busy", strlen("busy"))) {
             status_kind = TOX_USERSTATUS_BUSY;
-            wprintw(ctx->history, "Status set to ");
-            wattron(ctx->history, COLOR_PAIR(RED));
+            wprintw(ctx->history, "Status set to: ");
+            wattron(ctx->history, COLOR_PAIR(RED) | A_BOLD);
             wprintw(ctx->history, "[Busy]\n");
-            wattroff(ctx->history, COLOR_PAIR(RED));
+            wattroff(ctx->history, COLOR_PAIR(RED) | A_BOLD);
         }
 
         else {
