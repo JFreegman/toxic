@@ -24,7 +24,9 @@ typedef struct {
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     int num;
     int chatwin;
-    bool active;  
+    bool active;
+    bool online;
+    TOX_USERSTATUS status;
 } friend_t;
 
 static friend_t friends[MAX_FRIENDS_NUM];
@@ -34,25 +36,44 @@ static int num_selected = 0;
 
 void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
 {
-    if (num >= num_friends)
+    if (num < 0 || num >= num_friends)
         return;
 
     if (friends[num].chatwin == -1)
         friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
 }
 
+void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
+{
+    if (num < 0 || num >= num_friends)
+        return;
+
+    if (status == 1)
+        friends[num].online = true;
+    else
+        friends[num].online = false;
+}
+
 void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
-    if (len >= TOX_MAX_NAME_LENGTH || num >= num_friends)
+    if (len >= TOX_MAX_NAME_LENGTH || num < 0 || num >= num_friends)
         return;
 
     memcpy((char *) &friends[num].name, (char *) str, len);
     friends[num].name[len] = 0;
 }
 
+void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
+{
+    if (num < 0 || num >= num_friends)
+        return;
+
+    friends[num].status = status;
+}
+
 void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
-    if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num >= num_friends)
+    if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
 
     memcpy((char *) &friends[num].statusmsg, (char *) str, len);
@@ -71,6 +92,8 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].num = num;
             friends[i].active = true;
             friends[i].chatwin = -1;
+            friends[i].online = false;
+            friends[i].status = TOX_USERSTATUS_NONE;
 
             if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
                 strcpy((char *) friends[i].name, "unknown");
@@ -127,10 +150,9 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
             break;
     }
 
-    if (store_data(m, DATA_FILE))
-        wprintw(self->window, "\nFailed to store messenger data\n");
-
     num_friends = i;
+
+    store_data(m, DATA_FILE);
     select_friend(m, KEY_DOWN);
 }
 
@@ -157,10 +179,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     if (num_friends == 0) {
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
-        wattron(self->window, COLOR_PAIR(2) | A_BOLD);
+        wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
         wprintw(self->window, " Open chat with up/down keys and enter.\n");
         wprintw(self->window, " Delete friends with the backspace key.\n\n");
-        wattroff(self->window, COLOR_PAIR(2) | A_BOLD);
+        wattroff(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     }
 
     int i;
@@ -172,26 +194,26 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             else
                 wprintw(self->window, "   ");
 
-            if (tox_friendstatus(m, friends[i].num) == TOX_FRIEND_ONLINE) {
-                TOX_USERSTATUS status = tox_get_userstatus(m, friends[i].num);
-                int colour = 7;    /* Invalid or other errors default to black */
+            if (friends[i].online) {
+                TOX_USERSTATUS status = friends[i].status;
+                int colour = WHITE;
 
                 switch(status) {
                 case TOX_USERSTATUS_NONE:
-                    colour = 1;
+                    colour = GREEN;
                     break;
                 case TOX_USERSTATUS_AWAY:
-                    colour = 5;
+                    colour = YELLOW;
                     break;
                 case TOX_USERSTATUS_BUSY:
-                    colour = 3;
+                    colour = RED;
                     break;
                 }
 
                 wprintw(self->window, "[");
-                wattron(self->window, COLOR_PAIR(colour));
+                wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "O");
-                wattroff(self->window, COLOR_PAIR(colour));
+                wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "] %s", friends[i].name);
 
                 if (friends[i].statusmsg[0])
@@ -203,7 +225,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             }
         }
     }
-    
+
     wrefresh(self->window);
 }
 
@@ -226,8 +248,10 @@ ToxWindow new_friendlist()
     ret.onDraw = &friendlist_onDraw;
     ret.onInit = &friendlist_onInit;
     ret.onMessage = &friendlist_onMessage;
+    ret.onConnectionChange = &friendlist_onConnectionChange;
     ret.onAction = &friendlist_onMessage;    // Action has identical behaviour to message
     ret.onNickChange = &friendlist_onNickChange;
+    ret.onStatusChange = &friendlist_onStatusChange;
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
 
     strcpy(ret.title, "[friends]");

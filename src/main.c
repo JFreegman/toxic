@@ -71,6 +71,7 @@ static void init_term()
 
     if (has_colors()) {
         start_color();
+        init_pair(0, COLOR_WHITE, COLOR_BLACK);
         init_pair(1, COLOR_GREEN, COLOR_BLACK);
         init_pair(2, COLOR_CYAN, COLOR_BLACK);
         init_pair(3, COLOR_RED, COLOR_BLACK);
@@ -79,7 +80,6 @@ static void init_term()
         init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
         init_pair(7, COLOR_BLACK, COLOR_BLACK);
         init_pair(8, COLOR_BLACK, COLOR_WHITE);
-
     }
 
     refresh();
@@ -91,9 +91,11 @@ static Tox *init_tox()
     Tox *m = tox_new();
 
     /* Callbacks */
+    tox_callback_connectionstatus(m, on_connectionchange, NULL);
     tox_callback_friendrequest(m, on_request, NULL);
     tox_callback_friendmessage(m, on_message, NULL);
     tox_callback_namechange(m, on_nickchange, NULL);
+    tox_callback_userstatus(m, on_statuschange, NULL);
     tox_callback_statusmessage(m, on_statusmessagechange, NULL);
     tox_callback_action(m, on_action, NULL);
 #ifdef __linux__
@@ -396,17 +398,17 @@ int main(int argc, char *argv[])
         load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
-        attron(COLOR_PAIR(3) | A_BOLD);
+        attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "You passed '-f' without giving an argument.\n"
                 "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(3) | A_BOLD);
+        attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
     if (config_err) {
-        attron(COLOR_PAIR(3) | A_BOLD);
+        attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "Unable to determine configuration directory.\n"
                 "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(3) | A_BOLD);
+        attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
     while (true) {
