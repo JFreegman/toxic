@@ -146,7 +146,6 @@ int add_window(Tox *m, ToxWindow w)
         windows[i] = w;
         w.onInit(&w, m);
 
-        //active_window = windows + i;
         return i;
     }
 

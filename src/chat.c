@@ -494,6 +494,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     ctx->history = subwin(self->window, y-3, x, 0, 0);
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 0, x, y-4, 0);
+    wprintw(ctx->history, "\n\n");
     print_help(ctx);
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
@@ -534,7 +535,6 @@ ToxWindow new_chat(Tox *m, int friendnum)
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, friendnum, (uint8_t *) &name);
-
     snprintf(ret.name, sizeof(ret.name), "%s", name);
 
     ChatContext *x = calloc(1, sizeof(ChatContext));
