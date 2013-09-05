@@ -17,6 +17,8 @@ static ToxWindow *active_window;
 static ToxWindow *prompt;
 static Tox *m;
 
+#define UNKNOWN_NAME "Unknown"
+
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
@@ -30,11 +32,40 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
     }
 
     wprintw(prompt->window, "\nWith the message: %s\n", data);
-    wprintw(prompt->window, "\nUse \"accept %d\" to accept it.\n", n);
+    wprintw(prompt->window, "Type \"accept %d\" to accept it.\n", n);
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
             windows[i].onFriendRequest(&windows[i], public_key, data, length);
+    }
+}
+
+void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
+{
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
+    tox_getname(m, friendnumber, (uint8_t *) &nick);
+
+    if (!nick[0])
+        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
+
+    if (status == 1) {
+        wattron(prompt->window, A_BOLD);
+        wprintw(prompt->window, "\n%s ", nick);
+        wattroff(prompt->window, A_BOLD);
+        wprintw(prompt->window, "has come online\n");
+    } else {
+        wattron(prompt->window, A_BOLD);
+        wprintw(prompt->window, "\n%s ", nick);
+        wattroff(prompt->window, A_BOLD);
+        wprintw(prompt->window, "has gone offline\n");
+
+    }
+
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onConnectionChange != NULL)
+            windows[i].onConnectionChange(&windows[i], m, friendnumber, status);
     }
 }
 
@@ -60,7 +91,6 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
 
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(nick change) %d: %s\n", friendnumber, string);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -71,12 +101,21 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
 void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(note change) %d: %s\n", friendnumber, string);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
             windows[i].onStatusMessageChange(&windows[i], friendnumber, string, length);
+    }
+}
+
+void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onStatusChange != NULL)
+            windows[i].onStatusChange(&windows[i], m, friendnumber, status);
     }
 }
 
@@ -179,15 +218,15 @@ static void draw_bar()
     static int odd = 0;
     int blinkrate = 30;
 
-    attron(COLOR_PAIR(4));
+    attron(COLOR_PAIR(BLUE));
     mvhline(LINES - 2, 0, '_', COLS);
-    attroff(COLOR_PAIR(4));
+    attroff(COLOR_PAIR(BLUE));
 
     move(LINES - 1, 0);
 
-    attron(COLOR_PAIR(4) | A_BOLD);
+    attron(COLOR_PAIR(BLUE) | A_BOLD);
     printw(" TOXIC " TOXICVER " |");
-    attroff(COLOR_PAIR(4) | A_BOLD);
+    attroff(COLOR_PAIR(BLUE) | A_BOLD);
 
     int i;
 
@@ -199,13 +238,13 @@ static void draw_bar()
             odd = (odd + 1) % blinkrate;
 
             if (windows[i].blink && (odd < (blinkrate / 2)))
-                attron(COLOR_PAIR(3));
+                attron(COLOR_PAIR(RED));
 
             clrtoeol();
             printw(" %s", windows[i].title);
 
             if (windows[i].blink && (odd < (blinkrate / 2)))
-                attroff(COLOR_PAIR(3));
+                attroff(COLOR_PAIR(RED));
 
             if (windows + i == active_window) {
                 attroff(A_BOLD);

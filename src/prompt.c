@@ -243,7 +243,7 @@ void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
 void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     wclear(self->window);
-    wattron(self->window, COLOR_PAIR(2) | A_BOLD);
+    wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(self->window, "Commands:\n");
     wattroff(self->window, A_BOLD);
 
@@ -264,7 +264,7 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n\n");
     wattroff(self->window, A_BOLD);
 
-    wattroff(self->window, COLOR_PAIR(2));
+    wattroff(self->window, COLOR_PAIR(CYAN));
 }
 
 void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
@@ -314,6 +314,8 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     nick = argv[1];
+    if (nick[0] == '\"')
+        nick[strlen(++nick)-1] = L'\0';
 
     tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
     wprintw(self->window, "Nickname set to: %s\n", nick);
@@ -357,19 +359,31 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 
     if (!strncmp(status, "online", strlen("online"))) {
         status_kind = TOX_USERSTATUS_NONE;
-        status_text = "Online";
-    } else if (!strncmp(status, "away", strlen("away"))) {
-        status_kind = TOX_USERSTATUS_AWAY;
-        status_text = "Away";
-    } else if (!strncmp(status, "busy", strlen("busy"))) {
-        status_kind = TOX_USERSTATUS_BUSY;
-        status_text = "Busy";
-    } else {
-        wprintw(self->window, "Invalid status.\n");
-        return;
+        wprintw(self->window, "Status set to: ");
+        wattron(self->window, COLOR_PAIR(GREEN) | A_BOLD);
+        wprintw(self->window, "[Online]\n");
+        wattroff(self->window, COLOR_PAIR(GREEN) | A_BOLD);
     }
 
-    wprintw(self->window, "Status set to: %s\n", status_text);
+    else if (!strncmp(status, "away", strlen("away"))) {
+        status_kind = TOX_USERSTATUS_AWAY;
+        wprintw(self->window, "Status set to: ");
+        wattron(self->window, COLOR_PAIR(YELLOW) | A_BOLD);
+        wprintw(self->window, "[Away]\n");
+        wattroff(self->window, COLOR_PAIR(YELLOW) | A_BOLD);
+    }
+
+    else if (!strncmp(status, "busy", strlen("busy"))) {
+        status_kind = TOX_USERSTATUS_BUSY;
+        wprintw(self->window, "Status set to: ");
+        wattron(self->window, COLOR_PAIR(RED) | A_BOLD);
+        wprintw(self->window, "[Busy]\n");
+        wattroff(self->window, COLOR_PAIR(RED) | A_BOLD);
+    }
+
+    else
+        wprintw(self->window, "Invalid status.\n");
+
     tox_set_userstatus(m, status_kind);
 
     if (msg != NULL) {
@@ -529,9 +543,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             --y;
     }
 
-    wattron(self->window, COLOR_PAIR(1));
+    wattron(self->window, COLOR_PAIR(GREEN));
     mvwprintw(self->window, y, 0, "# ");
-    wattroff(self->window, COLOR_PAIR(1));
+    wattroff(self->window, COLOR_PAIR(GREEN));
     mvwprintw(self->window, y, 2, "%s", prompt_buf);
     wclrtoeol(self->window);
     wrefresh(self->window);

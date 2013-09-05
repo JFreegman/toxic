@@ -24,6 +24,16 @@
 #define TOXICVER "NOVER" //Use the -D flag to set this
 #endif
 
+/* Curses foreground colours (background is black) */
+#define WHITE 0
+#define GREEN 1
+#define CYAN 2
+#define RED 3
+#define BLUE 4
+#define YELLOW 5
+#define MAGENTA 6
+#define BLACK 7
+
 typedef struct ToxWindow_ ToxWindow;
 
 struct ToxWindow_ {
@@ -31,8 +41,10 @@ struct ToxWindow_ {
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
     void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
+    void(*onConnectionChange)(ToxWindow *, Tox *, int, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onNickChange)(ToxWindow *, int, uint8_t *, uint16_t);
+    void(*onStatusChange)(ToxWindow *, Tox *, int, TOX_USERSTATUS);
     void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     char title[256];
@@ -44,9 +56,11 @@ struct ToxWindow_ {
 };
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
+void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata);
 void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_friendadded(Tox *m, int friendnumber);
 ToxWindow *init_windows();
