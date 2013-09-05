@@ -314,6 +314,7 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     nick = argv[1];
+    nick[strlen(++nick)-1] = L'\0';
 
     tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
     wprintw(self->window, "Nickname set to: %s\n", nick);

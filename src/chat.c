@@ -52,8 +52,8 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
         return;
 
     tox_getname(m, num, (uint8_t *) &nick);
-    msg[len - 1] = '\0';
-    nick[TOX_MAX_NAME_LENGTH - 1] = '\0';
+    msg[len-1] = '\0';
+    nick[TOX_MAX_NAME_LENGTH-1] = '\0';
 
     wattron(ctx->history, COLOR_PAIR(2));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -65,6 +65,24 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
 
     self->blink = true;
     beep();
+}
+
+void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
+{
+    ChatContext *ctx = (ChatContext *) self->x;
+    struct tm *timeinfo = get_time();
+
+    if (ctx->friendnum != num)
+        return;
+
+    wattron(ctx->history, COLOR_PAIR(2));
+    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    wattroff(ctx->history, COLOR_PAIR(2));
+
+    if (status == 1)
+        wprintw(ctx->history, "* Chat partner has come online\n");
+    else
+        wprintw(ctx->history, "* Chat partner went offline\n");
 }
 
 static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uint16_t len)
@@ -110,7 +128,7 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     wprintw(ctx->history, "* Chat partner changed nick to '%s'\n", nick);
 }
 
-static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
+static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
 {
     ChatContext *ctx = (ChatContext *) self->x;
     struct tm *timeinfo = get_time();
@@ -122,9 +140,47 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     wattroff(ctx->history, COLOR_PAIR(2));
 
+    switch(status) {
+
+    case TOX_USERSTATUS_NONE:
+        wprintw(ctx->history, "* Chat partner set status to ");
+        wattron(ctx->history, COLOR_PAIR(1));
+        wprintw(ctx->history, "[Online]\n");
+        wattroff(ctx->history, COLOR_PAIR(1));
+        break;
+
+    case TOX_USERSTATUS_BUSY:
+        wprintw(ctx->history, "* Chat partner set status to ");
+        wattron(ctx->history, COLOR_PAIR(3));
+        wprintw(ctx->history, "[Busy]\n");
+        wattroff(ctx->history, COLOR_PAIR(3));
+        break;
+
+    case TOX_USERSTATUS_AWAY:
+        wprintw(ctx->history, "* Chat partner set status to ");
+        wattron(ctx->history, COLOR_PAIR(5));
+        wprintw(ctx->history, "[Away]\n");
+        wattroff(ctx->history, COLOR_PAIR(5));
+        break;
+    }
+}
+
+static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
+{
+    ChatContext *ctx = (ChatContext *) self->x;
+    struct tm *timeinfo = get_time();
+
+    if (ctx->friendnum != num)
+        return;
+
     status[len - 1] = '\0';
 
-    wprintw(ctx->history, "* Chat partner changed personal note to: %s\n", status);
+    if (strncmp(status, "Online", strlen("status"))) {    /* Ignore default "Online" message */
+        wattron(ctx->history, COLOR_PAIR(2));
+        wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+        wattroff(ctx->history, COLOR_PAIR(2));
+        wprintw(ctx->history, "* Chat partner changed personal note to: %s\n", status);
+    }
 }
 
 /* check that the string has one non-space character */
@@ -322,17 +378,26 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
         if (!strncmp(status, "online", strlen("online"))) {
             status_kind = TOX_USERSTATUS_NONE;
-            status_text = "Online";
+            wprintw(ctx->history, "Status set to ");
+            wattron(ctx->history, COLOR_PAIR(1));
+            wprintw(ctx->history, "[Online]\n");
+            wattroff(ctx->history, COLOR_PAIR(1));
         }
 
         else if (!strncmp(status, "away", strlen("away"))) {
             status_kind = TOX_USERSTATUS_AWAY;
-            status_text = "Away";
+            wprintw(ctx->history, "Status set to ");
+            wattron(ctx->history, COLOR_PAIR(5));
+            wprintw(ctx->history, "[Away]\n");
+            wattroff(ctx->history, COLOR_PAIR(5));
         }
 
         else if (!strncmp(status, "busy", strlen("busy"))) {
             status_kind = TOX_USERSTATUS_BUSY;
-            status_text = "Busy";
+            wprintw(ctx->history, "Status set to ");
+            wattron(ctx->history, COLOR_PAIR(3));
+            wprintw(ctx->history, "[Busy]\n");
+            wattroff(ctx->history, COLOR_PAIR(3));
         }
 
         else {
@@ -340,7 +405,6 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
             return;
         }
 
-        wprintw(ctx->history, "Status set to: %s\n", status_text);
         tox_set_userstatus(m, status_kind);
 
         msg = strchr(status, ' ');
@@ -442,7 +506,9 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onDraw = &chat_onDraw;
     ret.onInit = &chat_onInit;
     ret.onMessage = &chat_onMessage;
+    ret.onConnectionChange = &chat_onConnectionChange;
     ret.onNickChange = &chat_onNickChange;
+    ret.onStatusChange = &chat_onStatusChange;
     ret.onStatusMessageChange = &chat_onStatusMessageChange;
     ret.onAction = &chat_onAction;
 

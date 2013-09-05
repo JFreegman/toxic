@@ -91,9 +91,11 @@ static Tox *init_tox()
     Tox *m = tox_new();
 
     /* Callbacks */
+    tox_callback_connectionstatus(m, on_connectionchange, NULL);
     tox_callback_friendrequest(m, on_request, NULL);
     tox_callback_friendmessage(m, on_message, NULL);
     tox_callback_namechange(m, on_nickchange, NULL);
+    tox_callback_userstatus(m, on_statuschange, NULL);
     tox_callback_statusmessage(m, on_statusmessagechange, NULL);
     tox_callback_action(m, on_action, NULL);
 #ifdef __linux__

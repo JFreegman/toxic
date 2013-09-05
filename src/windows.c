@@ -17,6 +17,8 @@ static ToxWindow *active_window;
 static ToxWindow *prompt;
 static Tox *m;
 
+#define unknown_name "Unknown"
+
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
@@ -35,6 +37,27 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
             windows[i].onFriendRequest(&windows[i], public_key, data, length);
+    }
+}
+
+void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
+{
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
+    tox_getname(m, friendnumber, (uint8_t *) &nick);
+
+    if (!nick[0])
+        snprintf(nick, sizeof(nick), "%s", unknown_name);
+
+    if (status == 1)
+        wprintw(prompt->window, "\n%s has come online\n", nick, friendnumber);
+    else
+        wprintw(prompt->window, "\n%s went offline\n", nick, friendnumber);
+
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onConnectionChange != NULL)
+            windows[i].onConnectionChange(&windows[i], m, friendnumber, status);
     }
 }
 
@@ -60,7 +83,6 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
 
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(nick change) %d: %s\n", friendnumber, string);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -71,12 +93,58 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
 void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    wprintw(prompt->window, "\n(note change) %d: %s\n", friendnumber, string);
+    /* Don't show default "Online" status message */
+    if (strncmp(string, "Online", strlen(string))) {
+        uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
+        tox_getname(m, friendnumber, (uint8_t *) &nick);
+
+        if (!nick[0])
+            snprintf(nick, sizeof(nick), "%s", unknown_name);
+
+        wprintw(prompt->window, "\n%s set note to: %s\n", nick, string);
+    }
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
             windows[i].onStatusMessageChange(&windows[i], friendnumber, string, length);
+    }
+}
+
+void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata)
+{
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
+    tox_getname(m, friendnumber, (uint8_t *) &nick);
+
+    if (!nick[0])
+        snprintf(nick, sizeof(nick), "%s", unknown_name);
+
+    switch(status) {
+    case TOX_USERSTATUS_NONE:
+        /* Disabled because it spams a second messages when user comes online */
+        break;
+
+    case TOX_USERSTATUS_BUSY:
+        wprintw(prompt->window, "\n%s set status to ", nick);
+        wattron(prompt->window, COLOR_PAIR(3));
+        wprintw(prompt->window, "[Busy]\n");
+        wattroff(prompt->window, COLOR_PAIR(3));
+        break;
+
+    case TOX_USERSTATUS_AWAY:
+        wprintw(prompt->window, "\n%s set status to ", nick);
+        wattron(prompt->window, COLOR_PAIR(5));
+        wprintw(prompt->window, "[Away]\n");
+        wattroff(prompt->window, COLOR_PAIR(5));
+        break;
+    }
+    
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onStatusChange != NULL)
+            windows[i].onStatusChange(&windows[i], m, friendnumber, status);
     }
 }
 
