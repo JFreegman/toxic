@@ -166,6 +166,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
             set_active_window(friends[num_selected].chatwin);
         } else {
             friends[num_selected].chatwin = add_window(m, new_chat(m, friends[num_selected].num));
+            set_active_window(friends[num_selected].chatwin);
         }
     } else if (key == 0x107 || key == 0x8 || key == 0x7f)
         delete_friend(m, self, num_selected, key);
@@ -214,14 +215,14 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "] %s", friends[i].name);
+                wprintw(self->window, "]%s", friends[i].name);
 
                 if (friends[i].statusmsg[0])
                     wprintw(self->window, " (%s)\n", friends[i].statusmsg);
                 else
                     wprintw(self->window, "\n");
             } else {
-                wprintw(self->window, "[O] %s\n", friends[i].name);
+                wprintw(self->window, "[O]%s\n", friends[i].name);
             }
         }
     }
@@ -254,6 +255,6 @@ ToxWindow new_friendlist()
     ret.onStatusChange = &friendlist_onStatusChange;
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
 
-    strcpy(ret.title, "[friends]");
+    strcpy(ret.name, "friends");
     return ret;
 }

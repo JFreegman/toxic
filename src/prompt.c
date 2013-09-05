@@ -565,6 +565,6 @@ ToxWindow new_prompt()
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;
     ret.onInit = &prompt_onInit;
-    strcpy(ret.title, "[prompt]");
+    strcpy(ret.name, "prompt");
     return ret;
 }

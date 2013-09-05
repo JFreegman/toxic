@@ -58,7 +58,6 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
         wprintw(prompt->window, "\n%s ", nick);
         wattroff(prompt->window, A_BOLD);
         wprintw(prompt->window, "has gone offline\n");
-
     }
 
     int i;
@@ -147,7 +146,7 @@ int add_window(Tox *m, ToxWindow w)
         windows[i] = w;
         w.onInit(&w, m);
 
-        active_window = windows + i;
+        //active_window = windows + i;
         return i;
     }
 
@@ -241,7 +240,7 @@ static void draw_bar()
                 attron(COLOR_PAIR(RED));
 
             clrtoeol();
-            printw(" %s", windows[i].title);
+            printw(" [%s]", windows[i].name);
 
             if (windows[i].blink && (odd < (blinkrate / 2)))
                 attroff(COLOR_PAIR(RED));
