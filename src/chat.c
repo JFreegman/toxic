@@ -30,14 +30,6 @@ typedef struct {
     WINDOW *linewin;
 } ChatContext;
 
-typedef struct {
-    WINDOW *topline;    
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    TOX_USERSTATUS status;
-    bool is_online;
-    int max_len;    /* set equal to the window's max x coordinate */
-} StatusBar;
-
 void print_help(ChatContext *self);
 void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd);
 

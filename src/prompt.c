@@ -57,6 +57,24 @@ static struct {
     { "note",      cmd_note      },
 };
 
+void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
+{
+    int n = add_req(key);
+    wprintw(self->window, "\nFriend request from:\n");
+
+    int i;
+
+    for (i = 0; i < KEY_SIZE_BYTES; ++i) {
+        wprintw(self->window, "%02x", key[i] & 0xff);
+    }
+
+    wprintw(self->window, "\n\nWith the message: %s\n\n", data);
+    wprintw(self->window, "Type \"accept %d\" to accept it.\n", n);
+
+    self->blink = true;
+    beep();
+}
+
 // XXX:
 int add_req(uint8_t *public_key)
 {
@@ -565,6 +583,7 @@ ToxWindow new_prompt()
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;
     ret.onInit = &prompt_onInit;
+    ret.onFriendRequest = &prompt_onFriendRequest;
     strcpy(ret.name, "prompt");
     return ret;
 }

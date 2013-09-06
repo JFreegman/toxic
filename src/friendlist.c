@@ -76,8 +76,9 @@ void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, ui
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
 
-    memcpy((char *) &friends[num].statusmsg, (char *) str, len);
-    friends[num].statusmsg[len] = 0;
+    /* Ignore default "Online" status message */
+    if (strncmp(str, "Online", strlen(str)))
+        memcpy((char *) &friends[num].statusmsg, (char *) str, len);
 }
 
 int friendlist_onFriendAdded(Tox *m, int num)
