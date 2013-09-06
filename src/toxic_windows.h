@@ -47,9 +47,13 @@ struct ToxWindow_ {
     void(*onStatusChange)(ToxWindow *, Tox *, int, TOX_USERSTATUS);
     void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
-    char title[256];
 
+    char name[TOX_MAX_NAME_LENGTH];
+
+    int friendnum;
     void *x;
+    void *s;
+
     bool blink;
 
     WINDOW *window;
