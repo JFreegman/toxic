@@ -44,6 +44,7 @@
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
+ToxWindow *prompt = NULL;
 
 void on_window_resize(int sig)
 {
@@ -392,7 +393,7 @@ int main(int argc, char *argv[])
 
     init_term();
     Tox *m = init_tox();
-    ToxWindow *prompt = init_windows(m);
+    prompt = init_windows(m);
 
     if (f_loadfromfile)
         load_data(m, DATA_FILE);
@@ -410,6 +411,8 @@ int main(int argc, char *argv[])
                 "defaulting to 'data' for a keyfile...\n");
         attroff(COLOR_PAIR(RED) | A_BOLD);
     }
+
+    prompt_init_statusbar(prompt, m);
 
     while (true) {
         /* Update tox */
