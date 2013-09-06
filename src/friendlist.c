@@ -124,7 +124,8 @@ static void select_friend(Tox *m, wint_t key)
             }
         }
     } else if (key == KEY_DOWN) {
-        while ((n = (n + 1) % num_friends) != num_selected) {
+        while (++n != num_selected) {
+            n = n % num_friends;
             if (friends[n].active) {
                 num_selected = n;
                 return;

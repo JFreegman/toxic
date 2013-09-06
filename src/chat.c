@@ -81,7 +81,6 @@ void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
 
     StatusBar *statusbar = (StatusBar *) self->s;
     statusbar->is_online = status == 1 ? true : false;
-
 }
 
 static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uint16_t len)
@@ -425,9 +424,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     wmove(statusbar->topline, 0, 0);
 
     /* Draw name, status and note in statusbar */
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    snprintf(nick, sizeof(nick), "%s", self->name);
-
     if (statusbar->is_online) {
         char *status_text = "Unknown";
         int colour = WHITE;
@@ -449,17 +445,17 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             break;
         }
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, "%s", nick);
+        wprintw(statusbar->topline, " %s ", self->name);
         wattroff(statusbar->topline, A_BOLD);
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, " [%s]", status_text);
+        wprintw(statusbar->topline, "[%s]", status_text);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
     } else {
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, "%s", nick);
+        wprintw(statusbar->topline, " %s ", self->name);
         wattroff(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " [Offline]");
+        wprintw(statusbar->topline, "[Offline]");
     }
 
     if (statusbar->statusmsg[0])
