@@ -19,6 +19,8 @@
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
+extern ToxWindow *prompt;
+
 typedef struct {
     uint8_t name[TOX_MAX_NAME_LENGTH];
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
@@ -40,7 +42,7 @@ void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16
         return;
 
     if (friends[num].chatwin == -1)
-        friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
+        friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
 }
 
 void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
@@ -76,8 +78,9 @@ void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, ui
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
 
-    memcpy((char *) &friends[num].statusmsg, (char *) str, len);
-    friends[num].statusmsg[len] = 0;
+    /* Ignore default "Online" status message */
+    if (strncmp(str, "Online", strlen(str)))
+        memcpy((char *) &friends[num].statusmsg, (char *) str, len);
 }
 
 int friendlist_onFriendAdded(Tox *m, int num)
@@ -166,7 +169,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (friends[num_selected].chatwin != -1) {
             set_active_window(friends[num_selected].chatwin);
         } else {
-            friends[num_selected].chatwin = add_window(m, new_chat(m, friends[num_selected].num));
+            friends[num_selected].chatwin = add_window(m, new_chat(m, prompt, friends[num_selected].num));
             set_active_window(friends[num_selected].chatwin);
         }
     } else if (key == 0x107 || key == 0x8 || key == 0x7f)

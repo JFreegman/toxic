@@ -10,6 +10,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "toxic_windows.h"
 #include "prompt.h"
 
 extern char *DATA_FILE;
@@ -30,12 +31,11 @@ void cmd_help(ToxWindow *, Tox *m, int, char **);
 void cmd_msg(ToxWindow *, Tox *m, int, char **);
 void cmd_myid(ToxWindow *, Tox *m, int, char **);
 void cmd_nick(ToxWindow *, Tox *m, int, char **);
-void cmd_mynick(ToxWindow *, Tox *m, int, char **);
 void cmd_quit(ToxWindow *, Tox *m, int, char **);
 void cmd_status(ToxWindow *, Tox *m, int, char **);
 void cmd_note(ToxWindow *, Tox *m, int, char **);
 
-#define NUM_COMMANDS 14
+#define NUM_COMMANDS 13
 
 static struct {
     char *name;
@@ -50,12 +50,57 @@ static struct {
     { "msg",       cmd_msg       },
     { "myid",      cmd_myid      },
     { "nick",      cmd_nick      },
-    { "mynick",    cmd_mynick    },
     { "q",         cmd_quit      },
     { "quit",      cmd_quit      },
     { "status",    cmd_status    },
     { "note",      cmd_note      },
 };
+
+/* Updates own nick in prompt statusbar */
+void prompt_update_nick(ToxWindow *prompt, uint8_t *nick)
+{
+    StatusBar *statusbar = (StatusBar *) prompt->s;
+    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+}
+
+/* Updates own statusmessage in prompt statusbar */
+void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg)
+{
+    StatusBar *statusbar = (StatusBar *) prompt->s;
+    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+}
+
+/* Updates own status in prompt statusbar */
+void prompt_update_status(ToxWindow *prompt, TOX_USERSTATUS status)
+{
+    StatusBar *statusbar = (StatusBar *) prompt->s;
+    statusbar->status = status;
+}
+
+/* Updates own connection status */
+void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
+{
+    StatusBar *statusbar = (StatusBar *) prompt->s;
+    statusbar->is_online = is_connected;
+}
+
+void prompt_onFriendRequest(ToxWindow *prompt, uint8_t *key, uint8_t *data, uint16_t length)
+{
+    int n = add_req(key);
+    wprintw(prompt->window, "\nFriend request from:\n");
+
+    int i;
+
+    for (i = 0; i < KEY_SIZE_BYTES; ++i) {
+        wprintw(prompt->window, "%02x", key[i] & 0xff);
+    }
+
+    wprintw(prompt->window, "\n\nWith the message: %s\n\n", data);
+    wprintw(prompt->window, "Type \"accept %d\" to accept it.\n", n);
+
+    prompt->blink = true;
+    beep();
+}
 
 // XXX:
 int add_req(uint8_t *public_key)
@@ -109,7 +154,7 @@ void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    if (argc != 1 && argc != 2) {
+    if (argc < 1 || argc > 2) {
         wprintw(self->window, "Invalid syntax.\n");
         return;
     }
@@ -117,22 +162,33 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
     char xx[3];
     uint32_t x;
-    char *id;
-    char *msg;
+    uint8_t *msg;
     int i, num;
 
-    id = argv[1];
+    char *id = argv[1];
+
+    if (id == NULL) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
 
     if (argc == 2) {
-        if (argv[2][0] != '\"') {
+        msg = argv[2];
+
+        if (msg == NULL) {
+            wprintw(self->window, "Invalid syntax.\n");
+            return;
+        }
+
+        if (msg[0] != '\"') {
             wprintw(self->window, "Messages must be enclosed in quotes.\n");
             return;
         }
 
-        msg = argv[2];
         msg[strlen(++msg)-1] = L'\0';
+
     } else
-        msg = "";
+        msg = "Let's tox.";
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
         wprintw(self->window, "Invalid ID length.\n");
@@ -156,7 +212,7 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         id[i] = toupper(id[i]);
     }
 
-    num = tox_addfriend(m, id_bin, (uint8_t *) msg, strlen(msg) + 1);
+    num = tox_addfriend(m, id_bin, msg, strlen(msg) + 1);
 
     switch (num) {
         case TOX_FAERR_TOOLONG:
@@ -197,6 +253,7 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 void cmd_clear(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     wclear(self->window);
+    wprintw(self->window, "\n\n");
 }
 
 void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
@@ -244,7 +301,7 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     wclear(self->window);
     wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(self->window, "Commands:\n");
+    wprintw(self->window, "\n\nCommands:\n");
     wattroff(self->window, A_BOLD);
 
     wprintw(self->window, "      connect <ip> <port> <key> : Connect to DHT server\n");
@@ -252,7 +309,6 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, "      status <type> <message>   : Set your status with optional note\n");
     wprintw(self->window, "      note  <message>           : Set a personal note\n");
     wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
-    wprintw(self->window, "      mynick                    : Print your current nickname\n");
     wprintw(self->window, "      accept <number>           : Accept friend request\n");
     wprintw(self->window, "      myid                      : Print your ID\n");
     wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
@@ -279,6 +335,12 @@ void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 
     id = argv[1];
     msg = argv[2];
+
+    if (id == NULL || msg == NULL) {
+      wprintw(self->window, "Invalid syntax.\n");
+      return;
+    }
+
     msg[strlen(++msg)-1] = L'\0';
 
     if (tox_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
@@ -305,7 +367,7 @@ void cmd_myid(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *nick;
+    uint8_t *nick;
 
     /* check arguments */
     if (argc != 1) {
@@ -314,82 +376,74 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     nick = argv[1];
+
+    if (nick == NULL) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
+
     if (nick[0] == '\"')
         nick[strlen(++nick)-1] = L'\0';
 
-    tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
-    wprintw(self->window, "Nickname set to: %s\n", nick);
+    tox_setname(m, nick, strlen(nick) + 1);
+    prompt_update_nick(self, nick);
 
-    if (store_data(m, DATA_FILE)) {
-        wprintw(self->window, "\nCould not store Messenger data\n");
-    }
-}
-
-void cmd_mynick(ToxWindow *self, Tox *m, int argc, char **argv)
-{
-    uint8_t *nick = malloc(TOX_MAX_NAME_LENGTH);
-    tox_getselfname(m, nick, TOX_MAX_NAME_LENGTH);
-    wprintw(self->window, "Current nickname: %s\n", nick);
-    free(nick);
+    store_data(m, DATA_FILE);
 }
 
 void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    if (argc != 1 && argc != 2) {
+    char *status, *status_text;
+    uint8_t *msg = NULL;
+
+    if (argc < 1 || argc > 2) {
         wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
 
-    char *status, *status_text;
-    char *msg = NULL;
-
-    /* check arguments */
     if (argc == 2) {
+
         msg = argv[2];
+
+        if (msg == NULL) {
+            wprintw(self->window, "Invalid syntax.\n");
+            return;
+        }
+
         if (msg[0] != '\"') {
             wprintw(self->window, "Messages must be enclosed in quotes.\n");
             return;
         }
     }
 
-
     status = argv[1];
+
+    if (status == NULL) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
 
     TOX_USERSTATUS status_kind;
 
-    if (!strncmp(status, "online", strlen("online"))) {
+    if (!strncmp(status, "online", strlen("online")))
         status_kind = TOX_USERSTATUS_NONE;
-        wprintw(self->window, "Status set to: ");
-        wattron(self->window, COLOR_PAIR(GREEN) | A_BOLD);
-        wprintw(self->window, "[Online]\n");
-        wattroff(self->window, COLOR_PAIR(GREEN) | A_BOLD);
-    }
 
-    else if (!strncmp(status, "away", strlen("away"))) {
+    else if (!strncmp(status, "away", strlen("away")))
         status_kind = TOX_USERSTATUS_AWAY;
-        wprintw(self->window, "Status set to: ");
-        wattron(self->window, COLOR_PAIR(YELLOW) | A_BOLD);
-        wprintw(self->window, "[Away]\n");
-        wattroff(self->window, COLOR_PAIR(YELLOW) | A_BOLD);
-    }
 
-    else if (!strncmp(status, "busy", strlen("busy"))) {
+    else if (!strncmp(status, "busy", strlen("busy")))
         status_kind = TOX_USERSTATUS_BUSY;
-        wprintw(self->window, "Status set to: ");
-        wattron(self->window, COLOR_PAIR(RED) | A_BOLD);
-        wprintw(self->window, "[Busy]\n");
-        wattroff(self->window, COLOR_PAIR(RED) | A_BOLD);
-    }
 
     else
         wprintw(self->window, "Invalid status.\n");
 
     tox_set_userstatus(m, status_kind);
+    prompt_update_status(self, status_kind);
 
     if (msg != NULL) {
         msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
-        tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
-        wprintw(self->window, "Personal note set to: %s\n", msg);
+        tox_set_statusmessage(m, msg, strlen(msg) + 1);
+        prompt_update_statusmessage(self, msg);
     }
 }
 
@@ -400,19 +454,22 @@ void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    char *msg;
+    if (argv[1] == NULL) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
 
-    /* check arguments */
-    if (argv[1] && argv[1][0] != '\"') {
+    if (argv[1][0] != '\"') {
         wprintw(self->window, "Messages must be enclosed in quotes.\n");
         return;
     }
 
+    uint8_t *msg;
     msg = argv[1];
     msg[strlen(++msg)-1] = L'\0';
 
-    tox_set_statusmessage(m, (uint8_t *) msg, strlen(msg) + 1);
-    wprintw(self->window, "Personal note set to: %s\n", msg);
+    tox_set_statusmessage(m, msg, strlen(msg) + 1);
+    prompt_update_statusmessage(self, msg);
 }
 
 static void execute(ToxWindow *self, Tox *m, char *u_cmd)
@@ -524,9 +581,8 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* BACKSPACE key: Remove one character from line */
     else if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (prompt_buf_pos != 0) {
+        if (prompt_buf_pos != 0)
             prompt_buf[--prompt_buf_pos] = 0;
-        }
     }
 }
 
@@ -534,20 +590,64 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
     int x, y;
-    getyx(self->window, y, x);
-    (void) x;
     int i;
+    getyx(self->window, y, x);
 
     for (i = 0; i < (strlen(prompt_buf)); ++i) {
         if ((prompt_buf[i] == '\n') && (y != 0))
             --y;
     }
 
+    StatusBar *statusbar = (StatusBar *) self->s;
+
+    werase(statusbar->topline);
+
+    if (statusbar->is_online) {
+        int colour = WHITE;
+        char *status_text = "Unknown";
+
+        switch(statusbar->status) {
+        case TOX_USERSTATUS_NONE:
+            status_text = "Online";
+            colour = GREEN;
+            break;
+        case TOX_USERSTATUS_AWAY:
+            status_text = "Away";
+            colour = YELLOW;
+            break;
+        case TOX_USERSTATUS_BUSY:
+            status_text = "Busy";
+            colour = RED;
+            break;
+        }
+
+        wattron(statusbar->topline, A_BOLD);
+        wprintw(statusbar->topline, "%s ", statusbar->nick);
+        wattron(statusbar->topline, A_BOLD);
+        wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+        wprintw(statusbar->topline, "[%s]", status_text);
+        wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+    } else {
+        wattron(statusbar->topline, A_BOLD);
+        wprintw(statusbar->topline, "%s ", statusbar->nick);
+        wattroff(statusbar->topline, A_BOLD);
+        wprintw(statusbar->topline, "[Offline]");
+    }
+
+    if (statusbar->statusmsg[0]) {
+        wattron(statusbar->topline, A_BOLD);
+        wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
+        wattroff(statusbar->topline, A_BOLD);
+    }
+
+    wprintw(statusbar->topline, "\n");
+
     wattron(self->window, COLOR_PAIR(GREEN));
     mvwprintw(self->window, y, 0, "# ");
     wattroff(self->window, COLOR_PAIR(GREEN));
     mvwprintw(self->window, y, 2, "%s", prompt_buf);
     wclrtoeol(self->window);
+    
     wrefresh(self->window);
 }
 
@@ -558,6 +658,30 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     wclrtoeol(self->window);
 }
 
+void prompt_init_statusbar(ToxWindow *self, Tox *m)
+{
+    int x, y;
+    getmaxyx(self->window, y, x);
+
+    /* Init statusbar info */
+    StatusBar *statusbar = (StatusBar *) self->s;
+    statusbar->status = TOX_USERSTATUS_NONE;
+    statusbar->is_online = false;
+    statusbar->max_len = x;
+
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_getselfname(m, (uint8_t *) &nick, TOX_MAX_NAME_LENGTH);
+    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+
+    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    tox_copy_self_statusmessage(m, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    if (strncmp(statusmsg, "Online", strlen(statusmsg)))
+        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+
+    /* Init statusbar subwindow */
+    statusbar->topline = subwin(self->window, 2, x, 0, 0);
+}
+
 ToxWindow new_prompt()
 {
     ToxWindow ret;
@@ -565,6 +689,11 @@ ToxWindow new_prompt()
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;
     ret.onInit = &prompt_onInit;
+    ret.onFriendRequest = &prompt_onFriendRequest;
     strcpy(ret.name, "prompt");
+
+    StatusBar *s = calloc(1, sizeof(StatusBar));
+    ret.s = s;
+
     return ret;
 }

@@ -22,18 +22,8 @@ static Tox *m;
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
-    int n = add_req(public_key);
-    wprintw(prompt->window, "\nFriend request from:\n");
-
     int i;
-
-    for (i = 0; i < KEY_SIZE_BYTES; ++i) {
-        wprintw(prompt->window, "%02x", public_key[i] & 0xff);
-    }
-
-    wprintw(prompt->window, "\nWith the message: %s\n", data);
-    wprintw(prompt->window, "Type \"accept %d\" to accept it.\n", n);
-
+    
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
             windows[i].onFriendRequest(&windows[i], public_key, data, length);
@@ -49,15 +39,19 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
     if (status == 1) {
+        wattron(prompt->window, COLOR_PAIR(GREEN));
         wattron(prompt->window, A_BOLD);
         wprintw(prompt->window, "\n%s ", nick);
         wattroff(prompt->window, A_BOLD);
         wprintw(prompt->window, "has come online\n");
+        wattroff(prompt->window, COLOR_PAIR(GREEN));
     } else {
+        wattron(prompt->window, COLOR_PAIR(RED));
         wattron(prompt->window, A_BOLD);
         wprintw(prompt->window, "\n%s ", nick);
         wattroff(prompt->window, A_BOLD);
         wprintw(prompt->window, "has gone offline\n");
+        wattroff(prompt->window, COLOR_PAIR(RED));
     }
 
     int i;

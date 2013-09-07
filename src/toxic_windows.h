@@ -49,15 +49,25 @@ struct ToxWindow_ {
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
 
     char name[TOX_MAX_NAME_LENGTH];
-
     int friendnum;
+
     void *x;
     void *s;
+    void *prompt;
 
     bool blink;
 
     WINDOW *window;
 };
+
+typedef struct {
+    WINDOW *topline;    
+    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    uint8_t nick[TOX_MAX_NAME_LENGTH];
+    TOX_USERSTATUS status;
+    bool is_online;
+    int max_len;    /* set to the window's max x coordinate */
+} StatusBar;
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
