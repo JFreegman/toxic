@@ -154,7 +154,7 @@ void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    if (argc != 1 && argc != 2) {
+    if (argc < 1 || argc > 2) {
         wprintw(self->window, "Invalid syntax.\n");
         return;
     }
@@ -162,22 +162,33 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
     char xx[3];
     uint32_t x;
-    char *id;
-    char *msg;
+    uint8_t *msg;
     int i, num;
 
-    id = argv[1];
+    char *id = argv[1];
+
+    if (id == NULL) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
 
     if (argc == 2) {
-        if (argv[2][0] != '\"') {
+        msg = argv[2];
+
+        if (msg == NULL) {
+            wprintw(self->window, "Invalid syntax.\n");
+            return;
+        }
+
+        if (msg[0] != '\"') {
             wprintw(self->window, "Messages must be enclosed in quotes.\n");
             return;
         }
 
-        msg = argv[2];
         msg[strlen(++msg)-1] = L'\0';
+
     } else
-        msg = "";
+        msg = "Let's tox.";
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
         wprintw(self->window, "Invalid ID length.\n");
@@ -201,7 +212,7 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         id[i] = toupper(id[i]);
     }
 
-    num = tox_addfriend(m, id_bin, (uint8_t *) msg, strlen(msg) + 1);
+    num = tox_addfriend(m, id_bin, msg, strlen(msg) + 1);
 
     switch (num) {
         case TOX_FAERR_TOOLONG:
