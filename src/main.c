@@ -238,9 +238,11 @@ static void do_tox(Tox *m, ToxWindow *prompt)
         }
     } else if (!dht_on && tox_isconnected(m)) {
         dht_on = true;
+        prompt_update_connectionstatus(prompt, dht_on);
         wprintw(prompt->window, "\nDHT connected.\n");
     } else if (dht_on && !tox_isconnected(m)) {
         dht_on = false;
+        prompt_update_connectionstatus(prompt, dht_on);
         wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
     }
 

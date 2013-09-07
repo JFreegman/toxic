@@ -77,6 +77,13 @@ void prompt_update_status(ToxWindow *prompt, TOX_USERSTATUS status)
     statusbar->status = status;
 }
 
+/* Updates own connection status */
+void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
+{
+    StatusBar *statusbar = (StatusBar *) prompt->s;
+    statusbar->is_online = is_connected;
+}
+
 void prompt_onFriendRequest(ToxWindow *prompt, uint8_t *key, uint8_t *data, uint16_t length)
 {
     int n = add_req(key);
@@ -584,7 +591,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     werase(statusbar->topline);
 
-    if (tox_isconnected(m)) {
+    if (statusbar->is_online) {
         int colour = WHITE;
         char *status_text = "Unknown";
 
