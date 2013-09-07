@@ -655,6 +655,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     /* Init statusbar info */
     StatusBar *statusbar = (StatusBar *) self->s;
     statusbar->status = TOX_USERSTATUS_NONE;
+    statusbar->is_online = false;
     statusbar->max_len = x;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
