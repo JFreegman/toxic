@@ -30,14 +30,6 @@ typedef struct {
     WINDOW *linewin;
 } ChatContext;
 
-typedef struct {
-    WINDOW *topline;    
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    TOX_USERSTATUS status;
-    bool is_online;
-    int max_len;    /* set equal to the window's max x coordinate */
-} StatusBar;
-
 void print_help(ChatContext *self);
 void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd);
 
@@ -238,7 +230,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                tox_getselfname(m, selfname, sizeof(selfname));
+                tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
 
                 wattron(ctx->history, COLOR_PAIR(CYAN));
                 wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -321,8 +313,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
     else if (!strncmp(cmd, "/status ", strlen("/status "))) {
         char *status = strchr(cmd, ' ');
-        char *msg;
-        char *status_text;
+        uint8_t *msg;
 
         if (status == NULL) {
             wprintw(ctx->history, "Invalid syntax.\n");
@@ -362,24 +353,27 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         }
 
         tox_set_userstatus(m, status_kind);
+        prompt_update_status(self->prompt, status_kind); 
 
         msg = strchr(status, ' ');
         if (msg != NULL) {
             msg++;
-            tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
+            tox_set_statusmessage(m, msg, strlen(msg) + 1);
+            prompt_update_statusmessage(self->prompt, msg);
             wprintw(ctx->history, "Personal note set to: %s\n", msg);
         }
     }
 
     else if (!strncmp(cmd, "/note ", strlen("/note "))) {
-        char *msg = strchr(cmd, ' ');
+        uint8_t *msg = strchr(cmd, ' ');
         msg++;
+        tox_set_statusmessage(m, msg, strlen(msg) + 1);
+        prompt_update_statusmessage(self->prompt, msg);
         wprintw(ctx->history, "Personal note set to: %s\n", msg);
-        tox_set_statusmessage(m, ( uint8_t *) msg, strlen(msg) + 1);
     }
 
     else if (!strncmp(cmd, "/nick ", strlen("/nick "))) {
-        char *nick;
+        uint8_t *nick;
         nick = strchr(cmd, ' ');
 
         if (nick == NULL) {
@@ -388,7 +382,8 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         }
 
         nick++;
-        tox_setname(m, (uint8_t *) nick, strlen(nick) + 1);
+        tox_setname(m, nick, strlen(nick) + 1);
+        prompt_update_nick(self->prompt, nick);
         wprintw(ctx->history, "Nickname set to: %s\n", nick);
     }
 
@@ -444,6 +439,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             colour = RED;
             break;
         }
+
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", self->name);
         wattroff(statusbar->topline, A_BOLD);
@@ -458,8 +454,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, "[Offline]");
     }
 
-    if (statusbar->statusmsg[0])
+    if (statusbar->statusmsg[0]) {
+        wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
+        wattroff(statusbar->topline, A_BOLD);
+    }
 
     wprintw(statusbar->topline, "\n");
 
@@ -514,7 +513,7 @@ void print_help(ChatContext *self)
     wattroff(self->history, COLOR_PAIR(CYAN));
 }
 
-ToxWindow new_chat(Tox *m, int friendnum)
+ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
@@ -537,6 +536,8 @@ ToxWindow new_chat(Tox *m, int friendnum)
     StatusBar *s = calloc(1, sizeof(StatusBar));
     ret.x = x;
     ret.s = s;
+
+    ret.prompt = prompt;
     ret.friendnum = friendnum;
 
     return ret;
