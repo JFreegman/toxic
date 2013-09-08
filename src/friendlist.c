@@ -198,7 +198,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wprintw(self->window, " > ");
             else
                 wprintw(self->window, "   ");
-
+            
             if (friends[i].online) {
                 TOX_USERSTATUS status = friends[i].status;
                 int colour = WHITE;

@@ -19,7 +19,7 @@ extern int store_data(Tox *m, char *path);
 uint8_t pending_requests[MAX_STR_SIZE][TOX_CLIENT_ID_SIZE]; // XXX
 uint8_t num_requests = 0; // XXX
 
-static char prompt_buf[MAX_STR_SIZE] = {0};
+static char prompt_buf[MAX_STR_SIZE] = {'\0'};
 static int prompt_buf_pos = 0;
 
 /* commands */
@@ -258,18 +258,21 @@ void cmd_clear(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    tox_IP_Port dht;
-    char *ip, *port, *key;
-
     /* check arguments */
     if (argc != 3) {
       wprintw(self->window, "Invalid syntax.\n");
       return;
     }
 
-    ip = argv[1];
-    port = argv[2];
-    key = argv[3];
+    tox_IP_Port dht;
+    char *ip = argv[1];
+    char *port = argv[2];
+    char *key = argv[3];
+
+    if (!ip || !port || !key) {
+        wprintw(self->window, "Invalid syntax.\n");
+        return;
+    }
 
     if (atoi(port) == 0) {
         wprintw(self->window, "Invalid syntax.\n");
@@ -325,16 +328,14 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *id, *msg;
-
     /* check arguments */
     if (argc != 2) {
       wprintw(self->window, "Invalid syntax.\n");
       return;
     }
 
-    id = argv[1];
-    msg = argv[2];
+    char *id = argv[1];
+    uint8_t *msg = argv[2];
 
     if (id == NULL || msg == NULL) {
       wprintw(self->window, "Invalid syntax.\n");
@@ -343,7 +344,7 @@ void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 
     msg[strlen(++msg)-1] = L'\0';
 
-    if (tox_sendmessage(m, atoi(id), (uint8_t *) msg, strlen(msg) + 1) == 0)
+    if (tox_sendmessage(m, atoi(id), msg, strlen(msg) + 1) == 0)
         wprintw(self->window, "Failed to send message.\n");
     else
         wprintw(self->window, "Message successfully sent.\n");
@@ -352,9 +353,10 @@ void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
 void cmd_myid(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
-    size_t i;
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
     tox_getaddress(m, address);
+
+    size_t i;
 
     for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
         char xx[3];
@@ -367,15 +369,13 @@ void cmd_myid(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    uint8_t *nick;
-
     /* check arguments */
     if (argc != 1) {
       wprintw(self->window, "Invalid syntax.\n");
       return;
     }
 
-    nick = argv[1];
+    uint8_t *nick = argv[1];
 
     if (nick == NULL) {
         wprintw(self->window, "Invalid syntax.\n");
@@ -393,13 +393,12 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    char *status, *status_text;
-    uint8_t *msg = NULL;
-
     if (argc < 1 || argc > 2) {
         wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
+
+    uint8_t *msg = NULL;
 
     if (argc == 2) {
 
@@ -416,7 +415,7 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
         }
     }
 
-    status = argv[1];
+    char *status = argv[1];
 
     if (status == NULL) {
         wprintw(self->window, "Invalid syntax.\n");
@@ -454,18 +453,18 @@ void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    if (argv[1] == NULL) {
+    uint8_t *msg = argv[1];
+
+    if (msg == NULL) {
         wprintw(self->window, "Invalid syntax.\n");
         return;
     }
 
-    if (argv[1][0] != '\"') {
+    if (msg[0] != '\"') {
         wprintw(self->window, "Messages must be enclosed in quotes.\n");
         return;
     }
 
-    uint8_t *msg;
-    msg = argv[1];
     msg[strlen(++msg)-1] = L'\0';
 
     tox_set_statusmessage(m, msg, strlen(msg) + 1);
@@ -475,7 +474,7 @@ void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
 static void execute(ToxWindow *self, Tox *m, char *u_cmd)
 {
     int newlines = 0;
-    char cmd[MAX_STR_SIZE] = {0};
+    char cmd[MAX_STR_SIZE] = {'\0'};
     int i;
 
     for (i = 0; i < strlen(prompt_buf); ++i) {
@@ -511,7 +510,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
         else if (cmd[i] == '\"') {
             while (cmd[++i] != '\"') {
                 if (cmd[i] == '\0') {
-                    wprintw(self->window, "Invalid command: did you forget a closing \"?\n");
+                    wprintw(self->window, "Invalid command: did you forget an opening or closing \"?\n");
                     return;
                 }
             }
@@ -536,18 +535,22 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
     }
 
     /* no input */
-    if (!cmdargs[0])
+    if (!cmdargs[0]) {
+        free(cmdargs);
         return;
+    }
 
     /* match input to command list */
     for (i = 0; i < NUM_COMMANDS; i++) {
         if (!strcmp(cmdargs[0], commands[i].name)) {
             (commands[i].func)(self, m, numargs, cmdargs);
+            free(cmdargs);
             return;
         }
     }
 
     /* no match */
+    free(cmdargs);
     wprintw(self->window, "Invalid command.\n");
 }
 
@@ -634,11 +637,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, "[Offline]");
     }
 
-    if (statusbar->statusmsg[0]) {
-        wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
-        wattroff(statusbar->topline, A_BOLD);
-    }
+    wattron(statusbar->topline, A_BOLD);
+    wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
+    wattroff(statusbar->topline, A_BOLD);
 
     wprintw(statusbar->topline, "\n");
 
@@ -670,13 +671,13 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     statusbar->max_len = x;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getselfname(m, (uint8_t *) &nick, TOX_MAX_NAME_LENGTH);
+    tox_getselfname(m, nick, TOX_MAX_NAME_LENGTH);
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    tox_copy_self_statusmessage(m, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
-    if (strncmp(statusmsg, "Online", strlen(statusmsg)))
-        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+    /* temporary until statusmessage saving works */
+    uint8_t *statusmsg = "Toxing on Toxic v0.2.0";
+    // tox_copy_self_statusmessage(m, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
     /* Init statusbar subwindow */
     statusbar->topline = subwin(self->window, 2, x, 0, 0);

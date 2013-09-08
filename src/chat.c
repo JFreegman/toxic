@@ -121,9 +121,7 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
         return;
 
     StatusBar *statusbar = (StatusBar *) self->s;
-
-    if (strncmp(status, "Online", strlen(status)))    /* Ignore default "Online" message */
-        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", status);
+    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", status);
 }
 
 /* check that the string has one non-space character */
@@ -298,7 +296,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         wattroff(ctx->history, COLOR_PAIR(CYAN));
 
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        tox_getselfname(m, selfname, sizeof(selfname));
+        tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
 
         wattron(ctx->history, COLOR_PAIR(YELLOW));
         wprintw(ctx->history, "* %s %s\n", selfname, action);
@@ -313,7 +311,6 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
 
     else if (!strncmp(cmd, "/status ", strlen("/status "))) {
         char *status = strchr(cmd, ' ');
-        uint8_t *msg;
 
         if (status == NULL) {
             wprintw(ctx->history, "Invalid syntax.\n");
@@ -355,7 +352,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
         tox_set_userstatus(m, status_kind);
         prompt_update_status(self->prompt, status_kind); 
 
-        msg = strchr(status, ' ');
+        uint8_t *msg = strchr(status, ' ');
         if (msg != NULL) {
             msg++;
             tox_set_statusmessage(m, msg, strlen(msg) + 1);
@@ -373,8 +370,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
     }
 
     else if (!strncmp(cmd, "/nick ", strlen("/nick "))) {
-        uint8_t *nick;
-        nick = strchr(cmd, ' ');
+        uint8_t *nick = strchr(cmd, ' ');
 
         if (nick == NULL) {
             wprintw(ctx->history, "Invalid syntax.\n");
@@ -454,11 +450,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, "[Offline]");
     }
 
-    if (statusbar->statusmsg[0]) {
-        wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
-        wattroff(statusbar->topline, A_BOLD);
-    }
+    wattron(statusbar->topline, A_BOLD);
+    wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
+    wattroff(statusbar->topline, A_BOLD);
 
     wprintw(statusbar->topline, "\n");
 
@@ -475,13 +469,12 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     /* Init statusbar info */
     StatusBar *statusbar = (StatusBar *) self->s;
     statusbar->status = tox_get_userstatus(m, self->friendnum);
-    statusbar->is_online = tox_friendstatus(m, self->friendnum) == TOX_FRIEND_ONLINE;
+    statusbar->is_online = tox_get_friend_connectionstatus(m, self->friendnum) == 1;
     statusbar->max_len = x;
 
-    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
     tox_copy_statusmessage(m, self->friendnum, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
-    if (strncmp(statusmsg, "Online", strlen(statusmsg)))
-        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
     /* Init subwindows */
     ChatContext *ctx = (ChatContext *) self->x;
