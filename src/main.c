@@ -275,9 +275,8 @@ int store_data(Tox *m, char *path)
     len = tox_size(m);
     buf = malloc(len);
 
-    if (buf == NULL) {
+    if (buf == NULL)
         return 2;
-    }
 
     tox_save(m, buf);
 
@@ -334,8 +333,8 @@ static void load_data(Tox *m, char *path)
 
         uint32_t i = 0;
 
-        char name[TOX_MAX_NAME_LENGTH];
-        while (tox_getname(m, i, (uint8_t *)name) != -1) {
+        uint8_t name[TOX_MAX_NAME_LENGTH];
+        while (tox_getname(m, i, name) != -1) {
             on_friendadded(m, i);
             i++;
         }

@@ -20,6 +20,8 @@
 /* number of permanent default windows */
 #define N_DEFAULT_WINS 3
 
+#define UNKNOWN_NAME "Unknown"
+ 
 #ifndef TOXICVER
 #define TOXICVER "NOVER" //Use the -D flag to set this
 #endif

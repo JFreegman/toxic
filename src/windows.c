@@ -17,8 +17,6 @@ static ToxWindow *active_window;
 static ToxWindow *prompt;
 static Tox *m;
 
-#define UNKNOWN_NAME "Unknown"
-
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
