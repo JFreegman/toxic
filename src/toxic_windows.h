@@ -43,7 +43,7 @@ struct ToxWindow_ {
     void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
     void(*onConnectionChange)(ToxWindow *, Tox *, int, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
-    void(*onNickChange)(ToxWindow *, int, uint8_t *, uint16_t);
+    void(*onNickChange)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onStatusChange)(ToxWindow *, Tox *, int, TOX_USERSTATUS);
     void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);

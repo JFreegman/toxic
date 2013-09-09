@@ -77,7 +77,7 @@ void prompt_update_status(ToxWindow *prompt, TOX_USERSTATUS status)
     statusbar->status = status;
 }
 
-/* Updates own connection status */
+/* Updates own connection status in prompt statusbar */
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 {
     StatusBar *statusbar = (StatusBar *) prompt->s;
@@ -296,6 +296,7 @@ void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     endwin();
     store_data(m, DATA_FILE);
+    free(DATA_FILE);
     tox_kill(m);
     exit(0);
 }
@@ -520,8 +521,8 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
     /* read arguments into array */
     char **cmdargs = malloc((numargs + 1) * sizeof(char *));
     if (!cmdargs) {
-      wprintw(self->window, "Invalid command: too many arguments.\n");
-      return;
+        wprintw(self->window, "Invalid command: too many arguments.\n");
+        return;
     }
 
     int pos = 0;
@@ -625,7 +626,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         }
 
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, "%s ", statusbar->nick);
+        wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattron(statusbar->topline, A_BOLD);
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
         wprintw(statusbar->topline, "[%s]", status_text);
@@ -638,7 +639,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 
     wattron(statusbar->topline, A_BOLD);
-    wprintw(statusbar->topline, " | %s", statusbar->statusmsg);
+    wprintw(statusbar->topline, " | %s |", statusbar->statusmsg);
     wattroff(statusbar->topline, A_BOLD);
 
     wprintw(statusbar->topline, "\n");
@@ -676,7 +677,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 
     /* temporary until statusmessage saving works */
     uint8_t *statusmsg = "Toxing on Toxic v0.2.0";
-    // tox_copy_self_statusmessage(m, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    m_set_statusmessage(m, statusmsg, strlen(statusmsg) + 1);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
     /* Init statusbar subwindow */

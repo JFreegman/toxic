@@ -98,7 +98,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     beep();
 }
 
-static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t len)
+static void chat_onNickChange(ToxWindow *self, Tox *m, int num, uint8_t *nick, uint16_t len)
 {
     if (self->friendnum != num)
         return;
@@ -276,6 +276,7 @@ void execute(ToxWindow *self, ChatContext *ctx, Tox *m, char *cmd)
     else if (!strcmp(cmd, "/quit") || !strcmp(cmd, "/exit") || !strcmp(cmd, "/q")) {
         endwin();
         store_data(m, DATA_FILE);
+        free(DATA_FILE);
         tox_kill(m);
         exit(0);
     }

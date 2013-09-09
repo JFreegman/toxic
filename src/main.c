@@ -41,6 +41,7 @@
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
 #endif
+
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
@@ -254,14 +255,18 @@ int f_loadfromfile;
 /*
  * Store Messenger to given location
  * Return 0 stored successfully
- * Return 1 malloc failed
- * Return 2 opening path failed
- * Return 3 fwrite failed
+ * Return 1 file path is NULL
+ * Return 2 malloc failed
+ * Return 3 opening path failed
+ * Return 4 fwrite failed
  */
 int store_data(Tox *m, char *path)
 {
     if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
         return 0;
+
+    if (path == NULL)
+        return 1;
 
     FILE *fd;
     size_t len;
@@ -271,7 +276,7 @@ int store_data(Tox *m, char *path)
     buf = malloc(len);
 
     if (buf == NULL) {
-        return 1;
+        return 2;
     }
 
     tox_save(m, buf);
@@ -280,13 +285,13 @@ int store_data(Tox *m, char *path)
 
     if (fd == NULL) {
         free(buf);
-        return 2;
+        return 3;
     }
 
     if (fwrite(buf, len, 1, fd) != 1) {
         free(buf);
         fclose(fd);
-        return 3;
+        return 4;
     }
 
     free(buf);
@@ -380,14 +385,18 @@ int main(int argc, char *argv[])
             SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
-            strcpy(DATA_FILE, user_config_dir);
-            strcat(DATA_FILE, CONFIGDIR);
-            strcat(DATA_FILE, "data");
+            if (DATA_FILE != NULL) {
+                strcpy(DATA_FILE, user_config_dir);
+                strcat(DATA_FILE, CONFIGDIR);
+                strcat(DATA_FILE, "data");
+            }
 
             SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-            strcpy(SRVLIST_FILE, user_config_dir);
-            strcat(SRVLIST_FILE, CONFIGDIR);
-            strcat(SRVLIST_FILE, "DHTservers");
+            if (SRVLIST_FILE != NULL) {
+                strcpy(SRVLIST_FILE, user_config_dir);
+                strcat(SRVLIST_FILE, CONFIGDIR);
+                strcat(SRVLIST_FILE, "DHTservers");
+            }
         }
     }
 

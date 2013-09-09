@@ -56,13 +56,12 @@ void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t sta
         friends[num].online = false;
 }
 
-void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
+void friendlist_onNickChange(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
 {
     if (len >= TOX_MAX_NAME_LENGTH || num < 0 || num >= num_friends)
         return;
 
     memcpy((char *) &friends[num].name, (char *) str, len);
-    friends[num].name[len] = 0;
 }
 
 void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
@@ -78,9 +77,7 @@ void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, ui
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
 
-    /* Ignore default "Online" status message */
-    if (strncmp(str, "Online", strlen(str)))
-        memcpy((char *) &friends[num].statusmsg, (char *) str, len);
+    memcpy((char *) &friends[num].statusmsg, (char *) str, len);
 }
 
 int friendlist_onFriendAdded(Tox *m, int num)
@@ -219,14 +216,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "]%s", friends[i].name);
-
-                if (friends[i].statusmsg[0])
-                    wprintw(self->window, " (%s)\n", friends[i].statusmsg);
-                else
-                    wprintw(self->window, "\n");
+                wprintw(self->window, "]%s (%s)\n", friends[i].name, friends[i].statusmsg);
             } else {
-                wprintw(self->window, "[O]%s\n", friends[i].name);
+                wprintw(self->window, "[O]%s\n", friends[i].name, friends[i].statusmsg);
             }
         }
     }
