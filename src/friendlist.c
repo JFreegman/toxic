@@ -95,8 +95,8 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
 
-            if (tox_getname(m, num, friends[i].name) != 0 || friends[i].name[0] == '\0')
-                strcpy((char *) friends[i].name, "unknown");
+            if (tox_getname(m, num, friends[i].name) == -1 || friends[i].name[0] == '\0')
+                strcpy((char *) friends[i].name, UNKNOWN_NAME);
 
             if (i == num_friends)
                 ++num_friends;
