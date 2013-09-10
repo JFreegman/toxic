@@ -65,10 +65,10 @@ struct ToxWindow_ {
 typedef struct {
     WINDOW *topline;    
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    uint16_t statusmsg_len;
     uint8_t nick[TOX_MAX_NAME_LENGTH];
     TOX_USERSTATUS status;
     bool is_online;
-    int max_len;    /* set to the window's max x coordinate */
 } StatusBar;
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
