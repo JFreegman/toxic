@@ -113,6 +113,13 @@ unsigned char *hex_string_to_bin(char hex_string[])
 {
     size_t len = strlen(hex_string);
     unsigned char *val = malloc(len);
+
+    if (val == NULL) {
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        endwin();
+        exit(EXIT_FAILURE);
+    }
+
     char *pos = hex_string;
     int i;
 
@@ -688,7 +695,14 @@ ToxWindow new_prompt()
     strcpy(ret.name, "prompt");
 
     StatusBar *s = calloc(1, sizeof(StatusBar));
-    ret.s = s;
+
+    if (s != NULL)
+        ret.s = s;
+    else {
+        fprintf(stderr, "calloc() failed. Aborting...\n");
+        endwin();
+        exit(EXIT_FAILURE);
+    }
 
     return ret;
 }

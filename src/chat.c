@@ -142,12 +142,22 @@ static char *wcs_to_char(wchar_t *string)
     if (len != (size_t) -1) {
         len++;
         ret = malloc(len);
-        wcstombs(ret, string, len);
+        if (ret != NULL)
+            wcstombs(ret, string, len);
     } else {
         ret = malloc(2);
-        ret[0] = ' ';
-        ret[1] = '\0';
+        if (ret != NULL) {
+            ret[0] = ' ';
+            ret[1] = '\0';
+        }
     }
+
+    if (ret == NULL) {
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        endwin();
+        exit(EXIT_FAILURE);
+    }
+
     return ret;
 }
 
@@ -533,8 +543,16 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
 
     ChatContext *x = calloc(1, sizeof(ChatContext));
     StatusBar *s = calloc(1, sizeof(StatusBar));
-    ret.x = x;
-    ret.s = s;
+
+
+    if (s != NULL && x != NULL) {
+        ret.x = x;
+        ret.s = s;
+    } else {
+        fprintf(stderr, "calloc() failed. Aborting...\n");
+        endwin();
+        exit(EXIT_FAILURE);
+    }
 
     ret.prompt = prompt;
     ret.friendnum = friendnum;

@@ -317,14 +317,14 @@ static void load_data(Tox *m, char *path)
         buf = malloc(len);
 
         if (buf == NULL) {
-            fprintf(stderr, "malloc() failed.\n");
+            fprintf(stderr, "malloc() failed. Aborting...\n");
             fclose(fd);
             endwin();
             exit(EXIT_FAILURE);
         }
 
         if (fread(buf, len, 1, fd) != 1) {
-            fprintf(stderr, "fread() failed.\n");
+            fprintf(stderr, "fread() failed. Aborting...\n");
             free(buf);
             fclose(fd);
             endwin();
@@ -357,13 +357,9 @@ static void load_data(Tox *m, char *path)
 void exit_toxic(Tox *m)
 {
     store_data(m, DATA_FILE);
-
-    if (DATA_FILE != NULL)
-        free(DATA_FILE);
-
-    if (SRVLIST_FILE != NULL)
-        free(SRVLIST_FILE);
-
+    free(DATA_FILE);
+    free(SRVLIST_FILE);
+    free(prompt->s);
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
@@ -401,17 +397,20 @@ int main(int argc, char *argv[])
             SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
-            if (DATA_FILE != NULL) {
+            SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
+
+            if (DATA_FILE != NULL && SRVLIST_FILE != NULL) {
                 strcpy(DATA_FILE, user_config_dir);
                 strcat(DATA_FILE, CONFIGDIR);
                 strcat(DATA_FILE, "data");
-            }
 
-            SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-            if (SRVLIST_FILE != NULL) {
                 strcpy(SRVLIST_FILE, user_config_dir);
                 strcat(SRVLIST_FILE, CONFIGDIR);
                 strcat(SRVLIST_FILE, "DHTservers");
+            } else {
+                fprintf(stderr, "malloc() failed. Aborting...\n");
+                endwin();
+                exit(EXIT_FAILURE);
             }
         }
     }
