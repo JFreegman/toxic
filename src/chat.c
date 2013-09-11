@@ -203,11 +203,7 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
         print_help(ctx);
 
     else if (!strcmp(cmd, "/quit") || !strcmp(cmd, "/exit") || !strcmp(cmd, "/q")) {
-        endwin();
-        store_data(m, DATA_FILE);
-        free(DATA_FILE);
-        tox_kill(m);
-        exit(0);
+        exit_toxic(m);
     }
 
     else if (!strncmp(cmd, "/me ", strlen("/me "))) {

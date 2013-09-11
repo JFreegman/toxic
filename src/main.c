@@ -354,6 +354,21 @@ static void load_data(Tox *m, char *path)
     }
 }
 
+void exit_toxic(Tox *m)
+{
+    store_data(m, DATA_FILE);
+
+    if (DATA_FILE != NULL)
+        free(DATA_FILE);
+
+    if (SRVLIST_FILE != NULL)
+        free(SRVLIST_FILE);
+
+    tox_kill(m);
+    endwin();
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[])
 {
     char *user_config_dir = get_user_config_dir();
@@ -441,8 +456,6 @@ int main(int argc, char *argv[])
         draw_active_window(m);
     }
 
-    tox_kill(m);
-    free(DATA_FILE);
-    free(SRVLIST_FILE);
+    exit_toxic(m);
     return 0;
 }
