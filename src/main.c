@@ -91,6 +91,8 @@ static Tox *init_tox()
 {
     /* Init core */
     Tox *m = tox_new();
+    if (!m)
+        return NULL;
 
     /* Callbacks */
     tox_callback_connectionstatus(m, on_connectionchange, NULL);
@@ -403,6 +405,12 @@ int main(int argc, char *argv[])
 
     init_term();
     Tox *m = init_tox();
+    if (!m) {
+        endwin();
+        fprintf(stderr, "Failed to initialize network. Aborting...\n");
+        exit(1);
+    }
+
     prompt = init_windows(m);
 
     if (f_loadfromfile)
