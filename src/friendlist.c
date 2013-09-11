@@ -24,6 +24,7 @@ extern ToxWindow *prompt;
 typedef struct {
     uint8_t name[TOX_MAX_NAME_LENGTH];
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    uint16_t statusmsg_len;
     int num;
     int chatwin;
     bool active;
@@ -77,6 +78,7 @@ void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, ui
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
 
+    friends[num].statusmsg_len = len;
     memcpy((char *) &friends[num].statusmsg, (char *) str, len);
 }
 
@@ -216,7 +218,19 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "]%s (%s)\n", friends[i].name, friends[i].statusmsg);
+                wprintw(self->window, "]%s (", friends[i].name);
+
+                /* Truncate note if it doesn't fit on one line */
+                int x, y;
+                getmaxyx(self->window, y, x);
+                uint16_t maxlen = x - getcurx(self->window) - 2;
+
+                if (friends[i].statusmsg_len > maxlen) {
+                    friends[i].statusmsg[maxlen] = '\0';
+                    friends[i].statusmsg_len = maxlen;
+                }
+
+                wprintw(self->window, "%s)\n", friends[i].statusmsg);
             } else {
                 wprintw(self->window, "[O]%s\n", friends[i].name);
             }
