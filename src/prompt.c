@@ -10,11 +10,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "toxic_windows.h"
 #include "prompt.h"
 
 extern char *DATA_FILE;
-extern int store_data(Tox *m, char *path);
 
 uint8_t pending_requests[MAX_STR_SIZE][TOX_CLIENT_ID_SIZE]; // XXX
 uint8_t num_requests = 0; // XXX
@@ -298,7 +296,7 @@ void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
     store_data(m, DATA_FILE);
     free(DATA_FILE);
     tox_kill(m);
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)

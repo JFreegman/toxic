@@ -10,7 +10,6 @@
 #include "toxic_windows.h"
 
 extern char *DATA_FILE;
-extern int store_data(Tox *m, char *path);
 
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
@@ -177,7 +176,8 @@ void set_next_window(int ch)
 
         if (active_window == inf) {    // infinite loop check
             endwin();
-            exit(2);
+            fprintf(stderr, "set_next_window() failed. Aborting...\n");
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -195,9 +195,9 @@ ToxWindow *init_windows()
     int n_prompt = add_window(m, new_prompt());
 
     if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
-        fprintf(stderr, "add_window() failed.\n");
+        fprintf(stderr, "add_window() failed. Aborting...\n");
         endwin();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     prompt = &windows[n_prompt];
