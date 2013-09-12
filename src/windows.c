@@ -30,7 +30,7 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
 {
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, friendnumber, (uint8_t *) &nick);
+    tox_getname(m, friendnumber, nick);
 
     if (!nick[0])
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);

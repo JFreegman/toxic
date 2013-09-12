@@ -49,7 +49,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, num, (uint8_t *) &nick);
+    tox_getname(m, num, nick);
 
     wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -81,7 +81,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, num, (uint8_t *) &nick);
+    tox_getname(m, num, nick);
 
     wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -133,7 +133,7 @@ int string_is_empty(char *string)
 }
 
 /* convert wide characters to null terminated string */
-static char *wcs_to_char(wchar_t *string)
+static uint8_t *wcs_to_char(wchar_t *string)
 {
     size_t len = 0;
     char *ret = NULL;
@@ -218,7 +218,7 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
 
     else if (!strncmp(cmd, "/me ", strlen("/me "))) {
         struct tm *timeinfo = get_time();
-        char *action = strchr(cmd, ' ');
+        uint8_t *action = strchr(cmd, ' ');
 
         if (action == NULL) {
             wprintw(self->window, "Invalid syntax.\n");
@@ -239,7 +239,7 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
         wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
         if (!statusbar->is_online
-                || tox_sendaction(m, self->friendnum, (uint8_t *) action, strlen(action) + 1) == 0) {
+                || tox_sendaction(m, self->friendnum, action, strlen(action) + 1) == 0) {
             wattron(ctx->history, COLOR_PAIR(RED));
             wprintw(ctx->history, " * Failed to send action\n");
             wattroff(ctx->history, COLOR_PAIR(RED));
@@ -379,7 +379,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
-        char *line = wcs_to_char(ctx->line);
+        uint8_t *line = wcs_to_char(ctx->line);
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
@@ -409,7 +409,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wprintw(ctx->history, "%s\n", line);
 
                 if (!statusbar->is_online
-                        || tox_sendmessage(m, self->friendnum, (uint8_t *) line, strlen(line) + 1) == 0) {
+                        || tox_sendmessage(m, self->friendnum, line, strlen(line) + 1) == 0) {
                     wattron(ctx->history, COLOR_PAIR(RED));
                     wprintw(ctx->history, " * Failed to send message.\n");
                     wattroff(ctx->history, COLOR_PAIR(RED));
@@ -538,12 +538,11 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
     ret.onAction = &chat_onAction;
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, friendnum, (uint8_t *) &name);
+    tox_getname(m, friendnum, name);
     snprintf(ret.name, sizeof(ret.name), "%s", name);
 
     ChatContext *x = calloc(1, sizeof(ChatContext));
     StatusBar *s = calloc(1, sizeof(StatusBar));
-
 
     if (s != NULL && x != NULL) {
         ret.x = x;
