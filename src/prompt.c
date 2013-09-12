@@ -94,7 +94,7 @@ void prompt_onFriendRequest(ToxWindow *prompt, uint8_t *key, uint8_t *data, uint
     }
 
     wprintw(prompt->window, "\n\nWith the message: %s\n\n", data);
-    wprintw(prompt->window, "Type \"accept %d\" to accept it.\n", n);
+    wprintw(prompt->window, "Type \"accept %i\" to accept it.\n", n);
 
     prompt->blink = true;
     beep();
