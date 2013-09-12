@@ -21,6 +21,9 @@
 #define N_DEFAULT_WINS 3
 
 #define UNKNOWN_NAME "Unknown"
+
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
  
 #ifndef TOXICVER
 #define TOXICVER "NOVER" //Use the -D flag to set this
@@ -85,4 +88,3 @@ int add_window(Tox *m, ToxWindow w);
 void del_window(ToxWindow *w);
 void set_active_window(int ch);
 #endif
-
