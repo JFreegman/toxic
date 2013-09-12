@@ -9,5 +9,3 @@ unsigned char *hex_string_to_bin(char hex_string[]);
 void prompt_init_statusbar(ToxWindow *self, Tox *m);
 
 #endif /* end of include guard: PROMPT_H_UZYGWFFL */
-
-

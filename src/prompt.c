@@ -10,11 +10,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "toxic_windows.h"
 #include "prompt.h"
 
 extern char *DATA_FILE;
-extern int store_data(Tox *m, char *path);
 
 uint8_t pending_requests[MAX_STR_SIZE][TOX_CLIENT_ID_SIZE]; // XXX
 uint8_t num_requests = 0; // XXX
@@ -115,6 +113,13 @@ unsigned char *hex_string_to_bin(char hex_string[])
 {
     size_t len = strlen(hex_string);
     unsigned char *val = malloc(len);
+
+    if (val == NULL) {
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        endwin();
+        exit(EXIT_FAILURE);
+    }
+
     char *pos = hex_string;
     int i;
 
@@ -294,11 +299,7 @@ void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
 
 void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
 {
-    endwin();
-    store_data(m, DATA_FILE);
-    free(DATA_FILE);
-    tox_kill(m);
-    exit(0);
+    exit_toxic(m);
 }
 
 void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
@@ -694,7 +695,14 @@ ToxWindow new_prompt()
     strcpy(ret.name, "prompt");
 
     StatusBar *s = calloc(1, sizeof(StatusBar));
-    ret.s = s;
+
+    if (s != NULL)
+        ret.s = s;
+    else {
+        fprintf(stderr, "calloc() failed. Aborting...\n");
+        endwin();
+        exit(EXIT_FAILURE);
+    }
 
     return ret;
 }

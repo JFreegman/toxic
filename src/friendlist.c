@@ -17,8 +17,6 @@
 #include "friendlist.h"
 
 extern char *DATA_FILE;
-extern int store_data(Tox *m, char *path);
-
 extern ToxWindow *prompt;
 
 typedef struct {
@@ -136,9 +134,10 @@ static void select_friend(Tox *m, wint_t key)
     } else return;    /* Bad key input */
 
     /* If we reach this something is wrong */
+    fprintf(stderr, "select_friend() failed. Aborting...\n");
     endwin();
     tox_kill(m);
-    exit(2);
+    exit(EXIT_FAILURE);
 }
 
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)

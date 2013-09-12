@@ -60,9 +60,9 @@ static void init_term()
     signal(SIGWINCH, on_window_resize);
 #if HAVE_WIDECHAR
     if (setlocale(LC_ALL, "") == NULL) {
-        printf("Could not set your locale, plese check your locale settings or"
+        fprintf(stderr, "Could not set your locale, plese check your locale settings or"
                "disable wide char support\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #endif
     initscr();
@@ -91,7 +91,7 @@ static Tox *init_tox()
 {
     /* Init core */
     Tox *m = tox_new();
-    if (!m)
+    if (m == NULL)
         return NULL;
 
     /* Callbacks */
@@ -184,7 +184,7 @@ int init_connection(Tox *m)
 
     fp = fopen(SRVLIST_FILE, "r");
 
-    if (!fp)
+    if (fp == NULL)
         return 1;
 
     char servers[MAXSERVERS][MAXLINE];
@@ -208,7 +208,7 @@ int init_connection(Tox *m)
     char *port = strtok(NULL, " ");
     char *key = strtok(NULL, " ");
 
-    if (!ip || !port || !key)
+    if (ip == NULL || port == NULL || key == NULL)
         return 3;
 
     tox_IP_Port dht;
@@ -317,18 +317,18 @@ static void load_data(Tox *m, char *path)
         buf = malloc(len);
 
         if (buf == NULL) {
-            fprintf(stderr, "malloc() failed.\n");
+            fprintf(stderr, "malloc() failed. Aborting...\n");
             fclose(fd);
             endwin();
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         if (fread(buf, len, 1, fd) != 1) {
-            fprintf(stderr, "fread() failed.\n");
+            fprintf(stderr, "fread() failed. Aborting...\n");
             free(buf);
             fclose(fd);
             endwin();
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         tox_load(m, buf, len);
@@ -349,9 +349,20 @@ static void load_data(Tox *m, char *path)
         if ((st = store_data(m, path)) != 0) {
             fprintf(stderr, "Store messenger failed with return code: %d\n", st);
             endwin();
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
+}
+
+void exit_toxic(Tox *m)
+{
+    store_data(m, DATA_FILE);
+    free(DATA_FILE);
+    free(SRVLIST_FILE);
+    free(prompt->s);
+    tox_kill(m);
+    endwin();
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[])
@@ -386,17 +397,20 @@ int main(int argc, char *argv[])
             SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
-            if (DATA_FILE != NULL) {
+            SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
+
+            if (DATA_FILE != NULL && SRVLIST_FILE != NULL) {
                 strcpy(DATA_FILE, user_config_dir);
                 strcat(DATA_FILE, CONFIGDIR);
                 strcat(DATA_FILE, "data");
-            }
 
-            SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-            if (SRVLIST_FILE != NULL) {
                 strcpy(SRVLIST_FILE, user_config_dir);
                 strcat(SRVLIST_FILE, CONFIGDIR);
                 strcat(SRVLIST_FILE, "DHTservers");
+            } else {
+                fprintf(stderr, "malloc() failed. Aborting...\n");
+                endwin();
+                exit(EXIT_FAILURE);
             }
         }
     }
@@ -405,10 +419,11 @@ int main(int argc, char *argv[])
 
     init_term();
     Tox *m = init_tox();
-    if (!m) {
+
+    if (m == NULL) {
         endwin();
         fprintf(stderr, "Failed to initialize network. Aborting...\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     prompt = init_windows(m);
@@ -440,8 +455,6 @@ int main(int argc, char *argv[])
         draw_active_window(m);
     }
 
-    tox_kill(m);
-    free(DATA_FILE);
-    free(SRVLIST_FILE);
+    exit_toxic(m);
     return 0;
 }
