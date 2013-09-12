@@ -324,7 +324,7 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
 
     else if (!strcmp(cmd, "/myid")) {
         char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {'\0'};
-        int i;
+        size_t i;
         uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
         tox_getaddress(m, address);
 

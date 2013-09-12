@@ -87,7 +87,7 @@ void prompt_onFriendRequest(ToxWindow *prompt, uint8_t *key, uint8_t *data, uint
     int n = add_req(key);
     wprintw(prompt->window, "\nFriend request from:\n");
 
-    int i;
+    size_t i;
 
     for (i = 0; i < KEY_SIZE_BYTES; ++i) {
         wprintw(prompt->window, "%02x", key[i] & 0xff);
@@ -121,7 +121,7 @@ unsigned char *hex_string_to_bin(char hex_string[])
     }
 
     char *pos = hex_string;
-    int i;
+    size_t i;
 
     for (i = 0; i < len; ++i, pos += 2)
         sscanf(pos, "%2hhx", &val[i]);
@@ -168,7 +168,8 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     char xx[3];
     uint32_t x;
     uint8_t *msg;
-    int i, num;
+    size_t i;
+    int num;
 
     char *id = argv[1];
 
@@ -477,7 +478,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
 {
     int newlines = 0;
     char cmd[MAX_STR_SIZE] = {'\0'};
-    int i;
+    size_t i;
 
     for (i = 0; i < strlen(prompt_buf); ++i) {
         if (u_cmd[i] == '\n')
@@ -595,7 +596,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
     int x, y;
-    int i;
+    size_t i;
     getyx(self->window, y, x);
 
     for (i = 0; i < (strlen(prompt_buf)); ++i) {
