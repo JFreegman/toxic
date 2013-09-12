@@ -195,8 +195,8 @@ ToxWindow *init_windows()
     int n_prompt = add_window(m, new_prompt());
 
     if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
-        fprintf(stderr, "add_window() failed. Aborting...\n");
         endwin();
+        fprintf(stderr, "add_window() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 

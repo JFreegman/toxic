@@ -115,8 +115,8 @@ unsigned char *hex_string_to_bin(char hex_string[])
     unsigned char *val = malloc(len);
 
     if (val == NULL) {
-        fprintf(stderr, "malloc() failed. Aborting...\n");
         endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 
@@ -699,8 +699,8 @@ ToxWindow new_prompt()
     if (s != NULL)
         ret.s = s;
     else {
-        fprintf(stderr, "calloc() failed. Aborting...\n");
         endwin();
+        fprintf(stderr, "calloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 

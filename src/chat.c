@@ -153,8 +153,8 @@ static uint8_t *wcs_to_char(wchar_t *string)
     }
 
     if (ret == NULL) {
-        fprintf(stderr, "malloc() failed. Aborting...\n");
         endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 
@@ -548,8 +548,8 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
         ret.x = x;
         ret.s = s;
     } else {
-        fprintf(stderr, "calloc() failed. Aborting...\n");
         endwin();
+        fprintf(stderr, "calloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 

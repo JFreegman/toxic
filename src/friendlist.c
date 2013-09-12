@@ -134,9 +134,9 @@ static void select_friend(Tox *m, wint_t key)
     } else return;    /* Bad key input */
 
     /* If we reach this something is wrong */
-    fprintf(stderr, "select_friend() failed. Aborting...\n");
     endwin();
     tox_kill(m);
+    fprintf(stderr, "select_friend() failed. Aborting...\n");
     exit(EXIT_FAILURE);
 }
 

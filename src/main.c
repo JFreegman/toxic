@@ -317,17 +317,17 @@ static void load_data(Tox *m, char *path)
         buf = malloc(len);
 
         if (buf == NULL) {
-            fprintf(stderr, "malloc() failed. Aborting...\n");
             fclose(fd);
             endwin();
+            fprintf(stderr, "malloc() failed. Aborting...\n");
             exit(EXIT_FAILURE);
         }
 
         if (fread(buf, len, 1, fd) != 1) {
-            fprintf(stderr, "fread() failed. Aborting...\n");
             free(buf);
             fclose(fd);
             endwin();
+            fprintf(stderr, "fread() failed. Aborting...\n");
             exit(EXIT_FAILURE);
         }
 
@@ -347,8 +347,8 @@ static void load_data(Tox *m, char *path)
         int st;
 
         if ((st = store_data(m, path)) != 0) {
-            fprintf(stderr, "Store messenger failed with return code: %d\n", st);
             endwin();
+            fprintf(stderr, "Store messenger failed with return code: %d\n", st);
             exit(EXIT_FAILURE);
         }
     }
@@ -408,8 +408,8 @@ int main(int argc, char *argv[])
                 strcat(SRVLIST_FILE, CONFIGDIR);
                 strcat(SRVLIST_FILE, "DHTservers");
             } else {
-                fprintf(stderr, "malloc() failed. Aborting...\n");
                 endwin();
+                fprintf(stderr, "malloc() failed. Aborting...\n");
                 exit(EXIT_FAILURE);
             }
         }
