@@ -6,6 +6,10 @@
 #include "config.h"
 #endif
 
+#ifndef SIGWINCH
+    #define SIGWINCH 28
+#endif
+
 #include <curses.h>
 #include <errno.h>
 #include <stdio.h>
@@ -14,25 +18,34 @@
 #include <stdint.h>
 #include <signal.h>
 #include <locale.h>
+#include <string.h>
 
-#ifdef _win32
-#include <direct.h>
+#ifdef _WIN32
+    #include <direct.h>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
 #else
+#include <netdb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #endif
 
-#include "Messenger.h"
-#include "network.h"
+#include <tox/tox.h>
 
 #include "configdir.h"
 #include "toxic_windows.h"
 #include "prompt.h"
 #include "friendlist.h"
 
+#ifndef PACKAGE_DATADIR
+#define PACKAGE_DATADIR "."
+#endif
+
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
+ToxWindow *prompt = NULL;
 
 void on_window_resize(int sig)
 {
@@ -45,7 +58,13 @@ static void init_term()
 {
     /* Setup terminal */
     signal(SIGWINCH, on_window_resize);
-    setlocale(LC_ALL, "");
+#if HAVE_WIDECHAR
+    if (setlocale(LC_ALL, "") == NULL) {
+        fprintf(stderr, "Could not set your locale, plese check your locale settings or"
+               "disable wide char support\n");
+        exit(EXIT_FAILURE);
+    }
+#endif
     initscr();
     cbreak();
     keypad(stdscr, 1);
@@ -54,6 +73,7 @@ static void init_term()
 
     if (has_colors()) {
         start_color();
+        init_pair(0, COLOR_WHITE, COLOR_BLACK);
         init_pair(1, COLOR_GREEN, COLOR_BLACK);
         init_pair(2, COLOR_CYAN, COLOR_BLACK);
         init_pair(3, COLOR_RED, COLOR_BLACK);
@@ -62,33 +82,95 @@ static void init_term()
         init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
         init_pair(7, COLOR_BLACK, COLOR_BLACK);
         init_pair(8, COLOR_BLACK, COLOR_WHITE);
-
     }
 
     refresh();
 }
 
-static Messenger *init_tox()
+static Tox *init_tox()
 {
     /* Init core */
-    Messenger *m = initMessenger();
+    Tox *m = tox_new();
+    if (m == NULL)
+        return NULL;
 
     /* Callbacks */
-    m_callback_friendrequest(m, on_request, NULL);
-    m_callback_friendmessage(m, on_message, NULL);
-    m_callback_namechange(m, on_nickchange, NULL);
-    m_callback_statusmessage(m, on_statuschange, NULL);
-    m_callback_action(m, on_action, NULL);
+    tox_callback_connectionstatus(m, on_connectionchange, NULL);
+    tox_callback_friendrequest(m, on_request, NULL);
+    tox_callback_friendmessage(m, on_message, NULL);
+    tox_callback_namechange(m, on_nickchange, NULL);
+    tox_callback_userstatus(m, on_statuschange, NULL);
+    tox_callback_statusmessage(m, on_statusmessagechange, NULL);
+    tox_callback_action(m, on_action, NULL);
 #ifdef __linux__
-    setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
-#elif defined(WIN32)
-    setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
+    tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
+#elif defined(_WIN32)
+    tox_setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
 #elif defined(__APPLE__)
-    setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
+    tox_setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
 #else
-    setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
+    tox_setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
 #endif
     return m;
+}
+
+/*
+  resolve_addr():
+    address should represent IPv4 or a hostname with A record
+
+    returns a data in network byte order that can be used to set IP.i or IP_Port.ip.i
+    returns 0 on failure
+
+    TODO: Fix ipv6 support
+*/
+uint32_t resolve_addr(const char *address)
+{
+    struct addrinfo *server = NULL;
+    struct addrinfo  hints;
+    int              rc;
+    uint32_t         addr;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family   = AF_INET;    // IPv4 only right now.
+    hints.ai_socktype = SOCK_DGRAM; // type of socket Tox uses.
+
+#ifdef _WIN32
+    int res;
+    WSADATA wsa_data;
+
+    res = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+    if (res != 0)
+    {
+        return 0;
+    }
+#endif
+    rc = getaddrinfo(address, "echo", &hints, &server);
+
+    // Lookup failed.
+    if (rc != 0) {
+#ifdef _WIN32
+        WSACleanup();
+#endif
+        return 0;
+    }
+
+    // IPv4 records only..
+    if (server->ai_family != AF_INET) {
+        freeaddrinfo(server);
+#ifdef _WIN32
+        WSACleanup();
+#endif
+        return 0;
+    }
+
+
+    addr = ((struct sockaddr_in *)server->ai_addr)->sin_addr.s_addr;
+
+    freeaddrinfo(server);
+#ifdef _WIN32
+        WSACleanup();
+#endif
+    return addr;
 }
 
 #define MAXLINE 90    /* Approx max number of chars in a sever line (IP + port + key) */
@@ -96,16 +178,13 @@ static Messenger *init_tox()
 #define MAXSERVERS 50
 
 /* Connects to a random DHT server listed in the DHTservers file */
-int init_connection(Messenger *m)
+int init_connection(Tox *m)
 {
     FILE *fp = NULL;
 
-    if (DHT_isconnected(m->dht))
-        return 0;
-
     fp = fopen(SRVLIST_FILE, "r");
 
-    if (!fp)
+    if (fp == NULL)
         return 1;
 
     char servers[MAXSERVERS][MAXLINE];
@@ -129,10 +208,10 @@ int init_connection(Messenger *m)
     char *port = strtok(NULL, " ");
     char *key = strtok(NULL, " ");
 
-    if (!ip || !port || !key)
+    if (ip == NULL || port == NULL || key == NULL)
         return 3;
 
-    IP_Port dht;
+    tox_IP_Port dht;
     dht.port = htons(atoi(port));
     uint32_t resolved_address = resolve_addr(ip);
 
@@ -140,19 +219,19 @@ int init_connection(Messenger *m)
         return 0;
 
     dht.ip.i = resolved_address;
-    unsigned char *binary_string = hex_string_to_bin(key);
-    DHT_bootstrap(m->dht, dht, binary_string);
+    uint8_t *binary_string = hex_string_to_bin(key);
+    tox_bootstrap(m, dht, binary_string);
     free(binary_string);
     return 0;
 }
 
-static void do_tox(Messenger *m, ToxWindow *prompt)
+static void do_tox(Tox *m, ToxWindow *prompt)
 {
     static int conn_try = 0;
     static int conn_err = 0;
     static bool dht_on = false;
 
-    if (!dht_on && !DHT_isconnected(m->dht) && !(conn_try++ % 100)) {
+    if (!dht_on && !tox_isconnected(m) && !(conn_try++ % 100)) {
         if (!conn_err) {
             conn_err = init_connection(m);
             wprintw(prompt->window, "\nEstablishing connection...\n");
@@ -160,15 +239,17 @@ static void do_tox(Messenger *m, ToxWindow *prompt)
             if (conn_err)
                 wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
         }
-    } else if (!dht_on && DHT_isconnected(m->dht)) {
+    } else if (!dht_on && tox_isconnected(m)) {
         dht_on = true;
+        prompt_update_connectionstatus(prompt, dht_on);
         wprintw(prompt->window, "\nDHT connected.\n");
-    } else if (dht_on && !DHT_isconnected(m->dht)) {
+    } else if (dht_on && !tox_isconnected(m)) {
         dht_on = false;
+        prompt_update_connectionstatus(prompt, dht_on);
         wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
     }
 
-    doMessenger(m);
+    tox_do(m);
 }
 
 int f_loadfromfile;
@@ -176,39 +257,42 @@ int f_loadfromfile;
 /*
  * Store Messenger to given location
  * Return 0 stored successfully
- * Return 1 malloc failed
- * Return 2 opening path failed
- * Return 3 fwrite failed
+ * Return 1 file path is NULL
+ * Return 2 malloc failed
+ * Return 3 opening path failed
+ * Return 4 fwrite failed
  */
-int store_data(Messenger *m, char *path)
+int store_data(Tox *m, char *path)
 {
     if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
         return 0;
+
+    if (path == NULL)
+        return 1;
 
     FILE *fd;
     size_t len;
     uint8_t *buf;
 
-    len = Messenger_size(m);
+    len = tox_size(m);
     buf = malloc(len);
 
-    if (buf == NULL) {
-        return 1;
-    }
+    if (buf == NULL)
+        return 2;
 
-    Messenger_save(m, buf);
+    tox_save(m, buf);
 
     fd = fopen(path, "w");
 
     if (fd == NULL) {
         free(buf);
-        return 2;
+        return 3;
     }
 
     if (fwrite(buf, len, 1, fd) != 1) {
         free(buf);
         fclose(fd);
-        return 3;
+        return 4;
     }
 
     free(buf);
@@ -216,7 +300,7 @@ int store_data(Messenger *m, char *path)
     return 0;
 }
 
-static void load_data(Messenger *m, char *path)
+static void load_data(Tox *m, char *path)
 {
     if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
         return;
@@ -233,26 +317,28 @@ static void load_data(Messenger *m, char *path)
         buf = malloc(len);
 
         if (buf == NULL) {
-            fprintf(stderr, "malloc() failed.\n");
             fclose(fd);
             endwin();
-            exit(1);
+            fprintf(stderr, "malloc() failed. Aborting...\n");
+            exit(EXIT_FAILURE);
         }
 
         if (fread(buf, len, 1, fd) != 1) {
-            fprintf(stderr, "fread() failed.\n");
             free(buf);
             fclose(fd);
             endwin();
-            exit(1);
+            fprintf(stderr, "fread() failed. Aborting...\n");
+            exit(EXIT_FAILURE);
         }
 
-        Messenger_load(m, buf, len);
+        tox_load(m, buf, len);
 
-        uint32_t i;
+        uint32_t i = 0;
 
-        for (i = 0; i < m->numfriends; i++) {
+        uint8_t name[TOX_MAX_NAME_LENGTH];
+        while (tox_getname(m, i, name) != -1) {
             on_friendadded(m, i);
+            i++;
         }
 
         free(buf);
@@ -261,11 +347,22 @@ static void load_data(Messenger *m, char *path)
         int st;
 
         if ((st = store_data(m, path)) != 0) {
-            fprintf(stderr, "Store messenger failed with return code: %d\n", st);
             endwin();
-            exit(1);
+            fprintf(stderr, "Store messenger failed with return code: %d\n", st);
+            exit(EXIT_FAILURE);
         }
     }
+}
+
+void exit_toxic(Tox *m)
+{
+    store_data(m, DATA_FILE);
+    free(DATA_FILE);
+    free(SRVLIST_FILE);
+    free(prompt->s);
+    tox_kill(m);
+    endwin();
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[])
@@ -300,39 +397,55 @@ int main(int argc, char *argv[])
             SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
-            strcpy(DATA_FILE, user_config_dir);
-            strcat(DATA_FILE, CONFIGDIR);
-            strcat(DATA_FILE, "data");
-
             SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-            strcpy(SRVLIST_FILE, user_config_dir);
-            strcat(SRVLIST_FILE, CONFIGDIR);
-            strcat(SRVLIST_FILE, "DHTservers");
+
+            if (DATA_FILE != NULL && SRVLIST_FILE != NULL) {
+                strcpy(DATA_FILE, user_config_dir);
+                strcat(DATA_FILE, CONFIGDIR);
+                strcat(DATA_FILE, "data");
+
+                strcpy(SRVLIST_FILE, user_config_dir);
+                strcat(SRVLIST_FILE, CONFIGDIR);
+                strcat(SRVLIST_FILE, "DHTservers");
+            } else {
+                endwin();
+                fprintf(stderr, "malloc() failed. Aborting...\n");
+                exit(EXIT_FAILURE);
+            }
         }
     }
 
     free(user_config_dir);
 
     init_term();
-    Messenger *m = init_tox();
-    ToxWindow *prompt = init_windows(m);
+    Tox *m = init_tox();
+
+    if (m == NULL) {
+        endwin();
+        fprintf(stderr, "Failed to initialize network. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    prompt = init_windows(m);
 
     if (f_loadfromfile)
         load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
-        attron(COLOR_PAIR(3) | A_BOLD);
+        attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "You passed '-f' without giving an argument.\n"
                 "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(3) | A_BOLD);
+        attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
     if (config_err) {
-        attron(COLOR_PAIR(3) | A_BOLD);
+        attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "Unable to determine configuration directory.\n"
                 "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(3) | A_BOLD);
+        attroff(COLOR_PAIR(RED) | A_BOLD);
     }
+
+    prompt_init_statusbar(prompt, m);
 
     while (true) {
         /* Update tox */
@@ -342,8 +455,6 @@ int main(int argc, char *argv[])
         draw_active_window(m);
     }
 
-    cleanupMessenger(m);
-    free(DATA_FILE);
-    free(SRVLIST_FILE);
+    exit_toxic(m);
     return 0;
 }

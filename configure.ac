@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.65])
-AC_INIT([toxic], [0.1.1], [http://tox.im/])
+AC_INIT([toxic], [0.2.0], [http://tox.im/])
 AC_CONFIG_AUX_DIR(configure_aux)
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
@@ -19,6 +19,10 @@ LIBTOXCORE_SEARCH_HEADERS=
 LIBTOXCORE_SEARCH_LIBS=
 LIBSODIUM_SEARCH_HEADERS=
 LIBSODIUM_SEARCH_LIBS=
+
+LIBTOXCORE_FOUND="no"
+NCURSES_FOUND="no"
+NCURSES_WIDECHAR_SUPPORT="no"
 
 AC_ARG_WITH(dependency-search,
     AC_HELP_STRING([--with-dependency-search=DIR],
@@ -38,7 +42,7 @@ fi
 
 AC_ARG_WITH(libtoxcore-headers,
         AC_HELP_STRING([--with-libtoxcore-headers=DIR],
-                       [search for libtoxcore header files in DIR]),
+                       [search for libtoxcore header files in DIR/tox]),
         [
             LIBTOXCORE_SEARCH_HEADERS="$withval"
             AC_MSG_NOTICE([Will search for libtoxcore header files in $withval])
@@ -78,8 +82,12 @@ case $host_os in
     *mingw*)
         WIN32="yes"
     ;;
+    *freebsd*)
+        LDFLAGS="$LDFLAGS -L/usr/local/lib"
+        CFLAGS="$CFLAGS -I/usr/local/include"
+        CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+    ;;
 esac
-
 
 # Checks for programs.
 AC_PROG_CC
@@ -108,17 +116,21 @@ AC_CHECK_FUNCS(
 # pkg-config based tests
 PKG_PROG_PKG_CONFIG
 
-NCURSES_WIDECHAR_SUPPORT="yes"
 if test -n "$PKG_CONFIG"; then
-    if test "$WIN32" != "xyes"; then
+    if test "x$WIN32" != "xyes"; then
         PKG_CHECK_MODULES([NCURSES], [ncursesw],
-            [],
+            [
+                NCURSES_FOUND="yes"
+                NCURSES_WIDECHAR_SUPPORT="yes"
+            ],
             [
                 NCURSES_WIDECHAR_SUPPORT="no"
                 PKG_CHECK_MODULES([NCURSES], [ncurses],
-                    [],
                     [
-                        AC_MSG_ERROR([required library ncursesw was not found on your system: $NCURSES_PKG_ERRORS])
+                        NCURSES_FOUND="yes"
+                    ],
+                    [
+                        AC_MSG_WARN([$NCURSES_PKG_ERRORS])
                     ])
             ])
     fi
@@ -126,8 +138,80 @@ else
     AC_MSG_WARN([pkg-config was not found on your sytem])
 fi
 
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    AC_PATH_PROG([CURSES_CONFIG], [ncursesw5-config], [no])
+    if test "x$CURSES_CONFIG" != "xno"; then
+        AC_MSG_CHECKING(ncurses cflags)
+        NCURSES_CFLAGS=`${CURSES_CONFIG} --cflags`
+        AC_MSG_RESULT($NCURSES_CFLAGS)
 
-if (test -z "$PKG_CONFIG") || (test "x$WIN32" = "xyes"); then
+        AC_MSG_CHECKING(ncurses libraries)
+        NCURSES_LIBS=`${CURSES_CONFIG} --libs`
+        AC_MSG_RESULT($NCURSES_LIBS)
+
+        AC_SUBST(NCURSES_CFLAGS)
+        AC_SUBST(NCURSES_LIBS)
+        NCURSES_FOUND="yes"
+        NCURSES_WIDECHAR_SUPPORT="yes"
+    fi
+fi
+
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    unset ac_cv_path_CURSES_CONFIG
+    AC_PATH_PROG([CURSES_CONFIG], [ncursesw5.4-config], [no])
+    if test "x$CURSES_CONFIG" != "xno"; then
+        AC_MSG_CHECKING(ncurses cflags)
+        NCURSES_CFLAGS=`${CURSES_CONFIG} --cflags`
+        AC_MSG_RESULT($NCURSES_CFLAGS)
+
+        AC_MSG_CHECKING(ncurses libraries)
+        NCURSES_LIBS=`${CURSES_CONFIG} --libs`
+        AC_MSG_RESULT($NCURSES_LIBS)
+
+        AC_SUBST(NCURSES_CFLAGS)
+        AC_SUBST(NCURSES_LIBS)
+        NCURSES_FOUND="yes"
+        NCURSES_WIDECHAR_SUPPORT="yes"
+    fi
+fi
+
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    unset ac_cv_path_CURSES_CONFIG
+    AC_PATH_PROG([CURSES_CONFIG], [ncurses5-config], [no])
+    if test "x$CURSES_CONFIG" != "xno"; then
+        AC_MSG_CHECKING(ncurses cflags)
+        NCURSES_CFLAGS=`${CURSES_CONFIG} --cflags`
+        AC_MSG_RESULT($NCURSES_CFLAGS)
+
+        AC_MSG_CHECKING(ncurses libraries)
+        NCURSES_LIBS=`${CURSES_CONFIG} --libs`
+        AC_MSG_RESULT($NCURSES_LIBS)
+
+        AC_SUBST(NCURSES_CFLAGS)
+        AC_SUBST(NCURSES_LIBS)
+        NCURSES_FOUND="yes"
+    fi
+fi
+
+if (test "x$NCURSES_FOUND" = "xno") && (test "x$WIN32" != "xyes"); then
+    unset ac_cv_path_CURSES_CONFIG
+    AC_PATH_PROG([CURSES_CONFIG], [ncurses5.4-config], [no])
+    if test "x$CURSES_CONFIG" != "xno"; then
+        AC_MSG_CHECKING(ncurses cflags)
+        NCURSES_CFLAGS=`${CURSES_CONFIG} --cflags`
+        AC_MSG_RESULT($NCURSES_CFLAGS)
+
+        AC_MSG_CHECKING(ncurses libraries)
+        NCURSES_LIBS=`${CURSES_CONFIG} --libs`
+        AC_MSG_RESULT($NCURSES_LIBS)
+
+        AC_SUBST(NCURSES_CFLAGS)
+        AC_SUBST(NCURSES_LIBS)
+        NCURSES_FOUND="yes"
+    fi
+fi
+
+if test "x$NCURSES_FOUND" = "xno"; then
     AC_CHECK_HEADER([curses.h],
         [],
         [
@@ -154,19 +238,25 @@ if (test -z "$PKG_CONFIG") || (test "x$WIN32" = "xyes"); then
                 AC_MSG_ERROR([required library winsock2 was not found on the system, please check your MinGW installation])
             ]
         )
+        AC_DEFINE([_WIN32_WINNT], [0x501],
+                  [enable getaddrinfo/freeaddrinfo on XP and higher])
     else
-        AC_CHECK_LIB([ncursesw], [get_wch],
-            [],
+        AC_CHECK_LIB([ncursesw], [wget_wch],
             [
-                unset ac_cv_lib_ncursesw_get_wch
-                AC_CHECK_LIB([ncursesw], [get_wch],
-                    [],
+                NCURSES_WIDECHAR_SUPPORT="yes"
+            ],
+            [
+                unset ac_cv_lib_ncursesw_wget_wch
+                AC_CHECK_LIB([ncursesw], [wget_wch],
+                    [
+                        NCURSES_WIDECHAR_SUPPORT="yes"
+                    ],
                     [
                         NCURSES_WIDECHAR_SUPPORT="no"
                         AC_CHECK_LIB([ncurses], [clear],
                             [],
                             [
-                                unset ac_cv_lib_ncursesw_get_wch
+                                unset ac_cv_lib_ncurses_clear
                                 AC_CHECK_LIB([ncurses], [clear],
                                     [],
                                     [
@@ -188,120 +278,106 @@ if (test -z "$PKG_CONFIG") || (test "x$WIN32" = "xyes"); then
     fi
 fi
 
-# sodium is included by Tox headers so we kind of need to know where it is
-LIBSODIUM_CFLAGS=
-CFLAGS_SAVE="$CFLAGS"
-CPPFLAGS_SAVE="$CPPFLAGS"
-if test -n "$LIBSODIUM_SEARCH_HEADERS"; then
-    CFLAGS="$CFLAGS -I$LIBSODIUM_SEARCH_HEADERS"
-    CPPFLAGS="$CFLAGS -I$LIBSODIUM_SEARCH_HEADERS"
-    AC_CHECK_HEADER(sodium.h,
+if test -n "$PKG_CONFIG"; then
+    PKG_CHECK_MODULES(LIBTOXCORE, [libtoxcore],
         [
-            LIBSODIUM_CFLAGS="-I$LIBSODIUM_SEARCH_HEADERS"
+            LIBTOXCORE_FOUND="yes"
         ],
         [
-            AC_MSG_ERROR([header files for required library libsodium was not found in requested location $LIBSODIUM_SEARCH_HEADERS])
-        ]
-    )
-else
-    AC_CHECK_HEADER(sodium.h,
-        [],
-        [
-            AC_MSG_ERROR([header files for required library libsodium was not found on your system, please check http://download.libsodium.org/libsodium/releases/])
-        ]
-    )
-fi
-CFLAGS="$CFLAGS_SAVE"
-CPPFLAGS="$CPPFLAGS_SAVE"
-AC_SUBST(LIBSODIUM_CFLAGS)
-
-
-LIBSODIUM_LIBS=
-LIBSODIUM_LDFLAGS=
-LDFLAGS_SAVE="$LDFLAGS"
-if test -n "$LIBSODIUM_SEARCH_LIBS"; then
-    LDFLAGS="$LDFLAGS -L$LIBSODIUM_SEARCH_LIBS"
-    AC_CHECK_LIB(sodium, randombytes_random,
-        [
-            LIBSODIUM_LDFLAGS="-L$LIBSODIUM_SEARCH_LIBS"
-            LIBSODIUM_LIBS="-lsodium"
-        ],
-        [
-            AC_MSG_ERROR([required library libsodium was not found in requested location $LIBSODIUM_SEARCH_LIBS])
-        ]
-    )
-else
-    AC_CHECK_LIB(sodium, randombytes_random,
-        [],
-        [
-            AC_MSG_ERROR([required library libsodium was not found on your system, please check http://download.libsodium.org/libsodium/releases/])
-        ]
-    )
+            AC_MSG_WARN([required library libsodium was not found in requested location $LIBSODIUM_SEARCH_LIBS])
+        ])
 fi
 
-LDFLAGS="$LDFLAGS_SAVE"
-AC_SUBST(LIBSODIUM_LIBS)
-AC_SUBST(LIBSODIUM_LDFLAGS)
+if test "x$LIBTOXCORE_FOUND" = "xno"; then
+    LIBSODIUM_LIBS=
+    LIBSODIUM_LDFLAGS=
+    LDFLAGS_SAVE="$LDFLAGS"
+    if test -n "$LIBSODIUM_SEARCH_LIBS"; then
+        LDFLAGS="$LDFLAGS -L$LIBSODIUM_SEARCH_LIBS"
+        AC_CHECK_LIB(sodium, randombytes_random,
+            [
+                LIBSODIUM_LDFLAGS="-L$LIBSODIUM_SEARCH_LIBS"
+                LIBSODIUM_LIBS="-lsodium"
+            ],
+            [
+                AC_MSG_ERROR([required library libsodium was not found in requested location $LIBSODIUM_SEARCH_LIBS])
+            ]
+        )
+    else
+        AC_CHECK_LIB(sodium, randombytes_random,
+            [],
+            [
+                AC_MSG_ERROR([required library libsodium was not found on your system, please check http://download.libsodium.org/libsodium/releases/])
+            ]
+        )
+    fi
+
+    LDFLAGS="$LDFLAGS_SAVE"
+    AC_SUBST(LIBSODIUM_LIBS)
+    AC_SUBST(LIBSODIUM_LDFLAGS)
 
 
 
-LIBTOXCORE_CFLAGS=
-CFLAGS_SAVE="$CFLAGS"
-CPPFLAGS_SAVE="$CPPFLAGS"
+    LIBTOXCORE_CFLAGS=
+    CFLAGS_SAVE="$CFLAGS"
+    CPPFLAGS_SAVE="$CPPFLAGS"
 
-if test -n "$LIBTOXCORE_SEARCH_HEADERS"; then
-    CFLAGS="$CFLAGS -I$LIBTOXCORE_SEARCH_HEADERS $LIBSODIUM_CFLAGS"
-    CPPFLAGS="$CPPFLAGS -I$LIBTOXCORE_SEARCH_HEADERS $LIBSODIUM_CFLAGS"
-    AC_CHECK_HEADER([Messenger.h],
-        [
-            LIBTOXCORE_CFLAGS="-I$LIBTOXCORE_SEARCH_HEADERS"
-        ],
-        [
-            AC_MSG_ERROR([headers for the toxcore library were not found on your system])
-        ]
-    )
-else
-    CFLAGS="$CFLAGS $LIBSODIUM_CFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBSODIUM_CFLAGS"
-    AC_CHECK_HEADER([Messenger.h],
-        [],
-        [
-            AC_MSG_ERROR([headers for the toxcore library were not found on your system])
-        ]
-    )
+    if test -n "$LIBTOXCORE_SEARCH_HEADERS"; then
+        CFLAGS="$CFLAGS -I$LIBTOXCORE_SEARCH_HEADERS"
+        CPPFLAGS="$CPPFLAGS -I$LIBTOXCORE_SEARCH_HEADERS"
+        AC_CHECK_HEADER([tox/tox.h],
+            [
+                LIBTOXCORE_CFLAGS="-I$LIBTOXCORE_SEARCH_HEADERS"
+            ],
+            [
+                AC_MSG_ERROR([headers for the toxcore library were not found on your system])
+            ]
+        )
+    else
+        AC_CHECK_HEADER([tox/tox.h],
+            [],
+            [
+                AC_MSG_ERROR([headers for the toxcore library were not found on your system])
+            ],
+        )
+    fi
+    CFLAGS="$CFLAGS_SAVE"
+    CPPFLAGS="$CPPFLAGS_SAVE"
+    AC_SUBST(LIBTOXCORE_CFLAGS)
+
+    LIBTOXCORE_LIBS=
+    LIBTOXCORE_LDFLAGS=
+    LDFLAGS_SAVE="$LDFLAGS"
+    if test -n "$LIBTOXCORE_SEARCH_LIBS"; then
+        LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS -L$LIBTOXCORE_SEARCH_LIBS $LIBSODIUM_LIBS"
+        AC_CHECK_LIB([toxcore], [tox_new],
+            [
+                LIBTOXCORE_LDFLAGS="-L$LIBTOXCORE_SEARCH_LIBS"
+                LIBTOXCORE_LIBS="-ltoxcore"
+            ],
+            [
+                AC_MSG_ERROR([required library toxcore was not found on your system])
+            ],
+            [
+                $WINSOCK2_LIBS
+            ]
+        )
+    else
+        LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS $LIBSODIUM_LIBS"
+        AC_CHECK_LIB([toxcore], [tox_new],
+            [],
+            [
+                AC_MSG_ERROR([required library toxcore was not found on your system])
+            ],
+            [
+                $WINSOCK2_LIBS
+            ]
+        )
+    fi
+    LDFLAGS="$LDFLAGS_SAVE"
+    AC_SUBST(LIBTOXCORE_LIBS)
+    AC_SUBST(LIBTOXCORE_LDFLAGS)
 fi
-CFLAGS="$CFLAGS_SAVE"
-CPPFLAGS="$CPPFLAGS_SAVE"
-AC_SUBST(LIBTOXCORE_CFLAGS)
-
-LIBTOXCORE_LIBS=
-LIBTOXCORE_LDFLAGS=
-LDFLAGS_SAVE="$LDFLAGS"
-if test -n "$LIBTOXCORE_SEARCH_LIBS"; then
-    LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS -L$LIBTOXCORE_SEARCH_LIBS $LIBSODIUM_LIBS"
-    AC_CHECK_LIB([toxcore], [initMessenger],
-        [
-            LIBTOXCORE_LDFLAGS="-L$LIBTOXCORE_SEARCH_LIBS"
-            LIBTOXCORE_LIBS="-ltoxcore"
-        ],
-        [
-            AC_MSG_ERROR([required library toxcore was not found on your system])
-        ]
-    )
-else
-    LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS $LIBSODIUM_LIBS"
-    AC_CHECK_LIB([toxcore], [initMessenger],
-        [],
-        [
-            AC_MSG_ERROR([required library toxcore was not found on your system])
-        ]
-    )
-fi
-LDFLAGS="$LDFLAGS_SAVE"
-AC_SUBST(LIBTOXCORE_LIBS)
-AC_SUBST(LIBTOXCORE_LDFLAGS)
-
-
 
 TOXIC_VERSION="$PACKAGE_VERSION"
 AC_PATH_PROG([GIT], [git], [no])

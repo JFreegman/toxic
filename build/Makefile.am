@@ -11,9 +11,7 @@ toxic_SOURCES = $(top_srcdir)/src/main.c \
                 $(top_srcdir)/src/friendlist.h \
                 $(top_srcdir)/src/friendlist.c \
                 $(top_srcdir)/src/toxic_windows.h \
-                $(top_srcdir)/src/windows.c \
-                $(top_srcdir)/src/dhtstatus.h \
-                $(top_srcdir)/src/dhtstatus.c
+                $(top_srcdir)/src/windows.c
 
 toxic_CFLAGS =	-I$(top_srcdir) \
 				$(NCURSES_CFLAGS) \
