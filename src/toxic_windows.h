@@ -52,9 +52,10 @@ struct ToxWindow_ {
 
     char name[TOX_MAX_NAME_LENGTH];
     int friendnum;
+    int x;
 
-    void *x;
-    void *s;
+    void *chatwin;
+    void *stb;
     void *prompt;
 
     bool blink;

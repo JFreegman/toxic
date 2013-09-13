@@ -359,7 +359,7 @@ void exit_toxic(Tox *m)
     store_data(m, DATA_FILE);
     free(DATA_FILE);
     free(SRVLIST_FILE);
-    free(prompt->s);
+    free(prompt->stb);
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);

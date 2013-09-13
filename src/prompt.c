@@ -57,28 +57,28 @@ static struct {
 /* Updates own nick in prompt statusbar */
 void prompt_update_nick(ToxWindow *prompt, uint8_t *nick)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->s;
+    StatusBar *statusbar = (StatusBar *) prompt->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 }
 
 /* Updates own statusmessage in prompt statusbar */
 void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->s;
+    StatusBar *statusbar = (StatusBar *) prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 }
 
 /* Updates own status in prompt statusbar */
 void prompt_update_status(ToxWindow *prompt, TOX_USERSTATUS status)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->s;
+    StatusBar *statusbar = (StatusBar *) prompt->stb;
     statusbar->status = status;
 }
 
 /* Updates own connection status in prompt statusbar */
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->s;
+    StatusBar *statusbar = (StatusBar *) prompt->stb;
     statusbar->is_online = is_connected;
 }
 
@@ -612,7 +612,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             --y;
     }
 
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
 
     werase(statusbar->topline);
 
@@ -676,7 +676,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y, x);
 
     /* Init statusbar info */
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->status = TOX_USERSTATUS_NONE;
     statusbar->is_online = false;
 
@@ -703,10 +703,10 @@ ToxWindow new_prompt()
     ret.onFriendRequest = &prompt_onFriendRequest;
     strcpy(ret.name, "prompt");
 
-    StatusBar *s = calloc(1, sizeof(StatusBar));
+    StatusBar *stb = calloc(1, sizeof(StatusBar));
 
-    if (s != NULL)
-        ret.s = s;
+    if (stb != NULL)
+        ret.stb = stb;
     else {
         endwin();
         fprintf(stderr, "calloc() failed. Aborting...\n");

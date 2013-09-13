@@ -219,11 +219,21 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "]%s (", friends[i].name);
 
-                /* Truncate note if it doesn't fit on one line */
                 int x, y;
                 getmaxyx(self->window, y, x);
-                uint16_t maxlen = x - getcurx(self->window) - 2;
 
+                /* Reset friends[i].statusmsg on window resize */
+                if (x != self->x) {
+                    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+                    tox_copy_statusmessage(m, friends[i].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+                    snprintf(friends[i].statusmsg, sizeof(friends[i].statusmsg), "%s", statusmsg);
+                    friends[i].statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
+                }
+
+                self->x = x;
+
+                /* Truncate note if it doesn't fit on one line */
+                uint16_t maxlen = x - getcurx(self->window) - 2;
                 if (friends[i].statusmsg_len > maxlen) {
                     friends[i].statusmsg[maxlen] = '\0';
                     friends[i].statusmsg_len = maxlen;
