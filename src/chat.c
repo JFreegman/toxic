@@ -44,7 +44,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     if (self->friendnum != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->x;
+    ChatContext *ctx = (ChatContext *) self->chatwin;
 
     struct tm *timeinfo = get_time();
 
@@ -68,7 +68,7 @@ void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
     if (self->friendnum != num)
         return;
 
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->is_online = status == 1 ? true : false;
 }
 
@@ -77,7 +77,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     if (self->friendnum != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->x;
+    ChatContext *ctx = (ChatContext *) self->chatwin;
     struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
@@ -108,7 +108,7 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS
     if (self->friendnum != num)
         return;
 
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->status = status;
 }
 
@@ -117,7 +117,7 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     if (self->friendnum != num)
         return;
 
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->statusmsg_len = len;
     snprintf(statusbar->statusmsg, len, "%s", status);
 }
@@ -316,8 +316,14 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
             return;
         }
 
-        nick++;
-        tox_setname(m, nick, strlen(nick) + 1);
+        int len = strlen(++nick);
+
+        if (len > TOXIC_MAX_NAME_LENGTH) {
+            nick[TOXIC_MAX_NAME_LENGTH] = L'\0';
+            len = TOXIC_MAX_NAME_LENGTH;
+        }
+
+        tox_setname(m, nick, len+1);
         prompt_update_nick(self->prompt, nick);
         wprintw(ctx->history, "Nickname set to: %s\n", nick);
     }
@@ -343,8 +349,8 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    ChatContext *ctx = (ChatContext *) self->x;
-    StatusBar *statusbar = (StatusBar *) self->s;
+    ChatContext *ctx = (ChatContext *) self->chatwin;
+    StatusBar *statusbar = (StatusBar *) self->stb;
 
     struct tm *timeinfo = get_time();
 
@@ -436,10 +442,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int x, y;
     getmaxyx(self->window, y, x);
 
-    ChatContext *ctx = (ChatContext *) self->x;
+    ChatContext *ctx = (ChatContext *) self->chatwin;
 
     /* Draw status bar */
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
     mvwhline(statusbar->topline, 1, 0, '-', x);
     wmove(statusbar->topline, 0, 0);
 
@@ -471,7 +477,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
         wprintw(statusbar->topline, "[%s]", status_text);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-
     } else {
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", self->name);
@@ -479,19 +484,30 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, "[Offline]");
     }
 
+    /* Reset statusbar->statusmsg on window resize */
+    if (x != self->x) {
+        uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+        tox_copy_statusmessage(m, self->friendnum, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+        statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
+    }
+
+    self->x = x;
+
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x - getcurx(statusbar->topline) - 5;
+    uint16_t maxlen = x - getcurx(statusbar->topline) - 6;
     if (statusbar->statusmsg_len > maxlen) {
         statusbar->statusmsg[maxlen] = '\0';
         statusbar->statusmsg_len = maxlen;
     }
 
-    wattron(statusbar->topline, A_BOLD);
-    wprintw(statusbar->topline, " | %s |", statusbar->statusmsg);
-    wattroff(statusbar->topline, A_BOLD);
+    if (statusbar->statusmsg[0]) {
+        wattron(statusbar->topline, A_BOLD);
+        wprintw(statusbar->topline, " | %s | ", statusbar->statusmsg);
+        wattroff(statusbar->topline, A_BOLD);
+    }
 
     wprintw(statusbar->topline, "\n");
-
     mvwhline(ctx->linewin, 0, 0, '_', x);
     wrefresh(self->window);
 }
@@ -500,9 +516,10 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 {
     int x, y;
     getmaxyx(self->window, y, x);
+    self->x = x;
 
     /* Init statusbar info */
-    StatusBar *statusbar = (StatusBar *) self->s;
+    StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->status = tox_get_userstatus(m, self->friendnum);
     statusbar->is_online = tox_get_friend_connectionstatus(m, self->friendnum) == 1;
 
@@ -512,7 +529,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
 
     /* Init subwindows */
-    ChatContext *ctx = (ChatContext *) self->x;
+    ChatContext *ctx = (ChatContext *) self->chatwin;
     statusbar->topline = subwin(self->window, 2, x, 0, 0);
     ctx->history = subwin(self->window, y-3, x, 0, 0);
     scrollok(ctx->history, 1);
@@ -541,12 +558,12 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
     tox_getname(m, friendnum, name);
     snprintf(ret.name, sizeof(ret.name), "%s", name);
 
-    ChatContext *x = calloc(1, sizeof(ChatContext));
-    StatusBar *s = calloc(1, sizeof(StatusBar));
+    ChatContext *chatwin = calloc(1, sizeof(ChatContext));
+    StatusBar *stb = calloc(1, sizeof(StatusBar));
 
-    if (s != NULL && x != NULL) {
-        ret.x = x;
-        ret.s = s;
+    if (stb != NULL && chatwin != NULL) {
+        ret.chatwin = chatwin;
+        ret.stb = stb;
     } else {
         endwin();
         fprintf(stderr, "calloc() failed. Aborting...\n");
