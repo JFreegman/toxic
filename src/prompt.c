@@ -388,7 +388,8 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
 
     if (nick[0] == '\"') {
         ++nick;
-        nick[--len-1] = L'\0';
+        len -= 2;
+        nick[len] = L'\0';
     }
 
     if (len > TOXIC_MAX_NAME_LENGTH) {
