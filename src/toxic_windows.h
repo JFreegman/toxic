@@ -16,12 +16,9 @@
 #define MAX_FRIENDS_NUM 100
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
-
-/* number of permanent default windows */
-#define N_DEFAULT_WINS 3
-
+#define TOXIC_MAX_NAME_LENGTH 30   /* Not to be confused with TOX_MAX_NAME_LENGTH */
+#define N_DEFAULT_WINS 3    /* number of permanent default windows */
 #define UNKNOWN_NAME "Unknown"
-
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
  

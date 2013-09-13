@@ -316,8 +316,14 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
             return;
         }
 
-        nick++;
-        tox_setname(m, nick, strlen(nick) + 1);
+        int len = strlen(++nick);
+
+        if (len > TOXIC_MAX_NAME_LENGTH) {
+            nick[TOXIC_MAX_NAME_LENGTH] = L'\0';
+            len = TOXIC_MAX_NAME_LENGTH;
+        }
+
+        tox_setname(m, nick, len+1);
         prompt_update_nick(self->prompt, nick);
         wprintw(ctx->history, "Nickname set to: %s\n", nick);
     }

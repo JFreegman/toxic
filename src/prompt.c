@@ -384,10 +384,19 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    if (nick[0] == '\"')
-        nick[strlen(++nick)-1] = L'\0';
+    int len = strlen(nick);
 
-    tox_setname(m, nick, strlen(nick) + 1);
+    if (nick[0] == '\"') {
+        ++nick;
+        nick[--len-1] = L'\0';
+    }
+
+    if (len > TOXIC_MAX_NAME_LENGTH) {
+        nick[TOXIC_MAX_NAME_LENGTH] = L'\0';
+        len = TOXIC_MAX_NAME_LENGTH;
+    }
+
+    tox_setname(m, nick, len+1);
     prompt_update_nick(self, nick);
 
     store_data(m, DATA_FILE);
