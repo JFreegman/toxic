@@ -389,29 +389,36 @@ int main(int argc, char *argv[])
         }
     }
 
+    config_err = create_user_config_dir(user_config_dir);
     if (DATA_FILE == NULL ) {
-        config_err = create_user_config_dir(user_config_dir);
-
         if (config_err) {
             DATA_FILE = strdup("data");
-            SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
-            SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-
-            if (DATA_FILE != NULL && SRVLIST_FILE != NULL) {
+            if (DATA_FILE != NULL) {
                 strcpy(DATA_FILE, user_config_dir);
                 strcat(DATA_FILE, CONFIGDIR);
                 strcat(DATA_FILE, "data");
-
-                strcpy(SRVLIST_FILE, user_config_dir);
-                strcat(SRVLIST_FILE, CONFIGDIR);
-                strcat(SRVLIST_FILE, "DHTservers");
             } else {
                 endwin();
                 fprintf(stderr, "malloc() failed. Aborting...\n");
                 exit(EXIT_FAILURE);
             }
+        }
+    }
+
+    if (config_err) {
+        SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
+    } else {
+        SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
+        if (SRVLIST_FILE != NULL) {
+            strcpy(SRVLIST_FILE, user_config_dir);
+            strcat(SRVLIST_FILE, CONFIGDIR);
+            strcat(SRVLIST_FILE, "DHTservers");
+        } else {
+            endwin();
+            fprintf(stderr, "malloc() failed. Aborting...\n");
+            exit(EXIT_FAILURE);
         }
     }
 
