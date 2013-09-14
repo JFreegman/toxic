@@ -81,6 +81,11 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
 
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
+    if (length >= TOXIC_MAX_NAME_LENGTH) {    /* length includes null byte */
+        string[TOXIC_MAX_NAME_LENGTH] = L'\0';
+        length = TOXIC_MAX_NAME_LENGTH+1;
+    }
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
