@@ -285,16 +285,9 @@ void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    dht.port = htons(atoi(port));
-    uint32_t resolved_address = resolve_addr(ip);
-
-    if (resolved_address == 0) {
-        return;
-    }
-
-    dht.ip.i = resolved_address;
     uint8_t *binary_string = hex_string_to_bin(key);
-    tox_bootstrap(m, dht, binary_string);
+    tox_bootstrap_from_address(m, ip, TOX_ENABLE_IPV6_DEFAULT,
+                               htons(atoi(port)), binary_string);
     free(binary_string);
 }
 

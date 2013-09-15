@@ -90,7 +90,7 @@ static void init_term()
 static Tox *init_tox()
 {
     /* Init core */
-    Tox *m = tox_new();
+    Tox *m = tox_new(TOX_ENABLE_IPV6_DEFAULT);
     if (m == NULL)
         return NULL;
 
@@ -112,65 +112,6 @@ static Tox *init_tox()
     tox_setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
 #endif
     return m;
-}
-
-/*
-  resolve_addr():
-    address should represent IPv4 or a hostname with A record
-
-    returns a data in network byte order that can be used to set IP.i or IP_Port.ip.i
-    returns 0 on failure
-
-    TODO: Fix ipv6 support
-*/
-uint32_t resolve_addr(const char *address)
-{
-    struct addrinfo *server = NULL;
-    struct addrinfo  hints;
-    int              rc;
-    uint32_t         addr;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family   = AF_INET;    // IPv4 only right now.
-    hints.ai_socktype = SOCK_DGRAM; // type of socket Tox uses.
-
-#ifdef _WIN32
-    int res;
-    WSADATA wsa_data;
-
-    res = WSAStartup(MAKEWORD(2, 2), &wsa_data);
-    if (res != 0)
-    {
-        return 0;
-    }
-#endif
-    rc = getaddrinfo(address, "echo", &hints, &server);
-
-    // Lookup failed.
-    if (rc != 0) {
-#ifdef _WIN32
-        WSACleanup();
-#endif
-        return 0;
-    }
-
-    // IPv4 records only..
-    if (server->ai_family != AF_INET) {
-        freeaddrinfo(server);
-#ifdef _WIN32
-        WSACleanup();
-#endif
-        return 0;
-    }
-
-
-    addr = ((struct sockaddr_in *)server->ai_addr)->sin_addr.s_addr;
-
-    freeaddrinfo(server);
-#ifdef _WIN32
-        WSACleanup();
-#endif
-    return addr;
 }
 
 #define MAXLINE 90    /* Approx max number of chars in a sever line (IP + port + key) */
@@ -211,16 +152,9 @@ int init_connection(Tox *m)
     if (ip == NULL || port == NULL || key == NULL)
         return 3;
 
-    tox_IP_Port dht;
-    dht.port = htons(atoi(port));
-    uint32_t resolved_address = resolve_addr(ip);
-
-    if (resolved_address == 0)
-        return 0;
-
-    dht.ip.i = resolved_address;
     uint8_t *binary_string = hex_string_to_bin(key);
-    tox_bootstrap(m, dht, binary_string);
+    tox_bootstrap_from_address(m, ip, TOX_ENABLE_IPV6_DEFAULT,
+                               htons(atoi(port)), binary_string);
     free(binary_string);
     return 0;
 }
