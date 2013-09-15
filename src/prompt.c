@@ -119,7 +119,7 @@ unsigned char *hex_string_to_bin(char hex_string[])
     }
 
     char *pos = hex_string;
-    int i;
+    size_t i;
 
     for (i = 0; i < len; ++i, pos += 2)
         sscanf(pos, "%2hhx", &val[i]);
@@ -164,7 +164,8 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
     char xx[3];
     uint32_t x;
     uint8_t *msg;
-    int i, num;
+    size_t i;
+    int num;
 
     char *id = argv[1];
 
@@ -280,16 +281,9 @@ void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    dht.port = htons(atoi(port));
-    uint32_t resolved_address = resolve_addr(ip);
-
-    if (resolved_address == 0) {
-        return;
-    }
-
-    dht.ip.i = resolved_address;
     uint8_t *binary_string = hex_string_to_bin(key);
-    tox_bootstrap(m, dht, binary_string);
+    tox_bootstrap_from_address(m, ip, TOX_ENABLE_IPV6_DEFAULT,
+                               htons(atoi(port)), binary_string);
     free(binary_string);
 }
 
@@ -555,7 +549,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
 {
     int newlines = 0;
     char cmd[MAX_STR_SIZE] = {'\0'};
-    int i;
+    size_t i;
 
     for (i = 0; i < strlen(prompt_buf); ++i) {
         if (u_cmd[i] == '\n')
@@ -673,7 +667,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
     int x, y;
-    int i;
+    size_t i;
     getyx(self->window, y, x);
 
     for (i = 0; i < (strlen(prompt_buf)); ++i) {
