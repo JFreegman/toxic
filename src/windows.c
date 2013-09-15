@@ -124,6 +124,26 @@ void on_friendadded(Tox *m, int friendnumber)
     if (store_data(m, DATA_FILE))
         wprintw(prompt->window, "\nCould not store Tox data\n");
 }
+
+void on_groupmessage(Tox *m, int groupnumber, uint8_t *message, uint16_t length, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupMessage != NULL)
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, message, length);
+    }
+}
+
+void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupInvite != NULL)
+            windows[i].onGroupInvite(&windows[i], m, friendnumber, group_pub_key);
+    }
+}
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow w)
@@ -261,7 +281,6 @@ void prepare_window(WINDOW *w)
 
 void draw_active_window(Tox *m)
 {
-
     ToxWindow *a = active_window;
     wint_t ch = 0;
 

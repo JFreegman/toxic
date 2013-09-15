@@ -18,17 +18,8 @@
 #include "friendlist.h"
 #include "chat.h"
 
-#define CURS_Y_OFFSET 3
-
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
-
-typedef struct {
-    wchar_t line[MAX_STR_SIZE];
-    size_t pos;
-    WINDOW *history;
-    WINDOW *linewin;
-} ChatContext;
 
 struct tm *get_time(void)
 {
@@ -41,11 +32,10 @@ struct tm *get_time(void)
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
-    if (self->friendnum != num)
+    if (self->num != num)
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
-
     struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
@@ -65,7 +55,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
 
 void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
 {
-    if (self->friendnum != num)
+    if (self->num != num)
         return;
 
     StatusBar *statusbar = (StatusBar *) self->stb;
@@ -74,7 +64,7 @@ void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
 
 static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uint16_t len)
 {
-    if (self->friendnum != num)
+    if (self->num != num)
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
@@ -97,7 +87,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
 
 static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t len)
 {
-    if (self->friendnum != num)
+    if (self->num != num)
         return;
 
     snprintf(self->name, sizeof(self->name), "%s", nick);
@@ -105,7 +95,7 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
 {
-    if (self->friendnum != num)
+    if (self->num != num)
         return;
 
     StatusBar *statusbar = (StatusBar *) self->stb;
@@ -114,7 +104,7 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS
 
 static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status, uint16_t len)
 {
-    if (self->friendnum != num)
+    if (self->num != num)
         return;
 
     StatusBar *statusbar = (StatusBar *) self->stb;
@@ -133,7 +123,7 @@ int string_is_empty(char *string)
 }
 
 /* convert wide characters to null terminated string */
-static uint8_t *wcs_to_char(wchar_t *string)
+uint8_t *wcs_to_char(wchar_t *string)
 {
     size_t len = 0;
     char *ret = NULL;
@@ -162,7 +152,7 @@ static uint8_t *wcs_to_char(wchar_t *string)
 }
 
 /* convert a wide char to null terminated string */
-static char *wc_to_char(wchar_t ch)
+char *wc_to_char(wchar_t ch)
 {
     int len = 0;
     static char ret[MB_LEN_MAX + 1];
@@ -239,7 +229,7 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
         wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
         if (!statusbar->is_online
-                || tox_sendaction(m, self->friendnum, action, strlen(action) + 1) == 0) {
+                || tox_sendaction(m, self->num, action, strlen(action) + 1) == 0) {
             wattron(ctx->history, COLOR_PAIR(RED));
             wprintw(ctx->history, " * Failed to send action\n");
             wattroff(ctx->history, COLOR_PAIR(RED));
@@ -393,7 +383,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         if (line[0] == '/') {
             if (close_win = !strncmp(line, "/close", strlen("/close"))) {
-                int f_num = self->friendnum;
+                int f_num = self->num;
                 delwin(ctx->linewin);
                 delwin(statusbar->topline);
                 del_window(self);
@@ -415,7 +405,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wprintw(ctx->history, "%s\n", line);
 
                 if (!statusbar->is_online
-                        || tox_sendmessage(m, self->friendnum, line, strlen(line) + 1) == 0) {
+                        || tox_sendmessage(m, self->num, line, strlen(line) + 1) == 0) {
                     wattron(ctx->history, COLOR_PAIR(RED));
                     wprintw(ctx->history, " * Failed to send message.\n");
                     wattroff(ctx->history, COLOR_PAIR(RED));
@@ -438,7 +428,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 static void chat_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
-
     int x, y;
     getmaxyx(self->window, y, x);
 
@@ -487,9 +476,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     /* Reset statusbar->statusmsg on window resize */
     if (x != self->x) {
         uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-        tox_copy_statusmessage(m, self->friendnum, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        tox_copy_statusmessage(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-        statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
+        statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->num);
     }
 
     self->x = x;
@@ -520,13 +509,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init statusbar info */
     StatusBar *statusbar = (StatusBar *) self->stb;
-    statusbar->status = tox_get_userstatus(m, self->friendnum);
-    statusbar->is_online = tox_get_friend_connectionstatus(m, self->friendnum) == 1;
+    statusbar->status = tox_get_userstatus(m, self->num);
+    statusbar->is_online = tox_get_friend_connectionstatus(m, self->num) == 1;
 
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-    tox_copy_statusmessage(m, self->friendnum, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    tox_copy_statusmessage(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
+    statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->num);
 
     /* Init subwindows */
     ChatContext *ctx = (ChatContext *) self->chatwin;
@@ -571,7 +560,7 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
     }
 
     ret.prompt = prompt;
-    ret.friendnum = friendnum;
+    ret.num = friendnum;
 
     return ret;
 }

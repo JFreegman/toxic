@@ -49,10 +49,7 @@ void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t sta
     if (num < 0 || num >= num_friends)
         return;
 
-    if (status == 1)
-        friends[num].online = true;
-    else
-        friends[num].online = false;
+    friends[num].online = status == 1 ? true : false;
 }
 
 void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
@@ -227,7 +224,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
                     tox_copy_statusmessage(m, friends[i].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     snprintf(friends[i].statusmsg, sizeof(friends[i].statusmsg), "%s", statusmsg);
-                    friends[i].statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
+                    friends[i].statusmsg_len = tox_get_statusmessage_size(m, self->num);
                 }
 
                 self->x = x;
