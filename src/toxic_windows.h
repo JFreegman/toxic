@@ -19,7 +19,7 @@
 
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
-#define MAX_GROUPCHAT_NUM 32
+#define MAX_GROUPCHAT_NUM 30
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
 #define TOXIC_MAX_NAME_LENGTH 30   /* Not to be confused with TOX_MAX_NAME_LENGTH */

@@ -26,15 +26,14 @@ extern int store_data(Tox *m, char *path);
 
 int get_num_groupchats(void)
 {
-    int count = 0;
     int i;
 
-    for (i = 0; i < group_chat_index; ++i) {
-        if (groupchats[i].active)
-            ++count;
+    for (i = 0; i <= group_chat_index; ++i) {
+        if (!groupchats[i].active)
+            return i;
     }
 
-    return count;
+    return -1;
 }
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m)
@@ -45,7 +44,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m)
         if (!groupchats[i].active) {
             groupchats[i].active = true;
             groupchats[i].chatwin = add_window(m, new_groupchat(m, prompt, i));
-            set_active_window(groupchats[i].chatwin);
+            //set_active_window(groupchats[i].chatwin);
 
             if (i == group_chat_index)
                 ++group_chat_index;
@@ -140,7 +139,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (line[0] == '/') {
             if (close_win = !strncmp(line, "/close", strlen("/close"))) {
                 set_active_window(0);
-                int group_num = groupchats[self->num].chatwin;
+                int group_num = self->num;
                 delwin(ctx->linewin);
                 del_window(self);
                 close_groupchatwin(m, group_num);

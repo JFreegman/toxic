@@ -18,7 +18,7 @@ extern char *DATA_FILE;
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint8_t num_frnd_requests = 0;
 
-uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
+uint8_t pending_grp_requests[MAX_GROUPCHAT_NUM][TOX_CLIENT_ID_SIZE];
 uint8_t num_grp_requests = 0;
 
 static char prompt_buf[MAX_STR_SIZE] = {'\0'};
@@ -92,18 +92,28 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
     statusbar->is_online = is_connected;
 }
 
-/* Adds friend request to pending friend requests. */
+/* Adds friend request to pending friend requests. 
+   Returns friend number on success, -1 if queue is full or other error. */
 int add_friend_req(uint8_t *public_key)
 {
-    memcpy(pending_frnd_requests[num_frnd_requests++], public_key, TOX_CLIENT_ID_SIZE);
-    return num_frnd_requests - 1;
+    if (num_frnd_requests < MAX_FRIENDS_NUM) {
+        memcpy(pending_frnd_requests[num_frnd_requests++], public_key, TOX_CLIENT_ID_SIZE);
+        return num_frnd_requests - 1;
+    }
+
+    return -1;
 }
 
-/* Adds group chat invite to pending group chat requests */
+/* Adds group chat invite to pending group chat requests. 
+   Returns group number on success, -1 if queue is full or other error. */
 int add_group_req(uint8_t *group_pub_key)
 {
-    memcpy(pending_grp_requests[num_grp_requests++], group_pub_key, TOX_CLIENT_ID_SIZE);
-    return num_grp_requests - 1;
+    if (num_grp_requests < MAX_GROUPCHAT_NUM) {
+        memcpy(pending_grp_requests[num_grp_requests++], group_pub_key, TOX_CLIENT_ID_SIZE);
+        return num_grp_requests - 1;
+    }
+
+    return -1;
 }
 
 // XXX: FIX
@@ -143,13 +153,13 @@ void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    num = tox_addfriend_norequest(m, pending_frnd_requests[num]);
+    int friendnum = tox_addfriend_norequest(m, pending_frnd_requests[num]);
 
-    if (num == -1)
+    if (friendnum == -1)
         wprintw(self->window, "Failed to add friend.\n");
     else {
-        wprintw(self->window, "Friend accepted.\n");
-        on_friendadded(m, num);
+        wprintw(self->window, "Friend request accepted.\n");
+        on_friendadded(m, friendnum);
     }
 }
 
@@ -296,7 +306,7 @@ void cmd_groupchat(ToxWindow *self, Tox *m, int argc, char **argv)
 {
     int ngc = get_num_groupchats();
 
-    if (ngc < 0 || ngc >= MAX_GROUPCHAT_NUM) {
+    if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
         wprintw(self->window, "\nMaximum number of group chats has been reached.\n");
         return;
     }
@@ -357,9 +367,8 @@ void cmd_invite(ToxWindow *self, Tox *m, int argc, char **argv)
 
     int friendnum = atoi(argv[1]);
     int groupnum = atoi(argv[2]);
-    int n = tox_invite_friend(m, friendnum, groupnum);
 
-    if (n == -1) {
+    if (tox_invite_friend(m, friendnum, groupnum) == -1) {
         wprintw(self->window, "Failed to invite friend.\n");
         return;
     }
@@ -386,10 +395,18 @@ void cmd_join(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    num = tox_join_groupchat(m, num, pending_grp_requests[num]);
+    int groupnum = tox_join_groupchat(m, num, pending_grp_requests[num]);
 
-    if (num == -1 || init_groupchat_win(self, m) == -1)
+    if (groupnum == -1) {
         wprintw(self->window, "Group chat failed to initialize.\n");
+        return;
+    }
+
+    if (init_groupchat_win(self, m) == -1) {
+        wprintw(self->window, "Group chat failed to initialize.\n");
+        tox_del_groupchat(m, groupnum);
+        return;
+    }
 }
 
 void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
@@ -484,7 +501,7 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
             wprintw(self->window, "Messages must be enclosed in quotes.\n");
             return;
         }
-    } else if (argc < 1 || argc > 2) {
+    } else if (argc != 1) {
         wprintw(self->window, "Wrong number of arguments.\n");
         return;
     }
@@ -736,6 +753,12 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
     int n = add_friend_req(key);
+
+    if (n == -1) {
+        wprintw(self->window, "Friend request queue is full. Discarding request.\n");
+        return;
+    }
+
     wprintw(self->window, "\nFriend request from:\n");
 
     int i;
@@ -753,16 +776,22 @@ void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16
 
 void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
 {
+    wprintw(self->window, "\nGroup chat invite from: %d\n", friendnumber);
+
     int ngc = get_num_groupchats();
-    if (ngc < 0 || ngc >= MAX_GROUPCHAT_NUM) {
-        wprintw(self->window, "\nGroup chat invite from: %d\n", friendnumber);
+
+    if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
         wprintw(self->window, "\nMaximum number of group chats has been reached. Discarding invite.\n");
         return;
     }
 
     int n = add_group_req(group_pub_key);
 
-    wprintw(self->window, "\nGroup chat invite from: %d\n", friendnumber);
+    if (n == -1) {
+        wprintw(self->window, "\nGroup chat queue is full. Discarding invite.\n");
+        return;
+    }
+
     wprintw(self->window, "Type \"join %d\" to join the chat.\n", n);
 
     self->blink = true;
