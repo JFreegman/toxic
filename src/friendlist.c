@@ -256,8 +256,7 @@ void disable_chatwin(int f_num)
     friends[f_num].chatwin = -1;
 }
 
-/* Returns the respective friend number of name. Returns -1 on no match 
-   This should be used instead of tox_getname for retrieving */
+/* Returns the respective friend number of name. Returns -1 on no match */
 int get_friendnum(uint8_t *name)
 {
     int i;
