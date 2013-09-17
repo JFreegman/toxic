@@ -64,7 +64,7 @@ static void close_groupchatwin(Tox *m, int groupnum)
     int i;
 
     for (i = group_chat_index; i > 0; --i) {
-        if (groupchats[i-1].chatwin != -1)
+        if (groupchats[i-1].active)
             break;
     }
 
