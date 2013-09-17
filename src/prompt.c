@@ -340,8 +340,8 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, "      status <type> <message>   : Set your status with optional note\n");
     wprintw(self->window, "      note  <message>           : Set a personal note\n");
     wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
-    wprintw(self->window, "      join <n>                  : Join a group chat (must be invited)\n");
-    wprintw(self->window, "      invite <f> <g>            : Invite friend f to groupchat g\n");
+    wprintw(self->window, "      join <n>                  : Join a group chat\n");
+    wprintw(self->window, "      invite <nick> <n>         : Invite friend to a groupchat\n");
     wprintw(self->window, "      groupchat                 : Create a group chat\n");
     wprintw(self->window, "      myid                      : Print your ID\n");
     wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
@@ -368,15 +368,25 @@ void cmd_invite(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    int friendnum = atoi(argv[1]);
+    uint8_t *friendname = argv[1];
     int groupnum = atoi(argv[2]);
+
+    if (friendname[0] == '\"')
+        friendname[strlen(++friendname)-1] = L'\0';
+
+    int friendnum = get_friendnum(friendname);
+
+    if (friendnum == -1) {
+        wprintw(self->window, "Friend '%s' not found.\n", friendname);
+        return;
+    }
 
     if (tox_invite_friend(m, friendnum, groupnum) == -1) {
         wprintw(self->window, "Failed to invite friend.\n");
         return;
     }
 
-    wprintw(self->window, "Invited friend %d to group chat %d.\n", friendnum, groupnum);
+    wprintw(self->window, "Invited friend %s to group chat %d.\n", friendname, groupnum);
 }
 
 void cmd_join(ToxWindow *self, Tox *m, int argc, char **argv)
@@ -779,7 +789,16 @@ void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16
 
 void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
 {
-    wprintw(self->window, "\nGroup chat invite from: %d\n", friendnumber);
+    if (friendnumber < 0)
+        return;
+
+    uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
+
+    if (tox_getname(m, friendnumber, name) == -1)
+        return;
+
+    name[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
+    wprintw(self->window, "\nGroup chat invite from %s.\n", name);
 
     int ngc = get_num_groupchats();
 
