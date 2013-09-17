@@ -136,22 +136,22 @@ int serverlist_load()
     char line[MAXLINE];
     while (fgets(line, sizeof(line), fp) && linecnt < MAXSERVERS) {
         if (strlen(line) > MINLINE) {
-			char *name = strtok(server, " ");
-			char *port = strtok(NULL, " ");
-			char *key_ascii = strtok(NULL, " ");
-			/* invalid line */
-			if (name == NULL || port == NULL || key_ascii == NULL)
-				continue;
+            char *name = strtok(line, " ");
+            char *port = strtok(NULL, " ");
+            char *key_ascii = strtok(NULL, " ");
+            /* invalid line */
+            if (name == NULL || port == NULL || key_ascii == NULL)
+                continue;
 
-			strncpy(servers[linecnt], name, SERVERLEN);
-			servers[linecnt][SERVERLEN - 1] = 0;
-			ports[linecnt] = htons(atoi(port));
+            strncpy(servers[linecnt], name, SERVERLEN);
+            servers[linecnt][SERVERLEN - 1] = 0;
+            ports[linecnt] = htons(atoi(port));
 
-			uint8_t *key_binary = hex_string_to_bin(key_ascii);
-			memcpy(keys[linecnt], key_binary, TOX_CLIENT_ID_SIZE);
-			free(binary_string);
+            uint8_t *key_binary = hex_string_to_bin(key_ascii);
+            memcpy(keys[linecnt], key_binary, TOX_CLIENT_ID_SIZE);
+            free(key_binary);
 
-			linecnt++;
+            linecnt++;
         }
     }
 
@@ -166,8 +166,8 @@ int serverlist_load()
 
 int init_connection_helper(Tox *m, int linenumber)
 {
-    return tox_bootstrap_from_address(m, servers[linenumber, TOX_ENABLE_IPV6_DEFAULT,
-												ports[linenumber], keys[linenumber]);
+    return tox_bootstrap_from_address(m, servers[linenumber], TOX_ENABLE_IPV6_DEFAULT,
+                                                ports[linenumber], keys[linenumber]);
 }
 
 /* Connects to a random DHT server listed in the DHTservers file
@@ -195,14 +195,14 @@ int init_connection(Tox *m)
         if (res)
             return res;
 
-		if (!linecnt)
-			return 4;
+        if (!linecnt)
+            return 4;
 
-		res = 6;
+        res = 6;
         int linenumber;
         for(linenumber = 0; linenumber < linecnt; linenumber++)
             if (init_connection_helper(m, linenumber))
-				res = 0;
+                res = 0;
 
         return res;
     }
