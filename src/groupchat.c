@@ -19,7 +19,7 @@
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int group_chat_index = 0;
 
-ToxWindow new_groupchat(Tox *m, ToxWindow *prompt, int groupnum);
+ToxWindow new_group_chat(Tox *m, ToxWindow *prompt, int groupnum);
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -36,15 +36,15 @@ int get_num_groupchats(void)
     return -1;
 }
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m)
+int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
     int i;
 
     for (i = 0; i <= group_chat_index; ++i) {
         if (!groupchats[i].active) {
+            groupchats[i].chatwin = add_window(m, new_group_chat(m, prompt, groupnum));
             groupchats[i].active = true;
-            groupchats[i].chatwin = add_window(m, new_groupchat(m, prompt, i));
-            //set_active_window(groupchats[i].chatwin);
+            set_active_window(groupchats[i].chatwin);
 
             if (i == group_chat_index)
                 ++group_chat_index;
@@ -64,7 +64,7 @@ static void close_groupchatwin(Tox *m, int groupnum)
     int i;
 
     for (i = group_chat_index; i > 0; --i) {
-        if (groupchats[i-1].active)
+        if (groupchats[i-1].chatwin != -1)
             break;
     }
 
@@ -139,25 +139,25 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (line[0] == '/') {
             if (close_win = !strncmp(line, "/close", strlen("/close"))) {
                 set_active_window(0);
-                int group_num = self->num;
+                int groupnum = self->num;
                 delwin(ctx->linewin);
                 del_window(self);
-                close_groupchatwin(m, group_num);
+                close_groupchatwin(m, groupnum);
             } //else
                 //execute(self, ctx, statusbar, m, line);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
-                uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+                // uint8_t selfname[TOX_MAX_NAME_LENGTH];
+                // tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
 
-                wattron(ctx->history, COLOR_PAIR(CYAN));
-                wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-                wattroff(ctx->history, COLOR_PAIR(CYAN));
-                wattron(ctx->history, COLOR_PAIR(GREEN));
-                wprintw(ctx->history, "%s: ", selfname);
-                wattroff(ctx->history, COLOR_PAIR(GREEN));
-                wprintw(ctx->history, "%s\n", line);
+                // wattron(ctx->history, COLOR_PAIR(CYAN));
+                // wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+                // wattroff(ctx->history, COLOR_PAIR(CYAN));
+                // wattron(ctx->history, COLOR_PAIR(GREEN));
+                // wprintw(ctx->history, "%s: ", selfname);
+                // wattroff(ctx->history, COLOR_PAIR(GREEN));
+                // wprintw(ctx->history, "%s\n", line);
 
                 if (tox_group_message_send(m, self->num, line, strlen(line) + 1) == -1) {
                     wattron(ctx->history, COLOR_PAIR(RED));
@@ -193,14 +193,14 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     int x, y;
     ChatContext *ctx = (ChatContext *) self->chatwin;
     getmaxyx(self->window, y, x);
-    ctx->history = subwin(self->window, y-4, x, 0, 0);
+    ctx->history = subwin(self->window, y-3, x, 0, 0);
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 2, x, y-4, 0);
     // print_help(ctx);
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_groupchat(Tox *m, ToxWindow *prompt, int groupnum)
+ToxWindow new_group_chat(Tox *m, ToxWindow *prompt, int groupnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));

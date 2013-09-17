@@ -318,7 +318,7 @@ void cmd_groupchat(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    if (init_groupchat_win(self, m) == -1) {
+    if (init_groupchat_win(self, m, groupnum) == -1) {
         wprintw(self->window, "Group chat failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;
@@ -336,10 +336,13 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
 
     wprintw(self->window, "      connect <ip> <port> <key> : Connect to DHT server\n");
     wprintw(self->window, "      add <id> <message>        : Add friend with optional message\n");
+    wprintw(self->window, "      accept <n>                : Accept friend request\n");
     wprintw(self->window, "      status <type> <message>   : Set your status with optional note\n");
     wprintw(self->window, "      note  <message>           : Set a personal note\n");
     wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
-    wprintw(self->window, "      accept <number>           : Accept friend request\n");
+    wprintw(self->window, "      join <n>                  : Join a group chat (must be invited)\n");
+    wprintw(self->window, "      invite <f> <g>            : Invite friend f to groupchat g\n");
+    wprintw(self->window, "      groupchat                 : Create a group chat\n");
     wprintw(self->window, "      myid                      : Print your ID\n");
     wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
     wprintw(self->window, "      help                      : Print this message again\n");
@@ -402,7 +405,7 @@ void cmd_join(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    if (init_groupchat_win(self, m) == -1) {
+    if (init_groupchat_win(self, m, groupnum) == -1) {
         wprintw(self->window, "Group chat failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;
