@@ -195,8 +195,9 @@ void set_active_window(int index)
     active_window = windows + index;
 }
 
-ToxWindow *init_windows()
+ToxWindow *init_windows(Tox *mToAssign)
 {
+    m = mToAssign;
     int n_prompt = add_window(m, new_prompt());
 
     if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
