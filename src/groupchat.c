@@ -71,7 +71,7 @@ static void close_groupchatwin(Tox *m, int groupnum)
     group_chat_index = i;
 }
 
-static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, uint8_t *msg, uint16_t len)
+static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *msg, uint16_t len)
 {
     if (self->num != groupnum)
         return;
@@ -79,14 +79,15 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, uint
     ChatContext *ctx = (ChatContext *) self->chatwin;
     struct tm *timeinfo = get_time();
 
-    // uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    // tox_getname(m, num, nick);
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_group_peername(m, groupnum, peernum, nick);
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
     wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     wattroff(ctx->history, COLOR_PAIR(CYAN));
     wattron(ctx->history, COLOR_PAIR(4));
-    wprintw(ctx->history, "Toxicle: ");
+    wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s\n", msg);
 

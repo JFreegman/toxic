@@ -125,13 +125,13 @@ void on_friendadded(Tox *m, int friendnumber)
         wprintw(prompt->window, "\nCould not store Tox data\n");
 }
 
-void on_groupmessage(Tox *m, int groupnumber, uint8_t *message, uint16_t length, void *userdata)
+void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata)
 {
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, message, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, message, length);
     }
 }
 
