@@ -65,17 +65,19 @@ static struct {
 };
 
 /* Updates own nick in prompt statusbar */
-void prompt_update_nick(ToxWindow *prompt, uint8_t *nick)
+void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
 {
     StatusBar *statusbar = (StatusBar *) prompt->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+    statusbar->nick_len = len;
 }
 
 /* Updates own statusmessage in prompt statusbar */
-void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg)
+void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg, uint16_t len)
 {
     StatusBar *statusbar = (StatusBar *) prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+    statusbar->statusmsg_len = len;
 }
 
 /* Updates own status in prompt statusbar */
@@ -170,19 +172,14 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
-    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
-    char xx[3];
-    uint32_t x;
-    uint8_t *msg;
-    size_t i;
-    int num;
-
     char *id = argv[1];
 
     if (id == NULL) {
         wprintw(self->window, "Invalid syntax.\n");
         return;
     }
+
+    uint8_t *msg;
 
     if (argc == 2) {
         msg = argv[2];
@@ -207,6 +204,11 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         return;
     }
 
+    size_t i;
+    char xx[3];
+    uint32_t x;
+    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
+
     for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
         xx[0] = id[2 * i];
         xx[1] = id[2 * i + 1];
@@ -224,7 +226,7 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         id[i] = toupper(id[i]);
     }
 
-    num = tox_addfriend(m, id_bin, msg, strlen(msg) + 1);
+    int num = tox_addfriend(m, id_bin, msg, strlen(msg) + 1);
 
     switch (num) {
         case TOX_FAERR_TOOLONG:
@@ -341,7 +343,7 @@ void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
     wprintw(self->window, "      note  <message>           : Set a personal note\n");
     wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
     wprintw(self->window, "      join <n>                  : Join a group chat\n");
-    wprintw(self->window, "      invite <nick> <n>         : Invite friend to a groupchat\n");
+    wprintw(self->window, "      invite <nickname> <n>     : Invite friend to a groupchat\n");
     wprintw(self->window, "      groupchat                 : Create a group chat\n");
     wprintw(self->window, "      myid                      : Print your ID\n");
     wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
@@ -492,7 +494,7 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     tox_setname(m, nick, len+1);
-    prompt_update_nick(self, nick);
+    prompt_update_nick(self, nick, len+1);
 
     store_data(m, DATA_FILE);
 }
@@ -545,8 +547,9 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
 
     if (msg != NULL) {
         msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
-        tox_set_statusmessage(m, msg, strlen(msg) + 1);
-        prompt_update_statusmessage(self, msg);
+        uint16_t len = strlen(msg) + 1;
+        tox_set_statusmessage(m, msg, len);
+        prompt_update_statusmessage(self, msg, len);
     }
 }
 
@@ -570,9 +573,9 @@ void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     msg[strlen(++msg)-1] = L'\0';
-
-    tox_set_statusmessage(m, msg, strlen(msg) + 1);
-    prompt_update_statusmessage(self, msg);
+    uint16_t len = strlen(msg) + 1;
+    tox_set_statusmessage(m, msg, len);
+    prompt_update_statusmessage(self, msg, len);
 }
 
 static void execute(ToxWindow *self, Tox *m, char *u_cmd)
@@ -663,14 +666,14 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* Add printable characters to line */
     if (isprint(key)) {
         if (prompt_buf_pos == (sizeof(prompt_buf) - 1)) {
-            wprintw(self->window, "\nToo Long.\n");
-            prompt_buf_pos = 0;
-            prompt_buf[0] = 0;
+            return;
         } else if (!(prompt_buf_pos == 0) && (prompt_buf_pos < COLS)
                    && (prompt_buf_pos % (COLS - 3) == 0)) {
+            wprintw(self->window, "\n");
             prompt_buf[prompt_buf_pos++] = '\n';
         } else if (!(prompt_buf_pos == 0) && (prompt_buf_pos > COLS)
                    && ((prompt_buf_pos - (COLS - 3)) % (COLS) == 0)) {
+            wprintw(self->window, "\n");
             prompt_buf[prompt_buf_pos++] = '\n';
         }
 

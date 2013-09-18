@@ -21,7 +21,7 @@ extern ToxWindow *prompt;
 
 typedef struct {
     uint8_t name[TOX_MAX_NAME_LENGTH];
-    uint8_t namelength;
+    uint16_t namelength;
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
     int num;

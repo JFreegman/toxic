@@ -73,6 +73,7 @@ typedef struct {
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
     uint8_t nick[TOX_MAX_NAME_LENGTH];
+    uint16_t nick_len;
     TOX_USERSTATUS status;
     bool is_online;
 } StatusBar;

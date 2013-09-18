@@ -314,7 +314,7 @@ static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox
         }
 
         tox_setname(m, nick, len+1);
-        prompt_update_nick(self->prompt, nick);
+        prompt_update_nick(self->prompt, nick, len+1);
         wprintw(ctx->history, "Nickname set to: %s\n", nick);
     }
 
