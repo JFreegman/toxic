@@ -1,8 +1,13 @@
 /*
  * Toxic -- Tox Curses Client
  */
+
 #ifndef _windows_h
 #define _windows_h
+
+#ifndef TOXICVER
+#define TOXICVER "NOVER"    /* Use the -D flag to set this */
+#endif
 
 #include <curses.h>
 #include <stdint.h>
@@ -14,17 +19,15 @@
 
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
+#define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - N_DEFAULT_WINS
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
-#define TOXIC_MAX_NAME_LENGTH 30   /* Not to be confused with TOX_MAX_NAME_LENGTH */
-#define N_DEFAULT_WINS 3    /* number of permanent default windows */
+#define TOXIC_MAX_NAME_LENGTH 30   /* Must be <= TOX_MAX_NAME_LENGTH */
+#define N_DEFAULT_WINS 2    /* number of permanent default windows */
 #define UNKNOWN_NAME "Unknown"
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
- 
-#ifndef TOXICVER
-#define TOXICVER "NOVER" //Use the -D flag to set this
-#endif
+#define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 
 /* Curses foreground colours (background is black) */
 #define WHITE 0
@@ -49,9 +52,11 @@ struct ToxWindow_ {
     void(*onStatusChange)(ToxWindow *, Tox *, int, TOX_USERSTATUS);
     void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
+    void(*onGroupMessage)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
+    void(*onGroupInvite)(ToxWindow *, Tox *, int, uint8_t *);
 
     char name[TOX_MAX_NAME_LENGTH];
-    int friendnum;
+    int num;
     int x;
 
     void *chatwin;
@@ -68,9 +73,22 @@ typedef struct {
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
     uint8_t nick[TOX_MAX_NAME_LENGTH];
+    uint16_t nick_len;
     TOX_USERSTATUS status;
     bool is_online;
 } StatusBar;
+
+typedef struct {
+    wchar_t line[MAX_STR_SIZE];
+    size_t pos;
+    WINDOW *history;
+    WINDOW *linewin;
+} ChatContext;
+
+typedef struct {
+    int chatwin;
+    bool active;
+} GroupChat;
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
@@ -80,6 +98,8 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata);
 void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_friendadded(Tox *m, int friendnumber);
+void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
+void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
 ToxWindow *init_windows();
 void draw_active_window(Tox *m);
 int add_window(Tox *m, ToxWindow w);

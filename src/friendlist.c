@@ -21,6 +21,7 @@ extern ToxWindow *prompt;
 
 typedef struct {
     uint8_t name[TOX_MAX_NAME_LENGTH];
+    uint16_t namelength;
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
     int num;
@@ -49,10 +50,7 @@ void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t sta
     if (num < 0 || num >= num_friends)
         return;
 
-    if (status == 1)
-        friends[num].online = true;
-    else
-        friends[num].online = false;
+    friends[num].online = status == 1 ? true : false;
 }
 
 void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
@@ -61,6 +59,7 @@ void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t le
         return;
 
     memcpy((char *) &friends[num].name, (char *) str, len);
+    friends[num].namelength = len;
 }
 
 void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
@@ -94,9 +93,12 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
+            friends[i].namelength = tox_getname(m, num, friends[i].name);
 
-            if (tox_getname(m, num, friends[i].name) == -1 || friends[i].name[0] == '\0')
+            if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy((char *) friends[i].name, UNKNOWN_NAME);
+                friends[i].namelength = strlen(UNKNOWN_NAME) + 1;
+            }
 
             if (i == num_friends)
                 ++num_friends;
@@ -227,7 +229,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
                     tox_copy_statusmessage(m, friends[i].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     snprintf(friends[i].statusmsg, sizeof(friends[i].statusmsg), "%s", statusmsg);
-                    friends[i].statusmsg_len = tox_get_statusmessage_size(m, self->friendnum);
+                    friends[i].statusmsg_len = tox_get_statusmessage_size(m, self->num);
                 }
 
                 self->x = x;
@@ -252,6 +254,20 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 void disable_chatwin(int f_num)
 {
     friends[f_num].chatwin = -1;
+}
+
+/* Returns the respective friend number of name. Returns -1 on no match */
+int get_friendnum(uint8_t *name)
+{
+    int i;
+    int len = strlen(name);
+
+    for (i = 0; i < num_friends; ++i) {
+        if (strncmp(friends[i].name, name, len) == 0)
+            return friends[i].num;
+    }
+
+    return -1;
 }
 
 static void friendlist_onInit(ToxWindow *self, Tox *m)

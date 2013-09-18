@@ -102,6 +102,8 @@ static Tox *init_tox()
     tox_callback_userstatus(m, on_statuschange, NULL);
     tox_callback_statusmessage(m, on_statusmessagechange, NULL);
     tox_callback_action(m, on_action, NULL);
+    tox_callback_group_invite(m, on_groupinvite, NULL);
+    tox_callback_group_message(m, on_groupmessage, NULL);
 #ifdef __linux__
     tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
 #elif defined(_WIN32)
