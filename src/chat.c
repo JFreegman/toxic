@@ -168,173 +168,54 @@ char *wc_to_char(wchar_t ch)
     return ret;
 }
 
-static void print_help(ChatContext *self)
+static void print_chat_help(ChatContext *ctx)
 {
-    wattron(self->history, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(self->history, "Commands:\n");
-    wattroff(self->history, A_BOLD);
+    wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
+    wprintw(ctx->history, "Chat commands:\n");
+    wattroff(ctx->history, A_BOLD);
 
-    wprintw(self->history, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(self->history, "      /note <message>            : Set a personal note\n");
-    wprintw(self->history, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(self->history, "      /me <action>               : Do an action\n");
-    wprintw(self->history, "      /myid                      : Print your ID\n");
-    wprintw(self->history, "      /clear                     : Clear the screen\n");
-    wprintw(self->history, "      /close                     : Close the current chat window\n");
-    wprintw(self->history, "      /quit or /exit             : Exit Toxic\n");
-    wprintw(self->history, "      /help                      : Print this message again\n\n");
-
-    wattroff(self->history, COLOR_PAIR(CYAN));
+    wprintw(ctx->history, "      /status <type> <message>   : Set your status with optional note\n");
+    wprintw(ctx->history, "      /note <message>            : Set a personal note\n");
+    wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
+    wprintw(ctx->history, "      /invite <nickname> <n>     : Invite friend to a groupchat\n");
+    wprintw(ctx->history, "      /me <action>               : Do an action\n");
+    wprintw(ctx->history, "      /myid                      : Print your ID\n");
+    wprintw(ctx->history, "      /clear                     : Clear the screen\n");
+    wprintw(ctx->history, "      /close                     : Close the current chat window\n");
+    wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
+    wprintw(ctx->history, "      /help                      : Print this message again\n");
+    
+    wattron(ctx->history, A_BOLD);
+    wprintw(ctx->history, "\n * Messages must be enclosed in quotation marks.\n");
+    wattroff(ctx->history, A_BOLD);
+    
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 }
 
-static void execute(ToxWindow *self, ChatContext *ctx, StatusBar *statusbar, Tox *m, char *cmd)
-{
-    if (!strcmp(cmd, "/clear") || !strcmp(cmd, "/c")) {
-        wclear(self->window);
-        wclear(ctx->history);
-        wprintw(ctx->history, "\n\n");
-        int x, y;
-        getmaxyx(self->window, y, x);
-        (void) x;
-        wmove(self->window, y - CURS_Y_OFFSET, 0);
+static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
+    struct tm *timeinfo = get_time();
+
+    if (action == NULL) {
+        wprintw(ctx->history, "Invalid syntax.\n");
+        return;
     }
 
-    else if (!strcmp(cmd, "/help") || !strcmp(cmd, "/h"))
-        print_help(ctx);
+    wattron(ctx->history, COLOR_PAIR(CYAN));
+    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 
-    else if (!strcmp(cmd, "/quit") || !strcmp(cmd, "/exit") || !strcmp(cmd, "/q")) {
-        exit_toxic(m);
+    uint8_t selfname[TOX_MAX_NAME_LENGTH];
+    tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+
+    wattron(ctx->history, COLOR_PAIR(YELLOW));
+    wprintw(ctx->history, "* %s %s\n", selfname, action);
+    wattroff(ctx->history, COLOR_PAIR(YELLOW));
+
+    if (tox_sendaction(m, self->num, action, strlen(action) + 1) == 0) {
+        wattron(ctx->history, COLOR_PAIR(RED));
+        wprintw(ctx->history, " * Failed to send action\n");
+        wattroff(ctx->history, COLOR_PAIR(RED));
     }
-
-    else if (!strncmp(cmd, "/me ", strlen("/me "))) {
-        struct tm *timeinfo = get_time();
-        uint8_t *action = strchr(cmd, ' ');
-
-        if (action == NULL) {
-            wprintw(self->window, "Invalid syntax.\n");
-            return;
-        }
-
-        action++;
-
-        wattron(ctx->history, COLOR_PAIR(CYAN));
-        wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-        wattroff(ctx->history, COLOR_PAIR(CYAN));
-
-        uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
-
-        wattron(ctx->history, COLOR_PAIR(YELLOW));
-        wprintw(ctx->history, "* %s %s\n", selfname, action);
-        wattroff(ctx->history, COLOR_PAIR(YELLOW));
-
-        if (!statusbar->is_online
-                || tox_sendaction(m, self->num, action, strlen(action) + 1) == 0) {
-            wattron(ctx->history, COLOR_PAIR(RED));
-            wprintw(ctx->history, " * Failed to send action\n");
-            wattroff(ctx->history, COLOR_PAIR(RED));
-        }
-    }
-
-    else if (!strncmp(cmd, "/status ", strlen("/status "))) {
-        char *status = strchr(cmd, ' ');
-
-        if (status == NULL) {
-            wprintw(ctx->history, "Invalid syntax.\n");
-            return;
-        }
-
-        status++;
-        TOX_USERSTATUS status_kind;
-
-        if (!strncmp(status, "online", strlen("online"))) {
-            status_kind = TOX_USERSTATUS_NONE;
-            wprintw(ctx->history, "Status set to: ");
-            wattron(ctx->history, COLOR_PAIR(GREEN) | A_BOLD);
-            wprintw(ctx->history, "[Online]\n");
-            wattroff(ctx->history, COLOR_PAIR(GREEN) | A_BOLD);
-        }
-
-        else if (!strncmp(status, "away", strlen("away"))) {
-            status_kind = TOX_USERSTATUS_AWAY;
-            wprintw(ctx->history, "Status set to: ");
-            wattron(ctx->history, COLOR_PAIR(YELLOW) | A_BOLD);
-            wprintw(ctx->history, "[Away]\n");
-            wattroff(ctx->history, COLOR_PAIR(YELLOW) | A_BOLD);
-        }
-
-        else if (!strncmp(status, "busy", strlen("busy"))) {
-            status_kind = TOX_USERSTATUS_BUSY;
-            wprintw(ctx->history, "Status set to: ");
-            wattron(ctx->history, COLOR_PAIR(RED) | A_BOLD);
-            wprintw(ctx->history, "[Busy]\n");
-            wattroff(ctx->history, COLOR_PAIR(RED) | A_BOLD);
-        }
-
-        else {
-            wprintw(ctx->history, "Invalid status.\n");
-            return;
-        }
-
-        tox_set_userstatus(m, status_kind);
-        prompt_update_status(self->prompt, status_kind); 
-
-        uint8_t *msg = strchr(status, ' ');
-        if (msg != NULL) {
-            msg++;
-            uint16_t len = strlen(msg) + 1;
-            tox_set_statusmessage(m, msg, len);
-            prompt_update_statusmessage(self->prompt, msg, len);
-            wprintw(ctx->history, "Personal note set to: %s\n", msg);
-        }
-    }
-
-    else if (!strncmp(cmd, "/note ", strlen("/note "))) {
-        uint8_t *msg = strchr(cmd, ' ');
-        msg++;
-        uint16_t len = strlen(msg) + 1;
-        tox_set_statusmessage(m, msg, len);
-        prompt_update_statusmessage(self->prompt, msg, len);
-        wprintw(ctx->history, "Personal note set to: %s\n", msg);
-    }
-
-    else if (!strncmp(cmd, "/nick ", strlen("/nick "))) {
-        uint8_t *nick = strchr(cmd, ' ');
-
-        if (nick == NULL) {
-            wprintw(ctx->history, "Invalid syntax.\n");
-            return;
-        }
-
-        int len = strlen(++nick);
-
-        if (len > TOXIC_MAX_NAME_LENGTH) {
-            nick[TOXIC_MAX_NAME_LENGTH] = L'\0';
-            len = TOXIC_MAX_NAME_LENGTH;
-        }
-
-        tox_setname(m, nick, len+1);
-        prompt_update_nick(self->prompt, nick, len+1);
-        wprintw(ctx->history, "Nickname set to: %s\n", nick);
-    }
-
-    else if (!strcmp(cmd, "/myid")) {
-        char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {'\0'};
-        size_t i;
-        uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
-        tox_getaddress(m, address);
-
-        for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; i++) {
-            char xx[3];
-            snprintf(xx, sizeof(xx), "%02X",  address[i] & 0xff);
-            strcat(id, xx);
-        }
-
-        wprintw(ctx->history, "%s\n", id);
-    }
-
-    else
-        wprintw(ctx->history, "Invalid command.\n");
 }
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -388,8 +269,12 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 delwin(statusbar->topline);
                 del_window(self);
                 disable_chatwin(f_num);
-            } else
-                execute(self, ctx, statusbar, m, line);
+            } else if (!strncmp(line, "/me ", strlen("/me ")))
+                send_action(self, ctx, m, line+4);
+              else if (!strncmp(line, "/help", strlen("/help")))
+                print_chat_help(ctx);
+              else
+                execute(ctx->history, self->prompt, m, line, ctx->pos);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
@@ -524,7 +409,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 0, x, y-4, 0);
     wprintw(ctx->history, "\n\n");
-    print_help(ctx);
+    print_chat_help(ctx);
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 

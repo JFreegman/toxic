@@ -25,43 +25,43 @@ static char prompt_buf[MAX_STR_SIZE] = {'\0'};
 static int prompt_buf_pos = 0;
 
 /* commands */
-void cmd_accept(ToxWindow *, Tox *m, int, char **);
-void cmd_add(ToxWindow *, Tox *m, int, char **);
-void cmd_clear(ToxWindow *, Tox *m, int, char **);
-void cmd_connect(ToxWindow *, Tox *m, int, char **);
-void cmd_groupchat(ToxWindow *, Tox *m, int, char **);
-void cmd_help(ToxWindow *, Tox *m, int, char **);
-void cmd_invite(ToxWindow *, Tox *m, int, char **);
-void cmd_join(ToxWindow *, Tox *m, int, char **);
-void cmd_msg(ToxWindow *, Tox *m, int, char **);
-void cmd_myid(ToxWindow *, Tox *m, int, char **);
-void cmd_nick(ToxWindow *, Tox *m, int, char **);
-void cmd_quit(ToxWindow *, Tox *m, int, char **);
-void cmd_status(ToxWindow *, Tox *m, int, char **);
-void cmd_note(ToxWindow *, Tox *m, int, char **);
+void cmd_accept(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_add(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_clear(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_connect(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_groupchat(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_help(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_invite(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_join(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_msg(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_myid(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_nick(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_quit(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_status(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_note(WINDOW *, ToxWindow *, Tox *m, int, char **);
 
 #define NUM_COMMANDS 16
 
 static struct {
     char *name;
-    void (*func)(ToxWindow *, Tox *m, int, char **);
+    void (*func)(WINDOW *, ToxWindow *, Tox *m, int, char **);
 } commands[] = {
-    { "accept",    cmd_accept    },
-    { "add",       cmd_add       },
-    { "clear",     cmd_clear     },
-    { "connect",   cmd_connect   },
-    { "exit",      cmd_quit      },
-    { "groupchat", cmd_groupchat },
-    { "help",      cmd_help      },
-    { "invite",    cmd_invite    },
-    { "join",      cmd_join      },
-    { "msg",       cmd_msg       },
-    { "myid",      cmd_myid      },
-    { "nick",      cmd_nick      },
-    { "q",         cmd_quit      },
-    { "quit",      cmd_quit      },
-    { "status",    cmd_status    },
-    { "note",      cmd_note      },
+    { "/accept",    cmd_accept    },
+    { "/add",       cmd_add       },
+    { "/clear",     cmd_clear     },
+    { "/connect",   cmd_connect   },
+    { "/exit",      cmd_quit      },
+    { "/groupchat", cmd_groupchat },
+    { "/help",      cmd_help      },
+    { "/invite",    cmd_invite    },
+    { "/join",      cmd_join      },
+    { "/msg",       cmd_msg       },
+    { "/myid",      cmd_myid      },
+    { "/nick",      cmd_nick      },
+    { "/q",         cmd_quit      },
+    { "/quit",      cmd_quit      },
+    { "/status",    cmd_status    },
+    { "/note",      cmd_note      },
 };
 
 /* Updates own nick in prompt statusbar */
@@ -140,42 +140,42 @@ unsigned char *hex_string_to_bin(char hex_string[])
 }
 
 /* command functions */
-void cmd_accept(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     /* check arguments */
     if (argc != 1) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
     int num = atoi(argv[1]);
 
     if (num < 0 || num >= num_frnd_requests) {
-        wprintw(self->window, "No pending friend request with that number.\n");
+        wprintw(window, "No pending friend request with that number.\n");
         return;
     }
 
     int friendnum = tox_addfriend_norequest(m, pending_frnd_requests[num]);
 
     if (friendnum == -1)
-        wprintw(self->window, "Failed to add friend.\n");
+        wprintw(window, "Failed to add friend.\n");
     else {
-        wprintw(self->window, "Friend request accepted.\n");
+        wprintw(window, "Friend request accepted.\n");
         on_friendadded(m, friendnum);
     }
 }
 
-void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     if (argc < 1 || argc > 2) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
     char *id = argv[1];
 
     if (id == NULL) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
@@ -185,12 +185,12 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         msg = argv[2];
 
         if (msg == NULL) {
-            wprintw(self->window, "Invalid syntax.\n");
+            wprintw(window, "Invalid syntax.\n");
             return;
         }
 
         if (msg[0] != '\"') {
-            wprintw(self->window, "Messages must be enclosed in quotes.\n");
+            wprintw(window, "Messages must be enclosed in quotes.\n");
             return;
         }
 
@@ -200,7 +200,7 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         msg = "Let's tox.";
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
-        wprintw(self->window, "Invalid ID length.\n");
+        wprintw(window, "Invalid ID length.\n");
         return;
     }
 
@@ -215,7 +215,7 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
         xx[2] = '\0';
 
         if (sscanf(xx, "%02x", &x) != 1) {
-            wprintw(self->window, "Invalid ID.\n");
+            wprintw(window, "Invalid ID.\n");
             return;
         }
 
@@ -230,51 +230,51 @@ void cmd_add(ToxWindow *self, Tox *m, int argc, char **argv)
 
     switch (num) {
         case TOX_FAERR_TOOLONG:
-            wprintw(self->window, "Message is too long.\n");
+            wprintw(window, "Message is too long.\n");
             break;
 
         case TOX_FAERR_NOMESSAGE:
-            wprintw(self->window, "Please add a message to your request.\n");
+            wprintw(window, "Please add a message to your request.\n");
             break;
 
         case TOX_FAERR_OWNKEY:
-            wprintw(self->window, "That appears to be your own ID.\n");
+            wprintw(window, "That appears to be your own ID.\n");
             break;
 
         case TOX_FAERR_ALREADYSENT:
-            wprintw(self->window, "Friend request already sent.\n");
+            wprintw(window, "Friend request already sent.\n");
             break;
 
         case TOX_FAERR_UNKNOWN:
-            wprintw(self->window, "Undefined error when adding friend.\n");
+            wprintw(window, "Undefined error when adding friend.\n");
             break;
 
         case TOX_FAERR_BADCHECKSUM:
-            wprintw(self->window, "Bad checksum in address.\n");
+            wprintw(window, "Bad checksum in address.\n");
             break;
 
         case TOX_FAERR_SETNEWNOSPAM:
-            wprintw(self->window, "Nospam was different.\n");
+            wprintw(window, "Nospam was different.\n");
             break;
 
         default:
-            wprintw(self->window, "Friend added as %d.\n", num);
+            wprintw(window, "Friend added as %d.\n", num);
             on_friendadded(m, num);
             break;
     }
 }
 
-void cmd_clear(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_clear(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
-    wclear(self->window);
-    wprintw(self->window, "\n\n");
+    wclear(window);
+    wprintw(window, "\n\n");
 }
 
-void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     /* check arguments */
     if (argc != 3) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
@@ -284,12 +284,12 @@ void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
     char *key = argv[3];
 
     if (ip == NULL || port == NULL || key == NULL) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
     if (atoi(port) == 0) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
@@ -299,74 +299,74 @@ void cmd_connect(ToxWindow *self, Tox *m, int argc, char **argv)
     free(binary_string);
 }
 
-void cmd_quit(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_quit(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     exit_toxic(m);
 }
 
-void cmd_groupchat(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     int ngc = get_num_groupchats();
 
     if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
-        wprintw(self->window, "\nMaximum number of group chats has been reached.\n");
+        wprintw(window, "\nMaximum number of group chats has been reached.\n");
         return;
     }
 
     int groupnum = tox_add_groupchat(m);
 
     if (groupnum == -1) {
-        wprintw(self->window, "Group chat failed to initialize.\n");
+        wprintw(window, "Group chat failed to initialize.\n");
         return;
     }
 
-    if (init_groupchat_win(self, m, groupnum) == -1) {
-        wprintw(self->window, "Group chat failed to initialize.\n");
+    if (init_groupchat_win(prompt, m, groupnum) == -1) {
+        wprintw(window, "Group chat failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;
     }
 
-    wprintw(self->window, "Group chat created as %d.\n", groupnum);
+    wprintw(window, "Group chat created as %d.\n", groupnum);
 }
 
-void cmd_help(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_help(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
-    wclear(self->window);
-    wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(self->window, "\n\nCommands:\n");
-    wattroff(self->window, A_BOLD);
+    wclear(window);
+    wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
+    wprintw(window, "\n\nCommands:\n");
+    wattroff(window, A_BOLD);
 
-    wprintw(self->window, "      connect <ip> <port> <key> : Connect to DHT server\n");
-    wprintw(self->window, "      add <id> <message>        : Add friend with optional message\n");
-    wprintw(self->window, "      accept <n>                : Accept friend request\n");
-    wprintw(self->window, "      status <type> <message>   : Set your status with optional note\n");
-    wprintw(self->window, "      note  <message>           : Set a personal note\n");
-    wprintw(self->window, "      nick <nickname>           : Set your nickname\n");
-    wprintw(self->window, "      join <n>                  : Join a group chat\n");
-    wprintw(self->window, "      invite <nickname> <n>     : Invite friend to a groupchat\n");
-    wprintw(self->window, "      groupchat                 : Create a group chat\n");
-    wprintw(self->window, "      myid                      : Print your ID\n");
-    wprintw(self->window, "      quit/exit                 : Exit Toxic\n");
-    wprintw(self->window, "      help                      : Print this message again\n");
-    wprintw(self->window, "      clear                     : Clear this window\n");
+    wprintw(window, "      /connect <ip> <port> <key> : Connect to DHT server\n");
+    wprintw(window, "      /add <id> <message>        : Add friend with optional message\n");
+    wprintw(window, "      /accept <n>                : Accept friend request\n");
+    wprintw(window, "      /status <type> <message>   : Set your status with optional note\n");
+    wprintw(window, "      /note  <message>           : Set a personal note\n");
+    wprintw(window, "      /nick <nickname>           : Set your nickname\n");
+    wprintw(window, "      /join <n>                  : Join a group chat\n");
+    wprintw(window, "      /invite <nickname> <n>     : Invite friend to a groupchat\n");
+    wprintw(window, "      /groupchat                 : Create a group chat\n");
+    wprintw(window, "      /myid                      : Print your ID\n");
+    wprintw(window, "      /quit or /exit             : Exit Toxic\n");
+    wprintw(window, "      /help                      : Print this message again\n");
+    wprintw(window, "      /clear                     : Clear this window\n");
 
-    wattron(self->window, A_BOLD);
-    wprintw(self->window, " * Messages must be enclosed in quotation marks.\n");
-    wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n\n");
-    wattroff(self->window, A_BOLD);
+    wattron(window, A_BOLD);
+    wprintw(window, "\n * Messages must be enclosed in quotation marks.\n");
+    wprintw(window, " * Use the TAB key to navigate through the tabs.\n\n");
+    wattroff(window, A_BOLD);
 
-    wattroff(self->window, COLOR_PAIR(CYAN));
+    wattroff(window, COLOR_PAIR(CYAN));
 }
 
-void cmd_invite(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_invite(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     if (argc != 2) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
     if (argv[1] == NULL || argv[2] == NULL) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
@@ -379,56 +379,56 @@ void cmd_invite(ToxWindow *self, Tox *m, int argc, char **argv)
     int friendnum = get_friendnum(friendname);
 
     if (friendnum == -1) {
-        wprintw(self->window, "Friend '%s' not found.\n", friendname);
+        wprintw(window, "Friend '%s' not found.\n", friendname);
         return;
     }
 
     if (tox_invite_friend(m, friendnum, groupnum) == -1) {
-        wprintw(self->window, "Failed to invite friend.\n");
+        wprintw(window, "Failed to invite friend.\n");
         return;
     }
 
-    wprintw(self->window, "Invited friend %s to group chat %d.\n", friendname, groupnum);
+    wprintw(window, "Invited friend %s to group chat %d.\n", friendname, groupnum);
 }
 
-void cmd_join(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     if (argc != 1) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
     if (argv[1] == NULL) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
     int num = atoi(argv[1]);
 
     if (num < 0 || num >= num_grp_requests) {
-        wprintw(self->window, "No pending group chat invites with that number.\n");
+        wprintw(window, "No pending group chat invites with that number.\n");
         return;
     }
 
     int groupnum = tox_join_groupchat(m, num, pending_grp_requests[num]);
 
     if (groupnum == -1) {
-        wprintw(self->window, "Group chat failed to initialize.\n");
+        wprintw(window, "Group chat failed to initialize.\n");
         return;
     }
 
-    if (init_groupchat_win(self, m, groupnum) == -1) {
-        wprintw(self->window, "Group chat failed to initialize.\n");
+    if (init_groupchat_win(prompt, m, groupnum) == -1) {
+        wprintw(window, "Group chat window failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;
     }
 }
 
-void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_msg(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     /* check arguments */
     if (argc != 2) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
@@ -436,19 +436,19 @@ void cmd_msg(ToxWindow *self, Tox *m, int argc, char **argv)
     uint8_t *msg = argv[2];
 
     if (id == NULL || msg == NULL) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
     msg[strlen(++msg)-1] = L'\0';
 
     if (tox_sendmessage(m, atoi(id), msg, strlen(msg) + 1) == 0)
-        wprintw(self->window, "Failed to send message.\n");
+        wprintw(window, "Failed to send message.\n");
     else
-        wprintw(self->window, "Message successfully sent.\n");
+        wprintw(window, "Message successfully sent.\n");
 }
 
-void cmd_myid(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
@@ -462,21 +462,21 @@ void cmd_myid(ToxWindow *self, Tox *m, int argc, char **argv)
         strcat(id, xx);
     }
 
-    wprintw(self->window, "%s\n", id);
+    wprintw(window, "%s\n", id);
 }
 
-void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     /* check arguments */
     if (argc != 1) {
-      wprintw(self->window, "Invalid syntax.\n");
+      wprintw(window, "Invalid syntax.\n");
       return;
     }
 
     uint8_t *nick = argv[1];
 
     if (nick == NULL) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
@@ -494,12 +494,12 @@ void cmd_nick(ToxWindow *self, Tox *m, int argc, char **argv)
     }
 
     tox_setname(m, nick, len+1);
-    prompt_update_nick(self, nick, len+1);
+    prompt_update_nick(prompt, nick, len+1);
 
     store_data(m, DATA_FILE);
 }
 
-void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     uint8_t *msg = NULL;
 
@@ -508,23 +508,23 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
         msg = argv[2];
 
         if (msg == NULL) {
-            wprintw(self->window, "Invalid syntax.\n");
+            wprintw(window, "Invalid syntax.\n");
             return;
         }
 
         if (msg[0] != '\"') {
-            wprintw(self->window, "Messages must be enclosed in quotes.\n");
+            wprintw(window, "Messages must be enclosed in quotes.\n");
             return;
         }
     } else if (argc != 1) {
-        wprintw(self->window, "Wrong number of arguments.\n");
+        wprintw(window, "Wrong number of arguments.\n");
         return;
     }
 
     char *status = argv[1];
 
     if (status == NULL) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
@@ -540,51 +540,51 @@ void cmd_status(ToxWindow *self, Tox *m, int argc, char **argv)
         status_kind = TOX_USERSTATUS_BUSY;
 
     else
-        wprintw(self->window, "Invalid status.\n");
+        wprintw(window, "Invalid status.\n");
 
     tox_set_userstatus(m, status_kind);
-    prompt_update_status(self, status_kind);
+    prompt_update_status(prompt, status_kind);
 
     if (msg != NULL) {
         msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
         uint16_t len = strlen(msg) + 1;
         tox_set_statusmessage(m, msg, len);
-        prompt_update_statusmessage(self, msg, len);
+        prompt_update_statusmessage(prompt, msg, len);
     }
 }
 
-void cmd_note(ToxWindow *self, Tox *m, int argc, char **argv)
+void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     if (argc != 1) {
-        wprintw(self->window, "Wrong number of arguments.\n");
+        wprintw(window, "Wrong number of arguments.\n");
         return;
     }
 
     uint8_t *msg = argv[1];
 
     if (msg == NULL) {
-        wprintw(self->window, "Invalid syntax.\n");
+        wprintw(window, "Invalid syntax.\n");
         return;
     }
 
     if (msg[0] != '\"') {
-        wprintw(self->window, "Messages must be enclosed in quotes.\n");
+        wprintw(window, "Messages must be enclosed in quotes.\n");
         return;
     }
 
     msg[strlen(++msg)-1] = L'\0';
     uint16_t len = strlen(msg) + 1;
     tox_set_statusmessage(m, msg, len);
-    prompt_update_statusmessage(self, msg, len);
+    prompt_update_statusmessage(prompt, msg, len);
 }
 
-static void execute(ToxWindow *self, Tox *m, char *u_cmd)
+void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len)
 {
     int newlines = 0;
     char cmd[MAX_STR_SIZE] = {'\0'};
     size_t i;
 
-    for (i = 0; i < strlen(prompt_buf); ++i) {
+    for (i = 0; i < buf_len; ++i) {
         if (u_cmd[i] == '\n')
             ++newlines;
         else
@@ -617,7 +617,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
         else if (cmd[i] == '\"') {
             while (cmd[++i] != '\"') {
                 if (cmd[i] == '\0') {
-                    wprintw(self->window, "Invalid command: did you forget an opening or closing \"?\n");
+                    wprintw(window, "Invalid command: did you forget an opening or closing \"?\n");
                     return;
                 }
             }
@@ -627,7 +627,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
     /* read arguments into array */
     char **cmdargs = malloc((numargs + 1) * sizeof(char *));
     if (!cmdargs) {
-        wprintw(self->window, "Invalid command: too many arguments.\n");
+        wprintw(window, "Invalid command: too many arguments.\n");
         return;
     }
 
@@ -650,7 +650,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
     /* match input to command list */
     for (i = 0; i < NUM_COMMANDS; i++) {
         if (!strcmp(cmdargs[0], commands[i].name)) {
-            (commands[i].func)(self, m, numargs, cmdargs);
+            (commands[i].func)(window, prompt, m, numargs, cmdargs);
             free(cmdargs);
             return;
         }
@@ -658,7 +658,7 @@ static void execute(ToxWindow *self, Tox *m, char *u_cmd)
 
     /* no match */
     free(cmdargs);
-    wprintw(self->window, "Invalid command.\n");
+    wprintw(window, "Invalid command.\n");
 }
 
 static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -684,7 +684,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* RETURN key: execute command */
     else if (key == '\n') {
         wprintw(self->window, "\n");
-        execute(self, m, prompt_buf);
+        execute(self->window, self, m, prompt_buf, prompt_buf_pos);
         prompt_buf_pos = 0;
         prompt_buf[0] = 0;
     }
@@ -762,7 +762,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     scrollok(self->window, 1);
-    cmd_help(self, m, 0, NULL);
+    cmd_help(self->window, self, m, 0, NULL);
     wclrtoeol(self->window);
 }
 
@@ -784,7 +784,7 @@ void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16
     }
 
     wprintw(self->window, "\n\nWith the message: %s\n\n", data);
-    wprintw(self->window, "Type \"accept %d\" to accept it.\n", n);
+    wprintw(self->window, "Type \"/accept %d\" to accept it.\n", n);
 
     self->blink = true;
     beep();
@@ -817,7 +817,7 @@ void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *gr
         return;
     }
 
-    wprintw(self->window, "Type \"join %d\" to join the chat.\n", n);
+    wprintw(self->window, "Type \"/join %d\" to join the chat.\n", n);
 
     self->blink = true;
     beep();

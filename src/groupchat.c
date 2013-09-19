@@ -15,6 +15,7 @@
 
 #include "toxic_windows.h"
 #include "chat.h"
+#include "prompt.h"
 
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int group_chat_index = 0;
@@ -69,6 +70,31 @@ static void close_groupchatwin(Tox *m, int groupnum)
     }
 
     group_chat_index = i;
+}
+
+static void print_groupchat_help(ChatContext *ctx)
+{
+    wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
+    wprintw(ctx->history, "Group chat commands:\n");
+    wattroff(ctx->history, A_BOLD);
+
+    wprintw(ctx->history, "      /add <id> <message>        : Add friend with optional message\n");
+    wprintw(ctx->history, "      /status <type> <message>   : Set your status with optional note\n");
+    wprintw(ctx->history, "      /note  <message>           : Set a personal note\n");
+    wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
+    wprintw(ctx->history, "      /invite <nickname> <n>     : Invite friend to a groupchat\n");
+    wprintw(ctx->history, "      /groupchat                 : Create a group chat\n");
+    wprintw(ctx->history, "      /myid                      : Print your ID\n");
+    wprintw(ctx->history, "      /clear                     : Clear the screen\n");
+    wprintw(ctx->history, "      /close                     : Close the current group chat\n");
+    wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
+    wprintw(ctx->history, "      /help                      : Print this message again\n");
+    
+    wattron(ctx->history, A_BOLD);
+    wprintw(ctx->history, "\n * Messages must be enclosed in quotation marks.\n");
+    wattroff(ctx->history, A_BOLD);
+    
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *msg, uint16_t len)
@@ -138,14 +164,16 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         bool close_win = false;
 
         if (line[0] == '/') {
-            if (close_win = !strncmp(line, "/close", strlen("/close"))) {
+            if (close_win = strncmp(line, "/close", strlen(line)) == 0) {
                 set_active_window(0);
                 int groupnum = self->num;
                 delwin(ctx->linewin);
                 del_window(self);
                 close_groupchatwin(m, groupnum);
-            } //else
-                //execute(self, ctx, statusbar, m, line);
+            } else if (strncmp(line, "/help", strlen("/help")) == 0)
+                print_groupchat_help(ctx);
+              else
+                execute(ctx->history, self->prompt, m, line, ctx->pos);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
@@ -197,7 +225,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     ctx->history = subwin(self->window, y-3, x, 0, 0);
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 2, x, y-4, 0);
-    // print_help(ctx);
+    print_groupchat_help(ctx);
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 
