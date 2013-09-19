@@ -17,6 +17,7 @@
 #include "toxic_windows.h"
 #include "friendlist.h"
 #include "chat.h"
+#include "commands.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);

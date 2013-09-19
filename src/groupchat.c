@@ -15,7 +15,7 @@
 
 #include "toxic_windows.h"
 #include "chat.h"
-#include "prompt.h"
+#include "commands.h"
 
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int group_chat_index = 0;
