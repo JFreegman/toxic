@@ -6,12 +6,10 @@
 #define _windows_h
 
 #ifndef TOXICVER
-#define TOXICVER "NOVER"    /* Use the -D flag to set this */
+#define TOXICVER "NOVER_"    /* Use the -D flag to set this */
 #endif
 
 #include <curses.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <wctype.h>
 #include <wchar.h>
 

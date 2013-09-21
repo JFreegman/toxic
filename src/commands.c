@@ -8,10 +8,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "toxic_windows.h"
-#include "prompt.h"
+#include "misc_tools.h"
 #include "commands.h"
 
 extern char *DATA_FILE;
