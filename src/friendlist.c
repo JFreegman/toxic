@@ -8,8 +8,6 @@
 
 #include <string.h>
 #include <stdint.h>
-#include <ctype.h>
-#include <stdbool.h>
 #include <stdlib.h>
 
 #include <tox/tox.h>

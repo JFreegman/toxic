@@ -8,10 +8,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
+#include "toxic_windows.h"
 #include "prompt.h"
 #include "commands.h"
+#include "misc_tools.h"
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint8_t num_frnd_requests = 0;
@@ -76,28 +77,7 @@ int add_group_req(uint8_t *group_pub_key)
     return -1;
 }
 
-// XXX: FIX
-unsigned char *hex_string_to_bin(char hex_string[])
-{
-    size_t len = strlen(hex_string);
-    unsigned char *val = malloc(len);
-
-    if (val == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
-
-    char *pos = hex_string;
-    size_t i;
-
-    for (i = 0; i < len; ++i, pos += 2)
-        sscanf(pos, "%2hhx", &val[i]);
-
-    return val;
-}
-
-void print_prompt_help(ToxWindow *self)
+static void print_prompt_help(ToxWindow *self)
 {
     wclear(self->window);
     wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
@@ -235,7 +215,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     wclrtoeol(self->window);
 }
 
-void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
+static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
     int n = add_friend_req(key);
 
@@ -259,7 +239,7 @@ void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16
     beep();
 }
 
-void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
+static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
 {
     if (friendnumber < 0)
         return;

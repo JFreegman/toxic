@@ -8,28 +8,15 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <ctype.h>
 #include <time.h>
-#include <limits.h>
 
 #include "toxic_windows.h"
 #include "friendlist.h"
-#include "chat.h"
 #include "commands.h"
+#include "misc_tools.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
-
-struct tm *get_time(void)
-{
-    struct tm *timeinfo;
-    time_t now;
-    time(&now);
-    timeinfo = localtime(&now);
-    return timeinfo;
-}
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
@@ -54,7 +41,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     beep();
 }
 
-void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
+static void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
 {
     if (self->num != num)
         return;
@@ -111,62 +98,6 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->statusmsg_len = len;
     snprintf(statusbar->statusmsg, len, "%s", status);
-}
-
-/* check that the string has one non-space character */
-int string_is_empty(char *string)
-{
-    int rc = 0;
-    char *copy = strdup(string);
-    rc = ((strtok(copy, " ") == NULL) ? 1 : 0);
-    free(copy);
-    return rc;
-}
-
-/* convert wide characters to null terminated string */
-uint8_t *wcs_to_char(wchar_t *string)
-{
-    size_t len = 0;
-    char *ret = NULL;
-
-    len = wcstombs(NULL, string, 0);
-    if (len != (size_t) -1) {
-        len++;
-        ret = malloc(len);
-        if (ret != NULL)
-            wcstombs(ret, string, len);
-    } else {
-        ret = malloc(2);
-        if (ret != NULL) {
-            ret[0] = ' ';
-            ret[1] = '\0';
-        }
-    }
-
-    if (ret == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return ret;
-}
-
-/* convert a wide char to null terminated string */
-char *wc_to_char(wchar_t ch)
-{
-    int len = 0;
-    static char ret[MB_LEN_MAX + 1];
-
-    len = wctomb(ret, ch);
-    if (len == -1) {
-        ret[0] = ' ';
-        ret[1] = '\0';
-    } else {
-        ret[len] = '\0';
-    }
-
-    return ret;
 }
 
 static void print_chat_help(ChatContext *ctx)
