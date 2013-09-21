@@ -35,8 +35,9 @@
 
 #include "configdir.h"
 #include "toxic_windows.h"
-#include "prompt.h"
 #include "friendlist.h"
+#include "prompt.h"
+#include "misc_tools.h"
 
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."

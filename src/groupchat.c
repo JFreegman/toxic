@@ -8,14 +8,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <ctype.h>
 #include <time.h>
 
 #include "toxic_windows.h"
-#include "chat.h"
 #include "commands.h"
+#include "misc_tools.h"
 
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int group_chat_index = 0;
