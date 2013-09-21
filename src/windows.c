@@ -19,12 +19,7 @@ static Tox *m;
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
-    int i;
-    
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onFriendRequest != NULL)
-            windows[i].onFriendRequest(&windows[i], public_key, data, length);
-    }
+    on_friendadded(m, tox_addfriend_norequest(m, public_key));
 }
 
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
@@ -61,12 +56,22 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
 
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    int i;
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_getname(m, friendnumber, nick);
 
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onMessage != NULL)
-            windows[i].onMessage(&windows[i], m, friendnumber, string, length);
-    }
+    uint8_t *line;
+
+    if (strncmp(string, "invite", strlen("invite")) == 0) {
+        char fixed_nick[strlen(nick) + 3];
+        snprintf(fixed_nick, sizeof(fixed_nick), "\"%s\"", nick);  /* In case name has spaces */
+        char invitemsg[strlen("/invite ")+strlen(fixed_nick)+3];
+        snprintf(invitemsg, sizeof(invitemsg), "/invite %s 0", fixed_nick);
+        execute(prompt->window, prompt, m, invitemsg, strlen(invitemsg));
+        line = "Invite sent. If you get an error message please try again.";
+    } else
+        line = "Sorry, I only understand one word: invite";
+
+    tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
 }
 
 void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)

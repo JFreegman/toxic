@@ -115,7 +115,6 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     wprintw(ctx->history, "%s\n", msg);
 
     self->blink = true;
-    beep();
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)

@@ -217,26 +217,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
-    int n = add_friend_req(key);
 
-    if (n == -1) {
-        wprintw(self->window, "Friend request queue is full. Discarding request.\n");
-        return;
-    }
-
-    wprintw(self->window, "\nFriend request from:\n");
-
-    int i;
-
-    for (i = 0; i < KEY_SIZE_BYTES; ++i) {
-        wprintw(self->window, "%02x", key[i] & 0xff);
-    }
-
-    wprintw(self->window, "\n\nWith the message: %s\n\n", data);
-    wprintw(self->window, "Type \"/accept %d\" to accept it.\n", n);
-
-    self->blink = true;
-    beep();
 }
 
 static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
@@ -287,12 +268,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
     /* temporary until statusmessage saving works */
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    char toxic_ver[strlen(TOXICVER)+1];
-    strcpy(toxic_ver, TOXICVER);
-    char *L = strchr(toxic_ver, '_');
-    toxic_ver[L-toxic_ver] = '\0';
-    snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver); 
+    uint8_t *statusmsg = "Send me a message with the word 'invite'";
     m_set_statusmessage(m, statusmsg, strlen(statusmsg) + 1);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
