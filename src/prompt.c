@@ -17,8 +17,9 @@
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint8_t num_frnd_requests = 0;
 
+/* One group chat request slot for each friend; slot is 
+   overwritten on subsequent requests by the same friend. */
 uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
-uint8_t num_grp_requests = 0;
 
 static char prompt_buf[MAX_STR_SIZE] = {'\0'};
 static int prompt_buf_pos = 0;
@@ -66,10 +67,10 @@ int add_friend_req(uint8_t *public_key)
 }
 
 /* Adds group chat invite to pending group chat requests. 
-   Returns friend number on success, -1 if queue is full or other error. */
+   Returns friend number on success, -1 if f_num is out of range. */
 int add_group_req(uint8_t *group_pub_key, int f_num)
 {
-    if (num_grp_requests++ < MAX_GROUPCHAT_NUM) {
+    if (f_num >= 0 && f_num < MAX_FRIENDS_NUM) {
         memcpy(pending_grp_requests[f_num], group_pub_key, TOX_CLIENT_ID_SIZE);
         return f_num;
     }
@@ -217,7 +218,13 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
+    int n = add_friend_req(key);
 
+    if (n == -1) {
+        wprintw(self->window, "Friend request queue is full. Discarding request.\n");
+        return;
+    }
+    wprintw(self->window, "Type \"/accept %d\" to accept it.\n", n);
 }
 
 static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
@@ -248,7 +255,6 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
     }
 
     wprintw(self->window, "Type \"/join %d\" to join the chat.\n", n);
-
     self->blink = true;
     beep();
 }
