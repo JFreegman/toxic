@@ -19,7 +19,6 @@ extern uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_frnd_requests;
 
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
-extern uint8_t num_grp_requests;
 
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
@@ -254,21 +253,21 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     int num = atoi(argv[1]);
 
     if (num < 0 || num >= MAX_FRIENDS_NUM) {
-        wprintw(window, "Invalid number.\n");
+        wprintw(window, "No pending group chat invite with that number.\n");
         return;
     }
 
     uint8_t *groupkey = pending_grp_requests[num];
 
-    if (!groupkey || !strlen(groupkey)) {
-        wprintw(window, "No group chat request with that number.\n");
+    if (strlen(groupkey) != TOX_CLIENT_ID_SIZE) {    /* Improve this test */
+        wprintw(window, "No pending group chat invite with that number.\n");
         return;
     }
 
     int groupnum = tox_join_groupchat(m, num, groupkey);
 
     if (groupnum == -1) {
-        wprintw(window, "Group chat failed to initialize.\n");
+        wprintw(window, "Group chat instance failed to initialize.\n");
         return;
     }
 
