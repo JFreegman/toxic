@@ -18,7 +18,7 @@ extern char *DATA_FILE;
 extern uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_frnd_requests;
 
-extern uint8_t pending_grp_requests[MAX_GROUPCHAT_NUM][TOX_CLIENT_ID_SIZE];
+extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_grp_requests;
 
 /* command functions */

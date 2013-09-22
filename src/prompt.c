@@ -17,7 +17,7 @@
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint8_t num_frnd_requests = 0;
 
-uint8_t pending_grp_requests[MAX_GROUPCHAT_NUM][TOX_CLIENT_ID_SIZE];
+uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint8_t num_grp_requests = 0;
 
 static char prompt_buf[MAX_STR_SIZE] = {'\0'};
@@ -66,12 +66,12 @@ int add_friend_req(uint8_t *public_key)
 }
 
 /* Adds group chat invite to pending group chat requests. 
-   Returns group number on success, -1 if queue is full or other error. */
-int add_group_req(uint8_t *group_pub_key)
+   Returns friend number on success, -1 if queue is full or other error. */
+int add_group_req(uint8_t *group_pub_key, int f_num)
 {
-    if (num_grp_requests < MAX_GROUPCHAT_NUM) {
-        memcpy(pending_grp_requests[num_grp_requests++], group_pub_key, TOX_CLIENT_ID_SIZE);
-        return num_grp_requests - 1;
+    if (num_grp_requests++ < MAX_GROUPCHAT_NUM) {
+        memcpy(pending_grp_requests[f_num], group_pub_key, TOX_CLIENT_ID_SIZE);
+        return f_num;
     }
 
     return -1;
@@ -259,7 +259,7 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
         return;
     }
 
-    int n = add_group_req(group_pub_key);
+    int n = add_group_req(group_pub_key, friendnumber);
 
     if (n == -1) {
         wprintw(self->window, "\nGroup chat queue is full. Discarding invite.\n");
@@ -287,12 +287,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
     /* temporary until statusmessage saving works */
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    char toxic_ver[strlen(TOXICVER)+1];
-    strcpy(toxic_ver, TOXICVER);
-    char *L = strchr(toxic_ver, '_');
-    toxic_ver[L-toxic_ver] = '\0';
-    snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver); 
+    uint8_t *statusmsg = "Toxing on Toxic v.0.2.1";
     m_set_statusmessage(m, statusmsg, strlen(statusmsg) + 1);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
