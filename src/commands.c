@@ -253,12 +253,19 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 
     int num = atoi(argv[1]);
 
-    if (num < 0 || num >= num_grp_requests) {
-        wprintw(window, "No pending group chat invites with that number.\n");
+    if (num < 0 || num >= MAX_FRIENDS_NUM) {
+        wprintw(window, "Invalid number.\n");
         return;
     }
 
-    int groupnum = tox_join_groupchat(m, num, pending_grp_requests[num]);
+    uint8_t *groupkey = pending_grp_requests[num];
+
+    if (!groupkey || !strlen(groupkey)) {
+        wprintw(window, "No group chat request with that number.\n");
+        return;
+    }
+
+    int groupnum = tox_join_groupchat(m, num, groupkey);
 
     if (groupnum == -1) {
         wprintw(window, "Group chat failed to initialize.\n");
