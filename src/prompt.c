@@ -261,7 +261,7 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
     int n = add_group_req(group_pub_key, friendnumber);
 
     if (n == -1) {
-        wprintw(self->window, "\nGroup chat queue is full. Discarding invite.\n");
+        wprintw(self->window, "\nSomething bad happened.\n");
         return;
     }
 
