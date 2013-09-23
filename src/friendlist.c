@@ -56,7 +56,7 @@ void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t le
     if (len >= TOX_MAX_NAME_LENGTH || num < 0 || num >= num_friends)
         return;
 
-    memcpy((char *) &friends[num].name, (char *) str, len);
+    memcpy(friends[num].name, str, len);
     friends[num].namelength = len;
 }
 
@@ -73,8 +73,8 @@ void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, ui
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
 
+    memcpy(friends[num].statusmsg, str, len);
     friends[num].statusmsg_len = len;
-    memcpy((char *) &friends[num].statusmsg, (char *) str, len);
 }
 
 int friendlist_onFriendAdded(Tox *m, int num)
@@ -258,10 +258,9 @@ void disable_chatwin(int f_num)
 int get_friendnum(uint8_t *name)
 {
     int i;
-    int len = strlen(name);
 
     for (i = 0; i < num_friends; ++i) {
-        if (strncmp(friends[i].name, name, len) == 0)
+        if (strcmp(friends[i].name, name) == 0)
             return friends[i].num;
     }
 

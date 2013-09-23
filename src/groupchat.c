@@ -160,7 +160,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         bool close_win = false;
 
         if (line[0] == '/') {
-            if (close_win = strncmp(line, "/close", strlen(line)) == 0) {
+            if (close_win = strncmp(line, "/close", strlen("/close")) == 0) {
                 set_active_window(0);
                 int groupnum = self->num;
                 delwin(ctx->linewin);

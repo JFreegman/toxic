@@ -29,28 +29,6 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
 
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
 {
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, friendnumber, nick);
-
-    if (!nick[0])
-        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
-
-    if (status == 1) {
-        wattron(prompt->window, COLOR_PAIR(GREEN));
-        wattron(prompt->window, A_BOLD);
-        wprintw(prompt->window, "\n%s ", nick);
-        wattroff(prompt->window, A_BOLD);
-        wprintw(prompt->window, "has come online\n");
-        wattroff(prompt->window, COLOR_PAIR(GREEN));
-    } else {
-        wattron(prompt->window, COLOR_PAIR(RED));
-        wattron(prompt->window, A_BOLD);
-        wprintw(prompt->window, "\n%s ", nick);
-        wattroff(prompt->window, A_BOLD);
-        wprintw(prompt->window, "has gone offline\n");
-        wattroff(prompt->window, COLOR_PAIR(RED));
-    }
-
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -96,7 +74,7 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
         char n_buf[strlen(string)+4];    /* must have room for chars relative to MAX_FRIENDS_NUM */
         snprintf(n_buf, sizeof(n_buf), "%s%d", string, friendnumber);
         strcpy(string, n_buf);
-        length = strlen(string) + 1;
+        length = strlen(n_buf) + 1;
     }
 
     int i;

@@ -216,6 +216,39 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     wclrtoeol(self->window);
 }
 
+static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , uint8_t status)
+{
+    if (friendnum < 0)
+        return;
+
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+
+    if (tox_getname(m, friendnum, nick) == -1)
+        return;
+
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+
+    if (!nick[0])
+        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
+
+    if (status == 1) {
+        wattron(self->window, COLOR_PAIR(GREEN));
+        wattron(self->window, A_BOLD);
+        wprintw(self->window, "\n%s ", nick);
+        wattroff(self->window, A_BOLD);
+        wprintw(self->window, "has come online\n");
+        wattroff(self->window, COLOR_PAIR(GREEN));
+    } else {
+        wattron(self->window, COLOR_PAIR(RED));
+        wattron(self->window, A_BOLD);
+        wprintw(self->window, "\n%s ", nick);
+        wattroff(self->window, A_BOLD);
+        wprintw(self->window, "has gone offline\n");
+        wattroff(self->window, COLOR_PAIR(RED));
+    }
+
+}
+
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
     wprintw(self->window, "\nFriend request from:\n");
@@ -301,6 +334,7 @@ ToxWindow new_prompt(void)
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;
     ret.onInit = &prompt_onInit;
+    ret.onConnectionChange = &prompt_onConnectionChange;
     ret.onFriendRequest = &prompt_onFriendRequest;
     ret.onGroupInvite = &prompt_onGroupInvite;
 

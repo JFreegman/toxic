@@ -78,7 +78,7 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     if (self->num != num)
         return;
 
-    snprintf(self->name, sizeof(self->name), "%s", nick);
+    memcpy(self->name, nick, len);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
@@ -97,7 +97,7 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
 
     StatusBar *statusbar = (StatusBar *) self->stb;
     statusbar->statusmsg_len = len;
-    snprintf(statusbar->statusmsg, len, "%s", status);
+    memcpy(statusbar->statusmsg, status, len);
 }
 
 static void print_chat_help(ChatContext *ctx)
