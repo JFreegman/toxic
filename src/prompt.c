@@ -99,7 +99,7 @@ static void print_prompt_help(ToxWindow *self)
     wprintw(self->window, "      /clear                     : Clear this window\n");
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " * Messages must be enclosed in quotation marks.\n");
+    wprintw(self->window, " * Argument messages must be enclosed in quotation marks.\n");
     wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n");
     wattroff(self->window, A_BOLD);
 
@@ -226,8 +226,6 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
     if (tox_getname(m, friendnum, nick) == -1)
         return;
 
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
-
     if (!nick[0])
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
@@ -281,7 +279,6 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
     if (tox_getname(m, friendnumber, name) == -1)
         return;
 
-    name[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
     wprintw(self->window, "\nGroup chat invite from %s.\n", name);
 
     int ngc = get_num_groupchats();

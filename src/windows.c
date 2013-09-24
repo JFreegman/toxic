@@ -64,17 +64,19 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
     if (length >= TOXIC_MAX_NAME_LENGTH) {    /* length includes null byte */
         string[TOXIC_MAX_NAME_LENGTH] = L'\0';
-        length = TOXIC_MAX_NAME_LENGTH+1;
+        length = TOXIC_MAX_NAME_LENGTH + 1;
+        tox_setfriendname(m, friendnumber, string, length);
     }
 
     /* Append friendnumber to duplicate nicks to guarantee uniqueness */
     int n = get_friendnum(string);
 
     if (n != friendnumber && n != -1) {
-        char n_buf[strlen(string)+4];    /* must have room for chars relative to MAX_FRIENDS_NUM */
+        char n_buf[strlen(string)+4];    /* must have room for friendnum chars relative to MAX_FRIENDS_NUM */
         snprintf(n_buf, sizeof(n_buf), "%s%d", string, friendnumber);
         strcpy(string, n_buf);
         length = strlen(n_buf) + 1;
+        tox_setfriendname(m, friendnumber, string, length);
     }
 
     int i;
