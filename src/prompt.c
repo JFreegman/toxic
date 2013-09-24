@@ -99,7 +99,7 @@ static void print_prompt_help(ToxWindow *self)
     wprintw(self->window, "      /clear                     : Clear this window\n");
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " * Messages must be enclosed in quotation marks.\n");
+    wprintw(self->window, " * Command argument messages must be enclosed in quotation marks.\n");
     wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n");
     wattroff(self->window, A_BOLD);
 

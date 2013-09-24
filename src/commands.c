@@ -48,7 +48,7 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
 
 void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
-    if (argc < 1 || argc > 2) {
+    if (argc < 1) {
         wprintw(window, "Invalid syntax.\n");
         return;
     }
@@ -62,7 +62,7 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 
     uint8_t *msg;
 
-    if (argc == 2) {
+    if (argc > 1) {
         msg = argv[2];
 
         if (msg == NULL) {
@@ -71,7 +71,7 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
         }
 
         if (msg[0] != '\"') {
-            wprintw(window, "Messages must be enclosed in quotes.\n");
+            wprintw(window, "Message must be enclosed in quotes.\n");
             return;
         }
 
@@ -192,12 +192,12 @@ void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **a
     int groupnum = tox_add_groupchat(m);
 
     if (groupnum == -1) {
-        wprintw(window, "Group chat failed to initialize.\n");
+        wprintw(window, "Group chat instnace failed to initialize.\n");
         return;
     }
 
     if (init_groupchat_win(prompt, m, groupnum) == -1) {
-        wprintw(window, "Group chat failed to initialize.\n");
+        wprintw(window, "Group chat window failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;
     }
@@ -235,7 +235,7 @@ void cmd_invite(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
         return;
     }
 
-    wprintw(window, "Invited friend %s to group chat %d.\n", friendname, groupnum);
+    wprintw(window, "Invited '%s' to group chat %d.\n", friendname, groupnum);
 }
 
 void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
@@ -281,25 +281,34 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 void cmd_msg(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     /* check arguments */
-    if (argc != 2) {
+    if (argc < 2) {
       wprintw(window, "Invalid syntax.\n");
       return;
     }
 
-    char *id = argv[1];
+    uint8_t *name = argv[1];
     uint8_t *msg = argv[2];
 
-    if (id == NULL || msg == NULL) {
+    if (name == NULL || msg == NULL) {
       wprintw(window, "Invalid syntax.\n");
       return;
+    }
+
+    if (msg[0] != '\"') {
+        wprintw(window, "Messages must be enclosed in quotes.\n");
+        return;
     }
 
     msg[strlen(++msg)-1] = L'\0';
+    int friendnum = get_friendnum(name);
 
-    if (tox_sendmessage(m, atoi(id), msg, strlen(msg) + 1) == 0)
+    if (friendnum == -1) {
+        wprintw(window, "Friend '%s' not found.\n", name);
+        return;
+    }
+
+    if (tox_sendmessage(m, friendnum, msg, strlen(msg) + 1) == 0)
         wprintw(window, "Failed to send message.\n");
-    else
-        wprintw(window, "Message successfully sent.\n");
 }
 
 void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
