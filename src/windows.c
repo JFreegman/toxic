@@ -4,12 +4,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "friendlist.h"
 #include "prompt.h"
 #include "toxic_windows.h"
 #include "misc_tools.h"
-#include "time.h"
 
 extern char *DATA_FILE;
 
