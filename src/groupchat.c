@@ -88,7 +88,7 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /help                      : Print this message again\n");
     
     wattron(ctx->history, A_BOLD);
-    wprintw(ctx->history, "\n * Messages must be enclosed in quotation marks.\n");
+    wprintw(ctx->history, "\n * Argument messages must be enclosed in quotation marks.\n");
     wattroff(ctx->history, A_BOLD);
     
     wattroff(ctx->history, COLOR_PAIR(CYAN));
@@ -160,7 +160,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         bool close_win = false;
 
         if (line[0] == '/') {
-            if (close_win = strncmp(line, "/close", strlen(line)) == 0) {
+            if (close_win = strncmp(line, "/close", strlen("/close")) == 0) {
                 set_active_window(0);
                 int groupnum = self->num;
                 delwin(ctx->linewin);

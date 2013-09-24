@@ -99,7 +99,7 @@ static void print_prompt_help(ToxWindow *self)
     wprintw(self->window, "      /clear                     : Clear this window\n");
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " * Messages must be enclosed in quotation marks.\n");
+    wprintw(self->window, " * Argument messages must be enclosed in quotation marks.\n");
     wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n");
     wattroff(self->window, A_BOLD);
 
@@ -216,6 +216,37 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     wclrtoeol(self->window);
 }
 
+static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , uint8_t status)
+{
+    if (friendnum < 0)
+        return;
+
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+
+    if (tox_getname(m, friendnum, nick) == -1)
+        return;
+
+    if (!nick[0])
+        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
+
+    if (status == 1) {
+        wattron(self->window, COLOR_PAIR(GREEN));
+        wattron(self->window, A_BOLD);
+        wprintw(self->window, "\n%s ", nick);
+        wattroff(self->window, A_BOLD);
+        wprintw(self->window, "has come online\n");
+        wattroff(self->window, COLOR_PAIR(GREEN));
+    } else {
+        wattron(self->window, COLOR_PAIR(RED));
+        wattron(self->window, A_BOLD);
+        wprintw(self->window, "\n%s ", nick);
+        wattroff(self->window, A_BOLD);
+        wprintw(self->window, "has gone offline\n");
+        wattroff(self->window, COLOR_PAIR(RED));
+    }
+
+}
+
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
     int n = add_friend_req(key);
@@ -237,7 +268,6 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
     if (tox_getname(m, friendnumber, name) == -1)
         return;
 
-    name[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
     wprintw(self->window, "\nGroup chat invite from %s.\n", name);
 
     int ngc = get_num_groupchats();
@@ -250,7 +280,7 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
     int n = add_group_req(group_pub_key, friendnumber);
 
     if (n == -1) {
-        wprintw(self->window, "\nGroup chat queue is full. Discarding invite.\n");
+        wprintw(self->window, "\nSomething bad happened.\n");
         return;
     }
 
@@ -290,6 +320,7 @@ ToxWindow new_prompt(void)
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;
     ret.onInit = &prompt_onInit;
+    ret.onConnectionChange = &prompt_onConnectionChange;
     ret.onFriendRequest = &prompt_onFriendRequest;
     ret.onGroupInvite = &prompt_onGroupInvite;
 
