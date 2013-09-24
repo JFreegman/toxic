@@ -118,7 +118,7 @@ static void print_chat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /help                      : Print this message again\n");
     
     wattron(ctx->history, A_BOLD);
-    wprintw(ctx->history, "\n * Command argument messages must be enclosed in quotation marks.\n");
+    wprintw(ctx->history, "\n * Argument messages must be enclosed in quotation marks.\n");
     wattroff(ctx->history, A_BOLD);
     
     wattroff(ctx->history, COLOR_PAIR(CYAN));
