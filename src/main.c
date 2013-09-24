@@ -298,7 +298,7 @@ static void load_data(Tox *m, char *path)
     size_t len;
     uint8_t *buf;
 
-    if ((fd = fopen(path, "r")) != NULL) {
+    if ((fd = fopen(path, "rb")) != NULL) {
         fseek(fd, 0, SEEK_END);
         len = ftell(fd);
         fseek(fd, 0, SEEK_SET);
