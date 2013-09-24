@@ -271,7 +271,7 @@ int store_data(Tox *m, char *path)
 
     tox_save(m, buf);
 
-    fd = fopen(path, "w");
+    fd = fopen(path, "wb");
 
     if (fd == NULL) {
         free(buf);
