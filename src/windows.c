@@ -8,6 +8,8 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "toxic_windows.h"
+#include "misc_tools.h"
+#include "time.h"
 
 extern char *DATA_FILE;
 
@@ -46,10 +48,16 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
         snprintf(invitemsg, sizeof(invitemsg), "/invite %s 0", fixed_nick);
         execute(prompt->window, prompt, m, invitemsg, strlen(invitemsg));
         line = "Invite sent. If you get an error message please try again.";
-    } else
-        line = "Sorry, I only understand one word: invite";
+        tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
+    } else {
+        struct tm *timeinfo = get_time();
 
-    tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
+        uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+        tox_getname(m, friendnumber, nick);
+
+        wprintw(prompt->window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+        wprintw(prompt->window, "%s: %s\n ", nick, string);
+    }
 }
 
 void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
