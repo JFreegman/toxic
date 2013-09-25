@@ -259,7 +259,7 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 
     uint8_t *groupkey = pending_grp_requests[num];
 
-    if (strlen(groupkey) != TOX_CLIENT_ID_SIZE) {    /* Improve this test */
+    if (!strlen(groupkey)) {
         wprintw(window, "No pending group chat invite with that number.\n");
         return;
     }
