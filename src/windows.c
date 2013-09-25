@@ -34,24 +34,24 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     }
 }
 
+#define ROOM_NUM "0"
+
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, friendnumber, nick);
 
-    uint8_t *line;
-
     if (strncmp(string, "invite", strlen("invite")) == 0) {
+        uint8_t *line;
         char fixed_nick[strlen(nick) + 3];
         snprintf(fixed_nick, sizeof(fixed_nick), "\"%s\"", nick);  /* In case name has spaces */
-        char invitemsg[strlen("/invite ")+strlen(fixed_nick)+3];
-        snprintf(invitemsg, sizeof(invitemsg), "/invite %s 0", fixed_nick);
+        char invitemsg[strlen("/invite ")+strlen(fixed_nick)+1+strlen(ROOM_NUM)+1];
+        snprintf(invitemsg, sizeof(invitemsg), "/invite %s %s", fixed_nick, ROOM_NUM);
         execute(prompt->window, prompt, m, invitemsg, strlen(invitemsg));
-        line = "Invite sent. If you get an error message please try again.";
+        line = "Invite sent. Please report any problems to #tox @ Freenode";
         tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
     } else {
         struct tm *timeinfo = get_time();
-
         uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
         tox_getname(m, friendnumber, nick);
 

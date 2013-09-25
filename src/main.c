@@ -19,7 +19,6 @@
 #include <signal.h>
 #include <locale.h>
 #include <string.h>
-#include <unistd.h>
 
 
 #ifdef _WIN32
@@ -451,8 +450,6 @@ int main(int argc, char *argv[])
 
         /* Draw */
         draw_active_window(m);
-        /* Why is this here? 
-        usleep((unsigned int)1000); */
     }
 
     exit_toxic(m);
