@@ -50,6 +50,10 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
         execute(prompt->window, prompt, m, invitemsg, strlen(invitemsg));
         line = "Invite sent. Please report any problems to #tox @ Freenode";
         tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
+
+        uint8_t announce[MAX_STR_SIZE];
+        snprintf(announce, sizeof(announce), "<GroupBot> Invite sent to: %s\n", nick);
+        tox_group_message_send(m, atoi(ROOM_NUM), announce, strlen(announce) + 1);
     } else {
         struct tm *timeinfo = get_time();
         uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
