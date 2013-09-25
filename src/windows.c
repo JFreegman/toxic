@@ -283,7 +283,9 @@ static void draw_bar()
 void prepare_window(WINDOW *w)
 {
     mvwin(w, 0, 0);
+#ifndef WIN32
     wresize(w, LINES - 2, COLS);
+#endif
 }
 
 void draw_active_window(Tox *m)

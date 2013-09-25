@@ -273,7 +273,7 @@ int store_data(Tox *m, char *path)
 
     tox_save(m, buf);
 
-    fd = fopen(path, "w");
+    fd = fopen(path, "wb");
 
     if (fd == NULL) {
         free(buf);
@@ -300,7 +300,7 @@ static void load_data(Tox *m, char *path)
     size_t len;
     uint8_t *buf;
 
-    if ((fd = fopen(path, "r")) != NULL) {
+    if ((fd = fopen(path, "rb")) != NULL) {
         fseek(fd, 0, SEEK_END);
         len = ftell(fd);
         fseek(fd, 0, SEEK_SET);
@@ -451,8 +451,8 @@ int main(int argc, char *argv[])
 
         /* Draw */
         draw_active_window(m);
-
-        usleep((uint)1000);
+        /* Why is this here? 
+        usleep((unsigned int)1000); */
     }
 
     exit_toxic(m);
