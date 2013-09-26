@@ -19,7 +19,7 @@ uint8_t num_frnd_requests = 0;
 
 /* One group chat request slot for each friend; slot is 
    overwritten on subsequent requests by the same friend. */
-uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {'\0'};
+uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {'a'};
 
 static char prompt_buf[MAX_STR_SIZE] = {'\0'};
 static int prompt_buf_pos = 0;

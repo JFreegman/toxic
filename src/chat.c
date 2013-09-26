@@ -35,7 +35,13 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     wattron(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
-    wprintw(ctx->history, "%s\n", msg);
+
+    if (msg[0] == '>') {
+        wattron(ctx->history, COLOR_PAIR(GREEN));
+        wprintw(ctx->history, "%s\n", msg);
+        wattroff(ctx->history, COLOR_PAIR(GREEN));
+    } else
+        wprintw(ctx->history, "%s\n", msg);
 
     self->blink = true;
     beep();
@@ -219,7 +225,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wattron(ctx->history, COLOR_PAIR(GREEN));
                 wprintw(ctx->history, "%s: ", selfname);
                 wattroff(ctx->history, COLOR_PAIR(GREEN));
-                wprintw(ctx->history, "%s\n", line);
+
+                if (line[0] == '>') {
+                    wattron(ctx->history, COLOR_PAIR(GREEN));
+                    wprintw(ctx->history, "%s\n", line);
+                    wattroff(ctx->history, COLOR_PAIR(GREEN));
+                } else
+                    wprintw(ctx->history, "%s\n", line);
 
                 if (!statusbar->is_online
                         || tox_sendmessage(m, self->num, line, strlen(line) + 1) == 0) {

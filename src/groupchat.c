@@ -112,7 +112,13 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     wattron(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
-    wprintw(ctx->history, "%s\n", msg);
+    
+    if (msg[0] == '>') {
+        wattron(ctx->history, COLOR_PAIR(GREEN));
+        wprintw(ctx->history, "%s\n", msg);
+        wattroff(ctx->history, COLOR_PAIR(GREEN));
+    } else
+        wprintw(ctx->history, "%s\n", msg);
 
     self->blink = true;
 }
