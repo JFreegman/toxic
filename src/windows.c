@@ -155,6 +155,7 @@ int add_window(Tox *m, ToxWindow w)
         if (w.window == NULL)
             return -1;
 
+        wbkgd(w.window, COLOR_PAIR(0));
         windows[i] = w;
         w.onInit(&w, m);
 
