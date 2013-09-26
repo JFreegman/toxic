@@ -43,12 +43,16 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
 
     if (strncmp(string, "invite", strlen("invite")) == 0) {
 
+        uint8_t *line;
+
         if (tox_invite_friend(m, friendnumber, ROOM_NUM) == -1) {
             wprintw(prompt->window, "Failed to invite friend.\n");
+            line = "Invite failed. Please try again or report a problem to #tox @ Freenode";
+            tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
             return;
         }
 
-        uint8_t *line = "Invite sent. Please report any problems to #tox @ Freenode.";
+        line = "Invite sent. Please report any problems to #tox @ Freenode.";
         tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
 
         uint8_t announce[MAX_STR_SIZE];
