@@ -166,7 +166,17 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
+    /* BACKSPACE key: Remove one character from line */
+    if (key == 0x107 || key == 0x8 || key == 0x7f) {
+        if (ctx->pos > 0) {
+            ctx->line[--ctx->pos] = L'\0';
 
+            if (x == 0)
+                mvwdelch(self->window, y - 1, x2 - 1);
+            else
+                mvwdelch(self->window, y, x - 1);
+        }
+    } else
     /* Add printable chars to buffer and print on input space */
 #if HAVE_WIDECHAR
     if (iswprint(key)) {
@@ -179,19 +189,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             ctx->line[ctx->pos] = L'\0';
         }
     }
-
-    /* BACKSPACE key: Remove one character from line */
-    else if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (ctx->pos > 0) {
-            ctx->line[--ctx->pos] = L'\0';
-
-            if (x == 0)
-                mvwdelch(self->window, y - 1, x2 - 1);
-            else
-                mvwdelch(self->window, y, x - 1);
-        }
-    }
-
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
         uint8_t *line = wcs_to_char(ctx->line);

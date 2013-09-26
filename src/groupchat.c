@@ -132,6 +132,17 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
+    /* BACKSPACE key: Remove one character from line */
+    if (key == 0x107 || key == 0x8 || key == 0x7f) {
+        if (ctx->pos > 0) {
+            ctx->line[--ctx->pos] = L'\0';
+
+            if (x == 0)
+                mvwdelch(self->window, y - 1, x2 - 1);
+            else
+                mvwdelch(self->window, y, x - 1);
+        }
+    } else 
     /* Add printable chars to buffer and print on input space */
 #if HAVE_WIDECHAR
     if (iswprint(key)) {
@@ -142,18 +153,6 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             mvwaddstr(self->window, y, x, wc_to_char(key));
             ctx->line[ctx->pos++] = key;
             ctx->line[ctx->pos] = L'\0';
-        }
-    }
-
-    /* BACKSPACE key: Remove one character from line */
-    else if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (ctx->pos > 0) {
-            ctx->line[--ctx->pos] = L'\0';
-
-            if (x == 0)
-                mvwdelch(self->window, y - 1, x2 - 1);
-            else
-                mvwdelch(self->window, y, x - 1);
         }
     }
 
