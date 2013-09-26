@@ -34,7 +34,7 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     }
 }
 
-#define ROOM_NUM "0"
+#define ROOM_NUM 0
 
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
@@ -42,22 +42,20 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
     tox_getname(m, friendnumber, nick);
 
     if (strncmp(string, "invite", strlen("invite")) == 0) {
-        uint8_t *line;
-        char fixed_nick[strlen(nick) + 3];
-        snprintf(fixed_nick, sizeof(fixed_nick), "\"%s\"", nick);  /* In case name has spaces */
-        char invitemsg[strlen("/invite ")+strlen(fixed_nick)+1+strlen(ROOM_NUM)+1];
-        snprintf(invitemsg, sizeof(invitemsg), "/invite %s %s", fixed_nick, ROOM_NUM);
-        execute(prompt->window, prompt, m, invitemsg, strlen(invitemsg));
-        line = "Invite sent. Please report any problems to #tox @ Freenode";
+
+        if (tox_invite_friend(m, friendnumber, ROOM_NUM) == -1) {
+            wprintw(prompt->window, "Failed to invite friend.\n");
+            return;
+        }
+
+        uint8_t *line = "Invite sent. Please report any problems to #tox @ Freenode.";
         tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
 
         uint8_t announce[MAX_STR_SIZE];
         snprintf(announce, sizeof(announce), "<GroupBot> Invite sent to: %s", nick);
-        tox_group_message_send(m, atoi(ROOM_NUM), announce, strlen(announce) + 1);
+        tox_group_message_send(m, ROOM_NUM, announce, strlen(announce) + 1);
     } else {
         struct tm *timeinfo = get_time();
-        uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-        tox_getname(m, friendnumber, nick);
 
         wprintw(prompt->window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         wprintw(prompt->window, "%s: %s\n ", nick, string);
