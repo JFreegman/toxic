@@ -279,20 +279,16 @@ static void draw_bar()
     refresh();
 }
 
-void prepare_window(WINDOW *w)
-{
-    mvwin(w, 0, 0);
-#ifndef WIN32
-    wresize(w, LINES - 2, COLS);
-#endif
-}
-
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = active_window;
     wint_t ch = 0;
 
-    prepare_window(a->window);
+    touchwin(a->window);
+#ifndef WIN32
+    wresize(a->window, LINES - 2, COLS);
+#endif
+
     a->blink = false;
     draw_bar();
     a->onDraw(a, m);

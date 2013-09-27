@@ -19,8 +19,6 @@
 #include <signal.h>
 #include <locale.h>
 #include <string.h>
-#include <unistd.h>
-
 
 #ifdef _WIN32
     #include <direct.h>
