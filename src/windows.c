@@ -53,17 +53,19 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
         }
 
         line = "Invite sent. Please report any problems to #tox @ Freenode.";
-        tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
 
         uint8_t announce[MAX_STR_SIZE];
-        snprintf(announce, sizeof(announce), "<GroupBot> Invite sent to: %s", nick);
+        snprintf(announce, sizeof(announce), "> <GroupBot> Invite sent to: %s", nick);
         tox_group_message_send(m, ROOM_NUM, announce, strlen(announce) + 1);
     } else {
         struct tm *timeinfo = get_time();
+        line = "Sorry, I only understand one command: invite";
 
         wprintw(prompt->window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         wprintw(prompt->window, "%s: %s\n ", nick, string);
     }
+
+    tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
 }
 
 void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
