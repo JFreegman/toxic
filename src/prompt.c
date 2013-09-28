@@ -157,7 +157,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     size_t i;
 
-    for (i = 0; i < (prompt_buf_pos); ++i) {
+    for (i = 0; i < prompt_buf_pos; ++i) {
         if ((prompt_buf[i] == '\n') && (y != 0))
             --y;
     }
