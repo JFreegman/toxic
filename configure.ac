@@ -349,7 +349,7 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
     LIBTOXCORE_LDFLAGS=
     LDFLAGS_SAVE="$LDFLAGS"
     if test -n "$LIBTOXCORE_SEARCH_LIBS"; then
-        LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS -L$LIBTOXCORE_SEARCH_LIBS $LIBSODIUM_LIBS"
+        LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS -L$LIBTOXCORE_SEARCH_LIBS"
         AC_CHECK_LIB([toxcore], [tox_new],
             [
                 LIBTOXCORE_LDFLAGS="-L$LIBTOXCORE_SEARCH_LIBS"
@@ -360,10 +360,11 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
             ],
             [
                 $WINSOCK2_LIBS
+                $LIBSODIUM_LIBS
             ]
         )
     else
-        LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS $LIBSODIUM_LIBS"
+        LDFLAGS="$LDFLAGS $LIBSODIUM_LDFLAGS"
         AC_CHECK_LIB([toxcore], [tox_new],
             [],
             [
@@ -371,6 +372,7 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
             ],
             [
                 $WINSOCK2_LIBS
+                $LIBSODIUM_LIBS
             ]
         )
     fi
