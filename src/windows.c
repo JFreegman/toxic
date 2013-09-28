@@ -41,9 +41,9 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, friendnumber, nick);
 
-    if (strncmp(string, "invite", strlen("invite")) == 0) {
+    uint8_t *line;
 
-        uint8_t *line;
+    if (strncmp(string, "invite", strlen("invite")) == 0) {
 
         if (tox_invite_friend(m, friendnumber, ROOM_NUM) == -1) {
             wprintw(prompt->window, "Failed to invite friend.\n");
