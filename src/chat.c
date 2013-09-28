@@ -35,7 +35,13 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     wattron(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
-    wprintw(ctx->history, "%s\n", msg);
+
+    if (msg[0] == '>') {
+        wattron(ctx->history, COLOR_PAIR(GREEN));
+        wprintw(ctx->history, "%s\n", msg);
+        wattroff(ctx->history, COLOR_PAIR(GREEN));
+    } else
+        wprintw(ctx->history, "%s\n", msg);
 
     self->blink = true;
     beep();
@@ -160,7 +166,17 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
+    /* BACKSPACE key: Remove one character from line */
+    if (key == 0x107 || key == 0x8 || key == 0x7f) {
+        if (ctx->pos > 0) {
+            ctx->line[--ctx->pos] = L'\0';
 
+            if (x == 0)
+                mvwdelch(self->window, y - 1, x2 - 1);
+            else
+                mvwdelch(self->window, y, x - 1);
+        }
+    } else
     /* Add printable chars to buffer and print on input space */
 #if HAVE_WIDECHAR
     if (iswprint(key)) {
@@ -173,19 +189,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             ctx->line[ctx->pos] = L'\0';
         }
     }
-
-    /* BACKSPACE key: Remove one character from line */
-    else if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (ctx->pos > 0) {
-            ctx->line[--ctx->pos] = L'\0';
-
-            if (x == 0)
-                mvwdelch(self->window, y - 1, x2 - 1);
-            else
-                mvwdelch(self->window, y, x - 1);
-        }
-    }
-
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
         uint8_t *line = wcs_to_char(ctx->line);
@@ -219,7 +222,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wattron(ctx->history, COLOR_PAIR(GREEN));
                 wprintw(ctx->history, "%s: ", selfname);
                 wattroff(ctx->history, COLOR_PAIR(GREEN));
-                wprintw(ctx->history, "%s\n", line);
+
+                if (line[0] == '>') {
+                    wattron(ctx->history, COLOR_PAIR(GREEN));
+                    wprintw(ctx->history, "%s\n", line);
+                    wattroff(ctx->history, COLOR_PAIR(GREEN));
+                } else
+                    wprintw(ctx->history, "%s\n", line);
 
                 if (!statusbar->is_online
                         || tox_sendmessage(m, self->num, line, strlen(line) + 1) == 0) {

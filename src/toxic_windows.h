@@ -37,6 +37,10 @@
 #define MAGENTA 6
 #define BLACK 7
 
+/* Fixes text color problem on some terminals. 
+   Uncomment if necessary */
+//#define URXVT_FIX
+
 typedef struct ToxWindow_ ToxWindow;
 
 struct ToxWindow_ {

@@ -20,7 +20,6 @@
 #include <locale.h>
 #include <string.h>
 
-
 #ifdef _WIN32
     #include <direct.h>
     #include <winsock2.h>
@@ -223,10 +222,8 @@ static void do_tox(Tox *m, ToxWindow *prompt)
 
     if (!dht_on && !tox_isconnected(m) && !(conn_try++ % 100)) {
         if (!conn_err) {
-            conn_err = init_connection(m);
-            wprintw(prompt->window, "\nEstablishing connection...\n");
-
-            if (conn_err)
+            wprintw(prompt->window, "Establishing connection...\n");
+            if (conn_err = init_connection(m))
                 wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
         }
     } else if (!dht_on && tox_isconnected(m)) {

@@ -173,7 +173,10 @@ int add_window(Tox *m, ToxWindow w)
 
         if (w.window == NULL)
             return -1;
-
+#ifdef URXVT_FIX
+        /* Fixes text color problem on some terminals. */
+        wbkgd(w.window, COLOR_PAIR(6));
+#endif
         windows[i] = w;
         w.onInit(&w, m);
 
@@ -263,8 +266,13 @@ static void draw_bar()
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].window) {
-            if (windows + i == active_window)
+            if (windows + i == active_window) {
+#ifdef URXVT_FIX
+                attron(A_BOLD | COLOR_PAIR(GREEN));
+            } else {
+#endif
                 attron(A_BOLD);
+            }
 
             odd = (odd + 1) % blinkrate;
 
@@ -277,7 +285,11 @@ static void draw_bar()
             if (windows[i].blink && (odd < (blinkrate / 2)))
                 attroff(COLOR_PAIR(RED));
 
-            if (windows + i == active_window) {
+           if (windows + i == active_window) {
+#ifdef URXVT_FIX
+                attroff(A_BOLD | COLOR_PAIR(GREEN));
+            } else {
+#endif
                 attroff(A_BOLD);
             }
         }
@@ -286,20 +298,16 @@ static void draw_bar()
     refresh();
 }
 
-void prepare_window(WINDOW *w)
-{
-    mvwin(w, 0, 0);
-#ifndef WIN32
-    wresize(w, LINES - 2, COLS);
-#endif
-}
-
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = active_window;
     wint_t ch = 0;
 
-    prepare_window(a->window);
+    touchwin(a->window);
+#ifndef WIN32
+    wresize(a->window, LINES - 2, COLS);
+#endif
+
     a->blink = false;
     draw_bar();
     a->onDraw(a, m);

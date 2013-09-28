@@ -364,7 +364,7 @@ void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 
 void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
-    if (argc != 1) {
+    if (argc < 1) {
         wprintw(window, "Messages must be enclosed in quotes.\n");
         return;
     }
@@ -421,19 +421,28 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
         return;
     }
 
+    int len = strlen(status);
+    char l_status[len+1];
+    int i;
+
+    for (i = 0; i <= len; ++i)
+        l_status[i] = tolower(status[i]);
+
     TOX_USERSTATUS status_kind;
 
-    if (!strncmp(status, "online", strlen("online")))
+    if (!strcmp(l_status, "online"))
         status_kind = TOX_USERSTATUS_NONE;
 
-    else if (!strncmp(status, "away", strlen("away")))
+    else if (!strcmp(l_status, "away"))
         status_kind = TOX_USERSTATUS_AWAY;
 
-    else if (!strncmp(status, "busy", strlen("busy")))
+    else if (!strcmp(l_status, "busy"))
         status_kind = TOX_USERSTATUS_BUSY;
 
-    else
-        wprintw(window, "Invalid status.\n");
+    else {
+        wprintw(window, "Invalid status. Valid statuses are: online, busy and away.\n");
+        return;
+    }
 
     tox_set_userstatus(m, status_kind);
     prompt_update_status(prompt, status_kind);

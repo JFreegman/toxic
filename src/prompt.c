@@ -19,7 +19,7 @@ uint8_t num_frnd_requests = 0;
 
 /* One group chat request slot for each friend; slot is 
    overwritten on subsequent requests by the same friend. */
-uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {'\0'};
+uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 
 static char prompt_buf[MAX_STR_SIZE] = {'\0'};
 static int prompt_buf_pos = 0;
@@ -87,6 +87,7 @@ static void print_prompt_help(ToxWindow *self)
 
     wprintw(self->window, "      /add <id> <message>        : Add friend with optional message\n");
     wprintw(self->window, "      /accept <n>                : Accept friend request\n");
+    wprintw(self->window, "      /connect <ip> <port> <key> : Manually connect to a DHT server\n");
     wprintw(self->window, "      /status <type> <message>   : Set your status with optional note\n");
     wprintw(self->window, "      /note  <message>           : Set a personal note\n");
     wprintw(self->window, "      /nick <nickname>           : Set your nickname\n");
@@ -149,18 +150,22 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
-    int x, y;
-    size_t i;
-    getyx(self->window, y, x);
 
-    for (i = 0; i < (strlen(prompt_buf)); ++i) {
+    int x, y, x2, y2;
+    getyx(self->window, y, x);
+    getmaxyx(self->window, y2, x2);
+
+    size_t i;
+
+    for (i = 0; i < prompt_buf_pos; ++i) {
         if ((prompt_buf[i] == '\n') && (y != 0))
             --y;
     }
 
     StatusBar *statusbar = (StatusBar *) self->stb;
-
     werase(statusbar->topline);
+    mvwhline(statusbar->topline, 1, 0, '-', x2);
+    wmove(statusbar->topline, 0, 0);
 
     if (statusbar->is_online) {
         int colour = WHITE;
@@ -211,7 +216,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
-    scrollok(self->window, 1);
+    scrollok(self->window, true);
     print_prompt_help(self);
     wclrtoeol(self->window);
 }
