@@ -16,7 +16,7 @@
 #include <tox/tox.h>
 
 #define MAX_WINDOWS_NUM 32
-#define MAX_FRIENDS_NUM 100
+#define MAX_FRIENDS_NUM 999
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - N_DEFAULT_WINS
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
