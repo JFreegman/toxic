@@ -4,10 +4,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "friendlist.h"
 #include "prompt.h"
 #include "toxic_windows.h"
+#include "misc_tools.h"
 
 extern char *DATA_FILE;
 
@@ -19,12 +21,7 @@ static Tox *m;
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
-    int i;
-    
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onFriendRequest != NULL)
-            windows[i].onFriendRequest(&windows[i], public_key, data, length);
-    }
+    on_friendadded(m, tox_addfriend_norequest(m, public_key));
 }
 
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
@@ -37,14 +34,38 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     }
 }
 
+#define ROOM_NUM 0
+
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
-    int i;
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_getname(m, friendnumber, nick);
 
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onMessage != NULL)
-            windows[i].onMessage(&windows[i], m, friendnumber, string, length);
+    uint8_t *line;
+
+    if (strncmp(string, "invite", strlen("invite")) == 0) {
+
+        if (tox_invite_friend(m, friendnumber, ROOM_NUM) == -1) {
+            wprintw(prompt->window, "Failed to invite friend.\n");
+            line = "Invite failed. Please try again or report a problem to #tox @ Freenode";
+            tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
+            return;
+        }
+
+        line = "Invite sent. Please report any problems to #tox @ Freenode.";
+
+        uint8_t announce[MAX_STR_SIZE];
+        snprintf(announce, sizeof(announce), "> <GroupBot> Invite sent to: %s", nick);
+        tox_group_message_send(m, ROOM_NUM, announce, strlen(announce) + 1);
+    } else {
+        struct tm *timeinfo = get_time();
+        line = "Sorry, I only understand one command: invite";
+
+        wprintw(prompt->window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+        wprintw(prompt->window, "%s: %s\n ", nick, string);
     }
+
+    tox_sendmessage(m, friendnumber, line, strlen(line) + 1);
 }
 
 void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)

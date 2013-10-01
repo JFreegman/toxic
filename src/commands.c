@@ -365,7 +365,7 @@ void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     if (argc < 1) {
-        wprintw(window, "Wrong number of arguments.\n");
+        wprintw(window, "Messages must be enclosed in quotes.\n");
         return;
     }
 
