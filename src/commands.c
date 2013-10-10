@@ -20,6 +20,8 @@ extern uint8_t num_frnd_requests;
 
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 
+extern 
+
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
@@ -390,6 +392,68 @@ void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 void cmd_quit(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     exit_toxic(m);
+}
+
+void cmd_sendfile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+{
+    if (argc < 1) {
+        wprintw(window, "Wrong number of arguments.\n");
+        return;
+    }
+
+    uint8_t *friendname = argv[1];
+
+    int friendnum = get_friendnum(friendname);
+
+    if (friendnum == -1) {
+        wprintw(window, "Friend '%s' not found.\n", friendname);
+        return;
+    }
+
+    uint8_t *filename = argv[2];
+    int filename_len = strlen(filename);
+
+    if (filename[0] != '\"') {
+        wprintw(window, "File name must be enclosed in quotes.\n");
+        return;
+    }
+
+    filename[strlen(++filename)-1] = L'\0';
+
+    if (filename_len > MAX_STR_SIZE) {
+        wprintw(window, "File path exceeds character limit\n");
+        return;
+    }
+
+    FILE *file_to_send = fopen(filename, "r");
+
+    if (file_to_send == NULL) {
+        wprintw(window, "File '%s' not found\n", filename);
+        return;
+    }
+
+    fseek(file_to_send, 0, SEEK_END);
+    uint64_t filesize = ftell(file_to_send);
+    fseek(file_to_send, 0, SEEK_SET);
+
+    int filenum = tox_new_filesender(m, friendnum, filesize, filename, filename_len + 1);
+
+    if (filenum == -1) {
+        wprintw(window, "Error sending file\n");
+        return;
+    }
+
+    memcpy(file_senders[num_file_senders].filename, filename, filename_len + 1);
+    memcpy(file_senders[num_file_senders].friendname, friendname, strlen(friendname) + 1);
+    file_senders[num_file_senders].file = file_to_send;
+    file_senders[num_file_senders].filenum = filenum;
+    file_senders[num_file_senders].friendnum = friendnum;
+    file_senders[num_file_senders].piecelen = fread(file_senders[num_file_senders].nextpiece, 1,
+                                                    tox_filedata_size(m, friendnum), file_to_send);
+
+
+    wprintw(window, "Sending file '%s' to %s...\n", filename, friendname);
+    ++num_file_senders;
 }
 
 void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)

@@ -92,6 +92,7 @@ static Tox *init_tox()
 {
     /* Init core */
     Tox *m = tox_new(TOX_ENABLE_IPV6_DEFAULT);
+
     if (m == NULL)
         return NULL;
 
@@ -105,6 +106,10 @@ static Tox *init_tox()
     tox_callback_action(m, on_action, NULL);
     tox_callback_group_invite(m, on_groupinvite, NULL);
     tox_callback_group_message(m, on_groupmessage, NULL);
+    tox_callback_file_sendrequest(m, on_file_sendrequest, NULL);
+    tox_callback_file_control(m, on_file_control, NULL);
+    tox_callback_file_data(m, on_file_data, NULL);
+
 #ifdef __linux__
     tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
 #elif defined(_WIN32)
@@ -114,6 +119,7 @@ static Tox *init_tox()
 #else
     tox_setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
 #endif
+
     return m;
 }
 
@@ -341,6 +347,36 @@ static void load_data(Tox *m, char *path)
     }
 }
 
+void do_file_senders(Tox *m)
+{
+    int i;
+
+    for (i = 0; i < NUM_FILE_SENDERS; ++i) {
+        if (file_senders[i].file == NULL)
+            continue;
+
+        while (true) {
+            if (!tox_file_senddata(m, file_senders[i].friendnum, file_senders[i].filenum,
+                                   file_senders[i].nextpiece, file_senders[i].piecelen))
+                return;
+
+            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, file_senders[i].friendnum),
+                                             file_senders[i].file);
+
+            if (file_senders[i].piecelen == 0) {
+                fclose(file_senders[i].file);
+                file_senders[i].file = NULL;
+                tox_file_sendcontrol(m, file_senders[i].friendnum, 0, file_senders[i].filenum, 3, 0, 0);
+                char msg[MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 50];
+                snprintf(msg, sizeof(msg), "File '%s' successfuly sent to %s.",
+                         file_senders[i].filename, file_senders[i].friendname);
+                wprintw(prompt->window, "%s\n", msg);
+                return;
+            }
+        }
+    }
+}
+
 void exit_toxic(Tox *m)
 {
     store_data(m, DATA_FILE);
@@ -442,10 +478,8 @@ int main(int argc, char *argv[])
     prompt_init_statusbar(prompt, m);
 
     while (true) {
-        /* Update tox */
         do_tox(m, prompt);
-
-        /* Draw */
+        do_file_senders(m);
         draw_active_window(m);
     }
 

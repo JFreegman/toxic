@@ -15,11 +15,12 @@ void cmd_myid(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_nick(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_note(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_quit(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_sendfile(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_status(WINDOW *, ToxWindow *, Tox *m, int, char **);
 
 void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len);
 
-#define NUM_COMMANDS 15
+#define NUM_COMMANDS 16
 
 static struct {
     char *name;
@@ -39,5 +40,6 @@ static struct {
     { "/note",      cmd_note      },
     { "/q",         cmd_quit      },
     { "/quit",      cmd_quit      },
+    { "/sendfile",  cmd_sendfile  },
     { "/status",    cmd_status    },
 };

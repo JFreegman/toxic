@@ -56,6 +56,9 @@ struct ToxWindow_ {
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
     void(*onGroupInvite)(ToxWindow *, Tox *, int, uint8_t *);
+    void(*onFileSendRequest)(ToxWindow *, Tox *, int, uint8_t, uint64_t, uint8_t *, uint16_t);
+    void(*onFileControl)(ToxWindow *, Tox *, int, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
+    void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
 
     char name[TOX_MAX_NAME_LENGTH];
     int num;
@@ -92,6 +95,22 @@ typedef struct {
     bool active;
 } GroupChat;
 
+#define NUM_FILE_SENDERS 256
+#define FILE_PIECE_SIZE 1024
+
+typedef struct {
+    FILE *file;
+    uint16_t friendnum;
+    uint8_t filenum;
+    uint8_t nextpiece[FILE_PIECE_SIZE];
+    uint16_t piecelen;
+    uint8_t friendname[TOXIC_MAX_NAME_LENGTH];
+    uint8_t filename[MAX_STR_SIZE];
+} FileSender;
+
+FileSender file_senders[NUM_FILE_SENDERS];
+uint8_t num_file_senders;
+
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
@@ -102,6 +121,10 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
 void on_friendadded(Tox *m, int friendnumber);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
 void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
+void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *filename, uint16_t filename_length, void *userdata);
+void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
+void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
+
 ToxWindow *init_windows();
 void draw_active_window(Tox *m);
 int add_window(Tox *m, ToxWindow w);
