@@ -20,8 +20,6 @@ extern uint8_t num_frnd_requests;
 
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 
-extern 
-
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
@@ -180,6 +178,28 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **arg
     tox_bootstrap_from_address(m, ip, TOX_ENABLE_IPV6_DEFAULT,
                                htons(atoi(port)), binary_string);
     free(binary_string);
+}
+
+void cmd_file(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+{
+    if (argc < 1) {
+        wprintw(window, "Wrong number of arguments.\n");
+        return;
+    }
+
+    uint8_t filenum = atoi(argv[1]);
+
+    if (filenum < 0 || filenum > MAX_FILENUMBER) {
+        wprintw(window, "File transfer failed.\n");
+        return;
+    }
+
+    int friendnum = pending_file_transfers[filenum];
+
+    if (tox_file_sendcontrol(m, friendnum, 1, filenum, 0, 0, 0))
+        wprintw(window, "Accepted file transfer %u. Saving file as %d.%u.bin.\n", filenum, friendnum, filenum);
+    else
+        wprintw(window, "File transfer failed.\n");
 }
 
 void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
@@ -410,6 +430,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **ar
         return;
     }
 
+    if (friendname[0] == '\"')
+        friendname[strlen(++friendname)-1] = L'\0';
+
     uint8_t *filename = argv[2];
     int filename_len = strlen(filename);
 
@@ -421,14 +444,14 @@ void cmd_sendfile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **ar
     filename[strlen(++filename)-1] = L'\0';
 
     if (filename_len > MAX_STR_SIZE) {
-        wprintw(window, "File path exceeds character limit\n");
+        wprintw(window, "File path exceeds character limit.\n");
         return;
     }
 
     FILE *file_to_send = fopen(filename, "r");
 
     if (file_to_send == NULL) {
-        wprintw(window, "File '%s' not found\n", filename);
+        wprintw(window, "File '%s' not found.\n", filename);
         return;
     }
 

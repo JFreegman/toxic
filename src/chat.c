@@ -106,6 +106,75 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     memcpy(statusbar->statusmsg, status, len);
 }
 
+static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint64_t filesize,
+                                   uint8_t *filename, uint16_t filename_len)
+{
+    if (self-> num != num)
+        return;
+
+    ChatContext *ctx = (ChatContext *) self->chatwin;
+
+    wprintw(ctx->history, "File transfer request for '%s' of size %llu.\n", filename, (long long unsigned int)filesize);
+
+    if (filenum > MAX_FILENUMBER) {
+        wprintw(ctx->history, "Too many pending file requests; discarding.\n");
+        return;
+    }
+
+    wprintw(ctx->history, "Type '/file %d' to accept the file transfer.\n", filenum);
+
+    pending_file_transfers[filenum] = num;
+
+    self->blink = true;
+    beep();
+
+}
+
+static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive_send, uint8_t filenum, 
+                               uint8_t control_type, uint8_t *data, uint16_t length)
+{
+    if (self->num != num)
+        return;
+
+    ChatContext *ctx = (ChatContext *) self->chatwin;
+
+    switch(control_type) {
+    case 0:
+        wprintw(ctx->history, "File transfer accepted.\n");
+        break;
+    case 3:
+        wprintw(ctx->history, "File successfully recieved.\n");
+        break;
+    default:
+        wprintw(ctx->history, "Control %u receieved.\n", control_type);
+        break;
+    }
+
+    self->blink = true;
+    beep();
+}
+
+static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint8_t *data, uint16_t length)
+{
+    if (self->num != num)
+        return;
+
+    ChatContext *ctx = (ChatContext *) self->chatwin;
+
+    char filename[MAX_STR_SIZE];
+    snprintf(filename, sizeof(filename), "%d.%u.bin", num, filenum);
+
+    FILE *file_to_save = fopen(filename, "a");
+
+    if (fwrite(data, length, 1, file_to_save) != 1) {
+        wattron(ctx->history, COLOR_PAIR(RED));
+        wprintw(ctx->history, "* Error writing to file.\n");
+        wattroff(ctx->history, COLOR_PAIR(RED));
+    }
+
+    fclose(file_to_save);
+}
+
 static void print_chat_help(ChatContext *ctx)
 {
     wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
@@ -120,6 +189,9 @@ static void print_chat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /myid                      : Print your ID\n");
     wprintw(ctx->history, "      /clear                     : Clear the screen\n");
     wprintw(ctx->history, "      /close                     : Close the current chat window\n");
+    wprintw(ctx->history, "      /sendfile <nickname> <file>: Send a file\n");
+    wprintw(ctx->history, "      /file <n>                  : Accept a file\n");
+    wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
     wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
     wprintw(ctx->history, "      /help                      : Print this message again\n");
     
@@ -368,6 +440,9 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
     ret.onStatusChange = &chat_onStatusChange;
     ret.onStatusMessageChange = &chat_onStatusMessageChange;
     ret.onAction = &chat_onAction;
+    ret.onFileSendRequest = &chat_onFileSendRequest;
+    ret.onFileControl = &chat_onFileControl;
+    ret.onFileData = &chat_onFileData;
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, friendnum, name);

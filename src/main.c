@@ -367,10 +367,10 @@ void do_file_senders(Tox *m)
                 fclose(file_senders[i].file);
                 file_senders[i].file = NULL;
                 tox_file_sendcontrol(m, file_senders[i].friendnum, 0, file_senders[i].filenum, 3, 0, 0);
-                char msg[MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 50];
-                snprintf(msg, sizeof(msg), "File '%s' successfuly sent to %s.",
-                         file_senders[i].filename, file_senders[i].friendname);
-                wprintw(prompt->window, "%s\n", msg);
+
+                /* TODO: move this alert to chat window */
+                wprintw(prompt->window, "File '%s' successfuly sent to %s.\n", file_senders[i].filename,
+                         file_senders[i].friendname);
                 return;
             }
         }

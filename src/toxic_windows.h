@@ -95,7 +95,10 @@ typedef struct {
     bool active;
 } GroupChat;
 
+/* Start file transfer code */
+
 #define NUM_FILE_SENDERS 256
+#define MAX_FILENUMBER 100  /* fix */
 #define FILE_PIECE_SIZE 1024
 
 typedef struct {
@@ -111,6 +114,10 @@ typedef struct {
 FileSender file_senders[NUM_FILE_SENDERS];
 uint8_t num_file_senders;
 
+uint8_t pending_file_transfers[MAX_FILENUMBER];
+
+/* End file transfer code */
+
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
@@ -122,7 +129,7 @@ void on_friendadded(Tox *m, int friendnumber);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
 void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
 void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *filename, uint16_t filename_length, void *userdata);
-void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
+void on_file_control(Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
 
 ToxWindow *init_windows();
