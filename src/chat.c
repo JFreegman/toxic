@@ -24,14 +24,11 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
-    struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, num, nick);
 
-    wattron(ctx->history, COLOR_PAIR(CYAN));
-    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
@@ -62,15 +59,11 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
-    struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, num, nick);
 
-    wattron(ctx->history, COLOR_PAIR(CYAN));
-    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
-
+    print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(YELLOW));
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
@@ -202,20 +195,15 @@ static void print_chat_help(ChatContext *ctx)
 }
 
 static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
-    struct tm *timeinfo = get_time();
-
     if (action == NULL) {
         wprintw(ctx->history, "Invalid syntax.\n");
         return;
     }
 
-    wattron(ctx->history, COLOR_PAIR(CYAN));
-    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
-
     uint8_t selfname[TOX_MAX_NAME_LENGTH];
     tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
 
+    print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(YELLOW));
     wprintw(ctx->history, "* %s %s\n", selfname, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
@@ -231,8 +219,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     ChatContext *ctx = (ChatContext *) self->chatwin;
     StatusBar *statusbar = (StatusBar *) self->stb;
-
-    struct tm *timeinfo = get_time();
 
     int x, y, y2, x2;
     getyx(self->window, y, x);
@@ -287,9 +273,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
                 tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
 
-                wattron(ctx->history, COLOR_PAIR(CYAN));
-                wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-                wattroff(ctx->history, COLOR_PAIR(CYAN));
+                print_time(ctx->history);
                 wattron(ctx->history, COLOR_PAIR(GREEN));
                 wprintw(ctx->history, "%s: ", selfname);
                 wattroff(ctx->history, COLOR_PAIR(GREEN));

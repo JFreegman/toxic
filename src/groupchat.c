@@ -100,15 +100,12 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
-    struct tm *timeinfo = get_time();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_group_peername(m, groupnum, peernum, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
-    wattron(ctx->history, COLOR_PAIR(CYAN));
-    wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(4));
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
@@ -126,7 +123,6 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     ChatContext *ctx = (ChatContext *) self->chatwin;
-    struct tm *timeinfo = get_time();
 
     int x, y, y2, x2;
     getyx(self->window, y, x);
@@ -181,9 +177,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 // uint8_t selfname[TOX_MAX_NAME_LENGTH];
                 // tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
 
-                // wattron(ctx->history, COLOR_PAIR(CYAN));
-                // wprintw(ctx->history, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-                // wattroff(ctx->history, COLOR_PAIR(CYAN));
+                // print_time(ctx->history);
                 // wattron(ctx->history, COLOR_PAIR(GREEN));
                 // wprintw(ctx->history, "%s: ", selfname);
                 // wattroff(ctx->history, COLOR_PAIR(GREEN));
