@@ -40,6 +40,16 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
+/* Prints the time to given window */
+void print_time(WINDOW *window)
+{
+    struct tm *timeinfo = get_time();
+
+    wattron(window, COLOR_PAIR(CYAN));
+    wprintw(window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    wattroff(window, COLOR_PAIR(CYAN));
+}
+
 /* check that the string has one non-space character */
 int string_is_empty(char *string)
 {
@@ -94,14 +104,4 @@ char *wc_to_char(wchar_t ch)
     }
 
     return ret;
-}
-
-/* Prints the time to given window */
-void print_time(WINDOW *window)
-{
-    struct tm *timeinfo = get_time();
-
-    wattron(window, COLOR_PAIR(CYAN));
-    wprintw(window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(window, COLOR_PAIR(CYAN));
 }

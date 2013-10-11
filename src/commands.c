@@ -197,7 +197,8 @@ void cmd_file(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     int friendnum = pending_file_transfers[filenum];
 
     if (tox_file_sendcontrol(m, friendnum, 1, filenum, 0, 0, 0))
-        wprintw(window, "Accepted file transfer %u. Saving file as %d.%u.bin.\n", filenum, friendnum, filenum);
+        wprintw(window, "Accepted file transfer %u. Saving file as %d.%u.bin.\n", filenum, friendnum,
+                filenum);
     else
         wprintw(window, "File transfer failed.\n");
 }

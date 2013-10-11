@@ -118,7 +118,8 @@ void on_friendadded(Tox *m, int friendnumber)
         wprintw(prompt->window, "\nCould not store Tox data\n");
 }
 
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata)
+void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length,
+                     void *userdata)
 {
     int i;
 
@@ -162,7 +163,8 @@ void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t fi
     }
 }
 
-void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata)
+void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length,
+                  void *userdata)
 {
     int i;
 

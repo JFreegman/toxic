@@ -8,6 +8,9 @@ unsigned char *hex_string_to_bin(char hex_string[]);
 /* get the current local time */
 struct tm *get_time(void);
 
+/* Prints the time to given window */
+void print_time(WINDOW *window);
+
 /* check that the string has one non-space character */
 int string_is_empty(char *string);
 
@@ -16,6 +19,3 @@ uint8_t *wcs_to_char(wchar_t *string);
 
 /* convert a wide char to null terminated string */
 char *wc_to_char(wchar_t ch);
-
-/* Prints the time to window w */
-void print_time(WINDOW *window);

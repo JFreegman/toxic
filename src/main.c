@@ -360,17 +360,18 @@ void do_file_senders(Tox *m)
                                    file_senders[i].nextpiece, file_senders[i].piecelen))
                 return;
 
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, file_senders[i].friendnum),
-                                             file_senders[i].file);
+            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, 
+                                             file_senders[i].friendnum), file_senders[i].file);
 
             if (file_senders[i].piecelen == 0) {
                 fclose(file_senders[i].file);
                 file_senders[i].file = NULL;
-                tox_file_sendcontrol(m, file_senders[i].friendnum, 0, file_senders[i].filenum, 3, 0, 0);
+                tox_file_sendcontrol(m, file_senders[i].friendnum, 0, file_senders[i].filenum, 
+                                     3, 0, 0);
 
                 /* TODO: move this alert to chat window */
-                wprintw(prompt->window, "File '%s' successfuly sent to %s.\n", file_senders[i].filename,
-                         file_senders[i].friendname);
+                wprintw(prompt->window, "File '%s' successfuly sent to %s.\n", 
+                        file_senders[i].filename, file_senders[i].friendname);
                 return;
             }
         }

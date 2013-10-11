@@ -99,15 +99,16 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     memcpy(statusbar->statusmsg, status, len);
 }
 
-static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint64_t filesize,
-                                   uint8_t *filename, uint16_t filename_len)
+static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, 
+                                   uint64_t filesize, uint8_t *filename, uint16_t filename_len)
 {
     if (self-> num != num)
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
-    wprintw(ctx->history, "File transfer request for '%s' of size %llu.\n", filename, (long long unsigned int)filesize);
+    wprintw(ctx->history, "File transfer request for '%s' of size %llu.\n", filename, 
+            (long long unsigned int)filesize);
 
     if (filenum > MAX_FILENUMBER) {
         wprintw(ctx->history, "Too many pending file requests; discarding.\n");
@@ -123,8 +124,8 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
 }
 
-static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive_send, uint8_t filenum, 
-                               uint8_t control_type, uint8_t *data, uint16_t length)
+static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive_send, 
+                               uint8_t filenum, uint8_t control_type, uint8_t *data, uint16_t length)
 {
     if (self->num != num)
         return;
@@ -147,7 +148,8 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
     beep();
 }
 
-static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint8_t *data, uint16_t length)
+static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint8_t *data,
+                            uint16_t length)
 {
     if (self->num != num)
         return;

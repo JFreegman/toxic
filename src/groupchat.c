@@ -94,7 +94,8 @@ static void print_groupchat_help(ChatContext *ctx)
     wattroff(ctx->history, COLOR_PAIR(CYAN));
 }
 
-static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *msg, uint16_t len)
+static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum,
+                                     uint8_t *msg, uint16_t len)
 {
     if (self->num != groupnum)
         return;
