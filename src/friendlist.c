@@ -108,6 +108,16 @@ int friendlist_onFriendAdded(Tox *m, int num)
     return -1;
 }
 
+void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint64_t filesize,
+                                   uint8_t *filename, uint16_t filename_len)
+{
+    if (num < 0 || num >= num_friends)
+        return;
+
+    if (friends[num].chatwin == -1)
+        friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
+}
+
 static void select_friend(Tox *m, wint_t key)
 {
     if (num_friends < 1)
@@ -286,6 +296,7 @@ ToxWindow new_friendlist()
     ret.onNickChange = &friendlist_onNickChange;
     ret.onStatusChange = &friendlist_onStatusChange;
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
+    ret.onFileSendRequest = &friendlist_onFileSendRequest;
 
     strcpy(ret.name, "friends");
     return ret;
