@@ -137,6 +137,41 @@ void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *user
             windows[i].onGroupInvite(&windows[i], m, friendnumber, group_pub_key);
     }
 }
+
+void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, 
+                         uint8_t *filename, uint16_t filename_length, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onFileSendRequest != NULL)
+            windows[i].onFileSendRequest(&windows[i], m, friendnumber, filenumber, filesize,
+                                         filename, filename_length);
+    }
+}
+
+void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, 
+                      uint8_t control_type, uint8_t *data, uint16_t length, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onFileControl != NULL)
+            windows[i].onFileControl(&windows[i], m, friendnumber, receive_send, filenumber,
+                                     control_type, data, length);
+    }
+}
+
+void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onFileData != NULL)
+            windows[i].onFileData(&windows[i], m, friendnumber, filenumber, data, length);
+    }
+}
+
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow w)
