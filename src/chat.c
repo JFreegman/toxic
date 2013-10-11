@@ -191,7 +191,6 @@ static void print_chat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /close                     : Close the current chat window\n");
     wprintw(ctx->history, "      /sendfile <nickname> <file>: Send a file\n");
     wprintw(ctx->history, "      /file <n>                  : Accept a file\n");
-    wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
     wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
     wprintw(ctx->history, "      /help                      : Print this message again\n");
     
