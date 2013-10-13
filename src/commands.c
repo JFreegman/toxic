@@ -180,7 +180,7 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **arg
     free(binary_string);
 }
 
-void cmd_file(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_savefile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     if (argc < 1) {
         wprintw(window, "Wrong number of arguments.\n");
@@ -226,39 +226,6 @@ void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **a
     }
 
     wprintw(window, "Group chat created as %d.\n", groupnum);
-}
-
-void cmd_invite(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
-{
-    if (argc != 2) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
-
-    if (argv[1] == NULL || argv[2] == NULL) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
-
-    uint8_t *friendname = argv[1];
-    int groupnum = atoi(argv[2]);
-
-    if (friendname[0] == '\"')
-        friendname[strlen(++friendname)-1] = L'\0';
-
-    int friendnum = get_friendnum(friendname);
-
-    if (friendnum == -1) {
-        wprintw(window, "Friend '%s' not found.\n", friendname);
-        return;
-    }
-
-    if (tox_invite_friend(m, friendnum, groupnum) == -1) {
-        wprintw(window, "Failed to invite friend.\n");
-        return;
-    }
-
-    wprintw(window, "Invited '%s' to group chat %d.\n", friendname, groupnum);
 }
 
 void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
@@ -400,7 +367,7 @@ void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 
     if (msg[0] != '\"') {
-        wprintw(window, "Messages must be enclosed in quotes.\n");
+        wprintw(window, "Note must be enclosed in quotes.\n");
         return;
     }
 
@@ -413,71 +380,6 @@ void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 void cmd_quit(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     exit_toxic(m);
-}
-
-void cmd_sendfile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
-{
-    if (argc < 1) {
-        wprintw(window, "Wrong number of arguments.\n");
-        return;
-    }
-
-    uint8_t *friendname = argv[1];
-
-    int friendnum = get_friendnum(friendname);
-
-    if (friendnum == -1) {
-        wprintw(window, "Friend '%s' not found.\n", friendname);
-        return;
-    }
-
-    if (friendname[0] == '\"')
-        friendname[strlen(++friendname)-1] = L'\0';
-
-    uint8_t *filename = argv[2];
-    int filename_len = strlen(filename);
-
-    if (filename[0] != '\"') {
-        wprintw(window, "File name must be enclosed in quotes.\n");
-        return;
-    }
-
-    filename[strlen(++filename)-1] = L'\0';
-
-    if (filename_len > MAX_STR_SIZE) {
-        wprintw(window, "File path exceeds character limit.\n");
-        return;
-    }
-
-    FILE *file_to_send = fopen(filename, "r");
-
-    if (file_to_send == NULL) {
-        wprintw(window, "File '%s' not found.\n", filename);
-        return;
-    }
-
-    fseek(file_to_send, 0, SEEK_END);
-    uint64_t filesize = ftell(file_to_send);
-    fseek(file_to_send, 0, SEEK_SET);
-
-    int filenum = tox_new_filesender(m, friendnum, filesize, filename, filename_len + 1);
-
-    if (filenum == -1) {
-        wprintw(window, "Error sending file\n");
-        return;
-    }
-
-    memcpy(file_senders[num_file_senders].filename, filename, filename_len + 1);
-    memcpy(file_senders[num_file_senders].friendname, friendname, strlen(friendname) + 1);
-    file_senders[num_file_senders].file = file_to_send;
-    file_senders[num_file_senders].filenum = filenum;
-    file_senders[num_file_senders].friendnum = friendnum;
-    file_senders[num_file_senders].piecelen = fread(file_senders[num_file_senders].nextpiece, 1,
-                                                    tox_filedata_size(m, friendnum), file_to_send);
-
-
-    wprintw(window, "Sending file '%s' to %s...\n", filename, friendname);
-    ++num_file_senders;
 }
 
 void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
@@ -494,7 +396,7 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
         }
 
         if (msg[0] != '\"') {
-            wprintw(window, "Messages must be enclosed in quotes.\n");
+            wprintw(window, "Note must be enclosed in quotes.\n");
             return;
         }
     } else if (argc != 1) {

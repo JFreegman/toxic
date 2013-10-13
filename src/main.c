@@ -371,7 +371,7 @@ void do_file_senders(Tox *m)
 
                 /* TODO: move this alert to chat window */
                 wprintw(prompt->window, "File '%s' successfuly sent to %s.\n", 
-                        file_senders[i].filename, file_senders[i].friendname);
+                        file_senders[i].pathname, file_senders[i].friendname);
                 return;
             }
         }

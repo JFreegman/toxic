@@ -79,7 +79,6 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /status <type> <message>   : Set your status with optional note\n");
     wprintw(ctx->history, "      /note  <message>           : Set a personal note\n");
     wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(ctx->history, "      /invite <nickname> <n>     : Invite friend to a groupchat\n");
     wprintw(ctx->history, "      /groupchat                 : Create a group chat\n");
     wprintw(ctx->history, "      /myid                      : Print your ID\n");
     wprintw(ctx->history, "      /clear                     : Clear the screen\n");

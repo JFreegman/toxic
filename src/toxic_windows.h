@@ -108,7 +108,7 @@ typedef struct {
     uint8_t nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
     uint8_t friendname[TOXIC_MAX_NAME_LENGTH];
-    uint8_t filename[MAX_STR_SIZE];
+    uint8_t pathname[MAX_STR_SIZE];
 } FileSender;
 
 FileSender file_senders[NUM_FILE_SENDERS];
@@ -128,7 +128,7 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
 void on_friendadded(Tox *m, int friendnumber);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
 void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
-void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *filename, uint16_t filename_length, void *userdata);
+void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname, uint16_t pathname_length, void *userdata);
 void on_file_control(Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
 

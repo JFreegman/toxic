@@ -100,14 +100,14 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
 }
 
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, 
-                                   uint64_t filesize, uint8_t *filename, uint16_t filename_len)
+                                   uint64_t filesize, uint8_t *pathname, uint16_t path_len)
 {
     if (self-> num != num)
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
-    wprintw(ctx->history, "File transfer request for '%s' of size %llu.\n", filename, 
+    wprintw(ctx->history, "File transfer request for '%s' of size %llu.\n", pathname, 
             (long long unsigned int)filesize);
 
     if (filenum > MAX_FILENUMBER) {
@@ -115,7 +115,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
         return;
     }
 
-    wprintw(ctx->history, "Type '/file %d' to accept the file transfer.\n", filenum);
+    wprintw(ctx->history, "Type '/savefile %d' to accept the file transfer.\n", filenum);
 
     pending_file_transfers[filenum] = num;
 
@@ -156,10 +156,10 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
-    char filename[MAX_STR_SIZE];
-    snprintf(filename, sizeof(filename), "%d.%u.bin", num, filenum);
+    char pathname[MAX_STR_SIZE];
+    snprintf(pathname, sizeof(pathname), "%d.%u.bin", num, filenum);
 
-    FILE *file_to_save = fopen(filename, "a");
+    FILE *file_to_save = fopen(pathname, "a");
 
     if (fwrite(data, length, 1, file_to_save) != 1) {
         wattron(ctx->history, COLOR_PAIR(RED));
@@ -168,6 +168,67 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
     }
 
     fclose(file_to_save);
+}
+
+static void chat_groupinvite(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *line)
+{
+    int groupnum = atoi(line);
+
+    if (groupnum == 0 && strcmp(line, "0")) {    /* atoi returns 0 value on invalid input */
+        wprintw(ctx->history, "Invalid syntax.\n");
+        return;
+    }
+
+    if (tox_invite_friend(m, self->num, groupnum) == -1) {
+        wprintw(ctx->history, "Failed to invite friend.\n");
+        return;
+    }
+
+    wprintw(ctx->history, "Invited friend to group chat %d.\n", groupnum);
+}
+
+static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *path)
+{
+    int path_len = strlen(path);
+
+    if (path_len > MAX_STR_SIZE) {
+        wprintw(ctx->history, "File path exceeds character limit.\n");
+        return;
+    }
+
+    FILE *file_to_send = fopen(path, "r");
+
+    if (file_to_send == NULL) {
+        wprintw(ctx->history, "File '%s' not found.\n", path);
+        return;
+    }
+
+    fseek(file_to_send, 0, SEEK_END);
+    uint64_t filesize = ftell(file_to_send);
+    fseek(file_to_send, 0, SEEK_SET);
+
+    int friendnum = self->num;
+    uint8_t friendname[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_getname(m, friendnum, friendname);
+
+    int filenum = tox_new_filesender(m, friendnum, filesize, path, path_len + 1);
+
+    if (filenum == -1) {
+        wprintw(ctx->history, "Error sending file.\n");
+        return;
+    }
+
+    memcpy(file_senders[num_file_senders].pathname, path, path_len + 1);
+    memcpy(file_senders[num_file_senders].friendname, friendname, strlen(friendname) + 1);
+    file_senders[num_file_senders].file = file_to_send;
+    file_senders[num_file_senders].filenum = filenum;
+    file_senders[num_file_senders].friendnum = friendnum;
+    file_senders[num_file_senders].piecelen = fread(file_senders[num_file_senders].nextpiece, 1,
+                                                    tox_filedata_size(m, friendnum), file_to_send);
+
+
+    wprintw(ctx->history, "Sending file '%s'...\n", path);
+    ++num_file_senders;
 }
 
 static void print_chat_help(ChatContext *ctx)
@@ -179,13 +240,13 @@ static void print_chat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /status <type> <message>   : Set your status with optional note\n");
     wprintw(ctx->history, "      /note <message>            : Set a personal note\n");
     wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(ctx->history, "      /invite <nickname> <n>     : Invite friend to a groupchat\n");
+    wprintw(ctx->history, "      /invite <n>                : Invite friend to a groupchat\n");
     wprintw(ctx->history, "      /me <action>               : Do an action\n");
     wprintw(ctx->history, "      /myid                      : Print your ID\n");
     wprintw(ctx->history, "      /clear                     : Clear the screen\n");
     wprintw(ctx->history, "      /close                     : Close the current chat window\n");
-    wprintw(ctx->history, "      /sendfile <nickname> <file>: Send a file\n");
-    wprintw(ctx->history, "      /file <n>                  : Accept a file\n");
+    wprintw(ctx->history, "      /sendfile <filepath>       : Send a file\n");
+    wprintw(ctx->history, "      /savefile <n>              : Receive a file\n");
     wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
     wprintw(ctx->history, "      /help                      : Print this message again\n");
     
@@ -251,11 +312,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
         uint8_t *line = wcs_to_char(ctx->line);
+        line[ctx->pos+1] = '\0';
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
         bool close_win = false;
-
         if (line[0] == '/') {
             if (close_win = !strncmp(line, "/close", strlen("/close"))) {
                 int f_num = self->num;
@@ -264,9 +325,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 del_window(self);
                 disable_chatwin(f_num);
             } else if (!strncmp(line, "/me ", strlen("/me ")))
-                send_action(self, ctx, m, line+4);
+                send_action(self, ctx, m, line + strlen("/me "));
               else if (!strncmp(line, "/help", strlen("/help")))
                 print_chat_help(ctx);
+              else if (!strncmp(line, "/invite", strlen("/invite")))
+                chat_groupinvite(self, ctx, m, line + strlen("/invite "));
+              else if(!strncmp(line, "/sendfile ", strlen("/sendfile ")))
+                chat_sendfile(self, ctx, m, line + strlen("/sendfile "));
               else
                 execute(ctx->history, self->prompt, m, line, ctx->pos);
         } else {
