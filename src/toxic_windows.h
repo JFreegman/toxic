@@ -108,7 +108,6 @@ typedef struct {
     uint8_t filenum;
     uint8_t nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
-    uint8_t friendname[TOXIC_MAX_NAME_LENGTH];
     uint8_t pathname[MAX_STR_SIZE];
 } FileSender;
 

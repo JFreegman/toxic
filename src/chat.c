@@ -107,7 +107,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
-    wprintw(ctx->history, "File transfer request for '%s' of size %llu.\n", pathname, 
+    wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", pathname, 
             (long long unsigned int)filesize);
 
     if (filenum > MAX_FILENUMBER) {
@@ -219,7 +219,6 @@ static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *pa
     }
 
     memcpy(file_senders[num_file_senders].pathname, path, path_len + 1);
-    memcpy(file_senders[num_file_senders].friendname, friendname, strlen(friendname) + 1);
     file_senders[num_file_senders].chatwin = ctx->history;
     file_senders[num_file_senders].file = file_to_send;
     file_senders[num_file_senders].filenum = filenum;

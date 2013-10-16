@@ -347,7 +347,7 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-void chat_do_file_senders(Tox *m)
+void do_file_senders(Tox *m)
 {
     int i;
 
@@ -478,7 +478,7 @@ int main(int argc, char *argv[])
 
     while (true) {
         do_tox(m, prompt);
-        chat_do_file_senders(m);
+        do_file_senders(m);
         draw_active_window(m);
     }
 
