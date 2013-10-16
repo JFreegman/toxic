@@ -34,7 +34,7 @@ static int num_friends = 0;
 static int num_selected = 0;
 
 
-void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
+static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
 {
     if (num < 0 || num >= num_friends)
         return;
@@ -43,7 +43,7 @@ void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16
         friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
 }
 
-void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
+static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
 {
     if (num < 0 || num >= num_friends)
         return;
@@ -51,7 +51,7 @@ void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t sta
     friends[num].online = status == 1 ? true : false;
 }
 
-void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
+static void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
     if (len >= TOX_MAX_NAME_LENGTH || num < 0 || num >= num_friends)
         return;
@@ -60,7 +60,7 @@ void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t le
     friends[num].namelength = len;
 }
 
-void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
+static void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
 {
     if (num < 0 || num >= num_friends)
         return;
@@ -68,7 +68,7 @@ void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS 
     friends[num].status = status;
 }
 
-void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
+static void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
 {
     if (len >= TOX_MAX_STATUSMESSAGE_LENGTH || num < 0 || num >= num_friends)
         return;
@@ -108,8 +108,8 @@ int friendlist_onFriendAdded(Tox *m, int num)
     return -1;
 }
 
-void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint64_t filesize,
-                                   uint8_t *filename, uint16_t filename_len)
+static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, 
+                                         uint64_t filesize, uint8_t *filename, uint16_t filename_len)
 {
     if (num < 0 || num >= num_friends)
         return;
@@ -153,7 +153,7 @@ static void select_friend(Tox *m, wint_t key)
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
 {
     tox_delfriend(m, f_num);
-    memset(&(friends[f_num]), 0, sizeof(friend_t));
+    memset(&friends[f_num], 0, sizeof(friend_t));
     
     int i;
 

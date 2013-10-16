@@ -31,7 +31,12 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
 
     int num = atoi(argv[1]);
 
-    if (num < 0 || num >= num_frnd_requests) {
+    if (num < 0 || num > num_frnd_requests) {
+        wprintw(window, "No pending friend request with that number.\n");
+        return;
+    }
+
+    if (!strlen(pending_frnd_requests[num])) {
         wprintw(window, "No pending friend request with that number.\n");
         return;
     }
@@ -44,6 +49,17 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
         wprintw(window, "Friend request accepted.\n");
         on_friendadded(m, friendnum);
     }
+
+    memset(&pending_frnd_requests[num], 0, sizeof(TOX_CLIENT_ID_SIZE));
+
+    int i;
+
+    for (i = num_frnd_requests; i > 0; --i) {
+        if (!strlen(pending_frnd_requests[i-1]))
+            break;
+    }
+
+    num_frnd_requests = i;
 }
 
 void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)

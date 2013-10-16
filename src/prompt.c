@@ -14,7 +14,7 @@
 #include "commands.h"
 #include "misc_tools.h"
 
-uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
+uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
 
 /* One group chat request slot for each friend; slot is 
@@ -55,12 +55,22 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 }
 
 /* Adds friend request to pending friend requests. 
-   Returns friend number on success, -1 if queue is full or other error. */
-int add_friend_req(uint8_t *public_key)
+   Returns request number on success, -1 if queue is full or other error. */
+static int add_friend_request(uint8_t *public_key)
 {
     if (num_frnd_requests < MAX_FRIENDS_NUM) {
-        memcpy(pending_frnd_requests[num_frnd_requests++], public_key, TOX_CLIENT_ID_SIZE);
-        return num_frnd_requests - 1;
+        int i;
+
+        for (i = 0; i <= num_frnd_requests; ++i) {
+            if (!strlen(pending_frnd_requests[i])) {
+                memcpy(pending_frnd_requests[i], public_key, TOX_CLIENT_ID_SIZE);
+
+                if (i == num_frnd_requests)
+                    ++num_frnd_requests;
+
+                return i;
+            }
+        }
     }
 
     return -1;
@@ -68,7 +78,7 @@ int add_friend_req(uint8_t *public_key)
 
 /* Adds group chat invite to pending group chat requests. 
    Returns friend number on success, -1 if f_num is out of range. */
-int add_group_req(uint8_t *group_pub_key, int f_num)
+static int add_group_request(uint8_t *group_pub_key, int f_num)
 {
     if (f_num >= 0 && f_num < MAX_FRIENDS_NUM) {
         memcpy(pending_grp_requests[f_num], group_pub_key, TOX_CLIENT_ID_SIZE);
@@ -261,7 +271,7 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     }
 
     wprintw(self->window, "\n\nWith the message: %s\n\n", data);
-    int n = add_friend_req(key);
+    int n = add_friend_request(key);
 
     if (n == -1) {
         wprintw(self->window, "Friend request queue is full. Discarding request.\n");
@@ -292,7 +302,7 @@ static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint
         return;
     }
 
-    int n = add_group_req(group_pub_key, friendnumber);
+    int n = add_group_request(group_pub_key, friendnumber);
 
     if (n == -1) {
         wprintw(self->window, "\nSomething bad happened.\n");
