@@ -98,11 +98,12 @@ typedef struct {
 /* Start file transfer code */
 
 #define NUM_FILE_SENDERS 256
-#define MAX_FILENUMBER 100  /* fix */
+#define MAX_FILENUMBER 100
 #define FILE_PIECE_SIZE 1024
 
 typedef struct {
     FILE *file;
+    WINDOW *chatwin;
     uint16_t friendnum;
     uint8_t filenum;
     uint8_t nextpiece[FILE_PIECE_SIZE];

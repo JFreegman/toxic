@@ -220,6 +220,7 @@ static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *pa
 
     memcpy(file_senders[num_file_senders].pathname, path, path_len + 1);
     memcpy(file_senders[num_file_senders].friendname, friendname, strlen(friendname) + 1);
+    file_senders[num_file_senders].chatwin = ctx->history;
     file_senders[num_file_senders].file = file_to_send;
     file_senders[num_file_senders].filenum = filenum;
     file_senders[num_file_senders].friendnum = friendnum;

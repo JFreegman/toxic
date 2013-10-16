@@ -347,7 +347,7 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-void do_file_senders(Tox *m)
+void chat_do_file_senders(Tox *m)
 {
     int i;
 
@@ -367,11 +367,9 @@ void do_file_senders(Tox *m)
                 fclose(file_senders[i].file);
                 file_senders[i].file = NULL;
                 tox_file_sendcontrol(m, file_senders[i].friendnum, 0, file_senders[i].filenum, 
-                                     3, 0, 0);
+                                     TOX_FILECONTROL_FINISHED, 0, 0);
 
-                /* TODO: move this alert to chat window */
-                wprintw(prompt->window, "File '%s' successfuly sent to %s.\n", 
-                        file_senders[i].pathname, file_senders[i].friendname);
+                wprintw(file_senders[i].chatwin, "File successfuly sent.\n");
                 return;
             }
         }
@@ -480,7 +478,7 @@ int main(int argc, char *argv[])
 
     while (true) {
         do_tox(m, prompt);
-        do_file_senders(m);
+        chat_do_file_senders(m);
         draw_active_window(m);
     }
 
