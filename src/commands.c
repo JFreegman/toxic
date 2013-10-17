@@ -31,7 +31,7 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
 
     int num = atoi(argv[1]);
 
-    if (num < 0 || num > num_frnd_requests) {
+    if (num < 0 || num >= MAX_FRIENDS_NUM) {
         wprintw(window, "No pending friend request with that number.\n");
         return;
     }
@@ -205,16 +205,16 @@ void cmd_savefile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **ar
 
     uint8_t filenum = atoi(argv[1]);
 
-    if (filenum < 0 || filenum > MAX_FILENUMBER) {
+    if (filenum < 0 || filenum >= MAX_FILENUMBER) {
         wprintw(window, "File transfer failed.\n");
         return;
     }
 
     int friendnum = pending_file_transfers[filenum];
+    uint8_t *filename = filenames[filenum];
 
-    if (tox_file_sendcontrol(m, friendnum, 1, filenum, 0, 0, 0))
-        wprintw(window, "Accepted file transfer %u. Saving file as %d.%u.bin.\n", filenum, friendnum,
-                filenum);
+    if (tox_file_sendcontrol(m, friendnum, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
+        wprintw(window, "Accepted file transfer %u. Saving file as: '%s'.\n", filenum, filename);
     else
         wprintw(window, "File transfer failed.\n");
 }

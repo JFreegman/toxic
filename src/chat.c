@@ -102,15 +102,27 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, 
                                    uint64_t filesize, uint8_t *pathname, uint16_t path_len)
 {
-    if (self-> num != num)
+    if (self->num != num)
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
-    wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", pathname, 
+    /* try to get file name from path */
+    uint8_t *filename = strrchr(pathname, '/');    // Try unix style paths
+    
+    if (filename != NULL) {
+        ++filename;
+    } else {
+        filename = strrchr(pathname, '\\');    // Try windows style paths
+
+        if (filename == NULL)
+            filename = pathname;
+    }
+
+    wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", filename, 
             (long long unsigned int)filesize);
 
-    if (filenum > MAX_FILENUMBER) {
+    if (filenum >= MAX_FILENUMBER) {
         wprintw(ctx->history, "Too many pending file requests; discarding.\n");
         return;
     }
@@ -118,10 +130,10 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     wprintw(ctx->history, "Type '/savefile %d' to accept the file transfer.\n", filenum);
 
     pending_file_transfers[filenum] = num;
+    strcpy(filenames[filenum], filename);
 
     self->blink = true;
     beep();
-
 }
 
 static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive_send, 
@@ -133,14 +145,17 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
     switch(control_type) {
-    case 0:
+    case TOX_FILECONTROL_ACCEPT:
         wprintw(ctx->history, "File transfer accepted.\n");
         break;
-    case 3:
-        wprintw(ctx->history, "File successfully recieved.\n");
+    case TOX_FILECONTROL_PAUSE:
+        wprintw(ctx->history, "File transfer paused.\n");
         break;
-    default:
-        wprintw(ctx->history, "Control %u receieved.\n", control_type);
+    case TOX_FILECONTROL_KILL:
+        wprintw(ctx->history, "File transfer failed.\n");
+        break;
+    case TOX_FILECONTROL_FINISHED:
+        wprintw(ctx->history, "File successfully recieved.\n");
         break;
     }
 
@@ -156,10 +171,8 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
-    char pathname[MAX_STR_SIZE];
-    snprintf(pathname, sizeof(pathname), "%d.%u.bin", num, filenum);
-
-    FILE *file_to_save = fopen(pathname, "a");
+    uint8_t *filename = filenames[filenum];
+    FILE *file_to_save = fopen(filename, "a");
 
     if (fwrite(data, length, 1, file_to_save) != 1) {
         wattron(ctx->history, COLOR_PAIR(RED));
@@ -221,11 +234,10 @@ static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *pa
     memcpy(file_senders[num_file_senders].pathname, path, path_len + 1);
     file_senders[num_file_senders].chatwin = ctx->history;
     file_senders[num_file_senders].file = file_to_send;
-    file_senders[num_file_senders].filenum = filenum;
+    file_senders[num_file_senders].filenum = (uint8_t) filenum;
     file_senders[num_file_senders].friendnum = friendnum;
     file_senders[num_file_senders].piecelen = fread(file_senders[num_file_senders].nextpiece, 1,
                                                     tox_filedata_size(m, friendnum), file_to_send);
-
 
     wprintw(ctx->history, "Sending file '%s'...\n", path);
     ++num_file_senders;

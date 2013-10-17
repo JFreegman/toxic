@@ -104,7 +104,7 @@ typedef struct {
 typedef struct {
     FILE *file;
     WINDOW *chatwin;
-    uint16_t friendnum;
+    int friendnum;
     uint8_t filenum;
     uint8_t nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
@@ -115,6 +115,7 @@ FileSender file_senders[NUM_FILE_SENDERS];
 uint8_t num_file_senders;
 
 uint8_t pending_file_transfers[MAX_FILENUMBER];
+uint8_t filenames[MAX_FILENUMBER][MAX_STR_SIZE];
 
 /* End file transfer code */
 
