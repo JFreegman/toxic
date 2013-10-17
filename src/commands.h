@@ -7,7 +7,6 @@ void cmd_accept(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_add(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_clear(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_connect(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_savefile(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_groupchat(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_join(WINDOW *, ToxWindow *, Tox *m, int, char **);
 void cmd_msg(WINDOW *, ToxWindow *, Tox *m, int, char **);
@@ -19,7 +18,7 @@ void cmd_status(WINDOW *, ToxWindow *, Tox *m, int, char **);
 
 void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len);
 
-#define NUM_COMMANDS 15
+#define NUM_COMMANDS 14
 
 static struct {
     char *name;
@@ -30,7 +29,6 @@ static struct {
     { "/clear",     cmd_clear     },
     { "/connect",   cmd_connect   },
     { "/exit",      cmd_quit      },
-    { "/savefile",  cmd_savefile  },
     { "/groupchat", cmd_groupchat },
     { "/join",      cmd_join      },
     { "/msg",       cmd_msg       },

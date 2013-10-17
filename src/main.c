@@ -356,20 +356,25 @@ void do_file_senders(Tox *m)
             continue;
 
         while (true) {
-            if (!tox_file_senddata(m, file_senders[i].friendnum, file_senders[i].filenum,
-                                   file_senders[i].nextpiece, file_senders[i].piecelen))
+            uint8_t filenum = file_senders[i].filenum;
+            int friendnum = file_senders[i].friendnum;
+
+            if (!tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece,
+                                   file_senders[i].piecelen))
                 return;
 
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, 
-                                             file_senders[i].friendnum), file_senders[i].file);
+                                             friendnum), file_senders[i].file);
 
             if (file_senders[i].piecelen == 0) {
                 fclose(file_senders[i].file);
                 file_senders[i].file = NULL;
-                tox_file_sendcontrol(m, file_senders[i].friendnum, 0, file_senders[i].filenum, 
+                tox_file_sendcontrol(m, friendnum, 0, filenum, 
                                      TOX_FILECONTROL_FINISHED, 0, 0);
 
-                wprintw(file_senders[i].chatwin, "File successfuly sent.\n");
+                uint8_t *pathname = file_senders[i].pathname;
+
+                wprintw(file_senders[i].chatwin, "File '%s' successfuly sent.\n", pathname);
                 return;
             }
         }

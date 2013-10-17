@@ -17,22 +17,8 @@
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
 
-typedef struct {
-    uint8_t name[TOX_MAX_NAME_LENGTH];
-    uint16_t namelength;
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    uint16_t statusmsg_len;
-    int num;
-    int chatwin;
-    bool active;
-    bool online;
-    TOX_USERSTATUS status;
-} friend_t;
-
-static friend_t friends[MAX_FRIENDS_NUM];
 static int num_friends = 0;
 static int num_selected = 0;
-
 
 static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
 {

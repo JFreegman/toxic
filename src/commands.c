@@ -196,29 +196,6 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **arg
     free(binary_string);
 }
 
-void cmd_savefile(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
-{
-    if (argc < 1) {
-        wprintw(window, "Wrong number of arguments.\n");
-        return;
-    }
-
-    uint8_t filenum = atoi(argv[1]);
-
-    if (filenum < 0 || filenum >= MAX_FILENUMBER) {
-        wprintw(window, "File transfer failed.\n");
-        return;
-    }
-
-    int friendnum = pending_file_transfers[filenum];
-    uint8_t *filename = filenames[filenum];
-
-    if (tox_file_sendcontrol(m, friendnum, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
-        wprintw(window, "Accepted file transfer %u. Saving file as: '%s'.\n", filenum, filename);
-    else
-        wprintw(window, "File transfer failed.\n");
-}
-
 void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     int ngc = get_num_groupchats();

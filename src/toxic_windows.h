@@ -114,10 +114,27 @@ typedef struct {
 FileSender file_senders[NUM_FILE_SENDERS];
 uint8_t num_file_senders;
 
-uint8_t pending_file_transfers[MAX_FILENUMBER];
-uint8_t filenames[MAX_FILENUMBER][MAX_STR_SIZE];
+typedef struct {
+  uint8_t pending_file_transfers[MAX_FILENUMBER];
+  uint8_t filenames[MAX_FILENUMBER][MAX_STR_SIZE];
+} FileReceiver;
 
 /* End file transfer code */
+
+typedef struct {
+    uint8_t name[TOX_MAX_NAME_LENGTH];
+    uint16_t namelength;
+    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    uint16_t statusmsg_len;
+    int num;
+    int chatwin;
+    bool active;
+    bool online;
+    TOX_USERSTATUS status;
+    FileReceiver file_receiver;
+} friend_t;
+
+friend_t friends[MAX_FRIENDS_NUM];
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
