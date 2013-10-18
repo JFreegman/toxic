@@ -128,6 +128,18 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
         return;
     }
 
+    /* Append current time to duplicate file names */
+    FILE *filecheck = NULL;
+
+    if ((filecheck = fopen(filename, "r"))) {
+        struct tm *timeinfo = get_time();
+        uint8_t cur_time[MAX_STR_SIZE];
+        snprintf(cur_time, sizeof(cur_time), ".%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min,
+                 timeinfo->tm_sec);
+        strncat(filename, cur_time, MAX_STR_SIZE);
+        fclose(filecheck);
+    }
+
     wprintw(ctx->history, "Type '/savefile %d' to accept the file transfer.\n", filenum);
 
     friends[num].file_receiver.pending_file_transfers[filenum] = num;
@@ -144,8 +156,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
+    uint8_t *filename;
 
-    uint8_t *filename = friends[num].file_receiver.filenames[filenum];
+    if (receive_send == 0)
+        filename = friends[num].file_receiver.filenames[filenum];
+    else
+        filename = file_senders[filenum].pathname;
 
     switch(control_type) {
     case TOX_FILECONTROL_ACCEPT:
