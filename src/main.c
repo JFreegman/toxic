@@ -351,7 +351,7 @@ void do_file_senders(Tox *m)
 {
     int i;
 
-    for (i = 0; i < NUM_FILE_SENDERS; ++i) {
+    for (i = 0; i < MAX_FILES; ++i) {
         if (file_senders[i].file == NULL)
             continue;
 
@@ -368,13 +368,21 @@ void do_file_senders(Tox *m)
 
             if (file_senders[i].piecelen == 0) {
                 fclose(file_senders[i].file);
-                file_senders[i].file = NULL;
-                tox_file_sendcontrol(m, friendnum, 0, filenum, 
-                                     TOX_FILECONTROL_FINISHED, 0, 0);
+                memset(&file_senders[i], 0, sizeof(FileSender));
+
+                tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
 
                 uint8_t *pathname = file_senders[i].pathname;
-
                 wprintw(file_senders[i].chatwin, "File '%s' successfuly sent.\n", pathname);
+
+                int i;
+
+                for (i = num_file_senders; i > 0; --i) {
+                    if (file_senders[i-1].active)
+                        break;
+                }
+
+                num_file_senders = i;
                 return;
             }
         }

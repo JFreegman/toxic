@@ -97,26 +97,26 @@ typedef struct {
 
 /* Start file transfer code */
 
-#define NUM_FILE_SENDERS 256
-#define MAX_FILENUMBER 100
+#define MAX_FILES 256
 #define FILE_PIECE_SIZE 1024
 
 typedef struct {
     FILE *file;
     WINDOW *chatwin;
     int friendnum;
+    bool active;
     uint8_t filenum;
     uint8_t nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
     uint8_t pathname[MAX_STR_SIZE];
 } FileSender;
 
-FileSender file_senders[NUM_FILE_SENDERS];
+FileSender file_senders[MAX_FILES];
 uint8_t num_file_senders;
 
 typedef struct {
-  uint8_t pending_file_transfers[MAX_FILENUMBER];
-  uint8_t filenames[MAX_FILENUMBER][MAX_STR_SIZE];
+  uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
+  bool pending[MAX_FILES];
 } FileReceiver;
 
 /* End file transfer code */

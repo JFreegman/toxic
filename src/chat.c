@@ -123,7 +123,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", filename, 
             (long long unsigned int)filesize);
 
-    if (filenum >= MAX_FILENUMBER) {
+    if (filenum >= MAX_FILES) {
         wprintw(ctx->history, "Too many pending file requests; discarding.\n");
         return;
     }
@@ -142,7 +142,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     wprintw(ctx->history, "Type '/savefile %d' to accept the file transfer.\n", filenum);
 
-    friends[num].file_receiver.pending_file_transfers[filenum] = num;
+    friends[num].file_receiver.pending[filenum] = true;
     strcpy(friends[num].file_receiver.filenames[filenum], filename);
 
     self->blink = true;
@@ -221,6 +221,11 @@ static void chat_groupinvite(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t 
 
 static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *path)
 {
+    if (num_file_senders >= MAX_FILES) {
+        wprintw(ctx->history,"Please wait for some of your outgoing file transfers to complete.\n");
+        return;
+    }
+
     int path_len = strlen(path);
 
     if (path_len > MAX_STR_SIZE) {
@@ -250,34 +255,53 @@ static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *pa
         return;
     }
 
-    memcpy(file_senders[num_file_senders].pathname, path, path_len + 1);
-    file_senders[num_file_senders].chatwin = ctx->history;
-    file_senders[num_file_senders].file = file_to_send;
-    file_senders[num_file_senders].filenum = (uint8_t) filenum;
-    file_senders[num_file_senders].friendnum = friendnum;
-    file_senders[num_file_senders].piecelen = fread(file_senders[num_file_senders].nextpiece, 1,
-                                                    tox_filedata_size(m, friendnum), file_to_send);
+    int i;
 
-    wprintw(ctx->history, "Sending file '%s'...\n", path);
-    ++num_file_senders;
+    for (i = 0; i < MAX_FILES; ++i) {
+        if (!file_senders[i].active) {
+            memcpy(file_senders[i].pathname, path, path_len + 1);
+            file_senders[i].active = true;
+            file_senders[i].chatwin = ctx->history;
+            file_senders[i].file = file_to_send;
+            file_senders[i].filenum = (uint8_t) filenum;
+            file_senders[i].friendnum = friendnum;
+            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
+                                             tox_filedata_size(m, friendnum), file_to_send);
+
+            wprintw(ctx->history, "Sending file: '%s'\n", path);
+
+            if (i == num_file_senders)
+                ++num_file_senders;
+
+            return;
+        }
+    }
 }
 
 static void chat_savefile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *num)
 {
     uint8_t filenum = atoi(num);
 
-    if (filenum < 0 || filenum >= MAX_FILENUMBER) {
-        wprintw(ctx->history, "File transfer failed.\n");
+    if (filenum < 0 || filenum >= MAX_FILES) {
+        wprintw(ctx->history, "No pending file transfers with that number.\n");
         return;
     }
 
     int friendnum = self->num;
+
+    if (!friends[friendnum].file_receiver.pending[filenum]) {
+        wprintw(ctx->history, "No pending file transfers with that number.\n");
+        return;
+    }
+
     uint8_t *filename = friends[friendnum].file_receiver.filenames[filenum];
 
     if (tox_file_sendcontrol(m, friendnum, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
         wprintw(ctx->history, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
     else
         wprintw(ctx->history, "File transfer failed.\n");
+
+    friends[friendnum].file_receiver.pending[filenum] = false;
 }
 
 static void print_chat_help(ChatContext *ctx)
