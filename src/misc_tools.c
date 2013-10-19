@@ -50,14 +50,10 @@ void print_time(WINDOW *window)
     wattroff(window, COLOR_PAIR(CYAN));
 }
 
-/* check that the string has one non-space character */
+/* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(char *string)
 {
-    int rc = 0;
-    char *copy = strdup(string);
-    rc = ((strtok(copy, " ") == NULL) ? 1 : 0);
-    free(copy);
-    return rc;
+    return strlen(string) <= 0;
 }
 
 /* convert wide characters to null terminated string */
