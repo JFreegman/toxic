@@ -261,39 +261,6 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 }
 
-void cmd_msg(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
-{
-    /* check arguments */
-    if (argc < 2) {
-      wprintw(window, "Invalid syntax.\n");
-      return;
-    }
-
-    uint8_t *name = argv[1];
-    uint8_t *msg = argv[2];
-
-    if (name == NULL || msg == NULL) {
-      wprintw(window, "Invalid syntax.\n");
-      return;
-    }
-
-    if (msg[0] != '\"') {
-        wprintw(window, "Messages must be enclosed in quotes.\n");
-        return;
-    }
-
-    msg[strlen(++msg)-1] = L'\0';
-    int friendnum = get_friendnum(name);
-
-    if (friendnum == -1) {
-        wprintw(window, "Friend '%s' not found.\n", name);
-        return;
-    }
-
-    if (tox_sendmessage(m, friendnum, msg, strlen(msg) + 1) == 0)
-        wprintw(window, "Failed to send message.\n");
-}
-
 void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};

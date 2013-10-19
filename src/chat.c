@@ -571,8 +571,9 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
     ret.onFileData = &chat_onFileData;
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, friendnum, name);
-    snprintf(ret.name, sizeof(ret.name), "%s", name);
+    uint16_t len = tox_getname(m, friendnum, name);
+    memcpy(ret.name, name, len);
+    ret.name[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));

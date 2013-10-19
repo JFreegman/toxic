@@ -255,19 +255,6 @@ void disable_chatwin(int f_num)
     friends[f_num].chatwin = -1;
 }
 
-/* Returns the respective friend number of name. Returns -1 on no match */
-int get_friendnum(uint8_t *name)
-{
-    int i;
-
-    for (i = 0; i < num_friends; ++i) {
-        if (strcmp(friends[i].name, name) == 0)
-            return friends[i].num;
-    }
-
-    return -1;
-}
-
 static void friendlist_onInit(ToxWindow *self, Tox *m)
 {
 
