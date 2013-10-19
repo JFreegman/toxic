@@ -136,7 +136,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
         uint8_t cur_time[MAX_STR_SIZE];
         snprintf(cur_time, sizeof(cur_time), ".%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min,
                  timeinfo->tm_sec);
-        strncat(filename, cur_time, MAX_STR_SIZE);
+        strncat(filename, cur_time, MAX_STR_SIZE - strlen(filename));
         fclose(filecheck);
     }
 

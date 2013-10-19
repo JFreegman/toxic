@@ -352,7 +352,7 @@ void do_file_senders(Tox *m)
     int i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        if (file_senders[i].file == NULL)
+        if (!file_senders[i].active)
             continue;
 
         while (true) {
