@@ -42,6 +42,8 @@ static void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint
     if (len >= TOX_MAX_NAME_LENGTH || num < 0 || num >= num_friends)
         return;
 
+    str[TOXIC_MAX_NAME_LENGTH] = '\0';
+    len = strlen(str) + 1;
     memcpy(friends[num].name, str, len);
     friends[num].namelength = len;
 }
@@ -82,6 +84,9 @@ int friendlist_onFriendAdded(Tox *m, int num)
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy((char *) friends[i].name, UNKNOWN_NAME);
                 friends[i].namelength = strlen(UNKNOWN_NAME) + 1;
+            } else {    /* Enforce toxic's maximum name length */
+                friends[i].name[TOXIC_MAX_NAME_LENGTH] = '\0';
+                friends[i].namelength = strlen(friends[i].name) + 1;
             }
 
             if (i == num_friends)

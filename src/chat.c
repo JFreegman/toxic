@@ -27,6 +27,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, num, nick);
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(4));
@@ -62,6 +63,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_getname(m, num, nick);
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(YELLOW));
@@ -77,6 +79,8 @@ static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t 
     if (self->num != num)
         return;
 
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+    len = strlen(nick) + 1;
     memcpy(self->name, nick, len);
 }
 
@@ -245,9 +249,6 @@ static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *pa
     fseek(file_to_send, 0, SEEK_SET);
 
     int friendnum = self->num;
-    uint8_t friendname[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, friendnum, friendname);
-
     int filenum = tox_new_filesender(m, friendnum, filesize, path, path_len + 1);
 
     if (filenum == -1) {
