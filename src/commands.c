@@ -21,7 +21,7 @@ extern uint8_t num_frnd_requests;
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 
 /* command functions */
-void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
     if (argc != 1) {
@@ -62,7 +62,7 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
     num_frnd_requests = i;
 }
 
-void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
         wprintw(window, "Invalid syntax.\n");
@@ -70,21 +70,10 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 
     char *id = argv[1];
-
-    if (id == NULL) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
-
     uint8_t *msg;
 
     if (argc > 1) {
         msg = argv[2];
-
-        if (msg == NULL) {
-            wprintw(window, "Invalid syntax.\n");
-            return;
-        }
 
         if (msg[0] != '\"') {
             wprintw(window, "Message must be enclosed in quotes.\n");
@@ -161,13 +150,13 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 }
 
-void cmd_clear(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_clear(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wclear(window);
     wprintw(window, "\n\n");
 }
 
-void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
     if (argc != 3) {
@@ -180,11 +169,6 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **arg
     char *port = argv[2];
     char *key = argv[3];
 
-    if (ip == NULL || port == NULL || key == NULL) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
-
     if (atoi(port) == 0) {
         wprintw(window, "Invalid syntax.\n");
         return;
@@ -196,7 +180,7 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **arg
     free(binary_string);
 }
 
-void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     int ngc = get_num_groupchats();
 
@@ -221,14 +205,9 @@ void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **a
     wprintw(window, "Group chat created as %d.\n", groupnum);
 }
 
-void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc != 1) {
-      wprintw(window, "Invalid syntax.\n");
-      return;
-    }
-
-    if (argv[1] == NULL) {
       wprintw(window, "Invalid syntax.\n");
       return;
     }
@@ -261,7 +240,7 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 }
 
-void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
@@ -278,7 +257,7 @@ void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     wprintw(window, "%s\n", id);
 }
 
-void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
     if (argc != 1) {
@@ -287,12 +266,6 @@ void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 
     uint8_t *nick = argv[1];
-
-    if (nick == NULL) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
-
     int len = strlen(nick);
 
     if (nick[0] == '\"') {
@@ -312,7 +285,7 @@ void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     store_data(m, DATA_FILE);
 }
 
-void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
         wprintw(window, "Wrong number of arguments.\n");
@@ -320,11 +293,6 @@ void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     }
 
     uint8_t *msg = argv[1];
-
-    if (msg == NULL) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
 
     if (msg[0] != '\"') {
         wprintw(window, "Note must be enclosed in quotes.\n");
@@ -337,23 +305,17 @@ void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
     prompt_update_statusmessage(prompt, msg, len);
 }
 
-void cmd_quit(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_quit(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     exit_toxic(m);
 }
 
-void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv)
+void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     uint8_t *msg = NULL;
 
     if (argc == 2) {
-
         msg = argv[2];
-
-        if (msg == NULL) {
-            wprintw(window, "Invalid syntax.\n");
-            return;
-        }
 
         if (msg[0] != '\"') {
             wprintw(window, "Note must be enclosed in quotes.\n");
@@ -365,12 +327,6 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
     }
 
     char *status = argv[1];
-
-    if (status == NULL) {
-        wprintw(window, "Invalid syntax.\n");
-        return;
-    }
-
     int len = strlen(status);
     char l_status[len+1];
     int i;
@@ -405,85 +361,55 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char **argv
     }
 }
 
+#define MAX_NUM_ARGS 4     /* Includes command */
+
 void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len)
 {
-    int newlines = 0;
-    char cmd[MAX_STR_SIZE] = {'\0'};
-    size_t i;
+    char args[MAX_NUM_ARGS][MAX_STR_SIZE];
+    int num_args = 0;
+    int i = 0;
+    bool f_end = false;
+    char *start;
 
-    for (i = 0; i < buf_len; ++i) {
-        if (u_cmd[i] == '\n')
-            ++newlines;
-        else
-            cmd[i - newlines] = u_cmd[i];
-    }
+    /* Put arguments into args array (characters wrapped in double quotes count as one arg) */
+    while (u_cmd[i] != '\0' && num_args < MAX_NUM_ARGS) {
+        start = &u_cmd[i];
 
-    int leading_spc = 0;
-
-    for (i = 0; i < MAX_STR_SIZE && isspace(cmd[i]); ++i)
-        leading_spc++;
-
-    memmove(cmd, cmd + leading_spc, MAX_STR_SIZE - leading_spc);
-
-    int cmd_end = strlen(cmd);
-
-    while (cmd_end > 0 && cmd_end--)
-        if (!isspace(cmd[cmd_end]))
-            break;
-
-    cmd[cmd_end + 1] = '\0';
-
-    /* insert \0 at argument boundaries */
-    int numargs = 0;
-    for (i = 0; i < MAX_STR_SIZE; i++) {
-        if (cmd[i] == ' ') {
-            cmd[i] = '\0';
-            numargs++;
-        }
-        /* skip over strings */
-        else if (cmd[i] == '\"') {
-            while (cmd[++i] != '\"') {
-                if (cmd[i] == '\0') {
-                    wprintw(window, "Invalid command: did you forget an opening or closing \"?\n");
+        if (u_cmd[i] == '\"') {
+            while (u_cmd[++i] != '\"') {
+                if (u_cmd[i] == '\0') {
+                    wprintw(window, "Invalid command. Did you forget a closing \"?\n");
                     return;
                 }
             }
+
+            if (u_cmd[++i] == '\0')
+                f_end = true;
+
+        } else {
+            while (u_cmd[i] != ' ') {
+                if (u_cmd[++i] == '\0') {
+                    f_end = true;
+                    break;
+                }
+            }
         }
-    }
 
-    /* read arguments into array */
-    char **cmdargs = malloc((numargs + 1) * sizeof(char *));
-    if (!cmdargs) {
-        wprintw(window, "Invalid command: too many arguments.\n");
-        return;
-    }
+        /* Copy from start to current position */
+        u_cmd[i] = '\0';
+        strcpy(args[num_args++], start);
 
-    int pos = 0;
-    
-    for (i = 0; i < numargs + 1; i++) {
-        cmdargs[i] = cmd + pos;
-        pos += strlen(cmdargs[i]) + 1;
-        /* replace empty strings with NULL for easier error checking */
-        if (strlen(cmdargs[i]) == 0)
-            cmdargs[i] = NULL;
-    }
-
-    /* no input */
-    if (!cmdargs[0]) {
-        free(cmdargs);
-        return;
+        if (!f_end)
+            ++i;
     }
 
     /* match input to command list */
-    for (i = 0; i < NUM_COMMANDS; i++) {
-        if (!strcmp(cmdargs[0], commands[i].name)) {
-            (commands[i].func)(window, prompt, m, numargs, cmdargs);
-            free(cmdargs);
+    for (i = 0; i < NUM_COMMANDS; ++i) {
+        if (strcmp(args[0], commands[i].name) == 0) {
+            (commands[i].func)(window, prompt, m, num_args-1, args);
             return;
         }
     }
 
-    /* no match */
-    free(cmdargs);
     wprintw(window, "Invalid command.\n");
 }

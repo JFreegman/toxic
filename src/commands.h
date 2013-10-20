@@ -3,17 +3,17 @@
  */
 
 /* commands */
-void cmd_accept(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_add(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_clear(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_connect(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_groupchat(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_join(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_myid(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_nick(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_note(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_quit(WINDOW *, ToxWindow *, Tox *m, int, char **);
-void cmd_status(WINDOW *, ToxWindow *, Tox *m, int, char **);
+void cmd_accept(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_add(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_clear(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_connect(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_groupchat(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_join(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_myid(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_nick(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_note(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_quit(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
+void cmd_status(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
 
 void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len);
 
@@ -21,7 +21,7 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len
 
 static struct {
     char *name;
-    void (*func)(WINDOW *, ToxWindow *, Tox *m, int, char **);
+    void (*func)(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
 } commands[] = {
     { "/accept",    cmd_accept    },
     { "/add",       cmd_add       },

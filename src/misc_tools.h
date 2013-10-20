@@ -11,7 +11,7 @@ struct tm *get_time(void);
 /* Prints the time to given window */
 void print_time(WINDOW *window);
 
-/* check that the string has one non-space character */
+/* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(char *string);
 
 /* convert wide characters to null terminated string */
