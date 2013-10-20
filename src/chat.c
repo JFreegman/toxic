@@ -386,7 +386,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
         uint8_t *line = wcs_to_char(ctx->line);
-        line[ctx->pos+1] = L'\0';
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
