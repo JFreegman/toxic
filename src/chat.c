@@ -283,7 +283,7 @@ static void chat_savefile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *nu
 {
     uint8_t filenum = atoi(num);
 
-    if (filenum < 0 || filenum >= MAX_FILES) {
+    if ((filenum == 0 && strcmp(num, "0")) || filenum >= MAX_FILES) {
         wprintw(ctx->history, "No pending file transfers with that number.\n");
         return;
     }

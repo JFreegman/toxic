@@ -31,7 +31,7 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv
 
     int num = atoi(argv[1]);
 
-    if (num < 0 || num >= MAX_FRIENDS_NUM) {
+    if ((num == 0 && strcmp(argv[1], "0"))|| num >= MAX_FRIENDS_NUM) {
         wprintw(window, "No pending friend request with that number.\n");
         return;
     }
@@ -214,7 +214,7 @@ void cmd_join(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[
 
     int num = atoi(argv[1]);
 
-    if (num < 0 || num >= MAX_FRIENDS_NUM) {
+    if ((num == 0 && strcmp(argv[1], "0")) || num >= MAX_FRIENDS_NUM) {
         wprintw(window, "No pending group chat invite with that number.\n");
         return;
     }
@@ -314,7 +314,7 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv
 {
     uint8_t *msg = NULL;
 
-    if (argc == 2) {
+    if (argc >= 2) {
         msg = argv[2];
 
         if (msg[0] != '\"') {
@@ -392,12 +392,11 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd)
             }
         }
 
-        /* Copy from start to current position */
-        u_cmd[i] = '\0';
-        strcpy(args[num_args++], start);
-
         if (!f_end)
-            ++i;
+            u_cmd[i++] = '\0';
+
+        /* Copy from start to current position */
+        strcpy(args[num_args++], start);
     }
 
     /* match input to command list */

@@ -99,7 +99,7 @@ static void print_prompt_help(ToxWindow *self)
     wprintw(self->window, "      /accept <n>                : Accept friend request\n");
     wprintw(self->window, "      /connect <ip> <port> <key> : Manually connect to a DHT server\n");
     wprintw(self->window, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(self->window, "      /note  <message>           : Set a personal note\n");
+    wprintw(self->window, "      /note <message>            : Set a personal note\n");
     wprintw(self->window, "      /nick <nickname>           : Set your nickname\n");
     wprintw(self->window, "      /join <n>                  : Join a group chat\n");
     wprintw(self->window, "      /groupchat                 : Create a group chat\n");
