@@ -15,7 +15,7 @@ void cmd_note(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
 void cmd_quit(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
 void cmd_status(WINDOW *, ToxWindow *, Tox *m, int, char (*argv)[MAX_STR_SIZE]);
 
-void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len);
+void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd);
 
 #define NUM_COMMANDS 13
 

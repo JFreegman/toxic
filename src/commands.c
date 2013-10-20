@@ -338,13 +338,10 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv
 
     if (!strcmp(l_status, "online"))
         status_kind = TOX_USERSTATUS_NONE;
-
     else if (!strcmp(l_status, "away"))
         status_kind = TOX_USERSTATUS_AWAY;
-
     else if (!strcmp(l_status, "busy"))
         status_kind = TOX_USERSTATUS_BUSY;
-
     else {
         wprintw(window, "Invalid status. Valid statuses are: online, busy and away.\n");
         return;
@@ -363,7 +360,7 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv
 
 #define MAX_NUM_ARGS 4     /* Includes command */
 
-void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd, int buf_len)
+void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd)
 {
     char args[MAX_NUM_ARGS][MAX_STR_SIZE];
     int num_args = 0;
