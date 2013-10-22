@@ -372,10 +372,10 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd)
     while (u_cmd[i] != '\0' && num_args < MAX_NUM_ARGS) {
         start = &u_cmd[i];
 
-        if (u_cmd[i] == '\"') {
+        if (*start == '\"') {
             while (u_cmd[++i] != '\"') {
                 if (u_cmd[i] == '\0') {
-                    wprintw(window, "Invalid command. Did you forget a closing \"?\n");
+                    wprintw(window, "Invalid argument. Did you forget a closing \"?\n");
                     return;
                 }
             }
