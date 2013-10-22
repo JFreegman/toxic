@@ -53,7 +53,7 @@ void print_time(WINDOW *window)
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(char *string)
 {
-    return strlen(string) <= 0;
+    return string[0] == '\0';
 }
 
 /* convert wide characters to null terminated string */
