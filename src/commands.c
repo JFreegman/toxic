@@ -360,43 +360,39 @@ void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv
 
 #define MAX_NUM_ARGS 4     /* Includes command */
 
-void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *u_cmd)
+void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd)
 {
-    char args[MAX_NUM_ARGS][MAX_STR_SIZE];
+    if (string_is_empty(cmd))
+        return;
+
+    char args[MAX_NUM_ARGS][MAX_STR_SIZE] = {0};
     int num_args = 0;
     int i = 0;
-    bool f_end = false;
-    char *start;
+    bool cmd_end = false;    // flags when we get to the end of cmd
+    char *end;               // points to the end of the current arg
 
     /* Put arguments into args array (characters wrapped in double quotes count as one arg) */
-    while (u_cmd[i] != '\0' && num_args < MAX_NUM_ARGS) {
-        start = &u_cmd[i];
+    while (!cmd_end && num_args < MAX_NUM_ARGS) {
+        if (*cmd == '\"') {
+            end = strchr(cmd+1, '\"');
 
-        if (*start == '\"') {
-            while (u_cmd[++i] != '\"') {
-                if (u_cmd[i] == '\0') {
-                    wprintw(window, "Invalid argument. Did you forget a closing \"?\n");
-                    return;
-                }
+            if (end++ == NULL) {    /* Increment past the end quote */
+                wprintw(window, "Invalid command. Did you forget a closing \"?\n");
+                return;
             }
 
-            if (u_cmd[++i] == '\0')
-                f_end = true;
-
+            cmd_end = *end == '\0';
         } else {
-            while (u_cmd[i] != ' ') {
-                if (u_cmd[++i] == '\0') {
-                    f_end = true;
-                    break;
-                }
-            }
+            end = strchr(cmd, ' ');
+            cmd_end = end == NULL;
         }
 
-        if (!f_end)
-            u_cmd[i++] = '\0';
+        if (!cmd_end)
+            *end++ = '\0';    /* mark end of current argument */
 
-        /* Copy from start to current position */
-        strcpy(args[num_args++], start);
+        /* Copy from start of current arg to where we just inserted the null byte */
+        strcpy(args[num_args++], cmd);
+        cmd = end;
     }
 
     /* match input to command list */
