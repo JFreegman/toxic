@@ -367,7 +367,6 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd)
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE] = {0};
     int num_args = 0;
-    int i = 0;
     bool cmd_end = false;    // flags when we get to the end of cmd
     char *end;               // points to the end of the current arg
 
@@ -377,7 +376,7 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd)
             end = strchr(cmd+1, '\"');
 
             if (end++ == NULL) {    /* Increment past the end quote */
-                wprintw(window, "Invalid command. Did you forget a closing \"?\n");
+                wprintw(window, "Invalid argument. Did you forget a closing \"?\n");
                 return;
             }
 
@@ -394,6 +393,8 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd)
         strcpy(args[num_args++], cmd);
         cmd = end;
     }
+
+    int i;
 
     /* match input to command list */
     for (i = 0; i < NUM_COMMANDS; ++i) {

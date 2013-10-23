@@ -118,22 +118,29 @@ static void print_prompt_help(ToxWindow *self)
 
 static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    /* Add printable characters to line */
-    if (isprint(key)) {
-        if (prompt_buf_pos == (sizeof(prompt_buf) - 1)) {
-            return;
-        } else if (!(prompt_buf_pos == 0) && (prompt_buf_pos < COLS)
-                   && (prompt_buf_pos % (COLS - 3) == 0)) {
-            wprintw(self->window, "\n");
-            prompt_buf[prompt_buf_pos++] = '\n';
-        } else if (!(prompt_buf_pos == 0) && (prompt_buf_pos > COLS)
-                   && ((prompt_buf_pos - (COLS - 3)) % (COLS) == 0)) {
-            wprintw(self->window, "\n");
-            prompt_buf[prompt_buf_pos++] = '\n';
-        }
+    int x, y, y2, x2;
+    getyx(self->window, y, x);
+    getmaxyx(self->window, y2, x2);
 
-        prompt_buf[prompt_buf_pos++] = key;
-        prompt_buf[prompt_buf_pos] = 0;
+    /* BACKSPACE key: Remove one character from line */
+    if (key == 0x107 || key == 0x8 || key == 0x7f) {
+        if (prompt_buf_pos != 0) {
+            prompt_buf[--prompt_buf_pos] = '\0';
+
+            if (x == 0)
+                mvwdelch(self->window, y - 1, x2 - 1);
+            else
+                mvwdelch(self->window, y, x - 1);
+        }
+    }
+
+    /* Add printable characters to line */
+    else if (isprint(key)) {
+        if (prompt_buf_pos < (MAX_STR_SIZE-1)) {
+            mvwaddch(self->window, y, x, key);
+            prompt_buf[prompt_buf_pos++] = key;
+            prompt_buf[prompt_buf_pos] = '\0';
+        }
     }
 
     /* RETURN key: execute command */
@@ -146,14 +153,9 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
             execute(self->window, self, m, prompt_buf);
 
         prompt_buf_pos = 0;
-        prompt_buf[0] = 0;
+        prompt_buf[0] = '\0';
     }
 
-    /* BACKSPACE key: Remove one character from line */
-    else if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (prompt_buf_pos != 0)
-            prompt_buf[--prompt_buf_pos] = 0;
-    }
 }
 
 static void prompt_onDraw(ToxWindow *self, Tox *m)
@@ -164,10 +166,11 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
+    /* Someone please fix this disgusting hack */
     size_t i;
 
     for (i = 0; i < prompt_buf_pos; ++i) {
-        if ((prompt_buf[i] == '\n') && (y != 0))
+        if ((prompt_buf_pos + 3) >= x2)
             --y;
     }
 

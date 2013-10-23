@@ -60,7 +60,7 @@ int string_is_empty(char *string)
 uint8_t *wcs_to_char(wchar_t *string)
 {
     size_t len = 0;
-    char *ret = NULL;
+    uint8_t *ret = NULL;
 
     len = wcstombs(NULL, string, 0);
     if (len != (size_t) -1) {

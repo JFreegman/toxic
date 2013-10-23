@@ -360,6 +360,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
+
     /* BACKSPACE key: Remove one character from line */
     if (key == 0x107 || key == 0x8 || key == 0x7f) {
         if (ctx->pos > 0) {
@@ -377,7 +378,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 #else
     if (isprint(key)) {
 #endif
-        if (ctx->pos < (MAX_STR_SIZE-1)) {
+        if (ctx->pos <= MAX_STR_SIZE) {
             mvwaddstr(self->window, y, x, wc_to_char(key));
             ctx->line[ctx->pos++] = key;
             ctx->line[ctx->pos] = L'\0';
@@ -390,6 +391,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
         bool close_win = false;
+
         if (line[0] == '/') {
             if (close_win = !strncmp(line, "/close", strlen("/close"))) {
                 int f_num = self->num;
