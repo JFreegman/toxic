@@ -63,7 +63,7 @@ uint8_t *wcs_to_char(wchar_t *string)
     size_t len = wcstombs(NULL, string, 0);
 
     if (len != (size_t) -1) {
-        ret = malloc(len+1);
+        ret = malloc(++len);
 
         if (ret != NULL)
             wcstombs(ret, string, len);
