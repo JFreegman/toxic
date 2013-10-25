@@ -378,7 +378,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 #else
     if (isprint(key)) {
 #endif
-        if (ctx->pos <= MAX_STR_SIZE) {
+        if (ctx->pos < (MAX_STR_SIZE-1)) {
             mvwaddstr(self->window, y, x, wc_to_char(key));
             ctx->line[ctx->pos++] = key;
             ctx->line[ctx->pos] = L'\0';
