@@ -136,7 +136,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* Add printable characters to line */
     else if (isprint(key)) {
-        if (prompt_buf_pos < (MAX_STR_SIZE-1)) {
+        if (prompt_buf_pos <= MAX_STR_SIZE) {
             mvwaddch(self->window, y, x, key);
             prompt_buf[prompt_buf_pos++] = key;
             prompt_buf[prompt_buf_pos] = '\0';

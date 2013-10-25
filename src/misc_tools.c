@@ -59,17 +59,17 @@ int string_is_empty(char *string)
 /* convert wide characters to null terminated string */
 uint8_t *wcs_to_char(wchar_t *string)
 {
-    size_t len = 0;
     uint8_t *ret = NULL;
+    size_t len = wcstombs(NULL, string, 0);
 
-    len = wcstombs(NULL, string, 0);
     if (len != (size_t) -1) {
-        len++;
-        ret = malloc(len);
+        ret = malloc(len+1);
+
         if (ret != NULL)
             wcstombs(ret, string, len);
     } else {
         ret = malloc(2);
+
         if (ret != NULL) {
             ret[0] = ' ';
             ret[1] = '\0';
@@ -88,10 +88,9 @@ uint8_t *wcs_to_char(wchar_t *string)
 /* convert a wide char to null terminated string */
 char *wc_to_char(wchar_t ch)
 {
-    int len = 0;
     static char ret[MB_LEN_MAX + 1];
+    int len = wctomb(ret, ch);
 
-    len = wctomb(ret, ch);
     if (len == -1) {
         ret[0] = ' ';
         ret[1] = '\0';

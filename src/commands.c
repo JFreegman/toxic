@@ -50,7 +50,7 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv
         on_friendadded(m, friendnum);
     }
 
-    memset(&pending_frnd_requests[num], 0, sizeof(TOX_CLIENT_ID_SIZE));
+    memset(&pending_frnd_requests[num], 0, TOX_CLIENT_ID_SIZE);
 
     int i;
 
