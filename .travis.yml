@@ -9,8 +9,8 @@ before_script:
   - cd libsodium
   - git checkout tags/0.4.2
   - ./autogen.sh
-  - ./configure && make check -j2
-  - sudo make install &
+  - ./configure && make -j3
+  - sudo make install 
   - cd ..
 # creating librarys' links and updating cache
   - sudo ldconfig
