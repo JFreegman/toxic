@@ -9,14 +9,14 @@ before_script:
   - cd libsodium
   - git checkout tags/0.4.2
   - ./autogen.sh
-  - ./configure && make check -j3
+  - ./configure && make check -j4
   - sudo make install
   - cd ..
 # installing libconfig, needed for DHT_bootstrap_daemon
   - wget http://www.hyperrealm.com/libconfig/libconfig-1.4.9.tar.gz
   - tar -xvzf libconfig-1.4.9.tar.gz
   - cd libconfig-1.4.9
-  - ./configure && make -j3
+  - ./configure && make -j4
   - sudo make install
   - cd ..
 # creating librarys' links and updating cache
@@ -30,13 +30,13 @@ before_script:
   - cd toxcore
   - autoreconf -i
   - ./configure
-  - make -j2
+  - make -j4
   - sudo make install
   - cd ..
 script:
   - autoreconf -i
   - ./configure
-  - make -j2
+  - make -j4
 notifications:
   email: false
 
