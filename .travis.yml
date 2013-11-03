@@ -9,27 +9,15 @@ before_script:
   - cd libsodium
   - git checkout tags/0.4.2
   - ./autogen.sh
-  - ./configure && make check -j3
-  - sudo make install
-  - cd ..
-# installing libconfig, needed for DHT_bootstrap_daemon
-  - wget http://www.hyperrealm.com/libconfig/libconfig-1.4.9.tar.gz
-  - tar -xvzf libconfig-1.4.9.tar.gz
-  - cd libconfig-1.4.9
   - ./configure && make -j3
-  - sudo make install
+  - sudo make install 
   - cd ..
 # creating librarys' links and updating cache
   - sudo ldconfig
-# installing sphinx, needed for documentation
-  - sudo apt-get install python-sphinx
-# installing check, needed for unit tests
-  - sudo apt-get install check
-  
   - git clone https://github.com/irungentoo/ProjectTox-Core.git toxcore
   - cd toxcore
   - autoreconf -i
-  - ./configure
+  - ./configure --disable-tests --disable-ntox --disable-dht-bootstrap-daemon
   - make -j2
   - sudo make install
   - cd ..
