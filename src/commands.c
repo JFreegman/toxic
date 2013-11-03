@@ -128,7 +128,7 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[M
             break;
 
         case TOX_FAERR_ALREADYSENT:
-            wprintw(window, "Friend request already sent.\n");
+            wprintw(window, "Friend request has already been sent.\n");
             break;
 
         case TOX_FAERR_UNKNOWN:
@@ -144,7 +144,7 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[M
             break;
 
         default:
-            wprintw(window, "Friend added as %d.\n", num);
+            wprintw(window, "Friend request sent.\n");
             on_friendadded(m, num);
             break;
     }

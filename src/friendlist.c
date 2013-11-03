@@ -133,12 +133,6 @@ static void select_friend(Tox *m, wint_t key)
             }
         }
     } else return;    /* Bad key input */
-
-    /* If we reach this something is wrong */
-    endwin();
-    tox_kill(m);
-    fprintf(stderr, "select_friend() failed. Aborting...\n");
-    exit(EXIT_FAILURE);
 }
 
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
@@ -260,7 +254,7 @@ static void friendlist_onInit(ToxWindow *self, Tox *m)
 
 }
 
-ToxWindow new_friendlist()
+ToxWindow new_friendlist(void)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
