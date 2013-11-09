@@ -133,7 +133,7 @@ static char servers[MAXSERVERS][SERVERLEN];
 static uint16_t ports[MAXSERVERS];
 static uint8_t keys[MAXSERVERS][TOX_CLIENT_ID_SIZE];
 
-int serverlist_load()
+int serverlist_load(void)
 {
     FILE *fp = NULL;
 
@@ -488,6 +488,7 @@ int main(int argc, char *argv[])
     }
 
     prompt_init_statusbar(prompt, m);
+    sort_friendlist_index();
 
     while (true) {
         do_tox(m, prompt);
