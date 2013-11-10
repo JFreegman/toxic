@@ -3,8 +3,11 @@
  */
 
 #define MAX_NUM_ARGS 4     /* Includes command */
-#define GLOBAL_COMMAND_MODE 0
-#define CHAT_COMMAND_MODE 1
-#define GROUPCHAT_COMMAND_MODE 2
+
+enum {
+    GLOBAL_COMMAND_MODE,
+    CHAT_COMMAND_MODE,
+    GROUPCHAT_COMMAND_MODE,
+};
 
 void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd, int mode);
