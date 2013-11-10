@@ -11,11 +11,11 @@
 
 #include "toxic_windows.h"
 #include "misc_tools.h"
-#include "chat_commands.h"
+#include "execute.h"
 
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 
-void cmd_help(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_chat_help(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, "Chat commands:\n");

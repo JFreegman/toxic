@@ -10,4 +10,4 @@ enum {
     GROUPCHAT_COMMAND_MODE,
 };
 
-void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd, int mode);
+void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode);

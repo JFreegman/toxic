@@ -6,13 +6,45 @@
 #include <string.h>
 
 #include "toxic_windows.h"
-#include "global_commands.h"
-#include "chat_commands.h"
 #include "execute.h"
+#include "chat_commands.h"
+#include "global_commands.h"
+
+struct cmd_func {
+    const char *name;
+    void (*func)(WINDOW *, ToxWindow *, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
+};
+
+#define GLOBAL_NUM_COMMANDS 12
+
+static struct cmd_func global_commands[] = {
+    { "/accept",    cmd_accept    },
+    { "/add",       cmd_add       },
+    { "/clear",     cmd_clear     },
+    { "/connect",   cmd_connect   },
+    { "/exit",      cmd_quit      },
+    { "/groupchat", cmd_groupchat },
+    { "/myid",      cmd_myid      },
+    { "/nick",      cmd_nick      },
+    { "/note",      cmd_note      },
+    { "/q",         cmd_quit      },
+    { "/quit",      cmd_quit      },
+    { "/status",    cmd_status    },
+};
+
+#define CHAT_NUM_COMMANDS 5
+
+static struct cmd_func chat_commands[] = {
+    { "/help",      cmd_chat_help   },
+    { "/invite",    cmd_groupinvite },
+    { "/join",      cmd_join_group  },
+    { "/savefile",  cmd_savefile    },
+    { "/sendfile",  cmd_sendfile    },
+};
 
 /* Parses input command and puts args into arg array. 
    Returns number of arguments on success, -1 on failure. */
-static int parse_command(WINDOW *window, char *cmd, char (*args)[MAX_STR_SIZE])
+static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])
 {
     int num_args = 0;
     bool cmd_end = false;    // flags when we get to the end of cmd
@@ -24,7 +56,7 @@ static int parse_command(WINDOW *window, char *cmd, char (*args)[MAX_STR_SIZE])
             end = strchr(cmd+1, '\"');
 
             if (end++ == NULL) {    /* Increment past the end quote */
-                wprintw(window, "Invalid argument. Did you forget a closing \"?\n");
+                wprintw(w, "Invalid argument. Did you forget a closing \"?\n");
                 return -1;
             }
 
@@ -45,43 +77,48 @@ static int parse_command(WINDOW *window, char *cmd, char (*args)[MAX_STR_SIZE])
     return num_args;
 }
 
-void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd, int mode)
+/* Matches command to respective function. Returns 0 on match, 1 on no match */
+static int do_command(WINDOW *w, ToxWindow *prompt, Tox *m, int num_args, 
+                         int num_cmds, struct cmd_func *commands, char (*args)[MAX_STR_SIZE])
+{
+    int i;
+
+    for (i = 0; i < num_cmds; ++i) {
+        if (strcmp(args[0], commands[i].name) == 0) {
+            (commands[i].func)(w, prompt, m, num_args-1, args);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode)
 {
     if (string_is_empty(cmd))
         return;
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE] = {0};
-    int num_args = parse_command(window, cmd, args);
+    int num_args = parse_command(w, cmd, args);
 
     if (num_args == -1)
         return;
 
-    /* Attempt to match input to command functions. If non-global command mode is specified, 
-       try the specified mode's commands first, then upon failure try global commands.
-
-       TODO: Generalize command matching loop in a separate function */
-    int i;
-
+    /* Try to match input command to command functions. If non-global command mode is specified, 
+       try specified mode's commands first, then upon failure try global commands. */
     switch(mode) {
     case CHAT_COMMAND_MODE:
-        for (i = 0; i < CHAT_NUM_COMMANDS; ++i) {
-            if (strcmp(args[0], chat_commands[i].name) == 0) {
-                (chat_commands[i].func)(window, prompt, m, num_args-1, args);
-                return;
-            }
-        }
+        if (do_command(w, prompt, m, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
+            return;
         break;
 
     case GROUPCHAT_COMMAND_MODE:
         break;
     }
 
-    for (i = 0; i < GLOBAL_NUM_COMMANDS; ++i) {
-        if (strcmp(args[0], global_commands[i].name) == 0) {
-            (global_commands[i].func)(window, prompt, m, num_args-1, args);
-            return;
-        }
-    }
+    if (do_command(w, prompt, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
+        return;
 
-    wprintw(window, "Invalid command.\n");
+
+    wprintw(w, "Invalid command.\n");
 }
