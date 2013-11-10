@@ -10,20 +10,22 @@
 #include "chat_commands.h"
 #include "execute.h"
 
+/* Parses input command and puts args into arg array. 
+   Returns number of arguments on success, -1 on failure. */
 static int parse_command(WINDOW *window, char *cmd, char (*args)[MAX_STR_SIZE])
 {
     int num_args = 0;
     bool cmd_end = false;    // flags when we get to the end of cmd
     char *end;               // points to the end of the current arg
 
-    /* Put arguments into args array (characters wrapped in double quotes count as one arg) */
+    /* characters wrapped in double quotes count as one arg */
     while (!cmd_end && num_args < MAX_NUM_ARGS) {
         if (*cmd == '\"') {
             end = strchr(cmd+1, '\"');
 
             if (end++ == NULL) {    /* Increment past the end quote */
                 wprintw(window, "Invalid argument. Did you forget a closing \"?\n");
-                return;
+                return -1;
             }
 
             cmd_end = *end == '\0';
@@ -50,6 +52,9 @@ void execute(WINDOW *window, ToxWindow *prompt, Tox *m, char *cmd, int mode)
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE] = {0};
     int num_args = parse_command(window, cmd, args);
+
+    if (num_args == -1)
+        return;
 
     /* Attempt to match input to command functions. If non-global command mode is specified, 
        try the specified mode's commands first, then upon failure try global commands.
