@@ -11,12 +11,27 @@
 #include <time.h>
 
 #include "toxic_windows.h"
-#include "friendlist.h"
-#include "commands.h"
+#include "execute.h"
 #include "misc_tools.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
+
+/* One group chat request slot for each friend; slot is 
+   overwritten on subsequent requests by the same friend. */
+extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
+
+/* Adds group chat invite to pending group chat requests. 
+   Returns friend number on success, -1 if f_num is out of range. */
+static int add_group_request(uint8_t *group_pub_key, int f_num)
+{
+    if (f_num >= 0 && f_num < MAX_FRIENDS_NUM) {
+        memcpy(pending_grp_requests[f_num], group_pub_key, TOX_CLIENT_ID_SIZE);
+        return f_num;
+    }
+
+    return -1;
+}
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
@@ -206,129 +221,36 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
     fclose(file_to_save);
 }
 
-static void chat_groupinvite(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *line)
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
 {
-    int groupnum = atoi(line);
+    if (friendnumber < 0)
+        return;
 
-    if (groupnum == 0 && strcmp(line, "0")) {    /* atoi returns 0 value on invalid input */
-        wprintw(ctx->history, "Invalid syntax.\n");
+    ChatContext *ctx = (ChatContext *) self->chatwin;
+    uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
+
+    if (tox_getname(m, friendnumber, name) == -1)
+        return;
+
+    wprintw(ctx->history, "Group chat invite from %s.\n", name);
+
+    int ngc = get_num_groupchats();
+
+    if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
+        wprintw(ctx->history, "Maximum number of group chats has been reached. Discarding invite.\n");
         return;
     }
 
-    if (tox_invite_friend(m, self->num, groupnum) == -1) {
-        wprintw(ctx->history, "Failed to invite friend.\n");
+    int n = add_group_request(group_pub_key, friendnumber);
+
+    if (n == -1) {
+        wprintw(ctx->history, "Something bad happened.\n");
         return;
     }
 
-    wprintw(ctx->history, "Invited friend to group chat %d.\n", groupnum);
-}
-
-static void chat_sendfile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *path)
-{
-    if (num_file_senders >= MAX_FILES) {
-        wprintw(ctx->history,"Please wait for some of your outgoing file transfers to complete.\n");
-        return;
-    }
-
-    int path_len = strlen(path);
-
-    if (path_len > MAX_STR_SIZE) {
-        wprintw(ctx->history, "File path exceeds character limit.\n");
-        return;
-    }
-
-    FILE *file_to_send = fopen(path, "r");
-
-    if (file_to_send == NULL) {
-        wprintw(ctx->history, "File '%s' not found.\n", path);
-        return;
-    }
-
-    fseek(file_to_send, 0, SEEK_END);
-    uint64_t filesize = ftell(file_to_send);
-    fseek(file_to_send, 0, SEEK_SET);
-
-    int friendnum = self->num;
-    int filenum = tox_new_filesender(m, friendnum, filesize, path, path_len + 1);
-
-    if (filenum == -1) {
-        wprintw(ctx->history, "Error sending file.\n");
-        return;
-    }
-
-    int i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
-        if (!file_senders[i].active) {
-            memcpy(file_senders[i].pathname, path, path_len + 1);
-            file_senders[i].active = true;
-            file_senders[i].chatwin = ctx->history;
-            file_senders[i].file = file_to_send;
-            file_senders[i].filenum = (uint8_t) filenum;
-            file_senders[i].friendnum = friendnum;
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
-                                             tox_filedata_size(m, friendnum), file_to_send);
-
-            wprintw(ctx->history, "Sending file: '%s'\n", path);
-
-            if (i == num_file_senders)
-                ++num_file_senders;
-
-            return;
-        }
-    }
-}
-
-static void chat_savefile(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *num)
-{
-    uint8_t filenum = atoi(num);
-
-    if ((filenum == 0 && strcmp(num, "0")) || filenum >= MAX_FILES) {
-        wprintw(ctx->history, "No pending file transfers with that number.\n");
-        return;
-    }
-
-    int friendnum = self->num;
-
-    if (!friends[friendnum].file_receiver.pending[filenum]) {
-        wprintw(ctx->history, "No pending file transfers with that number.\n");
-        return;
-    }
-
-    uint8_t *filename = friends[friendnum].file_receiver.filenames[filenum];
-
-    if (tox_file_sendcontrol(m, friendnum, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
-        wprintw(ctx->history, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
-    else
-        wprintw(ctx->history, "File transfer failed.\n");
-
-    friends[friendnum].file_receiver.pending[filenum] = false;
-}
-
-static void print_chat_help(ChatContext *ctx)
-{
-    wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(ctx->history, "Chat commands:\n");
-    wattroff(ctx->history, A_BOLD);
-
-    wprintw(ctx->history, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(ctx->history, "      /note <message>            : Set a personal note\n");
-    wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(ctx->history, "      /invite <n>                : Invite friend to a groupchat\n");
-    wprintw(ctx->history, "      /me <action>               : Do an action\n");
-    wprintw(ctx->history, "      /myid                      : Print your ID\n");
-    wprintw(ctx->history, "      /clear                     : Clear the screen\n");
-    wprintw(ctx->history, "      /close                     : Close the current chat window\n");
-    wprintw(ctx->history, "      /sendfile <filepath>       : Send a file\n");
-    wprintw(ctx->history, "      /savefile <n>              : Receive a file\n");
-    wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
-    wprintw(ctx->history, "      /help                      : Print this message again\n");
-    
-    wattron(ctx->history, A_BOLD);
-    wprintw(ctx->history, "\n * Argument messages must be enclosed in quotation marks.\n");
-    wattroff(ctx->history, A_BOLD);
-    
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    wprintw(ctx->history, "Type \"/join %d\" to join the chat.\n", n);
+    self->blink = true;
+    beep();
 }
 
 static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
@@ -401,16 +323,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 disable_chatwin(f_num);
             } else if (!strncmp(line, "/me ", strlen("/me ")))
                 send_action(self, ctx, m, line + strlen("/me "));
-              else if (!strncmp(line, "/help", strlen("/help")))
-                print_chat_help(ctx);
-              else if (!strncmp(line, "/invite", strlen("/invite")))
-                chat_groupinvite(self, ctx, m, line + strlen("/invite "));
-              else if(!strncmp(line, "/sendfile ", strlen("/sendfile ")))
-                chat_sendfile(self, ctx, m, line + strlen("/sendfile "));
-              else if(!strncmp(line, "/savefile ", strlen("/savefile ")))
-                chat_savefile(self, ctx, m, line + strlen("/savefile "));
               else
-                execute(ctx->history, self->prompt, m, line);
+                execute(ctx->history, self->prompt, m, line, CHAT_COMMAND_MODE);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
@@ -549,7 +463,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 0, x, y-4, 0);
     wprintw(ctx->history, "\n\n");
-    print_chat_help(ctx);
+    execute(ctx->history, self->prompt, m, "/help", CHAT_COMMAND_MODE);
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 
@@ -563,6 +477,7 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
     ret.onInit = &chat_onInit;
     ret.onMessage = &chat_onMessage;
     ret.onConnectionChange = &chat_onConnectionChange;
+    ret.onGroupInvite = &chat_onGroupInvite;
     ret.onNickChange = &chat_onNickChange;
     ret.onStatusChange = &chat_onStatusChange;
     ret.onStatusMessageChange = &chat_onStatusMessageChange;

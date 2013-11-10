@@ -143,6 +143,15 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8
         friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
 }
 
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *group_pub_key)
+{
+    if (num < 0 || num >= max_friends_index)
+        return;
+
+    if (friends[num].chatwin == -1)
+        friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
+}
+
 static void select_friend(Tox *m, wint_t key)
 {
     if (num_friends < 1)
@@ -265,7 +274,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             } else {
                 wprintw(self->window, "[O]%s\n", friends[f].name);
             }
-       }
+        }
     }
 
     wrefresh(self->window);
@@ -296,6 +305,7 @@ ToxWindow new_friendlist(void)
     ret.onStatusChange = &friendlist_onStatusChange;
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
     ret.onFileSendRequest = &friendlist_onFileSendRequest;
+    ret.onGroupInvite = &friendlist_onGroupInvite;
 
     strcpy(ret.name, "friends");
     return ret;

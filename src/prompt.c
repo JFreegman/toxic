@@ -11,15 +11,11 @@
 
 #include "toxic_windows.h"
 #include "prompt.h"
-#include "commands.h"
+#include "execute.h"
 #include "misc_tools.h"
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
-
-/* One group chat request slot for each friend; slot is 
-   overwritten on subsequent requests by the same friend. */
-uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 
 static char prompt_buf[MAX_STR_SIZE] = {'\0'};
 static int prompt_buf_pos = 0;
@@ -71,18 +67,6 @@ static int add_friend_request(uint8_t *public_key)
                 return i;
             }
         }
-    }
-
-    return -1;
-}
-
-/* Adds group chat invite to pending group chat requests. 
-   Returns friend number on success, -1 if f_num is out of range. */
-static int add_group_request(uint8_t *group_pub_key, int f_num)
-{
-    if (f_num >= 0 && f_num < MAX_FRIENDS_NUM) {
-        memcpy(pending_grp_requests[f_num], group_pub_key, TOX_CLIENT_ID_SIZE);
-        return f_num;
     }
 
     return -1;
@@ -150,7 +134,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (!strncmp(prompt_buf, "/help", strlen("/help")))
             print_prompt_help(self);
         else
-            execute(self->window, self, m, prompt_buf);
+            execute(self->window, self, m, prompt_buf, GLOBAL_COMMAND_MODE);
 
         prompt_buf_pos = 0;
         prompt_buf[0] = '\0';
@@ -286,37 +270,6 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     beep();
 }
 
-static void prompt_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
-{
-    if (friendnumber < 0)
-        return;
-
-    uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
-
-    if (tox_getname(m, friendnumber, name) == -1)
-        return;
-
-    wprintw(self->window, "\nGroup chat invite from %s.\n", name);
-
-    int ngc = get_num_groupchats();
-
-    if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
-        wprintw(self->window, "\nMaximum number of group chats has been reached. Discarding invite.\n");
-        return;
-    }
-
-    int n = add_group_request(group_pub_key, friendnumber);
-
-    if (n == -1) {
-        wprintw(self->window, "\nSomething bad happened.\n");
-        return;
-    }
-
-    wprintw(self->window, "Type \"/join %d\" to join the chat.\n", n);
-    self->blink = true;
-    beep();
-}
-
 void prompt_init_statusbar(ToxWindow *self, Tox *m)
 {
     int x, y;
@@ -350,7 +303,6 @@ ToxWindow new_prompt(void)
     ret.onInit = &prompt_onInit;
     ret.onConnectionChange = &prompt_onConnectionChange;
     ret.onFriendRequest = &prompt_onFriendRequest;
-    ret.onGroupInvite = &prompt_onGroupInvite;
 
     strcpy(ret.name, "prompt");
 
