@@ -78,8 +78,8 @@ static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])
 }
 
 /* Matches command to respective function. Returns 0 on match, 1 on no match */
-static int do_command(WINDOW *w, ToxWindow *prompt, Tox *m, int num_args, 
-                         int num_cmds, struct cmd_func *commands, char (*args)[MAX_STR_SIZE])
+static int do_command(WINDOW *w, ToxWindow *prompt, Tox *m, int num_args, int num_cmds,
+                      struct cmd_func *commands, char (*args)[MAX_STR_SIZE])
 {
     int i;
 
@@ -118,7 +118,6 @@ void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode)
 
     if (do_command(w, prompt, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
-
 
     wprintw(w, "Invalid command.\n");
 }

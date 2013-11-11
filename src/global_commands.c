@@ -11,7 +11,6 @@
 
 #include "toxic_windows.h"
 #include "misc_tools.h"
-#include "execute.h"
 
 extern char *DATA_FILE;
 

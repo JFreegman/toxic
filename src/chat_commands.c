@@ -11,7 +11,6 @@
 
 #include "toxic_windows.h"
 #include "misc_tools.h"
-#include "execute.h"
 
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 

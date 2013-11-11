@@ -232,7 +232,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
     if (tox_getname(m, friendnumber, name) == -1)
         return;
 
-    wprintw(ctx->history, "Group chat invite from %s.\n", name);
+    wprintw(ctx->history, "%s has invited you to a group chat.\n", name);
 
     int ngc = get_num_groupchats();
 
@@ -244,7 +244,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
     int n = add_group_request(group_pub_key, friendnumber);
 
     if (n == -1) {
-        wprintw(ctx->history, "Something bad happened.\n");
+        wprintw(ctx->history, "Something bad happened. Discarding invite.\n");
         return;
     }
 
