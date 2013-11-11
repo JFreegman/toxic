@@ -85,7 +85,6 @@ static void print_prompt_help(ToxWindow *self)
     wprintw(self->window, "      /status <type> <message>   : Set your status with optional note\n");
     wprintw(self->window, "      /note <message>            : Set a personal note\n");
     wprintw(self->window, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(self->window, "      /join <n>                  : Join a group chat\n");
     wprintw(self->window, "      /groupchat                 : Create a group chat\n");
     wprintw(self->window, "      /myid                      : Print your ID\n");
     wprintw(self->window, "      /quit or /exit             : Exit Toxic\n");

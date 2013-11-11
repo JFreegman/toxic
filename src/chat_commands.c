@@ -26,6 +26,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*
     wprintw(window, "      /invite <n>                : Invite friend to a groupchat\n");
     wprintw(window, "      /me <action>               : Do an action\n");
     wprintw(window, "      /myid                      : Print your ID\n");
+    wprintw(window, "      /join <n>                  : Join a group chat\n");
     wprintw(window, "      /clear                     : Clear the screen\n");
     wprintw(window, "      /close                     : Close the current chat window\n");
     wprintw(window, "      /sendfile <filepath>       : Send a file\n");
