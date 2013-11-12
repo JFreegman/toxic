@@ -106,7 +106,7 @@ void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode)
 
     /* Try to match input command to command functions. If non-global command mode is specified, 
        try specified mode's commands first, then upon failure try global commands. */
-    switch(mode) {
+    switch (mode) {
     case CHAT_COMMAND_MODE:
         if (do_command(w, prompt, m, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
             return;

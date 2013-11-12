@@ -166,7 +166,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         int colour = WHITE;
         char *status_text = "Unknown";
 
-        switch(statusbar->status) {
+        switch (statusbar->status) {
         case TOX_USERSTATUS_NONE:
             status_text = "Online";
             colour = GREEN;

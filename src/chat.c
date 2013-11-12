@@ -182,7 +182,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
     else
         filename = file_senders[filenum].pathname;
 
-    switch(control_type) {
+    switch (control_type) {
     case TOX_FILECONTROL_ACCEPT:
         wprintw(ctx->history, "File transfer for '%s' accepted.\n", filename);
         break;
@@ -384,7 +384,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
         TOX_USERSTATUS status = statusbar->status;
 
-        switch(status) {
+        switch (status) {
         case TOX_USERSTATUS_NONE:
             status_text = "Online";
             colour = GREEN;

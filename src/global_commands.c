@@ -112,38 +112,31 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[M
     int num = tox_addfriend(m, id_bin, msg, strlen(msg) + 1);
 
     switch (num) {
-        case TOX_FAERR_TOOLONG:
-            wprintw(window, "Message is too long.\n");
-            break;
-
-        case TOX_FAERR_NOMESSAGE:
-            wprintw(window, "Please add a message to your request.\n");
-            break;
-
-        case TOX_FAERR_OWNKEY:
-            wprintw(window, "That appears to be your own ID.\n");
-            break;
-
-        case TOX_FAERR_ALREADYSENT:
-            wprintw(window, "Friend request has already been sent.\n");
-            break;
-
-        case TOX_FAERR_UNKNOWN:
-            wprintw(window, "Undefined error when adding friend.\n");
-            break;
-
-        case TOX_FAERR_BADCHECKSUM:
-            wprintw(window, "Bad checksum in address.\n");
-            break;
-
-        case TOX_FAERR_SETNEWNOSPAM:
-            wprintw(window, "Nospam was different.\n");
-            break;
-
-        default:
-            wprintw(window, "Friend request sent.\n");
-            on_friendadded(m, num);
-            break;
+    case TOX_FAERR_TOOLONG:
+        wprintw(window, "Message is too long.\n");
+        break;
+    case TOX_FAERR_NOMESSAGE:
+        wprintw(window, "Please add a message to your request.\n");
+        break;
+    case TOX_FAERR_OWNKEY:
+        wprintw(window, "That appears to be your own ID.\n");
+        break;
+    case TOX_FAERR_ALREADYSENT:
+        wprintw(window, "Friend request has already been sent.\n");
+        break;
+    case TOX_FAERR_UNKNOWN:
+        wprintw(window, "Undefined error when adding friend.\n");
+        break;
+    case TOX_FAERR_BADCHECKSUM:
+        wprintw(window, "Bad checksum in address.\n");
+        break;
+    case TOX_FAERR_SETNEWNOSPAM:
+        wprintw(window, "Nospam was different.\n");
+        break;
+    default:
+        wprintw(window, "Friend request sent.\n");
+        on_friendadded(m, num);
+        break;
     }
 }
 

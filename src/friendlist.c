@@ -232,7 +232,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 TOX_USERSTATUS status = friends[f].status;
                 int colour = WHITE;
 
-                switch(status) {
+                switch (status) {
                 case TOX_USERSTATUS_NONE:
                     colour = GREEN;
                     break;
