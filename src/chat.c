@@ -147,7 +147,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
         return;
     }
 
-    /* Append current time to duplicate file names */
+    /* Append a number to duplicate file names */
     FILE *filecheck = NULL;
     int count = 1;
     int len = strlen(filename);
@@ -159,7 +159,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
         strcat(filename, d);
         filename[len + strlen(d)] = '\0';
 
-        if (count > 999999) {
+        if (count >= 999999) {
             wprintw(ctx->history, "Error saving file to disk.\n");
             return;
         }
