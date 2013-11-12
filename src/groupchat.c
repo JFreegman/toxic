@@ -170,7 +170,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             } else if (strncmp(line, "/help", strlen("/help")) == 0)
                 print_groupchat_help(ctx);
               else
-                execute(ctx->history, self->prompt, m, line, GROUPCHAT_COMMAND_MODE);
+                execute(ctx->history, self->prompt, m, self->num, line, GROUPCHAT_COMMAND_MODE);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {

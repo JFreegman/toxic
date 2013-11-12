@@ -14,7 +14,7 @@
 
 extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 
-void cmd_chat_help(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_chat_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, "Chat commands:\n");
@@ -41,7 +41,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*
     wattroff(window, COLOR_PAIR(CYAN));
 }
 
-void cmd_groupinvite(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_groupinvite(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
       wprintw(window, "Invalid syntax.\n");
@@ -55,7 +55,7 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char 
         return;
     }
 
-    if (tox_invite_friend(m, chatwin->num, groupnum) == -1) {
+    if (tox_invite_friend(m, num, groupnum) == -1) {
         wprintw(window, "Failed to invite friend.\n");
         return;
     }
@@ -63,28 +63,28 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char 
     wprintw(window, "Invited friend to group chat %d.\n", groupnum);
 }
 
-void cmd_join_group(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_join_group(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc != 1) {
       wprintw(window, "Invalid syntax.\n");
       return;
     }
 
-    int num = atoi(argv[1]);
+    int g_num = atoi(argv[1]);
 
-    if ((num == 0 && strcmp(argv[1], "0")) || num >= MAX_FRIENDS_NUM) {
+    if ((g_num == 0 && strcmp(argv[1], "0")) || g_num >= MAX_FRIENDS_NUM) {
         wprintw(window, "No pending group chat invite with that number.\n");
         return;
     }
 
-    uint8_t *groupkey = pending_grp_requests[num];
+    uint8_t *groupkey = pending_grp_requests[g_num];
 
     if (!strlen(groupkey)) {
         wprintw(window, "No pending group chat invite with that number.\n");
         return;
     }
 
-    int groupnum = tox_join_groupchat(m, num, groupkey);
+    int groupnum = tox_join_groupchat(m, g_num, groupkey);
 
     if (groupnum == -1) {
         wprintw(window, "Group chat instance failed to initialize.\n");
@@ -98,7 +98,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *prompt, Tox *m, int argc, char (*
     }
 }
 
-void cmd_savefile(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_savefile(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc != 1) {
       wprintw(window, "Invalid syntax.\n");
@@ -112,24 +112,22 @@ void cmd_savefile(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*a
         return;
     }
 
-    int friendnum = chatwin->num;
-
-    if (!friends[friendnum].file_receiver.pending[filenum]) {
+    if (!friends[num].file_receiver.pending[filenum]) {
         wprintw(window, "No pending file transfers with that number.\n");
         return;
     }
 
-    uint8_t *filename = friends[friendnum].file_receiver.filenames[filenum];
+    uint8_t *filename = friends[num].file_receiver.filenames[filenum];
 
-    if (tox_file_sendcontrol(m, friendnum, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
+    if (tox_file_sendcontrol(m, num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
         wprintw(window, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
     else
         wprintw(window, "File transfer failed.\n");
 
-    friends[friendnum].file_receiver.pending[filenum] = false;
+    friends[num].file_receiver.pending[filenum] = false;
 }
 
-void cmd_sendfile(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_sendfile(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (num_file_senders >= MAX_FILES) {
         wprintw(window,"Please wait for some of your outgoing file transfers to complete.\n");
@@ -167,8 +165,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*a
     uint64_t filesize = ftell(file_to_send);
     fseek(file_to_send, 0, SEEK_SET);
 
-    int friendnum = chatwin->num;
-    int filenum = tox_new_filesender(m, friendnum, filesize, path, path_len + 1);
+    int filenum = tox_new_filesender(m, num, filesize, path, path_len + 1);
 
     if (filenum == -1) {
         wprintw(window, "Error sending file.\n");
@@ -184,9 +181,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *chatwin, Tox *m, int argc, char (*a
             file_senders[i].chatwin = window;
             file_senders[i].file = file_to_send;
             file_senders[i].filenum = (uint8_t) filenum;
-            file_senders[i].friendnum = friendnum;
+            file_senders[i].friendnum = num;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
-                                             tox_filedata_size(m, friendnum), file_to_send);
+                                             tox_filedata_size(m, num), file_to_send);
 
             wprintw(window, "Sending file: '%s'\n", path);
 

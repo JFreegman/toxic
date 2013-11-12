@@ -12,7 +12,7 @@
 
 struct cmd_func {
     const char *name;
-    void (*func)(WINDOW *, ToxWindow *, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
+    void (*func)(WINDOW *, ToxWindow *, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE]);
 };
 
 #define GLOBAL_NUM_COMMANDS 12
@@ -78,14 +78,14 @@ static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])
 }
 
 /* Matches command to respective function. Returns 0 on match, 1 on no match */
-static int do_command(WINDOW *w, ToxWindow *prompt, Tox *m, int num_args, int num_cmds,
+static int do_command(WINDOW *w, ToxWindow *prompt, Tox *m, int num, int num_args, int num_cmds,
                       struct cmd_func *commands, char (*args)[MAX_STR_SIZE])
 {
     int i;
 
     for (i = 0; i < num_cmds; ++i) {
         if (strcmp(args[0], commands[i].name) == 0) {
-            (commands[i].func)(w, prompt, m, num_args-1, args);
+            (commands[i].func)(w, prompt, m, num, num_args-1, args);
             return 0;
         }
     }
@@ -93,7 +93,7 @@ static int do_command(WINDOW *w, ToxWindow *prompt, Tox *m, int num_args, int nu
     return 1;
 }
 
-void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode)
+void execute(WINDOW *w, ToxWindow *prompt, Tox *m, int num, char *cmd, int mode)
 {
     if (string_is_empty(cmd))
         return;
@@ -108,7 +108,7 @@ void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode)
        try specified mode's commands first, then upon failure try global commands. */
     switch (mode) {
     case CHAT_COMMAND_MODE:
-        if (do_command(w, prompt, m, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
+        if (do_command(w, prompt, m, num, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
             return;
         break;
 
@@ -116,7 +116,7 @@ void execute(WINDOW *w, ToxWindow *prompt, Tox *m, char *cmd, int mode)
         break;
     }
 
-    if (do_command(w, prompt, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
+    if (do_command(w, prompt, m, num, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
 
     wprintw(w, "Invalid command.\n");

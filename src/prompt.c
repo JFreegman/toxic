@@ -133,7 +133,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (!strncmp(prompt_buf, "/help", strlen("/help")))
             print_prompt_help(self);
         else
-            execute(self->window, self, m, prompt_buf, GLOBAL_COMMAND_MODE);
+            execute(self->window, self, m, self->num, prompt_buf, GLOBAL_COMMAND_MODE);
 
         prompt_buf_pos = 0;
         prompt_buf[0] = '\0';
