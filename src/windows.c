@@ -16,10 +16,6 @@ static ToxWindow *active_window;
 static ToxWindow *prompt;
 static Tox *m;
 
-/* One group chat request slot for each friend; slot is 
-   overwritten on subsequent requests by the same friend. */
-uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
-
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {

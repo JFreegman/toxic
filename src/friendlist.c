@@ -111,6 +111,7 @@ int friendlist_onFriendAdded(Tox *m, int num)
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
             friends[i].namelength = tox_getname(m, num, friends[i].name);
+            memset(friends[i].pending_groupchat, 0, TOX_CLIENT_ID_SIZE);
 
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy((char *) friends[i].name, UNKNOWN_NAME);

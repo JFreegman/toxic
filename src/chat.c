@@ -17,22 +17,6 @@
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
-/* One group chat request slot for each friend; slot is 
-   overwritten on subsequent requests by the same friend. */
-extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
-
-/* Adds group chat invite to pending group chat requests. 
-   Returns friend number on success, -1 if f_num is out of range. */
-static int add_group_request(uint8_t *group_pub_key, int f_num)
-{
-    if (f_num >= 0 && f_num < MAX_FRIENDS_NUM) {
-        memcpy(pending_grp_requests[f_num], group_pub_key, TOX_CLIENT_ID_SIZE);
-        return f_num;
-    }
-
-    return -1;
-}
-
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
     if (self->num != num)
@@ -159,7 +143,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
         strcat(filename, d);
         filename[len + strlen(d)] = '\0';
 
-        if (count >= 999999) {
+        if (count > 999999) {
             wprintw(ctx->history, "Error saving file to disk.\n");
             return;
         }
@@ -229,7 +213,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_t *group_pub_key)
 {
-    if (friendnumber < 0)
+    if (self->num != friendnumber)
         return;
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
@@ -247,14 +231,9 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
         return;
     }
 
-    int n = add_group_request(group_pub_key, friendnumber);
+    memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
 
-    if (n == -1) {
-        wprintw(ctx->history, "Something bad happened. Discarding invite.\n");
-        return;
-    }
-
-    wprintw(ctx->history, "Type \"/join %d\" to join the chat.\n", n);
+    wprintw(ctx->history, "Type \"/join\" to join the chat.\n");
     self->blink = true;
     beep();
 }

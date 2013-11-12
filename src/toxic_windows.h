@@ -128,6 +128,7 @@ typedef struct {
     uint16_t namelength;
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
+    uint8_t pending_groupchat[TOX_CLIENT_ID_SIZE];
     int num;
     int chatwin;
     bool active;

@@ -12,8 +12,6 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 
-extern uint8_t pending_grp_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
-
 void cmd_chat_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
@@ -23,10 +21,10 @@ void cmd_chat_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc,
     wprintw(window, "      /status <type> <message>   : Set your status with optional note\n");
     wprintw(window, "      /note <message>            : Set a personal note\n");
     wprintw(window, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(window, "      /invite <n>                : Invite friend to a groupchat\n");
+    wprintw(window, "      /invite <n>                : Invite friend to a group chat\n");
     wprintw(window, "      /me <action>               : Do an action\n");
     wprintw(window, "      /myid                      : Print your ID\n");
-    wprintw(window, "      /join <n>                  : Join a group chat\n");
+    wprintw(window, "      /join                      : Join a pending group chat\n");
     wprintw(window, "      /clear                     : Clear the screen\n");
     wprintw(window, "      /close                     : Close the current chat window\n");
     wprintw(window, "      /sendfile <filepath>       : Send a file\n");
@@ -65,26 +63,14 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int arg
 
 void cmd_join_group(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (argc != 1) {
-      wprintw(window, "Invalid syntax.\n");
-      return;
-    }
+    uint8_t *groupkey = friends[num].pending_groupchat;
 
-    int g_num = atoi(argv[1]);
-
-    if ((g_num == 0 && strcmp(argv[1], "0")) || g_num >= MAX_FRIENDS_NUM) {
-        wprintw(window, "No pending group chat invite with that number.\n");
+    if (groupkey[0] == '\0') {
+        wprintw(window, "No pending group chat invite.\n");
         return;
     }
 
-    uint8_t *groupkey = pending_grp_requests[g_num];
-
-    if (!strlen(groupkey)) {
-        wprintw(window, "No pending group chat invite with that number.\n");
-        return;
-    }
-
-    int groupnum = tox_join_groupchat(m, g_num, groupkey);
+    int groupnum = tox_join_groupchat(m, num, groupkey);
 
     if (groupnum == -1) {
         wprintw(window, "Group chat instance failed to initialize.\n");
