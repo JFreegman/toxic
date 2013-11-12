@@ -149,14 +149,20 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     /* Append current time to duplicate file names */
     FILE *filecheck = NULL;
+    int count = 1;
+    int len = strlen(filename);
 
-    if ((filecheck = fopen(filename, "r"))) {
-        struct tm *timeinfo = get_time();
-        uint8_t cur_time[MAX_STR_SIZE];
-        snprintf(cur_time, sizeof(cur_time), ".%02d:%02d:%02d", timeinfo->tm_hour, timeinfo->tm_min,
-                 timeinfo->tm_sec);
-        strncat(filename, cur_time, MAX_STR_SIZE - strlen(filename));
-        fclose(filecheck);
+    while ((filecheck = fopen(filename, "r"))) {
+        filename[len] = '\0';
+        char d[9];
+        sprintf(d,"(%d)", count++);
+        strcat(filename, d);
+        filename[len + strlen(d)] = '\0';
+
+        if (count > 999999) {
+            wprintw(ctx->history, "Error saving file to disk.\n");
+            return;
+        }
     }
 
     wprintw(ctx->history, "Type '/savefile %d' to accept the file transfer.\n", filenum);
