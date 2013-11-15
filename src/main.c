@@ -389,7 +389,7 @@ static void do_file_senders(Tox *m)
                     close_file_sender(m, i);
                 }
 
-                return;
+                break;
             }
 
             file_senders[i].timestamp = current_time;
@@ -400,7 +400,7 @@ static void do_file_senders(Tox *m)
                 wprintw(file_senders[i].chatwin, "File '%s' successfuly sent.\n", pathname);
                 tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
                 close_file_sender(m, i);
-                return;
+                break;
             }
         }
     }
