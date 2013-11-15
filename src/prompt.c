@@ -72,33 +72,6 @@ static int add_friend_request(uint8_t *public_key)
     return -1;
 }
 
-static void print_prompt_help(ToxWindow *self)
-{
-    wclear(self->window);
-    wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(self->window, "\n\nCommands:\n");
-    wattroff(self->window, A_BOLD);
-
-    wprintw(self->window, "      /add <id> <message>        : Add friend with optional message\n");
-    wprintw(self->window, "      /accept <n>                : Accept friend request\n");
-    wprintw(self->window, "      /connect <ip> <port> <key> : Manually connect to a DHT server\n");
-    wprintw(self->window, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(self->window, "      /note <message>            : Set a personal note\n");
-    wprintw(self->window, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(self->window, "      /groupchat                 : Create a group chat\n");
-    wprintw(self->window, "      /myid                      : Print your ID\n");
-    wprintw(self->window, "      /quit or /exit             : Exit Toxic\n");
-    wprintw(self->window, "      /help                      : Print this message again\n");
-    wprintw(self->window, "      /clear                     : Clear this window\n");
-
-    wattron(self->window, A_BOLD);
-    wprintw(self->window, " * Argument messages must be enclosed in quotation marks.\n");
-    wprintw(self->window, " * Use the TAB key to navigate through the tabs.\n");
-    wattroff(self->window, A_BOLD);
-
-    wattroff(self->window, COLOR_PAIR(CYAN));
-}
-
 static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     int x, y, y2, x2;
@@ -129,12 +102,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* RETURN key: execute command */
     else if (key == '\n') {
         wprintw(self->window, "\n");
-
-        if (!strncmp(prompt_buf, "/help", strlen("/help")))
-            print_prompt_help(self);
-        else
-            execute(self->window, self, m, self->num, prompt_buf, GLOBAL_COMMAND_MODE);
-
+        execute(self->window, self, m, self->num, prompt_buf, GLOBAL_COMMAND_MODE);
         prompt_buf_pos = 0;
         prompt_buf[0] = '\0';
     }
@@ -212,7 +180,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     scrollok(self->window, true);
-    print_prompt_help(self);
+    execute(self->window, self, m, self->num, "/help", GLOBAL_COMMAND_MODE);
     wclrtoeol(self->window);
 }
 

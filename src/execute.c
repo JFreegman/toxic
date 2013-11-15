@@ -15,21 +15,22 @@ struct cmd_func {
     void (*func)(WINDOW *, ToxWindow *, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE]);
 };
 
-#define GLOBAL_NUM_COMMANDS 12
+#define GLOBAL_NUM_COMMANDS 13
 
 static struct cmd_func global_commands[] = {
-    { "/accept",    cmd_accept    },
-    { "/add",       cmd_add       },
-    { "/clear",     cmd_clear     },
-    { "/connect",   cmd_connect   },
-    { "/exit",      cmd_quit      },
-    { "/groupchat", cmd_groupchat },
-    { "/myid",      cmd_myid      },
-    { "/nick",      cmd_nick      },
-    { "/note",      cmd_note      },
-    { "/q",         cmd_quit      },
-    { "/quit",      cmd_quit      },
-    { "/status",    cmd_status    },
+    { "/accept",    cmd_accept      },
+    { "/add",       cmd_add         },
+    { "/clear",     cmd_clear       },
+    { "/connect",   cmd_connect     },
+    { "/exit",      cmd_quit        },
+    { "/groupchat", cmd_groupchat   },
+    { "/help",      cmd_prompt_help },
+    { "/myid",      cmd_myid        },
+    { "/nick",      cmd_nick        },
+    { "/note",      cmd_note        },
+    { "/q",         cmd_quit        },
+    { "/quit",      cmd_quit        },
+    { "/status",    cmd_status      },
 };
 
 #define CHAT_NUM_COMMANDS 5
@@ -105,7 +106,9 @@ void execute(WINDOW *w, ToxWindow *prompt, Tox *m, int num, char *cmd, int mode)
         return;
 
     /* Try to match input command to command functions. If non-global command mode is specified, 
-       try specified mode's commands first, then upon failure try global commands. */
+       try specified mode's commands first, then upon failure try global commands. 
+
+       Note: Global commands must come last in case of duplicate command names */
     switch (mode) {
     case CHAT_COMMAND_MODE:
         if (do_command(w, prompt, m, num, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)

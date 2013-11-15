@@ -365,9 +365,6 @@ static void close_file_sender(Tox *m, int i)
 
 static void do_file_senders(Tox *m)
 {
-    if (num_file_senders == 0)
-        return;
-
     int i;
 
     for (i = 0; i < num_file_senders; ++i) {
