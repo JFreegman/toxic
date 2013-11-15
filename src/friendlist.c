@@ -207,6 +207,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(0);
     werase(self->window);
+    int x, y;
+    getmaxyx(self->window, y, x);
+
+    bool fix_statuses = x != self->x;    /* true if window x axis has changed */
 
     if (max_friends_index == 0) {
         wprintw(self->window, "Empty. Add some friends! :-)\n");
@@ -250,22 +254,19 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "]%s (", friends[f].name);
 
-                int x, y;
-                getmaxyx(self->window, y, x);
-
                 /* Reset friends[f].statusmsg on window resize */
-                if (x != self->x) {
+                if (fix_statuses) {
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
                     tox_copy_statusmessage(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
-                    friends[f].statusmsg_len = tox_get_statusmessage_size(m, self->num);
+                    friends[f].statusmsg_len = tox_get_statusmessage_size(m, f);
                 }
-
-                self->x = x;
 
                 /* Truncate note if it doesn't fit on one line */
                 uint16_t maxlen = x - getcurx(self->window) - 2;
                 if (friends[f].statusmsg_len > maxlen) {
+                    friends[f].statusmsg[maxlen-3] = '\0';
+                    strcat(friends[f].statusmsg, "...");
                     friends[f].statusmsg[maxlen] = '\0';
                     friends[f].statusmsg_len = maxlen;
                 }
@@ -277,6 +278,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         }
     }
 
+    self->x = x;
     wrefresh(self->window);
 }
 
