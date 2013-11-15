@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <locale.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef _WIN32
     #include <direct.h>
@@ -347,7 +348,23 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-void do_file_senders(Tox *m)
+static void close_file_sender(Tox *m, int i)
+{
+    fclose(file_senders[i].file);
+    memset(&file_senders[i], 0, sizeof(FileSender));
+
+    int j;
+
+    for (j = num_file_senders; j > 0; --j) {
+        if (file_senders[j-1].active)
+            break;
+    }
+
+    num_file_senders = j;
+    return;
+}
+
+static void do_file_senders(Tox *m)
 {
     int i;
 
@@ -356,33 +373,33 @@ void do_file_senders(Tox *m)
             continue;
 
         while (true) {
+            uint8_t *pathname = file_senders[i].pathname;
             uint8_t filenum = file_senders[i].filenum;
+            uint64_t current_time = (uint64_t)time(NULL);
             int friendnum = file_senders[i].friendnum;
 
             if (!tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece,
-                                   file_senders[i].piecelen))
-                return;
+                                   file_senders[i].piecelen)) {
 
+                /* If file transfer has timed out kill transfer and send kill control */
+                if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
+                    wprintw(file_senders[i].chatwin, "File transfer for '%s' timed out.\n",
+                            pathname);
+                    tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
+                    close_file_sender(m, i);
+                }
+
+                return;
+            }
+
+            file_senders[i].timestamp = current_time;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, 
                                              friendnum), file_senders[i].file);
 
             if (file_senders[i].piecelen == 0) {
-                fclose(file_senders[i].file);
-                memset(&file_senders[i], 0, sizeof(FileSender));
-
-                tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
-
-                uint8_t *pathname = file_senders[i].pathname;
                 wprintw(file_senders[i].chatwin, "File '%s' successfuly sent.\n", pathname);
-
-                int i;
-
-                for (i = num_file_senders; i > 0; --i) {
-                    if (file_senders[i-1].active)
-                        break;
-                }
-
-                num_file_senders = i;
+                tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
+                close_file_sender(m, i);
                 return;
             }
         }

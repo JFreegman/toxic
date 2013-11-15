@@ -34,12 +34,13 @@ void sort_friendlist_index(void)
 
     /* split friends into online and offline groups */
     for (i = 0; i < max_friends_index; ++i) {
-        if (friends[i].active) {
-            if (friends[i].online)
-                on_friends[on_cnt++] = friends[i].num;
-            else
-                off_friends[off_cnt++] = friends[i].num;
-        }
+        if (!friends[i].active)
+            continue;
+
+        if (friends[i].online)
+            on_friends[on_cnt++] = friends[i].num;
+        else
+            off_friends[off_cnt++] = friends[i].num;
     }
 
     /* update friendlist_index, putting online friends before offline friends */

@@ -101,6 +101,7 @@ typedef struct {
 
 #define MAX_FILES 256
 #define FILE_PIECE_SIZE 1024
+#define TIMEOUT_FILESENDER 300
 
 typedef struct {
     FILE *file;
@@ -111,14 +112,15 @@ typedef struct {
     uint8_t nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
     uint8_t pathname[MAX_STR_SIZE];
+    uint64_t timestamp;
 } FileSender;
 
 FileSender file_senders[MAX_FILES];
 uint8_t num_file_senders;
 
 typedef struct {
-  uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
-  bool pending[MAX_FILES];
+    uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
+    bool pending[MAX_FILES];
 } FileReceiver;
 
 /* End file transfer code */

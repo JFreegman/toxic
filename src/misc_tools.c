@@ -100,3 +100,9 @@ char *wc_to_char(wchar_t ch)
 
     return ret;
 }
+
+/* Returns true if connection has timed out, false otherwise */
+bool timed_out(uint64_t timestamp, uint64_t curtime, uint64_t timeout)
+{
+    return timestamp + timeout <= curtime;
+}
