@@ -264,7 +264,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int arg
 {
     wclear(window);
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(window, "\n\nCommands:\n");
+    wprintw(window, "\n\nGlobal commands:\n");
     wattroff(window, A_BOLD);
 
     wprintw(window, "      /add <id> <message>        : Add friend with optional message\n");
@@ -277,7 +277,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int arg
     wprintw(window, "      /myid                      : Print your ID\n");
     wprintw(window, "      /quit or /exit             : Exit Toxic\n");
     wprintw(window, "      /help                      : Print this message again\n");
-    wprintw(window, "      /clear                     : Clear this window\n");
+    wprintw(window, "      /clear                     : Clear the window\n");
 
     wattron(window, A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");

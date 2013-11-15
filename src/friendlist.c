@@ -97,10 +97,10 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *
     friends[num].statusmsg_len = len;
 }
 
-int friendlist_onFriendAdded(Tox *m, int num)
+static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num)
 {
     if (max_friends_index < 0 || max_friends_index >= MAX_FRIENDS_NUM)
-        return -1;
+        return;
 
     int i;
 
@@ -128,11 +128,9 @@ int friendlist_onFriendAdded(Tox *m, int num)
                 ++max_friends_index;
 
             sort_friendlist_index();
-            return 0;
+            return;
         }
     }
-
-    return -1;
 }
 
 static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t filenum, 
@@ -300,6 +298,7 @@ ToxWindow new_friendlist(void)
     ret.onKey = &friendlist_onKey;
     ret.onDraw = &friendlist_onDraw;
     ret.onInit = &friendlist_onInit;
+    ret.onFriendAdded = &friendlist_onFriendAdded;
     ret.onMessage = &friendlist_onMessage;
     ret.onConnectionChange = &friendlist_onConnectionChange;
     ret.onAction = &friendlist_onMessage;    // Action has identical behaviour to message

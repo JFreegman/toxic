@@ -95,7 +95,12 @@ void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *user
 
 void on_friendadded(Tox *m, int friendnumber)
 {
-    friendlist_onFriendAdded(m, friendnumber);
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onFriendAdded != NULL)
+            windows[i].onFriendAdded(&windows[i], m, friendnumber);
+    }
 
     if (store_data(m, DATA_FILE))
         wprintw(prompt->window, "\nCould not store Tox data\n");

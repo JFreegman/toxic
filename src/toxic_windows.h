@@ -50,6 +50,7 @@ struct ToxWindow_ {
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
     void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
+    void(*onFriendAdded)(ToxWindow *, Tox *, int);
     void(*onConnectionChange)(ToxWindow *, Tox *, int, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onNickChange)(ToxWindow *, int, uint8_t *, uint16_t);
