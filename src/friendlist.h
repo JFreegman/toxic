@@ -7,5 +7,6 @@
 ToxWindow new_friendlist();
 void disable_chatwin(int f_num);
 int get_friendnum(uint8_t *name);
+void sort_friendlist_index(void);
 
 #endif /* end of include guard: FRIENDLIST_H_53I41IM */
