@@ -15,15 +15,14 @@ toxic_SOURCES = $(top_srcdir)/src/main.c \
                 $(top_srcdir)/src/groupchat.c \
                 $(top_srcdir)/src/groupchat.h \
                 $(top_srcdir)/src/global_commands.c \
-                $(top_srcdir)/src/global_commands.h \
                 $(top_srcdir)/src/chat_commands.c \
-                $(top_srcdir)/src/chat_commands.h \
                 $(top_srcdir)/src/execute.c \
                 $(top_srcdir)/src/execute.h \
                 $(top_srcdir)/src/misc_tools.c \
                 $(top_srcdir)/src/misc_tools.h
 
-toxic_CFLAGS =	-I$(top_srcdir) \
+toxic_CFLAGS = -Werror \
+                               -I$(top_srcdir) \
 				$(NCURSES_CFLAGS) \
 				$(LIBSODIUM_CFLAGS) \
 				$(LIBTOXCORE_CFLAGS)
