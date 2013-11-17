@@ -1,3 +1,5 @@
+#Don't change this unless needed, else you'll break stuff
+
 bin_PROGRAMS = toxic
 
 
