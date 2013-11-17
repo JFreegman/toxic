@@ -57,7 +57,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 static void close_groupchatwin(Tox *m, int groupnum)
 {
     tox_del_groupchat(m, groupnum);
-    memset(&(groupchats[groupnum]), 0, sizeof(GroupChat));
+    memset(&groupchats[groupnum], 0, sizeof(GroupChat));
 
     int i;
 

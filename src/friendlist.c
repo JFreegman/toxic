@@ -182,7 +182,6 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
 
     sort_friendlist_index();
     store_data(m, DATA_FILE);
-    select_friend(m, KEY_DOWN);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)

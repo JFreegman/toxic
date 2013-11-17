@@ -348,7 +348,7 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-static void close_file_sender(Tox *m, int i)
+static void close_file_sender(int i)
 {
     fclose(file_senders[i].file);
     memset(&file_senders[i], 0, sizeof(FileSender));
@@ -385,7 +385,7 @@ static void do_file_senders(Tox *m)
                     wprintw(file_senders[i].chatwin, "File transfer for '%s' timed out.\n",
                             pathname);
                     tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
-                    close_file_sender(m, i);
+                    close_file_sender(i);
                 }
 
                 break;
@@ -398,7 +398,7 @@ static void do_file_senders(Tox *m)
             if (file_senders[i].piecelen == 0) {
                 wprintw(file_senders[i].chatwin, "File '%s' successfuly sent.\n", pathname);
                 tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
-                close_file_sender(m, i);
+                close_file_sender(i);
                 break;
             }
         }
