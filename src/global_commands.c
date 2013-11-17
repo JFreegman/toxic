@@ -16,6 +16,7 @@ extern char *DATA_FILE;
 
 extern uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_frnd_requests;
+extern int num_groupchats;
 
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
@@ -172,9 +173,7 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, c
 
 void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    int ngc = get_num_groupchats();
-
-    if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
+    if (num_groupchats >= MAX_GROUPCHAT_NUM) {
         wprintw(window, "\nMaximum number of group chats has been reached.\n");
         return;
     }

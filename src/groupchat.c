@@ -15,37 +15,28 @@
 #include "misc_tools.h"
 
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
-static int group_chat_index = 0;
+static int max_groupchat_index = 0;
+int num_groupchats = 0;
 
 ToxWindow new_group_chat(Tox *m, ToxWindow *prompt, int groupnum);
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
-int get_num_groupchats(void)
-{
-    int i;
-
-    for (i = 0; i <= group_chat_index; ++i) {
-        if (!groupchats[i].active)
-            return i;
-    }
-
-    return -1;
-}
-
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
     int i;
 
-    for (i = 0; i <= group_chat_index; ++i) {
+    for (i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
             groupchats[i].chatwin = add_window(m, new_group_chat(m, prompt, groupnum));
             groupchats[i].active = true;
             set_active_window(groupchats[i].chatwin);
 
-            if (i == group_chat_index)
-                ++group_chat_index;
+            if (i == max_groupchat_index)
+                ++max_groupchat_index;
+
+            ++num_groupchats;
 
             return 0;
         }
@@ -57,16 +48,17 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 static void close_groupchatwin(Tox *m, int groupnum)
 {
     tox_del_groupchat(m, groupnum);
-    memset(&groupchats[groupnum], 0, sizeof(GroupChat));
+    memset(&(groupchats[groupnum]), 0, sizeof(GroupChat));
 
     int i;
 
-    for (i = group_chat_index; i > 0; --i) {
+    for (i = max_groupchat_index; i > 0; --i) {
         if (groupchats[i-1].active)
             break;
     }
 
-    group_chat_index = i;
+    --num_groupchats;
+    max_groupchat_index = i;
 }
 
 static void print_groupchat_help(ChatContext *ctx)

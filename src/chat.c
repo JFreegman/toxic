@@ -16,6 +16,7 @@
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
+extern int num_groupchats;
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
@@ -225,9 +226,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
 
     wprintw(ctx->history, "%s has invited you to a group chat.\n", name);
 
-    int ngc = get_num_groupchats();
-
-    if (ngc < 0 || ngc > MAX_GROUPCHAT_NUM) {
+    if (num_groupchats >= MAX_GROUPCHAT_NUM) {
         wprintw(ctx->history, "Maximum number of group chats has been reached. Discarding invite.\n");
         return;
     }
