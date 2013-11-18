@@ -154,9 +154,6 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *
 
 static void select_friend(Tox *m, wint_t key)
 {
-    if (num_friends < 1)
-        return;
-
     if (key == KEY_UP) {
         if (--num_selected < 0)
             num_selected = num_friends - 1;
@@ -180,17 +177,21 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     max_friends_index = i;
     --num_friends;
 
+    if (num_selected == num_friends)
+        --num_selected;
+
     sort_friendlist_index();
     store_data(m, DATA_FILE);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
+    if (num_friends == 0)
+        return;
+
     int f = friendlist_index[num_selected];
 
-    if (key == KEY_UP || key == KEY_DOWN) {
-        select_friend(m, key);
-    } else if (key == '\n') {
+    if (key == '\n') {
         /* Jump to chat window if already open */
         if (friends[f].chatwin != -1) {
             set_active_window(friends[f].chatwin);
@@ -198,8 +199,12 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
             friends[f].chatwin = add_window(m, new_chat(m, prompt, friends[f].num));
             set_active_window(friends[f].chatwin);
         }
-    } else if (key == 0x107 || key == 0x8 || key == 0x7f)
+    } else if (key == 0x107 || key == 0x8 || key == 0x7f) {
         delete_friend(m, self, f, key);
+    } else {
+        select_friend(m, key);
+    }
+
 }
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
@@ -211,7 +216,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     bool fix_statuses = x != self->x;    /* true if window x axis has changed */
 
-    if (max_friends_index == 0) {
+    if (num_friends == 0) {
         wprintw(self->window, "Empty. Add some friends! :-)\n");
     } else {
         wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
@@ -224,7 +229,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     for (i = 0; i < num_friends; ++i) {
         int f = friendlist_index[i];
-        int f_selected = false;
+        bool f_selected = false;
 
         if (friends[f].active) {
             if (i == num_selected) {
