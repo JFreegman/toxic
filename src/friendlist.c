@@ -224,12 +224,17 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     for (i = 0; i < num_friends; ++i) {
         int f = friendlist_index[i];
+        int f_selected = false;
 
         if (friends[f].active) {
-            if (i == num_selected)
+            if (i == num_selected) {
+                wattron(self->window, A_BOLD);
                 wprintw(self->window, " > ");
-            else
+                wattroff(self->window, A_BOLD);
+                f_selected = true;
+            } else {
                 wprintw(self->window, "   ");
+            }
             
             if (friends[f].online) {
                 TOX_USERSTATUS status = friends[f].status;
@@ -251,7 +256,15 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
                 wprintw(self->window, "O");
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "]%s (", friends[f].name);
+                wprintw(self->window, "]");
+
+                if (f_selected)
+                    wattron(self->window, A_BOLD);
+
+                wprintw(self->window, "%s", friends[f].name);
+
+                if (f_selected)
+                    wattroff(self->window, A_BOLD);
 
                 /* Reset friends[f].statusmsg on window resize */
                 if (fix_statuses) {
@@ -270,9 +283,17 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     friends[f].statusmsg_len = maxlen;
                 }
 
-                wprintw(self->window, "%s)\n", friends[f].statusmsg);
+                wprintw(self->window, " (%s)\n", friends[f].statusmsg);
             } else {
-                wprintw(self->window, "[O]%s\n", friends[f].name);
+                wprintw(self->window, "[O]");
+
+                if (f_selected)
+                    wattron(self->window, A_BOLD);
+
+                wprintw(self->window, "%s\n", friends[f].name);
+
+                if (f_selected)
+                    wattroff(self->window, A_BOLD);
             }
         }
     }
