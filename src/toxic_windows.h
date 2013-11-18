@@ -15,6 +15,8 @@
 
 #include <tox/tox.h>
 
+#define UNKNOWN_NAME "Unknown"
+
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - N_DEFAULT_WINS
@@ -22,10 +24,10 @@
 #define KEY_SIZE_BYTES 32
 #define TOXIC_MAX_NAME_LENGTH 30   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */
-#define UNKNOWN_NAME "Unknown"
+#define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
+
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
-#define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 
 /* Curses foreground colours (background is black) */
 enum {
@@ -102,7 +104,8 @@ typedef struct {
 
 #define MAX_FILES 256
 #define FILE_PIECE_SIZE 1024
-#define TIMEOUT_FILESENDER 300
+#define TIMEOUT_FILESENDER 10
+#define MAX_PIECES_SEND 100  /* Max number of pieces to send per file per call to do_file_senders() */
 
 typedef struct {
     FILE *file;

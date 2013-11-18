@@ -371,12 +371,15 @@ static void do_file_senders(Tox *m)
         if (!file_senders[i].active)
             continue;
 
-        while (true) {
-            uint8_t *pathname = file_senders[i].pathname;
-            uint8_t filenum = file_senders[i].filenum;
-            uint64_t current_time = (uint64_t)time(NULL);
-            int friendnum = file_senders[i].friendnum;
+        uint8_t *pathname = file_senders[i].pathname;
+        uint8_t filenum = file_senders[i].filenum;
+        int friendnum = file_senders[i].friendnum;
+        uint64_t current_time = (uint64_t) time(NULL);
 
+        bool piece_sent = false;    /* true if at least one file piece is successfuly sent */
+        int pieces = 0;
+
+        while (pieces++ < MAX_PIECES_SEND) {
             if (!tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece,
                                    file_senders[i].piecelen)) {
 
@@ -391,7 +394,7 @@ static void do_file_senders(Tox *m)
                 break;
             }
 
-            file_senders[i].timestamp = current_time;
+            piece_sent = true;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, 
                                              friendnum), file_senders[i].file);
 
@@ -402,6 +405,9 @@ static void do_file_senders(Tox *m)
                 break;
             }
         }
+
+        if (piece_sent)
+            file_senders[i].timestamp = current_time;
     }
 }
 

@@ -157,7 +157,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
     } else {
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, "%s ", statusbar->nick);
+        wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, "[Offline]");
     }

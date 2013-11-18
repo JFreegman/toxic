@@ -115,7 +115,7 @@ static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num)
             memset(friends[i].pending_groupchat, 0, TOX_CLIENT_ID_SIZE);
 
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
-                strcpy((char *) friends[i].name, UNKNOWN_NAME);
+                strcpy(friends[i].name, (uint8_t *) UNKNOWN_NAME);
                 friends[i].namelength = strlen(UNKNOWN_NAME) + 1;
             } else {    /* Enforce toxic's maximum name length */
                 friends[i].name[TOXIC_MAX_NAME_LENGTH] = '\0';
