@@ -217,14 +217,8 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
 
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
-    wprintw(self->window, "\nFriend request from:\n");
-    int i;
+    wprintw(self->window, "\nFriend request with the message: %s\n", data);
 
-    for (i = 0; i < KEY_SIZE_BYTES; ++i) {
-        wprintw(self->window, "%02x", key[i] & 0xff);
-    }
-
-    wprintw(self->window, "\n\nWith the message: %s\n\n", data);
     int n = add_friend_request(key);
 
     if (n == -1) {

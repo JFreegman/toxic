@@ -68,20 +68,23 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char 
     }
 
     char *id = argv[1];
-    uint8_t *msg;
+    uint8_t msg[MAX_STR_SIZE];
 
     if (argc > 1) {
-        msg = argv[2];
+        uint8_t *temp = argv[2];
 
-        if (msg[0] != '\"') {
+        if (temp[0] != '\"') {
             wprintw(window, "Message must be enclosed in quotes.\n");
             return;
         }
 
-        msg[strlen(++msg)-1] = L'\0';
-
-    } else
-        msg = "Let's tox.";
+        temp[strlen(++temp)-1] = L'\0';
+        snprintf(msg, sizeof(msg), "%s", temp);
+    } else {
+        uint8_t selfname[TOX_MAX_NAME_LENGTH];
+        tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+        snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
+    }
 
     if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
         wprintw(window, "Invalid ID length.\n");

@@ -177,7 +177,8 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     max_friends_index = i;
     --num_friends;
 
-    if (num_selected == num_friends)
+    /* make sure num_selected stays within num_friends range */
+    if (num_friends && num_selected == num_friends)
         --num_selected;
 
     sort_friendlist_index();
@@ -204,7 +205,6 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
     } else {
         select_friend(m, key);
     }
-
 }
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
