@@ -294,7 +294,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         bool close_win = false;
 
         if (line[0] == '/') {
-            if (close_win = !strncmp(line, "/close", strlen("/close"))) {
+            if (close_win = !strcmp(line, "/close")) {
                 int f_num = self->num;
                 delwin(ctx->linewin);
                 delwin(statusbar->topline);
@@ -303,7 +303,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             } else if (!strncmp(line, "/me ", strlen("/me ")))
                 send_action(self, ctx, m, line + strlen("/me "));
               else
-                execute(ctx->history, self->prompt, m, self->num, line, CHAT_COMMAND_MODE);
+                execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
@@ -442,11 +442,11 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 0, x, y-4, 0);
     wprintw(ctx->history, "\n\n");
-    execute(ctx->history, self->prompt, m, self->num, "/help", CHAT_COMMAND_MODE);
+    execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
+ToxWindow new_chat(Tox *m, int friendnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
@@ -482,7 +482,6 @@ ToxWindow new_chat(Tox *m, ToxWindow *prompt, int friendnum)
         exit(EXIT_FAILURE);
     }
 
-    ret.prompt = prompt;
     ret.num = friendnum;
 
     return ret;

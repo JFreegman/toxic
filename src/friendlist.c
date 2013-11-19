@@ -12,6 +12,7 @@
 
 #include <tox/tox.h>
 
+#include "chat.h"
 #include "friendlist.h"
 
 extern char *DATA_FILE;
@@ -57,7 +58,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str,
         return;
 
     if (friends[num].chatwin == -1)
-        friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
+        friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
 }
 
 static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
@@ -140,7 +141,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8
         return;
 
     if (friends[num].chatwin == -1)
-        friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
+        friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
 }
 
 static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *group_pub_key)
@@ -149,7 +150,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *
         return;
 
     if (friends[num].chatwin == -1)
-        friends[num].chatwin = add_window(m, new_chat(m, prompt, friends[num].num));
+        friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
 }
 
 static void select_friend(Tox *m, wint_t key)
@@ -197,7 +198,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (friends[f].chatwin != -1) {
             set_active_window(friends[f].chatwin);
         } else {
-            friends[f].chatwin = add_window(m, new_chat(m, prompt, friends[f].num));
+            friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
             set_active_window(friends[f].chatwin);
         }
     } else if (key == 0x107 || key == 0x8 || key == 0x7f) {

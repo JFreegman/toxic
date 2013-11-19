@@ -2,9 +2,8 @@
 #define FRIENDLIST_H_53I41IM
 
 #include "toxic_windows.h"
-#include "chat.h"
 
-ToxWindow new_friendlist();
+ToxWindow new_friendlist(void);
 void disable_chatwin(int f_num);
 int get_friendnum(uint8_t *name);
 void sort_friendlist_index(void);

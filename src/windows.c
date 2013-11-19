@@ -13,8 +13,8 @@ extern char *DATA_FILE;
 
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
-static ToxWindow *prompt;
 static Tox *m;
+static ToxWindow *prompt;
 
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)

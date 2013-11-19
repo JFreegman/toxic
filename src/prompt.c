@@ -102,7 +102,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* RETURN key: execute command */
     else if (key == '\n') {
         wprintw(self->window, "\n");
-        execute(self->window, self, m, self->num, prompt_buf, GLOBAL_COMMAND_MODE);
+        execute(self->window, self, m, prompt_buf, GLOBAL_COMMAND_MODE);
         prompt_buf_pos = 0;
         prompt_buf[0] = '\0';
     }
@@ -180,7 +180,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     scrollok(self->window, true);
-    execute(self->window, self, m, self->num, "/help", GLOBAL_COMMAND_MODE);
+    execute(self->window, self, m, "/help", GLOBAL_COMMAND_MODE);
     wclrtoeol(self->window);
 }
 

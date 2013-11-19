@@ -18,7 +18,7 @@ static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
 int num_groupchats = 0;
 
-ToxWindow new_group_chat(Tox *m, ToxWindow *prompt, int groupnum);
+ToxWindow new_group_chat(Tox *m, int groupnum);
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -29,7 +29,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 
     for (i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
-            groupchats[i].chatwin = add_window(m, new_group_chat(m, prompt, groupnum));
+            groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
             set_active_window(groupchats[i].chatwin);
 
@@ -153,7 +153,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         bool close_win = false;
 
         if (line[0] == '/') {
-            if (close_win = strncmp(line, "/close", strlen("/close")) == 0) {
+            if (close_win = strcmp(line, "/close") == 0) {
                 set_active_window(0);
                 int groupnum = self->num;
                 delwin(ctx->linewin);
@@ -162,7 +162,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             } else if (strncmp(line, "/help", strlen("/help")) == 0)
                 print_groupchat_help(ctx);
               else
-                execute(ctx->history, self->prompt, m, self->num, line, GROUPCHAT_COMMAND_MODE);
+                execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
         } else {
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
@@ -216,7 +216,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_group_chat(Tox *m, ToxWindow *prompt, int groupnum)
+ToxWindow new_group_chat(Tox *m, int groupnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
@@ -241,7 +241,6 @@ ToxWindow new_group_chat(Tox *m, ToxWindow *prompt, int groupnum)
         exit(EXIT_FAILURE);
     }
 
-    ret.prompt = prompt;
     ret.num = groupnum;
 
     return ret;

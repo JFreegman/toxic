@@ -66,14 +66,12 @@ struct ToxWindow_ {
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
 
     char name[TOX_MAX_NAME_LENGTH];
+    bool blink;
     int num;
     int x;
 
     void *chatwin;
     void *stb;
-    void *prompt;
-
-    bool blink;
 
     WINDOW *window;
 };

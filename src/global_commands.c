@@ -13,13 +13,14 @@
 #include "misc_tools.h"
 
 extern char *DATA_FILE;
+extern ToxWindow *prompt;
 
 extern uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_frnd_requests;
 extern int num_groupchats;
 
 /* command functions */
-void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
     if (argc != 1) {
@@ -60,7 +61,7 @@ void cmd_accept(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, ch
     num_frnd_requests = i;
 }
 
-void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
         wprintw(window, "Invalid syntax.\n");
@@ -144,13 +145,13 @@ void cmd_add(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char 
     }
 }
 
-void cmd_clear(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wclear(window);
     wprintw(window, "\n\n");
 }
 
-void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
     if (argc != 3) {
@@ -174,7 +175,7 @@ void cmd_connect(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, c
     free(binary_string);
 }
 
-void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (num_groupchats >= MAX_GROUPCHAT_NUM) {
         wprintw(window, "\nMaximum number of group chats has been reached.\n");
@@ -197,7 +198,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc,
     wprintw(window, "Group chat created as %d.\n", groupnum);
 }
 
-void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
@@ -214,7 +215,7 @@ void cmd_myid(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char
     wprintw(window, "%s\n", id);
 }
 
-void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
     if (argc != 1) {
@@ -242,7 +243,7 @@ void cmd_nick(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char
     store_data(m, DATA_FILE);
 }
 
-void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
         wprintw(window, "Wrong number of arguments.\n");
@@ -259,10 +260,11 @@ void cmd_note(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char
     msg[strlen(++msg)-1] = L'\0';
     uint16_t len = strlen(msg) + 1;
     tox_set_statusmessage(m, msg, len);
+
     prompt_update_statusmessage(prompt, msg, len);
 }
 
-void cmd_prompt_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wclear(window);
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
@@ -289,12 +291,12 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int arg
     wattroff(window, COLOR_PAIR(CYAN));
 }
 
-void cmd_quit(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     exit_toxic(m);
 }
 
-void cmd_status(WINDOW *window, ToxWindow *prompt, Tox *m, int num, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     uint8_t *msg = NULL;
 
