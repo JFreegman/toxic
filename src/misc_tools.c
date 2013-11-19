@@ -106,3 +106,10 @@ bool timed_out(uint64_t timestamp, uint64_t curtime, uint64_t timeout)
 {
     return timestamp + timeout <= curtime;
 }
+
+/* Beeps and makes window tab blink */
+void alert_window(ToxWindow *self)
+{
+    self->blink = true;
+    beep();
+}

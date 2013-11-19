@@ -22,3 +22,6 @@ char *wc_to_char(wchar_t ch);
 
 /* Returns true if connection has timed out, false otherwise */
 bool timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
+
+/* Beeps and makes window tab blink */
+void alert_window(ToxWindow *self);

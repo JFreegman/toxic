@@ -41,8 +41,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     } else
         wprintw(ctx->history, "%s\n", msg);
 
-    self->blink = true;
-    beep();
+    alert_window(self);
 }
 
 static void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t status)
@@ -70,8 +69,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    self->blink = true;
-    beep();
+    alert_window(self);
 }
 
 static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t len)
@@ -155,8 +153,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     friends[num].file_receiver.pending[filenum] = true;
     strcpy(friends[num].file_receiver.filenames[filenum], filename);
 
-    self->blink = true;
-    beep();
+    alert_window(self);
 }
 
 static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive_send, 
@@ -189,8 +186,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
         break;
     }
 
-    self->blink = true;
-    beep();
+    alert_window(self);
 }
 
 static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, uint8_t *data,
@@ -232,10 +228,8 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
     }
 
     memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
-
     wprintw(ctx->history, "Type \"/join\" to join the chat.\n");
-    self->blink = true;
-    beep();
+    alert_window(self);
 }
 
 static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
