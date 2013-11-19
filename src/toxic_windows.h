@@ -107,7 +107,7 @@ typedef struct {
 
 typedef struct {
     FILE *file;
-    WINDOW *chatwin;
+    ToxWindow *toxwin;
     int friendnum;
     bool active;
     uint8_t filenum;
