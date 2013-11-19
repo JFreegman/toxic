@@ -374,29 +374,27 @@ static void do_file_senders(Tox *m)
         uint8_t *pathname = file_senders[i].pathname;
         uint8_t filenum = file_senders[i].filenum;
         int friendnum = file_senders[i].friendnum;
+        FILE *fp = file_senders[i].file;
         uint64_t current_time = (uint64_t) time(NULL);
 
-        bool piece_sent = false;    /* true if at least one file piece is successfuly sent */
+        /* If file transfer has timed out kill transfer and send kill control */
+        if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
+            wprintw(file_senders[i].chatwin, "File transfer for '%s' timed out.\n", pathname);
+            tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
+            close_file_sender(i);
+            continue;
+        }
+
         int pieces = 0;
 
         while (pieces++ < MAX_PIECES_SEND) {
-            if (!tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece,
-                                   file_senders[i].piecelen)) {
-
-                /* If file transfer has timed out kill transfer and send kill control */
-                if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
-                    wprintw(file_senders[i].chatwin, "File transfer for '%s' timed out.\n",
-                            pathname);
-                    tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
-                    close_file_sender(i);
-                }
-
+            if (!tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece, 
+                                   file_senders[i].piecelen))
                 break;
-            }
 
-            piece_sent = true;
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, tox_filedata_size(m, 
-                                             friendnum), file_senders[i].file);
+            file_senders[i].timestamp = current_time;
+            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, 
+                                             tox_filedata_size(m, friendnum), fp);
 
             if (file_senders[i].piecelen == 0) {
                 wprintw(file_senders[i].chatwin, "File '%s' successfuly sent.\n", pathname);
@@ -405,9 +403,6 @@ static void do_file_senders(Tox *m)
                 break;
             }
         }
-
-        if (piece_sent)
-            file_senders[i].timestamp = current_time;
     }
 }
 
