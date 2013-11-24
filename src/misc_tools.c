@@ -113,3 +113,24 @@ void alert_window(ToxWindow *self)
     self->blink = true;
     beep();
 }
+
+/* case-insensitive string compare function for use with qsort - same return logic as strcmp */
+int name_compare(const void *nick1, const void *nick2)
+{
+    char s[strlen(nick1)];
+    char t[strlen(nick2)];
+    strcpy(s, (const char*) nick1);
+    strcpy(t, (const char*) nick2);
+
+    int i;
+
+    for (i = 0; s[i] != '\0' && t[i] != '\0'; ++i) {
+        s[i] = tolower(s[i]);
+        t[i] = tolower(t[i]);
+
+        if (s[i] != t[i])
+            break;
+    }
+
+    return s[i] - t[i];
+}

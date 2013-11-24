@@ -121,7 +121,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     groupchats[groupnum].num_peers = MIN(tox_group_number_peers(m, groupnum), MAX_GROUP_PEERS);
     tox_group_copy_names(m, groupnum, groupchats[groupnum].peer_names, groupchats[groupnum].num_peers);
-   //qsort(groupchats[groupnum].peer_names,
+    qsort(groupchats[groupnum].peer_names, groupchats[groupnum].num_peers, TOX_MAX_NAME_LENGTH, name_compare);
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)

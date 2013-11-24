@@ -27,3 +27,6 @@ bool timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
 
 /* Beeps and makes window tab blink */
 void alert_window(ToxWindow *self);
+
+/* case-insensitive string compare function for use with qsort - same return logic as strcmp */
+int name_compare(const void *nick1, const void *nick2);
