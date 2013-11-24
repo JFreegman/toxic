@@ -281,7 +281,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 }
 
                 /* Truncate note if it doesn't fit on one line */
-                uint16_t maxlen = x - getcurx(self->window) - 2;
+                uint16_t maxlen = x - getcurx(self->window) - 4;
                 if (friends[f].statusmsg_len > maxlen) {
                     friends[f].statusmsg[maxlen-3] = '\0';
                     strcat(friends[f].statusmsg, "...");

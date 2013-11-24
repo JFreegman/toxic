@@ -127,7 +127,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     StatusBar *statusbar = (StatusBar *) self->stb;
     werase(statusbar->topline);
-    mvwhline(statusbar->topline, 1, 0, '-', x2);
+    mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
     if (statusbar->is_online) {
@@ -163,7 +163,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 
     wattron(statusbar->topline, A_BOLD);
-    wprintw(statusbar->topline, " | %s |", statusbar->statusmsg);
+    wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
     wattroff(statusbar->topline, A_BOLD);
 
     wprintw(statusbar->topline, "\n");

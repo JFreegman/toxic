@@ -119,9 +119,9 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     if (self->num != groupnum)
         return;
 
-    int num_peers = tox_group_number_peers(m, groupnum);
-    groupchats[groupnum].num_peers = MIN(MAX_GROUP_PEERS, num_peers);
-    tox_group_copy_names(m, groupnum, groupchats[groupnum].peer_names, num_peers);
+    groupchats[groupnum].num_peers = MIN(tox_group_number_peers(m, groupnum), MAX_GROUP_PEERS);
+    tox_group_copy_names(m, groupnum, groupchats[groupnum].peer_names, groupchats[groupnum].num_peers);
+   //qsort(groupchats[groupnum].peer_names,
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -214,8 +214,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
     wclrtobot(ctx->sidebar);
-    mvwhline(ctx->linewin, 0, 0, '_', x);
-    mvwvline(ctx->sidebar, 0, 0,'|', x);
+    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
+    mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y-CHATBOX_HEIGHT);
+    mvwaddch(ctx->sidebar, y-CHATBOX_HEIGHT, 0, ACS_BTEE);  
 
     int num_peers = groupchats[self->num].num_peers;
     if (num_peers) {

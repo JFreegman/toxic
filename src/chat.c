@@ -353,7 +353,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     /* Draw status bar */
     StatusBar *statusbar = (StatusBar *) self->stb;
-    mvwhline(statusbar->topline, 1, 0, '-', x);
+    mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x);
     wmove(statusbar->topline, 0, 0);
 
     /* Draw name, status and note in statusbar */
@@ -402,7 +402,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     self->x = x;
 
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x - getcurx(statusbar->topline) - 6;
+    uint16_t maxlen = x - getcurx(statusbar->topline) - 4;
     if (statusbar->statusmsg_len > maxlen) {
         statusbar->statusmsg[maxlen] = '\0';
         statusbar->statusmsg_len = maxlen;
@@ -410,12 +410,12 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     if (statusbar->statusmsg[0]) {
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " | %s | ", statusbar->statusmsg);
+        wprintw(statusbar->topline, " - %s ", statusbar->statusmsg);
         wattroff(statusbar->topline, A_BOLD);
     }
 
     wprintw(statusbar->topline, "\n");
-    mvwhline(ctx->linewin, 0, 0, '_', x);
+    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
     wrefresh(self->window);
 }
 
