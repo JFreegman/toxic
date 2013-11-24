@@ -119,7 +119,6 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     if (self->num != groupnum)
         return;
 
-    memset(groupchats[groupnum].peer_names, 0, sizeof(groupchats[groupnum].peer_names);
     int num_peers = tox_group_number_peers(m, groupnum);
     groupchats[groupnum].num_peers = MIN(MAX_GROUP_PEERS, num_peers);
     tox_group_copy_names(m, groupnum, groupchats[groupnum].peer_names, num_peers);
