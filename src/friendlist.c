@@ -27,39 +27,27 @@ static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
 int index_name_cmp(const void *n1, const void *n2)
 {
-    return name_compare(friends[*(int *) n1].name, friends[*(int *) n2].name);
+    int res = name_compare(friends[*(int *) n1].name, friends[*(int *) n2].name);
+
+    int k = 100;
+    /* Use weight to make qsort always put online friends before offline */
+    res = friends[*(int *) n1].online ? (res - k) : (res + k);
+    res = friends[*(int *) n2].online ? (res + k) : (res - k);
+
+    return res;
 }
 
-/* sorts friendlist_index by connection status */
+/* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void)
 {
-    int on_friends[MAX_FRIENDS_NUM];
-    int off_friends[MAX_FRIENDS_NUM];
-    int on_cnt = 0;
-    int off_cnt = 0;
     int i;
 
-    /* split friends into online and offline groups */
     for (i = 0; i < max_friends_index; ++i) {
-        if (!friends[i].active)
-            continue;
-
-        if (friends[i].online)
-            on_friends[on_cnt++] = friends[i].num;
-        else
-            off_friends[off_cnt++] = friends[i].num;
+        if (friends[i].active)
+            friendlist_index[i] = friends[i].num;
     }
 
-    /* Sort both groups alphabetically*/
-    qsort(on_friends, on_cnt, sizeof(int), index_name_cmp);
-    qsort(off_friends, off_cnt, sizeof(int), index_name_cmp);
-
-    /* update friendlist_index, putting online friends before offline friends */
-    for (i = 0; i < on_cnt; ++i)
-        friendlist_index[i] = on_friends[i];
-
-    for (i = on_cnt; i < num_friends; ++i)
-        friendlist_index[i] = off_friends[i-on_cnt];
+    qsort(friendlist_index, num_friends, sizeof(int), index_name_cmp);
 }
 
 static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
@@ -89,6 +77,7 @@ static void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint
     len = strlen(str) + 1;
     memcpy(friends[num].name, str, len);
     friends[num].namelength = len;
+    sort_friendlist_index();
 }
 
 static void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
