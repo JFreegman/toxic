@@ -127,6 +127,16 @@ void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *user
     }
 }
 
+void on_group_namelistchange(Tox *m, int groupnumber, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupNamelistChange != NULL)
+            windows[i].onGroupNamelistChange(&windows[i], m, groupnumber);
+    }
+}
+
 void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, 
                          uint8_t *filename, uint16_t filename_length, void *userdata)
 {
@@ -253,7 +263,7 @@ ToxWindow *init_windows(Tox *mToAssign)
     return prompt;
 }
 
-static void draw_bar()
+static void draw_bar(void)
 {
     static int odd = 0;
     int blinkrate = 30;

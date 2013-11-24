@@ -56,7 +56,7 @@ void on_window_resize(int sig)
     clear();
 }
 
-static void init_term()
+static void init_term(void)
 {
     /* Setup terminal */
     signal(SIGWINCH, on_window_resize);
@@ -107,6 +107,7 @@ static Tox *init_tox()
     tox_callback_action(m, on_action, NULL);
     tox_callback_group_invite(m, on_groupinvite, NULL);
     tox_callback_group_message(m, on_groupmessage, NULL);
+    tox_callback_group_namelistchange(m, on_group_namelistchange, NULL);
     tox_callback_file_sendrequest(m, on_file_sendrequest, NULL);
     tox_callback_file_control(m, on_file_control, NULL);
     tox_callback_file_data(m, on_file_data, NULL);

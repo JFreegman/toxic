@@ -20,9 +20,9 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     wprintw(window, "Chat commands:\n");
     wattroff(window, A_BOLD);
 
-    wprintw(window, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(window, "      /note <message>            : Set a personal note\n");
-    wprintw(window, "      /nick <nickname>           : Set your nickname\n");
+    wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
+    wprintw(window, "      /note <msg>                : Set a personal note\n");
+    wprintw(window, "      /nick <nick>               : Set your nickname\n");
     wprintw(window, "      /invite <n>                : Invite friend to a group chat\n");
     wprintw(window, "      /me <action>               : Do an action\n");
     wprintw(window, "      /myid                      : Print your ID\n");

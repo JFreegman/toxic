@@ -271,12 +271,12 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wprintw(window, "\n\nGlobal commands:\n");
     wattroff(window, A_BOLD);
 
-    wprintw(window, "      /add <id> <message>        : Add friend with optional message\n");
+    wprintw(window, "      /add <id> <msg>            : Add friend with optional message\n");
     wprintw(window, "      /accept <n>                : Accept friend request\n");
     wprintw(window, "      /connect <ip> <port> <key> : Manually connect to a DHT server\n");
-    wprintw(window, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(window, "      /note <message>            : Set a personal note\n");
-    wprintw(window, "      /nick <nickname>           : Set your nickname\n");
+    wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
+    wprintw(window, "      /note <msg>                : Set a personal note\n");
+    wprintw(window, "      /nick <nick>               : Set your nickname\n");
     wprintw(window, "      /groupchat                 : Create a group chat\n");
     wprintw(window, "      /myid                      : Print your ID\n");
     wprintw(window, "      /quit or /exit             : Exit Toxic\n");
@@ -285,7 +285,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     wattron(window, A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");
-    wprintw(window, " * Use the TAB key to navigate through the tabs.\n");
+    wprintw(window, " * Use TAB and Shift-TAB to navigate through the tabs.\n");
     wattroff(window, A_BOLD);
 
     wattroff(window, COLOR_PAIR(CYAN));

@@ -13,6 +13,7 @@
 #include "toxic_windows.h"
 #include "execute.h"
 #include "misc_tools.h"
+#include "groupchat.h"
 
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
@@ -31,6 +32,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
         if (!groupchats[i].active) {
             groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
+            groupchats[i].num_peers = 0;
             set_active_window(groupchats[i].chatwin);
 
             if (i == max_groupchat_index)
@@ -67,16 +69,16 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, "Group chat commands:\n");
     wattroff(ctx->history, A_BOLD);
 
-    wprintw(ctx->history, "      /add <id> <message>        : Add friend with optional message\n");
-    wprintw(ctx->history, "      /status <type> <message>   : Set your status with optional note\n");
-    wprintw(ctx->history, "      /note  <message>           : Set a personal note\n");
-    wprintw(ctx->history, "      /nick <nickname>           : Set your nickname\n");
-    wprintw(ctx->history, "      /groupchat                 : Create a group chat\n");
-    wprintw(ctx->history, "      /myid                      : Print your ID\n");
-    wprintw(ctx->history, "      /clear                     : Clear the screen\n");
-    wprintw(ctx->history, "      /close                     : Close the current group chat\n");
-    wprintw(ctx->history, "      /quit or /exit             : Exit Toxic\n");
-    wprintw(ctx->history, "      /help                      : Print this message again\n");
+    wprintw(ctx->history, "      /add <id> <msg>     : Add friend with optional message\n");
+    wprintw(ctx->history, "      /status <type> <msg>: Set your status with optional note\n");
+    wprintw(ctx->history, "      /note  <msg>        : Set a personal note\n");
+    wprintw(ctx->history, "      /nick <nick>        : Set your nickname\n");
+    wprintw(ctx->history, "      /groupchat          : Create a group chat\n");
+    wprintw(ctx->history, "      /myid               : Print your ID\n");
+    wprintw(ctx->history, "      /clear              : Clear the screen\n");
+    wprintw(ctx->history, "      /close              : Close the current group chat\n");
+    wprintw(ctx->history, "      /quit or /exit      : Exit Toxic\n");
+    wprintw(ctx->history, "      /help               : Print this message again\n");
     
     wattron(ctx->history, A_BOLD);
     wprintw(ctx->history, "\n * Argument messages must be enclosed in quotation marks.\n");
@@ -110,6 +112,17 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
         wprintw(ctx->history, "%s\n", msg);
 
     self->blink = true;
+}
+
+static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum)
+{
+    if (self->num != groupnum)
+        return;
+
+    memset(groupchats[groupnum].peer_names, 0, sizeof(groupchats[groupnum].peer_names);
+    int num_peers = tox_group_number_peers(m, groupnum);
+    groupchats[groupnum].num_peers = MIN(MAX_GROUP_PEERS, num_peers);
+    tox_group_copy_names(m, groupnum, groupchats[groupnum].peer_names, num_peers);
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -199,21 +212,40 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     curs_set(1);
     int x, y;
     getmaxyx(self->window, y, x);
+
     ChatContext *ctx = (ChatContext *) self->chatwin;
+    wclrtobot(ctx->sidebar);
     mvwhline(ctx->linewin, 0, 0, '_', x);
+    mvwvline(ctx->sidebar, 0, 0,'|', x);
+
+    int num_peers = groupchats[self->num].num_peers;
+    if (num_peers) {
+        int i;
+
+        for (i = 0; i < num_peers; ++i) {
+            wmove(ctx->sidebar, i, 1);
+            groupchats[self->num].peer_names[i][SIDEBAR_WIDTH-2] = '\0';
+            uint8_t *nick = strlen(groupchats[self->num].peer_names[i]) ? groupchats[self->num].peer_names[i] : (uint8_t *) UNKNOWN_NAME;
+            wprintw(ctx->sidebar, "%s\n", nick);
+        }
+    }
+
     wrefresh(self->window);
 }
 
 static void groupchat_onInit(ToxWindow *self, Tox *m)
 {
     int x, y;
-    ChatContext *ctx = (ChatContext *) self->chatwin;
     getmaxyx(self->window, y, x);
-    ctx->history = subwin(self->window, y-3, x, 0, 0);
+
+    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x-SIDEBAR_WIDTH-1, 0, 0);
     scrollok(ctx->history, 1);
-    ctx->linewin = subwin(self->window, 2, x, y-4, 0);
+    ctx->linewin = subwin(self->window, 2, x, y-CHATBOX_HEIGHT, 0);
+    ctx->sidebar = subwin(self->window, y-CHATBOX_HEIGHT+1, SIDEBAR_WIDTH, 0, x-SIDEBAR_WIDTH);
+
     print_groupchat_help(ctx);
-    wmove(self->window, y - CURS_Y_OFFSET, 0);
+    wmove(self->window, y-CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)
@@ -225,6 +257,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     ret.onDraw = &groupchat_onDraw;
     ret.onInit = &groupchat_onInit;
     ret.onGroupMessage = &groupchat_onGroupMessage;
+    ret.onGroupNamelistChange = &groupchat_onGroupNamelistChange;
     // ret.onNickChange = &groupchat_onNickChange;
     // ret.onStatusChange = &groupchat_onStatusChange;
     // ret.onAction = &groupchat_onAction;
