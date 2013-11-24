@@ -14,6 +14,7 @@
 
 #include "chat.h"
 #include "friendlist.h"
+#include "misc_tools.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -22,7 +23,12 @@ static int max_friends_index = 0;    /* marks the index of the last friend in fr
 static int num_friends = 0;
 static int num_selected = 0;
 
-static int friendlist_index[MAX_FRIENDS_NUM];
+static int friendlist_index[MAX_FRIENDS_NUM] = {0};
+
+int index_name_cmp(const void *n1, const void *n2)
+{
+    return name_compare(friends[*(int *) n1].name, friends[*(int *) n2].name);
+}
 
 /* sorts friendlist_index by connection status */
 void sort_friendlist_index(void)
@@ -43,6 +49,10 @@ void sort_friendlist_index(void)
         else
             off_friends[off_cnt++] = friends[i].num;
     }
+
+    /* Sort both groups alphabetically*/
+    qsort(on_friends, on_cnt, sizeof(int), index_name_cmp);
+    qsort(off_friends, off_cnt, sizeof(int), index_name_cmp);
 
     /* update friendlist_index, putting online friends before offline friends */
     for (i = 0; i < on_cnt; ++i)

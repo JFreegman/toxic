@@ -2,7 +2,6 @@
  * Toxic -- Tox Curses Client
  */
 
-/* The sidebar will take up y/n of the window width where x is the full width of the window */
 #define SIDEBAR_WIDTH 16
 #define CHATBOX_HEIGHT 4
 
