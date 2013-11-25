@@ -41,13 +41,14 @@ int index_name_cmp(const void *n1, const void *n2)
 void sort_friendlist_index(void)
 {
     int i;
+    int n = 0;
 
     for (i = 0; i < max_friends_index; ++i) {
         if (friends[i].active)
-            friendlist_index[i] = friends[i].num;
+            friendlist_index[n++] = friends[i].num;
     }
 
-    qsort(friendlist_index, num_friends, sizeof(int), index_name_cmp);
+    //qsort(friendlist_index, num_friends, sizeof(int), index_name_cmp);
 }
 
 static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
