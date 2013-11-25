@@ -25,7 +25,7 @@ static int num_selected = 0;
 
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
-int index_name_cmp(const void *n1, const void *n2)
+static int index_name_cmp(const void *n1, const void *n2)
 {
     int res = name_compare(friends[*(int *) n1].name, friends[*(int *) n2].name);
 

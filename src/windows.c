@@ -127,13 +127,13 @@ void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *user
     }
 }
 
-void on_group_namelistchange(Tox *m, int groupnumber, void *userdata)
+void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata)
 {
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupNamelistChange != NULL)
-            windows[i].onGroupNamelistChange(&windows[i], m, groupnumber);
+            windows[i].onGroupNamelistChange(&windows[i], m, groupnumber, peernumber, change);
     }
 }
 

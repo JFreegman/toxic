@@ -61,7 +61,7 @@ struct ToxWindow_ {
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
     void(*onGroupInvite)(ToxWindow *, Tox *, int, uint8_t *);
-    void(*onGroupNamelistChange)(ToxWindow *, Tox*, int);
+    void(*onGroupNamelistChange)(ToxWindow *, Tox*, int, int, uint8_t);
     void(*onFileSendRequest)(ToxWindow *, Tox *, int, uint8_t, uint64_t, uint8_t *, uint16_t);
     void(*onFileControl)(ToxWindow *, Tox *, int, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
@@ -150,7 +150,7 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
 void on_friendadded(Tox *m, int friendnumber);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
 void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
-void on_group_namelistchange(Tox *m, int groupnumber, void *userdata);
+void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
 void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname, uint16_t pathname_length, void *userdata);
 void on_file_control(Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
