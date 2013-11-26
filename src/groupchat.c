@@ -101,7 +101,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(4));
-    wprintw(ctx->history, "%s (peernum %d): ", nick, peernum);
+    wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(4));
     
     if (msg[0] == '>') {
@@ -150,7 +150,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     case TOX_CHAT_CHANGE_PEER_ADD:
         wattron(ctx->history, COLOR_PAIR(GREEN));
         wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "* %s (peernum %d)", peername, peernum);
+        wprintw(ctx->history, "* %s", peername);
         wattroff(ctx->history, A_BOLD);
         wprintw(ctx->history, " has joined the room.\n");
         wattroff(ctx->history, COLOR_PAIR(GREEN));
@@ -158,7 +158,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     case TOX_CHAT_CHANGE_PEER_DEL:
         wattron(ctx->history, COLOR_PAIR(RED));
         wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "* %s (peernum %d)", oldpeername, peernum);
+        wprintw(ctx->history, "* %s", oldpeername);
         wattroff(ctx->history, A_BOLD);
         wprintw(ctx->history, " has left the room.\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
@@ -166,7 +166,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     case TOX_CHAT_CHANGE_PEER_NAME:
         wattron(ctx->history, COLOR_PAIR(MAGENTA));
         wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "* %s (peernum %d)", oldpeername, peernum);
+        wprintw(ctx->history, "* %s", oldpeername);
         wattroff(ctx->history, A_BOLD);
 
         wprintw(ctx->history, " is now known as ");
@@ -282,8 +282,8 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         for (i = 0; i < num_peers; ++i) {
             wmove(ctx->sidebar, i, 1);
             groupchats[self->num].peer_names[i][SIDEBAR_WIDTH-2] = '\0';
-            uint8_t *nick = strlen(groupchats[self->num].peer_names[i]) ?\
-                            groupchats[self->num].peer_names[i] : (uint8_t *) UNKNOWN_NAME;
+            uint8_t *nick = !string_is_empty(groupchats[self->num].peer_names[i])\
+                            ? groupchats[self->num].peer_names[i] : (uint8_t *) UNKNOWN_NAME;
             wprintw(ctx->sidebar, "%s\n", nick);
         }
     }
