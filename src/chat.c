@@ -415,6 +415,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     wprintw(statusbar->topline, "\n");
+
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
     wrefresh(self->window);
 }
@@ -438,9 +439,9 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     /* Init subwindows */
     ChatContext *ctx = (ChatContext *) self->chatwin;
     statusbar->topline = subwin(self->window, 2, x, 0, 0);
-    ctx->history = subwin(self->window, y-3, x, 0, 0);
+    ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x, 0, 0);
     scrollok(ctx->history, 1);
-    ctx->linewin = subwin(self->window, 0, x, y-4, 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y-CHATBOX_HEIGHT, 0);
     wprintw(ctx->history, "\n\n");
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     wmove(self->window, y - CURS_Y_OFFSET, 0);

@@ -25,6 +25,7 @@
 #define TOXIC_MAX_NAME_LENGTH 30   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */
 #define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
+#define CHATBOX_HEIGHT 4
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1

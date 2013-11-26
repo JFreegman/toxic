@@ -3,10 +3,12 @@
  */
 
 #define SIDEBAR_WIDTH 16
-#define CHATBOX_HEIGHT 4
 
-/* Limits # of peers in sidepanel (make this go away) */
-#define MAX_GROUP_PEERS 500    
+/* If this limit is reached the chat will still work 
+   but the side panel and channel updates will be frozen.
+
+   TODO: Make this not necessary */
+#define MAX_GROUP_PEERS 1000    
 
 typedef struct {
     int chatwin;

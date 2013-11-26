@@ -218,7 +218,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     /* check arguments */
-    if (argc != 1) {
+    if (argc < 1) {
       wprintw(window, "Invalid syntax.\n");
       return;
     }

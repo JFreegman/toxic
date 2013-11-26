@@ -263,10 +263,11 @@ ToxWindow *init_windows(Tox *mToAssign)
     return prompt;
 }
 
+#define TAB_BLINKRATE 30
+
 static void draw_bar(void)
 {
     static int odd = 0;
-    int blinkrate = 30;
 
     attron(COLOR_PAIR(BLUE));
     mvhline(LINES - 2, 0, '_', COLS);
@@ -290,15 +291,15 @@ static void draw_bar(void)
                 attron(A_BOLD);
             }
 
-            odd = (odd + 1) % blinkrate;
+            odd = (odd + 1) % TAB_BLINKRATE;
 
-            if (windows[i].blink && (odd < (blinkrate / 2)))
+            if (windows[i].blink && (odd < (TAB_BLINKRATE / 2)))
                 attron(COLOR_PAIR(RED));
 
             clrtoeol();
             printw(" [%s]", windows[i].name);
 
-            if (windows[i].blink && (odd < (blinkrate / 2)))
+            if (windows[i].blink && (odd < (TAB_BLINKRATE / 2)))
                 attroff(COLOR_PAIR(RED));
 
            if (windows + i == active_window) {

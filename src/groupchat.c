@@ -100,9 +100,9 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
     print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(4));
+    wattron(ctx->history, COLOR_PAIR(BLUE));
     wprintw(ctx->history, "%s: ", nick);
-    wattroff(ctx->history, COLOR_PAIR(4));
+    wattroff(ctx->history, COLOR_PAIR(BLUE));
     
     if (msg[0] == '>') {
         wattron(ctx->history, COLOR_PAIR(GREEN));
@@ -120,8 +120,10 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     if (self->num != groupnum)
         return;
 
+    groupchats[groupnum].num_peers = tox_group_number_peers(m, groupnum);
+
     /* Temporary */
-    if (peernum < 0 || peernum > MAX_GROUP_PEERS)
+    if (peernum < 0 || groupchats[groupnum].num_peers > MAX_GROUP_PEERS)
         return;
 
     /* get old peer name before updating name list */
@@ -130,8 +132,6 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     if (string_is_empty(oldpeername))
         strcpy(oldpeername, (uint8_t *) UNKNOWN_NAME);
-
-    groupchats[groupnum].num_peers = tox_group_number_peers(m, groupnum);
 
     /* two copies: oldpeer_names will be unsorted and match correct peernums on the next callback */
     tox_group_copy_names(m, groupnum, groupchats[groupnum].peer_names, groupchats[groupnum].num_peers);
@@ -316,8 +316,6 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     ret.onInit = &groupchat_onInit;
     ret.onGroupMessage = &groupchat_onGroupMessage;
     ret.onGroupNamelistChange = &groupchat_onGroupNamelistChange;
-    // ret.onNickChange = &groupchat_onNickChange;
-    // ret.onStatusChange = &groupchat_onStatusChange;
     // ret.onAction = &groupchat_onAction;
 
     snprintf(ret.name, sizeof(ret.name), "Room #%d", groupnum);
