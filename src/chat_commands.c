@@ -13,6 +13,7 @@
 #include "misc_tools.h"
 
 extern ToxWindow *prompt;
+extern int num_groupchats;
 
 void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -65,6 +66,11 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (num_groupchats >= MAX_GROUPCHAT_NUM) {
+        wprintw(window, "\nMaximum number of group chats has been reached.\n");
+        return;
+    }
+
     uint8_t *groupkey = friends[self->num].pending_groupchat;
 
     if (groupkey[0] == '\0') {

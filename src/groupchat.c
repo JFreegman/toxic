@@ -33,7 +33,12 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
-            set_active_window(groupchats[i].chatwin);
+            groupchats[i].peer_names = malloc(sizeof(uint8_t *) * TOX_MAX_NAME_LENGTH);
+            groupchats[i].oldpeer_names = malloc(sizeof(uint8_t *) * TOX_MAX_NAME_LENGTH);
+            memset(groupchats[i].peer_names, 0, sizeof(groupchats[i].peer_names));
+            memset(groupchats[i].oldpeer_names, 0, sizeof(groupchats[i].oldpeer_names));
+
+            //set_active_window(groupchats[i].chatwin);
 
             if (i == max_groupchat_index)
                 ++max_groupchat_index;
@@ -328,11 +333,6 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     print_groupchat_help(ctx);
     wmove(self->window, y-CURS_Y_OFFSET, 0);
-
-    groupchats[self->num].peer_names = malloc(sizeof(uint8_t *) * TOX_MAX_NAME_LENGTH);
-    groupchats[self->num].oldpeer_names = malloc(sizeof(uint8_t *) * TOX_MAX_NAME_LENGTH);
-    memset(groupchats[self->num].peer_names, 0, sizeof(groupchats[self->num].peer_names));
-    memset(groupchats[self->num].oldpeer_names, 0, sizeof(groupchats[self->num].oldpeer_names));
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)
