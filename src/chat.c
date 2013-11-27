@@ -109,6 +109,11 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
+    int idx = strlen(pathname) - 1;
+    while (pathname[idx] == '/') {
+      pathname[idx--] = 0;
+    }
+
     /* try to get file name from path */
     uint8_t *filename = strrchr(pathname, '/');    // Try unix style paths
     
