@@ -38,7 +38,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             memset(groupchats[i].peer_names, 0, sizeof(groupchats[i].peer_names));
             memset(groupchats[i].oldpeer_names, 0, sizeof(groupchats[i].oldpeer_names));
 
-            //set_active_window(groupchats[i].chatwin);
+            set_active_window(groupchats[i].chatwin);
 
             if (i == max_groupchat_index)
                 ++max_groupchat_index;
