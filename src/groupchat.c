@@ -33,8 +33,8 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
-            groupchats[i].peer_names = malloc(sizeof(uint8_t *) * TOX_MAX_NAME_LENGTH);
-            groupchats[i].oldpeer_names = malloc(sizeof(uint8_t *) * TOX_MAX_NAME_LENGTH);
+            groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
+            groupchats[i].oldpeer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             memset(groupchats[i].peer_names, 0, sizeof(groupchats[i].peer_names));
             memset(groupchats[i].oldpeer_names, 0, sizeof(groupchats[i].oldpeer_names));
 
@@ -131,8 +131,8 @@ static void copy_peernames(int gnum, int npeers, uint8_t tmp_peerlist[][TOX_MAX_
 
     int N = TOX_MAX_NAME_LENGTH;
 
-    groupchats[gnum].peer_names = malloc(sizeof(uint8_t *) * npeers * N);
-    groupchats[gnum].oldpeer_names = malloc(sizeof(uint8_t *) * npeers * N);
+    groupchats[gnum].peer_names = malloc(sizeof(uint8_t) * npeers * N);
+    groupchats[gnum].oldpeer_names = malloc(sizeof(uint8_t) * npeers * N);
 
     if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL) {
         endwin();
@@ -307,9 +307,10 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     int num_peers = groupchats[self->num].num_peers;
     int N = TOX_MAX_NAME_LENGTH;
+    int maxlines = y - CHATBOX_HEIGHT;
     int i;
 
-    for (i = 0; i < num_peers; ++i) {
+    for (i = 0; i < num_peers && i < maxlines; ++i) {
         wmove(ctx->sidebar, i, 1);
         groupchats[self->num].peer_names[i * N + SIDEBAR_WIDTH - 2] = '\0';
         uint8_t *nick = !string_is_empty(&groupchats[self->num].peer_names[i*N])\

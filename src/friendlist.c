@@ -153,7 +153,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *
         friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
 }
 
-static void select_friend(Tox *m, wint_t key)
+static void select_friend(ToxWindow *self, Tox *m, wint_t key)
 {
     if (key == KEY_UP) {
         if (--num_selected < 0)
@@ -204,7 +204,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
     } else if (key == 0x107 || key == 0x8 || key == 0x7f) {
         delete_friend(m, self, f, key);
     } else {
-        select_friend(m, key);
+        select_friend(self, m, key);
     }
 }
 
@@ -228,7 +228,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     int i;
 
-    for (i = 0; i < num_friends; ++i) {
+    for (i = 0; i < num_friends && i < y-3; ++i) {
         int f = friendlist_index[i];
         bool f_selected = false;
 
