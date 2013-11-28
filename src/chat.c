@@ -207,6 +207,9 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
 
      // we have a problem here, but don't let it segfault
     if (file_to_save == NULL) {
+        wattron(ctx->history, COLOR_PAIR(RED));
+        wprintw(ctx->history, "* Error writing to file.\n");
+        wattroff(ctx->history, COLOR_PAIR(RED));
         return;
     }
 
