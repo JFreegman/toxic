@@ -22,7 +22,7 @@
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - N_DEFAULT_WINS
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
-#define TOXIC_MAX_NAME_LENGTH 30   /* Must be <= TOX_MAX_NAME_LENGTH */
+#define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */
 #define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 4

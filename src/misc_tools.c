@@ -117,14 +117,14 @@ void alert_window(ToxWindow *self)
 /* case-insensitive string compare function for use with qsort - same return logic as strcmp */
 int name_compare(const void *nick1, const void *nick2)
 {
-    char s[strlen((const char *) nick1) + 1];
-    char t[strlen((const char *) nick2) + 1];
+    char s[TOX_MAX_NAME_LENGTH];
+    char t[TOX_MAX_NAME_LENGTH];
     strcpy(s, (const char *) nick1);
     strcpy(t, (const char *) nick2);
 
     int i;
 
-    for (i = 0; s[i] != '\0' && t[i] != '\0'; ++i) {
+    for (i = 0; s[i] && t[i]; ++i) {
         s[i] = tolower(s[i]);
         t[i] = tolower(t[i]);
 
@@ -133,4 +133,23 @@ int name_compare(const void *nick1, const void *nick2)
     }
 
     return s[i] - t[i];
+}
+
+/* Returns true if nick is valid. A valid toxic nick:
+      - cannot be empty
+      - cannot start with a space
+      - must not contain contiguous spaces */
+bool valid_nick(uint8_t *nick)
+{
+    if (!nick[0] || nick[0] == ' ')
+        return false;
+
+    int i;
+
+    for (i = 0; nick[i]; ++i) {
+        if (nick[i] == ' ' && nick[i+1] == ' ')
+            return false;
+    }
+
+    return true;
 }
