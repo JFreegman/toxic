@@ -217,6 +217,9 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
 
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
+    // make sure message data is null-terminated
+    data[length - 1] = 0;
+
     wprintw(self->window, "\nFriend request with the message: %s\n", data);
 
     int n = add_friend_request(key);
