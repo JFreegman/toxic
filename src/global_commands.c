@@ -232,7 +232,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         nick[len] = L'\0';
     }
 
-    if(!len) {
+    if (!len) {
       wprintw(window, "Invalid name.\n");
       return;
     }

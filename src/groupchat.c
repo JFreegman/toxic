@@ -35,8 +35,9 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].num_peers = 0;
             groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             groupchats[i].oldpeer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
-            memset(groupchats[i].peer_names, 0, sizeof(groupchats[i].peer_names));
-            memset(groupchats[i].oldpeer_names, 0, sizeof(groupchats[i].oldpeer_names));
+
+            /* temp fix */
+            memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
 
             set_active_window(groupchats[i].chatwin);
 
@@ -163,10 +164,10 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     /* get old peer name before updating name list */
     uint8_t oldpeername[TOX_MAX_NAME_LENGTH] = {0};
-    memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum*TOX_MAX_NAME_LENGTH], sizeof(oldpeername));
 
-    if (string_is_empty(oldpeername))
-        strcpy(oldpeername, (uint8_t *) UNKNOWN_NAME);
+    if (change != TOX_CHAT_CHANGE_PEER_ADD)
+        memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum*TOX_MAX_NAME_LENGTH], 
+               sizeof(oldpeername));
 
     /* Update name lists */
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
