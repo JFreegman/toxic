@@ -109,6 +109,11 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
+    int idx = strlen(pathname) - 1;
+    while (pathname[idx] == '/') {
+      pathname[idx--] = 0;
+    }
+
     /* try to get file name from path */
     uint8_t *filename = strrchr(pathname, '/');    // Try unix style paths
     
@@ -199,6 +204,11 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
 
     uint8_t *filename = friends[num].file_receiver.filenames[filenum];
     FILE *file_to_save = fopen(filename, "a");
+
+     // we have a problem here, but don't let it segfault
+    if (file_to_save == NULL) {
+        return;
+    }
 
     if (fwrite(data, length, 1, file_to_save) != 1) {
         wattron(ctx->history, COLOR_PAIR(RED));
