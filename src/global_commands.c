@@ -219,7 +219,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 {
     /* check arguments */
     if (argc < 1) {
-      wprintw(window, "Invalid syntax.\n");
+      wprintw(window, "Invalid name.\n");
       return;
     }
 
@@ -230,6 +230,11 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         ++nick;
         len -= 2;
         nick[len] = L'\0';
+    }
+
+    if(!len) {
+      wprintw(window, "Invalid name.\n");
+      return;
     }
 
     if (len > TOXIC_MAX_NAME_LENGTH) {
