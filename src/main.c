@@ -395,8 +395,8 @@ static void do_file_senders(Tox *m)
         int pieces = 0;
 
         while (pieces++ < MAX_PIECES_SEND) {
-            if (!tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece, 
-                                   file_senders[i].piecelen))
+            if (tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece, 
+                                   file_senders[i].piecelen) == -1)
                 break;
 
             file_senders[i].timestamp = current_time;
