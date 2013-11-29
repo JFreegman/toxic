@@ -113,7 +113,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     uint8_t *filename = friends[self->num].file_receiver.filenames[filenum];
 
-    if (tox_file_sendcontrol(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0))
+    if (tox_file_sendcontrol(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0)
         wprintw(window, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
     else
         wprintw(window, "File transfer failed.\n");
