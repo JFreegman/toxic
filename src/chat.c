@@ -26,7 +26,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, num, nick);
+    tox_get_name(m, num, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     print_time(ctx->history);
@@ -61,7 +61,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     ChatContext *ctx = (ChatContext *) self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getname(m, num, nick);
+    tox_get_name(m, num, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     print_time(ctx->history);
@@ -230,7 +230,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
     ChatContext *ctx = (ChatContext *) self->chatwin;
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
 
-    if (tox_getname(m, friendnumber, name) == -1)
+    if (tox_get_name(m, friendnumber, name) == -1)
         return;
 
     wprintw(ctx->history, "%s has invited you to a group chat.\n", name);
@@ -252,14 +252,14 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
     }
 
     uint8_t selfname[TOX_MAX_NAME_LENGTH];
-    tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+    tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
 
     print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(YELLOW));
     wprintw(ctx->history, "* %s %s\n", selfname, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    if (tox_sendaction(m, self->num, action, strlen(action) + 1) == 0) {
+    if (tox_send_action(m, self->num, action, strlen(action) + 1) == 0) {
         wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, " * Failed to send action\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
@@ -322,7 +322,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+                tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
 
                 print_time(ctx->history);
                 wattron(ctx->history, COLOR_PAIR(GREEN));
@@ -337,7 +337,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                     wprintw(ctx->history, "%s\n", line);
 
                 if (!statusbar->is_online
-                        || tox_sendmessage(m, self->num, line, strlen(line) + 1) == 0) {
+                        || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
                     wattron(ctx->history, COLOR_PAIR(RED));
                     wprintw(ctx->history, " * Failed to send message.\n");
                     wattroff(ctx->history, COLOR_PAIR(RED));
@@ -408,9 +408,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     /* Reset statusbar->statusmsg on window resize */
     if (x != self->x) {
         uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-        tox_copy_statusmessage(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-        statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->num);
+        statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
     }
 
     self->x = x;
@@ -442,13 +442,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init statusbar info */
     StatusBar *statusbar = (StatusBar *) self->stb;
-    statusbar->status = tox_get_userstatus(m, self->num);
-    statusbar->is_online = tox_get_friend_connectionstatus(m, self->num) == 1;
+    statusbar->status = tox_get_user_status(m, self->num);
+    statusbar->is_online = tox_get_friend_connection_status(m, self->num) == 1;
 
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-    tox_copy_statusmessage(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = tox_get_statusmessage_size(m, self->num);
+    statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
 
     /* Init subwindows */
     ChatContext *ctx = (ChatContext *) self->chatwin;
@@ -481,7 +481,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onFileData = &chat_onFileData;
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
-    uint16_t len = tox_getname(m, friendnum, name);
+    uint16_t len = tox_get_name(m, friendnum, name);
     memcpy(ret.name, name, len);
     ret.name[TOXIC_MAX_NAME_LENGTH] = '\0';
 

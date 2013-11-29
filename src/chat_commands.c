@@ -113,7 +113,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     uint8_t *filename = friends[self->num].file_receiver.filenames[filenum];
 
-    if (tox_file_sendcontrol(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0)
+    if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0)
         wprintw(window, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
     else
         wprintw(window, "File transfer failed.\n");
@@ -159,7 +159,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint64_t filesize = ftell(file_to_send);
     fseek(file_to_send, 0, SEEK_SET);
 
-    int filenum = tox_new_filesender(m, self->num, filesize, path, path_len + 1);
+    int filenum = tox_new_file_sender(m, self->num, filesize, path, path_len + 1);
 
     if (filenum == -1) {
         wprintw(window, "Error sending file.\n");
@@ -178,7 +178,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].friendnum = self->num;
             file_senders[i].timestamp = (uint64_t) time(NULL);
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
-                                             tox_filedata_size(m, self->num), file_to_send);
+                                             tox_file_data_size(m, self->num), file_to_send);
 
             wprintw(window, "Sending file: '%s'\n", path);
 
