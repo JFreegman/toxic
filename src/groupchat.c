@@ -15,14 +15,12 @@
 #include "misc_tools.h"
 #include "groupchat.h"
 
-static GroupChat groupchats[MAX_GROUPCHAT_NUM];
-static int max_groupchat_index = 0;
-int num_groupchats = 0;
-
-ToxWindow new_group_chat(Tox *m, int groupnum);
-
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
+
+GroupChat groupchats[MAX_GROUPCHAT_NUM];
+int num_groupchats = 0;
+static int max_groupchat_index = 0;
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {

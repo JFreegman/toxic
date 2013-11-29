@@ -23,6 +23,7 @@ static int max_friends_index = 0;    /* marks the index of the last friend in fr
 static int num_friends = 0;
 static int num_selected = 0;
 
+ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
 static int index_name_cmp(const void *n1, const void *n2)

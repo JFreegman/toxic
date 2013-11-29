@@ -16,6 +16,11 @@
 extern ToxWindow *prompt;
 extern int num_groupchats;
 
+extern ToxicFriend friends[MAX_FRIENDS_NUM];
+
+extern FileSender file_senders[MAX_FILES];
+extern uint8_t max_file_senders_index;
+
 void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);

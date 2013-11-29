@@ -19,6 +19,9 @@ extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 extern int num_groupchats;
 
+extern FileSender file_senders[MAX_FILES];
+extern ToxicFriend friends[MAX_FRIENDS_NUM];
+
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
     if (self->num != num)

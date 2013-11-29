@@ -2,7 +2,7 @@
  * Toxic -- Tox Curses Client
  */
 
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+// #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 /* convert a hex string to binary */
 unsigned char *hex_string_to_bin(char hex_string[]);

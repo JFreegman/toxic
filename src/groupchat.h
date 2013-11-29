@@ -13,3 +13,4 @@ typedef struct {
 } GroupChat;
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
+ToxWindow new_group_chat(Tox *m, int groupnum);

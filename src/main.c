@@ -49,6 +49,9 @@ char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
 ToxWindow *prompt = NULL;
 
+FileSender file_senders[MAX_FILES];
+uint8_t max_file_senders_index;
+
 void on_window_resize(int sig)
 {
     endwin();

@@ -123,31 +123,12 @@ typedef struct {
     uint64_t timestamp;
 } FileSender;
 
-FileSender file_senders[MAX_FILES];
-uint8_t max_file_senders_index;
-
 struct FileReceiver {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
     bool pending[MAX_FILES];
 };
 
 /* End file transfer code */
-
-typedef struct {
-    uint8_t name[TOX_MAX_NAME_LENGTH];
-    uint16_t namelength;
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
-    uint16_t statusmsg_len;
-    uint8_t pending_groupchat[TOX_CLIENT_ID_SIZE];
-    int num;
-    int chatwin;
-    bool active;
-    bool online;
-    TOX_USERSTATUS status;
-    struct FileReceiver file_receiver;
-} ToxicFriend;
-
-ToxicFriend friends[MAX_FRIENDS_NUM];
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);

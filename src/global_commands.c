@@ -11,12 +11,16 @@
 
 #include "toxic_windows.h"
 #include "misc_tools.h"
+#include "friendlist.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
 
+extern ToxicFriend friends[MAX_FRIENDS_NUM];
+
 extern uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_frnd_requests;
+
 extern int num_groupchats;
 
 /* command functions */
