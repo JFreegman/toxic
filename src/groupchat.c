@@ -171,7 +171,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     /* Update name lists */
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
-    tox_group_copy_names(m, groupnum, tmp_peerlist, num_peers);
+    tox_group_get_names(m, groupnum, tmp_peerlist, num_peers);
     copy_peernames(groupnum, num_peers, tmp_peerlist);
 
     /* get current peername then sort namelist */
@@ -274,7 +274,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             /* make sure the string has at least non-space character */
             if (!string_is_empty(line)) {
                 // uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                // tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+                // tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
 
                 // print_time(ctx->history);
                 // wattron(ctx->history, COLOR_PAIR(GREEN));

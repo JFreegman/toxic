@@ -40,7 +40,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    int friendnum = tox_addfriend_norequest(m, pending_frnd_requests[req]);
+    int friendnum = tox_add_friend_norequest(m, pending_frnd_requests[req]);
 
     if (friendnum == -1)
         wprintw(window, "Failed to add friend.\n");
@@ -83,7 +83,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         snprintf(msg, sizeof(msg), "%s", temp);
     } else {
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        tox_getselfname(m, selfname, TOX_MAX_NAME_LENGTH);
+        tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 
@@ -114,7 +114,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         id[i] = toupper(id[i]);
     }
 
-    int f_num = tox_addfriend(m, id_bin, msg, strlen(msg) + 1);
+    int f_num = tox_add_friend(m, id_bin, msg, strlen(msg) + 1);
 
     switch (f_num) {
     case TOX_FAERR_TOOLONG:
@@ -202,7 +202,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
-    tox_getaddress(m, address);
+    tox_get_address(m, address);
 
     size_t i;
 
@@ -242,7 +242,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         len = TOXIC_MAX_NAME_LENGTH - 1;
     }
 
-    tox_setname(m, nick, len+1);
+    tox_set_name(m, nick, len+1);
     prompt_update_nick(prompt, nick, len+1);
 
     store_data(m, DATA_FILE);
@@ -264,7 +264,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     msg[strlen(++msg)-1] = L'\0';
     uint16_t len = strlen(msg) + 1;
-    tox_set_statusmessage(m, msg, len);
+    tox_set_status_message(m, msg, len);
 
     prompt_update_statusmessage(prompt, msg, len);
 }
@@ -344,7 +344,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     if (msg != NULL) {
         msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
         uint16_t len = strlen(msg) + 1;
-        tox_set_statusmessage(m, msg, len);
+        tox_set_status_message(m, msg, len);
         prompt_update_statusmessage(prompt, msg, len);
     }
 }

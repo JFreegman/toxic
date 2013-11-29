@@ -191,7 +191,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
 
-    if (tox_getname(m, friendnum, nick) == -1)
+    if (tox_get_name(m, friendnum, nick) == -1)
         return;
 
     if (!nick[0])
@@ -244,7 +244,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     statusbar->is_online = false;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_getselfname(m, nick, TOX_MAX_NAME_LENGTH);
+    tox_get_self_name(m, nick, TOX_MAX_NAME_LENGTH);
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
     /* temporary until statusmessage saving works */

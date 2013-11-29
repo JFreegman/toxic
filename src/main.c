@@ -98,28 +98,28 @@ static Tox *init_tox()
         return NULL;
 
     /* Callbacks */
-    tox_callback_connectionstatus(m, on_connectionchange, NULL);
-    tox_callback_friendrequest(m, on_request, NULL);
-    tox_callback_friendmessage(m, on_message, NULL);
-    tox_callback_namechange(m, on_nickchange, NULL);
-    tox_callback_userstatus(m, on_statuschange, NULL);
-    tox_callback_statusmessage(m, on_statusmessagechange, NULL);
+    tox_callback_connection_status(m, on_connectionchange, NULL);
+    tox_callback_friend_request(m, on_request, NULL);
+    tox_callback_friend_message(m, on_message, NULL);
+    tox_callback_name_change(m, on_nickchange, NULL);
+    tox_callback_user_status(m, on_statuschange, NULL);
+    tox_callback_status_message(m, on_statusmessagechange, NULL);
     tox_callback_action(m, on_action, NULL);
     tox_callback_group_invite(m, on_groupinvite, NULL);
     tox_callback_group_message(m, on_groupmessage, NULL);
-    tox_callback_group_namelistchange(m, on_group_namelistchange, NULL);
-    tox_callback_file_sendrequest(m, on_file_sendrequest, NULL);
+    tox_callback_group_namelist_change(m, on_group_namelistchange, NULL);
+    tox_callback_file_send_request(m, on_file_sendrequest, NULL);
     tox_callback_file_control(m, on_file_control, NULL);
     tox_callback_file_data(m, on_file_data, NULL);
 
 #ifdef __linux__
-    tox_setname(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
+    tox_set_name(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
 #elif defined(_WIN32)
-    tox_setname(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
+    tox_set_name(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
 #elif defined(__APPLE__)
-    tox_setname(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
+    tox_set_name(m, (uint8_t *) "Hipster", sizeof("Hipster")); //This used to users of other Unixes are hipsters
 #else
-    tox_setname(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
+    tox_set_name(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
 #endif
 
     return m;
@@ -331,7 +331,7 @@ static void load_data(Tox *m, char *path)
         uint32_t i = 0;
 
         uint8_t name[TOX_MAX_NAME_LENGTH];
-        while (tox_getname(m, i, name) != -1) {
+        while (tox_get_name(m, i, name) != -1) {
             on_friendadded(m, i);
             i++;
         }
@@ -387,7 +387,7 @@ static void do_file_senders(Tox *m)
                 alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
             }
 
-            tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
+            tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
             close_file_sender(i);
             continue;
         }
@@ -395,13 +395,13 @@ static void do_file_senders(Tox *m)
         int pieces = 0;
 
         while (pieces++ < MAX_PIECES_SEND) {
-            if (tox_file_senddata(m, friendnum, filenum, file_senders[i].nextpiece, 
+            if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
                                    file_senders[i].piecelen) == -1)
                 break;
 
             file_senders[i].timestamp = current_time;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, 
-                                             tox_filedata_size(m, friendnum), fp);
+                                             tox_file_data_size(m, friendnum), fp);
 
             if (file_senders[i].piecelen == 0) {
                 ChatContext *ctx = (ChatContext *) file_senders[i].toxwin->chatwin;
@@ -411,7 +411,7 @@ static void do_file_senders(Tox *m)
                     alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
                 }
 
-                tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
+                tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
                 close_file_sender(i);
                 break;
             }

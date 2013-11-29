@@ -112,7 +112,7 @@ static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
-            friends[i].namelength = tox_getname(m, num, friends[i].name);
+            friends[i].namelength = tox_get_name(m, num, friends[i].name);
 
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy(friends[i].name, (uint8_t *) UNKNOWN_NAME);
@@ -164,7 +164,7 @@ static void select_friend(ToxWindow *self, Tox *m, wint_t key)
 
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
 {
-    tox_delfriend(m, f_num);
+    tox_del_friend(m, f_num);
     memset(&friends[f_num], 0, sizeof(friend_t));
     
     int i;
@@ -274,9 +274,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 /* Reset friends[f].statusmsg on window resize */
                 if (fix_statuses) {
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-                    tox_copy_statusmessage(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+                    tox_get_status_message(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
-                    friends[f].statusmsg_len = tox_get_statusmessage_size(m, f);
+                    friends[f].statusmsg_len = tox_get_status_message_size(m, f);
                 }
 
                 /* Truncate note if it doesn't fit on one line */
