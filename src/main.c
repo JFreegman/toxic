@@ -384,7 +384,7 @@ static void do_file_senders(Tox *m)
 
             if (ctx != NULL) {
                 wprintw(ctx->history, "File transfer for '%s' timed out.\n", pathname);
-                alert_window(file_senders[i].toxwin);
+                alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
             }
 
             tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
@@ -408,7 +408,7 @@ static void do_file_senders(Tox *m)
 
                 if (ctx != NULL) {
                     wprintw(ctx->history, "File '%s' successfuly sent.\n", pathname);
-                    alert_window(file_senders[i].toxwin);
+                    alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
                 }
 
                 tox_file_sendcontrol(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);

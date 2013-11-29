@@ -230,7 +230,7 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     }
 
     wprintw(self->window, "Type \"/accept %d\" to accept it.\n", n);
-    alert_window(self);
+    alert_window(self, WINDOW_ALERT_2, true);
 }
 
 void prompt_init_statusbar(ToxWindow *self, Tox *m)

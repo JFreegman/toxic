@@ -120,7 +120,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     } else
         wprintw(ctx->history, "%s\n", msg);
 
-    self->blink = true;
+    alert_window(self, WINDOW_ALERT_1, false);
 }
 
 /* Puts two copies of peerlist in chat instance */
@@ -214,6 +214,8 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         wattroff(ctx->history, COLOR_PAIR(MAGENTA));
         break;
     }
+
+    alert_window(self, WINDOW_ALERT_2, false);
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)

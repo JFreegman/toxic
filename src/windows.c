@@ -263,12 +263,25 @@ ToxWindow *init_windows(Tox *mToAssign)
     return prompt;
 }
 
-#define TAB_BLINKRATE 30
+static void draw_window_tab(ToxWindow toxwin)
+{
+    /* alert1 takes priority */
+    if (toxwin.alert1)
+        attron(COLOR_PAIR(RED));
+    else if (toxwin.alert2)
+        attron(COLOR_PAIR(BLUE));
+
+    clrtoeol();
+    printw(" [%s]", toxwin.name);
+
+    if (toxwin.alert1)
+        attroff(COLOR_PAIR(RED));
+    else if (toxwin.alert2)
+        attroff(COLOR_PAIR(BLUE));
+}
 
 static void draw_bar(void)
 {
-    static int odd = 0;
-
     attron(COLOR_PAIR(BLUE));
     mvhline(LINES - 2, 0, '_', COLS);
     attroff(COLOR_PAIR(BLUE));
@@ -291,18 +304,9 @@ static void draw_bar(void)
                 attron(A_BOLD);
             }
 
-            odd = (odd + 1) % TAB_BLINKRATE;
+            draw_window_tab(windows[i]);
 
-            if (windows[i].blink && (odd < (TAB_BLINKRATE / 2)))
-                attron(COLOR_PAIR(RED));
-
-            clrtoeol();
-            printw(" [%s]", windows[i].name);
-
-            if (windows[i].blink && (odd < (TAB_BLINKRATE / 2)))
-                attroff(COLOR_PAIR(RED));
-
-           if (windows + i == active_window) {
+            if (windows + i == active_window) {
 #ifdef URXVT_FIX
                 attroff(A_BOLD | COLOR_PAIR(GREEN));
             } else {
@@ -325,7 +329,9 @@ void draw_active_window(Tox *m)
     wresize(a->window, LINES - 2, COLS);
 #endif
 
-    a->blink = false;
+    a->alert1 = false;
+    a->alert2 = false;
+
     draw_bar();
     a->onDraw(a, m);
 

@@ -42,6 +42,11 @@ enum {
     BLACK,
 };
 
+enum {
+    WINDOW_ALERT_1,
+    WINDOW_ALERT_2,
+};
+
 /* Fixes text color problem on some terminals. 
    Uncomment if necessary */
 //#define URXVT_FIX
@@ -68,7 +73,8 @@ struct ToxWindow_ {
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
 
     char name[TOX_MAX_NAME_LENGTH];
-    bool blink;
+    bool alert1;
+    bool alert2;
     int num;
     int x;
 
