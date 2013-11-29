@@ -51,9 +51,11 @@ enum {
    Uncomment if necessary */
 //#define URXVT_FIX
 
-typedef struct ToxWindow_ ToxWindow;
+typedef struct ToxWindow ToxWindow;
+typedef struct StatusBar StatusBar;
+typedef struct ChatContext ChatContext;
 
-struct ToxWindow_ {
+struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
@@ -78,13 +80,13 @@ struct ToxWindow_ {
     int num;
     int x;
 
-    void *chatwin;
-    void *stb;
+    ChatContext *chatwin;
+    StatusBar *stb;
 
     WINDOW *window;
 };
 
-typedef struct {
+struct StatusBar {
     WINDOW *topline;    
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
@@ -92,15 +94,15 @@ typedef struct {
     uint16_t nick_len;
     TOX_USERSTATUS status;
     bool is_online;
-} StatusBar;
+};
 
-typedef struct {
+struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
-} ChatContext;
+};
 
 /* Start file transfer code */
 
@@ -124,10 +126,10 @@ typedef struct {
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
 
-typedef struct {
+struct FileReceiver {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
     bool pending[MAX_FILES];
-} FileReceiver;
+};
 
 /* End file transfer code */
 
@@ -142,10 +144,10 @@ typedef struct {
     bool active;
     bool online;
     TOX_USERSTATUS status;
-    FileReceiver file_receiver;
-} friend_t;
+    struct FileReceiver file_receiver;
+} ToxicFriend;
 
-friend_t friends[MAX_FRIENDS_NUM];
+ToxicFriend friends[MAX_FRIENDS_NUM];
 
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);

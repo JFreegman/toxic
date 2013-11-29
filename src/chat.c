@@ -13,6 +13,7 @@
 #include "toxic_windows.h"
 #include "execute.h"
 #include "misc_tools.h"
+#include "friendlist.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -23,7 +24,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     if (self->num != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_get_name(m, num, nick);
@@ -49,7 +50,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t st
     if (self->num != num)
         return;
 
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     statusbar->is_online = status == 1 ? true : false;
 }
 
@@ -58,7 +59,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     if (self->num != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_get_name(m, num, nick);
@@ -87,7 +88,7 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS
     if (self->num != num)
         return;
 
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     statusbar->status = status;
 }
 
@@ -96,7 +97,7 @@ static void chat_onStatusMessageChange(ToxWindow *self, int num, uint8_t *status
     if (self->num != num)
         return;
 
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     statusbar->statusmsg_len = len;
     memcpy(statusbar->statusmsg, status, len);
 }
@@ -107,7 +108,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     if (self->num != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     int idx = strlen(pathname) - 1;
     while (pathname[idx] == '/' && idx >= 0) {
@@ -167,7 +168,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
     if (self->num != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
     uint8_t *filename;
 
     if (receive_send == 0)
@@ -200,7 +201,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
     if (self->num != num)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     uint8_t *filename = friends[num].file_receiver.filenames[filenum];
     FILE *file_to_save = fopen(filename, "a");
@@ -227,7 +228,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
     if (self->num != friendnumber)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
 
     if (tox_get_name(m, friendnumber, name) == -1)
@@ -268,8 +269,8 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    ChatContext *ctx = (ChatContext *) self->chatwin;
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    ChatContext *ctx = self->chatwin;
+    StatusBar *statusbar = self->stb;
 
     int x, y, y2, x2;
     getyx(self->window, y, x);
@@ -363,10 +364,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int x, y;
     getmaxyx(self->window, y, x);
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     /* Draw status bar */
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x);
     wmove(statusbar->topline, 0, 0);
 
@@ -441,7 +442,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     self->x = x;
 
     /* Init statusbar info */
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     statusbar->status = tox_get_user_status(m, self->num);
     statusbar->is_online = tox_get_friend_connection_status(m, self->num) == 1;
 
@@ -451,7 +452,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
 
     /* Init subwindows */
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
     statusbar->topline = subwin(self->window, 2, x, 0, 0);
     ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x, 0, 0);
     scrollok(ctx->history, 1);

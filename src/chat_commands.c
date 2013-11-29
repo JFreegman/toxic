@@ -11,6 +11,7 @@
 
 #include "toxic_windows.h"
 #include "misc_tools.h"
+#include "friendlist.h"
 
 extern ToxWindow *prompt;
 extern int num_groupchats;

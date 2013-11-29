@@ -165,7 +165,7 @@ static void select_friend(ToxWindow *self, Tox *m, wint_t key)
 static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
 {
     tox_del_friend(m, f_num);
-    memset(&friends[f_num], 0, sizeof(friend_t));
+    memset(&friends[f_num], 0, sizeof(ToxicFriend));
     
     int i;
 

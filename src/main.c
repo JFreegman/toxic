@@ -89,7 +89,7 @@ static void init_term(void)
     refresh();
 }
 
-static Tox *init_tox()
+static Tox *init_tox(void)
 {
     /* Init core */
     Tox *m = tox_new(TOX_ENABLE_IPV6_DEFAULT);
@@ -380,7 +380,7 @@ static void do_file_senders(Tox *m)
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
-            ChatContext *ctx = (ChatContext *) file_senders[i].toxwin->chatwin;
+            ChatContext *ctx = file_senders[i].toxwin->chatwin;
 
             if (ctx != NULL) {
                 wprintw(ctx->history, "File transfer for '%s' timed out.\n", pathname);
@@ -404,7 +404,7 @@ static void do_file_senders(Tox *m)
                                              tox_file_data_size(m, friendnum), fp);
 
             if (file_senders[i].piecelen == 0) {
-                ChatContext *ctx = (ChatContext *) file_senders[i].toxwin->chatwin;
+                ChatContext *ctx = file_senders[i].toxwin->chatwin;
 
                 if (ctx != NULL) {
                     wprintw(ctx->history, "File '%s' successfuly sent.\n", pathname);

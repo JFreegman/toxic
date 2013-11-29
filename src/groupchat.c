@@ -102,7 +102,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     if (self->num != groupnum)
         return;
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_group_peername(m, groupnum, peernum, nick);
@@ -180,7 +180,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     qsort(groupchats[groupnum].peer_names, groupchats[groupnum].num_peers, TOX_MAX_NAME_LENGTH, name_compare);
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
     print_time(ctx->history);
 
     switch (change) {
@@ -220,7 +220,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
 
     int x, y, y2, x2;
     getyx(self->window, y, x);
@@ -307,7 +307,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int x, y;
     getmaxyx(self->window, y, x);
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
     wclrtobot(ctx->sidebar);
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
     mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y-CHATBOX_HEIGHT);
@@ -341,7 +341,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     int x, y;
     getmaxyx(self->window, y, x);
 
-    ChatContext *ctx = (ChatContext *) self->chatwin;
+    ChatContext *ctx = self->chatwin;
     ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x-SIDEBAR_WIDTH-1, 0, 0);
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, 2, x, y-CHATBOX_HEIGHT, 0);

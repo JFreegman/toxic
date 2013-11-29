@@ -23,7 +23,7 @@ static int prompt_buf_pos = 0;
 /* Updates own nick in prompt statusbar */
 void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->stb;
+    StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
     statusbar->nick_len = len;
 }
@@ -31,7 +31,7 @@ void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
 /* Updates own statusmessage in prompt statusbar */
 void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg, uint16_t len)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->stb;
+    StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
     statusbar->statusmsg_len = len;
 }
@@ -39,14 +39,14 @@ void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg, uint16_t
 /* Updates own status in prompt statusbar */
 void prompt_update_status(ToxWindow *prompt, TOX_USERSTATUS status)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->stb;
+    StatusBar *statusbar = prompt->stb;
     statusbar->status = status;
 }
 
 /* Updates own connection status in prompt statusbar */
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 {
-    StatusBar *statusbar = (StatusBar *) prompt->stb;
+    StatusBar *statusbar = prompt->stb;
     statusbar->is_online = is_connected;
 }
 
@@ -125,7 +125,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             --y;
     }
 
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     werase(statusbar->topline);
     mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
@@ -239,7 +239,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y, x);
 
     /* Init statusbar info */
-    StatusBar *statusbar = (StatusBar *) self->stb;
+    StatusBar *statusbar = self->stb;
     statusbar->status = TOX_USERSTATUS_NONE;
     statusbar->is_online = false;
 
