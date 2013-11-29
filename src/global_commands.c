@@ -202,7 +202,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
     uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
-    tox_add_address(m, address);
+    tox_get_address(m, address);
 
     size_t i;
 
