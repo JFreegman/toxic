@@ -122,7 +122,7 @@ typedef struct {
 } FileSender;
 
 FileSender file_senders[MAX_FILES];
-uint8_t num_file_senders;
+uint8_t max_file_senders_index;
 
 typedef struct {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];

@@ -123,7 +123,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (num_file_senders >= MAX_FILES) {
+    if (max_file_senders_index >= (MAX_FILES-1)) {
         wprintw(window,"Please wait for some of your outgoing file transfers to complete.\n");
         return;
     }
@@ -176,14 +176,14 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].file = file_to_send;
             file_senders[i].filenum = (uint8_t) filenum;
             file_senders[i].friendnum = self->num;
-            file_senders[i].timestamp = (uint64_t)time(NULL);
+            file_senders[i].timestamp = (uint64_t) time(NULL);
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_filedata_size(m, self->num), file_to_send);
 
             wprintw(window, "Sending file: '%s'\n", path);
 
-            if (i == num_file_senders)
-                ++num_file_senders;
+            if (i == max_file_senders_index)
+                ++max_file_senders_index;
 
             return;
         }

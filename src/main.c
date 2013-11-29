@@ -356,19 +356,19 @@ static void close_file_sender(int i)
 
     int j;
 
-    for (j = num_file_senders; j > 0; --j) {
+    for (j = max_file_senders_index; j > 0; --j) {
         if (file_senders[j-1].active)
             break;
     }
 
-    num_file_senders = j;
+    max_file_senders_index = j;
 }
 
 static void do_file_senders(Tox *m)
 {
     int i;
 
-    for (i = 0; i < num_file_senders; ++i) {
+    for (i = 0; i < max_file_senders_index; ++i) {
         if (!file_senders[i].active)
             continue;
 
@@ -419,9 +419,23 @@ static void do_file_senders(Tox *m)
     }
 }
 
+/* This should only be called on exit */
+static void close_file_transfers(Tox *m)
+{
+    int i;
+
+    for (i = 0; i < max_file_senders_index; ++i) {
+        if (!file_senders[i].active)
+            continue;
+
+        fclose(file_senders[i].file);
+    }
+}
+
 void exit_toxic(Tox *m)
 {
     store_data(m, DATA_FILE);
+    close_file_transfers(m);
     free(DATA_FILE);
     free(SRVLIST_FILE);
     free(prompt->stb);
