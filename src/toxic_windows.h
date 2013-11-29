@@ -127,6 +127,7 @@ uint8_t num_file_senders;
 typedef struct {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
     bool pending[MAX_FILES];
+    bool active[MAX_FILES];
 } FileReceiver;
 
 /* End file transfer code */

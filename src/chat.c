@@ -288,10 +288,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     } else
     /* Add printable chars to buffer and print on input space */
 #if HAVE_WIDECHAR
-    if (iswprint(key)) {
+    if (iswprint(key))
 #else
-    if (isprint(key)) {
+    if (isprint(key))
 #endif
+    {
         if (ctx->pos < (MAX_STR_SIZE-1)) {
             mvwaddstr(self->window, y, x, wc_to_char(key));
             ctx->line[ctx->pos++] = key;
