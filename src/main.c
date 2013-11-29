@@ -425,10 +425,8 @@ static void close_file_transfers(Tox *m)
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
-        if (!file_senders[i].active)
-            continue;
-
-        fclose(file_senders[i].file);
+        if (file_senders[i].active)
+            fclose(file_senders[i].file);
     }
 }
 

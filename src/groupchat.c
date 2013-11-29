@@ -314,12 +314,21 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     mvwaddch(ctx->sidebar, y-CHATBOX_HEIGHT, 0, ACS_BTEE);  
 
     int num_peers = groupchats[self->num].num_peers;
+
+    wmove(ctx->sidebar, 0, 1);
+    wattron(ctx->sidebar, A_BOLD);
+    wprintw(ctx->sidebar, "Peers: %d\n", num_peers);
+    wattroff(ctx->sidebar, A_BOLD);
+
+    mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
+    mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH-1);
+
     int N = TOX_MAX_NAME_LENGTH;
     int maxlines = y - CHATBOX_HEIGHT;
     int i;
 
     for (i = 0; i < num_peers && i < maxlines; ++i) {
-        wmove(ctx->sidebar, i, 1);
+        wmove(ctx->sidebar, i+2, 1);
         groupchats[self->num].peer_names[i*N+SIDEBAR_WIDTH-2] = '\0';
         wprintw(ctx->sidebar, "%s\n", &groupchats[self->num].peer_names[i*N]);
     }
