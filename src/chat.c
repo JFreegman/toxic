@@ -189,7 +189,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
     case TOX_FILECONTROL_KILL:
         wprintw(ctx->history, "File transfer for '%s' failed.\n", filename);
 
-        if (receive_send == 1)
+        if (receive_send == 0)
             friends[num].file_receiver.pending[filenum] = false;
         else
             close_file_sender(filenum);
