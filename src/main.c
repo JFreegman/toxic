@@ -352,7 +352,7 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-static void close_file_sender(int i)
+void close_file_sender(int i)
 {
     fclose(file_senders[i].file);
     memset(&file_senders[i], 0, sizeof(FileSender));

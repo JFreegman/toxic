@@ -188,7 +188,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
         break;
     case TOX_FILECONTROL_KILL:
         wprintw(ctx->history, "File transfer for '%s' failed.\n", filename);
-        friends[num].file_receiver.pending[filenum] = false;
+
+        if (receive_send == 1)
+            friends[num].file_receiver.pending[filenum] = false;
+        else
+            close_file_sender(filenum);
+
         break;
     case TOX_FILECONTROL_FINISHED:
         wprintw(ctx->history, "File transfer for '%s' complete.\n", filename);
@@ -214,6 +219,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
         wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, "* Error writing to file.\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
+        tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
         return;
     }
 
@@ -221,6 +227,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
         wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, "* Error writing to file.\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
+        tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
     }
 
     fclose(file_to_save);

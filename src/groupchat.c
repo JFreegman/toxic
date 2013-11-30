@@ -18,7 +18,7 @@
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
-GroupChat groupchats[MAX_GROUPCHAT_NUM];
+static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 int num_groupchats = 0;
 static int max_groupchat_index = 0;
 
