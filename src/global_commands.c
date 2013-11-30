@@ -21,8 +21,6 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 extern uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 extern uint8_t num_frnd_requests;
 
-extern int num_groupchats;
-
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -181,8 +179,10 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (num_groupchats >= MAX_GROUPCHAT_NUM) {
-        wprintw(window, "Maximum number of group chats has been reached.\n");
+    if (num_active_windows() >= MAX_WINDOWS_NUM) {
+        wattron(window, COLOR_PAIR(RED));
+        wprintw(window, " * Warning: Too many windows are open.\n");
+        wattron(window, COLOR_PAIR(RED));
         return;
     }
 

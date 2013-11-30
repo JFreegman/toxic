@@ -13,8 +13,9 @@ extern char *DATA_FILE;
 
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
-static Tox *m;
-static ToxWindow *prompt;
+static int num_windows;
+
+extern ToxWindow *prompt;
 
 /* CALLBACKS START */
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
@@ -182,7 +183,7 @@ int add_window(Tox *m, ToxWindow w)
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; i++) {
-        if (windows[i].window)
+        if (windows[i].active)
             continue;
 
         w.window = newwin(LINES - 2, COLS, 0, 0);
@@ -246,9 +247,8 @@ void set_active_window(int index)
     active_window = windows + index;
 }
 
-ToxWindow *init_windows(Tox *mToAssign)
+ToxWindow *init_windows(Tox *m)
 {
-    m = mToAssign;
     int n_prompt = add_window(m, new_prompt());
 
     if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
@@ -295,7 +295,7 @@ static void draw_bar(void)
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].window) {
+        if (windows[i].active) {
             if (windows + i == active_window) {
 #ifdef URXVT_FIX
                 attron(A_BOLD | COLOR_PAIR(GREEN));
@@ -346,4 +346,17 @@ void draw_active_window(Tox *m)
         set_next_window((int) ch);
     else if (ch != ERR)
         a->onKey(a, m, ch);
+}
+
+int num_active_windows(void)
+{
+    int count = 0;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].active)
+            ++count;
+    }
+
+    return count;
 }

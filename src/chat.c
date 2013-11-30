@@ -246,11 +246,6 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
 
     wprintw(ctx->history, "%s has invited you to a group chat.\n", name);
 
-    if (num_groupchats >= MAX_GROUPCHAT_NUM) {
-        wprintw(ctx->history, "Maximum number of group chats has been reached. Discarding invite.\n");
-        return;
-    }
-
     memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
     wprintw(ctx->history, "Type \"/join\" to join the chat.\n");
     alert_window(self, WINDOW_ALERT_2, true);
@@ -476,6 +471,8 @@ ToxWindow new_chat(Tox *m, int friendnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
+
+    ret.active = true;
 
     ret.onKey = &chat_onKey;
     ret.onDraw = &chat_onDraw;

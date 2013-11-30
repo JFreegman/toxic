@@ -18,8 +18,7 @@
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
-static GroupChat groupchats[MAX_GROUPCHAT_NUM];
-int num_groupchats = 0;
+static GroupChat groupchats[MAX_WINDOWS_NUM];
 static int max_groupchat_index = 0;
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
@@ -41,8 +40,6 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 
             if (i == max_groupchat_index)
                 ++max_groupchat_index;
-
-            ++num_groupchats;
 
             return 0;
         }
@@ -66,7 +63,6 @@ static void close_groupchatwin(Tox *m, int groupnum)
             break;
     }
 
-    --num_groupchats;
     max_groupchat_index = i;
 }
 
@@ -353,6 +349,8 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
+
+    ret.active = true;
 
     ret.onKey = &groupchat_onKey;
     ret.onDraw = &groupchat_onDraw;

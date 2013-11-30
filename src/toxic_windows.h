@@ -19,7 +19,6 @@
 
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
-#define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - N_DEFAULT_WINS
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
@@ -75,6 +74,7 @@ struct ToxWindow {
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
 
     char name[TOX_MAX_NAME_LENGTH];
+    bool active;
     bool alert1;
     bool alert2;
     int num;
@@ -145,9 +145,10 @@ void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t 
 void on_file_control(Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
 
-ToxWindow *init_windows(Tox *mToAssign);
+ToxWindow *init_windows(Tox *m);
 void draw_active_window(Tox *m);
 int add_window(Tox *m, ToxWindow w);
 void del_window(ToxWindow *w);
 void set_active_window(int ch);
+int num_active_windows(void);
 #endif

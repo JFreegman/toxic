@@ -261,6 +261,8 @@ ToxWindow new_prompt(void)
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
 
+    ret.active = true;
+
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;
     ret.onInit = &prompt_onInit;

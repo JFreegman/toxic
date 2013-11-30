@@ -14,7 +14,6 @@
 #include "friendlist.h"
 
 extern ToxWindow *prompt;
-extern int num_groupchats;
 
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
@@ -72,8 +71,10 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (num_groupchats >= MAX_GROUPCHAT_NUM) {
-        wprintw(window, "Maximum number of group chats has been reached.\n");
+    if (num_active_windows() >= MAX_WINDOWS_NUM) {
+        wattron(window, COLOR_PAIR(RED));
+        wprintw(window, " * Warning: Too many windows are open.\n");
+        wattron(window, COLOR_PAIR(RED));
         return;
     }
 
