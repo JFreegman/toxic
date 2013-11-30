@@ -13,7 +13,6 @@ extern char *DATA_FILE;
 
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
-static int num_windows;
 
 extern ToxWindow *prompt;
 

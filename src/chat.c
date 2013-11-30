@@ -17,7 +17,6 @@
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
-extern int num_groupchats;
 
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
@@ -184,7 +183,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
         wprintw(ctx->history, "File transfer for '%s' accepted.\n", filename);
         break;
     case TOX_FILECONTROL_PAUSE:
-        wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
+        // wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
         break;
     case TOX_FILECONTROL_KILL:
         wprintw(ctx->history, "File transfer for '%s' failed.\n", filename);

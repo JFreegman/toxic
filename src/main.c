@@ -332,12 +332,10 @@ static void load_data(Tox *m, char *path)
         tox_load(m, buf, len);
 
         uint32_t i = 0;
-
         uint8_t name[TOX_MAX_NAME_LENGTH];
-        while (tox_get_name(m, i, name) != -1) {
-            on_friendadded(m, i);
-            i++;
-        }
+
+        while (tox_get_name(m, i, name) != -1)
+            on_friendadded(m, i++);
 
         free(buf);
         fclose(fd);
