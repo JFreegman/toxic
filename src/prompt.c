@@ -55,7 +55,7 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 static int add_friend_request(uint8_t *public_key)
 {
     if (num_frnd_requests >= MAX_FRIENDS_NUM)
-        return;
+        return -1;
 
     int i;
 
