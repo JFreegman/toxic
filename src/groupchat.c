@@ -239,20 +239,24 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         int end_y = (ctx->len / x2) + (y2 - CURS_Y_OFFSET);
         int end_x = ctx->len % x2;
         wmove(self->window, end_y, end_x);
-    } else if (key == KEY_LEFT && ctx->pos > 0) {
-        --ctx->pos;
+    } else if (key == KEY_LEFT) {
+        if (ctx->pos > 0) {
+            --ctx->pos;
 
-        if (x == 0)
-            wmove(self->window, y-1, x2-1);
-        else
-            wmove(self->window, y, x-1);
-    } else if (key == KEY_RIGHT && ctx->line[ctx->pos] != L'\0') {
-        ++ctx->pos;
+            if (x == 0)
+                wmove(self->window, y-1, x2-1);
+            else
+                wmove(self->window, y, x-1);
+        }
+    } else if (key == KEY_RIGHT) {
+        if (ctx->pos < ctx->len) {
+            ++ctx->pos;
 
-        if (x == x2-1)
-            wmove(self->window, y+1, 0);
-        else
-            wmove(self->window, y, x+1);
+            if (x == x2-1)
+                wmove(self->window, y+1, 0);
+            else
+                wmove(self->window, y, x+1);
+        }
     } else
 #if HAVE_WIDECHAR
     if (iswprint(key))
@@ -328,7 +332,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     ChatContext *ctx = self->chatwin;
 
     wclear(ctx->linewin);
-    mvwprintw(ctx->linewin, 1, 0, "%s\n", wcs_to_char(ctx->line));
+    mvwprintw(ctx->linewin, 1, 0, "%s", wcs_to_char(ctx->line));
 
     wclrtobot(ctx->sidebar);
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
