@@ -99,6 +99,7 @@ struct StatusBar {
 struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
+    size_t len;
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;

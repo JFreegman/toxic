@@ -36,3 +36,16 @@ int name_compare(const void *nick1, const void *nick2);
       - cannot start with a space
       - must not contain contiguous spaces */
 bool valid_nick(uint8_t *nick);
+
+/*
+ * Buffer helper tools.
+ */
+
+/* Adds char to buffer at pos */
+void add_char_to_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len);
+
+/* Deletes the character before pos via the backspace key */
+void del_char_from_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len);
+
+/* sets pos and len to 0 */
+void reset_buf(wchar_t *buf, size_t *pos, size_t *len);

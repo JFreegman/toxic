@@ -283,13 +283,27 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* BACKSPACE key: Remove one character from line */
     if (key == 0x107 || key == 0x8 || key == 0x7f) {
         if (ctx->pos > 0) {
-            ctx->line[--ctx->pos] = L'\0';
+            del_char_from_buf(key, ctx->line, &ctx->pos, &ctx->len);
 
             if (x == 0)
-                mvwdelch(self->window, y - 1, x2 - 1);
+                wmove(self->window, y-1, x2-1);
             else
-                mvwdelch(self->window, y, x - 1);
+                wmove(self->window, y, x-1);
         }
+    }  else if (key == KEY_LEFT && ctx->pos > 0) {
+        --ctx->pos;
+
+        if (x == 0)
+            wmove(self->window, y-1, x2-1);
+        else
+            wmove(self->window, y, x-1);
+    } else if (key == KEY_RIGHT && ctx->line[ctx->pos] != L'\0') {
+        ++ctx->pos;
+
+        if (x == x2-1)
+            wmove(self->window, y+1, 0);
+        else
+            wmove(self->window, y, x+1);
     } else
     /* Add printable chars to buffer and print on input space */
 #if HAVE_WIDECHAR
@@ -297,11 +311,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 #else
     if (isprint(key))
 #endif
-    {
-        if (ctx->pos < (MAX_STR_SIZE-1)) {
-            mvwaddstr(self->window, y, x, wc_to_char(key));
-            ctx->line[ctx->pos++] = key;
-            ctx->line[ctx->pos] = L'\0';
+    {   /* prevents buffer overflows and strange behaviour when cursor goes past the window */
+        if ( (ctx->len < MAX_STR_SIZE-1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1)-1)) ) {
+            add_char_to_buf(key, ctx->line, &ctx->pos, &ctx->len);
+
+            if (x == x2-1)
+                wmove(self->window, y+1, 0);
+            else
+                wmove(self->window, y, x+1);
         }
     }
     /* RETURN key: Execute command or print line */
@@ -354,8 +371,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             free(ctx);
             free(statusbar);
         } else {
-            ctx->line[0] = L'\0';
-            ctx->pos = 0;
+            reset_buf(ctx->line, &ctx->pos, &ctx->len);
         }
 
         free(line);
@@ -369,6 +385,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y, x);
 
     ChatContext *ctx = self->chatwin;
+
+    wclear(ctx->linewin);
+    mvwprintw(ctx->linewin, 1, 0, "%s\n", wcs_to_char(ctx->line));
 
     /* Draw status bar */
     StatusBar *statusbar = self->stb;
@@ -434,7 +453,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     wprintw(statusbar->topline, "\n");
-
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
     wrefresh(self->window);
 }
