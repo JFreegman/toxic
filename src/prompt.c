@@ -54,18 +54,19 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
    Returns request number on success, -1 if queue is full or other error. */
 static int add_friend_request(uint8_t *public_key)
 {
-    if (num_frnd_requests < MAX_FRIENDS_NUM) {
-        int i;
+    if (num_frnd_requests >= MAX_FRIENDS_NUM)
+        return;
 
-        for (i = 0; i <= num_frnd_requests; ++i) {
-            if (!strlen(pending_frnd_requests[i])) {
-                memcpy(pending_frnd_requests[i], public_key, TOX_CLIENT_ID_SIZE);
+    int i;
 
-                if (i == num_frnd_requests)
-                    ++num_frnd_requests;
+    for (i = 0; i <= num_frnd_requests; ++i) {
+        if (!strlen(pending_frnd_requests[i])) {
+            memcpy(pending_frnd_requests[i], public_key, TOX_CLIENT_ID_SIZE);
 
-                return i;
-            }
+            if (i == num_frnd_requests)
+                ++num_frnd_requests;
+
+            return i;
         }
     }
 

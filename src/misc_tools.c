@@ -161,7 +161,8 @@ bool valid_nick(uint8_t *nick)
 }
 
 /*
- * Buffer helper tools. Assumes buffers are no larger than MAX_STR_SIZE
+ * Buffer helper tools. 
+ * Assumes buffers are no larger than MAX_STR_SIZE and are always null terminated at len
  */
 
 /* Adds char to buffer at pos */
@@ -170,15 +171,7 @@ void add_char_to_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len)
     if (*pos < 0 || *len >= MAX_STR_SIZE)
         return;
 
-    /* if cursor is at end of line simply insert char at last position and increment */
-    if (buf[*pos] == L'\0') {
-        buf[(*pos)++] = ch;
-        buf[*pos] = L'\0';
-        ++(*len);
-        return;
-    }
-
-    /* move all chars in front of pos one space forward and insert char in pos */
+    /* move all chars including null in front of pos one space forward and insert char in pos */
     int i;
 
     for (i = *len; i >= *pos && i >= 0; --i)
@@ -193,13 +186,6 @@ void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len)
 {
     if (*pos <= 0)
         return;
-
-    /* if cursor is at end of line delete previous char */
-    if (buf[*pos] == L'\0') {
-        buf[--(*pos)] = L'\0';
-        --(*len);
-        return;
-    }
 
     int i;
 
