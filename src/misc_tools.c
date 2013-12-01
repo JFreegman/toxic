@@ -188,8 +188,8 @@ void add_char_to_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len)
     ++(*len);
 }
 
-/* Deletes the character before pos via the backspace key */
-void del_char_from_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len)
+/* Deletes the character before pos */
+void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len)
 {
     if (*pos <= 0)
         return;
@@ -211,7 +211,21 @@ void del_char_from_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len)
     --(*len);
 }
 
-/* sets pos and len to 0 */
+/* Deletes the character at pos */
+void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len)
+{
+    if (*pos < 0 || *pos >= *len)
+        return;
+
+    int i;
+
+    for (i = *pos; i < *len; ++i)
+        buf[i] = buf[i+1];
+
+    --(*len);
+}
+
+/* nulls buf and sets pos and len to 0 */
 void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
 {
     buf[0] = L'\0';

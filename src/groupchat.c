@@ -220,17 +220,26 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    /* BACKSPACE key: Remove one character from line */
-    if (key == 0x107 || key == 0x8 || key == 0x7f) {
+    if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
         if (ctx->pos > 0) {
-            del_char_from_buf(key, ctx->line, &ctx->pos, &ctx->len);
+            del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
 
             if (x == 0)
                 wmove(self->window, y-1, x2-1);
             else
                 wmove(self->window, y, x-1);
         }
-    }  else if (key == KEY_LEFT && ctx->pos > 0) {
+    } else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
+        del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+    } else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
+        ctx->pos = 0;
+        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+    } else if (key == KEY_END) {     /* END key: move cursor to end of line */
+        ctx->pos = ctx->len;
+        int end_y = (ctx->pos / x2) + y;
+        int end_x = ctx->len % x2;
+        wmove(self->window, end_y, end_x);
+    } else if (key == KEY_LEFT && ctx->pos > 0) {
         --ctx->pos;
 
         if (x == 0)
