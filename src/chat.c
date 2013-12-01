@@ -113,7 +113,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     ChatContext *ctx = self->chatwin;
 
     int idx = strlen(pathname) - 1;
-    while (pathname[idx] == '/' && idx >= 0) {
+    while (idx >= 0 && pathname[idx] == '/') {
       pathname[idx--] = 0;
     }
 
