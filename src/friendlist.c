@@ -276,6 +276,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wattroff(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     }
 
+
+    if ((y2 - FLIST_OFST) == 0)    /* don't allow division by zero */
+        return;
+
     /* Determine which portion of friendlist to draw based on current position */
     int page = num_selected / (y2 - FLIST_OFST);
     int start = (y2 - FLIST_OFST) * page;
