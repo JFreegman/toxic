@@ -92,10 +92,11 @@ static void init_term(void)
     refresh();
 }
 
-static Tox *init_tox(void)
+static Tox *init_tox(int ipv4)
 {
     /* Init core */
-    Tox *m = tox_new(TOX_ENABLE_IPV6_DEFAULT);
+    int ipv6 = !ipv4;
+    Tox *m = tox_new(ipv6);
 
     if (m == NULL)
         return NULL;
@@ -451,6 +452,7 @@ int main(int argc, char *argv[])
     f_loadfromfile = 1;
     int f_flag = 0;
     int i = 0;
+    int f_use_ipv4 = 0;
 
     for (i = 0; i < argc; ++i) {
         if (argv[i] == NULL)
@@ -463,6 +465,8 @@ int main(int argc, char *argv[])
                     f_flag = -1;
             } else if (argv[i][1] == 'n') {
                 f_loadfromfile = 0;
+            } else if (argv[i][1] == '4') {
+                f_use_ipv4 = 1;
             }
         }
     }
@@ -503,7 +507,7 @@ int main(int argc, char *argv[])
     free(user_config_dir);
 
     init_term();
-    Tox *m = init_tox();
+    Tox *m = init_tox(f_use_ipv4);
 
     if (m == NULL) {
         endwin();
