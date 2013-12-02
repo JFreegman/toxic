@@ -256,14 +256,16 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
 }
 
+#define FLIST_OFST 3    /* Accounts for the three lines of text at top */
+
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(0);
     werase(self->window);
-    int x, y;
-    getmaxyx(self->window, y, x);
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
 
-    bool fix_statuses = x != self->x;    /* true if window x axis has changed */
+    bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
     if (num_friends == 0) {
         wprintw(self->window, "Empty. Add some friends! :-)\n");
@@ -274,9 +276,14 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wattroff(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     }
 
+    /* Determine which portion of friendlist to draw based on current position */
+    int page = num_selected / (y2 - FLIST_OFST);
+    int start = (y2 - FLIST_OFST) * page;
+    int end = y2 - FLIST_OFST + start;
+
     int i;
 
-    for (i = 0; i < num_friends && i < y-3; ++i) {
+    for (i = start; i < num_friends && i < end; ++i) {
         int f = friendlist_index[i];
         bool f_selected = false;
 
@@ -329,7 +336,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 }
 
                 /* Truncate note if it doesn't fit on one line */
-                uint16_t maxlen = x - getcurx(self->window) - 4;
+                uint16_t maxlen = x2 - getcurx(self->window) - 4;
                 if (friends[f].statusmsg_len > maxlen) {
                     friends[f].statusmsg[maxlen-3] = '\0';
                     strcat(friends[f].statusmsg, "...");
@@ -352,7 +359,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         }
     }
 
-    self->x = x;
+    self->x = x2;
     wrefresh(self->window);
 }
 

@@ -166,7 +166,7 @@ bool valid_nick(uint8_t *nick)
  */
 
 /* Adds char to buffer at pos */
-void add_char_to_buf(wint_t ch, wchar_t *buf, size_t *pos, size_t *len)
+void add_char_to_buf(wchar_t *buf, size_t *pos, size_t *len, wint_t ch)
 {
     if (*pos < 0 || *len >= MAX_STR_SIZE)
         return;
@@ -197,7 +197,7 @@ void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len)
     --(*len);
 }
 
-/* Deletes the character at pos */
+/* Deletes the character after pos */
 void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len)
 {
     if (*pos < 0 || *pos >= *len)

@@ -275,7 +275,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 #endif
     {   /* prevents buffer overflows and strange behaviour when cursor goes past the window */
         if ( (ctx->len < MAX_STR_SIZE-1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1)-1)) ) {
-            add_char_to_buf(key, ctx->line, &ctx->pos, &ctx->len);
+            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
 
             if (x == x2-1)
                 wmove(self->window, y+1, 0);
