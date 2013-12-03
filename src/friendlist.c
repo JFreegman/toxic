@@ -256,7 +256,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
 }
 
-#define FLIST_OFST 3    /* Accounts for the three lines of text at top */
+#define FLIST_OFST 3    /* Accounts for the three lines at top */
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
 {
@@ -276,8 +276,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wattroff(self->window, COLOR_PAIR(CYAN) | A_BOLD);
     }
 
-
-    if ((y2 - FLIST_OFST) == 0)    /* don't allow division by zero */
+    if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
         return;
 
     /* Determine which portion of friendlist to draw based on current position */

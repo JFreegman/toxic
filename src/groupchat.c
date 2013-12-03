@@ -85,6 +85,7 @@ static void print_groupchat_help(ChatContext *ctx)
     
     wattron(ctx->history, A_BOLD);
     wprintw(ctx->history, "\n * Argument messages must be enclosed in quotation marks.\n");
+    wprintw(ctx->history, " * Scroll peer list with the Page Up/Page Down keys.\n");
     wattroff(ctx->history, A_BOLD);
     
     wattroff(ctx->history, COLOR_PAIR(CYAN));
@@ -267,7 +268,22 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             else
                 wmove(self->window, y, x+1);
         }
-    } else
+    }
+
+    /* Scroll peerlist up and down one position if list overflows window */
+    else if (key == KEY_NPAGE) {
+        int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
+
+        if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
+            ++groupchats[self->num].side_pos;
+    }
+
+    else if (key == KEY_PPAGE) {
+        if (groupchats[self->num].side_pos > 0)
+            --groupchats[self->num].side_pos;
+    } 
+
+    else
 #if HAVE_WIDECHAR
     if (iswprint(key))
 #else
@@ -336,18 +352,18 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 static void groupchat_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
-    int x, y;
-    getmaxyx(self->window, y, x);
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
 
     ChatContext *ctx = self->chatwin;
 
     wclear(ctx->linewin);
     mvwprintw(ctx->linewin, 1, 0, "%s", wcs_to_char(ctx->line));
 
-    wclrtobot(ctx->sidebar);
-    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
-    mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y-CHATBOX_HEIGHT);
-    mvwaddch(ctx->sidebar, y-CHATBOX_HEIGHT, 0, ACS_BTEE);  
+    wclear(ctx->sidebar);
+    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
+    mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2-CHATBOX_HEIGHT);
+    mvwaddch(ctx->sidebar, y2-CHATBOX_HEIGHT, 0, ACS_BTEE);  
 
     int num_peers = groupchats[self->num].num_peers;
 
@@ -360,13 +376,14 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH-1);
 
     int N = TOX_MAX_NAME_LENGTH;
-    int maxlines = y - CHATBOX_HEIGHT;
+    int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
     int i;
 
     for (i = 0; i < num_peers && i < maxlines; ++i) {
         wmove(ctx->sidebar, i+2, 1);
-        groupchats[self->num].peer_names[i*N+SIDEBAR_WIDTH-2] = '\0';
-        wprintw(ctx->sidebar, "%s\n", &groupchats[self->num].peer_names[i*N]);
+        int peer = i + groupchats[self->num].side_pos;
+        groupchats[self->num].peer_names[peer*N+SIDEBAR_WIDTH-2] = '\0';
+        wprintw(ctx->sidebar, "%s\n", &groupchats[self->num].peer_names[peer*N]);
     }
 
     wrefresh(self->window);
