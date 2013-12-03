@@ -340,7 +340,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    tox_set_userstatus(m, status_kind);
+    tox_set_user_status(m, status_kind);
     prompt_update_status(prompt, status_kind);
 
     if (msg != NULL) {
