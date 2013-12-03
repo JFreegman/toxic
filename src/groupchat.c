@@ -194,6 +194,10 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         wattroff(ctx->history, A_BOLD);
         wprintw(ctx->history, " has left the room\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
+
+        if (groupchats[self->num].side_pos > 0)
+            --groupchats[self->num].side_pos;
+
         break;
     case TOX_CHAT_CHANGE_PEER_NAME:
         wattron(ctx->history, COLOR_PAIR(MAGENTA));
