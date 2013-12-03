@@ -24,7 +24,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 {
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, "Chat commands:\n");
-    wattroff(window, A_BOLD);
+    wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 
     wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
     wprintw(window, "      /note <msg>                : Set a personal note\n");
@@ -40,11 +40,9 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     wprintw(window, "      /quit or /exit             : Exit Toxic\n");
     wprintw(window, "      /help                      : Print this message again\n");
     
-    wattron(window, A_BOLD);
-    wprintw(window, "\n * Argument messages must be enclosed in quotation marks.\n");
-    wattroff(window, A_BOLD);
-    
-    wattroff(window, COLOR_PAIR(CYAN));
+    wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
+    wprintw(window, " * Argument messages must be enclosed in quotation marks.\n\n");
+    wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 }
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

@@ -70,11 +70,11 @@ static void print_groupchat_help(ChatContext *ctx)
 {
     wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(ctx->history, "Group chat commands:\n");
-    wattroff(ctx->history, A_BOLD);
+    wattroff(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
 
     wprintw(ctx->history, "      /add <id> <msg>     : Add friend with optional message\n");
     wprintw(ctx->history, "      /status <type> <msg>: Set your status with optional note\n");
-    wprintw(ctx->history, "      /note  <msg>        : Set a personal note\n");
+    wprintw(ctx->history, "      /note <msg>         : Set a personal note\n");
     wprintw(ctx->history, "      /nick <nick>        : Set your nickname\n");
     wprintw(ctx->history, "      /groupchat          : Create a group chat\n");
     wprintw(ctx->history, "      /myid               : Print your ID\n");
@@ -83,12 +83,10 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /quit or /exit      : Exit Toxic\n");
     wprintw(ctx->history, "      /help               : Print this message again\n");
     
-    wattron(ctx->history, A_BOLD);
-    wprintw(ctx->history, "\n * Argument messages must be enclosed in quotation marks.\n");
-    wprintw(ctx->history, " * Scroll peer list with the Page Up/Page Down keys.\n");
-    wattroff(ctx->history, A_BOLD);
-    
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
+    wprintw(ctx->history, " * Argument messages must be enclosed in quotation marks.\n");
+    wprintw(ctx->history, " * Scroll peer list with the Page Up/Page Down keys.\n\n");
+    wattroff(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum,
@@ -104,9 +102,9 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
     print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(BLUE));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "%s: ", nick);
-    wattroff(ctx->history, COLOR_PAIR(BLUE));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
     
     if (msg[0] == '>') {
         wattron(ctx->history, COLOR_PAIR(GREEN));

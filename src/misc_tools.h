@@ -47,7 +47,7 @@ void add_char_to_buf(wchar_t *buf, size_t *pos, size_t *len, wint_t ch);
 /* Deletes the character before pos */
 void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len);
 
-/* Deletes the character after pos */
+/* Deletes the character at pos */
 void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len);
 
 /* nulls buf and sets pos and len to 0 */

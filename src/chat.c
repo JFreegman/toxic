@@ -33,9 +33,9 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(4));
+    wattron(ctx->history, COLOR_PAIR(CYAN));
     wprintw(ctx->history, "%s: ", nick);
-    wattroff(ctx->history, COLOR_PAIR(4));
+    wattroff(ctx->history, COLOR_PAIR(CYAN));
 
     if (msg[0] == '>') {
         wattron(ctx->history, COLOR_PAIR(GREEN));

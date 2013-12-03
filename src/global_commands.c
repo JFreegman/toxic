@@ -278,7 +278,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wclear(window);
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, "\n\nGlobal commands:\n");
-    wattroff(window, A_BOLD);
+    wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 
     wprintw(window, "      /add <id> <msg>            : Add friend with optional message\n");
     wprintw(window, "      /accept <n>                : Accept friend request\n");
@@ -292,12 +292,10 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wprintw(window, "      /help                      : Print this message again\n");
     wprintw(window, "      /clear                     : Clear the window\n");
 
-    wattron(window, A_BOLD);
+    wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");
-    wprintw(window, " * Use TAB and Shift-TAB to navigate through the tabs.\n");
-    wattroff(window, A_BOLD);
-
-    wattroff(window, COLOR_PAIR(CYAN));
+    wprintw(window, " * Use TAB and Shift-TAB to navigate through the tabs.\n\n");
+    wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 }
 
 void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

@@ -46,9 +46,9 @@ void print_time(WINDOW *window)
 {
     struct tm *timeinfo = get_time();
 
-    wattron(window, COLOR_PAIR(CYAN));
+    //wattron(window, COLOR_PAIR(CYAN));
     wprintw(window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-    wattroff(window, COLOR_PAIR(CYAN));
+    //wattroff(window, COLOR_PAIR(CYAN));
 }
 
 /* Returns 1 if the string is empty, 0 otherwise */
@@ -197,7 +197,7 @@ void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len)
     --(*len);
 }
 
-/* Deletes the character after pos */
+/* Deletes the character at pos */
 void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len)
 {
     if (*pos < 0 || *pos >= *len)
