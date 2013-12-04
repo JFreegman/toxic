@@ -243,7 +243,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     if (len > TOXIC_MAX_NAME_LENGTH) {
         nick[TOXIC_MAX_NAME_LENGTH] = L'\0';
-        len = TOXIC_MAX_NAME_LENGTH - 1;
+        len = TOXIC_MAX_NAME_LENGTH;
     }
 
     tox_set_name(m, nick, len+1);
