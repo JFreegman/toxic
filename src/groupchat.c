@@ -387,8 +387,6 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         groupchats[self->num].peer_names[peer*N+SIDEBAR_WIDTH-2] = '\0';
         wprintw(ctx->sidebar, "%s\n", &groupchats[self->num].peer_names[peer*N]);
     }
-
-    wrefresh(self->window);
 }
 
 static void groupchat_onInit(ToxWindow *self, Tox *m)

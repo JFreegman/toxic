@@ -17,9 +17,6 @@
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
 
-static char prompt_buf[MAX_STR_SIZE] = {'\0'};
-static int prompt_buf_pos = 0;
-
 /* Updates own nick in prompt statusbar */
 void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
 {
@@ -75,56 +72,58 @@ static int add_friend_request(uint8_t *public_key)
 
 static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
+    ChatContext *ctx = self->chatwin;
+
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
     /* BACKSPACE key: Remove one character from line */
     if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (prompt_buf_pos != 0) {
-            prompt_buf[--prompt_buf_pos] = '\0';
+        if (ctx->pos > 0) {
+            del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
 
             if (x == 0)
-                mvwdelch(self->window, y - 1, x2 - 1);
+                wmove(self->window, y - 1, x2 - 1);
             else
-                mvwdelch(self->window, y, x - 1);
+                wmove(self->window, y, x - 1);
+        }
+    } else
+#if HAVE_WIDECHAR
+    if (iswprint(key))
+#else
+    if (isprint(key))
+#endif
+    {
+        if (ctx->pos < (MAX_STR_SIZE-1)) {
+            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
+
+            if (x == x2-1) {
+                wprintw(self->window, "\n");
+                wmove(self->window, y, x+2);
+            }
+            else {
+                wmove(self->window, y, x);
+            }
         }
     }
-
-    /* Add printable characters to line */
-    else if (isprint(key)) {
-        if (prompt_buf_pos < (MAX_STR_SIZE-1)) {
-            mvwaddch(self->window, y, x, key);
-            prompt_buf[prompt_buf_pos++] = key;
-            prompt_buf[prompt_buf_pos] = '\0';
-        }
-    }
-
     /* RETURN key: execute command */
     else if (key == '\n') {
         wprintw(self->window, "\n");
-        execute(self->window, self, m, prompt_buf, GLOBAL_COMMAND_MODE);
-        prompt_buf_pos = 0;
-        prompt_buf[0] = '\0';
+        uint8_t *line = wcs_to_char(ctx->line);
+        execute(self->window, self, m, line, GLOBAL_COMMAND_MODE);
+        reset_buf(ctx->line, &ctx->pos, &ctx->len);
     }
-
 }
 
 static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
-    curs_set(1);
+    ChatContext *ctx = self->chatwin;
 
+    curs_set(1);
     int x, y, x2, y2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
-
-    /* Someone please fix this disgusting hack */
-    size_t i;
-
-    for (i = 0; i < prompt_buf_pos; ++i) {
-        if ((prompt_buf_pos + 3) >= x2)
-            --y;
-    }
 
     StatusBar *statusbar = self->stb;
     werase(statusbar->topline);
@@ -169,13 +168,16 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     wprintw(statusbar->topline, "\n");
 
-    wattron(self->window, COLOR_PAIR(GREEN));
-    mvwprintw(self->window, y, 0, "# ");
-    wattroff(self->window, COLOR_PAIR(GREEN));
-    mvwprintw(self->window, y, 2, "%s", prompt_buf);
-    wclrtoeol(self->window);
-    
-    wrefresh(self->window);
+    if (x > 1) {
+        wattron(self->window, COLOR_PAIR(GREEN));
+        mvwprintw(self->window, y, 0, "# ");
+        wattroff(self->window, COLOR_PAIR(GREEN));
+    }
+
+    wclrtobot(self->window);
+
+    int ofst = ctx->len <= 0 ? y : y - ((ctx->len + 2 ) / x2);
+    mvwprintw(self->window, ofst, 2, wcs_to_char(ctx->line));
 }
 
 static void prompt_onInit(ToxWindow *self, Tox *m)
@@ -272,11 +274,13 @@ ToxWindow new_prompt(void)
 
     strcpy(ret.name, "prompt");
 
+    ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
 
-    if (stb != NULL)
+    if (stb != NULL && chatwin != NULL) {
+        ret.chatwin = chatwin;
         ret.stb = stb;
-    else {
+    } else {
         endwin();
         fprintf(stderr, "calloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);

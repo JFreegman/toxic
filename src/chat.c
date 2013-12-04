@@ -476,7 +476,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     wprintw(statusbar->topline, "\n");
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
-    wrefresh(self->window);
 }
 
 static void chat_onInit(ToxWindow *self, Tox *m)
