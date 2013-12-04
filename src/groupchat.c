@@ -235,20 +235,25 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     } 
 
     else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-        del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
-    } 
+        if (ctx->pos != ctx->len)
+            del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+    }
 
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
-        ctx->pos = 0;
-        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-    } 
+        if (ctx->pos > 0) {
+            ctx->pos = 0;
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        }
+    }
 
     else if (key == KEY_END) {     /* END key: move cursor to end of line */
-        ctx->pos = ctx->len;
-        int end_y = (ctx->len / x2) + (y2 - CURS_Y_OFFSET);
-        int end_x = ctx->len % x2;
-        wmove(self->window, end_y, end_x);
-    } 
+        if (ctx->pos != ctx->len) {
+            ctx->pos = ctx->len;
+            int end_y = (ctx->len / x2) + (y2 - CURS_Y_OFFSET);
+            int end_x = ctx->len % x2;
+            wmove(self->window, end_y, end_x);
+        }
+    }
 
     else if (key == KEY_LEFT) {
         if (ctx->pos > 0) {
