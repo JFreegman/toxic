@@ -80,14 +80,34 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* BACKSPACE key: Remove one character from line */
     if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (ctx->pos > 0) {
+        if (ctx->pos > 0)
             del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+            wmove(self->window, y, x-1);    /* not necessary but fixes a display glitch */
+    }
 
-            if (x == 0)
-                wmove(self->window, y - 1, x2 - 1);
-            else
-                wmove(self->window, y, x - 1);
-        }
+    else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
+        if (ctx->pos != ctx->len)
+            del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+    }
+
+    else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
+        if (ctx->pos != 0)
+            ctx->pos = 0;
+    }
+
+    else if (key == KEY_END) {     /* END key: move cursor to end of line */
+        if (ctx->pos != ctx->len)
+            ctx->pos = ctx->len;
+    } 
+
+    else if (key == KEY_LEFT) {
+        if (ctx->pos > 0)
+            --ctx->pos;
+    } 
+
+    else if (key == KEY_RIGHT) {
+        if (ctx->pos < ctx->len)
+            ++ctx->pos;
     } else
 #if HAVE_WIDECHAR
     if (iswprint(key))
@@ -95,21 +115,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     if (isprint(key))
 #endif
     {
-        if (ctx->pos < (MAX_STR_SIZE-1)) {
+        if (ctx->len < (MAX_STR_SIZE-1))
             add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
-
-            if (x == x2-1) {
-                wprintw(self->window, "\n");
-                wmove(self->window, y, x+2);
-            }
-            else {
-                wmove(self->window, y, x);
-            }
-        }
     }
     /* RETURN key: execute command */
     else if (key == '\n') {
-        wprintw(self->window, "\n");
+        wprintw(self->window, "\n"); 
         uint8_t *line = wcs_to_char(ctx->line);
         execute(self->window, self, m, line, GLOBAL_COMMAND_MODE);
         reset_buf(ctx->line, &ctx->pos, &ctx->len);
@@ -124,6 +135,18 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     int x, y, x2, y2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
+
+    wclrtobot(self->window);
+
+    /* Mark point of origin for new line */
+    if (ctx->len == 0) {
+        ctx->orig_y = y; 
+    } else {
+        mvwprintw(self->window, ctx->orig_y, 0, wcs_to_char(ctx->line));
+        /* move point of line origin up when input scrolls screen down */
+        if (y == y2-1 && ctx->len % x2 == 0)
+            --ctx->orig_y;
+    }
 
     StatusBar *statusbar = self->stb;
     werase(statusbar->topline);
@@ -166,18 +189,10 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
     wattroff(statusbar->topline, A_BOLD);
 
-    wprintw(statusbar->topline, "\n");
-
-    if (x > 1) {
-        wattron(self->window, COLOR_PAIR(GREEN));
-        mvwprintw(self->window, y, 0, "# ");
-        wattroff(self->window, COLOR_PAIR(GREEN));
-    }
-
-    wclrtobot(self->window);
-
-    int ofst = ctx->len <= 0 ? y : y - ((ctx->len + 2 ) / x2);
-    mvwprintw(self->window, ofst, 2, wcs_to_char(ctx->line));
+    /* put cursor back in correct spot */
+    int y_m = ctx->pos <= 0 ? ctx->orig_y : ctx->orig_y + (ctx->pos / x2);
+    int x_m = ctx->pos > 0 ? ctx->pos % x2 : 0;
+    wmove(self->window, y_m, x_m);
 }
 
 static void prompt_onInit(ToxWindow *self, Tox *m)

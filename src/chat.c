@@ -292,7 +292,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
 
     else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-        del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+        if (ctx->pos != ctx->len)
+            del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
     } 
 
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
