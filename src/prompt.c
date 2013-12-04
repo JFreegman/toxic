@@ -136,16 +136,24 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
+    int px2 = ctx->len >= x2 ? x2 : x2 - X_OFST;    /* max x to account for prompt char */
+    int p_ofst = px2 != x2 ? 0 : X_OFST;    /* line pos offset to account for prompt char */
+
     wclrtobot(self->window);
 
     /* Mark point of origin for new line */
-    if (ctx->len == 0) {
-        ctx->orig_y = y; 
-    } else {
-        mvwprintw(self->window, ctx->orig_y, 0, wcs_to_char(ctx->line));
+    if (ctx->len > 0) {
+        mvwprintw(self->window, ctx->orig_y, X_OFST, wcs_to_char(ctx->line));
+
         /* move point of line origin up when input scrolls screen down */
-        if (y == y2-1 && ctx->len % x2 == 0)
+        if (y == y2-1 && (ctx->len + p_ofst) % px2 == 0)
             --ctx->orig_y;
+
+    } else {
+        ctx->orig_y = y; 
+        wattron(self->window, COLOR_PAIR(GREEN));
+        mvwprintw(self->window, y, 0, "# ");
+        wattroff(self->window, COLOR_PAIR(GREEN));
     }
 
     StatusBar *statusbar = self->stb;
@@ -190,8 +198,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     wattroff(statusbar->topline, A_BOLD);
 
     /* put cursor back in correct spot */
-    int y_m = ctx->pos <= 0 ? ctx->orig_y : ctx->orig_y + (ctx->pos / x2);
-    int x_m = ctx->pos > 0 ? ctx->pos % x2 : 0;
+    int y_m = ctx->pos <= 0 ? ctx->orig_y : ctx->orig_y + ((ctx->pos + p_ofst) / px2);
+    int x_m = ctx->pos > 0 ? (ctx->pos + X_OFST) % x2 : X_OFST;
     wmove(self->window, y_m, x_m);
 }
 

@@ -5,6 +5,8 @@
 #ifndef PROMPT_H_UZYGWFFL
 #define PROMPT_H_UZYGWFFL
 
+#define X_OFST 2    /* offset to account for prompt "# " */
+
 ToxWindow new_prompt(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m);
 void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len);
