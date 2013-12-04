@@ -21,7 +21,7 @@
 #define MAX_FRIENDS_NUM 100
 #define MAX_STR_SIZE 256
 #define KEY_SIZE_BYTES 32
-#define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
+#define TOXIC_MAX_NAME_LENGTH 32   /* Must be < TOX_MAX_NAME_LENGTH */
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */
 #define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 4
@@ -59,7 +59,7 @@ struct ToxWindow {
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
     void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
-    void(*onFriendAdded)(ToxWindow *, Tox *, int);
+    void(*onFriendAdded)(ToxWindow *, Tox *, int, bool);
     void(*onConnectionChange)(ToxWindow *, Tox *, int, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onNickChange)(ToxWindow *, int, uint8_t *, uint16_t);
@@ -138,7 +138,7 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
 void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata);
 void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_friendadded(Tox *m, int friendnumber);
+void on_friendadded(Tox *m, int friendnumber, bool sort);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
 void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);

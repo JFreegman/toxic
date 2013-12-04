@@ -48,7 +48,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         wprintw(window, "Failed to add friend.\n");
     else {
         wprintw(window, "Friend request accepted.\n");
-        on_friendadded(m, friendnum);
+        on_friendadded(m, friendnum, true);
     }
 
     memset(&pending_frnd_requests[req], 0, TOX_CLIENT_ID_SIZE);
@@ -142,7 +142,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         break;
     default:
         wprintw(window, "Friend request sent.\n");
-        on_friendadded(m, f_num);
+        on_friendadded(m, f_num, true);
         break;
     }
 }

@@ -93,13 +93,13 @@ void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *user
     }
 }
 
-void on_friendadded(Tox *m, int friendnumber)
+void on_friendadded(Tox *m, int friendnumber, bool sort)
 {
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendAdded != NULL)
-            windows[i].onFriendAdded(&windows[i], m, friendnumber);
+            windows[i].onFriendAdded(&windows[i], m, friendnumber, sort);
     }
 
     if (store_data(m, DATA_FILE))
@@ -321,18 +321,20 @@ static void draw_bar(void)
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = active_window;
+    a->alert1 = false;
+    a->alert2 = false;
+
     wint_t ch = 0;
+
+    draw_bar();
 
     touchwin(a->window);
 #ifndef WIN32
     wresize(a->window, LINES - 2, COLS);
 #endif
 
-    a->alert1 = false;
-    a->alert2 = false;
-
-    draw_bar();
     a->onDraw(a, m);
+    wrefresh(a->window);
 
     /* Handle input */
 #ifdef HAVE_WIDECHAR

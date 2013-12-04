@@ -336,7 +336,7 @@ static void load_data(Tox *m, char *path)
         uint8_t name[TOX_MAX_NAME_LENGTH];
 
         while (tox_get_name(m, i, name) != -1)
-            on_friendadded(m, i++);
+            on_friendadded(m, i++, false);
 
         free(buf);
         fclose(fd);
