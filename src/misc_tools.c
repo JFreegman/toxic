@@ -46,7 +46,9 @@ void print_time(WINDOW *window)
 {
     struct tm *timeinfo = get_time();
 
+    wattron(window, COLOR_PAIR(BLUE));
     wprintw(window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    wattroff(window,COLOR_PAIR(BLUE));
 }
 
 /* Returns 1 if the string is empty, 0 otherwise */

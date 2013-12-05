@@ -155,7 +155,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         mvwprintw(self->window, prt->orig_y, X_OFST, wcs_to_char(prt->line));
 
         /* y distance between pos and len */
-        int d = prt->pos < (prt->len - px2) ? (y2 - y  - 1) : 0;
+        int d = prt->pos < (prt->len - px2) ? (y2 - y - 1) : 0;
 
         /* 1 if end of line is touching bottom of window, 0 otherwise */
         int bot = prt->orig_y + ((prt->len + p_ofst) / px2) == y2;
@@ -170,7 +170,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         prt->orig_y = y;    /* Mark point of origin for new line */
 
         wattron(self->window, COLOR_PAIR(GREEN));
-        mvwprintw(self->window, y, 0, "# ");
+        mvwprintw(self->window, y, 0, "$ ");
         wattroff(self->window, COLOR_PAIR(GREEN));
     }
 
