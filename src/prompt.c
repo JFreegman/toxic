@@ -155,10 +155,13 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         mvwprintw(self->window, prt->orig_y, X_OFST, wcs_to_char(prt->line));
 
         /* y distance between pos and len */
-        int d = prt->pos < (prt->len - px2) ? (y2 - y - 1) : 0;
+        int d = prt->pos < (prt->len - px2) ? (y2 - y  - 1) : 0;
+
+        /* 1 if end of line is touching bottom of window, 0 otherwise */
+        int bot = prt->orig_y + ((prt->len + p_ofst) / px2) == y2;
 
         /* move point of line origin up when input scrolls screen down */
-        if ( (prt->scroll) && (y + d == y2-1) && ((prt->len + p_ofst) % px2 == 0) ) {
+        if (prt->scroll && (y + d == y2 - bot) && ((prt->len + p_ofst) % px2 == 0) ) {
             --prt->orig_y;
             prt->scroll = false;
         }
