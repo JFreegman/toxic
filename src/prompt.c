@@ -72,7 +72,7 @@ static int add_friend_request(uint8_t *public_key)
 
 static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    ChatContext *ctx = self->chatwin;
+    PromptBuf *prt = self->promptbuf;
 
     int x, y, y2, x2;
     getyx(self->window, y, x);
@@ -80,34 +80,37 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* BACKSPACE key: Remove one character from line */
     if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (ctx->pos > 0)
-            del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+        if (prt->pos > 0)
+            del_char_buf_bck(prt->line, &prt->pos, &prt->len);
             wmove(self->window, y, x-1);    /* not necessary but fixes a display glitch */
+            prt->scroll = false;
     }
 
     else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-        if (ctx->pos != ctx->len)
-            del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+        if (prt->pos != prt->len) {
+            del_char_buf_frnt(prt->line, &prt->pos, &prt->len);
+            prt->scroll = false;
+        }
     }
 
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
-        if (ctx->pos != 0)
-            ctx->pos = 0;
+        if (prt->pos != 0)
+            prt->pos = 0;
     }
 
     else if (key == KEY_END) {     /* END key: move cursor to end of line */
-        if (ctx->pos != ctx->len)
-            ctx->pos = ctx->len;
+        if (prt->pos != prt->len)
+            prt->pos = prt->len;
     } 
 
     else if (key == KEY_LEFT) {
-        if (ctx->pos > 0)
-            --ctx->pos;
+        if (prt->pos > 0)
+            --prt->pos;
     } 
 
     else if (key == KEY_RIGHT) {
-        if (ctx->pos < ctx->len)
-            ++ctx->pos;
+        if (prt->pos < prt->len)
+            ++prt->pos;
     } else
 #if HAVE_WIDECHAR
     if (iswprint(key))
@@ -115,42 +118,54 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     if (isprint(key))
 #endif
     {
-        if (ctx->len < (MAX_STR_SIZE-1))
-            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
+        if (prt->len < (MAX_STR_SIZE-1)) {
+            add_char_to_buf(prt->line, &prt->pos, &prt->len, key);
+            prt->scroll = true;
+        }
     }
     /* RETURN key: execute command */
     else if (key == '\n') {
         wprintw(self->window, "\n"); 
-        uint8_t *line = wcs_to_char(ctx->line);
+        uint8_t *line = wcs_to_char(prt->line);
         execute(self->window, self, m, line, GLOBAL_COMMAND_MODE);
-        reset_buf(ctx->line, &ctx->pos, &ctx->len);
+        reset_buf(prt->line, &prt->pos, &prt->len);
     }
 }
 
 static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
-    ChatContext *ctx = self->chatwin;
+    PromptBuf *prt = self->promptbuf;
 
     curs_set(1);
     int x, y, x2, y2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
-
-    int px2 = ctx->len >= x2 ? x2 : x2 - X_OFST;    /* max x to account for prompt char */
-    int p_ofst = px2 != x2 ? 0 : X_OFST;    /* line pos offset to account for prompt char */
-
     wclrtobot(self->window);
 
-    /* Mark point of origin for new line */
-    if (ctx->len > 0) {
-        mvwprintw(self->window, ctx->orig_y, X_OFST, wcs_to_char(ctx->line));
+    /* if len is >= screen width offset max x by X_OFST to account for prompt char */
+    int px2 = prt->len >= x2 ? x2 : x2 - X_OFST;
+
+    if (px2 <= 0)
+        return;
+
+    /* len offset to account for prompt char (0 if len is < width of screen) */
+    int p_ofst = px2 != x2 ? 0 : X_OFST;
+
+    if (prt->len > 0) {
+        mvwprintw(self->window, prt->orig_y, X_OFST, wcs_to_char(prt->line));
+
+        /* y distance between pos and len */
+        int d = prt->pos < (prt->len - px2) ? (y2 - y - 1) : 0;
 
         /* move point of line origin up when input scrolls screen down */
-        if (y == y2-1 && (ctx->len + p_ofst) % px2 == 0)
-            --ctx->orig_y;
+        if ( (prt->scroll) && (y + d == y2-1) && ((prt->len + p_ofst) % px2 == 0) ) {
+            --prt->orig_y;
+            prt->scroll = false;
+        }
 
     } else {
-        ctx->orig_y = y; 
+        prt->orig_y = y;    /* Mark point of origin for new line */
+
         wattron(self->window, COLOR_PAIR(GREEN));
         mvwprintw(self->window, y, 0, "# ");
         wattroff(self->window, COLOR_PAIR(GREEN));
@@ -198,8 +213,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     wattroff(statusbar->topline, A_BOLD);
 
     /* put cursor back in correct spot */
-    int y_m = ctx->pos <= 0 ? ctx->orig_y : ctx->orig_y + ((ctx->pos + p_ofst) / px2);
-    int x_m = ctx->pos > 0 ? (ctx->pos + X_OFST) % x2 : X_OFST;
+    int y_m = prt->pos <= 0 ? prt->orig_y : prt->orig_y + ((prt->pos + p_ofst) / px2);
+    int x_m = prt->pos > 0 ? (prt->pos + X_OFST) % x2 : X_OFST;
     wmove(self->window, y_m, x_m);
 }
 
@@ -297,11 +312,11 @@ ToxWindow new_prompt(void)
 
     strcpy(ret.name, "prompt");
 
-    ChatContext *chatwin = calloc(1, sizeof(ChatContext));
+    PromptBuf *promptbuf = calloc(1, sizeof(PromptBuf));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
 
-    if (stb != NULL && chatwin != NULL) {
-        ret.chatwin = chatwin;
+    if (stb != NULL && promptbuf != NULL) {
+        ret.promptbuf = promptbuf;
         ret.stb = stb;
     } else {
         endwin();

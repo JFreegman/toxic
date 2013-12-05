@@ -52,6 +52,7 @@ enum {
 
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
+typedef struct PromptBuf PromptBuf;
 typedef struct ChatContext ChatContext;
 
 struct ToxWindow {
@@ -81,11 +82,13 @@ struct ToxWindow {
     int x;
 
     ChatContext *chatwin;
+    PromptBuf *promptbuf;
     StatusBar *stb;
 
     WINDOW *window;
 };
 
+/* statusbar info holder */
 struct StatusBar {
     WINDOW *topline;    
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
@@ -96,14 +99,24 @@ struct StatusBar {
     bool is_online;
 };
 
+/* chat and groupchat window/buffer holder */
 struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     size_t len;
-    int orig_y;
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
+};
+
+/* prompt window/buffer holder */
+struct PromptBuf {
+    wchar_t line[MAX_STR_SIZE];
+    size_t pos;
+    size_t len;
+    int orig_y;
+    bool scroll;    /* used for prompt window hack to determine when to scroll down */
+    WINDOW *linewin;
 };
 
 /* Start file transfer code */
