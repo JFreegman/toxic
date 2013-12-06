@@ -117,8 +117,9 @@ struct PromptBuf {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     size_t len;
-    int orig_y;    /* y axis point of origin for line */
-    bool scroll;    /* used for prompt window hack to determine when to scroll down */
+    bool at_bottom;    /* true if line end is at bottom of window */
+    int orig_y;        /* y axis point of line origin */
+    bool scroll;       /* used for prompt window hack to determine when to scroll down */
     WINDOW *linewin;
 };
 

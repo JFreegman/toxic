@@ -16,6 +16,26 @@
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
+extern ToxWindow *prompt;
+
+/* prevents input string from eating system messages: call this prior to printing a prompt message
+   TODO: This is only a partial fix */
+void prep_prompt_win(void)
+{
+    PromptBuf *prt = prompt->promptbuf;
+
+    if (prt->len <= 0)
+        return;
+
+    wprintw(prompt->window, "\n");
+
+    if (!prt->at_bottom) {
+        wmove(prompt->window, prt->orig_y - 1, X_OFST);
+        ++prt->orig_y;
+    } else {
+        wmove(prompt->window, prt->orig_y - 2, X_OFST);
+    }
+}
 
 /* Updates own nick in prompt statusbar */
 void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
@@ -166,14 +186,15 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (prt->len > 0) {
         mvwprintw(self->window, prt->orig_y, X_OFST, wcs_to_char(prt->line));
-        /* y distance between pos and len */
-        int d = y2 - y - 1;
 
-        /* 1 if end of line is touching bottom of window, 0 otherwise */
-        int bot = prt->orig_y + ((prt->len + p_ofst) / px2) == y2;
+        int k = prt->orig_y + ((prt->len + p_ofst) / px2);
+
+        prt->at_bottom = k == y2 - 1;
+        bool botm = k == y2;
+        bool edge = (prt->len + p_ofst) % px2 == 0;
 
         /* move point of line origin up when input scrolls screen down */
-        if (prt->scroll && (y + d == y2 - bot) && ((prt->len + p_ofst) % px2 == 0) ) {
+        if (prt->scroll && edge && botm) {
             --prt->orig_y;
             prt->scroll = false;
         }
@@ -245,6 +266,8 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
     if (friendnum < 0)
         return;
 
+    prep_prompt_win();
+
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
 
     if (tox_get_name(m, friendnum, nick) == -1)
@@ -275,7 +298,8 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     // make sure message data is null-terminated
     data[length - 1] = 0;
 
-    wprintw(self->window, "\nFriend request with the message: %s\n", data);
+    prep_prompt_win();
+    wprintw(self->window, "\nFriend request with the message: '%s'\n", data);
 
     int n = add_friend_request(key);
 

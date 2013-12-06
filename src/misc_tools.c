@@ -211,7 +211,7 @@ void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len)
     --(*len);
 }
 
-/* Deletes the entire line before pos */
+/* Deletes the line from beginning to pos */
 void discard_buf(wchar_t *buf, size_t *pos, size_t *len)
 {
     if (*pos <= 0)
@@ -227,7 +227,7 @@ void discard_buf(wchar_t *buf, size_t *pos, size_t *len)
     *len = c - 1;
 }
 
-/* Deletes the entire line in front of pos */
+/* Deletes the line from pos to len */
 void kill_buf(wchar_t *buf, size_t *pos, size_t *len)
 {
     if (*len == *pos)

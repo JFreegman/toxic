@@ -50,5 +50,11 @@ void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len);
 /* Deletes the character at pos */
 void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len);
 
+/* Deletes the line from beginning to pos */
+void discard_buf(wchar_t *buf, size_t *pos, size_t *len);
+
+/* Deletes the line from pos to len */
+void kill_buf(wchar_t *buf, size_t *pos, size_t *len);
+
 /* nulls buf and sets pos and len to 0 */
 void reset_buf(wchar_t *buf, size_t *pos, size_t *len);
