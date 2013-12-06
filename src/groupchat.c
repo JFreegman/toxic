@@ -239,6 +239,18 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
     }
 
+    else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
+        if (ctx->pos > 0) {
+            discard_buf(ctx->line, &ctx->pos, &ctx->len);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        }
+    }
+
+    else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
+        if (ctx->pos != ctx->len)
+            kill_buf(ctx->line, &ctx->pos, &ctx->len);
+    }
+
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
         if (ctx->pos > 0) {
             ctx->pos = 0;

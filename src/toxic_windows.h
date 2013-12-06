@@ -29,6 +29,9 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+#define T_KEY_KILL 0xB      /* ASCII code for ctrl-k */
+#define T_KEY_DISCARD 0x15  /* ASCII code for ctrl-u */
+
 /* Curses foreground colours (background is black) */
 enum {
     WHITE,
@@ -114,7 +117,7 @@ struct PromptBuf {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     size_t len;
-    int orig_y;
+    int orig_y;    /* y axis point of origin for line */
     bool scroll;    /* used for prompt window hack to determine when to scroll down */
     WINDOW *linewin;
 };

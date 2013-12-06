@@ -93,6 +93,16 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
         }
     }
 
+    else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
+        if (prt->pos > 0)
+            discard_buf(prt->line, &prt->pos, &prt->len);
+    }
+
+    else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
+        if (prt->len != prt->pos)
+            kill_buf(prt->line, &prt->pos, &prt->len);
+    }
+
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
         if (prt->pos != 0)
             prt->pos = 0;
@@ -125,7 +135,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
     /* RETURN key: execute command */
     else if (key == '\n') {
-        wprintw(self->window, "\n"); 
+        wprintw(self->window, "\n");
         uint8_t *line = wcs_to_char(prt->line);
         execute(self->window, self, m, line, GLOBAL_COMMAND_MODE);
         reset_buf(prt->line, &prt->pos, &prt->len);
@@ -153,9 +163,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (prt->len > 0) {
         mvwprintw(self->window, prt->orig_y, X_OFST, wcs_to_char(prt->line));
-
         /* y distance between pos and len */
-        int d = prt->pos < (prt->len - px2) ? (y2 - y - 1) : 0;
+        int d = y2 - y - 1;
 
         /* 1 if end of line is touching bottom of window, 0 otherwise */
         int bot = prt->orig_y + ((prt->len + p_ofst) / px2) == y2;
@@ -166,13 +175,13 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             prt->scroll = false;
         }
 
-    } else {
-        prt->orig_y = y;    /* Mark point of origin for new line */
-
-        wattron(self->window, COLOR_PAIR(GREEN));
-        mvwprintw(self->window, y, 0, "$ ");
-        wattroff(self->window, COLOR_PAIR(GREEN));
+    } else {    /* Mark point of origin for new line */
+        prt->orig_y = y;    
     }
+
+    wattron(self->window, COLOR_PAIR(GREEN));
+    mvwprintw(self->window, prt->orig_y, 0, "$ ");
+    wattroff(self->window, COLOR_PAIR(GREEN));
 
     StatusBar *statusbar = self->stb;
     werase(statusbar->topline);
@@ -216,8 +225,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     wattroff(statusbar->topline, A_BOLD);
 
     /* put cursor back in correct spot */
-    int y_m = prt->pos <= 0 ? prt->orig_y : prt->orig_y + ((prt->pos + p_ofst) / px2);
-    int x_m = prt->pos > 0 ? (prt->pos + X_OFST) % x2 : X_OFST;
+    int y_m = prt->orig_y + ((prt->pos + p_ofst) / px2);
+    int x_m = (prt->pos + X_OFST) % x2;
     wmove(self->window, y_m, x_m);
 }
 
@@ -256,7 +265,6 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
         wprintw(self->window, "has gone offline\n");
         wattroff(self->window, COLOR_PAIR(RED));
     }
-
 }
 
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)

@@ -211,6 +211,32 @@ void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len)
     --(*len);
 }
 
+/* Deletes the entire line before pos */
+void discard_buf(wchar_t *buf, size_t *pos, size_t *len)
+{
+    if (*pos <= 0)
+        return;
+
+    int i;
+    int c = 0;
+
+    for (i = *pos; i <= *len; ++i)
+        buf[c++] = buf[i];
+
+    *pos = 0;
+    *len = c - 1;
+}
+
+/* Deletes the entire line in front of pos */
+void kill_buf(wchar_t *buf, size_t *pos, size_t *len)
+{
+    if (*len == *pos)
+        return;
+
+    buf[*pos] = L'\0';
+    *len = *pos;
+}
+
 /* nulls buf and sets pos and len to 0 */
 void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
 {
