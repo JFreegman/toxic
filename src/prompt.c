@@ -94,8 +94,11 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
 
     else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
-        if (prt->pos > 0)
+        if (prt->pos > 0) {
+            wmove(self->window, prt->orig_y, X_OFST);
+            wclrtobot(self->window);
             discard_buf(prt->line, &prt->pos, &prt->len);
+        }
     }
 
     else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
