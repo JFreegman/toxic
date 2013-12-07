@@ -44,7 +44,9 @@ enum {
     BLACK,
 };
 
+/* tab alert types: lower types take priority */
 enum {
+    WINDOW_ALERT_0,
     WINDOW_ALERT_1,
     WINDOW_ALERT_2,
 };
@@ -79,6 +81,7 @@ struct ToxWindow {
 
     char name[TOX_MAX_NAME_LENGTH];
     bool active;
+    bool alert0;
     bool alert1;
     bool alert2;
     int num;

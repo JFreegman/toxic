@@ -527,7 +527,6 @@ int main(int argc, char *argv[])
         load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
-        prep_prompt_win();
         attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "You passed '-f' without giving an argument.\n"
                 "defaulting to 'data' for a keyfile...\n");
@@ -535,7 +534,6 @@ int main(int argc, char *argv[])
     }
 
     if (config_err) {
-        prep_prompt_win();
         attron(COLOR_PAIR(RED) | A_BOLD);
         wprintw(prompt->window, "Unable to determine configuration directory.\n"
                 "defaulting to 'data' for a keyfile...\n");

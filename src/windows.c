@@ -264,19 +264,23 @@ ToxWindow *init_windows(Tox *m)
 
 static void draw_window_tab(ToxWindow toxwin)
 {
-    /* alert1 takes priority */
-    if (toxwin.alert1)
+    /* alert0 takes priority */
+    if (toxwin.alert0)
+        attron(COLOR_PAIR(GREEN));
+    else if (toxwin.alert1)
         attron(COLOR_PAIR(RED));
     else if (toxwin.alert2)
-        attron(COLOR_PAIR(BLUE));
+        attron(COLOR_PAIR(MAGENTA));
 
     clrtoeol();
     printw(" [%s]", toxwin.name);
 
-    if (toxwin.alert1)
+    if (toxwin.alert0)
+        attroff(COLOR_PAIR(GREEN));
+    else if (toxwin.alert1)
         attroff(COLOR_PAIR(RED));
     else if (toxwin.alert2)
-        attroff(COLOR_PAIR(BLUE));
+        attroff(COLOR_PAIR(MAGENTA));
 }
 
 static void draw_bar(void)
@@ -321,6 +325,7 @@ static void draw_bar(void)
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = active_window;
+    a->alert0 = false;
     a->alert1 = false;
     a->alert2 = false;
 

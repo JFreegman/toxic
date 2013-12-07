@@ -97,6 +97,24 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     ChatContext *ctx = self->chatwin;
 
+    /* check if message contains own name and alert appropriately */
+    int alert_type = WINDOW_ALERT_1;
+    bool beep = false;
+    int msg_clr = WHITE;
+
+    uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
+
+    bool nick_match = strcasestr(msg, selfnick);;
+
+    if (nick_match) {
+        alert_type = WINDOW_ALERT_0;
+        beep = true;
+        msg_clr = RED;
+    }
+
+    alert_window(self, alert_type, beep);
+
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_group_peername(m, groupnum, peernum, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
@@ -106,14 +124,15 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     wprintw(ctx->history, "%s: ", nick);
     wattroff(ctx->history, COLOR_PAIR(CYAN));
     
-    if (msg[0] == '>') {
+    if (msg[0] == '>' && !nick_match) {
         wattron(ctx->history, COLOR_PAIR(GREEN));
         wprintw(ctx->history, "%s\n", msg);
         wattroff(ctx->history, COLOR_PAIR(GREEN));
-    } else
+    } else {
+        wattron(ctx->history, COLOR_PAIR(msg_clr));
         wprintw(ctx->history, "%s\n", msg);
-
-    alert_window(self, WINDOW_ALERT_1, false);
+        wattroff(ctx->history, COLOR_PAIR(msg_clr));
+    }
 }
 
 /* Puts two copies of peerlist in chat instance */
