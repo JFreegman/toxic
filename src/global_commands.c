@@ -294,7 +294,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");
-    wprintw(window, " * Use TAB and Shift-TAB to navigate through the tabs.\n\n");
+    wprintw(window, " * Use ctrl-o and ctrl-p to navigate through the tabs.\n\n");
     wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 }
 

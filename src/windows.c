@@ -215,7 +215,7 @@ void del_window(ToxWindow *w)
 }
 
 /* Shows next window when tab or back-tab is pressed */
-void set_next_window(int ch)
+void set_next_window(wint_t ch)
 {
     ToxWindow *end = windows + MAX_WINDOWS_NUM - 1;
     ToxWindow *inf = active_window;
@@ -349,7 +349,7 @@ void draw_active_window(Tox *m)
 #endif
 
     if (ch == '\t' || ch == KEY_BTAB || ch == T_KEY_NEXT || ch == T_KEY_PREV)
-        set_next_window((int) ch);
+        set_next_window(ch);
     else if (ch != ERR)
         a->onKey(a, m, ch);
 }

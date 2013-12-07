@@ -32,8 +32,8 @@
 /* ASCII key codes */
 #define T_KEY_KILL       0xB      /* ctrl-k */
 #define T_KEY_DISCARD    0x15     /* ctrl-u */
-#define T_KEY_NEXT       0x1D     /* ctrl-] */
-#define T_KEY_PREV       0x1B     /* ctrl-[ */
+#define T_KEY_NEXT       0x10     /* ctrl-] */
+#define T_KEY_PREV       0x0f     /* ctrl-[ */
 
 /* Curses foreground colours (background is black) */
 enum {
