@@ -98,6 +98,11 @@ static Tox *init_tox(int ipv4)
     int ipv6 = !ipv4;
     Tox *m = tox_new(ipv6);
 
+    if (TOX_ENABLE_IPV6_DEFAULT && m == NULL) {
+        fprintf(stderr, "IPv6 didn't initialize, trying IPv4 only\n");
+        m = tox_new(0);
+    }
+
     if (m == NULL)
         return NULL;
 
