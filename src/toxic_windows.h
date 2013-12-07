@@ -29,8 +29,11 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
-#define T_KEY_KILL 0xB      /* ASCII code for ctrl-k */
-#define T_KEY_DISCARD 0x15  /* ASCII code for ctrl-u */
+/* ASCII key codes */
+#define T_KEY_KILL       0xB      /* ctrl-k */
+#define T_KEY_DISCARD    0x15     /* ctrl-u */
+#define T_KEY_NEXT       0x1D     /* ctrl-] */
+#define T_KEY_PREV       0x1B     /* ctrl-[ */
 
 /* Curses foreground colours (background is black) */
 enum {
@@ -80,12 +83,13 @@ struct ToxWindow {
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
 
     char name[TOX_MAX_NAME_LENGTH];
+    int num;
     bool active;
+    int x;
+
     bool alert0;
     bool alert1;
     bool alert2;
-    int num;
-    int x;
 
     ChatContext *chatwin;
     PromptBuf *promptbuf;
