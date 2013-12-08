@@ -158,25 +158,10 @@ void alert_window(ToxWindow *self, int type, bool is_beep)
         beep();
 }
 
-/* case-insensitive string compare function for use with qsort - same return logic as strcmp */
-int name_compare(const void *nick1, const void *nick2)
+/* case-insensitive string compare function for use with qsort */
+int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2)
 {
-    char s[TOX_MAX_NAME_LENGTH];
-    char t[TOX_MAX_NAME_LENGTH];
-    strcpy(s, (const char *) nick1);
-    strcpy(t, (const char *) nick2);
-
-    int i;
-
-    for (i = 0; s[i] && t[i]; ++i) {
-        s[i] = tolower(s[i]);
-        t[i] = tolower(t[i]);
-
-        if (s[i] != t[i])
-            break;
-    }
-
-    return s[i] - t[i];
+    return strcasecmp((const char *) nick1, (const char *) nick2);
 }
 
 /* Returns true if nick is valid. A valid toxic nick:

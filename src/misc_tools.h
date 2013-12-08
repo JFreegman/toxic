@@ -35,8 +35,8 @@ bool timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
 /* Colours the window tab according to type. Beeps if is_beep is true */
 void alert_window(ToxWindow *self, int type, bool is_beep);
 
-/* case-insensitive string compare function for use with qsort - same return logic as strcmp */
-int name_compare(const void *nick1, const void *nick2);
+/* case-insensitive string compare function for use with qsort */
+int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
 
 /* Returns true if nick is valid. A valid toxic nick:
       - cannot be empty

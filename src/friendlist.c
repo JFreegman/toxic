@@ -28,7 +28,7 @@ static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
 static int index_name_cmp(const void *n1, const void *n2)
 {
-    int res = name_compare(friends[*(int *) n1].name, friends[*(int *) n2].name);
+    int res = qsort_strcasecmp_hlpr(friends[*(int *) n1].name, friends[*(int *) n2].name);
 
     int k = 100;
     /* Use weight to make qsort always put online friends before offline */
