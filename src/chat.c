@@ -21,6 +21,8 @@ extern int store_data(Tox *m, char *path);
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
+extern cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE];
+
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
     if (self->num != num)
@@ -344,7 +346,25 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             else
                 wmove(self->window, y, x+1);
         }
-    } else
+    } 
+
+    else if (key == '\t') {    /* TAB key: command */
+        if (ctx->len > 1 && ctx->line[0] == '/') {
+            int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, cmd_list, TOT_NUM_COMMANDS,
+                                     MAX_CMDNAME_SIZE);
+
+            if (diff != -1) {
+                if (x + diff > x2 - 1) {
+                    int ofst = (x + diff - 1) - (x2 - 1);
+                    wmove(self->window, y+1, ofst);
+                } else {
+                    wmove(self->window, y, x+diff);
+                }
+            }
+        }
+    }
+
+    else
 #if HAVE_WIDECHAR
     if (iswprint(key))
 #else

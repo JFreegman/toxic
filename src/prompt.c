@@ -17,6 +17,7 @@
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
 extern ToxWindow *prompt;
+extern cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE];
 
 /* prevents input string from eating system messages: call this prior to printing a prompt message
    TODO: This is only a partial fix */
@@ -144,7 +145,14 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_RIGHT) {
         if (prt->pos < prt->len)
             ++prt->pos;
-    } else
+
+    } else if (key == '\t') {    /* TAB key: completes command */
+        if (prt->len > 1 && prt->line[0] == '/')
+            complete_line(prt->line, &prt->pos, &prt->len, cmd_list, TOT_NUM_COMMANDS,
+                          MAX_CMDNAME_SIZE);
+    }
+
+    else
 #if HAVE_WIDECHAR
     if (iswprint(key))
 #else

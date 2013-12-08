@@ -20,6 +20,7 @@
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
 #define MAX_STR_SIZE 256
+#define MAX_CMDNAME_SIZE 64
 #define KEY_SIZE_BYTES 32
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be < TOX_MAX_NAME_LENGTH */
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */

@@ -21,6 +21,8 @@ extern int store_data(Tox *m, char *path);
 static GroupChat groupchats[MAX_WINDOWS_NUM];
 static int max_groupchat_index = 0;
 
+extern cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE];
+
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
     int i;
@@ -306,8 +308,13 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == '\t') {    /* TAB key: completes peer name */
         if (ctx->len > 0) {
-            int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
+            int diff;
+            if (ctx->line[0] != '/')
+                diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
                                      groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
+            else
+                diff = complete_line(ctx->line, &ctx->pos, &ctx->len, cmd_list, TOT_NUM_COMMANDS,
+                                     MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {

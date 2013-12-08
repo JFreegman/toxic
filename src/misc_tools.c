@@ -276,10 +276,12 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
    in the list, and size is the size of each item in the list. 
 
    Returns the difference between the old len and new len of buf on success, -1 if error */
-int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size)
+int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int n_items, int size)
 {
     if (*pos <= 0 || *len <= 0 || *len >= MAX_STR_SIZE)
         return -1;
+
+    const uint8_t *L = (uint8_t *) list;
 
     uint8_t ubuf[MAX_STR_SIZE];
     /* work with multibyte string copy of buf for simplicity */
@@ -309,7 +311,7 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
 
     /* look for a match in list */
     for (i = 0; i < n_items; ++i) {
-        match = &list[i*size];
+        match = &L[i*size];
         if (is_match = strncasecmp(match, sub, s_len) == 0)
             break;
     }

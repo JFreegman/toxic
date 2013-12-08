@@ -15,8 +15,6 @@ struct cmd_func {
     void (*func)(WINDOW *w, ToxWindow *, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
 };
 
-#define GLOBAL_NUM_COMMANDS 13
-
 static struct cmd_func global_commands[] = {
     { "/accept",    cmd_accept      },
     { "/add",       cmd_add         },
@@ -33,8 +31,6 @@ static struct cmd_func global_commands[] = {
     { "/status",    cmd_status      },
 };
 
-#define CHAT_NUM_COMMANDS 5
-
 static struct cmd_func chat_commands[] = {
     { "/help",      cmd_chat_help   },
     { "/invite",    cmd_groupinvite },
@@ -42,6 +38,28 @@ static struct cmd_func chat_commands[] = {
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
 };
+
+/* Array of all command names; used for tab completion. */
+const uint8_t cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE] = {
+    { "/accept"     },
+    { "/add"        },
+    { "/clear"      },
+    { "/connect"    },
+    { "/exit"       },
+    { "/groupchat"  },
+    { "/help"       },
+    { "/invite"     },
+    { "/join"       },
+    { "/myid"       },
+    { "/nick"       },
+    { "/note"       },
+    { "/q"          },
+    { "/quit"       },
+    { "/savefile"   },
+    { "/sendfile"   },
+    { "/status"     },
+};
+
 
 /* Parses input command and puts args into arg array. 
    Returns number of arguments on success, -1 on failure. */

@@ -74,4 +74,4 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len);
    in the list, and size is the size of each item in the list. 
 
    Returns the difference between the old len and new len of buf on success, -1 if error */
-int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size);
+int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int n_items, int size);
