@@ -293,11 +293,11 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
    Returns the difference between the old len and new len of buf */
 int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size)
 {
-    if (*pos <= 0 || *len < 2 || *len > MAX_STR_SIZE)
+    if (*pos <= 0 || *len <= 0 || *len > MAX_STR_SIZE)
         return -1;
 
     uint8_t ubuf[MAX_STR_SIZE];
-
+    /* work with multibyte string copy of buf for simplicity */
     if (wcs_to_char_buf(ubuf, buf, MAX_STR_SIZE) == -1)
         return -1;
 
@@ -310,22 +310,24 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
     if (!sub++)
         sub = tmp;
 
+    int s_len = strlen(sub);
     const uint8_t *match;
+    bool is_match = false;
     int i;
 
     /* look for a match in list */
     for (i = 0; i < n_items; ++i) {
-        if (match = strstr(&list[i*size], sub))
+        match = &list[i*size];
+        if (is_match = strncasecmp(match, sub, s_len) == 0)
             break;
     }
 
-    if (!match)
+    if (!is_match)
         return -1;
 
     /* put match in correct spot in buf */
-    int s_len = strlen(sub);
     int m_len = strlen(match);
-    int strt = *pos - s_len;
+    int strt = (int) *pos - s_len;
 
     uint8_t tmpend[MAX_STR_SIZE];
     strcpy(tmpend, &ubuf[*pos]);
@@ -339,8 +341,8 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
         return -1;
 
     int diff = m_len - s_len;
-    *len += diff;
-    *pos += diff;
+    *len += (size_t) diff;
+    *pos += (size_t) diff;
 
     wmemcpy(buf, newbuf, MAX_STR_SIZE);
 
