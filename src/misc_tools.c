@@ -278,7 +278,7 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
    Returns the difference between the old len and new len of buf on success, -1 if error */
 int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size)
 {
-    if (*pos <= 0 || *len <= 0 || *len > MAX_STR_SIZE)
+    if (*pos <= 0 || *len <= 0 || *len >= MAX_STR_SIZE)
         return -1;
 
     uint8_t ubuf[MAX_STR_SIZE];
@@ -291,9 +291,13 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[*pos] = '\0';
     uint8_t *sub = strrchr(tmp, ' ');
+    int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */   
 
-    if (!sub++)
+    if (!sub++) {
         sub = tmp;
+        if (sub[0] != '/')    /* make sure it's not a command */
+            n_endchrs = 2;
+    }
 
     int s_len = strlen(sub);
     const uint8_t *match;
@@ -310,14 +314,20 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
     if (!is_match)
         return -1;
 
-    /* put match in correct spot in buf */
+    /* put match in correct spot in buf and append endchars (space or ": ") */
+    const uint8_t *endchrs = n_endchrs == 1 ? " " : ": ";
     int m_len = strlen(match);
     int strt = (int) *pos - s_len;
+    int diff = m_len - s_len + n_endchrs;
+
+    if (*len + diff > MAX_STR_SIZE)
+        return -1;
 
     uint8_t tmpend[MAX_STR_SIZE];
     strcpy(tmpend, &ubuf[*pos]);
     strcpy(&ubuf[strt], match);
-    strcpy(&ubuf[strt+m_len], tmpend);
+    strcpy(&ubuf[strt+m_len], endchrs);
+    strcpy(&ubuf[strt+m_len+n_endchrs], tmpend);
 
     /* convert to widechar and copy back to original buf */
     wchar_t newbuf[MAX_STR_SIZE];
@@ -327,7 +337,6 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
 
     wmemcpy(buf, newbuf, MAX_STR_SIZE);
 
-    int diff = m_len - s_len;
     *len += (size_t) diff;
     *pos += (size_t) diff;
 
