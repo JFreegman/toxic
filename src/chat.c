@@ -362,7 +362,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
-        uint8_t *line = wcs_to_char(ctx->line);
+        uint8_t line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+            memset(&line, 0, sizeof(line));
+
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
@@ -412,8 +416,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         } else {
             reset_buf(ctx->line, &ctx->pos, &ctx->len);
         }
-
-        free(line);
     }
 }
 
@@ -426,7 +428,13 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     ChatContext *ctx = self->chatwin;
 
     wclear(ctx->linewin);
-    mvwprintw(ctx->linewin, 1, 0, "%s", wcs_to_char(ctx->line));
+
+    uint8_t line[MAX_STR_SIZE];
+
+    if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+        memset(&line, 0, sizeof(line));
+
+    mvwprintw(ctx->linewin, 1, 0, "%s", line);
 
     /* Draw status bar */
     StatusBar *statusbar = self->stb;

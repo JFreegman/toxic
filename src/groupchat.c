@@ -313,7 +313,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
                                      groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
 
-            if (diff != -1 && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1)-1))) {
+            if (diff != -1) {
                 if (x + diff > x2 - 1) {
                     int ofst = (x + diff - 1) - (x2 - 1);
                     wmove(self->window, y+1, ofst);
@@ -356,7 +356,11 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
-        uint8_t *line = wcs_to_char(ctx->line);
+        uint8_t line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+            memset(&line, 0, sizeof(line));
+
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
@@ -398,8 +402,6 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         else {
             reset_buf(ctx->line, &ctx->pos, &ctx->len);
         }
-
-        free(line);
     }
 }
 
@@ -412,7 +414,13 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     ChatContext *ctx = self->chatwin;
 
     wclear(ctx->linewin);
-    mvwprintw(ctx->linewin, 1, 0, "%s", wcs_to_char(ctx->line));
+
+    uint8_t line[MAX_STR_SIZE];
+
+    if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+        memset(&line, 0, sizeof(line));
+
+    mvwprintw(ctx->linewin, 1, 0, "%s", line);
 
     wclear(ctx->sidebar);
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);

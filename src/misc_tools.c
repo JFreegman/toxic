@@ -72,8 +72,8 @@ int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
 }
 
 /* converts wide character string into a multibyte string.
-   Same thing as wcs_to_char() but caller must provide its own buffer */
-int wcs_to_char_buf(uint8_t *buf, const wchar_t *string, size_t n)
+   Same thing as wcs_to_mbs() but caller must provide its own buffer */
+int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
 {
     size_t len = wcstombs(NULL, string, 0) + 1;
 
@@ -86,8 +86,8 @@ int wcs_to_char_buf(uint8_t *buf, const wchar_t *string, size_t n)
     return len;
 }
 
-/* convert wide characters to multibyte string */
-uint8_t *wcs_to_char(wchar_t *string)
+/* convert wide characters to multibyte string: string returned must be free'd */
+uint8_t *wcs_to_mbs(wchar_t *string)
 {
     uint8_t *ret = NULL;
     size_t len = wcstombs(NULL, string, 0);
@@ -270,12 +270,12 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
 
 /* looks for the first instance in list that begins with the last entered word in buf according to pos, 
    then fills buf with the complete word. e.g. "Hello jo" would complete the buffer 
-   with "Hello john". It shouldn't matter where pos is within buf.
+   with "Hello john".
 
    list is a pointer to the list of strings being compared, n_items is the number of items
    in the list, and size is the size of each item in the list. 
 
-   Returns the difference between the old len and new len of buf */
+   Returns the difference between the old len and new len of buf on success, -1 if error */
 int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size)
 {
     if (*pos <= 0 || *len <= 0 || *len > MAX_STR_SIZE)
@@ -283,7 +283,7 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
 
     uint8_t ubuf[MAX_STR_SIZE];
     /* work with multibyte string copy of buf for simplicity */
-    if (wcs_to_char_buf(ubuf, buf, MAX_STR_SIZE) == -1)
+    if (wcs_to_mbs_buf(ubuf, buf, MAX_STR_SIZE) == -1)
         return -1;
 
     /* isolate substring from space behind pos to pos */
@@ -325,11 +325,11 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
     if (char_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
         return -1;
 
+    wmemcpy(buf, newbuf, MAX_STR_SIZE);
+
     int diff = m_len - s_len;
     *len += (size_t) diff;
     *pos += (size_t) diff;
-
-    wmemcpy(buf, newbuf, MAX_STR_SIZE);
 
     return diff;
 }

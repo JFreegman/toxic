@@ -159,7 +159,11 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     /* RETURN key: execute command */
     else if (key == '\n') {
         wprintw(self->window, "\n");
-        uint8_t *line = wcs_to_char(prt->line);
+        uint8_t line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, prt->line, MAX_STR_SIZE) == -1)
+            memset(&line, 0, sizeof(line));
+
         execute(self->window, self, m, line, GLOBAL_COMMAND_MODE);
         reset_buf(prt->line, &prt->pos, &prt->len);
     }
@@ -185,7 +189,12 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     int p_ofst = px2 != x2 ? 0 : X_OFST;
 
     if (prt->len > 0) {
-        mvwprintw(self->window, prt->orig_y, X_OFST, wcs_to_char(prt->line));
+        uint8_t line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, prt->line, MAX_STR_SIZE) == -1)
+            memset(&line, 0, sizeof(line));
+
+        mvwprintw(self->window, prt->orig_y, X_OFST, line);
 
         int k = prt->orig_y + ((prt->len + p_ofst) / px2);
 
