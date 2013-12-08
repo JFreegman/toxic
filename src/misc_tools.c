@@ -299,6 +299,9 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, i
             n_endchrs = 2;
     }
 
+    if (string_is_empty(sub))
+        return -1;
+
     int s_len = strlen(sub);
     const uint8_t *match;
     bool is_match = false;
