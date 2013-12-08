@@ -221,7 +221,7 @@ void set_next_window(int ch)
     ToxWindow *inf = active_window;
 
     while (true) {
-        if (ch == '\t' || ch == T_KEY_NEXT) {
+        if (ch == T_KEY_NEXT) {
             if (++active_window > end)
                 active_window = windows;
         } else if (--active_window < windows)
@@ -348,7 +348,7 @@ void draw_active_window(Tox *m)
     ch = getch();
 #endif
 
-    if (ch == '\t' || ch == KEY_BTAB || ch == T_KEY_NEXT || ch == T_KEY_PREV)
+    if (ch == T_KEY_NEXT || ch == T_KEY_PREV)
         set_next_window((int) ch);
     else if (ch != ERR)
         a->onKey(a, m, ch);

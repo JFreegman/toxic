@@ -308,6 +308,22 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         }
     }
 
+    else if (key == '\t') {    /* TAB key: completes peer name */
+        if (ctx->len >= 2) {
+            int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
+                                     groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
+
+            if (diff != -1 && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1)-1))) {
+                if (x + diff > x2 - 1) {
+                    int ofst = (x + diff - 1) - (x2 - 1);
+                    wmove(self->window, y+1, ofst);
+                } else {
+                    wmove(self->window, y, x+diff);
+                }
+            }
+        }
+    }
+
     /* Scroll peerlist up and down one position if list overflows window */
     else if (key == KEY_NPAGE) {
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;

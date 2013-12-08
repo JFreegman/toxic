@@ -57,7 +57,36 @@ int string_is_empty(char *string)
     return string[0] == '\0';
 }
 
-/* convert wide characters to null terminated string */
+/* convert a multibyte string to a wide character string (must provide buffer) */
+int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
+{
+    size_t len = mbstowcs(NULL, string, 0) + 1;
+
+    if (n < len)
+        return -1;
+
+    if ((len = mbstowcs(buf, string, n)) == (size_t) -1)
+        return -1;
+
+    return len;
+}
+
+/* converts wide character string into a multibyte string.
+   Same thing as wcs_to_char() but caller must provide its own buffer */
+int wcs_to_char_buf(uint8_t *buf, const wchar_t *string, size_t n)
+{
+    size_t len = wcstombs(NULL, string, 0) + 1;
+
+    if (n < len)
+        return -1;
+
+    if ((len = wcstombs(buf, string, n)) == (size_t) -1)
+        return -1;
+
+    return len;
+}
+
+/* convert wide characters to multibyte string */
 uint8_t *wcs_to_char(wchar_t *string)
 {
     uint8_t *ret = NULL;
@@ -66,8 +95,10 @@ uint8_t *wcs_to_char(wchar_t *string)
     if (len != (size_t) -1) {
         ret = malloc(++len);
 
-        if (ret != NULL)
-            wcstombs(ret, string, len);
+        if (ret != NULL) {
+            if (wcstombs(ret, string, len) == (size_t) -1)
+                return NULL;
+        }
     } else {
         ret = malloc(2);
 
@@ -86,7 +117,7 @@ uint8_t *wcs_to_char(wchar_t *string)
     return ret;
 }
 
-/* convert a wide char to null terminated string */
+/* convert a wide char to multibyte string */
 char *wc_to_char(wchar_t ch)
 {
     static char ret[MB_LEN_MAX + 1];
@@ -250,4 +281,68 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
     buf[0] = L'\0';
     *pos = 0;
     *len = 0;
+}
+
+/* looks for the first instance in list that begins with the last entered word in buf according to pos, 
+   then fills buf with the complete word. e.g. "Hello jo" would complete the buffer 
+   with "Hello john". It shouldn't matter where pos is within buf.
+
+   list is a pointer to the list of strings being compared, n_items is the number of items
+   in the list, and size is the size of each item in the list. 
+
+   Returns the difference between the old len and new len of buf */
+int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size)
+{
+    if (*pos <= 0 || *len < 2 || *len > MAX_STR_SIZE)
+        return -1;
+
+    uint8_t ubuf[MAX_STR_SIZE];
+
+    if (wcs_to_char_buf(ubuf, buf, MAX_STR_SIZE) == -1)
+        return -1;
+
+    /* isolate substring from space behind pos to pos */
+    uint8_t tmp[MAX_STR_SIZE];
+    snprintf(tmp, sizeof(tmp), "%s", ubuf);
+    tmp[*pos] = '\0';
+    uint8_t *sub = strrchr(tmp, ' ');
+
+    if (!sub++)
+        sub = tmp;
+
+    const uint8_t *match;
+    int i;
+
+    /* look for a match in list */
+    for (i = 0; i < n_items; ++i) {
+        if (match = strstr(&list[i*size], sub))
+            break;
+    }
+
+    if (!match)
+        return -1;
+
+    /* put match in correct spot in buf */
+    int s_len = strlen(sub);
+    int m_len = strlen(match);
+    int strt = *pos - s_len;
+
+    uint8_t tmpend[MAX_STR_SIZE];
+    strcpy(tmpend, &ubuf[*pos]);
+    strcpy(&ubuf[strt], match);
+    strcpy(&ubuf[strt+m_len], tmpend);
+
+    /* convert to widechar and copy back to original buf */
+    wchar_t newbuf[MAX_STR_SIZE];
+
+    if (char_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
+        return -1;
+
+    int diff = m_len - s_len;
+    *len += diff;
+    *pos += diff;
+
+    wmemcpy(buf, newbuf, MAX_STR_SIZE);
+
+    return diff;
 }

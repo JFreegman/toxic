@@ -16,10 +16,17 @@ void print_time(WINDOW *window);
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(char *string);
 
-/* convert wide characters to null terminated string */
+/* convert a multibyte string to a wide character string (must provide buffer) */
+int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
+
+/* converts wide character string into a multibyte string.
+   Same thing as wcs_to_char() but caller must provide its own buffer */
+int wcs_to_char_buf(uint8_t *buf, const wchar_t *string, size_t n);
+
+/* convert wide characters to multibyte string string */
 uint8_t *wcs_to_char(wchar_t *string);
 
-/* convert a wide char to null terminated string */
+/* convert a wide char to multibyte string string */
 char *wc_to_char(wchar_t ch);
 
 /* Returns true if connection has timed out, false otherwise */
@@ -58,3 +65,12 @@ void kill_buf(wchar_t *buf, size_t *pos, size_t *len);
 
 /* nulls buf and sets pos and len to 0 */
 void reset_buf(wchar_t *buf, size_t *pos, size_t *len);
+
+/* looks for the first instance in list that begins with the last entered word in buf, 
+   then completes the word. e.g. "Hello jo" would complete the buffer with "Hello john".
+
+   list is a pointer to the list of strings being compared, n_items is the number of items
+   in the list, and size is the size of each item in the list.
+
+   Returns the difference between the old len and new len of buf */
+int complete_line(wchar_t *buf, size_t *pos, size_t *len, const uint8_t *list, int n_items, int size);
