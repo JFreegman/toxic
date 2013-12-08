@@ -100,7 +100,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     /* check if message contains own name and alert appropriately */
     int alert_type = WINDOW_ALERT_1;
     bool beep = false;
-    int msg_clr = WHITE;
+    int nick_clr = CYAN;
 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
@@ -110,7 +110,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     if (nick_match) {
         alert_type = WINDOW_ALERT_0;
         beep = true;
-        msg_clr = RED;
+        nick_clr = RED;
     }
 
     alert_window(self, alert_type, beep);
@@ -120,18 +120,16 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
     print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(CYAN));
+    wattron(ctx->history, COLOR_PAIR(nick_clr));
     wprintw(ctx->history, "%s: ", nick);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    wattroff(ctx->history, COLOR_PAIR(nick_clr));
     
-    if (msg[0] == '>' && !nick_match) {
+    if (msg[0] == '>') {
         wattron(ctx->history, COLOR_PAIR(GREEN));
         wprintw(ctx->history, "%s\n", msg);
         wattroff(ctx->history, COLOR_PAIR(GREEN));
     } else {
-        wattron(ctx->history, COLOR_PAIR(msg_clr));
         wprintw(ctx->history, "%s\n", msg);
-        wattroff(ctx->history, COLOR_PAIR(msg_clr));
     }
 }
 
@@ -205,12 +203,10 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         wattroff(ctx->history, COLOR_PAIR(GREEN));
         break;
     case TOX_CHAT_CHANGE_PEER_DEL:
-        wattron(ctx->history, COLOR_PAIR(RED));
         wattron(ctx->history, A_BOLD);
         wprintw(ctx->history, "* %s", oldpeername);
         wattroff(ctx->history, A_BOLD);
         wprintw(ctx->history, " has left the room\n");
-        wattroff(ctx->history, COLOR_PAIR(RED));
 
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
