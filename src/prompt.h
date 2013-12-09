@@ -7,6 +7,8 @@
 
 #define X_OFST 2    /* offset to account for prompt char */
 
+#define AC_NUM_GLOB_COMMANDS 15
+
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m);

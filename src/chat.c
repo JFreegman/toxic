@@ -21,7 +21,29 @@ extern int store_data(Tox *m, char *path);
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
-extern cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE];
+#define AC_NUM_CHAT_COMMANDS 18
+
+/* Array of chat command names used for tab completion. */
+static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
+    { "/accept"     },
+    { "/add"        },
+    { "/clear"      },
+    { "/close"      },
+    { "/connect"    },
+    { "/exit"       },
+    { "/groupchat"  },
+    { "/help"       },
+    { "/invite"     },
+    { "/join"       },
+    { "/myid"       },
+    { "/nick"       },
+    { "/note"       },
+    { "/q"          },
+    { "/quit"       },
+    { "/savefile"   },
+    { "/sendfile"   },
+    { "/status"     },
+};
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
@@ -350,7 +372,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == '\t') {    /* TAB key: command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
-            int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, cmd_list, TOT_NUM_COMMANDS,
+            int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, chat_cmd_list, AC_NUM_CHAT_COMMANDS,
                                      MAX_CMDNAME_SIZE);
 
             if (diff != -1) {

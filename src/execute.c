@@ -39,28 +39,6 @@ static struct cmd_func chat_commands[] = {
     { "/sendfile",  cmd_sendfile    },
 };
 
-/* Array of all command names; used for tab completion. */
-const uint8_t cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE] = {
-    { "/accept"     },
-    { "/add"        },
-    { "/clear"      },
-    { "/connect"    },
-    { "/exit"       },
-    { "/groupchat"  },
-    { "/help"       },
-    { "/invite"     },
-    { "/join"       },
-    { "/myid"       },
-    { "/nick"       },
-    { "/note"       },
-    { "/q"          },
-    { "/quit"       },
-    { "/savefile"   },
-    { "/sendfile"   },
-    { "/status"     },
-};
-
-
 /* Parses input command and puts args into arg array. 
    Returns number of arguments on success, -1 on failure. */
 static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])

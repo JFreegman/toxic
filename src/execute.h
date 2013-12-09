@@ -5,7 +5,6 @@
 #define MAX_NUM_ARGS 4     /* Includes command */
 #define GLOBAL_NUM_COMMANDS 13
 #define CHAT_NUM_COMMANDS 5
-#define TOT_NUM_COMMANDS 17    /* -1 for duplicate /help command */
 
 enum {
     GLOBAL_COMMAND_MODE,

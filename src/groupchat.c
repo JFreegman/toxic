@@ -14,6 +14,7 @@
 #include "execute.h"
 #include "misc_tools.h"
 #include "groupchat.h"
+#include "prompt.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -21,7 +22,8 @@ extern int store_data(Tox *m, char *path);
 static GroupChat groupchats[MAX_WINDOWS_NUM];
 static int max_groupchat_index = 0;
 
-extern cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE];
+/* temporary until group chats have unique commands */
+extern glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
@@ -107,7 +109,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
 
-    bool nick_match = strcasestr(msg, selfnick);;
+    bool nick_match = strcasestr(msg, selfnick);
 
     if (nick_match) {
         alert_type = WINDOW_ALERT_0;
@@ -313,7 +315,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
                                      groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
             else
-                diff = complete_line(ctx->line, &ctx->pos, &ctx->len, cmd_list, TOT_NUM_COMMANDS,
+                diff = complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
                                      MAX_CMDNAME_SIZE);
 
             if (diff != -1) {

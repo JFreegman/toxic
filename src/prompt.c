@@ -17,7 +17,25 @@
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
 extern ToxWindow *prompt;
-extern cmd_list[TOT_NUM_COMMANDS][MAX_CMDNAME_SIZE];
+
+/* Array of global command names used for tab completion. */
+const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
+    { "/accept"     },
+    { "/add"        },
+    { "/clear"      },
+    { "/close"      },    /* rm /close when groupchats gets its own list */
+    { "/connect"    },
+    { "/exit"       },
+    { "/groupchat"  },
+    { "/help"       },
+    { "/join"       },
+    { "/myid"       },
+    { "/nick"       },
+    { "/note"       },
+    { "/q"          },
+    { "/quit"       },
+    { "/status"     },
+};
 
 /* prevents input string from eating system messages: call this prior to printing a prompt message
    TODO: This is only a partial fix */
@@ -148,7 +166,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     } else if (key == '\t') {    /* TAB key: completes command */
         if (prt->len > 1 && prt->line[0] == '/')
-            complete_line(prt->line, &prt->pos, &prt->len, cmd_list, TOT_NUM_COMMANDS,
+            complete_line(prt->line, &prt->pos, &prt->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
                           MAX_CMDNAME_SIZE);
     }
 
