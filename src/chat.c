@@ -21,7 +21,7 @@ extern int store_data(Tox *m, char *path);
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
-#define AC_NUM_CHAT_COMMANDS 18
+#define AC_NUM_CHAT_COMMANDS 17
 
 /* Array of chat command names used for tab completion. */
 static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -38,7 +38,6 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
-    { "/q"          },
     { "/quit"       },
     { "/savefile"   },
     { "/sendfile"   },

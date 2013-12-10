@@ -10,6 +10,8 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 
+extern ToxWindow *prompt;
+
 // XXX: FIX
 unsigned char *hex_string_to_bin(char hex_string[])
 {
@@ -153,8 +155,10 @@ void alert_window(ToxWindow *self, int type, bool is_beep)
         self->alert2 = true;
         break;
     }
-    
-    if (is_beep)
+
+    StatusBar *stb = prompt->stb;
+
+    if (is_beep && stb->status != TOX_USERSTATUS_BUSY)
         beep();
 }
 
