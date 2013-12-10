@@ -23,7 +23,9 @@ toxic_SOURCES = $(top_srcdir)/src/main.c \
                 $(top_srcdir)/src/execute.c \
                 $(top_srcdir)/src/execute.h \
                 $(top_srcdir)/src/misc_tools.c \
-                $(top_srcdir)/src/misc_tools.h
+                $(top_srcdir)/src/misc_tools.h \
+                $(top_srcdir)/src/toxic_strings.c \
+                $(top_srcdir)/src/toxic_strings.h
 
 toxic_CFLAGS =                 -I$(top_srcdir) \
 				$(NCURSES_CFLAGS) \

@@ -13,6 +13,7 @@
 #include "prompt.h"
 #include "execute.h"
 #include "misc_tools.h"
+#include "toxic_strings.h"
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;

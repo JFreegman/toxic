@@ -14,6 +14,7 @@
 #include "execute.h"
 #include "misc_tools.h"
 #include "friendlist.h"
+#include "toxic_strings.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
