@@ -281,9 +281,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_END) {     /* END key: move cursor to end of line */
         if (ctx->pos != ctx->len) {
             ctx->pos = ctx->len;
-            int end_y = (ctx->len / x2) + (y2 - CURS_Y_OFFSET);
-            int end_x = ctx->len % x2;
-            wmove(self->window, end_y, end_x);
+            mv_curs_end(self->window, ctx->len, y2, x2);
         }
     }
 
@@ -311,7 +309,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == KEY_UP) {    /* fetches previous item in history */
         if (ctx->hst_pos >= 0) {
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, &ctx->hst_tot,
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
                             &ctx->hst_pos, LN_HIST_MV_UP);
             mv_curs_end(self->window, ctx->len, y2, x2);
         }
@@ -319,7 +317,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == KEY_DOWN) {    /* fetches next item in history */
         if (ctx->hst_pos < ctx->hst_tot) {
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, &ctx->hst_tot,
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
                             &ctx->hst_pos, LN_HIST_MV_DWN);
             mv_curs_end(self->window, ctx->len, y2, x2);
         }

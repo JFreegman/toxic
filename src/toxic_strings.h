@@ -35,12 +35,11 @@ enum {
     LN_HIST_MV_DWN,
 };
 
-/* adds a line to the ln_history buffer at hst_pos and sets hst_pos to last history item. 
-   Assumes entries are of size MAX_STR_SIZE */
-void add_line_to_hist(const wchar_t *buf, size_t len, void *hst, int *hst_tot, int *hst_pos);
+/* adds a line to the ln_history buffer at hst_pos and sets hst_pos to last history item. */
+void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZE], int *hst_tot, 
+                      int *hst_pos);
 
 /* copies history item at hst_pos to buf. Sets pos and len to the len of the history item.
-   hst_pos is decremented or incremented depending on key_dir.
-   Assumes history entries are of size MAX_STR_SIZE */
-void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, const void *ln_history, int *hst_tot,
-                    int *hst_pos, int key_dir);
+   hst_pos is decremented or incremented depending on key_dir. */
+void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_STR_SIZE],
+                     int hst_tot, int *hst_pos, int key_dir);

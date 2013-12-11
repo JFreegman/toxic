@@ -89,45 +89,41 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
     *len = 0;
 }
 
-/* adds a line to the ln_history buffer at hst_pos and sets hst_pos to end of history. 
-   Assumes entries are of size MAX_STR_SIZE */
-void add_line_to_hist(const wchar_t *buf, size_t len, void *ln_history, int *hst_tot, int *hst_pos)
+/* adds a line to the ln_history buffer at hst_pos and sets hst_pos to end of history. */
+void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZE], int *hst_tot, 
+                      int *hst_pos)
 {
     if (len > MAX_STR_SIZE)
         return;
-
-    wchar_t *hst = (wchar_t *) ln_history;
 
     /* If history is full make room for newest entry and don't increment hst_tot */
     if (*hst_tot == MAX_LINE_HIST) {
         int i;
 
         for (i = 0; i < MAX_LINE_HIST - 1; ++i)
-            wmemcpy(&hst[MAX_STR_SIZE * i], &hst[MAX_STR_SIZE * (i + 1)], MAX_STR_SIZE);
+            wmemcpy(hst[i], hst[i+1], MAX_STR_SIZE);
     } else {
         ++(*hst_tot);
     }
 
     *hst_pos = *hst_tot;
-    wmemcpy(&hst[(*hst_tot - 1) * MAX_STR_SIZE], buf, len + 1);
+    wmemcpy(hst[*hst_tot-1], buf, len + 1);
 }
 
 /* copies history item at hst_pos to buf. Sets pos and len to the len of the history item.
-   hst_pos is decremented or incremented depending on key_dir.
-   Assumes history entries are of size MAX_STR_SIZE */
-void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, const void *ln_history, int *hst_tot,
-                     int *hst_pos, int key_dir)
+   hst_pos is decremented or incremented depending on key_dir. */
+void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_STR_SIZE],
+                     int hst_tot, int *hst_pos, int key_dir)
 {
     if (key_dir == LN_HIST_MV_UP) {
         if (--(*hst_pos) < 0)
             ++(*hst_pos);
     } else {
-        if (++(*hst_pos) == *hst_tot)
+        if (++(*hst_pos) == hst_tot)
             --(*hst_pos);
     }
 
-    wchar_t *hst = (wchar_t *) ln_history;
-    const wchar_t *hst_line = &hst[*hst_pos * MAX_STR_SIZE];
+    const wchar_t *hst_line = hst[*hst_pos];
     size_t h_len = wcslen(hst_line);
 
     wmemcpy(buf, hst_line, h_len + 1);
