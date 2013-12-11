@@ -15,6 +15,7 @@
 #include "misc_tools.h"
 #include "groupchat.h"
 #include "prompt.h"
+#include "toxic_strings.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -308,6 +309,22 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         }
     }
 
+    else if (key == KEY_UP) {    /* fetches previous item in history */
+        if (ctx->hst_pos >= 0) {
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, &ctx->hst_tot,
+                            &ctx->hst_pos, LN_HIST_MV_UP);
+            mv_curs_end(self->window, ctx->len, y2, x2);
+        }
+    }
+
+    else if (key == KEY_DOWN) {    /* fetches next item in history */
+        if (ctx->hst_pos < ctx->hst_tot) {
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, &ctx->hst_tot,
+                            &ctx->hst_pos, LN_HIST_MV_DWN);
+            mv_curs_end(self->window, ctx->len, y2, x2);
+        }
+    }
+
     else if (key == '\t') {    /* TAB key: completes peer name */
         if (ctx->len > 0) {
             int diff;
@@ -370,6 +387,9 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
         bool close_win = false;
+
+        if (!string_is_empty(line))
+            add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
 
         if (line[0] == '/') {
             if (close_win = strcmp(line, "/close") == 0) {

@@ -163,8 +163,25 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_RIGHT) {
         if (prt->pos < prt->len)
             ++prt->pos;
+    } 
 
-    } else if (key == '\t') {    /* TAB key: completes command */
+    else if (key == KEY_UP) {     /* fetches previous item in history */
+        if (prt->hst_pos >= 0) {
+            wmove(self->window, prt->orig_y, X_OFST);
+            fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, &prt->hst_tot,
+                            &prt->hst_pos, LN_HIST_MV_UP);
+        }
+    }
+
+    else if (key == KEY_DOWN) {    /* fetches next item in history */
+        if (prt->hst_pos < prt->hst_tot) {
+            wmove(self->window, prt->orig_y, X_OFST);
+            fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, &prt->hst_tot,
+                            &prt->hst_pos, LN_HIST_MV_DWN);
+        }
+    }
+
+    else if (key == '\t') {    /* TAB key: completes command */
         if (prt->len > 1 && prt->line[0] == '/')
             complete_line(prt->line, &prt->pos, &prt->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
                           MAX_CMDNAME_SIZE);
@@ -189,6 +206,9 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         if (wcs_to_mbs_buf(line, prt->line, MAX_STR_SIZE) == -1)
             memset(&line, 0, sizeof(line));
+
+        if (!string_is_empty(line))
+            add_line_to_hist(prt->line, prt->len, prt->ln_history, &prt->hst_tot, &prt->hst_pos);
 
         execute(self->window, self, m, line, GLOBAL_COMMAND_MODE);
         reset_buf(prt->line, &prt->pos, &prt->len);

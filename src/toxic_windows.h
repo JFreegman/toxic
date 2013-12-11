@@ -110,11 +110,18 @@ struct StatusBar {
     bool is_online;
 };
 
+#define MAX_LINE_HIST 64
+
 /* chat and groupchat window/buffer holder */
 struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     size_t len;
+
+    wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];
+    int hst_pos;
+    int hst_tot;
+
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
@@ -128,6 +135,11 @@ struct PromptBuf {
     bool at_bottom;    /* true if line end is at bottom of window */
     int orig_y;        /* y axis point of line origin */
     bool scroll;       /* used for prompt window hack to determine when to scroll down */
+
+    wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];
+    int hst_pos;
+    int hst_tot;
+
     WINDOW *linewin;
 };
 

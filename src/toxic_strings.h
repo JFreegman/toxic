@@ -29,3 +29,18 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len);
 
    Returns the difference between the old len and new len of buf on success, -1 if error */
 int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int n_items, int size);
+
+enum {
+    LN_HIST_MV_UP,
+    LN_HIST_MV_DWN,
+};
+
+/* adds a line to the ln_history buffer at hst_pos and sets hst_pos to last history item. 
+   Assumes entries are of size MAX_STR_SIZE */
+void add_line_to_hist(const wchar_t *buf, size_t len, void *hst, int *hst_tot, int *hst_pos);
+
+/* copies history item at hst_pos to buf. Sets pos and len to the len of the history item.
+   hst_pos is decremented or incremented depending on key_dir.
+   Assumes history entries are of size MAX_STR_SIZE */
+void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, const void *ln_history, int *hst_tot,
+                    int *hst_pos, int key_dir);
