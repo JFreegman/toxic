@@ -170,6 +170,10 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
             wmove(self->window, prt->orig_y, X_OFST);
             fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, prt->hst_tot,
                             &prt->hst_pos, LN_HIST_MV_UP);
+            if (prt->at_bottom && prt->len >= x2 - X_OFST) {
+                --prt->orig_y;
+                prt->scroll = true;
+            }
         }
     }
 
