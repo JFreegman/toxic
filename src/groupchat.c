@@ -438,12 +438,16 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     wclear(ctx->linewin);
 
-    uint8_t line[MAX_STR_SIZE];
+    if (ctx->len > 0) {
+        uint8_t line[MAX_STR_SIZE];
 
-    if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-        memset(&line, 0, sizeof(line));
-
-    mvwprintw(ctx->linewin, 1, 0, "%s", line);
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            mvwprintw(ctx->linewin, 1, 0, "%s", line);
+        }
+    }
 
     wclear(ctx->sidebar);
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);

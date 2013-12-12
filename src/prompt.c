@@ -181,7 +181,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
                 int k = prt->orig_y + ((prt->len + p_ofst) / px2);
 
-                if (k == y2) {    /* cursor is below max_y */
+                if (k >= y2) {
                     wprintw(self->window, "\n");
                     --prt->orig_y;
                 }
@@ -252,11 +252,11 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (prt->len > 0) {
         uint8_t line[MAX_STR_SIZE];
-
+        
         if (wcs_to_mbs_buf(line, prt->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
-
-        mvwprintw(self->window, prt->orig_y, X_OFST, line);
+            reset_buf(prt->line, &prt->pos, &prt->len);
+        else
+            mvwprintw(self->window, prt->orig_y, X_OFST, line);
 
         int k = prt->orig_y + ((prt->len + p_ofst) / px2);
 

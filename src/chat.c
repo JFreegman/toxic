@@ -481,23 +481,27 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 static void chat_onDraw(ToxWindow *self, Tox *m)
 {
     curs_set(1);
-    int x, y;
-    getmaxyx(self->window, y, x);
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
 
     ChatContext *ctx = self->chatwin;
 
     wclear(ctx->linewin);
 
-    uint8_t line[MAX_STR_SIZE];
-
-    if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-        memset(&line, 0, sizeof(line));
-
-    mvwprintw(ctx->linewin, 1, 0, "%s", line);
+    if (ctx->len > 0) {
+        uint8_t line[MAX_STR_SIZE];
+        
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            mvwprintw(ctx->linewin, 1, 0, "%s", line);
+        }
+    }
 
     /* Draw status bar */
     StatusBar *statusbar = self->stb;
-    mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x);
+    mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
     /* Draw name, status and note in statusbar */
@@ -536,17 +540,17 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     /* Reset statusbar->statusmsg on window resize */
-    if (x != self->x) {
+    if (x2 != self->x) {
         uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
         tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
     }
 
-    self->x = x;
+    self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x - getcurx(statusbar->topline) - 4;
+    uint16_t maxlen = x2 - getcurx(statusbar->topline) - 4;
     if (statusbar->statusmsg_len > maxlen) {
         statusbar->statusmsg[maxlen] = '\0';
         statusbar->statusmsg_len = maxlen;
@@ -559,14 +563,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     wprintw(statusbar->topline, "\n");
-    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x);
+    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
 }
 
 static void chat_onInit(ToxWindow *self, Tox *m)
 {
-    int x, y;
-    getmaxyx(self->window, y, x);
-    self->x = x;
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
+    self->x = x2;
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
@@ -580,13 +584,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init subwindows */
     ChatContext *ctx = self->chatwin;
-    statusbar->topline = subwin(self->window, 2, x, 0, 0);
-    ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x, 0, 0);
+    statusbar->topline = subwin(self->window, 2, x2, 0, 0);
+    ctx->history = subwin(self->window, y2-CHATBOX_HEIGHT+1, x2, 0, 0);
     scrollok(ctx->history, 1);
-    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y-CHATBOX_HEIGHT, 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2-CHATBOX_HEIGHT, 0);
     wprintw(ctx->history, "\n\n");
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
-    wmove(self->window, y - CURS_Y_OFFSET, 0);
+    wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)
