@@ -242,15 +242,17 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
+    int cur_len = 0;
 
     if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
         if (ctx->pos > 0) {
+            cur_len = wcwidth(ctx->line[ctx->pos - 1]);
             del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
 
             if (x == 0)
-                wmove(self->window, y-1, x2-1);
+                wmove(self->window, y-1, x2 - cur_len);
             else
-                wmove(self->window, y, x-1);
+                wmove(self->window, y, x - cur_len);
         }
     } 
 
@@ -281,29 +283,31 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_END) {     /* END key: move cursor to end of line */
         if (ctx->pos != ctx->len) {
             ctx->pos = ctx->len;
-            mv_curs_end(self->window, ctx->len, y2, x2);
+            mv_curs_end(self->window, wcswidth(ctx->line), y2, x2);
         }
     }
 
     else if (key == KEY_LEFT) {
         if (ctx->pos > 0) {
             --ctx->pos;
+            cur_len = wcwidth(ctx->line[ctx->pos]);
 
             if (x == 0)
-                wmove(self->window, y-1, x2-1);
+                wmove(self->window, y-1, x2 - cur_len);
             else
-                wmove(self->window, y, x-1);
+                wmove(self->window, y, x - cur_len);
         }
     } 
 
     else if (key == KEY_RIGHT) {
         if (ctx->pos < ctx->len) {
+            cur_len = wcwidth(ctx->line[ctx->pos]);
             ++ctx->pos;
 
             if (x == x2-1)
                 wmove(self->window, y+1, 0);
             else
-                wmove(self->window, y, x+1);
+                wmove(self->window, y, x + cur_len);
         }
     }
 
@@ -370,7 +374,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             if (x == x2-1)
                 wmove(self->window, y+1, 0);
             else
-                wmove(self->window, y, x+1);
+                wmove(self->window, y, x + wcwidth(key));
         }
     }
 
