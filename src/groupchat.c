@@ -301,7 +301,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
         if (ctx->pos > 0) {
-            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1], CHATBOX_HEIGHT*x2));
+            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1], 5));
             del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
 
             if (x == 0)
@@ -345,7 +345,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_LEFT) {
         if (ctx->pos > 0) {
             --ctx->pos;
-            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos], CHATBOX_HEIGHT*x2));
+            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos], 5));
 
             if (x == 0)
                 wmove(self->window, y-1, x2 - cur_len);
@@ -356,7 +356,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == KEY_RIGHT) {
         if (ctx->pos < ctx->len) {
-            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos], CHATBOX_HEIGHT*x2));
+            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos], 5));
             ++ctx->pos;
 
             if (x == x2-1)
@@ -429,7 +429,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             if (x == x2-1)
                 wmove(self->window, y+1, 0);
             else
-                wmove(self->window, y, x + MAX(1, wcwidth(key, CHATBOX_HEIGHT*x2)));
+                wmove(self->window, y, x + MAX(1, wcwidth(key, 5)));
         }
     }
 
