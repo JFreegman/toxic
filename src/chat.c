@@ -442,34 +442,30 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 delwin(statusbar->topline);
                 del_window(self);
                 disable_chatwin(f_num);
-            } else if (!strncmp(line, "/me ", strlen("/me ")))
+            } else if (strncmp(line, "/me ", strlen("/me ")) == 0)
                 send_action(self, ctx, m, line + strlen("/me "));
               else
                 execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
-        } else {
-            /* make sure the string has at least non-space character */
-            if (!string_is_empty(line)) {
-                uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
+        } else if (!string_is_empty(line)) {
+            uint8_t selfname[TOX_MAX_NAME_LENGTH];
+            tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
 
-                print_time(ctx->history);
+            print_time(ctx->history);
+            wattron(ctx->history, COLOR_PAIR(GREEN));
+            wprintw(ctx->history, "%s: ", selfname);
+            wattroff(ctx->history, COLOR_PAIR(GREEN));
+
+            if (line[0] == '>') {
                 wattron(ctx->history, COLOR_PAIR(GREEN));
-                wprintw(ctx->history, "%s: ", selfname);
+                wprintw(ctx->history, "%s\n", line);
                 wattroff(ctx->history, COLOR_PAIR(GREEN));
+            } else
+                wprintw(ctx->history, "%s\n", line);
 
-                if (line[0] == '>') {
-                    wattron(ctx->history, COLOR_PAIR(GREEN));
-                    wprintw(ctx->history, "%s\n", line);
-                    wattroff(ctx->history, COLOR_PAIR(GREEN));
-                } else
-                    wprintw(ctx->history, "%s\n", line);
-
-                if (!statusbar->is_online
-                        || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
-                    wattron(ctx->history, COLOR_PAIR(RED));
-                    wprintw(ctx->history, " * Failed to send message.\n");
-                    wattroff(ctx->history, COLOR_PAIR(RED));
-                }
+            if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
+                wattron(ctx->history, COLOR_PAIR(RED));
+                wprintw(ctx->history, " * Failed to send message.\n");
+                wattroff(ctx->history, COLOR_PAIR(RED));
             }
         }
 

@@ -117,6 +117,17 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, 
     }
 }
 
+void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, uint16_t length,
+                    void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupAction != NULL)
+            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, action, length);
+    }
+}
+
 void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata)
 {
     int i;

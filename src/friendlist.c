@@ -26,14 +26,15 @@ static int num_selected = 0;
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
+#define S_WEIGHT 100
+
 static int index_name_cmp(const void *n1, const void *n2)
 {
     int res = qsort_strcasecmp_hlpr(friends[*(int *) n1].name, friends[*(int *) n2].name);
 
-    int k = 100;
     /* Use weight to make qsort always put online friends before offline */
-    res = friends[*(int *) n1].online ? (res - k) : (res + k);
-    res = friends[*(int *) n2].online ? (res + k) : (res - k);
+    res = friends[*(int *) n1].online ? (res - S_WEIGHT) : (res + S_WEIGHT);
+    res = friends[*(int *) n2].online ? (res + S_WEIGHT) : (res - S_WEIGHT);
 
     return res;
 }

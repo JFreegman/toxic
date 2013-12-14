@@ -138,6 +138,40 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     }
 }
 
+static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *action,
+                                    uint16_t len)
+{
+    if (self->num != groupnum)
+        return;
+
+    ChatContext *ctx = self->chatwin;
+
+    /* check if message contains own name and alert appropriately */
+    int alert_type = WINDOW_ALERT_1;
+    bool beep = false;
+
+    uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
+
+    bool nick_match = strcasestr(action, selfnick);
+
+    if (nick_match) {
+        alert_type = WINDOW_ALERT_0;
+        beep = true;
+    }
+
+    alert_window(self, alert_type, beep);
+
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_group_peername(m, groupnum, peernum, nick);
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
+
+    print_time(ctx->history);
+    wattron(ctx->history, COLOR_PAIR(YELLOW));
+    wprintw(ctx->history, "* %s %s\n", nick, action);
+    wattroff(ctx->history, COLOR_PAIR(YELLOW));
+}
+
 /* Puts two copies of peerlist in chat instance */
 static void copy_peernames(int gnum, int npeers, uint8_t tmp_peerlist[][TOX_MAX_NAME_LENGTH])
 {
@@ -233,6 +267,27 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     }
 
     alert_window(self, WINDOW_ALERT_2, false);
+}
+
+static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
+    if (action == NULL) {
+        wprintw(ctx->history, "Invalid syntax.\n");
+        return;
+    }
+
+    // uint8_t selfname[TOX_MAX_NAME_LENGTH];
+    // tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
+
+    // print_time(ctx->history);
+    // wattron(ctx->history, COLOR_PAIR(YELLOW));
+    // wprintw(ctx->history, "* %s %s\n", selfname, action);
+    // wattroff(ctx->history, COLOR_PAIR(YELLOW));
+
+    if (tox_group_action_send(m, self->num, action, strlen(action) + 1) == -1) {
+        wattron(ctx->history, COLOR_PAIR(RED));
+        wprintw(ctx->history, " * Failed to send action\n");
+        wattroff(ctx->history, COLOR_PAIR(RED));
+    }
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -400,35 +455,24 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 delwin(ctx->linewin);
                 del_window(self);
                 close_groupchatwin(m, groupnum);
-            } else if (strncmp(line, "/help", strlen("/help")) == 0)
+            } else if (strcmp(line, "/help") == 0)
                 print_groupchat_help(ctx);
+              else if (strncmp(line, "/me ", strlen("/me ")) == 0)
+                send_group_action(self, ctx, m, line + strlen("/me "));
               else
                 execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
-        } else {
-            /* make sure the string has at least non-space character */
-            if (!string_is_empty(line)) {
-                // uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                // tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
-
-                // print_time(ctx->history);
-                // wattron(ctx->history, COLOR_PAIR(GREEN));
-                // wprintw(ctx->history, "%s: ", selfname);
-                // wattroff(ctx->history, COLOR_PAIR(GREEN));
-                // wprintw(ctx->history, "%s\n", line);
-
-                if (tox_group_message_send(m, self->num, line, strlen(line) + 1) == -1) {
-                    wattron(ctx->history, COLOR_PAIR(RED));
-                    wprintw(ctx->history, " * Failed to send message.\n");
-                    wattroff(ctx->history, COLOR_PAIR(RED));
-                }
+        } else if (!string_is_empty(line)) {
+            if (tox_group_message_send(m, self->num, line, strlen(line) + 1) == -1) {
+                wattron(ctx->history, COLOR_PAIR(RED));
+                wprintw(ctx->history, " * Failed to send message.\n");
+                wattroff(ctx->history, COLOR_PAIR(RED));
             }
         }
 
         if (close_win)
             free(ctx);
-        else {
+        else
             reset_buf(ctx->line, &ctx->pos, &ctx->len);
-        }
     }
 }
 
@@ -507,7 +551,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     ret.onInit = &groupchat_onInit;
     ret.onGroupMessage = &groupchat_onGroupMessage;
     ret.onGroupNamelistChange = &groupchat_onGroupNamelistChange;
-    // ret.onAction = &groupchat_onAction;
+    ret.onGroupAction = &groupchat_onGroupAction;
 
     snprintf(ret.name, sizeof(ret.name), "Room #%d", groupnum);
 

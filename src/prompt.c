@@ -252,7 +252,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (prt->len > 0) {
         uint8_t line[MAX_STR_SIZE];
-        
+
         if (wcs_to_mbs_buf(line, prt->line, MAX_STR_SIZE) == -1)
             reset_buf(prt->line, &prt->pos, &prt->len);
         else
