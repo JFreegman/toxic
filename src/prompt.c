@@ -166,35 +166,31 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     } 
 
     else if (key == KEY_UP) {     /* fetches previous item in history */
-        if (prt->hst_pos >= 0) {
-            wmove(self->window, prt->orig_y, X_OFST);
-            fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, prt->hst_tot,
-                            &prt->hst_pos, LN_HIST_MV_UP);
+        wmove(self->window, prt->orig_y, X_OFST);
+        fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, prt->hst_tot,
+                        &prt->hst_pos, LN_HIST_MV_UP);
 
-            /* adjust line y origin appropriately when window scrolls down */
-            if (prt->at_bottom && prt->len >= x2 - X_OFST) {
-                int px2 = prt->len >= x2 ? x2 : x2 - X_OFST;
-                int p_ofst = px2 != x2 ? 0 : X_OFST;
+        /* adjust line y origin appropriately when window scrolls down */
+        if (prt->at_bottom && prt->len >= x2 - X_OFST) {
+            int px2 = prt->len >= x2 ? x2 : x2 - X_OFST;
+            int p_ofst = px2 != x2 ? 0 : X_OFST;
 
-                if (px2 <= 0)
-                    return;
+            if (px2 <= 0)
+                return;
 
-                int k = prt->orig_y + ((prt->len + p_ofst) / px2);
+            int k = prt->orig_y + ((prt->len + p_ofst) / px2);
 
-                if (k >= y2) {
-                    wprintw(self->window, "\n");
-                    --prt->orig_y;
-                }
+            if (k >= y2) {
+                wprintw(self->window, "\n");
+                --prt->orig_y;
             }
         }
     }
 
     else if (key == KEY_DOWN) {    /* fetches next item in history */
-        if (prt->hst_pos < prt->hst_tot) {
-            wmove(self->window, prt->orig_y, X_OFST);
-            fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, prt->hst_tot,
-                            &prt->hst_pos, LN_HIST_MV_DWN);
-        }
+        wmove(self->window, prt->orig_y, X_OFST);
+        fetch_hist_item(prt->line, &prt->pos, &prt->len, prt->ln_history, prt->hst_tot,
+                        &prt->hst_pos, LN_HIST_MV_DWN);
     }
 
     else if (key == '\t') {    /* TAB key: completes command */

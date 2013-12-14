@@ -22,7 +22,7 @@
 #define MAX_STR_SIZE 256
 #define MAX_CMDNAME_SIZE 64
 #define KEY_SIZE_BYTES 32
-#define TOXIC_MAX_NAME_LENGTH 32   /* Must be < TOX_MAX_NAME_LENGTH */
+#define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */
 #define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 4
