@@ -89,6 +89,20 @@ void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
     *len = 0;
 }
 
+#define HIST_PURGE MAX_LINE_HIST / 4
+
+/* shifts hist items back and makes room for HIST_PURGE new entries */
+static void shift_hist_back(wchar_t (*hst)[MAX_STR_SIZE], int *hst_tot)
+{
+    int i;
+    int n = MAX_LINE_HIST - HIST_PURGE;
+
+    for (i = 0; i < n; ++i)
+        wmemcpy(hst[i], hst[i+HIST_PURGE], MAX_STR_SIZE);
+
+    *hst_tot = n;
+}
+
 /* adds a line to the ln_history buffer at hst_pos and sets hst_pos to end of history. */
 void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZE], int *hst_tot, 
                       int *hst_pos)
@@ -96,17 +110,12 @@ void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZ
     if (len > MAX_STR_SIZE)
         return;
 
-    /* If history is full make room for newest entry and don't increment hst_tot */
-    if (*hst_tot == MAX_LINE_HIST) {
-        int i;
+    if (*hst_tot >= MAX_LINE_HIST)
+        shift_hist_back(hst, hst_tot);
 
-        for (i = 0; i < MAX_LINE_HIST - 1; ++i)
-            wmemcpy(hst[i], hst[i+1], MAX_STR_SIZE);
-    } else {
-        ++(*hst_tot);
-    }
-
+    ++(*hst_tot);
     *hst_pos = *hst_tot;
+
     wmemcpy(hst[*hst_tot-1], buf, len + 1);
 }
 

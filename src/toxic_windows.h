@@ -34,7 +34,7 @@
 #define T_KEY_KILL       0xB      /* ctrl-k */
 #define T_KEY_DISCARD    0x15     /* ctrl-u */
 #define T_KEY_NEXT       0x10     /* ctrl-p */
-#define T_KEY_PREV       0x0f     /* ctrl-o */
+#define T_KEY_PREV       0x0F     /* ctrl-o */
 
 /* Curses foreground colours (background is black) */
 enum {
@@ -111,7 +111,7 @@ struct StatusBar {
     bool is_online;
 };
 
-#define MAX_LINE_HIST 64
+#define MAX_LINE_HIST 128
 
 /* chat and groupchat window/buffer holder */
 struct ChatContext {
