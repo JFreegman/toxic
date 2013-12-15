@@ -256,14 +256,14 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
-    } else if (key == 0x107 || key == 0x8 || key == 0x7f) {
+    } else if (key == KEY_DC) {
         delete_friend(m, self, f, key);
     } else {
         select_friend(self, m, key);
     }
 }
 
-#define FLIST_OFST 3    /* Accounts for the three lines at top */
+#define FLIST_OFST 4    /* Accounts for the lines at top */
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
 {
@@ -274,14 +274,21 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
-    if (num_friends == 0) {
-        wprintw(self->window, "Empty. Add some friends! :-)\n");
-    } else {
-        wattron(self->window, COLOR_PAIR(CYAN) | A_BOLD);
-        wprintw(self->window, " Open chat with up/down keys and enter.\n");
-        wprintw(self->window, " Delete friends with the backspace key.\n\n");
-        wattroff(self->window, COLOR_PAIR(CYAN) | A_BOLD);
-    }
+    wattron(self->window, COLOR_PAIR(CYAN));
+    wprintw(self->window, " Open a chat window with the");
+    wattron(self->window, A_BOLD);
+    wprintw(self->window, " Enter ");
+    wattroff(self->window, A_BOLD);
+    wprintw(self->window, "key. Delete a friend with the");
+    wattron(self->window, A_BOLD);
+    wprintw(self->window, " Delete ");
+    wattroff(self->window, A_BOLD);
+    wprintw(self->window, "key.\n\n");
+    wattroff(self->window, COLOR_PAIR(CYAN));
+
+    wattron(self->window, A_BOLD);
+    wprintw(self->window, " Friends: %d \n\n", num_friends);
+    wattroff(self->window, A_BOLD);
 
     if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
         return;
