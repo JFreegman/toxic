@@ -308,24 +308,32 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wmove(self->window, y-1, x2 - cur_len);
             else
                 wmove(self->window, y, x - cur_len);
+        } else {
+            beep();
         }
     } 
 
     else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
         if (ctx->pos != ctx->len)
             del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+        else
+            beep();
     }
 
     else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
         if (ctx->pos > 0) {
             discard_buf(ctx->line, &ctx->pos, &ctx->len);
             wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            beep();
         }
     }
 
     else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
         if (ctx->pos != ctx->len)
             kill_buf(ctx->line, &ctx->pos, &ctx->len);
+        else
+            beep();
     }
 
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
@@ -351,6 +359,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wmove(self->window, y-1, x2 - cur_len);
             else
                 wmove(self->window, y, x - cur_len);
+        } else {
+            beep();
         }
     } 
 
@@ -363,6 +373,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wmove(self->window, y+1, 0);
             else
                 wmove(self->window, y, x + cur_len);
+        } else {
+            beep();
         }
     }
 
@@ -395,7 +407,11 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 } else {
                     wmove(self->window, y, x+diff);
                 }
+            } else {
+                beep();
             }
+        } else {
+            beep();
         }
     }
 

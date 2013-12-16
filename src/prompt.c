@@ -119,16 +119,21 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     /* BACKSPACE key: Remove one character from line */
     if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (prt->pos > 0)
+        if (prt->pos > 0) {
             del_char_buf_bck(prt->line, &prt->pos, &prt->len);
             wmove(self->window, y, x-1);    /* not necessary but fixes a display glitch */
             prt->scroll = false;
+        } else {
+            beep();
+        }
     }
 
     else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
         if (prt->pos != prt->len) {
             del_char_buf_frnt(prt->line, &prt->pos, &prt->len);
             prt->scroll = false;
+        } else {
+            beep();
         }
     }
 
@@ -137,12 +142,16 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
             wmove(self->window, prt->orig_y, X_OFST);
             wclrtobot(self->window);
             discard_buf(prt->line, &prt->pos, &prt->len);
+        } else {
+            beep();
         }
     }
 
     else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
         if (prt->len != prt->pos)
             kill_buf(prt->line, &prt->pos, &prt->len);
+        else
+            beep();
     }
 
     else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
@@ -158,11 +167,15 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_LEFT) {
         if (prt->pos > 0)
             --prt->pos;
+        else
+            beep();
     } 
 
     else if (key == KEY_RIGHT) {
         if (prt->pos < prt->len)
             ++prt->pos;
+        else 
+            beep();
     } 
 
     else if (key == KEY_UP) {     /* fetches previous item in history */
@@ -194,9 +207,13 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
 
     else if (key == '\t') {    /* TAB key: completes command */
-        if (prt->len > 1 && prt->line[0] == '/')
-            complete_line(prt->line, &prt->pos, &prt->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
-                          MAX_CMDNAME_SIZE);
+        if (prt->len > 1 && prt->line[0] == '/') {
+            if (complete_line(prt->line, &prt->pos, &prt->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
+                              MAX_CMDNAME_SIZE) == -1) 
+                beep();
+        } else {
+            beep();
+        }
     }
 
     else
