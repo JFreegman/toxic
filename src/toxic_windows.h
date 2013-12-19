@@ -111,7 +111,7 @@ struct StatusBar {
     bool is_online;
 };
 
-#define MAX_LINE_HIST 128
+#define MAX_LINE_HIST 10
 
 /* chat and groupchat window/buffer holder */
 struct ChatContext {

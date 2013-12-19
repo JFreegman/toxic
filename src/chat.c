@@ -396,7 +396,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         mv_curs_end(self->window, ctx->len, y2, x2);
     }
 
-    else if (key == '\t') {    /* TAB key: command */
+    else if (key == '\t') {    /* TAB key: completes command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
             int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, chat_cmd_list, AC_NUM_CHAT_COMMANDS,
                                      MAX_CMDNAME_SIZE);

@@ -130,9 +130,8 @@ void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_
             beep();
         }
     } else {
-        if (++(*hst_pos) > hst_tot) {
+        if (++(*hst_pos) >= hst_tot) {
             --(*hst_pos);
-            beep();
             return;
         }
     }

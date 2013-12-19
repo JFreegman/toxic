@@ -393,7 +393,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == '\t') {    /* TAB key: completes peer name */
         if (ctx->len > 0) {
             int diff;
-            if (ctx->line[0] != '/')
+
+            if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
                 diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
                                      groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
             else
