@@ -360,17 +360,20 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
     if (!nick[0])
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
 
+    wprintw(self->window, "\n");
+    print_time(self->window);
+
     if (status == 1) {
         wattron(self->window, COLOR_PAIR(GREEN));
         wattron(self->window, A_BOLD);
-        wprintw(self->window, "\n%s ", nick);
+        wprintw(self->window, "* %s ", nick);
         wattroff(self->window, A_BOLD);
         wprintw(self->window, "has come online\n");
         wattroff(self->window, COLOR_PAIR(GREEN));
     } else {
         wattron(self->window, COLOR_PAIR(RED));
         wattron(self->window, A_BOLD);
-        wprintw(self->window, "\n%s ", nick);
+        wprintw(self->window, "* %s ", nick);
         wattroff(self->window, A_BOLD);
         wprintw(self->window, "has gone offline\n");
         wattroff(self->window, COLOR_PAIR(RED));
@@ -383,7 +386,9 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     data[length - 1] = 0;
 
     prep_prompt_win();
-    wprintw(self->window, "\nFriend request with the message: '%s'\n", data);
+    wprintw(self->window, "\n");
+    print_time(self->window);
+    wprintw(self->window, "Friend request with the message: '%s'\n", data);
 
     int n = add_friend_request(key);
 

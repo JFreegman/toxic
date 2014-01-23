@@ -132,6 +132,7 @@ void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_
     } else {
         if (++(*hst_pos) >= hst_tot) {
             --(*hst_pos);
+            beep();
             return;
         }
     }
@@ -214,7 +215,7 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int 
     /* convert to widechar and copy back to original buf */
     wchar_t newbuf[MAX_STR_SIZE];
 
-    if (char_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
+    if (mbs_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
         return -1;
 
     wcscpy(buf, newbuf);

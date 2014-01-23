@@ -59,7 +59,7 @@ int string_is_empty(char *string)
 }
 
 /* convert a multibyte string to a wide character string (must provide buffer) */
-int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
+int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
 {
     size_t len = mbstowcs(NULL, string, 0) + 1;
 
