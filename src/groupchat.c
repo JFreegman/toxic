@@ -532,8 +532,13 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     for (i = 0; i < num_peers && i < maxlines; ++i) {
         wmove(ctx->sidebar, i+2, 1);
         int peer = i + groupchats[self->num].side_pos;
-        groupchats[self->num].peer_names[peer*N+SIDEBAR_WIDTH-2] = '\0';
-        wprintw(ctx->sidebar, "%s\n", &groupchats[self->num].peer_names[peer*N]);
+
+        /* truncate nick to fit in side panel without modifying list */
+        uint8_t tmpnck[TOX_MAX_NAME_LENGTH];
+        memcpy(tmpnck, &groupchats[self->num].peer_names[peer*N], SIDEBAR_WIDTH-3);
+        tmpnck[SIDEBAR_WIDTH-2] = '\0';
+
+        wprintw(ctx->sidebar, "%s\n", tmpnck);
     }
 }
 
