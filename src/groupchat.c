@@ -535,7 +535,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
         /* truncate nick to fit in side panel without modifying list */
         uint8_t tmpnck[TOX_MAX_NAME_LENGTH];
-        memcpy(tmpnck, &groupchats[self->num].peer_names[peer*N], SIDEBAR_WIDTH-3);
+        memcpy(tmpnck, &groupchats[self->num].peer_names[peer*N], SIDEBAR_WIDTH-2);
         tmpnck[SIDEBAR_WIDTH-2] = '\0';
 
         wprintw(ctx->sidebar, "%s\n", tmpnck);
