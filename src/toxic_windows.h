@@ -72,7 +72,7 @@ struct ToxWindow {
     void(*onFriendAdded)(ToxWindow *, Tox *, int, bool);
     void(*onConnectionChange)(ToxWindow *, Tox *, int, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
-    void(*onNickChange)(ToxWindow *, int, uint8_t *, uint16_t);
+    void(*onNickChange)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
     void(*onStatusChange)(ToxWindow *, Tox *, int, TOX_USERSTATUS);
     void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
     void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);

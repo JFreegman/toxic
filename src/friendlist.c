@@ -20,7 +20,6 @@ extern char *DATA_FILE;
 extern ToxWindow *prompt;
 
 static int max_friends_index = 0;    /* marks the index of the last friend in friends array */
-static int num_friends = 0;
 static int num_selected = 0;
 
 ToxicFriend friends[MAX_FRIENDS_NUM];
@@ -40,7 +39,7 @@ static int index_name_cmp(const void *n1, const void *n2)
 }
 
 /* sorts friendlist_index first by connection status then alphabetically */
-void sort_friendlist_index(void)
+void sort_friendlist_index(Tox *m)
 {
     int i;
     int n = 0;
@@ -50,7 +49,7 @@ void sort_friendlist_index(void)
             friendlist_index[n++] = friends[i].num;
     }
 
-    qsort(friendlist_index, num_friends, sizeof(int), index_name_cmp);
+    qsort(friendlist_index, tox_count_friendlist(m), sizeof(int), index_name_cmp);
 }
 
 static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
@@ -83,10 +82,10 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint
         return;
 
     friends[num].online = status == 1 ? true : false;
-    sort_friendlist_index();
+    sort_friendlist_index(m);
 }
 
-static void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint16_t len)
+static void friendlist_onNickChange(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
 {
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
@@ -95,7 +94,7 @@ static void friendlist_onNickChange(ToxWindow *self, int num, uint8_t *str, uint
     len = strlen(str) + 1;
     memcpy(friends[num].name, str, len);
     friends[num].namelength = len;
-    sort_friendlist_index();
+    sort_friendlist_index(m);
 }
 
 static void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
@@ -139,13 +138,11 @@ static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort
                 friends[i].namelength = strlen(friends[i].name) + 1;
             }
 
-            ++num_friends;
-
             if (i == max_friends_index)
                 ++max_friends_index;
 
             if (sort)
-                sort_friendlist_index();
+                sort_friendlist_index(m);
 
             return;
         }
@@ -203,6 +200,8 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *
 
 static void select_friend(ToxWindow *self, Tox *m, wint_t key)
 {
+    int num_friends = tox_count_friendlist(m);
+
     if (key == KEY_UP) {
         if (--num_selected < 0)
             num_selected = num_friends - 1;
@@ -224,19 +223,20 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     }
 
     max_friends_index = i;
-    --num_friends;
 
     /* make sure num_selected stays within num_friends range */
+    int num_friends = tox_count_friendlist(m);
+
     if (num_friends && num_selected == num_friends)
         --num_selected;
 
-    sort_friendlist_index();
+    sort_friendlist_index(m);
     store_data(m, DATA_FILE);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
-    if (num_friends == 0)
+    if (tox_count_friendlist(m) == 0)
         return;
 
     int f = friendlist_index[num_selected];
@@ -273,6 +273,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y2, x2);
 
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
+    int num_friends = tox_count_friendlist(m);
 
     wattron(self->window, COLOR_PAIR(CYAN));
     wprintw(self->window, " Open a chat window with the");

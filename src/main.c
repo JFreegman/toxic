@@ -547,7 +547,7 @@ int main(int argc, char *argv[])
     }
 
     prompt_init_statusbar(prompt, m);
-    sort_friendlist_index();
+    sort_friendlist_index(m);
 
     while (true) {
         do_tox(m, prompt);

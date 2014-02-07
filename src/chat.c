@@ -99,7 +99,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
-static void chat_onNickChange(ToxWindow *self, int num, uint8_t *nick, uint16_t len)
+static void chat_onNickChange(ToxWindow *self, Tox *m, int num, uint8_t *nick, uint16_t len)
 {
     if (self->num != num)
         return;

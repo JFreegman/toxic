@@ -66,7 +66,7 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onNickChange != NULL)
-            windows[i].onNickChange(&windows[i], friendnumber, string, length);
+            windows[i].onNickChange(&windows[i], m, friendnumber, string, length);
     }
 
     if (store_data(m, DATA_FILE))
