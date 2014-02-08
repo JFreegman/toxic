@@ -287,7 +287,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wattroff(self->window, COLOR_PAIR(CYAN));
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " Friends: %d \n\n", num_friends);
+    wprintw(self->window, " Friends: %d/%d \n\n", tox_get_num_online_friends(m), num_friends);
     wattroff(self->window, A_BOLD);
 
     if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
