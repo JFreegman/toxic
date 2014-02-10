@@ -102,6 +102,10 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     ChatContext *ctx = self->chatwin;
 
+    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    tox_group_peername(m, groupnum, peernum, nick);
+    nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
+
     /* check if message contains own name and alert appropriately */
     int alert_type = WINDOW_ALERT_1;
     bool beep = false;
@@ -110,7 +114,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
 
-    bool nick_match = strcasestr(msg, selfnick);
+    bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH);
 
     if (nick_match) {
         alert_type = WINDOW_ALERT_0;
@@ -119,10 +123,6 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     }
 
     alert_window(self, alert_type, beep);
-
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_group_peername(m, groupnum, peernum, nick);
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
     print_time(ctx->history);
     wattron(ctx->history, COLOR_PAIR(nick_clr));
