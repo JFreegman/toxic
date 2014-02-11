@@ -216,11 +216,9 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     /* get old peer name before updating name list */
     uint8_t oldpeername[TOX_MAX_NAME_LENGTH] = {0};
 
-    if (change != TOX_CHAT_CHANGE_PEER_ADD) {
+    if (change != TOX_CHAT_CHANGE_PEER_ADD)
         memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum*TOX_MAX_NAME_LENGTH], 
                sizeof(oldpeername));
-        oldpeername[TOXIC_MAX_NAME_LENGTH] = '\0';
-    }
 
     /* Update name lists */
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];

@@ -136,23 +136,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     ChatContext *ctx = self->chatwin;
 
-    int idx = strlen(pathname) - 1;
-    while (idx >= 0 && pathname[idx] == '/') {
-      pathname[idx--] = 0;
-    }
-
-    /* try to get file name from path */
-    uint8_t *filename = strrchr(pathname, '/');    // Try unix style paths
-    
-    if (filename != NULL) {
-        if (!strlen(++filename))
-            filename = pathname;
-    } else {
-        filename = strrchr(pathname, '\\');    // Try windows style paths
-
-        if (filename == NULL)
-            filename = pathname;
-    }
+    uint8_t *filename = get_file_name(pathname);
 
     wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", filename, 
             (long long unsigned int)filesize);

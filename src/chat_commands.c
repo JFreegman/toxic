@@ -164,7 +164,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint64_t filesize = ftell(file_to_send);
     fseek(file_to_send, 0, SEEK_SET);
 
-    int filenum = tox_new_file_sender(m, self->num, filesize, path, path_len + 1);
+    uint8_t *filename = get_file_name(path);
+    int filenum = tox_new_file_sender(m, self->num, filesize, filename, strlen(filename) + 1);
 
     if (filenum == -1) {
         wprintw(window, "Error sending file.\n");

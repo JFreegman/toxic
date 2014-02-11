@@ -193,3 +193,26 @@ void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
     int end_x = len % max_x;
     wmove(w, end_y, end_x);  
 }
+
+/* Returns base file name from path or original file name if no path is supplied */
+uint8_t *get_file_name(uint8_t *pathname)
+{
+    int idx = strlen(pathname) - 1;
+
+    while (idx >= 0 && pathname[idx] == '/')
+      pathname[idx--] = '\0';
+
+    uint8_t *filename = strrchr(pathname, '/');    // Try unix style paths
+    
+    if (filename != NULL) {
+        if (!strlen(++filename))
+            filename = pathname;
+    } else {
+        filename = strrchr(pathname, '\\');    // Try windows style paths
+
+        if (filename == NULL)
+            filename = pathname;
+    }
+
+    return filename;
+}
