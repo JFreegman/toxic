@@ -193,10 +193,12 @@ static void copy_peernames(int gnum, int npeers, uint8_t tmp_peerlist[][TOX_MAX_
     int i;
 
     for (i = 0; i < npeers; ++i) {
-        if (string_is_empty(tmp_peerlist[i]))
+        if (string_is_empty(tmp_peerlist[i])) {
             memcpy(&groupchats[gnum].peer_names[i*N], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
-        else
+        } else {
             memcpy(&groupchats[gnum].peer_names[i*N], tmp_peerlist[i], N);
+            groupchats[gnum].peer_names[i*N+TOXIC_MAX_NAME_LENGTH] = '\0';
+        }
     }
 
     memcpy(groupchats[gnum].oldpeer_names, groupchats[gnum].peer_names, N*npeers);
@@ -214,9 +216,11 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     /* get old peer name before updating name list */
     uint8_t oldpeername[TOX_MAX_NAME_LENGTH] = {0};
 
-    if (change != TOX_CHAT_CHANGE_PEER_ADD)
+    if (change != TOX_CHAT_CHANGE_PEER_ADD) {
         memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum*TOX_MAX_NAME_LENGTH], 
                sizeof(oldpeername));
+        oldpeername[TOXIC_MAX_NAME_LENGTH] = '\0';
+    }
 
     /* Update name lists */
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
