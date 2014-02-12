@@ -136,7 +136,8 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
 
     ChatContext *ctx = self->chatwin;
 
-    uint8_t *filename = get_file_name(pathname);
+    uint8_t filename[MAX_STR_SIZE];
+    get_file_name(pathname, filename);
 
     wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", filename, 
             (long long unsigned int)filesize);

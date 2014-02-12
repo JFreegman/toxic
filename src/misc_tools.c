@@ -194,8 +194,8 @@ void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
     wmove(w, end_y, end_x);  
 }
 
-/* Returns base file name from path or original file name if no path is supplied */
-uint8_t *get_file_name(uint8_t *pathname)
+/* gets base file name from path or original file name if no path is supplied */
+void get_file_name(uint8_t *pathname, uint8_t *namebuf)
 {
     int idx = strlen(pathname) - 1;
 
@@ -214,5 +214,5 @@ uint8_t *get_file_name(uint8_t *pathname)
             filename = pathname;
     }
 
-    return filename;
+    snprintf(namebuf, MAX_STR_SIZE, "%s", filename);
 }

@@ -48,5 +48,5 @@ bool valid_nick(uint8_t *nick);
 /* Moves the cursor to the end of the line in given window */
 void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);
 
-/* Returns base file name from path or original file name if no path is supplied */
-uint8_t *get_file_name(uint8_t *pathname);
+/* gets base file name from path or original file name if no path is supplied */
+void get_file_name(uint8_t *pathname, uint8_t *buf);
