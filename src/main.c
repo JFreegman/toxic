@@ -200,7 +200,7 @@ int init_connection_helper(Tox *m, int linenumber)
  * 4: failed to resolve name to IP
  * 5: serverlist file contains no acceptable line
  */
-static uint8_t init_connection_serverlist_loaded = 0;
+static int init_connection_serverlist_loaded = 0;
 int init_connection(Tox *m)
 {
     if (linecnt > 0) /* already loaded serverlist */

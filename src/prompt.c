@@ -370,6 +370,8 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
         wattroff(self->window, A_BOLD);
         wprintw(self->window, "has come online\n");
         wattroff(self->window, COLOR_PAIR(GREEN));
+
+        alert_window(self, WINDOW_ALERT_2, false);
     } else {
         wattron(self->window, COLOR_PAIR(RED));
         wattron(self->window, A_BOLD);
@@ -398,7 +400,7 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     }
 
     wprintw(self->window, "Type \"/accept %d\" to accept it.\n", n);
-    alert_window(self, WINDOW_ALERT_2, true);
+    alert_window(self, WINDOW_ALERT_1, true);
 }
 
 void prompt_init_statusbar(ToxWindow *self, Tox *m)
