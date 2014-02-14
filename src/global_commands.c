@@ -138,7 +138,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         wprintw(window, "Bad checksum in address.\n");
         break;
     case TOX_FAERR_SETNEWNOSPAM:
-        wprintw(window, "Nospam was different.\n");
+        wprintw(window, "Nospam was different (is this contact already added?)\n");
         break;
     default:
         wprintw(window, "Friend request sent.\n");
