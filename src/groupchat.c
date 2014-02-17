@@ -109,10 +109,10 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     /* check if message contains own name and alert appropriately */
     int alert_type = WINDOW_ALERT_1;
     bool beep = false;
-    int nick_clr = CYAN;
 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
     tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
+    int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
     bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH);
 
