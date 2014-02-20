@@ -407,7 +407,7 @@ static void do_file_senders(Tox *m)
 
         int pieces = 0;
 
-        while (pieces++ < MAX_PIECES_SEND) {
+        while (true) {
             if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
                                    file_senders[i].piecelen) == -1)
                 break;

@@ -162,7 +162,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_END) {     /* END key: move cursor to end of line */
         if (prt->pos != prt->len)
             prt->pos = prt->len;
-    } 
+    }
 
     else if (key == KEY_LEFT) {
         if (prt->pos > 0)

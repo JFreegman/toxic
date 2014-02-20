@@ -149,7 +149,6 @@ struct PromptBuf {
 #define MAX_FILES 256
 #define FILE_PIECE_SIZE 1024
 #define TIMEOUT_FILESENDER 300
-#define MAX_PIECES_SEND 100  /* Max number of pieces to send per file per call to do_file_senders() */
 
 typedef struct {
     FILE *file;
