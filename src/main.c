@@ -232,7 +232,7 @@ int init_connection(Tox *m)
     return 5;
 }
 
-static void do_tox(Tox *m, ToxWindow *prompt)
+static void do_connection(Tox *m, ToxWindow *prompt)
 {
     static int conn_try = 0;
     static int conn_err = 0;
@@ -258,8 +258,6 @@ static void do_tox(Tox *m, ToxWindow *prompt)
         prep_prompt_win();
         wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
     }
-
-    tox_do(m);
 }
 
 int f_loadfromfile;
@@ -405,8 +403,6 @@ static void do_file_senders(Tox *m)
             continue;
         }
 
-        int pieces = 0;
-
         while (true) {
             if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
                                    file_senders[i].piecelen) == -1)
@@ -432,21 +428,17 @@ static void do_file_senders(Tox *m)
     }
 }
 
-/* This should only be called on exit */
-static void close_file_transfers(Tox *m)
+void exit_toxic(Tox *m)
 {
+    store_data(m, DATA_FILE);
+
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
         if (file_senders[i].active)
             fclose(file_senders[i].file);
     }
-}
 
-void exit_toxic(Tox *m)
-{
-    store_data(m, DATA_FILE);
-    close_file_transfers(m);
     free(DATA_FILE);
     free(SRVLIST_FILE);
     free(prompt->stb);
@@ -454,6 +446,16 @@ void exit_toxic(Tox *m)
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
+}
+
+static void do_toxic(Tox *m, ToxWindow *prompt)
+{
+    do_connection(m, prompt);
+    do_file_senders(m);
+    draw_active_window(m);
+
+    /* main toxcore loop */
+    tox_do(m);
 }
 
 int main(int argc, char *argv[])
@@ -549,12 +551,8 @@ int main(int argc, char *argv[])
     prompt_init_statusbar(prompt, m);
     sort_friendlist_index(m);
 
-    while (true) {
-        do_tox(m, prompt);
-        do_file_senders(m);
-        draw_active_window(m);
-    }
+    while (true)
+        do_toxic(m, prompt);
 
-    exit_toxic(m);
     return 0;
 }
