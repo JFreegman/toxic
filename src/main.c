@@ -470,6 +470,9 @@ int main(int argc, char *argv[])
     int i = 0;
     int f_use_ipv4 = 0;
 
+    // Make sure all written files are read/writeable only by the current user.
+    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
     for (i = 0; i < argc; ++i) {
         if (argv[i] == NULL)
             break;
