@@ -14,3 +14,7 @@ Then execute the configure script with ./configure (you may need to pass it the 
 echo '/usr/local/lib/' | sudo tee -a /etc/ld.so.conf.d/locallib.conf
 sudo ldconfig
 ```
+If you dont already have them, you might want to install the ncurses libraries, on Debian:
+```
+sudo apt-get install libncurses5-dev libncursesw5-dev
+```
