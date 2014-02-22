@@ -547,9 +547,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x2 - getcurx(statusbar->topline) - 4;
+    uint16_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 6;
     if (statusbar->statusmsg_len > maxlen) {
-        statusbar->statusmsg[maxlen] = '\0';
+        statusbar->statusmsg[maxlen-1] = '\0';
         statusbar->statusmsg_len = maxlen;
     }
 
@@ -559,7 +559,16 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wattroff(statusbar->topline, A_BOLD);
     }
 
-    wprintw(statusbar->topline, "\n");
+    wclrtoeol(statusbar->topline);
+    wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
+    wprintw(statusbar->topline, "{");
+
+    int i;
+
+    for (i = 0; i < KEY_IDENT_DIGITS; ++i)
+        wprintw(statusbar->topline, "%x", friends[self->num].pub_key[i] & 0xff);
+
+    wprintw(statusbar->topline, "}\n");
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
 }
 
