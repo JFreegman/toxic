@@ -16,5 +16,5 @@ sudo ldconfig
 ```
 If you dont already have them, you might want to install the ncurses libraries, on Debian:
 ```
-sudo apt-get install libncurses5-dev
+sudo apt-get install libncurses5-dev libncursesw5-dev
 ```
