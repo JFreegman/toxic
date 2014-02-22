@@ -3,8 +3,6 @@
 
 #include "toxic_windows.h"
 
-#define KEY_IDENT_DIGITS 2
-
 typedef struct {
     uint8_t name[TOX_MAX_NAME_LENGTH];
     uint16_t namelength;
