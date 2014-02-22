@@ -418,7 +418,12 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
     /* temporary until statusmessage saving works */
-    uint8_t *statusmsg = "Toxing on Toxic v.0.2.4";
+    uint8_t ver[strlen(TOXICVER) + 1];
+    uint8_t statusmsg[MAX_STR_SIZE];
+    strcpy(ver, TOXICVER);
+    uint8_t *toxic_ver = strtok(ver, "_");
+    snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
+
     m_set_statusmessage(m, statusmsg, strlen(statusmsg) + 1);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
