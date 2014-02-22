@@ -130,6 +130,7 @@ static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
             friends[i].namelength = tox_get_name(m, num, friends[i].name);
+            tox_get_client_id(m, num, friends[i].pub_key);
 
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy(friends[i].name, (uint8_t *) UNKNOWN_NAME);
@@ -363,7 +364,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 wprintw(self->window, " (%s)\n", friends[f].statusmsg);
             } else {
-                wprintw(self->window, "[O]");
+                wprintw(self->window, "[");
+                wattron(self->window, A_BOLD);
+                wprintw(self->window, "O");
+                wattroff(self->window, A_BOLD);
+                wprintw(self->window, "]");
 
                 if (f_selected)
                     wattron(self->window, A_BOLD);

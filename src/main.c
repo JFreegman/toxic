@@ -232,34 +232,34 @@ int init_connection(Tox *m)
     return 5;
 }
 
-static void do_tox(Tox *m, ToxWindow *prompt)
+static void do_connection(Tox *m, ToxWindow *prompt)
 {
     static int conn_try = 0;
     static int conn_err = 0;
     static bool dht_on = false;
 
-    if (!dht_on && !tox_isconnected(m) && !(conn_try++ % 100)) {
+    bool is_connected = tox_isconnected(m);
+
+    if (!dht_on && !is_connected && !(conn_try++ % 100)) {
         prep_prompt_win();
         if (!conn_err) {
             wprintw(prompt->window, "Establishing connection...\n");
             if ((conn_err = init_connection(m)))
                 wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
         }
-    } else if (!dht_on && tox_isconnected(m)) {
+    } else if (!dht_on && is_connected) {
         dht_on = true;
         prompt_update_connectionstatus(prompt, dht_on);
 
         prep_prompt_win();
         wprintw(prompt->window, "\nDHT connected.\n");
-    } else if (dht_on && !tox_isconnected(m)) {
+    } else if (dht_on && !is_connected) {
         dht_on = false;
         prompt_update_connectionstatus(prompt, dht_on);
 
         prep_prompt_win();
         wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
     }
-
-    tox_do(m);
 }
 
 int f_loadfromfile;
@@ -405,9 +405,7 @@ static void do_file_senders(Tox *m)
             continue;
         }
 
-        int pieces = 0;
-
-        while (pieces++ < MAX_PIECES_SEND) {
+        while (true) {
             if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
                                    file_senders[i].piecelen) == -1)
                 break;
@@ -432,21 +430,17 @@ static void do_file_senders(Tox *m)
     }
 }
 
-/* This should only be called on exit */
-static void close_file_transfers(Tox *m)
+void exit_toxic(Tox *m)
 {
+    store_data(m, DATA_FILE);
+
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
         if (file_senders[i].active)
             fclose(file_senders[i].file);
     }
-}
 
-void exit_toxic(Tox *m)
-{
-    store_data(m, DATA_FILE);
-    close_file_transfers(m);
     free(DATA_FILE);
     free(SRVLIST_FILE);
     free(prompt->stb);
@@ -454,6 +448,16 @@ void exit_toxic(Tox *m)
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
+}
+
+static void do_toxic(Tox *m, ToxWindow *prompt)
+{
+    do_connection(m, prompt);
+    draw_active_window(m);
+    do_file_senders(m);
+
+    /* main tox-core loop */
+    tox_do(m);
 }
 
 int main(int argc, char *argv[])
@@ -465,6 +469,9 @@ int main(int argc, char *argv[])
     int f_flag = 0;
     int i = 0;
     int f_use_ipv4 = 0;
+
+    // Make sure all written files are read/writeable only by the current user.
+    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
     for (i = 0; i < argc; ++i) {
         if (argv[i] == NULL)
@@ -549,12 +556,8 @@ int main(int argc, char *argv[])
     prompt_init_statusbar(prompt, m);
     sort_friendlist_index(m);
 
-    while (true) {
-        do_tox(m, prompt);
-        do_file_senders(m);
-        draw_active_window(m);
-    }
+    while (true)
+        do_toxic(m, prompt);
 
-    exit_toxic(m);
     return 0;
 }

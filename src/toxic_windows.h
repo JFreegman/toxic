@@ -26,6 +26,7 @@
 #define N_DEFAULT_WINS 2    /* number of permanent default windows */
 #define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 4
+#define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
@@ -149,7 +150,6 @@ struct PromptBuf {
 #define MAX_FILES 256
 #define FILE_PIECE_SIZE 1024
 #define TIMEOUT_FILESENDER 300
-#define MAX_PIECES_SEND 100  /* Max number of pieces to send per file per call to do_file_senders() */
 
 typedef struct {
     FILE *file;

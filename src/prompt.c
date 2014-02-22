@@ -162,7 +162,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_END) {     /* END key: move cursor to end of line */
         if (prt->pos != prt->len)
             prt->pos = prt->len;
-    } 
+    }
 
     else if (key == KEY_LEFT) {
         if (prt->pos > 0)
@@ -418,7 +418,16 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
     /* temporary until statusmessage saving works */
-    uint8_t *statusmsg = "Toxing on Toxic v.0.2.4";
+    uint8_t ver[strlen(TOXICVER) + 1];
+    uint8_t statusmsg[MAX_STR_SIZE];
+    strcpy(ver, TOXICVER);
+    uint8_t *toxic_ver = strtok(ver, "_");
+
+    if (toxic_ver != NULL)
+        snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
+    else
+        snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic hacker edition");
+
     m_set_statusmessage(m, statusmsg, strlen(statusmsg) + 1);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
