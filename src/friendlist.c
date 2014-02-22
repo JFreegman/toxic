@@ -364,7 +364,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 wprintw(self->window, " (%s)\n", friends[f].statusmsg);
             } else {
-                wprintw(self->window, "[O]");
+                wprintw(self->window, "[");
+                wattron(self->window, A_BOLD);
+                wprintw(self->window, "O");
+                wattroff(self->window, A_BOLD);
+                wprintw(self->window, "]");
 
                 if (f_selected)
                     wattron(self->window, A_BOLD);
