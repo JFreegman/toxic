@@ -45,6 +45,14 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/status"     },
 };
 
+static void set_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
+{
+    ChatContext *ctx = self->chatwin;
+
+    tox_set_user_is_typing(m, self->num, is_typing);
+    ctx->self_is_typing = is_typing;
+}
+
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
     if (self->num != num)
@@ -77,7 +85,22 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int num, uint8_t st
         return;
 
     StatusBar *statusbar = self->stb;
-    statusbar->is_online = status == 1 ? true : false;
+
+    if (status == 1) {
+        statusbar->is_online = true;
+        friends[num].is_typing = tox_get_is_typing(m, num);
+    } else {
+        statusbar->is_online = false;
+        friends[num].is_typing = false;
+    }
+}
+
+static void chat_onTypingChange(ToxWindow *self, Tox *m, int num, int is_typing)
+{
+    if (self->num != num)
+        return;
+
+    friends[num].is_typing = is_typing;
 }
 
 static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uint16_t len)
@@ -416,6 +439,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             else
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
         }
+
+        if (!ctx->self_is_typing)
+            set_typingstatus(self, m, true);
     }
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
@@ -473,6 +499,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             reset_buf(ctx->line, &ctx->pos, &ctx->len);
         }
     }
+
+    if (ctx->len <= 0 && ctx->self_is_typing)
+        set_typingstatus(self, m, false);
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)
@@ -523,9 +552,16 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             break;
         }
 
+        if (friends[self->num].is_typing)
+            wattron(statusbar->topline, COLOR_PAIR(YELLOW));
+
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", self->name);
         wattroff(statusbar->topline, A_BOLD);
+
+        if (friends[self->num].is_typing)
+            wattroff(statusbar->topline, COLOR_PAIR(YELLOW));
+
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
         wprintw(statusbar->topline, "[%s]", status_text);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
@@ -611,6 +647,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onInit = &chat_onInit;
     ret.onMessage = &chat_onMessage;
     ret.onConnectionChange = &chat_onConnectionChange;
+    ret.onTypingChange = & chat_onTypingChange;
     ret.onGroupInvite = &chat_onGroupInvite;
     ret.onNickChange = &chat_onNickChange;
     ret.onStatusChange = &chat_onStatusChange;

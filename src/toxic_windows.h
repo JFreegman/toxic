@@ -84,6 +84,7 @@ struct ToxWindow {
     void(*onFileSendRequest)(ToxWindow *, Tox *, int, uint8_t, uint64_t, uint8_t *, uint16_t);
     void(*onFileControl)(ToxWindow *, Tox *, int, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
+    void(*onTypingChange)(ToxWindow *, Tox *, int, int);
 
     char name[TOX_MAX_NAME_LENGTH];
     int num;
@@ -123,6 +124,8 @@ struct ChatContext {
     wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];
     int hst_pos;
     int hst_tot;
+
+    bool self_is_typing;
 
     WINDOW *history;
     WINDOW *linewin;
@@ -185,6 +188,7 @@ void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t ch
 void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname, uint16_t pathname_length, void *userdata);
 void on_file_control(Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
+void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata);
 
 ToxWindow *init_windows(Tox *m);
 void draw_active_window(Tox *m);

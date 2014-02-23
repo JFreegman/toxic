@@ -37,6 +37,16 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     }
 }
 
+void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onTypingChange != NULL)
+            windows[i].onTypingChange(&windows[i], m, friendnumber, is_typing);
+    }
+}
+
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     int i;

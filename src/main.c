@@ -108,6 +108,7 @@ static Tox *init_tox(int ipv4)
 
     /* Callbacks */
     tox_callback_connection_status(m, on_connectionchange, NULL);
+    tox_callback_typing_change(m, on_typing_change, NULL);
     tox_callback_friend_request(m, on_request, NULL);
     tox_callback_friend_message(m, on_message, NULL);
     tox_callback_name_change(m, on_nickchange, NULL);

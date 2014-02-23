@@ -14,6 +14,7 @@ typedef struct {
     int chatwin;
     bool active;
     bool online;
+    bool is_typing;
     TOX_USERSTATUS status;
     struct FileReceiver file_receiver;
 } ToxicFriend;
