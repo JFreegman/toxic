@@ -2,6 +2,8 @@
 
 The client formerly resided in the [Tox core repository](https://github.com/irungentoo/ProjectTox-Core) and is now available as a standalone program. It looks like [this](http://wiki.tox.im/images/b/b6/Ncursesclient1.png).
 
+#Note: run git checkout 0.2.5, 0.2.6 segfaults due to a bug
+
 To compile, first generate the configure script by running the ```autoreconf -i``` command.
 
 Then execute the configure script with ./configure (you may need to pass it the location of your dependency libraries, i.e.):
