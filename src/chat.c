@@ -312,6 +312,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
+    bool close_win = false;
 
     if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
         if (ctx->pos > 0) {
@@ -440,7 +441,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
         }
 
-        if (!ctx->self_is_typing)
+        if (!ctx->self_is_typing && ctx->line[0] != '/')
             set_typingstatus(self, m, true);
     }
     /* RETURN key: Execute command or print line */
@@ -453,7 +454,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
-        bool close_win = false;
 
         if (!string_is_empty(line))
             add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
@@ -497,11 +497,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             free(statusbar);
         } else {
             reset_buf(ctx->line, &ctx->pos, &ctx->len);
-
-            if (ctx->len <= 0 && ctx->self_is_typing)
-                set_typingstatus(self, m, false);
         }
     }
+
+    if (!close_win) {
+        if (ctx->len <= 0 && ctx->self_is_typing)
+            set_typingstatus(self, m, false);
+    }       
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)
