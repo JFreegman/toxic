@@ -497,11 +497,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             free(statusbar);
         } else {
             reset_buf(ctx->line, &ctx->pos, &ctx->len);
+
+            if (ctx->len <= 0 && ctx->self_is_typing)
+                set_typingstatus(self, m, false);
         }
     }
-
-    if (ctx->len <= 0 && ctx->self_is_typing)
-        set_typingstatus(self, m, false);
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)
