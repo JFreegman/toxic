@@ -146,11 +146,14 @@ static char servers[MAXSERVERS][SERVERLEN];
 static uint16_t ports[MAXSERVERS];
 static uint8_t keys[MAXSERVERS][TOX_CLIENT_ID_SIZE];
 
-int serverlist_load(void)
+static int serverlist_load(const char *filename)
 {
     FILE *fp = NULL;
 
-    fp = fopen(SRVLIST_FILE, "r");
+    if (!filename)
+        return 1;
+
+    fp = fopen(filename, "r");
 
     if (fp == NULL)
         return 1;
@@ -213,9 +216,15 @@ int init_connection(Tox *m)
      */
     if (!init_connection_serverlist_loaded) {
         init_connection_serverlist_loaded = 1;
-        int res = serverlist_load();
+        int res = serverlist_load(SRVLIST_FILE);
         if (res)
-            return res;
+        {
+            // Fallback on the provided DHTServers in /usr/share,
+            // so new starts of toxic will connect to the DHT.
+            serverlist_load(PACKAGE_DATADIR "/DHTservers");
+            if (res)
+                return res;
+        }
 
         if (!linecnt)
             return 4;
@@ -509,19 +518,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (config_err) {
-        SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
+    SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
+    if (SRVLIST_FILE != NULL) {
+        strcpy(SRVLIST_FILE, user_config_dir);
+        strcat(SRVLIST_FILE, CONFIGDIR);
+        strcat(SRVLIST_FILE, "DHTservers");
     } else {
-        SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-        if (SRVLIST_FILE != NULL) {
-            strcpy(SRVLIST_FILE, user_config_dir);
-            strcat(SRVLIST_FILE, CONFIGDIR);
-            strcat(SRVLIST_FILE, "DHTservers");
-        } else {
-            endwin();
-            fprintf(stderr, "malloc() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
-        }
+        endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        exit(EXIT_FAILURE);
     }
 
     free(user_config_dir);
