@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  main.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,7 +65,10 @@
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
 char *SRVLIST_FILE = NULL;
+
 ToxWindow *prompt = NULL;
+
+static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
 
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
@@ -277,8 +298,6 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     }
 }
 
-int f_loadfromfile;
-
 /*
  * Store Messenger to given location
  * Return 0 stored successfully
@@ -485,7 +504,7 @@ int main(int argc, char *argv[])
     int i = 0;
     int f_use_ipv4 = 0;
 
-    // Make sure all written files are read/writeable only by the current user.
+    /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
     for (i = 0; i < argc; ++i) {
