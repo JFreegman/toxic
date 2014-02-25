@@ -1,6 +1,6 @@
-## Toxic - console client for [Tox](http://tox.im)
+## Toxic
 
-The client formerly resided in the [Tox core repository](https://github.com/irungentoo/ProjectTox-Core) and is now available as a standalone program. It looks like [this](http://wiki.tox.im/images/b/b6/Ncursesclient1.png).
+Toxic is an ncurses based instant messaging client for [Tox](http://tox.im) which formerly resided in the [Tox core repository](https://github.com/irungentoo/ProjectTox-Core) and is now available as a standalone program. It looks like [this](http://i.imgur.com/hL7WhVl.png).
 
 To compile, first generate the configure script by running the ```autoreconf -i``` command.
 
@@ -14,7 +14,7 @@ Then execute the configure script with ./configure (you may need to pass it the 
 echo '/usr/local/lib/' | sudo tee -a /etc/ld.so.conf.d/locallib.conf
 sudo ldconfig
 ```
-If you dont already have them, you might want to install the ncurses libraries, on Debian:
+If you dont already have them, you may need to install the ncurses libraries. For Debian based systems:
 ```
 sudo apt-get install libncurses5-dev libncursesw5-dev
 ```
