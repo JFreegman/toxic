@@ -205,6 +205,8 @@ int init_connection_helper(Tox *m, int line)
  */
 static bool srvlist_loaded = false;
 
+#define NUM_INIT_NODES 5
+
 int init_connection(Tox *m)
 {
     if (linecnt > 0) /* already loaded serverlist */
@@ -231,10 +233,11 @@ int init_connection(Tox *m)
             return 2;
 
         res = 3;
-        int line;
+        int i;
+        int n = MIN(NUM_INIT_NODES, linecnt);
 
-        for(line = 0; line < linecnt; line++)
-            if (init_connection_helper(m, line))
+        for(i = 0; i < n; ++i)
+            if (init_connection_helper(m, rand() % linecnt))
                 res = 0;
 
         return res;
