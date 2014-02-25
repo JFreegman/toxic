@@ -200,16 +200,15 @@ int init_connection_helper(Tox *m, int line)
  * return codes:
  * 1: failed to open server file
  * 2: no line of sufficient length in server file
- * 3: (old, removed) failed to split a selected line in the server file
- * 4: failed to resolve name to IP
- * 5: serverlist file contains no acceptable line
+ * 3: failed to resolve name to IP
+ * 4: serverlist file contains no acceptable line
  */
 static bool srvlist_loaded = false;
 
 int init_connection(Tox *m)
 {
     if (linecnt > 0) /* already loaded serverlist */
-        return init_connection_helper(m, rand() % linecnt) ? 0 : 4;
+        return init_connection_helper(m, rand() % linecnt) ? 0 : 3;
 
     /* only once:
      * - load the serverlist
@@ -220,17 +219,18 @@ int init_connection(Tox *m)
         int res = serverlist_load(SRVLIST_FILE);
 
         if (res) { 
-            /* Fallback on the provided DHTServers in /usr/share,
+            /* Fallback on the provided DHTServers in /usr/share or /usr/local/share,
             so new starts of toxic will connect to the DHT. */
             res = serverlist_load(PACKAGE_DATADIR "/DHTservers");
+
             if (res)
                 return res;
         }
 
         if (!linecnt)
-            return 4;
+            return 2;
 
-        res = 6;
+        res = 3;
         int line;
 
         for(line = 0; line < linecnt; line++)
@@ -241,7 +241,7 @@ int init_connection(Tox *m)
     }
 
     /* empty serverlist file */
-    return 5;
+    return 4;
 }
 
 static void do_connection(Tox *m, ToxWindow *prompt)
