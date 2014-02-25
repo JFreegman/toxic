@@ -189,10 +189,10 @@ static int serverlist_load(const char *filename)
     return 0;
 }
 
-int init_connection_helper(Tox *m, int linenumber)
+int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap_from_address(m, servers[linenumber], TOX_ENABLE_IPV6_DEFAULT,
-                                                ports[linenumber], keys[linenumber]);
+    return tox_bootstrap_from_address(m, servers[line], TOX_ENABLE_IPV6_DEFAULT,
+                                                ports[line], keys[line]);
 }
 
 /* Connects to a random DHT server listed in the DHTservers file
@@ -204,7 +204,8 @@ int init_connection_helper(Tox *m, int linenumber)
  * 4: failed to resolve name to IP
  * 5: serverlist file contains no acceptable line
  */
-static int init_connection_serverlist_loaded = 0;
+static bool srvlist_loaded = false;
+
 int init_connection(Tox *m)
 {
     if (linecnt > 0) /* already loaded serverlist */
@@ -214,14 +215,14 @@ int init_connection(Tox *m)
      * - load the serverlist
      * - connect to "everyone" inside
      */
-    if (!init_connection_serverlist_loaded) {
-        init_connection_serverlist_loaded = 1;
+    if (!srvlist_loaded) {
+        srvlist_loaded = true;
         int res = serverlist_load(SRVLIST_FILE);
-        if (res)
-        {
-            // Fallback on the provided DHTServers in /usr/share,
-            // so new starts of toxic will connect to the DHT.
-            serverlist_load(PACKAGE_DATADIR "/DHTservers");
+
+        if (res) { 
+            /* Fallback on the provided DHTServers in /usr/share,
+            so new starts of toxic will connect to the DHT. */
+            res = serverlist_load(PACKAGE_DATADIR "/DHTservers");
             if (res)
                 return res;
         }
@@ -230,9 +231,10 @@ int init_connection(Tox *m)
             return 4;
 
         res = 6;
-        int linenumber;
-        for(linenumber = 0; linenumber < linecnt; linenumber++)
-            if (init_connection_helper(m, linenumber))
+        int line;
+
+        for(line = 0; line < linecnt; line++)
+            if (init_connection_helper(m, line))
                 res = 0;
 
         return res;
