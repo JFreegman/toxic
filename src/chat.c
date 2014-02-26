@@ -112,7 +112,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     } else
         wprintw(ctx->history, "%s\n", msg);
 
-    add_to_log_buf(msg, nick, ctx);
+    add_to_log_buf(msg, nick, ctx, false);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
@@ -156,7 +156,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    add_to_log_buf(action, nick, ctx);
+    add_to_log_buf(action, nick, ctx, true);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
@@ -338,7 +338,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
         wprintw(ctx->history, " * Failed to send action\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
     } else {
-        add_to_log_buf(action, selfname, ctx);
+        add_to_log_buf(action, selfname, ctx, true);
     }
 }
 
@@ -529,7 +529,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wprintw(ctx->history, " * Failed to send message.\n");
                 wattroff(ctx->history, COLOR_PAIR(RED));
             } else {
-                add_to_log_buf(line, selfname, ctx);
+                add_to_log_buf(line, selfname, ctx, false);
             }
         }
 

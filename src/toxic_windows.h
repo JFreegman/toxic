@@ -136,7 +136,7 @@ struct StatusBar {
 };
 
 #define MAX_LOG_BUF_LINES 10    /* write log_buf contents to log file after this many lines */
-#define MAX_LOG_LINE_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 24    /* extra room for timestamp */
+#define MAX_LOG_LINE_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* extra room for timestamp */
 
 struct chatlog {
     uint8_t log_path[MAX_STR_SIZE];

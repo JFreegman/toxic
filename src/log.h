@@ -26,7 +26,11 @@ void init_logging_session(uint8_t *name, uint8_t *pub_key, ChatContext *ctx);
 
 /* Adds msg to log_buf with timestamp and name. 
    If buf is full, triggers write_to_log (which sets buf pos to 0) */
-void add_to_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx);
+void add_line_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx);
+
+/* Adds line/event to log_buf with timestamp and name. If buf is full, triggers write_to_log.
+   If event is true, formats line as an event, e.g. * name has gone offline */
+void add_to_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx, bool event);
 
 /* writes contents from a chatcontext's log buffer to respective log file and resets log pos.
    This is triggered automatically when the log buffer is full, but may be forced. */

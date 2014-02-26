@@ -168,7 +168,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
         wprintw(ctx->history, "%s\n", msg);
     }
 
-    add_to_log_buf(msg, nick, ctx);
+    add_to_log_buf(msg, nick, ctx, false);
 }
 
 static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *action,
@@ -204,7 +204,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    add_to_log_buf(action, nick, ctx);
+    add_to_log_buf(action, nick, ctx, true);
 }
 
 /* Puts two copies of peerlist in chat instance */
@@ -269,25 +269,36 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     ChatContext *ctx = self->chatwin;
     print_time(ctx->history);
 
+    uint8_t *event;
+
     switch (change) {
     case TOX_CHAT_CHANGE_PEER_ADD:
+        event = "has joined the room";
+
         wattron(ctx->history, COLOR_PAIR(GREEN));
         wattron(ctx->history, A_BOLD);
         wprintw(ctx->history, "* %s", peername);
         wattroff(ctx->history, A_BOLD);
-        wprintw(ctx->history, " has joined the room\n");
+        wprintw(ctx->history, " %s\n", event);
         wattroff(ctx->history, COLOR_PAIR(GREEN));
+
+        add_to_log_buf(event, peername, ctx, true);
         break;
+
     case TOX_CHAT_CHANGE_PEER_DEL:
+        event = "has left the room";
+
         wattron(ctx->history, A_BOLD);
         wprintw(ctx->history, "* %s", oldpeername);
         wattroff(ctx->history, A_BOLD);
-        wprintw(ctx->history, " has left the room\n");
+        wprintw(ctx->history, " %s\n", event);
 
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
 
+        add_to_log_buf(event, peername, ctx, true);
         break;
+
     case TOX_CHAT_CHANGE_PEER_NAME:
         wattron(ctx->history, COLOR_PAIR(MAGENTA));
         wattron(ctx->history, A_BOLD);
@@ -300,6 +311,10 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         wprintw(ctx->history, "%s\n", peername);
         wattroff(ctx->history, A_BOLD);
         wattroff(ctx->history, COLOR_PAIR(MAGENTA));
+
+        uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH + 32];
+        snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
+        add_to_log_buf(tmp_event, peername, ctx, true);
         break;
     }
 

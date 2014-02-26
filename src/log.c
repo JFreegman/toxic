@@ -85,17 +85,24 @@ void write_to_log(ChatContext *ctx)
     fclose(logfile);
 }
 
-/* Adds msg to log_buf with timestamp and name. 
-   If buf is full, triggers write_to_log (which sets buf pos to 0) */
-void add_to_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx)
+/* Adds line/event to log_buf with timestamp and name. If buf is full, triggers write_to_log.
+   If event is true, formats line as an event, e.g. * name has gone offline */
+void add_to_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx, bool event)
 {
     if (!ctx->log.log_on)
         return;
 
+    uint8_t name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
+
+    if (event)
+        snprintf(name_frmt, sizeof(name_frmt), "* %s", name);
+    else
+        snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
+
     struct tm *tminfo = get_time();
-    snprintf(ctx->log.log_buf[ctx->log.pos], MAX_LOG_LINE_SIZE, "%04d/%02d/%02d [%02d:%02d:%02d] %s: %s\n", 
+    snprintf(ctx->log.log_buf[ctx->log.pos], MAX_LOG_LINE_SIZE, "%04d/%02d/%02d [%02d:%02d:%02d] %s %s\n", 
                                   tminfo->tm_year + 1900, tminfo->tm_mon + 1, tminfo->tm_mday, 
-                                  tminfo->tm_hour, tminfo->tm_min, tminfo->tm_sec, name, msg);
+                                  tminfo->tm_hour, tminfo->tm_min, tminfo->tm_sec, name_frmt, msg);
 
     if (++(ctx->log.pos) >= MAX_LOG_BUF_LINES)
         write_to_log(ctx);
