@@ -109,6 +109,10 @@ struct ToxWindow {
     bool active;
     int x;
 
+    /* window type identifiers */
+    bool is_chat;
+    bool is_groupchat;
+
     bool alert0;
     bool alert1;
     bool alert2;
@@ -132,7 +136,7 @@ struct StatusBar {
 };
 
 #define MAX_LOG_BUF_LINES 10    /* write log_buf contents to log file after this many lines */
-#define MAX_LOG_LINE_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 24    /* extra room for time/date */
+#define MAX_LOG_LINE_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 24    /* extra room for timestamp */
 
 struct chatlog {
     uint8_t log_path[MAX_STR_SIZE];
@@ -226,4 +230,7 @@ int add_window(Tox *m, ToxWindow w);
 void del_window(ToxWindow *w);
 void set_active_window(int ch);
 int num_active_windows(void);
+
+/* closes all chat and groupchat windows (should only be called on shutdown) */
+void kill_all_windows(void);
 #endif

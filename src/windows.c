@@ -30,6 +30,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "toxic_windows.h"
+#include "groupchat.h"
 
 extern char *DATA_FILE;
 
@@ -408,4 +409,17 @@ int num_active_windows(void)
     }
 
     return count;
+}
+
+/* destroys all chat and groupchat windows (should only be called on shutdown) */
+void kill_all_windows(void)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].is_chat)
+            kill_chat_window(&windows[i]);
+        else if (windows[i].is_groupchat)
+            kill_groupchat_window(&windows[i]);
+    }
 }

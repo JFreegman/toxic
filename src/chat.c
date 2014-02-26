@@ -71,6 +71,24 @@ static void set_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
     ctx->self_is_typing = is_typing;
 }
 
+void kill_chat_window(ToxWindow *self)
+{
+    set_active_window(0);
+    ChatContext *ctx = self->chatwin;
+    StatusBar *statusbar = self->stb;
+
+    write_to_log(ctx);
+
+    int f_num = self->num;
+    delwin(ctx->linewin);
+    delwin(statusbar->topline);
+    del_window(self);
+    disable_chatwin(f_num);
+
+    free(ctx);
+    free(statusbar);
+}
+
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
 {
     if (self->num != num)
@@ -333,7 +351,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
-    bool close_win = false;
 
     if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
         if (ctx->pos > 0) {
@@ -480,17 +497,17 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
 
         if (line[0] == '/') {
-            if (close_win = !strcmp(line, "/close")) {
-                write_to_log(ctx);
-                int f_num = self->num;
-                delwin(ctx->linewin);
-                delwin(statusbar->topline);
-                del_window(self);
-                disable_chatwin(f_num);
-            } else if (strncmp(line, "/me ", strlen("/me ")) == 0)
+            if (strcmp(line, "/close") == 0) {
+                if (ctx->self_is_typing)
+                    set_typingstatus(self, m, false);
+
+                kill_chat_window(self);
+                return;
+            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_action(self, ctx, m, line + strlen("/me "));
-              else
+            } else {
                 execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
+            }
         } else if (!string_is_empty(line)) {
             uint8_t selfname[TOX_MAX_NAME_LENGTH];
             tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
@@ -516,18 +533,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             }
         }
 
-        if (close_win) {
-            free(ctx);
-            free(statusbar);
-        } else {
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
-        }
+        reset_buf(ctx->line, &ctx->pos, &ctx->len);
     }
 
-    if (!close_win) {
-        if (ctx->len <= 0 && ctx->self_is_typing)
-            set_typingstatus(self, m, false);
-    }       
+    if (ctx->len <= 0 && ctx->self_is_typing)
+        set_typingstatus(self, m, false);
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)
@@ -660,10 +670,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    if (self->name) {
-        ctx->log.log_on = true;
-        init_logging_session(self->name, friends[self->num].pub_key, ctx);
-    }
+    ctx->log.log_on = true;
+    init_logging_session(self->name, friends[self->num].pub_key, ctx);
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)
@@ -672,6 +680,7 @@ ToxWindow new_chat(Tox *m, int friendnum)
     memset(&ret, 0, sizeof(ret));
 
     ret.active = true;
+    ret.is_chat = true;
 
     ret.onKey = &chat_onKey;
     ret.onDraw = &chat_onDraw;

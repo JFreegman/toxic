@@ -71,8 +71,19 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
     return -1;
 }
 
-static void close_groupchatwin(Tox *m, int groupnum)
+void kill_groupchat_window(ToxWindow *self)
 {
+    ChatContext *ctx = self->chatwin;
+    write_to_log(ctx);
+
+    delwin(ctx->linewin);
+    del_window(self);
+    free(ctx);
+}
+
+static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
+{
+    set_active_window(0);
     tox_del_groupchat(m, groupnum);
 
     free(groupchats[groupnum].peer_names);
@@ -87,6 +98,8 @@ static void close_groupchatwin(Tox *m, int groupnum)
     }
 
     max_groupchat_index = i;
+
+    kill_groupchat_window(self);
 }
 
 static void print_groupchat_help(ChatContext *ctx)
@@ -480,19 +493,14 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         wclrtobot(self->window);
-        bool close_win = false;
 
         if (!string_is_empty(line))
             add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
 
         if (line[0] == '/') {
-            if (close_win = strcmp(line, "/close") == 0) {
-                write_to_log(ctx);
-                set_active_window(0);
-                int groupnum = self->num;
-                delwin(ctx->linewin);
-                del_window(self);
-                close_groupchatwin(m, groupnum);
+            if (strcmp(line, "/close") == 0) {
+                close_groupchat(self, m, self->num);
+                return;
             } else if (strcmp(line, "/help") == 0)
                 print_groupchat_help(ctx);
               else if (strncmp(line, "/me ", strlen("/me ")) == 0)
@@ -507,10 +515,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             }
         }
 
-        if (close_win)
-            free(ctx);
-        else
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+        reset_buf(ctx->line, &ctx->pos, &ctx->len);
     }
 }
 
@@ -591,6 +596,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     memset(&ret, 0, sizeof(ret));
 
     ret.active = true;
+    ret.is_groupchat = true;
 
     ret.onKey = &groupchat_onKey;
     ret.onDraw = &groupchat_onDraw;

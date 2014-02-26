@@ -475,6 +475,7 @@ void exit_toxic(Tox *m)
             fclose(file_senders[i].file);
     }
 
+    kill_all_windows();
     free(DATA_FILE);
     free(SRVLIST_FILE);
     free(prompt->stb);
