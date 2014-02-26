@@ -602,7 +602,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y-CURS_Y_OFFSET, 0);
 
     ctx->log.log_on = true;
-    init_logging_session(self->name, groupchats[self->num].groupkey, ctx);
+    init_logging_session(self->name, NULL, ctx);
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)

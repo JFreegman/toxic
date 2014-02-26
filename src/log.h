@@ -20,9 +20,8 @@
  *
  */
 
-/* gets a log path by appending to the config dir the name and first 4 chars of the pub_key, 
-   writes current date/time to log file. */
-void init_logging_session(uint8_t *name, uint8_t *pub_key, ChatContext *ctx);
+/* gets the log path by appending to the config dir the name and a pseudo-unique identity */
+void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
 
 /* Adds msg to log_buf with timestamp and name. 
    If buf is full, triggers write_to_log (which sets buf pos to 0) */

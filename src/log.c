@@ -28,23 +28,36 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 
-/* gets the log path by appending to the config dir the name and first 4 chars of key */
+/* gets the log path by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
 {
     if (!ctx->log.log_on)
         return;
 
     char *user_config_dir = get_user_config_dir();
-    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name)\
-                                                + (KEY_IDENT_DIGITS * 2) + 5;
+    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name); 
 
-    if (path_len > MAX_STR_SIZE)
+    /* use first 4 digits of key as log ident. If no key use a timestamp */
+    uint8_t ident[32];
+
+    if (key != NULL) {
+        path_len += (KEY_IDENT_DIGITS * 2 + 5);
+
+        sprintf(&ident[0], "%02X", key[0] & 0xff);
+        sprintf(&ident[2], "%02X", key[2] & 0xff);
+        ident[KEY_IDENT_DIGITS*2+1] = '\0';
+    } else {
+        struct tm *tminfo = get_time();
+        snprintf(ident, 32, 
+                "%04d-%02d-%02d-%02d:%02d:%02d", tminfo->tm_year+1900,tminfo->tm_mon+1, tminfo->tm_mday, 
+                                                 tminfo->tm_hour, tminfo->tm_min, tminfo->tm_sec);
+        path_len += strlen(ident) + 1;
+    }
+
+    if (path_len > MAX_STR_SIZE) {
+        ctx->log.log_on = false;
         return;
-
-    uint8_t ident[KEY_IDENT_DIGITS*2+1];
-    sprintf(&ident[0], "%02X", key[0] & 0xff);
-    sprintf(&ident[2], "%02X", key[2] & 0xff);
-    ident[KEY_IDENT_DIGITS*2+1] = '\0';
+    }
 
     snprintf(ctx->log.log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
              user_config_dir, CONFIGDIR, name, ident);
