@@ -154,6 +154,8 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     } else {
         wprintw(ctx->history, "%s\n", msg);
     }
+
+    add_to_log_buf(msg, nick, ctx);
 }
 
 static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *action,
@@ -188,6 +190,8 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     wattron(ctx->history, COLOR_PAIR(YELLOW));
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
+
+    add_to_log_buf(action, nick, ctx);
 }
 
 /* Puts two copies of peerlist in chat instance */
@@ -483,6 +487,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         if (line[0] == '/') {
             if (close_win = strcmp(line, "/close") == 0) {
+                write_to_log(ctx);
                 set_active_window(0);
                 int groupnum = self->num;
                 delwin(ctx->linewin);
@@ -575,6 +580,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     print_groupchat_help(ctx);
     wmove(self->window, y-CURS_Y_OFFSET, 0);
+
+    ctx->log.log_on = true;
+    init_logging_session(self->name, groupchats[self->num].groupkey, ctx);
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)

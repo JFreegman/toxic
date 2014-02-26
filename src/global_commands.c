@@ -211,7 +211,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum, NULL) == -1) {
         wprintw(window, "Group chat window failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;

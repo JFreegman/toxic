@@ -35,7 +35,8 @@ void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
         return;
 
     char *user_config_dir = get_user_config_dir();
-    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name) + (KEY_IDENT_DIGITS * 2) + 5;
+    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name)\
+                                                + (KEY_IDENT_DIGITS * 2) + 5;
 
     if (path_len > MAX_STR_SIZE)
         return;
@@ -45,7 +46,8 @@ void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
     sprintf(&ident[2], "%02X", key[2] & 0xff);
     ident[KEY_IDENT_DIGITS*2+1] = '\0';
 
-    snprintf(ctx->log.log_path, MAX_STR_SIZE, "%s%s%s-%s.log", user_config_dir, CONFIGDIR, name, ident);
+    snprintf(ctx->log.log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
+             user_config_dir, CONFIGDIR, name, ident);
 
     FILE *logfile = fopen(ctx->log.log_path, "a");
 

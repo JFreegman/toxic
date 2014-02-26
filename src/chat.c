@@ -319,9 +319,9 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
         wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, " * Failed to send action\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
+    } else {
+        add_to_log_buf(action, selfname, ctx);
     }
-
-    add_to_log_buf(action, selfname, ctx);
 }
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -507,12 +507,12 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             } else
                 wprintw(ctx->history, "%s\n", line);
 
-            add_to_log_buf(line, selfname, ctx);
-
             if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
                 wattron(ctx->history, COLOR_PAIR(RED));
                 wprintw(ctx->history, " * Failed to send message.\n");
                 wattroff(ctx->history, COLOR_PAIR(RED));
+            } else {
+                add_to_log_buf(line, selfname, ctx);
             }
         }
 

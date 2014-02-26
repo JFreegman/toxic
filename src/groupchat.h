@@ -30,6 +30,7 @@ typedef struct {
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     uint8_t *peer_names;
     uint8_t *oldpeer_names;
+    uint8_t groupkey[TOX_CLIENT_ID_SIZE];
 } GroupChat;
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
