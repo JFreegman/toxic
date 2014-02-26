@@ -94,6 +94,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     } else
         wprintw(ctx->history, "%s\n", msg);
 
+    add_to_log_buf(msg, nick, ctx);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
@@ -137,6 +138,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
+    add_to_log_buf(action, nick, ctx);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
@@ -263,7 +265,6 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
     uint8_t *filename = friends[num].file_receiver.filenames[filenum];
     FILE *file_to_save = fopen(filename, "a");
 
-     // we have a problem here, but don't let it segfault
     if (file_to_save == NULL) {
         wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, "* Error writing to file.\n");
@@ -319,6 +320,8 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
         wprintw(ctx->history, " * Failed to send action\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
     }
+
+    add_to_log_buf(action, selfname, ctx);
 }
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
@@ -478,6 +481,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         if (line[0] == '/') {
             if (close_win = !strcmp(line, "/close")) {
+                write_to_log(ctx);
                 int f_num = self->num;
                 delwin(ctx->linewin);
                 delwin(statusbar->topline);
@@ -502,6 +506,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wattroff(ctx->history, COLOR_PAIR(GREEN));
             } else
                 wprintw(ctx->history, "%s\n", line);
+
+            add_to_log_buf(line, selfname, ctx);
 
             if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
                 wattron(ctx->history, COLOR_PAIR(RED));
@@ -653,6 +659,11 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     wprintw(ctx->history, "\n\n");
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+
+    if (self->name) {
+        ctx->log.log_on = true;
+        init_logging_session(self->name, friends[self->num].pub_key, ctx);
+    }
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)

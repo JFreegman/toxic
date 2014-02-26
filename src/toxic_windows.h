@@ -131,6 +131,16 @@ struct StatusBar {
     bool is_online;
 };
 
+#define MAX_LOG_BUF_LINES 10    /* write log_buf contents to log file after this many lines */
+#define MAX_LOG_LINE_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 24    /* extra room for time/date */
+
+struct chatlog {
+    uint8_t log_path[MAX_STR_SIZE];
+    uint8_t log_buf[MAX_LOG_BUF_LINES][MAX_LOG_LINE_SIZE];
+    int pos;
+    bool log_on;
+};
+
 #define MAX_LINE_HIST 128
 
 /* chat and groupchat window/buffer holder */
@@ -144,6 +154,8 @@ struct ChatContext {
     int hst_tot;
 
     bool self_is_typing;
+
+    struct chatlog log;
 
     WINDOW *history;
     WINDOW *linewin;
