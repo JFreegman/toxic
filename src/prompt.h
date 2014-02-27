@@ -25,7 +25,7 @@
 
 #define X_OFST 2    /* offset to account for prompt char */
 
-#define AC_NUM_GLOB_COMMANDS 14
+#define AC_NUM_GLOB_COMMANDS 15
 
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);

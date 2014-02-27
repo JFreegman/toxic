@@ -32,6 +32,8 @@ typedef struct {
     uint8_t *oldpeer_names;
 } GroupChat;
 
+void groupchat_enable_log(ToxWindow *self);
+void groupchat_disable_log(ToxWindow *self);
 void kill_groupchat_window(ToxWindow *self);
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
 ToxWindow new_group_chat(Tox *m, int groupnum);

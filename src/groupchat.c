@@ -74,8 +74,8 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 void kill_groupchat_window(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
-    write_to_log(ctx);
 
+    groupchat_disable_log(self);
     delwin(ctx->linewin);
     del_window(self);
     free(ctx);
@@ -100,6 +100,29 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
     max_groupchat_index = i;
 
     kill_groupchat_window(self);
+}
+
+void groupchat_enable_log(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (ctx->log.log_on)
+        return;
+
+    ctx->log.log_on = true;
+
+    if (!ctx->log.log_path[0])
+        init_logging_session(self->name, NULL, ctx);
+}
+
+void groupchat_disable_log(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (ctx->log.log_on) {
+        write_to_log(ctx);
+        ctx->log.log_on = false;
+    }
 }
 
 static void print_groupchat_help(ChatContext *ctx)
@@ -599,10 +622,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     ctx->sidebar = subwin(self->window, y-CHATBOX_HEIGHT+1, SIDEBAR_WIDTH, 0, x-SIDEBAR_WIDTH);
 
     print_groupchat_help(ctx);
-    wmove(self->window, y-CURS_Y_OFFSET, 0);
+    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
-    ctx->log.log_on = true;
-    init_logging_session(self->name, NULL, ctx);
+    wmove(self->window, y-CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)

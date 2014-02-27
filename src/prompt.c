@@ -48,6 +48,7 @@ const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/groupchat"  },
     { "/help"       },
     { "/join"       },
+    { "/log"        },
     { "/myid"       },
     { "/nick"       },
     { "/note"       },

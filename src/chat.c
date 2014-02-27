@@ -33,6 +33,7 @@
 #include "misc_tools.h"
 #include "friendlist.h"
 #include "toxic_strings.h"
+#include "chat.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -40,7 +41,7 @@ extern int store_data(Tox *m, char *path);
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
-#define AC_NUM_CHAT_COMMANDS 17
+#define AC_NUM_CHAT_COMMANDS 18
 
 /* Array of chat command names used for tab completion. */
 static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -54,6 +55,7 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/help"       },
     { "/invite"     },
     { "/join"       },
+    { "/log"        },
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
@@ -77,7 +79,7 @@ void kill_chat_window(ToxWindow *self)
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
-    write_to_log(ctx);
+    chat_disable_log(self);
 
     int f_num = self->num;
     delwin(ctx->linewin);
@@ -87,6 +89,29 @@ void kill_chat_window(ToxWindow *self)
 
     free(ctx);
     free(statusbar);
+}
+
+void chat_enable_log(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (ctx->log.log_on)
+        return;
+
+    ctx->log.log_on = true;
+
+    if (!ctx->log.log_path[0])
+        init_logging_session(self->name, friends[self->num].pub_key, ctx);
+}
+
+void chat_disable_log(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (ctx->log.log_on) {
+        write_to_log(ctx);
+        ctx->log.log_on = false;
+    }
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
@@ -668,10 +693,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2-CHATBOX_HEIGHT, 0);
     wprintw(ctx->history, "\n\n");
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
+    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-
-    ctx->log.log_on = true;
-    init_logging_session(self->name, friends[self->num].pub_key, ctx);
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)

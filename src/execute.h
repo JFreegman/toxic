@@ -21,7 +21,7 @@
  */
 
 #define MAX_NUM_ARGS 4     /* Includes command */
-#define GLOBAL_NUM_COMMANDS 13
+#define GLOBAL_NUM_COMMANDS 14
 #define CHAT_NUM_COMMANDS 5
 
 enum {

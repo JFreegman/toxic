@@ -25,6 +25,8 @@
 
 #include "toxic_windows.h"
 
+void chat_enable_log(ToxWindow *self);
+void chat_disable_log(ToxWindow *self);
 void kill_chat_window(ToxWindow *self);
 ToxWindow new_chat(Tox *m, int friendnum);
 
