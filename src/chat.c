@@ -414,14 +414,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             beep();
     }
 
-    else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
+    else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
         if (ctx->pos > 0) {
             ctx->pos = 0;
             wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         }
     } 
 
-    else if (key == KEY_END) {     /* END key: move cursor to end of line */
+    else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
         if (ctx->pos != ctx->len) {
             ctx->pos = ctx->len;
             mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT-1)*x2)), y2, x2);

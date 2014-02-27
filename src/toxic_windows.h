@@ -54,6 +54,8 @@
 #define T_KEY_DISCARD    0x15     /* ctrl-u */
 #define T_KEY_NEXT       0x10     /* ctrl-p */
 #define T_KEY_PREV       0x0F     /* ctrl-o */
+#define T_KEY_C_E        0x05     /* ctrl-e */
+#define T_KEY_C_A        0x01     /* ctrl-a */
 
 /* Curses foreground colours (background is black) */
 enum {

@@ -21,7 +21,7 @@
  */
 
 /* gets the log path by appending to the config dir the name and a pseudo-unique identity */
-void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
+void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx);
 
 /* Adds msg to log_buf with timestamp and name. 
    If buf is full, triggers write_to_log (which sets buf pos to 0) */

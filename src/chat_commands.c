@@ -52,14 +52,14 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     wprintw(window, "Chat commands:\n");
     wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 
-    wprintw(window, "      /invite <n>                : Invite friend to a group chat\n");
-    wprintw(window, "      /join                      : Join a pending group chat\n");
-    wprintw(window, "      /log <bool>                : Enable/disable logging\n");
-    wprintw(window, "      /close                     : Close the current chat window\n");
-    wprintw(window, "      /sendfile <filepath>       : Send a file\n");
-    wprintw(window, "      /savefile <n>              : Receive a file\n");
-    wprintw(window, "      /help                      : Print this message again\n");
-    wprintw(window, "      /help global               : Show a list of global commands\n");
+    wprintw(window, "    /invite <n>                : Invite friend to a group chat\n");
+    wprintw(window, "    /join                      : Join a pending group chat\n");
+    wprintw(window, "    /log <on> or <off>         : Enable/disable logging\n");
+    wprintw(window, "    /sendfile <filepath>       : Send a file\n");
+    wprintw(window, "    /savefile <n>              : Receive a file\n");
+    wprintw(window, "    /close                     : Close the current chat window\n");
+    wprintw(window, "    /help                      : Print this message again\n");
+    wprintw(window, "    /help global               : Show a list of global commands\n");
     
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n\n");

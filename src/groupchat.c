@@ -131,15 +131,15 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, "Group chat commands:\n");
     wattroff(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
 
-    wprintw(ctx->history, "      /add <id> <msg>     : Add friend with optional message\n");
-    wprintw(ctx->history, "      /status <type> <msg>: Set your status with optional note\n");
-    wprintw(ctx->history, "      /note <msg>         : Set a personal note\n");
-    wprintw(ctx->history, "      /nick <nick>        : Set your nickname\n");
-    wprintw(ctx->history, "      /groupchat          : Create a group chat\n");
-    wprintw(ctx->history, "      /log <bool>         : Enable/disable logging\n");
-    wprintw(ctx->history, "      /close              : Close the current group chat\n");
-    wprintw(ctx->history, "      /help               : Print this message again\n");
-    wprintw(ctx->history, "      /help global        : Show a list of global commands\n");
+    wprintw(ctx->history, "    /add <id> <msg>     : Add friend with optional message\n");
+    wprintw(ctx->history, "    /status <type> <msg>: Set your status with optional note\n");
+    wprintw(ctx->history, "    /note <msg>         : Set a personal note\n");
+    wprintw(ctx->history, "    /nick <nick>        : Set your nickname\n");
+    wprintw(ctx->history, "    /groupchat          : Create a group chat\n");
+    wprintw(ctx->history, "    /log <on> or <off>  : Enable/disable logging\n");
+    wprintw(ctx->history, "    /close              : Close the current group chat\n");
+    wprintw(ctx->history, "    /help               : Print this message again\n");
+    wprintw(ctx->history, "    /help global        : Show a list of global commands\n");
     
     wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(ctx->history, " * Argument messages must be enclosed in quotation marks.\n");
@@ -410,14 +410,14 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             beep();
     }
 
-    else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
+    else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
         if (ctx->pos > 0) {
             ctx->pos = 0;
             wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         }
     }
 
-    else if (key == KEY_END) {     /* END key: move cursor to end of line */
+    else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
         if (ctx->pos != ctx->len) {
             ctx->pos = ctx->len;
             mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT-1)*x2)), y2, x2);
