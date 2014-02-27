@@ -136,11 +136,10 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, "      /note <msg>         : Set a personal note\n");
     wprintw(ctx->history, "      /nick <nick>        : Set your nickname\n");
     wprintw(ctx->history, "      /groupchat          : Create a group chat\n");
-    wprintw(ctx->history, "      /myid               : Print your ID\n");
-    wprintw(ctx->history, "      /clear              : Clear the screen\n");
+    wprintw(ctx->history, "      /log <bool>         : Enable/disable logging\n");
     wprintw(ctx->history, "      /close              : Close the current group chat\n");
-    wprintw(ctx->history, "      /quit or /exit      : Exit Toxic\n");
     wprintw(ctx->history, "      /help               : Print this message again\n");
+    wprintw(ctx->history, "      /help global        : Show a list of global commands\n");
     
     wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(ctx->history, " * Argument messages must be enclosed in quotation marks.\n");
@@ -539,12 +538,17 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             if (strcmp(line, "/close") == 0) {
                 close_groupchat(self, m, self->num);
                 return;
-            } else if (strcmp(line, "/help") == 0)
-                print_groupchat_help(ctx);
-              else if (strncmp(line, "/me ", strlen("/me ")) == 0)
+            } else if (strcmp(line, "/help") == 0) {
+                if (strcmp(line, "help global") == 0)
+                    execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
+                else
+                    print_groupchat_help(ctx);
+
+            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_group_action(self, ctx, m, line + strlen("/me "));
-              else
+            } else {
                 execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
+            }
         } else if (!string_is_empty(line)) {
             if (tox_group_message_send(m, self->num, line, strlen(line) + 1) == -1) {
                 wattron(ctx->history, COLOR_PAIR(RED));

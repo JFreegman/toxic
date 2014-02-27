@@ -211,7 +211,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, NULL) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum) == -1) {
         wprintw(window, "Group chat window failed to initialize.\n");
         tox_del_groupchat(m, groupnum);
         return;
@@ -228,8 +228,11 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     ChatContext *ctx = self->chatwin;
 
     if (argc == 0) {
-        uint8_t *s = ctx->log.log_on ? "enabled" : "disabled";
-        wprintw(window, "Logging for this chat is currently %s\n", s);
+        if (ctx->log.log_on)
+            wprintw(window, "Logging for this chat is currently enabled. /log 0 to disable.\n");
+        else
+            wprintw(window, "Logging for this chat is currently disabled. /log 1 to enable.\n");
+
         return;
     }
 
@@ -343,14 +346,14 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wprintw(window, "      /add <id> <msg>            : Add friend with optional message\n");
     wprintw(window, "      /accept <n>                : Accept friend request\n");
     wprintw(window, "      /connect <ip> <port> <key> : Manually connect to a DHT server\n");
-    wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
+    wprintw(window, "      /status <type> <msg>       : Set status with optional note\n");
     wprintw(window, "      /note <msg>                : Set a personal note\n");
     wprintw(window, "      /nick <nick>               : Set your nickname\n");
     wprintw(window, "      /groupchat                 : Create a group chat\n");
     wprintw(window, "      /myid                      : Print your ID\n");
-    wprintw(window, "      /quit or /exit             : Exit Toxic\n");
     wprintw(window, "      /help                      : Print this message again\n");
     wprintw(window, "      /clear                     : Clear the window\n");
+    wprintw(window, "      /quit or /exit             : Exit Toxic\n");
 
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");

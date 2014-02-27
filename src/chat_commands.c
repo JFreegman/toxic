@@ -30,6 +30,7 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 #include "friendlist.h"
+#include "execute.h"
 
 extern ToxWindow *prompt;
 
@@ -40,23 +41,25 @@ extern uint8_t max_file_senders_index;
 
 void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (argc == 1) {
+        if (!strcmp(argv[1], "global")) {
+            execute(window, self, m, "/help", GLOBAL_COMMAND_MODE);
+            return;
+        }
+    }
+
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, "Chat commands:\n");
     wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 
-    wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
-    wprintw(window, "      /note <msg>                : Set a personal note\n");
-    wprintw(window, "      /nick <nick>               : Set your nickname\n");
     wprintw(window, "      /invite <n>                : Invite friend to a group chat\n");
-    wprintw(window, "      /me <action>               : Do an action\n");
-    wprintw(window, "      /myid                      : Print your ID\n");
     wprintw(window, "      /join                      : Join a pending group chat\n");
-    wprintw(window, "      /clear                     : Clear the screen\n");
+    wprintw(window, "      /log <bool>                : Enable/disable logging\n");
     wprintw(window, "      /close                     : Close the current chat window\n");
     wprintw(window, "      /sendfile <filepath>       : Send a file\n");
     wprintw(window, "      /savefile <n>              : Receive a file\n");
-    wprintw(window, "      /quit or /exit             : Exit Toxic\n");
     wprintw(window, "      /help                      : Print this message again\n");
+    wprintw(window, "      /help global               : Show a list of global commands\n");
     
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n\n");
