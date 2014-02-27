@@ -336,7 +336,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
         uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH + 32];
         snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
-        add_to_log_buf(tmp_event, peername, ctx, true);
+        add_to_log_buf(tmp_event, oldpeername, ctx, true);
         break;
     }
 
