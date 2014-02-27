@@ -318,7 +318,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
 
-        add_to_log_buf(event, peername, ctx, true);
+        add_to_log_buf(event, oldpeername, ctx, true);
         break;
 
     case TOX_CHAT_CHANGE_PEER_NAME:
