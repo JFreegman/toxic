@@ -106,9 +106,6 @@ void groupchat_enable_log(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->log.log_on)
-        return;
-
     ctx->log.log_on = true;
 
     if (!ctx->log.log_path[0])

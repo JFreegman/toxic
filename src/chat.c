@@ -95,9 +95,6 @@ void chat_enable_log(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->log.log_on)
-        return;
-
     ctx->log.log_on = true;
 
     if (!ctx->log.log_path[0])
@@ -108,10 +105,10 @@ void chat_disable_log(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->log.log_on) {
+    if (ctx->log.log_on)
         write_to_log(ctx);
-        ctx->log.log_on = false;
-    }
+
+    ctx->log.log_on = false;
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
@@ -692,9 +689,14 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2-CHATBOX_HEIGHT, 0);
     wprintw(ctx->history, "\n\n");
-    execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
-    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+
+    execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
+
+    if (friends[self->num].logging_on)
+        chat_enable_log(self);
+
+    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)

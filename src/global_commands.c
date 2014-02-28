@@ -222,16 +222,27 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (!self->is_chat && !self->is_groupchat)    /* remove if prompt logging gets implemented */
+    if (!self->is_chat && !self->is_groupchat) {    /* remove if prompt logging gets implemented */
+        wprintw(window, "Invalid command.\n");
         return;
+    }
 
     ChatContext *ctx = self->chatwin;
 
     if (argc == 0) {
-        if (ctx->log.log_on)
-            wprintw(window, "Logging for this chat is on. Type \"/log off\" to disable.\n");
-        else
-            wprintw(window, "Logging for this chat is off. Type \"/log on\" to enable.\n");
+        if (ctx->log.log_on) {
+            wprintw(window, "Logging for this chat is ");
+            wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
+            wprintw(window, "[on]");
+            wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
+            wprintw(window, ". Type \"/log off\" to disable.\n");
+        } else {
+            wprintw(window, "Logging for this chat is ");
+            wattron(window, COLOR_PAIR(RED) | A_BOLD);
+            wprintw(window, "[off]");
+            wattroff(window, COLOR_PAIR(RED) | A_BOLD);
+            wprintw(window, ". Type \"/log on\" to enable.\n");
+        }
 
         return;
     }
@@ -239,10 +250,13 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     uint8_t *swch = argv[1];
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
-        if (self->is_chat)
+        if (self->is_chat) {
             chat_enable_log(self);
-        else if (self->is_groupchat)
+            friends[self->num].logging_on = true;
+        } else if (self->is_groupchat) {
             groupchat_enable_log(self);
+            friends[self->num].logging_on = false;
+        }
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
@@ -250,10 +264,12 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
-        if (self->is_chat)
+        if (self->is_chat) {
             chat_disable_log(self);
-        else if (self->is_groupchat)
+            friends[self->num].logging_on = false;
+        } else if (self->is_groupchat) {
             groupchat_disable_log(self);
+        }
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(RED) | A_BOLD);

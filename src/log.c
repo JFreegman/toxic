@@ -48,7 +48,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
         ident[KEY_IDENT_DIGITS*2+1] = '\0';
     } else {
         struct tm *tminfo = get_time();
-        snprintf(ident, 32, 
+        snprintf(ident, sizeof(ident), 
                 "%04d-%02d-%02d-%02d:%02d:%02d", tminfo->tm_year+1900,tminfo->tm_mon+1, tminfo->tm_mday, 
                                                  tminfo->tm_hour, tminfo->tm_min, tminfo->tm_sec);
         path_len += strlen(ident) + 1;
@@ -69,7 +69,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx)
         return;
     }
 
-    fprintf(logfile, "\n***NEW SESSION***\n\n");
+    fprintf(logfile, "\n*** NEW SESSION ***\n\n");
 
     fclose(logfile);
     free(user_config_dir);

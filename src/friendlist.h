@@ -37,6 +37,7 @@ typedef struct {
     bool active;
     bool online;
     bool is_typing;
+    bool logging_on;    /* saves preference for friend irrespective of chat windows */
     TOX_USERSTATUS status;
     struct FileReceiver file_receiver;
 } ToxicFriend;

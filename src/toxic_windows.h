@@ -144,7 +144,7 @@ struct chatlog {
     uint8_t log_path[MAX_STR_SIZE];
     uint8_t log_buf[MAX_LOG_BUF_LINES][MAX_LOG_LINE_SIZE];
     int pos;
-    bool log_on;
+    bool log_on;    /* specific to current chat window */
 };
 
 #define MAX_LINE_HIST 128
