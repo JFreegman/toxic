@@ -255,7 +255,6 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             friends[self->num].logging_on = true;
         } else if (self->is_groupchat) {
             groupchat_enable_log(self);
-            friends[self->num].logging_on = false;
         }
 
         wprintw(window, "Logging ");
