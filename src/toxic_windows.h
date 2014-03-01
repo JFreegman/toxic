@@ -161,7 +161,7 @@ struct ChatContext {
 
     bool self_is_typing;
 
-    struct chatlog log;
+    struct chatlog *log;
 
     WINDOW *history;
     WINDOW *linewin;

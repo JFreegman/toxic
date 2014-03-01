@@ -33,7 +33,7 @@
 #include "misc_tools.h"
 #include "friendlist.h"
 #include "toxic_strings.h"
-#include "chat.h"
+#include "log.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -79,7 +79,7 @@ void kill_chat_window(ToxWindow *self)
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
-    chat_disable_log(self);
+    log_disable(ctx->log);
 
     int f_num = self->num;
     delwin(ctx->linewin);
@@ -87,28 +87,9 @@ void kill_chat_window(ToxWindow *self)
     del_window(self);
     disable_chatwin(f_num);
 
+    free(ctx->log);
     free(ctx);
     free(statusbar);
-}
-
-void chat_enable_log(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    ctx->log.log_on = true;
-
-    if (!ctx->log.log_path[0])
-        init_logging_session(self->name, friends[self->num].pub_key, ctx);
-}
-
-void chat_disable_log(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    if (ctx->log.log_on)
-        write_to_log(ctx);
-
-    ctx->log.log_on = false;
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint16_t len)
@@ -134,7 +115,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *msg, uint1
     } else
         wprintw(ctx->history, "%s\n", msg);
 
-    add_to_log_buf(msg, nick, ctx, false);
+    add_to_log_buf(msg, nick, ctx->log, false);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
@@ -178,7 +159,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int num, uint8_t *action, uin
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    add_to_log_buf(action, nick, ctx, true);
+    add_to_log_buf(action, nick, ctx->log, true);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
@@ -360,7 +341,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
         wprintw(ctx->history, " * Failed to send action\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
     } else {
-        add_to_log_buf(action, selfname, ctx, true);
+        add_to_log_buf(action, selfname, ctx->log, true);
     }
 }
 
@@ -551,7 +532,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 wprintw(ctx->history, " * Failed to send message.\n");
                 wattroff(ctx->history, COLOR_PAIR(RED));
             } else {
-                add_to_log_buf(line, selfname, ctx, false);
+                add_to_log_buf(line, selfname, ctx->log, false);
             }
         }
 
@@ -688,15 +669,25 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     ctx->history = subwin(self->window, y2-CHATBOX_HEIGHT+1, x2, 0, 0);
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2-CHATBOX_HEIGHT, 0);
-    wprintw(ctx->history, "\n\n");
-    wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
+    ctx->log = malloc(sizeof(struct chatlog));
+
+    if (ctx->log == NULL) {
+        endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(ctx->log, 0, sizeof(struct chatlog));
 
     if (friends[self->num].logging_on)
-        chat_enable_log(self);
+        log_enable(ctx->log, self->name, friends[self->num].pub_key);
 
+    wprintw(ctx->history, "\n\n");
+    execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
+
+    wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_chat(Tox *m, int friendnum)

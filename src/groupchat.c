@@ -34,6 +34,7 @@
 #include "groupchat.h"
 #include "prompt.h"
 #include "toxic_strings.h"
+#include "log.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -75,9 +76,10 @@ void kill_groupchat_window(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    groupchat_disable_log(self);
+    log_disable(ctx->log);
     delwin(ctx->linewin);
     del_window(self);
+    free(ctx->log);
     free(ctx);
 }
 
@@ -98,28 +100,7 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
     }
 
     max_groupchat_index = i;
-
     kill_groupchat_window(self);
-}
-
-void groupchat_enable_log(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    ctx->log.log_on = true;
-
-    if (!ctx->log.log_path[0])
-        init_logging_session(self->name, NULL, ctx);
-}
-
-void groupchat_disable_log(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    if (ctx->log.log_on) {
-        write_to_log(ctx);
-        ctx->log.log_on = false;
-    }
 }
 
 static void print_groupchat_help(ChatContext *ctx)
@@ -187,7 +168,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
         wprintw(ctx->history, "%s\n", msg);
     }
 
-    add_to_log_buf(msg, nick, ctx, false);
+    add_to_log_buf(msg, nick, ctx->log, false);
 }
 
 static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *action,
@@ -223,7 +204,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    add_to_log_buf(action, nick, ctx, true);
+    add_to_log_buf(action, nick, ctx->log, true);
 }
 
 /* Puts two copies of peerlist in chat instance */
@@ -301,7 +282,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         wprintw(ctx->history, " %s\n", event);
         wattroff(ctx->history, COLOR_PAIR(GREEN));
 
-        add_to_log_buf(event, peername, ctx, true);
+        add_to_log_buf(event, peername, ctx->log, true);
         break;
 
     case TOX_CHAT_CHANGE_PEER_DEL:
@@ -315,7 +296,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
 
-        add_to_log_buf(event, oldpeername, ctx, true);
+        add_to_log_buf(event, oldpeername, ctx->log, true);
         break;
 
     case TOX_CHAT_CHANGE_PEER_NAME:
@@ -333,7 +314,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
         uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH + 32];
         snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
-        add_to_log_buf(tmp_event, oldpeername, ctx, true);
+        add_to_log_buf(tmp_event, oldpeername, ctx->log, true);
         break;
     }
 
@@ -621,6 +602,16 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y-CHATBOX_HEIGHT, 0);
     ctx->sidebar = subwin(self->window, y-CHATBOX_HEIGHT+1, SIDEBAR_WIDTH, 0, x-SIDEBAR_WIDTH);
+
+    ctx->log = malloc(sizeof(struct chatlog));
+
+    if (ctx->log == NULL) {
+        endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(ctx->log, 0, sizeof(struct chatlog));
 
     print_groupchat_help(ctx);
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);

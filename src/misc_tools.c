@@ -70,8 +70,8 @@ void print_time(WINDOW *window)
     wattroff(window,COLOR_PAIR(BLUE));
 }
 
-/* Returns 1 if the string is empty, 0 otherwise */
-int string_is_empty(char *string)
+/* Returns true if the string is empty, false otherwise */
+bool string_is_empty(char *string)
 {
     return string[0] == '\0';
 }

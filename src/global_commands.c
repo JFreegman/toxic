@@ -230,7 +230,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     ChatContext *ctx = self->chatwin;
 
     if (argc == 0) {
-        if (ctx->log.log_on) {
+        if (ctx->log->log_on) {
             wprintw(window, "Logging for this chat is ");
             wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
             wprintw(window, "[on]");
@@ -248,14 +248,15 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 
     uint8_t *swch = argv[1];
+    uint8_t *ident = NULL;
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
         if (self->is_chat) {
-            chat_enable_log(self);
             friends[self->num].logging_on = true;
-        } else if (self->is_groupchat) {
-            groupchat_enable_log(self);
+            ident = friends[self->num].pub_key;
         }
+
+        log_enable(ctx->log, self->name, ident);
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
@@ -263,12 +264,10 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
-        if (self->is_chat) {
-            chat_disable_log(self);
+        if (self->is_chat)
             friends[self->num].logging_on = false;
-        } else if (self->is_groupchat) {
-            groupchat_disable_log(self);
-        }
+
+        log_disable(ctx->log);
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(RED) | A_BOLD);

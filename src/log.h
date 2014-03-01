@@ -21,16 +21,15 @@
  */
 
 /* gets the log path by appending to the config dir the name and a pseudo-unique identity */
-void init_logging_session(uint8_t *name, uint8_t *key, ChatContext *ctx);
-
-/* Adds msg to log_buf with timestamp and name. 
-   If buf is full, triggers write_to_log (which sets buf pos to 0) */
-void add_line_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx);
+void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log);
 
 /* Adds line/event to log_buf with timestamp and name. If buf is full, triggers write_to_log.
    If event is true, formats line as an event, e.g. * name has gone offline */
-void add_to_log_buf(uint8_t *msg, uint8_t *name, ChatContext *ctx, bool event);
+void add_to_log_buf(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event);
 
 /* writes contents from a chatcontext's log buffer to respective log file and resets log pos.
    This is triggered automatically when the log buffer is full, but may be forced. */
-void write_to_log(ChatContext *ctx);
+void write_to_log(struct chatlog *log);
+
+void log_enable(struct chatlog *log, uint8_t *name, uint8_t *key);
+void log_disable(struct chatlog *log);
