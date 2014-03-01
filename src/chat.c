@@ -681,7 +681,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     memset(ctx->log, 0, sizeof(struct chatlog));
 
     if (friends[self->num].logging_on)
-        log_enable(ctx->log, self->name, friends[self->num].pub_key);
+        log_enable(self->name, friends[self->num].pub_key, ctx->log);
 
     wprintw(ctx->history, "\n\n");
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);

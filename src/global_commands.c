@@ -222,22 +222,22 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (!self->is_chat && !self->is_groupchat) {    /* remove if prompt logging gets implemented */
-        wprintw(window, "Invalid command.\n");
-        return;
-    }
-
-    ChatContext *ctx = self->chatwin;
-
     if (argc == 0) {
-        if (ctx->log->log_on) {
-            wprintw(window, "Logging for this chat is ");
+        bool on;
+
+        if (self->is_chat || self->is_groupchat)
+            on = self->chatwin->log->log_on;
+        else if (self->is_prompt)
+            on = self->promptbuf->log->log_on;
+
+        if (on) {
+            wprintw(window, "Logging for this window is ");
             wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
             wprintw(window, "[on]");
             wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
             wprintw(window, ". Type \"/log off\" to disable.\n");
         } else {
-            wprintw(window, "Logging for this chat is ");
+            wprintw(window, "Logging for this window is ");
             wattron(window, COLOR_PAIR(RED) | A_BOLD);
             wprintw(window, "[off]");
             wattroff(window, COLOR_PAIR(RED) | A_BOLD);
@@ -248,15 +248,19 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 
     uint8_t *swch = argv[1];
-    uint8_t *ident = NULL;
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
+
         if (self->is_chat) {
             friends[self->num].logging_on = true;
-            ident = friends[self->num].pub_key;
+            log_enable(self->name, friends[self->num].pub_key, self->chatwin->log);
+        } else if (self->is_prompt) {
+            uint8_t myid[TOX_FRIEND_ADDRESS_SIZE];
+            tox_get_address(m, myid);
+            log_enable(self->name, &myid, self->promptbuf->log);
+        } else if (self->is_groupchat) {
+            log_enable(self->name, NULL, self->chatwin->log);
         }
-
-        log_enable(ctx->log, self->name, ident);
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
@@ -264,10 +268,14 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
-        if (self->is_chat)
+        if (self->is_chat) {
             friends[self->num].logging_on = false;
-
-        log_disable(ctx->log);
+            log_disable(self->chatwin->log);
+        } else if (self->is_prompt) {
+            log_disable(self->promptbuf->log);
+        } else if (self->is_groupchat) {
+            log_disable(self->chatwin->log);
+        }
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(RED) | A_BOLD);
@@ -363,6 +371,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wprintw(window, "    /status <type> <msg>       : Set status with optional note\n");
     wprintw(window, "    /note <msg>                : Set a personal note\n");
     wprintw(window, "    /nick <nick>               : Set your nickname\n");
+    wprintw(window, "    /log <on> or <off>         : Enable/disable logging\n");
     wprintw(window, "    /groupchat                 : Create a group chat\n");
     wprintw(window, "    /myid                      : Print your ID\n");
     wprintw(window, "    /help                      : Print this message again\n");

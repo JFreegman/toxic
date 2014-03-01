@@ -1,4 +1,4 @@
-/*  log->c
+/*  log.c
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -121,7 +121,7 @@ void add_to_log_buf(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event
         write_to_log(log);
 }
 
-void log_enable(struct chatlog *log, uint8_t *name, uint8_t *key)
+void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log)
 {
     log->log_on = true;
 

@@ -31,5 +31,5 @@ void add_to_log_buf(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event
    This is triggered automatically when the log buffer is full, but may be forced. */
 void write_to_log(struct chatlog *log);
 
-void log_enable(struct chatlog *log, uint8_t *name, uint8_t *key);
+void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log);
 void log_disable(struct chatlog *log);

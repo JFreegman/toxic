@@ -114,6 +114,7 @@ struct ToxWindow {
     /* window type identifiers */
     bool is_chat;
     bool is_groupchat;
+    bool is_prompt;
 
     bool alert0;
     bool alert1;
@@ -182,6 +183,7 @@ struct PromptBuf {
     int hst_pos;
     int hst_tot;
 
+    struct chatlog *log;
     WINDOW *linewin;
 };
 
