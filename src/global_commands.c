@@ -367,7 +367,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     wprintw(window, "    /add <id> <msg>            : Add friend with optional message\n");
     wprintw(window, "    /accept <n>                : Accept friend request\n");
-    wprintw(window, "    /connect <ip> <port> <key> : Manually connect to a DHT server\n");
+    wprintw(window, "    /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(window, "    /status <type> <msg>       : Set status with optional note\n");
     wprintw(window, "    /note <msg>                : Set a personal note\n");
     wprintw(window, "    /nick <nick>               : Set your nickname\n");
