@@ -142,7 +142,7 @@ struct StatusBar {
 
 struct chatlog {
     FILE *file;
-    uint64_t lastflush;
+    uint64_t lastwrite;
     int pos;
     bool log_on;    /* specific to current chat window */
 };
