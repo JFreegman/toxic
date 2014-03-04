@@ -64,8 +64,6 @@
 
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
-char *SRVLIST_FILE = NULL;
-
 ToxWindow *prompt = NULL;
 
 static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
@@ -167,14 +165,12 @@ static char nodes[MAXNODES][NODELEN];
 static uint16_t ports[MAXNODES];
 static uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
 
-static int nodelist_load(const char *filename)
+static int nodelist_load(char *filename)
 {
-    FILE *fp = NULL;
-
     if (!filename)
         return 1;
 
-    fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "r");
 
     if (fp == NULL)
         return 1;
@@ -239,19 +235,10 @@ int init_connection(Tox *m)
      */
     if (!srvlist_loaded) {
         srvlist_loaded = true;
-        int res = nodelist_load(SRVLIST_FILE);
+        int res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
 
-        if (res) { 
-            /* Fallback on the provided DHTServers in /usr/share or /usr/local/share,
-            so new starts of toxic will connect to the DHT. */
-            res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
-
-            if (res)
-                return res;
-        }
-
-        if (!linecnt)
-            return 2;
+        if (linecnt < 1)
+            return res;
 
         res = 3;
         int i;
@@ -477,7 +464,6 @@ void exit_toxic(Tox *m)
 
     kill_all_windows();
     free(DATA_FILE);
-    free(SRVLIST_FILE);
     free(prompt->stb);
     log_disable(prompt->promptbuf->log);
     free(prompt->promptbuf->log);
@@ -536,24 +522,13 @@ int main(int argc, char *argv[])
             if (DATA_FILE != NULL) {
                 strcpy(DATA_FILE, user_config_dir);
                 strcat(DATA_FILE, CONFIGDIR);
-                strcat(DATA_FILE, "data");
+                strcat(DATA_FILE, "data");     
             } else {
                 endwin();
                 fprintf(stderr, "malloc() failed. Aborting...\n");
                 exit(EXIT_FAILURE);
             }
         }
-    }
-
-    SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTnodes") + 1);
-    if (SRVLIST_FILE != NULL) {
-        strcpy(SRVLIST_FILE, user_config_dir);
-        strcat(SRVLIST_FILE, CONFIGDIR);
-        strcat(SRVLIST_FILE, "DHTnodes");
-    } else {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
     }
 
     free(user_config_dir);

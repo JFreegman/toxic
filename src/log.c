@@ -100,10 +100,10 @@ void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
 
     uint64_t curtime = (uint64_t) time(NULL);
 
-    if (timed_out(log->lastflush, curtime, LOG_FLUSH_LIMIT))
+    if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT))
         fflush(log->file);
 
-    log->lastflush = curtime;
+    log->lastwrite = curtime;
 
 }
 
