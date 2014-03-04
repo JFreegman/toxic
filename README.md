@@ -5,7 +5,7 @@ Toxic is an ncurses based instant messaging client for [Tox](http://tox.im) whic
 * Generate the configure script by running the ```autoreconf -i``` command.
 
 * Execute the configure script with ```./configure``` (you may need to pass it the location of your dependency libraries, i.e.):
-```./configure --prefix=/where/to/install --with-libtoxcore-headers=/path/to/ProjectTox-Core/core --with-libtoxcore-libs=/path/to/ProjectTox-Core/build/core --with-libsodium-headers=/path/to/libsodium/include/ --with-libsodium-libs=/path/to/sodiumtest/lib/ ```
+```./configure --prefix=/where/to/install --with-libtoxcore-headers=/path/to/ProjectTox-Core/toxcore --with-libtoxcore-libs=/path/to/ProjectTox-Core/build/toxcore --with-libsodium-headers=/path/to/libsodium/include/ --with-libsodium-libs=/path/to/sodiumtest/lib/ ```
 
 * Compile and install the program with ```make && sudo make install```
 
