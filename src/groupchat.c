@@ -168,7 +168,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
         wprintw(ctx->history, "%s\n", msg);
     }
 
-    add_to_log_buf(msg, nick, ctx->log, false);
+    write_to_log(msg, nick, ctx->log, false);
 }
 
 static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *action,
@@ -204,7 +204,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     wprintw(ctx->history, "* %s %s\n", nick, action);
     wattroff(ctx->history, COLOR_PAIR(YELLOW));
 
-    add_to_log_buf(action, nick, ctx->log, true);
+    write_to_log(action, nick, ctx->log, true);
 }
 
 /* Puts two copies of peerlist in chat instance */
@@ -282,7 +282,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         wprintw(ctx->history, " %s\n", event);
         wattroff(ctx->history, COLOR_PAIR(GREEN));
 
-        add_to_log_buf(event, peername, ctx->log, true);
+        write_to_log(event, peername, ctx->log, true);
         break;
 
     case TOX_CHAT_CHANGE_PEER_DEL:
@@ -296,7 +296,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
 
-        add_to_log_buf(event, oldpeername, ctx->log, true);
+        write_to_log(event, oldpeername, ctx->log, true);
         break;
 
     case TOX_CHAT_CHANGE_PEER_NAME:
@@ -314,7 +314,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
         uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH + 32];
         snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
-        add_to_log_buf(tmp_event, oldpeername, ctx->log, true);
+        write_to_log(tmp_event, oldpeername, ctx->log, true);
         break;
     }
 

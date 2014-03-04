@@ -138,12 +138,11 @@ struct StatusBar {
     bool is_online;
 };
 
-#define MAX_LOG_BUF_LINES 10    /* write log_buf contents to log file after this many lines */
-#define MAX_LOG_LINE_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* extra room for timestamp */
+#define LOG_FLUSH_LIMIT 2  /* limits calls to fflush(logfile) to a max of one per LOG_FLUSH_LIMIT seconds */
 
 struct chatlog {
-    uint8_t log_path[MAX_STR_SIZE];
-    uint8_t log_buf[MAX_LOG_BUF_LINES][MAX_LOG_LINE_SIZE];
+    FILE *file;
+    uint64_t lastflush;
     int pos;
     bool log_on;    /* specific to current chat window */
 };

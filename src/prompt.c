@@ -398,26 +398,26 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
     uint8_t *msg;
 
     if (status == 1) {
-        msg = "has come online\n";
+        msg = "has come online";
         wattron(self->window, COLOR_PAIR(GREEN));
         wattron(self->window, A_BOLD);
         wprintw(self->window, "* %s ", nick);
         wattroff(self->window, A_BOLD);
-        wprintw(self->window, "%s", msg);
+        wprintw(self->window, "%s\n", msg);
         wattroff(self->window, COLOR_PAIR(GREEN));
 
-        add_to_log_buf(msg, nick, prt->log, true);
+        write_to_log(msg, nick, prt->log, true);
         alert_window(self, WINDOW_ALERT_2, false);
     } else {
-        msg = "has gone offline\n";
+        msg = "has gone offline";
         wattron(self->window, COLOR_PAIR(RED));
         wattron(self->window, A_BOLD);
         wprintw(self->window, "* %s ", nick);
         wattroff(self->window, A_BOLD);
-        wprintw(self->window, "%s", msg);
+        wprintw(self->window, "%s\n", msg);
         wattroff(self->window, COLOR_PAIR(RED));
 
-        add_to_log_buf(msg, nick, prt->log, true);
+        write_to_log(msg, nick, prt->log, true);
     }
 }
 
@@ -434,14 +434,14 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
     uint8_t msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "Friend request with the message '%s'\n", data);
     wprintw(self->window, "%s", msg);
-    add_to_log_buf(msg, "", prt->log, true);
+    write_to_log(msg, "", prt->log, true);
 
     int n = add_friend_request(key);
 
     if (n == -1) {
         uint8_t *errmsg = "Friend request queue is full. Discarding request.\n";
         wprintw(self->window, "%s", errmsg);
-        add_to_log_buf(errmsg, "", prt->log, true);
+        write_to_log(errmsg, "", prt->log, true);
         return;
     }
 

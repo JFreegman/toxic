@@ -28,7 +28,7 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 
-/* gets the log path by appending to the config dir the name and a pseudo-unique identity */
+/* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 {
     if (!log->log_on)
@@ -56,54 +56,35 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
     if (path_len > MAX_STR_SIZE) {
         log->log_on = false;
+        log->file = NULL;
         return;
     }
 
-    snprintf(log->log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
+    uint8_t log_path[MAX_STR_SIZE];
+
+    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
              user_config_dir, CONFIGDIR, name, ident);
 
-    FILE *logfile = fopen(log->log_path, "a");
+    log->file = fopen(log_path, "a");
 
-    if (logfile == NULL) {
+    if (log->file == NULL) {
         log->log_on = false;
         return;
     }
 
-    fprintf(logfile, "\n*** NEW SESSION ***\n\n");
-
-    fclose(logfile);
+    fprintf(log->file, "\n*** NEW SESSION ***\n\n");
     free(user_config_dir);
 }
 
-/* writes contents from a chatcontext's log buffer to respective log file and resets log pos.
-   This is triggered when the log buffer is full, but may be forced. */
-void write_to_log(struct chatlog *log)
+void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
 {
     if (!log->log_on)
         return;
 
-    FILE *logfile = fopen(log->log_path, "a");
-
-    if (logfile == NULL) {
+    if (log->file == NULL) {
         log->log_on = false;
         return;
     }
-
-    int i;
-
-    for (i = 0; i < log->pos; ++i)
-        fprintf(logfile, "%s", log->log_buf[i]);
-
-    log->pos = 0;
-    fclose(logfile);
-}
-
-/* Adds line/event to log_buf with timestamp and name. If buf is full, triggers write_to_log.
-   If event is true, formats line as an event, e.g. * name has gone offline */
-void add_to_log_buf(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
-{
-    if (!log->log_on)
-        return;
 
     uint8_t name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
 
@@ -113,26 +94,33 @@ void add_to_log_buf(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
     struct tm *tminfo = get_time();
-    snprintf(log->log_buf[log->pos], MAX_LOG_LINE_SIZE, "%04d/%02d/%02d [%02d:%02d:%02d] %s %s\n", 
-                                  tminfo->tm_year + 1900, tminfo->tm_mon + 1, tminfo->tm_mday, 
-                                  tminfo->tm_hour, tminfo->tm_min, tminfo->tm_sec, name_frmt, msg);
+    fprintf(log->file,"%04d/%02d/%02d [%02d:%02d:%02d] %s %s\n", tminfo->tm_year+1900,
+                           tminfo->tm_mon+1, tminfo->tm_mday, tminfo->tm_hour, tminfo->tm_min, 
+                           tminfo->tm_sec, name_frmt, msg);
 
-    if (++(log->pos) >= MAX_LOG_BUF_LINES)
-        write_to_log(log);
+    uint64_t curtime = (uint64_t) time(NULL);
+
+    if (timed_out(log->lastflush, curtime, LOG_FLUSH_LIMIT))
+        fflush(log->file);
+
+    log->lastflush = curtime;
+
 }
 
 void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log)
 {
     log->log_on = true;
 
-    if (!log->log_path[0])
+    if (log->file == NULL)
         init_logging_session(name, key, log);
 }
 
 void log_disable(struct chatlog *log)
 {
-    if (log->log_on) {
-        write_to_log(log);
-        log->log_on = false;
+    log->log_on = false;
+
+    if (log->file != NULL) {
+        fclose(log->file);
+        log->file = NULL;
     }
 }
