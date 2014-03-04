@@ -1,1 +1,1 @@
-dist_pkgdata_DATA = DHTservers
+dist_pkgdata_DATA = DHTnodes

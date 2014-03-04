@@ -159,15 +159,15 @@ static Tox *init_tox(int ipv4)
 
 #define MINLINE    50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
 #define MAXLINE   256 /* Approx max number of chars in a sever line (name + port + key) */
-#define MAXSERVERS 50
-#define SERVERLEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
+#define MAXNODES 50
+#define NODELEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
 
 static int  linecnt = 0;
-static char servers[MAXSERVERS][SERVERLEN];
-static uint16_t ports[MAXSERVERS];
-static uint8_t keys[MAXSERVERS][TOX_CLIENT_ID_SIZE];
+static char nodes[MAXNODES][NODELEN];
+static uint16_t ports[MAXNODES];
+static uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
 
-static int serverlist_load(const char *filename)
+static int nodelist_load(const char *filename)
 {
     FILE *fp = NULL;
 
@@ -180,7 +180,7 @@ static int serverlist_load(const char *filename)
         return 1;
 
     char line[MAXLINE];
-    while (fgets(line, sizeof(line), fp) && linecnt < MAXSERVERS) {
+    while (fgets(line, sizeof(line), fp) && linecnt < MAXNODES) {
         if (strlen(line) > MINLINE) {
             char *name = strtok(line, " ");
             char *port = strtok(NULL, " ");
@@ -189,8 +189,8 @@ static int serverlist_load(const char *filename)
             if (name == NULL || port == NULL || key_ascii == NULL)
                 continue;
 
-            strncpy(servers[linecnt], name, SERVERLEN);
-            servers[linecnt][SERVERLEN - 1] = 0;
+            strncpy(nodes[linecnt], name, NODELEN);
+            nodes[linecnt][NODELEN - 1] = 0;
             ports[linecnt] = htons(atoi(port));
 
             uint8_t *key_binary = hex_string_to_bin(key_ascii);
@@ -212,17 +212,17 @@ static int serverlist_load(const char *filename)
 
 int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap_from_address(m, servers[line], TOX_ENABLE_IPV6_DEFAULT,
+    return tox_bootstrap_from_address(m, nodes[line], TOX_ENABLE_IPV6_DEFAULT,
                                                 ports[line], keys[line]);
 }
 
-/* Connects to a random DHT server listed in the DHTservers file
+/* Connects to a random DHT node listed in the DHTnodes file
  *
  * return codes:
- * 1: failed to open server file
- * 2: no line of sufficient length in server file
+ * 1: failed to open node file
+ * 2: no line of sufficient length in node file
  * 3: failed to resolve name to IP
- * 4: serverlist file contains no acceptable line
+ * 4: nodelist file contains no acceptable line
  */
 static bool srvlist_loaded = false;
 
@@ -230,21 +230,21 @@ static bool srvlist_loaded = false;
 
 int init_connection(Tox *m)
 {
-    if (linecnt > 0) /* already loaded serverlist */
+    if (linecnt > 0) /* already loaded nodelist */
         return init_connection_helper(m, rand() % linecnt) ? 0 : 3;
 
     /* only once:
-     * - load the serverlist
+     * - load the nodelist
      * - connect to "everyone" inside
      */
     if (!srvlist_loaded) {
         srvlist_loaded = true;
-        int res = serverlist_load(SRVLIST_FILE);
+        int res = nodelist_load(SRVLIST_FILE);
 
         if (res) { 
             /* Fallback on the provided DHTServers in /usr/share or /usr/local/share,
             so new starts of toxic will connect to the DHT. */
-            res = serverlist_load(PACKAGE_DATADIR "/DHTservers");
+            res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
 
             if (res)
                 return res;
@@ -264,7 +264,7 @@ int init_connection(Tox *m)
         return res;
     }
 
-    /* empty serverlist file */
+    /* empty nodelist file */
     return 4;
 }
 
@@ -545,11 +545,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
+    SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTnodes") + 1);
     if (SRVLIST_FILE != NULL) {
         strcpy(SRVLIST_FILE, user_config_dir);
         strcat(SRVLIST_FILE, CONFIGDIR);
-        strcat(SRVLIST_FILE, "DHTservers");
+        strcat(SRVLIST_FILE, "DHTnodes");
     } else {
         endwin();
         fprintf(stderr, "malloc() failed. Aborting...\n");
