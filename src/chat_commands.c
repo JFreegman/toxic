@@ -139,10 +139,18 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     uint8_t *filename = friends[self->num].file_receiver.filenames[filenum];
 
-    if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0)
+    if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
         wprintw(window, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
-    else
+
+        if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
+            wattron(window, COLOR_PAIR(RED));
+            wprintw(window, "* Error writing to file.\n");
+            wattroff(window, COLOR_PAIR(RED));
+            tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
+        }
+    } else {
         wprintw(window, "File transfer failed.\n");
+    }
 
     friends[self->num].file_receiver.pending[filenum] = false;
 }

@@ -206,6 +206,7 @@ typedef struct {
 
 struct FileReceiver {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
+    FILE *files[MAX_FILES];
     bool pending[MAX_FILES];
 };
 

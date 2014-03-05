@@ -56,7 +56,6 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
     if (path_len > MAX_STR_SIZE) {
         log->log_on = false;
-        log->file = NULL;
         return;
     }
 
@@ -100,11 +99,10 @@ void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
 
     uint64_t curtime = (uint64_t) time(NULL);
 
-    if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT))
+    if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT)) {
         fflush(log->file);
-
-    log->lastwrite = curtime;
-
+        log->lastwrite = curtime;
+    }
 }
 
 void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log)
