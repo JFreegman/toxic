@@ -133,7 +133,7 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *
     friends[num].statusmsg_len = len;
 }
 
-static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
+void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
 {
     if (max_friends_index < 0 || max_friends_index >= MAX_FRIENDS_NUM)
         return;

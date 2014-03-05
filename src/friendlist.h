@@ -46,6 +46,8 @@ ToxWindow new_friendlist(void);
 void disable_chatwin(int f_num);
 int get_friendnum(uint8_t *name);
 
+void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort);
+
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(Tox *m);
 

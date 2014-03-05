@@ -283,6 +283,15 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     }
 }
 
+static void load_friendlist(Tox *m)
+{
+    int i;
+    uint32_t numfriends = tox_count_friendlist(m);
+
+    for (i = 0; i < numfriends; ++i)
+        friendlist_onFriendAdded(NULL, m, i, false);
+}
+
 /*
  * Store Messenger to given location
  * Return 0 stored successfully
@@ -361,12 +370,7 @@ static void load_data(Tox *m, char *path)
         }
 
         tox_load(m, buf, len);
-
-        uint32_t i = 0;
-        uint8_t name[TOX_MAX_NAME_LENGTH];
-
-        while (tox_get_name(m, i, name) != -1)
-            on_friendadded(m, i++, false);
+        load_friendlist(m);
 
         free(buf);
         fclose(fd);
@@ -384,12 +388,11 @@ static void load_data(Tox *m, char *path)
 void exit_toxic(Tox *m)
 {
     store_data(m, DATA_FILE);
-
     close_all_file_senders();
     kill_all_windows();
+    log_disable(prompt->promptbuf->log);
     free(DATA_FILE);
     free(prompt->stb);
-    log_disable(prompt->promptbuf->log);
     free(prompt->promptbuf->log);
     free(prompt->promptbuf);
     tox_kill(m);
