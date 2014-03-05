@@ -237,7 +237,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
-static void close_file_receiver(num, filenum)
+static void close_file_receiver(int num, int filenum)
 {
     friends[num].file_receiver.pending[filenum] = false;
     FILE *file = friends[num].file_receiver.files[filenum];
@@ -254,7 +254,6 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
 
     ChatContext *ctx = self->chatwin;
     uint8_t *filename;
-    bool close_in_file = false;
 
     if (receive_send == 0)
         filename = friends[num].file_receiver.filenames[filenum];
