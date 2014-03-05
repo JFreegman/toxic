@@ -57,6 +57,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
+#include "file_senders.h"
 
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
@@ -67,9 +68,6 @@ char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
 static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
-
-FileSender file_senders[MAX_FILES];
-uint8_t max_file_senders_index;
 
 void on_window_resize(int sig)
 {
@@ -383,85 +381,11 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-void close_file_sender(int i)
-{
-    fclose(file_senders[i].file);
-    memset(&file_senders[i], 0, sizeof(FileSender));
-
-    int j;
-
-    for (j = max_file_senders_index; j > 0; --j) {
-        if (file_senders[j-1].active)
-            break;
-    }
-
-    max_file_senders_index = j;
-}
-
-static void do_file_senders(Tox *m)
-{
-    int i;
-
-    for (i = 0; i < max_file_senders_index; ++i) {
-        if (!file_senders[i].active)
-            continue;
-
-        uint8_t *pathname = file_senders[i].pathname;
-        uint8_t filenum = file_senders[i].filenum;
-        int friendnum = file_senders[i].friendnum;
-        FILE *fp = file_senders[i].file;
-        uint64_t current_time = (uint64_t) time(NULL);
-
-        /* If file transfer has timed out kill transfer and send kill control */
-        if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
-            ChatContext *ctx = file_senders[i].toxwin->chatwin;
-
-            if (ctx != NULL) {
-                wprintw(ctx->history, "File transfer for '%s' timed out.\n", pathname);
-                alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
-            }
-
-            tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
-            close_file_sender(i);
-            continue;
-        }
-
-        while (true) {
-            if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
-                                   file_senders[i].piecelen) == -1)
-                break;
-
-            file_senders[i].timestamp = current_time;
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, 
-                                             tox_file_data_size(m, friendnum), fp);
-
-            if (file_senders[i].piecelen == 0) {
-                ChatContext *ctx = file_senders[i].toxwin->chatwin;
-
-                if (ctx != NULL) {
-                    wprintw(ctx->history, "File '%s' successfuly sent.\n", pathname);
-                    alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
-                }
-
-                tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
-                close_file_sender(i);
-                break;
-            }
-        }
-    }
-}
-
 void exit_toxic(Tox *m)
 {
     store_data(m, DATA_FILE);
 
-    int i;
-
-    for (i = 0; i < max_file_senders_index; ++i) {
-        if (file_senders[i].active)
-            fclose(file_senders[i].file);
-    }
-
+    close_all_file_senders();
     kill_all_windows();
     free(DATA_FILE);
     free(prompt->stb);

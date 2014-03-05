@@ -237,7 +237,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8_t fil
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
-static void close_file_receiver(int num, int filenum)
+static void chat_close_file_receiver(int num, uint8_t filenum)
 {
     friends[num].file_receiver.pending[filenum] = false;
     FILE *file = friends[num].file_receiver.files[filenum];
@@ -271,13 +271,13 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
         wprintw(ctx->history, "File transfer for '%s' failed.\n", filename);
 
         if (receive_send == 0)
-            close_file_receiver(num, filenum);
+            chat_close_file_receiver(num, filenum);
         else
-            close_file_sender(filenum);
+            chat_close_file_receiver(num, filenum);
         break;
     case TOX_FILECONTROL_FINISHED:
         wprintw(ctx->history, "File transfer for '%s' complete.\n", filename);
-        close_file_receiver(num, filenum);
+        chat_close_file_receiver(num, filenum);
         break;
     }
 

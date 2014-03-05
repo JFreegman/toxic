@@ -236,6 +236,6 @@ void del_window(ToxWindow *w);
 void set_active_window(int ch);
 int num_active_windows(void);
 
-/* closes all chat and groupchat windows (should only be called on shutdown) */
+/* cleans up all chat and groupchat windows (should only be called on shutdown) */
 void kill_all_windows(void);
 #endif
