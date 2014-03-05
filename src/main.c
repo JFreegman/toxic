@@ -117,8 +117,10 @@ static Tox *init_tox(int ipv4)
     int ipv6 = !ipv4;
     Tox *m = tox_new(ipv6);
 
-    // TOX_ENABLE_IPV6_DEFAULT is always 1.
-    // Fuck checking it, this *should* be doing ipv4 fallback, no?
+    /* 
+    * TOX_ENABLE_IPV6_DEFAULT is always 1.
+    * Checking it is redundant, this *should* be doing ipv4 fallback
+    */
     if (ipv6 && m == NULL) {
         fprintf(stderr, "IPv6 didn't initialize, trying IPv4\n");
         m = tox_new(0);
