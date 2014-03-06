@@ -253,7 +253,7 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     store_data(m, DATA_FILE);
 }
 
-static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
+static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, wint_t key_code)
 {
     if (num_friends == 0)
         return;

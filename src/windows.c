@@ -374,6 +374,7 @@ void draw_active_window(Tox *m)
     a->alert2 = false;
 
     wint_t ch = 0;
+    wint_t key_code = 0;
 
     draw_bar();
 
@@ -387,7 +388,7 @@ void draw_active_window(Tox *m)
 
     /* Handle input */
 #ifdef HAVE_WIDECHAR
-    wget_wch(stdscr, &ch);
+    key_code = wget_wch(stdscr, &ch);
 #else
     ch = getch();
 #endif
@@ -395,7 +396,7 @@ void draw_active_window(Tox *m)
     if (ch == T_KEY_NEXT || ch == T_KEY_PREV)
         set_next_window((int) ch);
     else if (ch != ERR)
-        a->onKey(a, m, ch);
+        a->onKey(a, m, ch, key_code);
 }
 
 int num_active_windows(void)
