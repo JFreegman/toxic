@@ -1,3 +1,25 @@
+/*  friendlist.h
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #ifndef FRIENDLIST_H_53I41IM
 #define FRIENDLIST_H_53I41IM
 
@@ -14,6 +36,8 @@ typedef struct {
     int chatwin;
     bool active;
     bool online;
+    bool is_typing;
+    bool logging_on;    /* saves preference for friend irrespective of chat windows */
     TOX_USERSTATUS status;
     struct FileReceiver file_receiver;
 } ToxicFriend;
@@ -21,6 +45,8 @@ typedef struct {
 ToxWindow new_friendlist(void);
 void disable_chatwin(int f_num);
 int get_friendnum(uint8_t *name);
+
+void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort);
 
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(Tox *m);

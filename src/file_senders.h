@@ -1,4 +1,4 @@
-/*  execute.h
+/*  file_senders.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,19 +20,7 @@
  *
  */
 
-#define MAX_NUM_ARGS 4     /* Includes command */
-#define GLOBAL_NUM_COMMANDS 14
+/* Should only be called on exit */
+void close_all_file_senders(void);
 
-#ifdef _SUPPORT_AUDIO 
-#define CHAT_NUM_COMMANDS 9
-#else 
-#define CHAT_NUM_COMMANDS 5
-#endif /* _SUPPORT_AUDIO */ 
-
-enum {
-    GLOBAL_COMMAND_MODE,
-    CHAT_COMMAND_MODE,
-    GROUPCHAT_COMMAND_MODE,
-};
-
-void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode);
+void do_file_senders(Tox *m);

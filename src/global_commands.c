@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  global_commands.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -202,6 +220,73 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     wprintw(window, "Group chat created as %d.\n", groupnum);
 }
 
+void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc == 0) {
+        bool on;
+
+        if (self->is_chat || self->is_groupchat)
+            on = self->chatwin->log->log_on;
+        else if (self->is_prompt)
+            on = self->promptbuf->log->log_on;
+
+        if (on) {
+            wprintw(window, "Logging for this window is ");
+            wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
+            wprintw(window, "[on]");
+            wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
+            wprintw(window, ". Type \"/log off\" to disable.\n");
+        } else {
+            wprintw(window, "Logging for this window is ");
+            wattron(window, COLOR_PAIR(RED) | A_BOLD);
+            wprintw(window, "[off]");
+            wattroff(window, COLOR_PAIR(RED) | A_BOLD);
+            wprintw(window, ". Type \"/log on\" to enable.\n");
+        }
+
+        return;
+    }
+
+    uint8_t *swch = argv[1];
+
+    if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
+
+        if (self->is_chat) {
+            friends[self->num].logging_on = true;
+            log_enable(self->name, friends[self->num].pub_key, self->chatwin->log);
+        } else if (self->is_prompt) {
+            uint8_t myid[TOX_FRIEND_ADDRESS_SIZE];
+            tox_get_address(m, myid);
+            log_enable(self->name, &myid, self->promptbuf->log);
+        } else if (self->is_groupchat) {
+            log_enable(self->name, NULL, self->chatwin->log);
+        }
+
+        wprintw(window, "Logging ");
+        wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
+        wprintw(window, "[on]\n");
+        wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
+        return;
+    } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
+        if (self->is_chat) {
+            friends[self->num].logging_on = false;
+            log_disable(self->chatwin->log);
+        } else if (self->is_prompt) {
+            log_disable(self->promptbuf->log);
+        } else if (self->is_groupchat) {
+            log_disable(self->chatwin->log);
+        }
+
+        wprintw(window, "Logging ");
+        wattron(window, COLOR_PAIR(RED) | A_BOLD);
+        wprintw(window, "[off]\n");
+        wattroff(window, COLOR_PAIR(RED) | A_BOLD);
+        return;
+    }
+
+    wprintw(window, "Invalid option. Use \"/log on\" and \"/log off\" to toggle logging.\n");
+}
+
 void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
@@ -280,17 +365,18 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wprintw(window, "\n\nGlobal commands:\n");
     wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
 
-    wprintw(window, "      /add <id> <msg>            : Add friend with optional message\n");
-    wprintw(window, "      /accept <n>                : Accept friend request\n");
-    wprintw(window, "      /connect <ip> <port> <key> : Manually connect to a DHT server\n");
-    wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
-    wprintw(window, "      /note <msg>                : Set a personal note\n");
-    wprintw(window, "      /nick <nick>               : Set your nickname\n");
-    wprintw(window, "      /groupchat                 : Create a group chat\n");
-    wprintw(window, "      /myid                      : Print your ID\n");
-    wprintw(window, "      /quit or /exit             : Exit Toxic\n");
-    wprintw(window, "      /help                      : Print this message again\n");
-    wprintw(window, "      /clear                     : Clear the window\n");
+    wprintw(window, "    /add <id> <msg>            : Add friend with optional message\n");
+    wprintw(window, "    /accept <n>                : Accept friend request\n");
+    wprintw(window, "    /connect <ip> <port> <key> : Manually connect to a DHT node\n");
+    wprintw(window, "    /status <type> <msg>       : Set status with optional note\n");
+    wprintw(window, "    /note <msg>                : Set a personal note\n");
+    wprintw(window, "    /nick <nick>               : Set your nickname\n");
+    wprintw(window, "    /log <on> or <off>         : Enable/disable logging\n");
+    wprintw(window, "    /groupchat                 : Create a group chat\n");
+    wprintw(window, "    /myid                      : Print your ID\n");
+    wprintw(window, "    /help                      : Print this message again\n");
+    wprintw(window, "    /clear                     : Clear the window\n");
+    wprintw(window, "    /quit or /exit             : Exit Toxic\n");
 
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");

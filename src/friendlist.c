@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  friendlist.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -116,7 +134,7 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, int num, uint8_t *
     friends[num].statusmsg_len = len;
 }
 
-static void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
+void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
 {
     if (max_friends_index < 0 || max_friends_index >= MAX_FRIENDS_NUM)
         return;

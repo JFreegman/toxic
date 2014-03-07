@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  chat_commands.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -12,6 +30,7 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 #include "friendlist.h"
+#include "execute.h"
 
 extern ToxWindow *prompt;
 
@@ -22,22 +41,16 @@ extern uint8_t max_file_senders_index;
 
 void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (argc == 1) {
+        if (!strcmp(argv[1], "global")) {
+            execute(window, self, m, "/help", GLOBAL_COMMAND_MODE);
+            return;
+        }
+    }
+
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, "Chat commands:\n");
     wattroff(window, COLOR_PAIR(CYAN) | A_BOLD);
-
-    wprintw(window, "      /status <type> <msg>       : Set your status with optional note\n");
-    wprintw(window, "      /note <msg>                : Set a personal note\n");
-    wprintw(window, "      /nick <nick>               : Set your nickname\n");
-    wprintw(window, "      /invite <n>                : Invite friend to a group chat\n");
-    wprintw(window, "      /me <action>               : Do an action\n");
-    wprintw(window, "      /myid                      : Print your ID\n");
-    wprintw(window, "      /join                      : Join a pending group chat\n");
-    wprintw(window, "      /clear                     : Clear the screen\n");
-    wprintw(window, "      /close                     : Close the current chat window\n");
-    wprintw(window, "      /sendfile <filepath>       : Send a file\n");
-    wprintw(window, "      /savefile <n>              : Receive a file\n");
-    wprintw(window, "      /quit or /exit             : Exit Toxic\n");
 
 #ifdef _SUPPORT_AUDIO
 
@@ -48,7 +61,14 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 #endif /* _SUPPORT_AUDIO */
     
-    wprintw(window, "      /help                      : Print this message again\n");
+    wprintw(window, "    /invite <n>                : Invite friend to a group chat\n");
+    wprintw(window, "    /join                      : Join a pending group chat\n");
+    wprintw(window, "    /log <on> or <off>         : Enable/disable logging\n");
+    wprintw(window, "    /sendfile <filepath>       : Send a file\n");
+    wprintw(window, "    /savefile <n>              : Receive a file\n");
+    wprintw(window, "    /close                     : Close the current chat window\n");
+    wprintw(window, "    /help                      : Print this message again\n");
+    wprintw(window, "    /help global               : Show a list of global commands\n");
     
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n\n");
@@ -128,10 +148,18 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     uint8_t *filename = friends[self->num].file_receiver.filenames[filenum];
 
-    if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0)
+    if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
         wprintw(window, "Accepted file transfer %u. Saving file as: '%s'\n", filenum, filename);
-    else
+
+        if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
+            wattron(window, COLOR_PAIR(RED));
+            wprintw(window, "* Error writing to file.\n");
+            wattroff(window, COLOR_PAIR(RED));
+            tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
+        }
+    } else {
         wprintw(window, "File transfer failed.\n");
+    }
 
     friends[self->num].file_receiver.pending[filenum] = false;
 }

@@ -1,3 +1,25 @@
+/*  windows.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -8,6 +30,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "toxic_windows.h"
+#include "groupchat.h"
 
 extern char *DATA_FILE;
 
@@ -34,6 +57,16 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onConnectionChange != NULL)
             windows[i].onConnectionChange(&windows[i], m, friendnumber, status);
+    }
+}
+
+void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onTypingChange != NULL)
+            windows[i].onTypingChange(&windows[i], m, friendnumber, is_typing);
     }
 }
 
@@ -376,4 +409,17 @@ int num_active_windows(void)
     }
 
     return count;
+}
+
+/* destroys all chat and groupchat windows (should only be called on shutdown) */
+void kill_all_windows(void)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].is_chat)
+            kill_chat_window(&windows[i]);
+        else if (windows[i].is_groupchat)
+            kill_groupchat_window(&windows[i]);
+    }
 }

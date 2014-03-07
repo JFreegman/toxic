@@ -1,4 +1,4 @@
-/*  execute.h
+/*  log.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,19 +20,14 @@
  *
  */
 
-#define MAX_NUM_ARGS 4     /* Includes command */
-#define GLOBAL_NUM_COMMANDS 14
+/* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
+void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log);
 
-#ifdef _SUPPORT_AUDIO 
-#define CHAT_NUM_COMMANDS 9
-#else 
-#define CHAT_NUM_COMMANDS 5
-#endif /* _SUPPORT_AUDIO */ 
+/* formats/writes line to log file */
+void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event);
 
-enum {
-    GLOBAL_COMMAND_MODE,
-    CHAT_COMMAND_MODE,
-    GROUPCHAT_COMMAND_MODE,
-};
+/* enables logging for specified log and creates/fetches file if necessary */
+void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log);
 
-void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode);
+/* disables logging for specified log and closes file */
+void log_disable(struct chatlog *log);

@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  main.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,6 +58,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
+#include "file_senders.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "audio_call.h"
@@ -51,11 +70,9 @@
 
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
-char *SRVLIST_FILE = NULL;
 ToxWindow *prompt = NULL;
 
-FileSender file_senders[MAX_FILES];
-uint8_t max_file_senders_index;
+static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
 
 void on_window_resize(int sig)
 {
@@ -103,8 +120,12 @@ static Tox *init_tox(int ipv4)
     int ipv6 = !ipv4;
     Tox *m = tox_new(ipv6);
 
-    if (TOX_ENABLE_IPV6_DEFAULT && m == NULL) {
-        fprintf(stderr, "IPv6 didn't initialize, trying IPv4 only\n");
+    /* 
+    * TOX_ENABLE_IPV6_DEFAULT is always 1.
+    * Checking it is redundant, this *should* be doing ipv4 fallback
+    */
+    if (ipv6 && m == NULL) {
+        fprintf(stderr, "IPv6 didn't initialize, trying IPv4\n");
         m = tox_new(0);
     }
 
@@ -113,6 +134,7 @@ static Tox *init_tox(int ipv4)
 
     /* Callbacks */
     tox_callback_connection_status(m, on_connectionchange, NULL);
+    tox_callback_typing_change(m, on_typing_change, NULL);
     tox_callback_friend_request(m, on_request, NULL);
     tox_callback_friend_message(m, on_message, NULL);
     tox_callback_name_change(m, on_nickchange, NULL);
@@ -142,25 +164,26 @@ static Tox *init_tox(int ipv4)
 
 #define MINLINE    50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
 #define MAXLINE   256 /* Approx max number of chars in a sever line (name + port + key) */
-#define MAXSERVERS 50
-#define SERVERLEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
+#define MAXNODES 50
+#define NODELEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
 
 static int  linecnt = 0;
-static char servers[MAXSERVERS][SERVERLEN];
-static uint16_t ports[MAXSERVERS];
-static uint8_t keys[MAXSERVERS][TOX_CLIENT_ID_SIZE];
+static char nodes[MAXNODES][NODELEN];
+static uint16_t ports[MAXNODES];
+static uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
 
-int serverlist_load(void)
+static int nodelist_load(char *filename)
 {
-    FILE *fp = NULL;
+    if (!filename)
+        return 1;
 
-    fp = fopen(SRVLIST_FILE, "r");
+    FILE *fp = fopen(filename, "r");
 
     if (fp == NULL)
         return 1;
 
     char line[MAXLINE];
-    while (fgets(line, sizeof(line), fp) && linecnt < MAXSERVERS) {
+    while (fgets(line, sizeof(line), fp) && linecnt < MAXNODES) {
         if (strlen(line) > MINLINE) {
             char *name = strtok(line, " ");
             char *port = strtok(NULL, " ");
@@ -169,8 +192,8 @@ int serverlist_load(void)
             if (name == NULL || port == NULL || key_ascii == NULL)
                 continue;
 
-            strncpy(servers[linecnt], name, SERVERLEN);
-            servers[linecnt][SERVERLEN - 1] = 0;
+            strncpy(nodes[linecnt], name, NODELEN);
+            nodes[linecnt][NODELEN - 1] = 0;
             ports[linecnt] = htons(atoi(port));
 
             uint8_t *key_binary = hex_string_to_bin(key_ascii);
@@ -190,51 +213,53 @@ int serverlist_load(void)
     return 0;
 }
 
-int init_connection_helper(Tox *m, int linenumber)
+int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap_from_address(m, servers[linenumber], TOX_ENABLE_IPV6_DEFAULT,
-                                                ports[linenumber], keys[linenumber]);
+    return tox_bootstrap_from_address(m, nodes[line], TOX_ENABLE_IPV6_DEFAULT,
+                                                ports[line], keys[line]);
 }
 
-/* Connects to a random DHT server listed in the DHTservers file
+/* Connects to a random DHT node listed in the DHTnodes file
  *
  * return codes:
- * 1: failed to open server file
- * 2: no line of sufficient length in server file
- * 3: (old, removed) failed to split a selected line in the server file
- * 4: failed to resolve name to IP
- * 5: serverlist file contains no acceptable line
+ * 1: failed to open node file
+ * 2: no line of sufficient length in node file
+ * 3: failed to resolve name to IP
+ * 4: nodelist file contains no acceptable line
  */
-static int init_connection_serverlist_loaded = 0;
+static bool srvlist_loaded = false;
+
+#define NUM_INIT_NODES 5
+
 int init_connection(Tox *m)
 {
-    if (linecnt > 0) /* already loaded serverlist */
-        return init_connection_helper(m, rand() % linecnt) ? 0 : 4;
+    if (linecnt > 0) /* already loaded nodelist */
+        return init_connection_helper(m, rand() % linecnt) ? 0 : 3;
 
     /* only once:
-     * - load the serverlist
+     * - load the nodelist
      * - connect to "everyone" inside
      */
-    if (!init_connection_serverlist_loaded) {
-        init_connection_serverlist_loaded = 1;
-        int res = serverlist_load();
-        if (res)
+    if (!srvlist_loaded) {
+        srvlist_loaded = true;
+        int res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
+
+        if (linecnt < 1)
             return res;
 
-        if (!linecnt)
-            return 4;
+        res = 3;
+        int i;
+        int n = MIN(NUM_INIT_NODES, linecnt);
 
-        res = 6;
-        int linenumber;
-        for(linenumber = 0; linenumber < linecnt; linenumber++)
-            if (init_connection_helper(m, linenumber))
+        for(i = 0; i < n; ++i)
+            if (init_connection_helper(m, rand() % linecnt))
                 res = 0;
 
         return res;
     }
 
-    /* empty serverlist file */
-    return 5;
+    /* empty nodelist file */
+    return 4;
 }
 
 static void do_connection(Tox *m, ToxWindow *prompt)
@@ -267,7 +292,14 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     }
 }
 
-int f_loadfromfile;
+static void load_friendlist(Tox *m)
+{
+    int i;
+    uint32_t numfriends = tox_count_friendlist(m);
+
+    for (i = 0; i < numfriends; ++i)
+        friendlist_onFriendAdded(NULL, m, i, false);
+}
 
 /*
  * Store Messenger to given location
@@ -347,12 +379,7 @@ static void load_data(Tox *m, char *path)
         }
 
         tox_load(m, buf, len);
-
-        uint32_t i = 0;
-        uint8_t name[TOX_MAX_NAME_LENGTH];
-
-        while (tox_get_name(m, i, name) != -1)
-            on_friendadded(m, i++, false);
+        load_friendlist(m);
 
         free(buf);
         fclose(fd);
@@ -367,88 +394,15 @@ static void load_data(Tox *m, char *path)
     }
 }
 
-void close_file_sender(int i)
-{
-    fclose(file_senders[i].file);
-    memset(&file_senders[i], 0, sizeof(FileSender));
-
-    int j;
-
-    for (j = max_file_senders_index; j > 0; --j) {
-        if (file_senders[j-1].active)
-            break;
-    }
-
-    max_file_senders_index = j;
-}
-
-static void do_file_senders(Tox *m)
-{
-    int i;
-
-    for (i = 0; i < max_file_senders_index; ++i) {
-        if (!file_senders[i].active)
-            continue;
-
-        uint8_t *pathname = file_senders[i].pathname;
-        uint8_t filenum = file_senders[i].filenum;
-        int friendnum = file_senders[i].friendnum;
-        FILE *fp = file_senders[i].file;
-        uint64_t current_time = (uint64_t) time(NULL);
-
-        /* If file transfer has timed out kill transfer and send kill control */
-        if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
-            ChatContext *ctx = file_senders[i].toxwin->chatwin;
-
-            if (ctx != NULL) {
-                wprintw(ctx->history, "File transfer for '%s' timed out.\n", pathname);
-                alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
-            }
-
-            tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_KILL, 0, 0);
-            close_file_sender(i);
-            continue;
-        }
-
-        while (true) {
-            if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
-                                   file_senders[i].piecelen) == -1)
-                break;
-
-            file_senders[i].timestamp = current_time;
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, 
-                                             tox_file_data_size(m, friendnum), fp);
-
-            if (file_senders[i].piecelen == 0) {
-                ChatContext *ctx = file_senders[i].toxwin->chatwin;
-
-                if (ctx != NULL) {
-                    wprintw(ctx->history, "File '%s' successfuly sent.\n", pathname);
-                    alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
-                }
-
-                tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
-                close_file_sender(i);
-                break;
-            }
-        }
-    }
-}
-
 void exit_toxic(Tox *m)
 {
     store_data(m, DATA_FILE);
-
-    int i;
-
-    for (i = 0; i < max_file_senders_index; ++i) {
-        if (file_senders[i].active)
-            fclose(file_senders[i].file);
-    }
-
+    close_all_file_senders();
+    kill_all_windows();
+    log_disable(prompt->promptbuf->log);
     free(DATA_FILE);
-    free(SRVLIST_FILE);
     free(prompt->stb);
+    free(prompt->promptbuf->log);
     free(prompt->promptbuf);
     tox_kill(m);
     endwin();
@@ -475,7 +429,7 @@ int main(int argc, char *argv[])
     int i = 0;
     int f_use_ipv4 = 0;
 
-    // Make sure all written files are read/writeable only by the current user.
+    /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
     for (i = 0; i < argc; ++i) {
@@ -504,27 +458,12 @@ int main(int argc, char *argv[])
             if (DATA_FILE != NULL) {
                 strcpy(DATA_FILE, user_config_dir);
                 strcat(DATA_FILE, CONFIGDIR);
-                strcat(DATA_FILE, "data");
+                strcat(DATA_FILE, "data");     
             } else {
                 endwin();
                 fprintf(stderr, "malloc() failed. Aborting...\n");
                 exit(EXIT_FAILURE);
             }
-        }
-    }
-
-    if (config_err) {
-        SRVLIST_FILE = strdup(PACKAGE_DATADIR "/DHTservers");
-    } else {
-        SRVLIST_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("DHTservers") + 1);
-        if (SRVLIST_FILE != NULL) {
-            strcpy(SRVLIST_FILE, user_config_dir);
-            strcat(SRVLIST_FILE, CONFIGDIR);
-            strcat(SRVLIST_FILE, "DHTservers");
-        } else {
-            endwin();
-            fprintf(stderr, "malloc() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
         }
     }
 
@@ -577,7 +516,8 @@ int main(int argc, char *argv[])
     prompt_init_statusbar(prompt, m);
     sort_friendlist_index(m);
 
-    while (true) do_toxic(m, prompt);
+    while (true) 
+        do_toxic(m, prompt);
     
 #ifdef _SUPPORT_AUDIO     
     terminate_audio(prompt, av);

@@ -1,9 +1,27 @@
-/*
- * Toxic -- Tox Curses Client
+/*  misc_tools.h
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
-// #define MIN(x, y) (((x) < (y)) ? (x) : (y))
- #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 /* convert a hex string to binary */
 unsigned char *hex_string_to_bin(char hex_string[]);
@@ -14,8 +32,8 @@ struct tm *get_time(void);
 /* Prints the time to given window */
 void print_time(WINDOW *window);
 
-/* Returns 1 if the string is empty, 0 otherwise */
-int string_is_empty(char *string);
+/* Returns true if the string is empty, false otherwise */
+bool string_is_empty(char *string);
 
 /* convert a multibyte string to a wide character string (must provide buffer) */
 int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);

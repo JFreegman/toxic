@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  prompt.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,6 +48,7 @@ const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/groupchat"  },
     { "/help"       },
     { "/join"       },
+    { "/log"        },
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
@@ -154,12 +173,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
             beep();
     }
 
-    else if (key == KEY_HOME) {    /* HOME key: Move cursor to beginning of line */
+    else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
         if (prt->pos != 0)
             prt->pos = 0;
     }
 
-    else if (key == KEY_END) {     /* END key: move cursor to end of line */
+    else if (key == KEY_END || key == T_KEY_C_E) {   /* END/C-e key: move cursor to end of line */
         if (prt->pos != prt->len)
             prt->pos = prt->len;
     }
@@ -341,6 +360,18 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     scrollok(self->window, true);
+    PromptBuf *prt = self->promptbuf;
+
+    prt->log = malloc(sizeof(struct chatlog));
+
+    if (prt->log == NULL) {
+        endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(prt->log, 0, sizeof(struct chatlog));
+
     execute(self->window, self, m, "/help", GLOBAL_COMMAND_MODE);
     wclrtoeol(self->window);
 }
@@ -350,6 +381,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
     if (friendnum < 0)
         return;
 
+    PromptBuf *prt = self->promptbuf;
     prep_prompt_win();
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
@@ -363,22 +395,29 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
     wprintw(self->window, "\n");
     print_time(self->window);
 
+    uint8_t *msg;
+
     if (status == 1) {
+        msg = "has come online";
         wattron(self->window, COLOR_PAIR(GREEN));
         wattron(self->window, A_BOLD);
         wprintw(self->window, "* %s ", nick);
         wattroff(self->window, A_BOLD);
-        wprintw(self->window, "has come online\n");
+        wprintw(self->window, "%s\n", msg);
         wattroff(self->window, COLOR_PAIR(GREEN));
 
+        write_to_log(msg, nick, prt->log, true);
         alert_window(self, WINDOW_ALERT_2, false);
     } else {
+        msg = "has gone offline";
         wattron(self->window, COLOR_PAIR(RED));
         wattron(self->window, A_BOLD);
         wprintw(self->window, "* %s ", nick);
         wattroff(self->window, A_BOLD);
-        wprintw(self->window, "has gone offline\n");
+        wprintw(self->window, "%s\n", msg);
         wattroff(self->window, COLOR_PAIR(RED));
+
+        write_to_log(msg, nick, prt->log, true);
     }
 }
 
@@ -386,16 +425,23 @@ static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data,
 {
     // make sure message data is null-terminated
     data[length - 1] = 0;
-
+    PromptBuf *prt = self->promptbuf;
     prep_prompt_win();
+
     wprintw(self->window, "\n");
     print_time(self->window);
-    wprintw(self->window, "Friend request with the message: '%s'\n", data);
+
+    uint8_t msg[MAX_STR_SIZE];
+    snprintf(msg, sizeof(msg), "Friend request with the message '%s'\n", data);
+    wprintw(self->window, "%s", msg);
+    write_to_log(msg, "", prt->log, true);
 
     int n = add_friend_request(key);
 
     if (n == -1) {
-        wprintw(self->window, "Friend request queue is full. Discarding request.\n");
+        uint8_t *errmsg = "Friend request queue is full. Discarding request.\n";
+        wprintw(self->window, "%s", errmsg);
+        write_to_log(errmsg, "", prt->log, true);
         return;
     }
 
@@ -441,6 +487,7 @@ ToxWindow new_prompt(void)
     memset(&ret, 0, sizeof(ret));
 
     ret.active = true;
+    ret.is_prompt = true;
 
     ret.onKey = &prompt_onKey;
     ret.onDraw = &prompt_onDraw;

@@ -1,5 +1,23 @@
-/*
- * Toxic -- Tox Curses Client
+/*  toxic_strings.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include <stdlib.h>
@@ -120,19 +138,21 @@ void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZ
 }
 
 /* copies history item at hst_pos to buf. Sets pos and len to the len of the history item.
-   hst_pos is decremented or incremented depending on key_dir. */
+   hst_pos is decremented or incremented depending on key_dir.
+   
+   resets buffer if at end of history */
 void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_STR_SIZE],
                      int hst_tot, int *hst_pos, int key_dir)
 {
     if (key_dir == LN_HIST_MV_UP) {
         if (--(*hst_pos) < 0) {
-            ++(*hst_pos);
+            *hst_pos = 0;
             beep();
         }
     } else {
         if (++(*hst_pos) >= hst_tot) {
-            --(*hst_pos);
-            beep();
+            *hst_pos = hst_tot;
+            reset_buf(buf, pos, len);
             return;
         }
     }
