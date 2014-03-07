@@ -38,6 +38,16 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     wprintw(window, "      /sendfile <filepath>       : Send a file\n");
     wprintw(window, "      /savefile <n>              : Receive a file\n");
     wprintw(window, "      /quit or /exit             : Exit Toxic\n");
+
+#ifdef _SUPPORT_AUDIO
+
+    wprintw(window, "      /call                      : Audio call\n");
+    wprintw(window, "      /cancel                    : Cancel call\n");
+    wprintw(window, "      /answer                    : Answer incomming call\n");
+    wprintw(window, "      /hangup                    : Hangup active call\n");
+
+#endif /* _SUPPORT_AUDIO */
+    
     wprintw(window, "      /help                      : Print this message again\n");
     
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);

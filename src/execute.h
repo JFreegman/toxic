@@ -4,7 +4,12 @@
 
 #define MAX_NUM_ARGS 4     /* Includes command */
 #define GLOBAL_NUM_COMMANDS 13
+
+#ifdef _SUPPORT_AUDIO 
+#define CHAT_NUM_COMMANDS 9
+#else 
 #define CHAT_NUM_COMMANDS 5
+#endif /* _SUPPORT_AUDIO */ 
 
 enum {
     GLOBAL_COMMAND_MODE,

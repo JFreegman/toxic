@@ -15,7 +15,11 @@
 
 #include <tox/tox.h>
 
-#define UNKNOWN_NAME "Unknown"
+#ifdef _SUPPORT_AUDIO
+    #include <tox/toxav.h>
+#endif /* _SUPPORT_AUDIO */
+
+#define UNKNOWN_NAME "John Doe"
 
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
@@ -85,6 +89,21 @@ struct ToxWindow {
     void(*onFileControl)(ToxWindow *, Tox *, int, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
     void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
 
+#ifdef _SUPPORT_AUDIO
+
+    void(*onInvite)(ToxWindow *, ToxAv *);
+    void(*onRinging)(ToxWindow *, ToxAv *);
+    void(*onStarting)(ToxWindow *, ToxAv *);
+    void(*onEnding)(ToxWindow *, ToxAv *);
+    void(*onError)(ToxWindow *, ToxAv *);
+    void(*onStart)(ToxWindow *, ToxAv *);
+    void(*onCancel)(ToxWindow *, ToxAv *);
+    void(*onReject)(ToxWindow *, ToxAv *);
+    void(*onEnd)(ToxWindow *, ToxAv *);
+    void(*onTimeout)(ToxWindow *, ToxAv *);
+    
+#endif /* _SUPPORT_AUDIO */
+    
     char name[TOX_MAX_NAME_LENGTH];
     int num;
     bool active;

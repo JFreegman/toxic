@@ -15,6 +15,7 @@
 #include "chat.h"
 #include "friendlist.h"
 #include "misc_tools.h"
+#include "audio_call.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -395,6 +396,36 @@ static void friendlist_onInit(ToxWindow *self, Tox *m)
 
 }
 
+#ifdef _SUPPORT_AUDIO
+static void friendlist_onAv(ToxWindow *self, ToxAv *av)
+{
+    int id = toxav_get_peer_id(av, 0);
+    
+    if ( id >= max_friends_index)
+        return;
+    
+    Tox* m = toxav_get_tox(av);
+    
+    if (friends[id].chatwin == -1) {
+        if (num_active_windows() < MAX_WINDOWS_NUM) {
+            friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
+        } else {
+            uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+            tox_get_name(m, id, nick);
+            nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+            wprintw(prompt->window, "Audio action from: %s!\n", nick);
+            
+            prep_prompt_win();
+            wattron(prompt->window, COLOR_PAIR(RED));
+            wprintw(prompt->window, "* Warning: Too many windows are open.\n");
+            wattron(prompt->window, COLOR_PAIR(RED));
+            
+            alert_window(prompt, WINDOW_ALERT_0, true);
+        }
+    }
+}
+#endif /* _SUPPORT_AUDIO */
+
 ToxWindow new_friendlist(void)
 {
     ToxWindow ret;
@@ -414,6 +445,19 @@ ToxWindow new_friendlist(void)
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
     ret.onFileSendRequest = &friendlist_onFileSendRequest;
     ret.onGroupInvite = &friendlist_onGroupInvite;
+    
+#ifdef _SUPPORT_AUDIO
+    ret.onInvite = &friendlist_onAv;
+    ret.onRinging = &friendlist_onAv;
+    ret.onStarting = &friendlist_onAv;
+    ret.onEnding = &friendlist_onAv;
+    ret.onError = &friendlist_onAv;
+    ret.onStart = &friendlist_onAv;
+    ret.onCancel = &friendlist_onAv;
+    ret.onReject = &friendlist_onAv;
+    ret.onEnd = &friendlist_onAv;
+    ret.onTimeout = &friendlist_onAv;
+#endif /* _SUPPORT_AUDIO */
 
     strcpy(ret.name, "friends");
     return ret;

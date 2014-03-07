@@ -419,23 +419,29 @@ AC_ARG_ENABLE([av],
 # Check for A/V library
 
 if test "x$BUILD_AV" = "xyes"; then
-    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+    PKG_CHECK_MODULES([OPENAL], [openal],
+    [        
+        export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 
-    PKG_CHECK_EXISTS([libtoxav], 
-    [
-        AC_CHECK_HEADER([tox/toxav.h],
+        PKG_CHECK_MODULES([LIBTOXAV], [libtoxav], 
         [
-            # Place define for audio support
-            AC_DEFINE([_SUPPORT_AUDIO], [], [If audio supported])
-            AC_MSG_NOTICE([Building with audio support])
-        ],
+            AC_CHECK_HEADER([tox/toxav.h],
+            [
+                # Place define for audio support
+                AC_DEFINE([_SUPPORT_AUDIO], [], [If audio supported])
+                AC_MSG_NOTICE([Building with audio support])
+            ],
+            [
+                AC_MSG_NOTICE([No A/V headers; disabling A/V support])
+                BUILD_AV="no"
+            ],)
+        ], 
         [
-            AC_MSG_NOTICE([No A/V headers; disabling A/V support])
-            BUILD_AV="no"
-        ],)
-    ], 
+            AC_MSG_NOTICE([No A/V library; disabling A/V support])
+        ])
+    ],
     [
-      AC_MSG_NOTICE([No A/V library; disabling A/V support])
+        AC_MSG_NOTICE([No openal library; disabling A/V support])
     ])
 fi
 
@@ -443,6 +449,8 @@ AM_CONDITIONAL(BUILD_AV, test "x$BUILD_AV" = "xyes")
 
 
 
+#debug mode
+CFLAGS="-ggdb3 -O0 -pg"
 
 TOXIC_VERSION="$PACKAGE_VERSION"
 AC_PATH_PROG([GIT], [git], [no])

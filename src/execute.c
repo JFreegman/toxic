@@ -37,6 +37,13 @@ static struct cmd_func chat_commands[] = {
     { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
+    
+#ifdef _SUPPORT_AUDIO
+    { "/call",      cmd_call        },
+    { "/cancel",    cmd_cancel      },
+    { "/answer",    cmd_answer      },
+    { "/hangup",    cmd_hangup      },
+#endif /* _SUPPORT_AUDIO */
 };
 
 /* Parses input command and puts args into arg array. 

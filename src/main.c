@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #endif
 
 #include <tox/tox.h>
@@ -39,6 +40,10 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
+
+#ifdef _SUPPORT_AUDIO
+    #include "audio_call.h"
+#endif /* _SUPPORT_AUDIO */
 
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
@@ -536,6 +541,22 @@ int main(int argc, char *argv[])
 
     prompt = init_windows(m);
 
+#ifdef _SUPPORT_AUDIO 
+    
+    attron(COLOR_PAIR(RED) | A_BOLD);
+    wprintw(prompt->window, "Starting audio...\n");
+    attroff(COLOR_PAIR(RED) | A_BOLD);
+    
+    ToxAv* av = init_audio(prompt, m);
+        
+    if ( errors() == NoError )
+        wprintw(prompt->window, "Audio started with no problems.\n");
+    else /* Get error code and stuff */
+        wprintw(prompt->window, "Error starting audio!\n");
+    
+    
+#endif /* _SUPPORT_AUDIO */
+    
     if (f_loadfromfile)
         load_data(m, DATA_FILE);
 
@@ -556,8 +577,11 @@ int main(int argc, char *argv[])
     prompt_init_statusbar(prompt, m);
     sort_friendlist_index(m);
 
-    while (true)
-        do_toxic(m, prompt);
-
+    while (true) do_toxic(m, prompt);
+    
+#ifdef _SUPPORT_AUDIO     
+    terminate_audio(prompt, av);
+#endif /* _SUPPORT_AUDIO */
+    
     return 0;
 }
