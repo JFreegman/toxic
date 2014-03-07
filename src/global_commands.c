@@ -197,7 +197,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (num_active_windows() >= MAX_WINDOWS_NUM) {
+    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         wattron(window, COLOR_PAIR(RED));
         wprintw(window, " * Warning: Too many windows are open.\n");
         wattron(window, COLOR_PAIR(RED));

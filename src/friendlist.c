@@ -77,7 +77,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str,
         return;
 
     if (friends[num].chatwin == -1) {
-        if (num_active_windows() < MAX_WINDOWS_NUM) {
+        if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
@@ -178,7 +178,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int num, uint8
         return;
 
     if (friends[num].chatwin == -1) {
-        if (num_active_windows() < MAX_WINDOWS_NUM) {
+        if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
@@ -203,7 +203,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int num, uint8_t *
         return;
 
     if (friends[num].chatwin == -1) {
-        if (num_active_windows() < MAX_WINDOWS_NUM) {
+        if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
@@ -264,7 +264,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
         /* Jump to chat window if already open */
         if (friends[f].chatwin != -1) {
             set_active_window(friends[f].chatwin);
-        } else if (num_active_windows() < MAX_WINDOWS_NUM) {
+        } else if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
             set_active_window(friends[f].chatwin);
         } else {

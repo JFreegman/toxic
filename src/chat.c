@@ -296,7 +296,9 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int num, uint8_t filenum, u
         wattron(ctx->history, COLOR_PAIR(RED));
         wprintw(ctx->history, "* Error writing to file.\n");
         wattroff(ctx->history, COLOR_PAIR(RED));
+
         tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
+        chat_close_file_receiver(num, filenum);
     }
 }
 
