@@ -530,6 +530,11 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         goto on_error;
     }
     
+    if ( ASettins.ttas ) { /* Transmission is active */
+        error_str = "Cannot change device while active transmission";
+        goto on_error;
+    }
+    
     _devices type;
     
     if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
