@@ -428,7 +428,7 @@ if test "x$BUILD_AV" = "xyes"; then
             AC_CHECK_HEADER([tox/toxav.h],
             [
                 # Place define for audio support
-                AC_DEFINE([_SUPPORT_AUDIO], [], [If audio supported])
+                AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
                 AC_MSG_NOTICE([Building with audio support])
             ],
             [
@@ -447,10 +447,6 @@ fi
 
 AM_CONDITIONAL(BUILD_AV, test "x$BUILD_AV" = "xyes")
 
-
-
-#debug mode
-CFLAGS="-ggdb3 -O0 -pg"
 
 TOXIC_VERSION="$PACKAGE_VERSION"
 AC_PATH_PROG([GIT], [git], [no])

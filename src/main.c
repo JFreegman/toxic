@@ -68,6 +68,10 @@
 #define PACKAGE_DATADIR "."
 #endif
 
+#ifdef _SUPPORT_AUDIO
+    ToxAv* av;
+#endif /* _SUPPORT_AUDIO */
+
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
@@ -405,6 +409,9 @@ void exit_toxic(Tox *m)
     free(prompt->promptbuf->log);
     free(prompt->promptbuf);
     tox_kill(m);
+    #ifdef _SUPPORT_AUDIO
+    terminate_audio(prompt, av);
+    #endif /* _SUPPORT_AUDIO */
     endwin();
     exit(EXIT_SUCCESS);
 }
@@ -486,7 +493,7 @@ int main(int argc, char *argv[])
     wprintw(prompt->window, "Starting audio...\n");
     attroff(COLOR_PAIR(RED) | A_BOLD);
     
-    ToxAv* av = init_audio(prompt, m);
+    av = init_audio(prompt, m);
         
     if ( errors() == NoError )
         wprintw(prompt->window, "Audio started with no problems.\n");
@@ -518,10 +525,6 @@ int main(int argc, char *argv[])
 
     while (true) 
         do_toxic(m, prompt);
-    
-#ifdef _SUPPORT_AUDIO     
-    terminate_audio(prompt, av);
-#endif /* _SUPPORT_AUDIO */
-    
+        
     return 0;
 }

@@ -43,7 +43,7 @@ static GroupChat groupchats[MAX_WINDOWS_NUM];
 static int max_groupchat_index = 0;
 
 /* temporary until group chats have unique commands */
-extern glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
+extern const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
