@@ -54,10 +54,10 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 #ifdef _SUPPORT_AUDIO
 
-    wprintw(window, "      /call                      : Audio call\n");
-    wprintw(window, "      /cancel                    : Cancel call\n");
-    wprintw(window, "      /answer                    : Answer incomming call\n");
-    wprintw(window, "      /hangup                    : Hangup active call\n");
+    wprintw(window, "    /call                      : Audio call\n");
+    wprintw(window, "    /cancel                    : Cancel call\n");
+    wprintw(window, "    /answer                    : Answer incomming call\n");
+    wprintw(window, "    /hangup                    : Hangup active call\n");
 
 #endif /* _SUPPORT_AUDIO */
     

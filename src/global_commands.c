@@ -377,7 +377,12 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     wprintw(window, "    /help                      : Print this message again\n");
     wprintw(window, "    /clear                     : Clear the window\n");
     wprintw(window, "    /quit or /exit             : Exit Toxic\n");
-
+    
+    #ifdef _SUPPORT_AUDIO
+    wprintw(window, "    /lsdev <type>              : List devices where type: in|out\n");
+    wprintw(window, "    /sdev <type> <id>          : Set active device\n");
+    #endif /* _SUPPORT_AUDIO */
+    
     wattron(window, COLOR_PAIR(CYAN) | A_BOLD);
     wprintw(window, " * Argument messages must be enclosed in quotation marks.\n");
     wprintw(window, " * Use ctrl-o and ctrl-p to navigate through the tabs.\n\n");

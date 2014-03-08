@@ -6,12 +6,10 @@
 #include "config.h"
 #endif
 
-#ifdef _SUPPORT_AUDIO
-
-
 #include "audio_call.h"
 #include "toxic_windows.h"
 #include "chat_commands.h"
+#include "global_commands.h"
 #include "toxic_windows.h"
 #include <curses.h>
 #include <AL/al.h>
@@ -33,11 +31,11 @@ typedef struct _DeviceIx {
     int dix; /* Index of default device */
 } DeviceIx;
 
-enum _devices
+typedef enum _devices
 {
     input,
     output,
-};
+} _devices;
 
 struct _ASettings {
     
@@ -87,8 +85,6 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
             
             stringed_device_list += strlen( stringed_device_list ) + 1;
         }
-        
-        ++ASettins.device[input].size;
     }
     
     if ( ASettins.device[input].size ) { /* Have device */
@@ -125,8 +121,6 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
             
             stringed_device_list += strlen( stringed_device_list ) + 1;
         }
-        
-        ++ASettins.device[output].size;
     }
     
     if ( ASettins.device[output].size ) { /* Have device */
@@ -491,7 +485,119 @@ on_error:
 }
 
 
+void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    const char* error_str;
+    
+    if ( argc != 1 ) {
+        if ( argc < 1 ) error_str = "Type must be specified!";        
+        else error_str = "Only one argument allowed!";
+        
+        goto on_error;
+    }
+    
+    _devices type;
+    
+    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+        type = input;
+    
+    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+        type = output;
+    
+    else {
+        wprintw(window, "Invalid type: %s\n", argv[1]);
+        return;
+    }
+    
+    int i = 0;
+    for ( ; i < ASettins.device[type].size; i ++) 
+        wprintw(window, "%d: %s\n", i, ASettins.device[type].devices[i]);
+    
+    return;
+on_error: 
+    wprintw(window, "%s\n", error_str); 
+}
 
-
-
-#endif /* _SUPPORT_AUDIO */
+void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    const char* error_str;
+    
+    if ( argc != 2 ) {
+        if ( argc < 1 ) error_str = "Type must be specified!";
+        else if ( argc < 2 ) error_str = "Must have id!";
+        else error_str = "Only two arguments allowed!";
+        
+        goto on_error;
+    }
+    
+    _devices type;
+    
+    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+        type = input;
+    
+    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+        type = output;
+    
+    else {
+        wprintw(window, "Invalid type: %s\n", argv[1]);
+        return;
+    }
+    
+    
+    char *end;
+    long int selection = strtol(argv[2], &end, 10);
+    
+    if ( *end ) {
+        error_str = "Invalid input";
+        goto on_error;
+    }
+    
+    if ( selection < 0 || selection >= ASettins.device[type].size ) {
+        error_str = "No device with such index";
+        goto on_error;
+    }
+    
+    /* Close default device */
+    if ( ASettins.device[type].dhndl ) {
+        alcCloseDevice(ASettins.device[type].dhndl);
+        
+        if ( ASettins.device[type].ctx) { /* Output device has context with it */
+            alcMakeContextCurrent(NULL);
+            alcDestroyContext(ASettins.device[type].ctx);
+        }
+    }
+    
+    /* Open new device */
+    
+    if ( type == input ) {
+        ASettins.device[input].dhndl = alcCaptureOpenDevice(
+            ASettins.device[input].devices[selection], AUDIO_SAMPLE_RATE, AL_FORMAT_MONO16, AUDIO_FRAME_SIZE * 4);
+        
+        if (alcGetError(ASettins.device[input].dhndl) != AL_NO_ERROR) {
+            error_str = "Error starting input device!";
+            ASettins.errors |= ErrorStartingCaptureDevice;
+        }
+        
+        ASettins.device[input].ctx = NULL;    
+        
+        wprintw(window, "Input device: %s\n", ASettins.device[type].devices[selection]);
+    }
+    else {
+        ASettins.device[output].dhndl = alcOpenDevice(ASettins.device[output].devices[selection]);
+        
+        if (alcGetError(ASettins.device[output].dhndl) != AL_NO_ERROR) {
+            error_str = "Error starting output device!";
+            ASettins.errors |= ErrorStartingOutputDevice;
+        }
+        
+        ASettins.device[output].ctx = alcCreateContext(ASettins.device[output].dhndl, NULL);
+        
+        wprintw(window, "Output device: %s\n", ASettins.device[type].devices[selection]);
+    }
+    
+    
+    
+    return;
+on_error: 
+    wprintw(window, "%s\n", error_str); 
+}

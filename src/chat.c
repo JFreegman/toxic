@@ -47,9 +47,9 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
 
 #ifdef _SUPPORT_AUDIO
-#define AC_NUM_CHAT_COMMANDS 22
+    #define AC_NUM_CHAT_COMMANDS 22
 #else
-#define AC_NUM_CHAT_COMMANDS 18
+    #define AC_NUM_CHAT_COMMANDS 18
 #endif /* _SUPPORT_AUDIO */
 
 /* Array of chat command names used for tab completion. */

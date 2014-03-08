@@ -5,9 +5,6 @@
 #ifndef _audio_h
 #define _audio_h
 
-#ifdef _SUPPORT_AUDIO
-
-
 #include <tox/toxav.h>
 
 typedef struct ToxWindow ToxWindow;
@@ -30,5 +27,4 @@ int errors();
 
 int start_transmission();
 
-#endif /* _SUPPORT_AUDIO */
 #endif /* _audio_h */
