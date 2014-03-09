@@ -105,7 +105,7 @@ int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
     return len;
 }
 
-/* convert wide characters to multibyte string: string returned must be free'd */
+/* convert wide characters to multibyte string: string returned must be freed */
 uint8_t *wcs_to_mbs(wchar_t *string)
 {
     uint8_t *ret = NULL;

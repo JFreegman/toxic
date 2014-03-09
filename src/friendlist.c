@@ -44,6 +44,8 @@ static int num_friends = 0;
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
+static PendingDel pendingdelete;
+
 #define S_WEIGHT 100
 
 static int index_name_cmp(const void *n1, const void *n2)
@@ -230,7 +232,7 @@ static void select_friend(ToxWindow *self, Tox *m, wint_t key)
     }
 }
 
-static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
+static void delete_friend(Tox *m, int f_num)
 {
     tox_del_friend(m, f_num);
     memset(&friends[f_num], 0, sizeof(ToxicFriend));
@@ -253,12 +255,62 @@ static void delete_friend(Tox *m, ToxWindow *self, int f_num, wint_t key)
     store_data(m, DATA_FILE);
 }
 
+/* activates delete friend popup */
+static void del_friend_activate(ToxWindow *self, Tox *m, int f_num)
+{
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
+    self->popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
+
+    wattron(self->popup, A_BOLD);
+    box(self->popup, ACS_VLINE, ACS_HLINE);
+    wattroff(self->popup, A_BOLD);
+
+    pendingdelete.active = true;
+    pendingdelete.num = f_num;
+}
+
+/* deactivates delete friend popup and deletes friend if instructed */
+static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
+{
+    if (key == 'y')
+        delete_friend(m, pendingdelete.num);
+ 
+    memset(&pendingdelete, 0, sizeof(PendingDel));
+    delwin(self->popup);
+    self->popup = NULL;
+    clear();
+    refresh();
+}
+
+static void friendlist_onPopup(ToxWindow *self, Tox *m)
+{
+    if (self->popup == NULL)
+        return;
+
+    wmove(self->popup, 1, 1);
+    wprintw(self->popup, "Delete contact ");
+    wattron(self->popup, A_BOLD);
+    wprintw(self->popup, "%s", friends[pendingdelete.num].name);
+    wattroff(self->popup, A_BOLD);
+    wprintw(self->popup, "? y/n");
+    wrefresh(self->popup);
+}
+
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
 {
     if (num_friends == 0)
         return;
 
     int f = friendlist_index[num_selected];
+
+    /* lock screen and force decision on deletion popup */
+    if (pendingdelete.active) {
+        if (key == 'y' || key == 'n')
+            del_friend_deactivate(self, m, key);
+
+        return;
+    }
 
     if (key == '\n') {
         /* Jump to chat window if already open */
@@ -276,7 +328,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
     } else if (key == KEY_DC) {
-        delete_friend(m, self, f, key);
+        del_friend_activate(self, m, f);
     } else {
         select_friend(self, m, key);
     }
@@ -306,7 +358,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wattroff(self->window, COLOR_PAIR(CYAN));
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " Friends: %d/%d \n\n", tox_get_num_online_friends(m), num_friends);
+    wprintw(self->window, " Online: %d/%d \n\n", tox_get_num_online_friends(m), num_friends);
     wattroff(self->window, A_BOLD);
 
     if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
@@ -421,6 +473,7 @@ ToxWindow new_friendlist(void)
     ret.active = true;
 
     ret.onKey = &friendlist_onKey;
+    ret.onPopup = &friendlist_onPopup;
     ret.onDraw = &friendlist_onDraw;
     ret.onInit = &friendlist_onInit;
     ret.onFriendAdded = &friendlist_onFriendAdded;

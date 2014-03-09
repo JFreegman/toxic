@@ -42,6 +42,11 @@ typedef struct {
     struct FileReceiver file_receiver;
 } ToxicFriend;
 
+typedef struct {
+    int num;
+    bool active;
+} PendingDel;
+
 ToxWindow new_friendlist(void);
 void disable_chatwin(int f_num);
 int get_friendnum(uint8_t *name);
