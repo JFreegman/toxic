@@ -262,10 +262,6 @@ static void del_friend_activate(ToxWindow *self, Tox *m, int f_num)
     getmaxyx(self->window, y2, x2);
     self->popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
 
-    wattron(self->popup, A_BOLD);
-    box(self->popup, ACS_VLINE, ACS_HLINE);
-    wattroff(self->popup, A_BOLD);
-
     pendingdelete.active = true;
     pendingdelete.num = f_num;
 }
@@ -283,10 +279,14 @@ static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
     refresh();
 }
 
-static void friendlist_onPopup(ToxWindow *self, Tox *m)
+static void draw_popup(ToxWindow *self, Tox *m)
 {
     if (self->popup == NULL)
         return;
+
+    wattron(self->popup, A_BOLD);
+    box(self->popup, ACS_VLINE, ACS_HLINE);
+    wattroff(self->popup, A_BOLD);
 
     wmove(self->popup, 1, 1);
     wprintw(self->popup, "Delete contact ");
@@ -294,6 +294,7 @@ static void friendlist_onPopup(ToxWindow *self, Tox *m)
     wprintw(self->popup, "%s", friends[pendingdelete.num].name);
     wattroff(self->popup, A_BOLD);
     wprintw(self->popup, "? y/n");
+
     wrefresh(self->popup);
 }
 
@@ -453,6 +454,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     self->x = x2;
     wrefresh(self->window);
+    draw_popup(self, m);
 }
 
 void disable_chatwin(int f_num)
@@ -473,7 +475,6 @@ ToxWindow new_friendlist(void)
     ret.active = true;
 
     ret.onKey = &friendlist_onKey;
-    ret.onPopup = &friendlist_onPopup;
     ret.onDraw = &friendlist_onDraw;
     ret.onInit = &friendlist_onInit;
     ret.onFriendAdded = &friendlist_onFriendAdded;

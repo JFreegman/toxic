@@ -387,14 +387,8 @@ void draw_active_window(Tox *m)
     wresize(a->window, LINES - 2, COLS);
 #endif
 
-    /* ignore main window if popup is active */
-    if (a->popup) {
-        a->onPopup(a, m);
-        wrefresh(a->popup);
-    } else {
-        a->onDraw(a, m);
-        wrefresh(a->window);
-    }
+    a->onDraw(a, m);
+    wrefresh(a->window);
 
     /* Handle input */
 #ifdef HAVE_WIDECHAR
@@ -403,7 +397,7 @@ void draw_active_window(Tox *m)
     ch = getch();
 #endif
 
-    if ((ch == T_KEY_NEXT || ch == T_KEY_PREV) && !a->popup)   /* lock window if active popup */
+    if (ch == T_KEY_NEXT || ch == T_KEY_PREV)
         set_next_window((int) ch);
     else if (ch != ERR)
         a->onKey(a, m, ch);

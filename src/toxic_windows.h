@@ -88,7 +88,6 @@ typedef struct ChatContext ChatContext;
 struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t);
     void(*onDraw)(ToxWindow *, Tox *);
-    void(*onPopup)(ToxWindow *, Tox*);
     void(*onInit)(ToxWindow *, Tox *);
     void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, int, bool);
