@@ -140,25 +140,25 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
     
     
     /* Streaming stuff from core */
-    ASettins.av = toxav_new(tox, window, 0, 0);
+    ASettins.av = toxav_new(tox, 0, 0);
     
     if ( !ASettins.av ) {
         ASettins.errors |= ErrorStartingCoreAudio;
         return NULL;
     }    
     
-    toxav_register_callstate_callback(callback_call_started, av_OnStart);
-    toxav_register_callstate_callback(callback_call_canceled, av_OnCancel);
-    toxav_register_callstate_callback(callback_call_rejected, av_OnReject);
-    toxav_register_callstate_callback(callback_call_ended, av_OnEnd);
-    toxav_register_callstate_callback(callback_recv_invite, av_OnInvite);
+    toxav_register_callstate_callback(callback_call_started, av_OnStart, window);
+    toxav_register_callstate_callback(callback_call_canceled, av_OnCancel, window);
+    toxav_register_callstate_callback(callback_call_rejected, av_OnReject, window);
+    toxav_register_callstate_callback(callback_call_ended, av_OnEnd, window);
+    toxav_register_callstate_callback(callback_recv_invite, av_OnInvite, window);
     
-    toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging);
-    toxav_register_callstate_callback(callback_recv_starting, av_OnStarting);
-    toxav_register_callstate_callback(callback_recv_ending, av_OnEnding);
+    toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging, window);
+    toxav_register_callstate_callback(callback_recv_starting, av_OnStarting, window);
+    toxav_register_callstate_callback(callback_recv_ending, av_OnEnding, window);
     
-    toxav_register_callstate_callback(callback_recv_error, av_OnError);
-    toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout);
+    toxav_register_callstate_callback(callback_recv_error, av_OnError, window);
+    toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, window);
     
     return ASettins.av;
 }
@@ -295,8 +295,8 @@ cleanup:
 
 int start_transmission()
 {
-    if ( !toxav_audio_decoding(ASettins.av) ||
-         !toxav_audio_encoding(ASettins.av) )
+    if ( !toxav_capability_supported(ASettins.av, AudioDecoding) ||
+         !toxav_capability_supported(ASettins.av, AudioEncoding) )
         return -1;
     
     /* Don't provide support for video */
@@ -324,8 +324,8 @@ int stop_transmission()
  * Callbacks
  */
 
-#define CB_BODY(Arg, onFunc) do { ToxWindow* windows = toxav_get_agent_handler(Arg); int i;\
-for (i = 0; i < MAX_WINDOWS_NUM; ++i) if (windows[i].onFunc != NULL) windows[i].onFunc(&windows[i], Arg); } while (0)
+#define CB_BODY(Arg, onFunc) do { ToxWindow* windows = (Arg); int i;\
+for (i = 0; i < MAX_WINDOWS_NUM; ++i) if (windows[i].onFunc != NULL) windows[i].onFunc(&windows[i], ASettins.av); } while (0)
 
 void *callback_recv_invite ( void* arg )
 {    
