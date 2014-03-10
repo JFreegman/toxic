@@ -32,8 +32,8 @@ struct tm *get_time(void);
 /* Prints the time to given window */
 void print_time(WINDOW *window);
 
-/* Returns true if the string is empty, false otherwise */
-bool string_is_empty(char *string);
+/* Returns 1 if the string is empty, 0 otherwise */
+int string_is_empty(char *string);
 
 /* convert a multibyte string to a wide character string (must provide buffer) */
 int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);

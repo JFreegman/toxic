@@ -74,8 +74,8 @@ void print_time(WINDOW *window)
     wattroff(window,COLOR_PAIR(BLUE));
 }
 
-/* Returns true if the string is empty, false otherwise */
-bool string_is_empty(char *string)
+/* Returns 1 if the string is empty, 0 otherwise */
+int string_is_empty(char *string)
 {
     return string[0] == '\0';
 }
@@ -109,7 +109,7 @@ int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
     return len;
 }
 
-/* convert wide characters to multibyte string: string returned must be free'd */
+/* convert wide characters to multibyte string: string returned must be freed */
 uint8_t *wcs_to_mbs(wchar_t *string)
 {
     uint8_t *ret = NULL;

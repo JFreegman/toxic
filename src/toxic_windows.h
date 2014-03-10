@@ -143,6 +143,7 @@ struct ToxWindow {
     PromptBuf *promptbuf;
     StatusBar *stb;
 
+    WINDOW *popup;
     WINDOW *window;
 };
 
@@ -253,7 +254,7 @@ void draw_active_window(Tox *m);
 int add_window(Tox *m, ToxWindow w);
 void del_window(ToxWindow *w);
 void set_active_window(int ch);
-int num_active_windows(void);
+int get_num_active_windows(void);
 
 /* cleans up all chat and groupchat windows (should only be called on shutdown) */
 void kill_all_windows(void);
