@@ -472,7 +472,7 @@ static void friendlist_onInit(ToxWindow *self, Tox *m)
 static void friendlist_onAv(ToxWindow *self, ToxAv *av)
 {
     int id = toxav_get_peer_id(av, 0);
-    id++;
+    /*id++;*/
     if ( id >= max_friends_index)
         return;
     
@@ -511,7 +511,7 @@ ToxWindow new_friendlist(void)
     ret.onFriendAdded = &friendlist_onFriendAdded;
     ret.onMessage = &friendlist_onMessage;
     ret.onConnectionChange = &friendlist_onConnectionChange;
-    ret.onAction = &friendlist_onMessage;    // Action has identical behaviour to message
+    ret.onAction = &friendlist_onMessage;    /* Action has identical behaviour to message */
     ret.onNickChange = &friendlist_onNickChange;
     ret.onStatusChange = &friendlist_onStatusChange;
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;

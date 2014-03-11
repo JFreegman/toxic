@@ -50,16 +50,16 @@ struct _ASettings {
 } ASettins;
 
 
-void *callback_recv_invite ( void *arg );
-void *callback_recv_ringing ( void *arg );
-void *callback_recv_starting ( void *arg );
-void *callback_recv_ending ( void *arg );
-void *callback_recv_error ( void *arg );
-void *callback_call_started ( void *arg );
-void *callback_call_canceled ( void *arg );
-void *callback_call_rejected ( void *arg );
-void *callback_call_ended ( void *arg );
-void *callback_requ_timeout ( void *arg );
+void callback_recv_invite ( void *arg );
+void callback_recv_ringing ( void *arg );
+void callback_recv_starting ( void *arg );
+void callback_recv_ending ( void *arg );
+void callback_recv_error ( void *arg );
+void callback_call_started ( void *arg );
+void callback_call_canceled ( void *arg );
+void callback_call_rejected ( void *arg );
+void callback_call_ended ( void *arg );
+void callback_requ_timeout ( void *arg );
 
 
 
@@ -327,57 +327,48 @@ int stop_transmission()
 #define CB_BODY(Arg, onFunc) do { ToxWindow* windows = (Arg); int i;\
 for (i = 0; i < MAX_WINDOWS_NUM; ++i) if (windows[i].onFunc != NULL) windows[i].onFunc(&windows[i], ASettins.av); } while (0)
 
-void *callback_recv_invite ( void* arg )
+void callback_recv_invite ( void* arg )
 {    
     CB_BODY(arg, onInvite);
-    _cbend;
 }
-void *callback_recv_ringing ( void* arg )
+void callback_recv_ringing ( void* arg )
 {
     CB_BODY(arg, onRinging);
-    _cbend;
 }
-void *callback_recv_starting ( void* arg )
+void callback_recv_starting ( void* arg )
 {
     CB_BODY(arg, onStarting);
-    _cbend;
 }
-void *callback_recv_ending ( void* arg )
+void callback_recv_ending ( void* arg )
 {   
     CB_BODY(arg, onEnding);
     stop_transmission();
 }
-void *callback_recv_error ( void* arg )
+void callback_recv_error ( void* arg )
 {
     CB_BODY(arg, onError);
-    _cbend;
 }
-void *callback_call_started ( void* arg )
+void callback_call_started ( void* arg )
 {
     CB_BODY(arg, onStart);
-    _cbend;
 }
-void *callback_call_canceled ( void* arg )
+void callback_call_canceled ( void* arg )
 {
     CB_BODY(arg, onCancel);
-    _cbend;
 }
-void *callback_call_rejected ( void* arg )
+void callback_call_rejected ( void* arg )
 {
     CB_BODY(arg, onReject);
-    _cbend;
 }
-void *callback_call_ended ( void* arg )
+void callback_call_ended ( void* arg )
 {  
     CB_BODY(arg, onEnd);
     stop_transmission();
-    _cbend;
 }
 
-void *callback_requ_timeout ( void* arg )
+void callback_requ_timeout ( void* arg )
 {
     CB_BODY(arg, onTimeout);
-    _cbend;
 }
 
 /* 

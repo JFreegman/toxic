@@ -282,9 +282,9 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int num, uint8_t receive
     case TOX_FILECONTROL_ACCEPT:
         wprintw(ctx->history, "File transfer for '%s' accepted.\n", filename);
         break;
-    // case TOX_FILECONTROL_PAUSE:
-    //     wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
-    //     break;
+    /*case TOX_FILECONTROL_PAUSE:
+        wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
+        break; */
     case TOX_FILECONTROL_KILL:
         wprintw(ctx->history, "File transfer for '%s' failed.\n", filename);
 

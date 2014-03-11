@@ -28,7 +28,7 @@
 #else 
     #define GLOBAL_NUM_COMMANDS 14
     #define CHAT_NUM_COMMANDS 5
-#endif /* _SUPPORT_AUDIO */ 
+#endif /* _SUPPORT_AUDIO */
 
 enum {
     GLOBAL_COMMAND_MODE,
