@@ -11,6 +11,7 @@
 #include "chat_commands.h"
 #include "global_commands.h"
 #include "toxic_windows.h"
+
 #include <curses.h>
 #include <AL/al.h>
 #include <AL/alc.h>
