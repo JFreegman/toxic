@@ -37,7 +37,7 @@
     #include <tox/toxav.h>
 #endif /* _SUPPORT_AUDIO */
 
-#define UNKNOWN_NAME "John Doe"
+#define UNKNOWN_NAME "Anonymous"
 
 #define MAX_WINDOWS_NUM 32
 #define MAX_FRIENDS_NUM 100
