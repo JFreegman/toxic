@@ -124,7 +124,7 @@ static void print_groupchat_help(ChatContext *ctx)
     wprintw(ctx->history, " * Scroll peer list with the Page Up/Page Down keys.\n\n");
     wattroff(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
     wattron(ctx->history, COLOR_PAIR(WHITE) | A_BOLD);
-    wprintw(ctx->history, " \n   Notice, some friends will be missing names while finding peers\n\n");
+    wprintw(ctx->history, "    Notice, some friends will be missing names while finding peers\n\n");
     wattroff(ctx->history, COLOR_PAIR(WHITE) | A_BOLD);
 }
 
