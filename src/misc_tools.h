@@ -48,8 +48,8 @@ uint8_t *wcs_to_mbs(wchar_t *string);
 /* convert a wide char to multibyte char */
 char *wc_to_char(wchar_t ch);
 
-/* Returns true if connection has timed out, false otherwise */
-bool timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
+/* Returns 1 if connection has timed out, 0 otherwise */
+int timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
 
 /* Colours the window tab according to type. Beeps if is_beep is true */
 void alert_window(ToxWindow *self, int type, bool is_beep);
