@@ -479,7 +479,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av)
     Tox* m = toxav_get_tox(av);
     
     if (friends[id].chatwin == -1) {
-        if (num_active_windows() < MAX_WINDOWS_NUM) {
+        if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
