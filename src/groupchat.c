@@ -330,13 +330,13 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t
         return;
     }
 
-    // uint8_t selfname[TOX_MAX_NAME_LENGTH];
-    // tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
+    /* uint8_t selfname[TOX_MAX_NAME_LENGTH];
+       tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
 
-    // print_time(ctx->history);
-    // wattron(ctx->history, COLOR_PAIR(YELLOW));
-    // wprintw(ctx->history, "* %s %s\n", selfname, action);
-    // wattroff(ctx->history, COLOR_PAIR(YELLOW));
+       print_time(ctx->history);
+       wattron(ctx->history, COLOR_PAIR(YELLOW));
+       wprintw(ctx->history, "* %s %s\n", selfname, action);
+       wattroff(ctx->history, COLOR_PAIR(YELLOW)); */
 
     if (tox_group_action_send(m, self->num, action, strlen(action) + 1) == -1) {
         wattron(ctx->history, COLOR_PAIR(RED));

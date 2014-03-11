@@ -82,7 +82,7 @@ enum {
 
 /* Fixes text color problem on some terminals. 
    Uncomment if necessary */
-//#define URXVT_FIX
+/* #define URXVT_FIX */
 
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;

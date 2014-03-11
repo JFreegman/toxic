@@ -33,7 +33,7 @@
 
 extern ToxWindow *prompt;
 
-// XXX: FIX
+/* XXX: FIX */
 unsigned char *hex_string_to_bin(char hex_string[])
 {
     size_t len = strlen(hex_string);
@@ -224,13 +224,13 @@ void get_file_name(uint8_t *pathname, uint8_t *namebuf)
     while (idx >= 0 && pathname[idx] == '/')
       pathname[idx--] = '\0';
 
-    uint8_t *filename = strrchr(pathname, '/');    // Try unix style paths
+    uint8_t *filename = strrchr(pathname, '/');    /* Try unix style paths */
     
     if (filename != NULL) {
         if (!strlen(++filename))
             filename = pathname;
     } else {
-        filename = strrchr(pathname, '\\');    // Try windows style paths
+        filename = strrchr(pathname, '\\');    /* Try windows style paths */
 
         if (filename == NULL)
             filename = pathname;

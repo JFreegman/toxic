@@ -79,8 +79,8 @@ static struct cmd_func chat_commands[] = {
 static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])
 {
     int num_args = 0;
-    bool cmd_end = false;    // flags when we get to the end of cmd
-    char *end;               // points to the end of the current arg
+    bool cmd_end = false;    /* flags when we get to the end of cmd */
+    char *end;               /* points to the end of the current arg */
 
     /* characters wrapped in double quotes count as one arg */
     while (!cmd_end && num_args < MAX_NUM_ARGS) {

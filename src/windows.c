@@ -253,7 +253,7 @@ int add_window(Tox *m, ToxWindow w)
 /* Deletes window w and cleans up */
 void del_window(ToxWindow *w)
 {
-    active_window = windows; // Go to prompt screen
+    active_window = windows; /* Go to prompt screen */
 
     delwin(w->window);
     memset(w, 0, sizeof(ToxWindow));
@@ -279,7 +279,7 @@ void set_next_window(int ch)
         if (active_window->window)
             return;
 
-        if (active_window == inf) {    // infinite loop check
+        if (active_window == inf) {    /* infinite loop check */
             endwin();
             fprintf(stderr, "set_next_window() failed. Aborting...\n");
             exit(EXIT_FAILURE);

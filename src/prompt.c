@@ -430,7 +430,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int friendnum , u
 
 static void prompt_onFriendRequest(ToxWindow *self, uint8_t *key, uint8_t *data, uint16_t length)
 {
-    // make sure message data is null-terminated
+    /* make sure message data is null-terminated */
     data[length - 1] = 0;
     PromptBuf *prt = self->promptbuf;
     prep_prompt_win();
