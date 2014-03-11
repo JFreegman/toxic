@@ -45,3 +45,16 @@ toxic_LDADD =	$(LIBTOXCORE_LDFLAGS) \
 				$(LIBSODIUM_LIBS) \
                 $(WINSOCK2_LIBS)
 
+
+# For audio support
+if BUILD_AV
+
+toxic_SOURCES += $(top_srcdir)/src/audio_call.c \
+                 $(top_srcdir)/src/audio_call.h
+
+toxic_CFLAGS += $(LIBTOXAV_CFLAGS) \
+		$(OPENAL_CFLAGS)
+		
+toxic_LDADD += $(LIBTOXAV_LIBS) \
+	       $(OPENAL_LIBS) 
+endif

@@ -25,7 +25,12 @@
 
 #define X_OFST 2    /* offset to account for prompt char */
 
-#define AC_NUM_GLOB_COMMANDS 15
+
+#ifdef _SUPPORT_AUDIO 
+    #define AC_NUM_GLOB_COMMANDS 17
+#else 
+    #define AC_NUM_GLOB_COMMANDS 15
+#endif /* _SUPPORT_AUDIO */ 
 
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);

@@ -20,8 +20,13 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "toxic_windows.h"
 #include "execute.h"
@@ -34,20 +39,24 @@ struct cmd_func {
 };
 
 static struct cmd_func global_commands[] = {
-    { "/accept",    cmd_accept      },
-    { "/add",       cmd_add         },
-    { "/clear",     cmd_clear       },
-    { "/connect",   cmd_connect     },
-    { "/exit",      cmd_quit        },
-    { "/groupchat", cmd_groupchat   },
-    { "/help",      cmd_prompt_help },
-    { "/log",       cmd_log         },
-    { "/myid",      cmd_myid        },
-    { "/nick",      cmd_nick        },
-    { "/note",      cmd_note        },
-    { "/q",         cmd_quit        },
-    { "/quit",      cmd_quit        },
-    { "/status",    cmd_status      },
+    { "/accept",    cmd_accept        },
+    { "/add",       cmd_add           },
+    { "/clear",     cmd_clear         },
+    { "/connect",   cmd_connect       },
+    { "/exit",      cmd_quit          },
+    { "/groupchat", cmd_groupchat     },
+    { "/help",      cmd_prompt_help   },
+    { "/log",       cmd_log           },
+    { "/myid",      cmd_myid          },
+    { "/nick",      cmd_nick          },
+    { "/note",      cmd_note          },
+    { "/q",         cmd_quit          },
+    { "/quit",      cmd_quit          },
+    { "/status",    cmd_status        },
+#ifdef _SUPPORT_AUDIO
+    { "/lsdev",     cmd_list_devices  },
+    { "/sdev",      cmd_change_device },
+#endif /* _SUPPORT_AUDIO */
 };
 
 static struct cmd_func chat_commands[] = {
@@ -56,6 +65,13 @@ static struct cmd_func chat_commands[] = {
     { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
+    
+#ifdef _SUPPORT_AUDIO
+    { "/call",      cmd_call        },
+    { "/cancel",    cmd_cancel      },
+    { "/answer",    cmd_answer      },
+    { "/hangup",    cmd_hangup      },
+#endif /* _SUPPORT_AUDIO */
 };
 
 /* Parses input command and puts args into arg array. 

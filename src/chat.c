@@ -35,13 +35,22 @@
 #include "toxic_strings.h"
 #include "log.h"
 
+#ifdef _SUPPORT_AUDIO
+    #include "audio_call.h"
+#endif /* _SUPPORT_AUDIO */
+
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
-#define AC_NUM_CHAT_COMMANDS 18
+
+#ifdef _SUPPORT_AUDIO
+    #define AC_NUM_CHAT_COMMANDS 22
+#else
+    #define AC_NUM_CHAT_COMMANDS 18
+#endif /* _SUPPORT_AUDIO */
 
 /* Array of chat command names used for tab completion. */
 static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -63,6 +72,15 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/savefile"   },
     { "/sendfile"   },
     { "/status"     },
+    
+#ifdef _SUPPORT_AUDIO
+    
+    { "/call"       },
+    { "/cancel"     },
+    { "/answer"     },
+    { "/hangup"     },
+    
+#endif /* _SUPPORT_AUDIO */
 };
 
 static void set_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
@@ -319,6 +337,123 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int friendnumber, uint8_
     wprintw(ctx->history, "Type \"/join\" to join the chat.\n");
     alert_window(self, WINDOW_ALERT_2, true);
 }
+
+/* Av Stuff */
+#ifdef _SUPPORT_AUDIO
+
+void chat_onInvite (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    wprintw(ctx->history, "Incomming audio call!\n"
+                          "Answer: \"/answer\" \"/cancel\"\n");
+    
+    alert_window(self, WINDOW_ALERT_0, true);
+}
+void chat_onRinging (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    wprintw(ctx->history, "Ringing...\n"
+                          "\"/cancel\" ?\n");
+}
+void chat_onStarting (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    if ( 0 != start_transmission() ) {/* YEAH! */
+        wprintw(ctx->history, "Error starting transmission!\n");
+        return;
+    }
+    
+    wprintw(ctx->history, "Call started! \n"
+                          "Type: \"/hangup\" to end it.\n");
+    
+}
+void chat_onEnding (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    toxav_kill_transmission(av);
+    
+    wprintw(ctx->history, "Call ended! \n");
+}
+void chat_onError (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    wprintw(ctx->history, "Error! \n");
+}
+void chat_onStart (ToxWindow *self, ToxAv *av)
+{    
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    if ( 0 != start_transmission() ) {/* YEAH! */
+        wprintw(ctx->history, "Error starting transmission!\n");
+        return;
+    }
+    
+    wprintw(ctx->history, "Call started! \n"
+                          "Type: \"/hangup\" to end it.\n");
+}
+void chat_onCancel (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    wprintw(ctx->history, "Call canceled! \n");
+}
+void chat_onReject (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    wprintw(ctx->history, "Rejected! \n");
+}
+void chat_onEnd (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    toxav_kill_transmission(av);
+    
+    wprintw(ctx->history, "Call ended! \n");
+}
+void chat_onTimeout (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+        
+    wprintw(ctx->history, "No answer! \n");
+}
+
+#endif /* _SUPPORT_AUDIO */
 
 static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
     if (action == NULL) {
@@ -710,6 +845,19 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onFileSendRequest = &chat_onFileSendRequest;
     ret.onFileControl = &chat_onFileControl;
     ret.onFileData = &chat_onFileData;
+    
+#ifdef _SUPPORT_AUDIO
+    ret.onInvite = &chat_onInvite;
+    ret.onRinging = &chat_onRinging;
+    ret.onStarting = &chat_onStarting;
+    ret.onEnding = &chat_onEnding;
+    ret.onError = &chat_onError;
+    ret.onStart = &chat_onStart;
+    ret.onCancel = &chat_onCancel;
+    ret.onReject = &chat_onReject;
+    ret.onEnd = &chat_onEnd;
+    ret.onTimeout = &chat_onTimeout;
+#endif /* _SUPPORT_AUDIO */
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
     uint16_t len = tox_get_name(m, friendnum, name);

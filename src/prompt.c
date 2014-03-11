@@ -54,6 +54,13 @@ const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/note"       },
     { "/quit"       },
     { "/status"     },
+    
+#ifdef _SUPPORT_AUDIO
+    
+    { "/lsdev"       },
+    { "/sdev"        },
+    
+#endif /* _SUPPORT_AUDIO */
 };
 
 /* prevents input string from eating system messages: call this prior to printing a prompt message
