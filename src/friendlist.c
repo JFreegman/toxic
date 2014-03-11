@@ -472,7 +472,7 @@ static void friendlist_onInit(ToxWindow *self, Tox *m)
 static void friendlist_onAv(ToxWindow *self, ToxAv *av)
 {
     int id = toxav_get_peer_id(av, 0);
-    
+    id++;
     if ( id >= max_friends_index)
         return;
     
