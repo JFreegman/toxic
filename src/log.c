@@ -53,7 +53,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
     } else {
         struct tm *tminfo = get_time();
         snprintf(ident, sizeof(ident), 
-                "%04d-%02d-%02d[%02d:%02d:%02d]", tminfo->tm_year+1900,tminfo->tm_mon+1, tminfo->tm_mday, 
+                "%04d-%02d-%02d[%d:%02d:%02d]", tminfo->tm_year+1900,tminfo->tm_mon+1, tminfo->tm_mday, 
                                                   tminfo->tm_hour, tminfo->tm_min, tminfo->tm_sec);
         path_len += strlen(ident) + 1;
     }
@@ -97,7 +97,7 @@ void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
     struct tm *tminfo = get_time();
-    fprintf(log->file,"%04d/%02d/%02d [%02d:%02d:%02d] %s %s\n", tminfo->tm_year+1900,
+    fprintf(log->file,"%04d/%02d/%02d [%d:%02d:%02d] %s %s\n", tminfo->tm_year+1900,
                            tminfo->tm_mon+1, tminfo->tm_mday, tminfo->tm_hour, tminfo->tm_min, 
                            tminfo->tm_sec, name_frmt, msg);
 

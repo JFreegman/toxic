@@ -275,18 +275,18 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     bool is_connected = tox_isconnected(m);
 
     if (!dht_on && !is_connected && !(conn_try++ % 100)) {
-        prep_prompt_win();
         if (!conn_err) {
-            wprintw(prompt->window, "Establishing connection...\n");
-            if ((conn_err = init_connection(m)))
+            if ((conn_err = init_connection(m))) {
+                prep_prompt_win();
                 wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
+            }
         }
     } else if (!dht_on && is_connected) {
         dht_on = true;
         prompt_update_connectionstatus(prompt, dht_on);
 
         prep_prompt_win();
-        wprintw(prompt->window, "\nDHT connected.\n");
+        wprintw(prompt->window, "DHT connected.\n");
     } else if (dht_on && !is_connected) {
         dht_on = false;
         prompt_update_connectionstatus(prompt, dht_on);

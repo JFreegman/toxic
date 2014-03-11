@@ -70,7 +70,7 @@ void print_time(WINDOW *window)
     struct tm *timeinfo = get_time();
 
     wattron(window, COLOR_PAIR(BLUE));
-    wprintw(window, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    wprintw(window, "[%2d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     wattroff(window,COLOR_PAIR(BLUE));
 }
 
@@ -189,11 +189,11 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2)
     return strcasecmp((const char *) nick1, (const char *) nick2);
 }
 
-/* Returns true if nick is valid. A valid toxic nick:
+/* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
       - cannot be empty
       - cannot start with a space
       - must not contain contiguous spaces */
-bool valid_nick(uint8_t *nick)
+int valid_nick(uint8_t *nick)
 {
     if (!nick[0] || nick[0] == ' ')
         return false;
