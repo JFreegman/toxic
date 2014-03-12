@@ -68,7 +68,7 @@ struct tm *get_time(void)
 void print_time(WINDOW *window)
 {
     uint8_t s[MAX_STR_SIZE];
-    strftime(s, MAX_STR_SIZE, "[%H:%M] ", get_time());
+    strftime(s, MAX_STR_SIZE, "[%H:%M:%S] ", get_time());
 
     wattron(window, COLOR_PAIR(BLUE));
     wprintw(window, "%s", s);
