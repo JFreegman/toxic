@@ -67,10 +67,11 @@ struct tm *get_time(void)
 /* Prints the time to given window */
 void print_time(WINDOW *window)
 {
-    struct tm *timeinfo = get_time();
+    uint8_t s[MAX_STR_SIZE];
+    strftime(s, MAX_STR_SIZE, "[%H:%M] ", get_time());
 
     wattron(window, COLOR_PAIR(BLUE));
-    wprintw(window, "[%d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    wprintw(window, "%s", s);
     wattroff(window,COLOR_PAIR(BLUE));
 }
 
