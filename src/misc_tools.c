@@ -196,16 +196,16 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2)
 int valid_nick(uint8_t *nick)
 {
     if (!nick[0] || nick[0] == ' ')
-        return false;
+        return 0;
 
     int i;
 
     for (i = 0; nick[i]; ++i) {
         if (nick[i] == ' ' && nick[i+1] == ' ')
-            return false;
+            return 0;
     }
 
-    return true;
+    return 1;
 }
 
 /* Moves cursor to the end of the line in given window */
