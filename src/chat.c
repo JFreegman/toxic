@@ -348,7 +348,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av)
     
     ChatContext *ctx = self->chatwin;
     
-    wprintw(ctx->history, "Incomming audio call!\n"
+    wprintw(ctx->history, "Incoming audio call!\n"
                           "Answer: \"/answer\" \"/cancel\"\n");
     
     alert_window(self, WINDOW_ALERT_0, true);
