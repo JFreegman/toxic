@@ -402,7 +402,6 @@ static void load_data(Tox *m, char *path)
 
 void exit_toxic(Tox *m)
 {
-    pthread_join(Winthread.tid, NULL);
     store_data(m, DATA_FILE);
     close_all_file_senders();
     kill_all_windows();
@@ -500,7 +499,6 @@ int main(int argc, char *argv[])
     }
 
     prompt = init_windows(m);
-    prompt_init_statusbar(prompt, m);
 
     /* create new thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
@@ -550,6 +548,7 @@ int main(int argc, char *argv[])
     }
 
     sort_friendlist_index(m);
+    prompt_init_statusbar(prompt, m);
 
     while (true) {
         do_toxic(m, prompt);

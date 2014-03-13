@@ -36,6 +36,7 @@
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
 extern ToxWindow *prompt;
+struct _Winthread Winthread;
 
 /* Array of global command names used for tab completion. */
 const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -467,21 +468,27 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     statusbar->is_online = false;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    uint8_t statusmsg[MAX_STR_SIZE];
+
+    pthread_mutex_lock(&Winthread.lock);
     tox_get_self_name(m, nick, TOX_MAX_NAME_LENGTH);
+    tox_get_self_status_message(m, statusmsg, MAX_STR_SIZE);
+    pthread_mutex_unlock(&Winthread.lock);
+
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
     /* temporary until statusmessage saving works */
     uint8_t ver[strlen(TOXICVER) + 1];
-    uint8_t statusmsg[MAX_STR_SIZE];
     strcpy(ver, TOXICVER);
     uint8_t *toxic_ver = strtok(ver, "_");
 
-    if (toxic_ver != NULL)
+    if (!strcmp("Online", statusmsg))
         snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
-    else
-        snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic hacker edition");
 
-    m_set_statusmessage(m, statusmsg, strlen(statusmsg) + 1);
+    pthread_mutex_lock(&Winthread.lock);
+    tox_set_status_message(m, statusmsg, strlen(statusmsg) + 1);
+    pthread_mutex_unlock(&Winthread.lock);
+
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
 
     /* Init statusbar subwindow */
