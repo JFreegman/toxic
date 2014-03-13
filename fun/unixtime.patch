@@ -1,0 +1,52 @@
+--- /src/misc_tools.c
++++ /src/misc_tools.c
+@@ -54,24 +54,11 @@
+     return val;
+ }
+ 
+-/* Get the current local time */
+-struct tm *get_time(void)
+-{
+-    struct tm *timeinfo;
+-    time_t now;
+-    time(&now);
+-    timeinfo = localtime(&now);
+-    return timeinfo;
+-}
+-
+ /* Prints the time to given window */
+ void print_time(WINDOW *window)
+ {
+-    uint8_t s[MAX_STR_SIZE];
+-    strftime(s, MAX_STR_SIZE, "[%H:%M:%S] ", get_time());
+-
+     wattron(window, COLOR_PAIR(BLUE));
+-    wprintw(window, "%s", s);
++    wprintw(window, "[%d] ", (int)time(NULL));
+     wattroff(window,COLOR_PAIR(BLUE));
+ }
+ 
+--- /src/log.c
++++ /src/log.c
+@@ -51,9 +51,7 @@
+         sprintf(&ident[2], "%02X", key[2] & 0xff);
+         ident[KEY_IDENT_DIGITS*2+1] = '\0';
+     } else {
+-        uint8_t s[MAX_STR_SIZE];
+-        strftime(s, MAX_STR_SIZE, "%Y-%m-%d[%H:%M:%S]", get_time());
+-        snprintf(ident, sizeof(ident), "%s", s);
++        snprintf(ident, sizeof(ident), "[%d]", (int)time(NULL));
+         path_len += strlen(ident) + 1;
+     }
+ 
+@@ -95,9 +93,7 @@
+     else
+         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
+ 
+-    uint8_t s[MAX_STR_SIZE];
+-    strftime(s, MAX_STR_SIZE, "%Y/%m/%d [%H:%M:%S]", get_time());
+-    fprintf(log->file,"%s %s %s\n", s, name_frmt, msg);
++    fprintf(log->file,"[%d]\n", (int)time(NULL), name_frmt, msg);
+ 
+     uint64_t curtime = (uint64_t) time(NULL);
+ 
