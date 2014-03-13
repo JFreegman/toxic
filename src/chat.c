@@ -44,7 +44,7 @@ extern int store_data(Tox *m, char *path);
 
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
-
+extern struct _Winthread Winthread;
 
 #ifdef _SUPPORT_AUDIO
     #define AC_NUM_CHAT_COMMANDS 22
@@ -747,7 +747,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     /* Reset statusbar->statusmsg on window resize */
     if (x2 != self->x) {
         uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+
+        pthread_mutex_lock(&Winthread.lock);
         tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        pthread_mutex_unlock(&Winthread.lock);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
     }

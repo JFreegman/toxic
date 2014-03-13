@@ -232,6 +232,11 @@ struct FileReceiver {
 
 /* End file transfer code */
 
+struct _Winthread {
+    pthread_t tid;
+    pthread_mutex_t lock;
+};
+
 void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
 void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);

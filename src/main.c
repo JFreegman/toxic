@@ -38,6 +38,7 @@
 #include <locale.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #ifdef _WIN32
     #include <direct.h>
@@ -77,6 +78,8 @@ char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
 static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
+
+struct _Winthread Winthread;
 
 void on_window_resize(int sig)
 {
@@ -255,9 +258,10 @@ int init_connection(Tox *m)
         int i;
         int n = MIN(NUM_INIT_NODES, linecnt);
 
-        for(i = 0; i < n; ++i)
+        for(i = 0; i < n; ++i) {
             if (init_connection_helper(m, rand() % linecnt))
                 res = 0;
+        }
 
         return res;
     }
@@ -284,13 +288,11 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     } else if (!dht_on && is_connected) {
         dht_on = true;
         prompt_update_connectionstatus(prompt, dht_on);
-
         prep_prompt_win();
         wprintw(prompt->window, "DHT connected.\n");
     } else if (dht_on && !is_connected) {
         dht_on = false;
         prompt_update_connectionstatus(prompt, dht_on);
-
         prep_prompt_win();
         wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
     }
@@ -400,6 +402,7 @@ static void load_data(Tox *m, char *path)
 
 void exit_toxic(Tox *m)
 {
+    pthread_join(Winthread.tid, NULL);
     store_data(m, DATA_FILE);
     close_all_file_senders();
     kill_all_windows();
@@ -418,12 +421,23 @@ void exit_toxic(Tox *m)
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
+    pthread_mutex_lock(&Winthread.lock);
+
     do_connection(m, prompt);
-    draw_active_window(m);
     do_file_senders(m);
 
     /* main tox-core loop */
     tox_do(m);
+
+    pthread_mutex_unlock(&Winthread.lock);
+}
+
+void *thread_winref(void *data)
+{
+    Tox *m = (Tox *) data;
+
+    while (true)
+        draw_active_window(m);
 }
 
 int main(int argc, char *argv[])
@@ -486,6 +500,21 @@ int main(int argc, char *argv[])
     }
 
     prompt = init_windows(m);
+    prompt_init_statusbar(prompt, m);
+
+    /* create new thread for ncurses stuff */
+    if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
+    {
+        endwin();
+        fprintf(stderr, "Mutex init failed. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0) {
+        endwin();
+        fprintf(stderr, "Thread creation failed. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
 
 #ifdef _SUPPORT_AUDIO 
     
@@ -520,11 +549,12 @@ int main(int argc, char *argv[])
         attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
-    prompt_init_statusbar(prompt, m);
     sort_friendlist_index(m);
 
-    while (true) 
+    while (true) {
         do_toxic(m, prompt);
+        usleep(10000);
+    }
         
     return 0;
 }

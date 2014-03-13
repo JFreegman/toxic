@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "friendlist.h"
 #include "prompt.h"
@@ -33,7 +34,7 @@
 #include "groupchat.h"
 
 extern char *DATA_FILE;
-
+extern struct _Winthread Winthread;
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
 
@@ -397,10 +398,14 @@ void draw_active_window(Tox *m)
     ch = getch();
 #endif
 
-    if (ch == T_KEY_NEXT || ch == T_KEY_PREV)
+    if (ch == T_KEY_NEXT || ch == T_KEY_PREV) {
         set_next_window((int) ch);
-    else if (ch != ERR)
+    } else if (ch != ERR) {
+        pthread_mutex_lock(&Winthread.lock);
         a->onKey(a, m, ch);
+        pthread_mutex_unlock(&Winthread.lock);
+    }
+
 }
 
 int get_num_active_windows(void)

@@ -42,6 +42,7 @@ static int max_friends_index = 0;    /* marks the index of the last friend in fr
 static int num_selected = 0;
 static int num_friends = 0;
 
+extern struct _Winthread Winthread;
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
@@ -420,9 +421,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 /* Reset friends[f].statusmsg on window resize */
                 if (fix_statuses) {
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+                    pthread_mutex_lock(&Winthread.lock);
                     tox_get_status_message(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
-                    snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
                     friends[f].statusmsg_len = tox_get_status_message_size(m, f);
+                    pthread_mutex_unlock(&Winthread.lock);
+                    snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
                 }
 
                 /* Truncate note if it doesn't fit on one line */
