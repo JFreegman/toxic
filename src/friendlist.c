@@ -360,8 +360,12 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wprintw(self->window, "key.\n\n");
     wattroff(self->window, COLOR_PAIR(CYAN));
 
+    pthread_mutex_lock(&Winthread.lock);
+    int nf = tox_get_num_online_friends(m);
+    pthread_mutex_unlock(&Winthread.lock);
+
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " Online: %d/%d \n\n", tox_get_num_online_friends(m), num_friends);
+    wprintw(self->window, " Online: %d/%d \n\n", nf, num_friends);
     wattroff(self->window, A_BOLD);
 
     if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */

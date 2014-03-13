@@ -405,7 +405,6 @@ void draw_active_window(Tox *m)
         a->onKey(a, m, ch);
         pthread_mutex_unlock(&Winthread.lock);
     }
-
 }
 
 int get_num_active_windows(void)
