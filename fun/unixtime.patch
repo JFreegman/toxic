@@ -35,7 +35,7 @@
 -        uint8_t s[MAX_STR_SIZE];
 -        strftime(s, MAX_STR_SIZE, "%Y-%m-%d[%H:%M:%S]", get_time());
 -        snprintf(ident, sizeof(ident), "%s", s);
-+        snprintf(ident, sizeof(ident), "[%s]", (int)time(NULL));
++        snprintf(ident, sizeof(ident), "[%d]", (int)time(NULL));
          path_len += strlen(ident) + 1;
      }
  
