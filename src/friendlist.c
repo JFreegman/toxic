@@ -62,7 +62,7 @@ static int index_name_cmp(const void *n1, const void *n2)
 }
 
 /* sorts friendlist_index first by connection status then alphabetically */
-void sort_friendlist_index(Tox *m)
+void sort_friendlist_index(void)
 {
     int i;
     int n = 0;
@@ -105,7 +105,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint
         return;
 
     friends[num].online = status == 1 ? true : false;
-    sort_friendlist_index(m);
+    sort_friendlist_index();
 }
 
 static void friendlist_onNickChange(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
@@ -117,7 +117,7 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int num, uint8_t *s
     len = strlen(str) + 1;
     memcpy(friends[num].name, str, len);
     friends[num].namelength = len;
-    sort_friendlist_index(m);
+    sort_friendlist_index();
 }
 
 static void friendlist_onStatusChange(ToxWindow *self, Tox *m, int num, TOX_USERSTATUS status)
@@ -168,7 +168,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
                 ++max_friends_index;
 
             if (sort)
-                sort_friendlist_index(m);
+                sort_friendlist_index();
 
             return;
         }
@@ -253,7 +253,7 @@ static void delete_friend(Tox *m, int f_num)
     if (num_friends && num_selected == num_friends)
         --num_selected;
 
-    sort_friendlist_index(m);
+    sort_friendlist_index();
     store_data(m, DATA_FILE);
 }
 
@@ -425,10 +425,12 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 /* Reset friends[f].statusmsg on window resize */
                 if (fix_statuses) {
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+
                     pthread_mutex_lock(&Winthread.lock);
                     tox_get_status_message(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     friends[f].statusmsg_len = tox_get_status_message_size(m, f);
                     pthread_mutex_unlock(&Winthread.lock);
+
                     snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
                 }
 
@@ -456,6 +458,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 if (f_selected)
                     wattroff(self->window, A_BOLD);
+
+                // wprintw(self->window, "Last seen ");
+                // uint64_t last_seen = friends[f].last_online;
+
+
             }
         }
     }

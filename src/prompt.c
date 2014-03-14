@@ -477,7 +477,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
 
-    /* temporary until statusmessage saving works */
+    /* load prev status message or show toxic version if it has never been set */
     uint8_t ver[strlen(TOXICVER) + 1];
     strcpy(ver, TOXICVER);
     uint8_t *toxic_ver = strtok(ver, "_");

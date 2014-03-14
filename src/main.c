@@ -501,8 +501,7 @@ int main(int argc, char *argv[])
     prompt = init_windows(m);
 
     /* create new thread for ncurses stuff */
-    if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
-    {
+    if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
         endwin();
         fprintf(stderr, "Mutex init failed. Aborting...\n");
         exit(EXIT_FAILURE);
@@ -515,21 +514,21 @@ int main(int argc, char *argv[])
     }
 
 #ifdef _SUPPORT_AUDIO 
-    
+
     attron(COLOR_PAIR(RED) | A_BOLD);
     wprintw(prompt->window, "Starting audio...\n");
     attroff(COLOR_PAIR(RED) | A_BOLD);
-    
+
     av = init_audio(prompt, m);
-        
+
     if ( errors() == NoError )
         wprintw(prompt->window, "Audio started with no problems.\n");
     else /* Get error code and stuff */
         wprintw(prompt->window, "Error starting audio!\n");
-    
-    
+
+
 #endif /* _SUPPORT_AUDIO */
-    
+
     if (f_loadfromfile)
         load_data(m, DATA_FILE);
 
@@ -547,7 +546,7 @@ int main(int argc, char *argv[])
         attroff(COLOR_PAIR(RED) | A_BOLD);
     }
 
-    sort_friendlist_index(m);
+    sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
 
     while (true) {

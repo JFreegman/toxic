@@ -99,7 +99,7 @@ void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
     strftime(s, MAX_STR_SIZE, "%Y/%m/%d [%H:%M:%S]", get_time());
     fprintf(log->file,"%s %s %s\n", s, name_frmt, msg);
 
-    uint64_t curtime = (uint64_t) time(NULL);
+    uint64_t curtime = get_unix_time();
 
     if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT)) {
         fflush(log->file);

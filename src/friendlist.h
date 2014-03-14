@@ -38,6 +38,7 @@ typedef struct {
     bool online;
     bool is_typing;
     bool logging_on;    /* saves preference for friend irrespective of chat windows */
+    uint64_t last_online;
     TOX_USERSTATUS status;
     struct FileReceiver file_receiver;
 } ToxicFriend;
@@ -54,6 +55,6 @@ int get_friendnum(uint8_t *name);
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort);
 
 /* sorts friendlist_index first by connection status then alphabetically */
-void sort_friendlist_index(Tox *m);
+void sort_friendlist_index(void);
 
 #endif /* end of include guard: FRIENDLIST_H_53I41IM */
