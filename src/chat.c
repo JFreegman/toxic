@@ -443,14 +443,24 @@ void chat_onEnd (ToxWindow *self, ToxAv *av)
     
     wprintw(ctx->history, "Call ended! \n");
 }
-void chat_onTimeout (ToxWindow *self, ToxAv *av)
+void chat_onRequestTimeout (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
     
     ChatContext *ctx = self->chatwin;
-        
+    
     wprintw(ctx->history, "No answer! \n");
+}
+
+void chat_onPeerTimeout (ToxWindow *self, ToxAv *av)
+{
+    if (self->num != toxav_get_peer_id(av, 0))
+        return;
+    
+    ChatContext *ctx = self->chatwin;
+    
+    wprintw(ctx->history, "Peer disconnected; call ended! \n");
 }
 
 #endif /* _SUPPORT_AUDIO */
@@ -859,7 +869,8 @@ ToxWindow new_chat(Tox *m, int friendnum)
     ret.onCancel = &chat_onCancel;
     ret.onReject = &chat_onReject;
     ret.onEnd = &chat_onEnd;
-    ret.onTimeout = &chat_onTimeout;
+    ret.onRequestTimeout = &chat_onRequestTimeout;
+    ret.onPeerTimeout = &chat_onPeerTimeout;
 #endif /* _SUPPORT_AUDIO */
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};

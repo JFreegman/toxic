@@ -121,7 +121,8 @@ struct ToxWindow {
     void(*onCancel)(ToxWindow *, ToxAv *);
     void(*onReject)(ToxWindow *, ToxAv *);
     void(*onEnd)(ToxWindow *, ToxAv *);
-    void(*onTimeout)(ToxWindow *, ToxAv *);
+    void(*onRequestTimeout)(ToxWindow *, ToxAv *);
+    void(*onPeerTimeout)(ToxWindow *, ToxAv *);
     
 #endif /* _SUPPORT_AUDIO */
     

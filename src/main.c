@@ -412,7 +412,7 @@ void exit_toxic(Tox *m)
     free(prompt->promptbuf);
     tox_kill(m);
     #ifdef _SUPPORT_AUDIO
-    terminate_audio(prompt, av);
+    terminate_audio();
     #endif /* _SUPPORT_AUDIO */
     endwin();
     exit(EXIT_SUCCESS);

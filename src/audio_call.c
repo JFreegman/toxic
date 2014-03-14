@@ -32,11 +32,11 @@ typedef struct _DeviceIx {
     int dix; /* Index of default device */
 } DeviceIx;
 
-typedef enum _devices
+typedef enum _Devices
 {
     input,
     output,
-} _devices;
+} _Devices;
 
 struct _ASettings {
     
@@ -61,7 +61,7 @@ void callback_call_canceled ( void *arg );
 void callback_call_rejected ( void *arg );
 void callback_call_ended ( void *arg );
 void callback_requ_timeout ( void *arg );
-
+void callback_peer_timeout ( void* arg );
 
 
 
@@ -94,10 +94,14 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
         
         if (alcGetError(ASettins.device[input].dhndl) != AL_NO_ERROR) {
             ASettins.errors |= ErrorStartingCaptureDevice;
+            wprintw(window->window, "Error starting default input device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
         }
+        else 
+            wprintw(window->window, "Input device: %s\n", ASettins.device[input].devices[ASettins.device[input].dix]);
         
-        wprintw(window->window, "Input device: %s\n", ASettins.device[input].devices[ASettins.device[input].dix]);
     } else { /* No device */
+        ASettins.errors |= ErrorStartingCaptureDevice;
+        
         wprintw(window->window, "No input device!\n");
         ASettins.device[input].dhndl = NULL;
     }
@@ -129,37 +133,48 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
         
         if (alcGetError(ASettins.device[output].dhndl) != AL_NO_ERROR) {
             ASettins.errors |= ErrorStartingOutputDevice;
+            wprintw(window->window, "Error starting default output device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
         }
-        
-        wprintw(window->window, "Output device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
-        ASettins.device[output].ctx = alcCreateContext(ASettins.device[output].dhndl, NULL);
+        else {
+            wprintw(window->window, "Output device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
+            ASettins.device[output].ctx = alcCreateContext(ASettins.device[output].dhndl, NULL);
+        }
     } else { /* No device */
+        ASettins.errors |= ErrorStartingOutputDevice;
+        
         wprintw(window->window, "No output device!\n");
         ASettins.device[output].dhndl = NULL;
         ASettins.device[output].ctx = NULL;
     }
     
-    
-    /* Streaming stuff from core */
-    ASettins.av = toxav_new(tox, 0, 0);
-    
-    if ( !ASettins.av ) {
-        ASettins.errors |= ErrorStartingCoreAudio;
-        return NULL;
-    }    
-    
-    toxav_register_callstate_callback(callback_call_started, av_OnStart, window);
-    toxav_register_callstate_callback(callback_call_canceled, av_OnCancel, window);
-    toxav_register_callstate_callback(callback_call_rejected, av_OnReject, window);
-    toxav_register_callstate_callback(callback_call_ended, av_OnEnd, window);
-    toxav_register_callstate_callback(callback_recv_invite, av_OnInvite, window);
-    
-    toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging, window);
-    toxav_register_callstate_callback(callback_recv_starting, av_OnStarting, window);
-    toxav_register_callstate_callback(callback_recv_ending, av_OnEnding, window);
-    
-    toxav_register_callstate_callback(callback_recv_error, av_OnError, window);
-    toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, window);
+    if (ASettins.errors & ErrorStartingCaptureDevice && ASettins.errors & ErrorStartingOutputDevice &&
+        !ASettins.device[input].dhndl && !ASettins.device[output].dhndl) {
+        wprintw(window->window, "No devices: disabling audio!\n");
+        ASettins.av = NULL;
+    }
+    else {
+        /* Streaming stuff from core */
+        ASettins.av = toxav_new(tox, 0, 0);
+        
+        if ( !ASettins.av ) {
+            ASettins.errors |= ErrorStartingCoreAudio;
+            return NULL;
+        }    
+        
+        toxav_register_callstate_callback(callback_call_started, av_OnStart, window);
+        toxav_register_callstate_callback(callback_call_canceled, av_OnCancel, window);
+        toxav_register_callstate_callback(callback_call_rejected, av_OnReject, window);
+        toxav_register_callstate_callback(callback_call_ended, av_OnEnd, window);
+        toxav_register_callstate_callback(callback_recv_invite, av_OnInvite, window);
+        
+        toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging, window);
+        toxav_register_callstate_callback(callback_recv_starting, av_OnStarting, window);
+        toxav_register_callstate_callback(callback_recv_ending, av_OnEnding, window);
+        
+        toxav_register_callstate_callback(callback_recv_error, av_OnError, window);
+        toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, window);
+        toxav_register_callstate_callback(callback_peer_timeout, av_OnPeerTimeout, window);
+    }
     
     return ASettins.av;
 }
@@ -176,7 +191,8 @@ void terminate_audio()
         alcDestroyContext(ASettins.device[output].ctx);
     }
     
-    toxav_kill(ASettins.av);
+    if ( ASettins.av )
+        toxav_kill(ASettins.av);
 }
 
 
@@ -194,7 +210,10 @@ int errors()
 void* transmission(void* arg)
 {
     (void)arg; /* Avoid warning */
-    
+        
+    /* Missing audio support */
+    if ( !ASettins.av ) _cbend;
+        
     ASettins.ttas = 1;
     
     /* Prepare devices */
@@ -296,6 +315,8 @@ cleanup:
 
 int start_transmission()
 {
+    if ( !ASettins.av ) return -1;
+    
     if ( !toxav_capability_supported(ASettins.av, AudioDecoding) ||
          !toxav_capability_supported(ASettins.av, AudioEncoding) )
         return -1;
@@ -356,6 +377,9 @@ void callback_call_started ( void* arg )
 void callback_call_canceled ( void* arg )
 {
     CB_BODY(arg, onCancel);
+    
+    /* In case call is active */
+    stop_transmission();
 }
 void callback_call_rejected ( void* arg )
 {
@@ -369,9 +393,17 @@ void callback_call_ended ( void* arg )
 
 void callback_requ_timeout ( void* arg )
 {
-    CB_BODY(arg, onTimeout);
+    CB_BODY(arg, onRequestTimeout);
 }
-
+void callback_peer_timeout ( void* arg )
+{
+    CB_BODY(arg, onPeerTimeout);
+    stop_transmission();
+    /* Call is stopped manually since there might be some other
+     * actions that one can possibly take on timeout
+     */
+    toxav_stop_call(ASettins.av);
+}
 /* 
  * End of Callbacks 
  */
@@ -386,7 +418,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
-    if ( !ASettins.av ) { error_str = "No audio supported!"; goto on_error; }
+    if ( !ASettins.av ) { error_str = "Audio not supported!"; goto on_error; }
         
     ToxAvError error = toxav_call(ASettins.av, self->num, TypeAudio, 30);
         
@@ -410,7 +442,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
-    if ( !ASettins.av ) { error_str = "No audio supported!"; goto on_error; }
+    if ( !ASettins.av ) { error_str = "Audio not supported!"; goto on_error; }
     
     ToxAvError error = toxav_answer(ASettins.av, TypeAudio);
     
@@ -435,7 +467,7 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
-    if ( !ASettins.av ) { error_str = "No audio supported!"; goto on_error; }
+    if ( !ASettins.av ) { error_str = "Audio not supported!"; goto on_error; }
     
     ToxAvError error = toxav_hangup(ASettins.av);
     
@@ -458,7 +490,7 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
-    if ( !ASettins.av ) { error_str = "No audio supported!"; goto on_error; }
+    if ( !ASettins.av ) { error_str = "Audio not supported!"; goto on_error; }
     
     ToxAvError error = toxav_hangup(ASettins.av);
     
@@ -488,7 +520,7 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         goto on_error;
     }
     
-    _devices type;
+    _Devices type;
     
     if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
         type = input;
@@ -527,7 +559,7 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         goto on_error;
     }
     
-    _devices type;
+    _Devices type;
     
     if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
         type = input;
