@@ -33,6 +33,27 @@
 
 extern ToxWindow *prompt;
 
+static uint64_t current_unix_time;
+
+void update_unix_time(void)
+{
+    current_unix_time = (uint64_t) time(NULL);
+}
+
+uint64_t get_unix_time(void)
+{
+    return current_unix_time;
+}
+
+/* Get the current local time */
+struct tm *get_time(void)
+{
+    struct tm *timeinfo;
+    uint64_t t = get_unix_time();
+    timeinfo = localtime(&t);
+    return timeinfo;
+}
+
 /* XXX: FIX */
 unsigned char *hex_string_to_bin(char hex_string[])
 {
@@ -52,16 +73,6 @@ unsigned char *hex_string_to_bin(char hex_string[])
         sscanf(pos, "%2hhx", &val[i]);
 
     return val;
-}
-
-/* Get the current local time */
-struct tm *get_time(void)
-{
-    struct tm *timeinfo;
-    time_t now;
-    time(&now);
-    timeinfo = localtime(&now);
-    return timeinfo;
 }
 
 /* Prints the time to given window */

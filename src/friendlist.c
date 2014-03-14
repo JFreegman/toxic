@@ -346,6 +346,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
+    uint64_t cur_time = get_unix_time();
+
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
     wattron(self->window, COLOR_PAIR(CYAN));
@@ -454,14 +456,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 if (f_selected)
                     wattron(self->window, A_BOLD);
 
-                wprintw(self->window, "%s\n", friends[f].name);
+                wprintw(self->window, "%s", friends[f].name);
 
                 if (f_selected)
                     wattroff(self->window, A_BOLD);
-
-                // wprintw(self->window, "Last seen ");
-                // uint64_t last_seen = friends[f].last_online;
-
 
             }
         }

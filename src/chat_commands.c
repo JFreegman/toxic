@@ -221,7 +221,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].file = file_to_send;
             file_senders[i].filenum = (uint8_t) filenum;
             file_senders[i].friendnum = self->num;
-            file_senders[i].timestamp = (uint64_t) time(NULL);
+            file_senders[i].timestamp = get_unix_time();
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 

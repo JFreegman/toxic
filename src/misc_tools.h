@@ -26,11 +26,17 @@
 /* convert a hex string to binary */
 unsigned char *hex_string_to_bin(char hex_string[]);
 
-/* get the current local time */
-struct tm *get_time(void);
+/* get the current unix time */
+uint64_t get_unix_time(void);
 
 /* Prints the time to given window */
 void print_time(WINDOW *window);
+
+/* get the current local time */
+struct tm *get_time(void);
+
+/* updates current unix time (should be run once per do_toxic loop) */
+void update_unix_time(void);
 
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(char *string);

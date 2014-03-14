@@ -550,6 +550,7 @@ int main(int argc, char *argv[])
     prompt_init_statusbar(prompt, m);
 
     while (true) {
+        update_unix_time();
         do_toxic(m, prompt);
         usleep(10000);
     }

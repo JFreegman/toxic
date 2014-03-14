@@ -71,7 +71,7 @@ void do_file_senders(Tox *m)
         uint8_t filenum = file_senders[i].filenum;
         int friendnum = file_senders[i].friendnum;
         FILE *fp = file_senders[i].file;
-        uint64_t current_time = (uint64_t) time(NULL);
+        uint64_t current_time = get_unix_time();
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
