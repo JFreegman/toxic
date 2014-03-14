@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <tox/tox.h>
 
@@ -105,6 +106,8 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint
         return;
 
     friends[num].online = status == 1 ? true : false;
+    friends[num].last_online = get_unix_time();
+    store_data(m, DATA_FILE);
     sort_friendlist_index();
 }
 
@@ -151,6 +154,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
+            friends[i].last_online = tox_get_last_online(m, num);
             friends[i].namelength = tox_get_name(m, num, friends[i].name);
             tox_get_client_id(m, num, friends[i].pub_key);
 
@@ -347,6 +351,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y2, x2);
 
     uint64_t cur_time = get_unix_time();
+    struct tm cur_loc_t = *localtime(&cur_time);
 
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
@@ -445,7 +450,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     friends[f].statusmsg_len = maxlen;
                 }
 
-                wprintw(self->window, " (%s)\n", friends[f].statusmsg);
+                if (friends[f].statusmsg[0])
+                    wprintw(self->window, " [%s]", friends[f].statusmsg);
+
+                wprintw(self->window, "\n");
             } else {
                 wprintw(self->window, "[");
                 wattron(self->window, A_BOLD);
@@ -460,7 +468,29 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 if (f_selected)
                     wattroff(self->window, A_BOLD);
+    
+                uint64_t last_seen = friends[f].last_online;
 
+                if (last_seen != 0) {
+                    uint8_t hour_min[MAX_STR_SIZE];
+                    struct tm last_loc_t = *localtime(&last_seen);
+                    strftime(hour_min, MAX_STR_SIZE, "%I:%M %p", &last_loc_t);
+                    int day_dist = (cur_loc_t.tm_yday - last_loc_t.tm_yday) % 365;
+
+                    switch (day_dist) {
+                    case 0:
+                        wprintw(self->window, " [Last seen: Today %s]\n", hour_min);
+                        break;
+                    case 1:
+                        wprintw(self->window, " [Last seen: Yesterday %s]\n", hour_min);
+                        break;
+                    default:
+                        wprintw(self->window, " [Last seen: %d days ago]\n", day_dist);
+                        break;
+                    } 
+                } else {
+                    wprintw(self->window, " [Last seen: Never]\n");
+                }
             }
         }
     }

@@ -54,6 +54,17 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
+/* Prints the time to given window */
+void print_time(WINDOW *window)
+{
+    uint8_t s[MAX_STR_SIZE];
+    strftime(s, MAX_STR_SIZE, "[%H:%M:%S] ", get_time());
+
+    wattron(window, COLOR_PAIR(BLUE));
+    wprintw(window, "%s", s);
+    wattroff(window,COLOR_PAIR(BLUE));
+}
+
 /* XXX: FIX */
 unsigned char *hex_string_to_bin(char hex_string[])
 {
@@ -73,17 +84,6 @@ unsigned char *hex_string_to_bin(char hex_string[])
         sscanf(pos, "%2hhx", &val[i]);
 
     return val;
-}
-
-/* Prints the time to given window */
-void print_time(WINDOW *window)
-{
-    uint8_t s[MAX_STR_SIZE];
-    strftime(s, MAX_STR_SIZE, "[%H:%M:%S] ", get_time());
-
-    wattron(window, COLOR_PAIR(BLUE));
-    wprintw(window, "%s", s);
-    wattroff(window,COLOR_PAIR(BLUE));
 }
 
 /* Returns 1 if the string is empty, 0 otherwise */
