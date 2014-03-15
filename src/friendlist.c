@@ -372,8 +372,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     pthread_mutex_unlock(&Winthread.lock);
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " Online: %d/%d \n\n", nf, num_friends);
+    wprintw(self->window, " Online: ");
     wattroff(self->window, A_BOLD);
+    wprintw(self->window, "%d/%d \n\n", nf, num_friends);
 
     if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
         return;
@@ -415,19 +416,19 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     break;
                 }
 
-                wprintw(self->window, "[");
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "O");
+                wprintw(self->window, "O ");
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "]");
 
                 if (f_selected)
-                    wattron(self->window, A_BOLD);
+                    wattron(self->window, COLOR_PAIR(BLUE));
 
+                wattron(self->window, A_BOLD);
                 wprintw(self->window, "%s", friends[f].name);
+                wattroff(self->window, A_BOLD);
 
                 if (f_selected)
-                    wattroff(self->window, A_BOLD);
+                    wattroff(self->window, COLOR_PAIR(BLUE));
 
                 /* Reset friends[f].statusmsg on window resize */
                 if (fix_statuses) {
@@ -442,7 +443,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 }
 
                 /* Truncate note if it doesn't fit on one line */
-                uint16_t maxlen = x2 - getcurx(self->window) - 4;
+                uint16_t maxlen = x2 - getcurx(self->window) - 2;
                 if (friends[f].statusmsg_len > maxlen) {
                     friends[f].statusmsg[maxlen-3] = '\0';
                     strcat(friends[f].statusmsg, "...");
@@ -451,23 +452,21 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 }
 
                 if (friends[f].statusmsg[0])
-                    wprintw(self->window, " [%s]", friends[f].statusmsg);
+                    wprintw(self->window, " %s", friends[f].statusmsg);
 
                 wprintw(self->window, "\n");
             } else {
-                wprintw(self->window, "[");
+                wprintw(self->window, "o ");
+
+                if (f_selected)
+                    wattron(self->window, COLOR_PAIR(BLUE));
+
                 wattron(self->window, A_BOLD);
-                wprintw(self->window, "O");
-                wattroff(self->window, A_BOLD);
-                wprintw(self->window, "]");
-
-                if (f_selected)
-                    wattron(self->window, A_BOLD);
-
                 wprintw(self->window, "%s", friends[f].name);
+                wattroff(self->window, A_BOLD);
 
                 if (f_selected)
-                    wattroff(self->window, A_BOLD);
+                    wattroff(self->window, COLOR_PAIR(YELLOW));
     
                 uint64_t last_seen = friends[f].last_online;
 
@@ -479,17 +478,17 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                     switch (day_dist) {
                     case 0:
-                        wprintw(self->window, " [Last seen: Today %s]\n", hour_min);
+                        wprintw(self->window, " Last seen: Today %s\n", hour_min);
                         break;
                     case 1:
-                        wprintw(self->window, " [Last seen: Yesterday %s]\n", hour_min);
+                        wprintw(self->window, " Last seen: Yesterday %s\n", hour_min);
                         break;
                     default:
-                        wprintw(self->window, " [Last seen: %d days ago]\n", day_dist);
+                        wprintw(self->window, " Last seen: %d days ago\n", day_dist);
                         break;
                     } 
                 } else {
-                    wprintw(self->window, " [Last seen: Never]\n");
+                    wprintw(self->window, " Last seen: Never\n");
                 }
             }
         }
