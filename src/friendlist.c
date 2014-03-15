@@ -47,7 +47,10 @@ extern struct _Winthread Winthread;
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
-static PendingDel pendingdelete;
+struct _pendingDel {
+    int num;
+    bool active;
+} pendingdelete;
 
 #define S_WEIGHT 100
 
@@ -74,6 +77,14 @@ void sort_friendlist_index(void)
     }
 
     qsort(friendlist_index, num_friends, sizeof(int), index_name_cmp);
+}
+
+static void update_friend_last_online(int num, uint64_t timestamp)
+{
+    friends[num].last_online.last_on = timestamp;
+    friends[num].last_online.tm = *localtime(&timestamp);
+    strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, "%I:%M %p", 
+            &friends[num].last_online.tm);
 }
 
 static void friendlist_onMessage(ToxWindow *self, Tox *m, int num, uint8_t *str, uint16_t len)
@@ -106,7 +117,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int num, uint
         return;
 
     friends[num].online = status == 1 ? true : false;
-    friends[num].last_online = get_unix_time();
+    update_friend_last_online(num, get_unix_time());
     store_data(m, DATA_FILE);
     sort_friendlist_index();
 }
@@ -154,9 +165,9 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
-            friends[i].last_online = tox_get_last_online(m, num);
             friends[i].namelength = tox_get_name(m, num, friends[i].name);
             tox_get_client_id(m, num, friends[i].pub_key);
+            update_friend_last_online(i, tox_get_last_online(m, i));
 
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy(friends[i].name, (uint8_t *) UNKNOWN_NAME);
@@ -278,7 +289,7 @@ static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
     if (key == 'y')
         delete_friend(m, pendingdelete.num);
  
-    memset(&pendingdelete, 0, sizeof(PendingDel));
+    memset(&pendingdelete, 0, sizeof(pendingdelete));
     delwin(self->popup);
     self->popup = NULL;
     clear();
@@ -351,7 +362,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y2, x2);
 
     uint64_t cur_time = get_unix_time();
-    struct tm cur_loc_t = *localtime(&cur_time);
+    struct tm cur_loc_tm = *localtime(&cur_time);
 
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
@@ -468,20 +479,18 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 if (f_selected)
                     wattroff(self->window, COLOR_PAIR(YELLOW));
     
-                uint64_t last_seen = friends[f].last_online;
+                uint64_t last_seen = friends[f].last_online.last_on;
 
                 if (last_seen != 0) {
-                    uint8_t hour_min[MAX_STR_SIZE];
-                    struct tm last_loc_t = *localtime(&last_seen);
-                    strftime(hour_min, MAX_STR_SIZE, "%I:%M %p", &last_loc_t);
-                    int day_dist = (cur_loc_t.tm_yday - last_loc_t.tm_yday) % 365;
+                    int day_dist = (cur_loc_tm.tm_yday - friends[f].last_online.tm.tm_yday) % 365;
+                    const uint8_t *hourmin = friends[f].last_online.hour_min_str;
 
                     switch (day_dist) {
                     case 0:
-                        wprintw(self->window, " Last seen: Today %s\n", hour_min);
+                        wprintw(self->window, " Last seen: Today %s\n", hourmin);
                         break;
                     case 1:
-                        wprintw(self->window, " Last seen: Yesterday %s\n", hour_min);
+                        wprintw(self->window, " Last seen: Yesterday %s\n", hourmin);
                         break;
                     default:
                         wprintw(self->window, " Last seen: %d days ago\n", day_dist);
