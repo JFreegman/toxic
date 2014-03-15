@@ -341,23 +341,24 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             colour = RED;
             break;
         }
+        wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+        wprintw(statusbar->topline, " [%s]", status_text);
+        wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", statusbar->nick);
-        wattron(statusbar->topline, A_BOLD);
-        wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, "[%s]", status_text);
-        wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+        wprintw(statusbar->topline, " %s", statusbar->nick);
+        wattroff(statusbar->topline, A_BOLD);
     } else {
+        wprintw(statusbar->topline, "[Offline]");
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, "[Offline]");
     }
 
-    wattron(statusbar->topline, A_BOLD);
-    wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
-    wattroff(statusbar->topline, A_BOLD);
+    if (statusbar->statusmsg[0])
+        wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
+
+    wprintw(statusbar->topline, "\n");
 
     /* put cursor back in correct spot */
     int y_m = prt->orig_y + ((prt->pos + p_ofst) / px2);
@@ -473,6 +474,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     pthread_mutex_lock(&Winthread.lock);
     tox_get_self_name(m, nick, TOX_MAX_NAME_LENGTH);
     tox_get_self_status_message(m, statusmsg, MAX_STR_SIZE);
+    TOX_USERSTATUS status = tox_get_self_user_status(m);
     pthread_mutex_unlock(&Winthread.lock);
 
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
@@ -482,14 +484,11 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     strcpy(ver, TOXICVER);
     uint8_t *toxic_ver = strtok(ver, "_");
 
-    if (!strcmp("Online", statusmsg))
+    if (!strcmp("Online", statusmsg) && toxic_ver != NULL)
         snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
 
-    pthread_mutex_lock(&Winthread.lock);
-    tox_set_status_message(m, statusmsg, strlen(statusmsg) + 1);
-    pthread_mutex_unlock(&Winthread.lock);
-
-    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+    prompt_update_statusmessage(prompt, statusmsg, strlen(statusmsg) + 1);
+    prompt_update_status(prompt, status);
 
     /* Init statusbar subwindow */
     statusbar->topline = subwin(self->window, 2, x, 0, 0);

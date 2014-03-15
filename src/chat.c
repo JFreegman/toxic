@@ -724,6 +724,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             break;
         }
 
+        wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+        wprintw(statusbar->topline, " [%s]", status_text);
+        wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+
         if (friends[self->num].is_typing)
             wattron(statusbar->topline, COLOR_PAIR(YELLOW));
 
@@ -733,15 +737,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
         if (friends[self->num].is_typing)
             wattroff(statusbar->topline, COLOR_PAIR(YELLOW));
-
-        wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, "[%s]", status_text);
-        wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
     } else {
+        wprintw(statusbar->topline, " [Offline]");
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", self->name);
         wattroff(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, "[Offline]");
     }
 
     /* Reset statusbar->statusmsg on window resize */
@@ -764,11 +764,8 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         statusbar->statusmsg_len = maxlen;
     }
 
-    if (statusbar->statusmsg[0]) {
-        wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " - %s ", statusbar->statusmsg);
-        wattroff(statusbar->topline, A_BOLD);
-    }
+    if (statusbar->statusmsg[0])
+        wprintw(statusbar->topline, "- %s ", statusbar->statusmsg);
 
     wclrtoeol(statusbar->topline);
     wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
