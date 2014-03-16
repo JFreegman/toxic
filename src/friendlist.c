@@ -33,7 +33,10 @@
 #include "chat.h"
 #include "friendlist.h"
 #include "misc_tools.h"
+
+#ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
+#endif
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
