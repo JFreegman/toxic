@@ -113,6 +113,8 @@ AC_CHECK_FUNCS(
     [],
     [ AC_MSG_ERROR([required library function is missing on your system])])
 
+AX_PTHREAD( [], [ AC_MSG_ERROR([pthreads not found on your system]) ])
+
 # pkg-config based tests
 PKG_PROG_PKG_CONFIG
 
