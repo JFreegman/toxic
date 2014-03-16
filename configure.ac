@@ -440,10 +440,12 @@ if test "x$BUILD_AV" = "xyes"; then
         ], 
         [
             AC_MSG_NOTICE([No A/V library; disabling A/V support])
+            BUILD_AV="no"
         ])
     ],
     [
         AC_MSG_NOTICE([No openal library; disabling A/V support])
+        BUILD_AV="no"
     ])
 fi
 
