@@ -34,7 +34,10 @@
 #include "chat.h"
 #include "friendlist.h"
 #include "misc_tools.h"
+
+#ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
+#endif
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -578,7 +581,8 @@ ToxWindow new_friendlist(void)
     ret.onCancel = &friendlist_onAv;
     ret.onReject = &friendlist_onAv;
     ret.onEnd = &friendlist_onAv;
-    ret.onTimeout = &friendlist_onAv;
+    ret.onRequestTimeout = &friendlist_onAv;
+    ret.onPeerTimeout = &friendlist_onAv;
 #endif /* _SUPPORT_AUDIO */
 
     strcpy(ret.name, "friends");

@@ -393,14 +393,15 @@ void draw_active_window(Tox *m)
 
     /* Handle input */
 #ifdef HAVE_WIDECHAR
-    wget_wch(stdscr, &ch);
+    if (wget_wch(stdscr, &ch) == ERR)
 #else
-    ch = getch();
+    if ((ch = getch()) == ERR)
 #endif
+        return;
 
     if (ch == T_KEY_NEXT || ch == T_KEY_PREV) {
         set_next_window((int) ch);
-    } else if (ch != ERR) {
+    } else {
         pthread_mutex_lock(&Winthread.lock);
         a->onKey(a, m, ch);
         pthread_mutex_unlock(&Winthread.lock);
