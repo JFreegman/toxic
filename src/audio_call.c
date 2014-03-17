@@ -27,9 +27,10 @@ typedef struct _DeviceIx {
     
     ALCdevice* dhndl; /* Handle of device selected/opened */
     ALCcontext* ctx; /* Device context */
-    const char* devices[MAX_DEVICES]; /* Container  */
-    int size;
+    const char* devices[MAX_DEVICES]; /* Container of available devices */
+    int size; /* Size of above container */
     int dix; /* Index of default device */
+    int index; /* Current index */
 } DeviceIx;
 
 typedef enum _Devices
@@ -64,6 +65,112 @@ void callback_requ_timeout ( void *arg );
 void callback_peer_timeout ( void* arg );
 
 
+/* Opens device under current index
+ */
+int device_open (WINDOW *window, _Devices type)
+{
+    /* Do not error if no device */
+    if ( !ASettins.device[type].size ) return 0;
+    
+    ALCdevice* prev_device = ASettins.device[type].dhndl;
+    
+    const char* error = NULL;
+    
+    if ( type == input ) {
+        ASettins.device[type].dhndl = alcCaptureOpenDevice(
+            ASettins.device[type].devices[ASettins.device[type].index], AUDIO_SAMPLE_RATE, AL_FORMAT_MONO16, AUDIO_FRAME_SIZE * 4);
+        
+        if (alcGetError(ASettins.device[type].dhndl) != AL_NO_ERROR) {
+            
+            /* Now check if we have previous device and act acording to it */
+            if ( !prev_device ) {
+                error = "Error starting input device!";
+                
+                ASettins.errors |= ErrorStartingCaptureDevice;
+            }
+            else {
+                error = "Could not start input device, falling back to previous";
+                
+                /* NOTE: What if device is opened? */
+                ASettins.device[type].dhndl = prev_device;
+            }
+        }
+        else 
+        {
+            /* Close previous */
+            if ( prev_device )
+                alcCaptureCloseDevice(prev_device);
+            
+            if ( window ) wprintw(window, "Input device: %s\n", ASettins.device[type].devices[ASettins.device[type].index]);
+        }
+        
+        ASettins.device[type].ctx = NULL;
+    }
+    else {
+        ASettins.device[type].dhndl = alcOpenDevice(ASettins.device[type].devices[ASettins.device[type].index]);
+        
+        if (alcGetError(ASettins.device[type].dhndl) != AL_NO_ERROR) {
+            
+            /* Now check if we have previous device and act acording to it */
+            if ( !prev_device ) {
+                error = "Error starting output device!";
+                
+                ASettins.errors |= ErrorStartingOutputDevice;
+                ASettins.device[type].ctx = NULL;
+            }
+            else {
+                error = "Could not start output device, falling back to previous";
+                
+                /* NOTE: What if device is opened? */
+                ASettins.device[type].dhndl = prev_device;
+            }
+        }
+        else {
+            
+            /* Close previous */
+            if ( prev_device ) {
+                alcCaptureCloseDevice(prev_device);                
+                alcMakeContextCurrent(NULL);
+                alcDestroyContext(ASettins.device[type].ctx);
+            }
+            
+            ASettins.device[type].ctx = alcCreateContext(ASettins.device[type].dhndl, NULL);
+            
+            if ( window ) wprintw(window, "Output device: %s\n", ASettins.device[type].devices[ASettins.device[type].index]);
+        }
+    }
+    
+    if ( error ) {
+        if ( window ) wprintw(window, "Error: %s\n", error);
+        return -1;
+    }
+    else return 0;
+}
+
+int device_close (WINDOW *window, _Devices type)
+{
+    const char* device = NULL;
+    
+    if ( ASettins.device[type].dhndl ) {
+        if (type == input) {
+            alcCaptureCloseDevice(ASettins.device[type].dhndl);
+            device = "input";
+        }
+        else {
+            alcCloseDevice(ASettins.device[type].dhndl);
+            alcMakeContextCurrent(NULL);
+            
+            if ( ASettins.device[type].ctx )
+                alcDestroyContext(ASettins.device[type].ctx);
+            
+            device = "output";
+        }
+            
+        ASettins.device[type].index = ASettins.device[type].dix;
+    }
+    
+    if ( window && device ) wprintw(window, "Closed %s device\n", device);
+}
 
 
 ToxAv* init_audio(ToxWindow* window, Tox* tox)
@@ -71,7 +178,7 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
     ASettins.errors = NoError;
     ASettins.ttas = 0; /* Not running */
     
-    /* Capture device */
+    /* Capture devices */
     const char* stringed_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
     ASettins.device[input].size = 0;
     
@@ -82,36 +189,14 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
             ASettins.device[input].devices[ASettins.device[input].size] = stringed_device_list;
             
             if ( strcmp( default_device , ASettins.device[input].devices[ASettins.device[input].size] ) == 0 )
-                ASettins.device[input].dix = ASettins.device[input].size;
+                ASettins.device[input].index = ASettins.device[input].dix = ASettins.device[input].size;
             
             stringed_device_list += strlen( stringed_device_list ) + 1;
         }
     }
     
-    if ( ASettins.device[input].size ) { /* Have device */
-        ASettins.device[input].dhndl = alcCaptureOpenDevice(
-            ASettins.device[input].devices[ASettins.device[input].dix], AUDIO_SAMPLE_RATE, AL_FORMAT_MONO16, AUDIO_FRAME_SIZE * 4);
-        
-        if (alcGetError(ASettins.device[input].dhndl) != AL_NO_ERROR) {
-            ASettins.errors |= ErrorStartingCaptureDevice;
-            wprintw(window->window, "Error starting default input device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
-        }
-        else 
-            wprintw(window->window, "Input device: %s\n", ASettins.device[input].devices[ASettins.device[input].dix]);
-        
-    } else { /* No device */
-        ASettins.errors |= ErrorStartingCaptureDevice;
-        
-        wprintw(window->window, "No input device!\n");
-        ASettins.device[input].dhndl = NULL;
-    }
     
-    ASettins.device[input].ctx = NULL;
-    
-    
-    
-    
-    /* Output device */
+    /* Output devices */
     stringed_device_list = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
     ASettins.device[output].size = 0;
     
@@ -122,33 +207,13 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
             ASettins.device[output].devices[ASettins.device[output].size] = stringed_device_list;            
             
             if ( strcmp( default_device , ASettins.device[output].devices[ASettins.device[output].size] ) == 0 )
-                ASettins.device[output].dix = ASettins.device[output].size;
+                ASettins.device[output].index = ASettins.device[output].dix = ASettins.device[output].size;
             
             stringed_device_list += strlen( stringed_device_list ) + 1;
         }
     }
     
-    if ( ASettins.device[output].size ) { /* Have device */
-        ASettins.device[output].dhndl = alcOpenDevice(ASettins.device[output].devices[ASettins.device[output].dix]);
-        
-        if (alcGetError(ASettins.device[output].dhndl) != AL_NO_ERROR) {
-            ASettins.errors |= ErrorStartingOutputDevice;
-            wprintw(window->window, "Error starting default output device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
-        }
-        else {
-            wprintw(window->window, "Output device: %s\n", ASettins.device[output].devices[ASettins.device[output].dix]);
-            ASettins.device[output].ctx = alcCreateContext(ASettins.device[output].dhndl, NULL);
-        }
-    } else { /* No device */
-        ASettins.errors |= ErrorStartingOutputDevice;
-        
-        wprintw(window->window, "No output device!\n");
-        ASettins.device[output].dhndl = NULL;
-        ASettins.device[output].ctx = NULL;
-    }
-    
-    if (ASettins.errors & ErrorStartingCaptureDevice && ASettins.errors & ErrorStartingOutputDevice &&
-        !ASettins.device[input].dhndl && !ASettins.device[output].dhndl) {
+    if (!ASettins.device[input].size && !ASettins.device[output].size) {
         wprintw(window->window, "No devices: disabling audio!\n");
         ASettins.av = NULL;
     }
@@ -181,15 +246,7 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
 
 void terminate_audio()
 {
-    if ( ASettins.device[input].dhndl ) {
-        alcCaptureCloseDevice(ASettins.device[input].dhndl);
-    }
-    
-    if ( ASettins.device[output].dhndl ) {
-        alcCloseDevice(ASettins.device[output].dhndl);
-        alcMakeContextCurrent(NULL);
-        alcDestroyContext(ASettins.device[output].ctx);
-    }
+    stop_transmission();
     
     if ( ASettins.av )
         toxav_kill(ASettins.av);
@@ -308,8 +365,10 @@ cleanup:
         
     alDeleteSources(1, &source);
     alDeleteBuffers(openal_buffers, buffers);
-    alcMakeContextCurrent(NULL);
-        
+    
+    device_close(NULL, input);
+    device_close(NULL, output);
+    
     _cbend;
 }
 
@@ -319,6 +378,12 @@ int start_transmission()
     
     if ( !toxav_capability_supported(ASettins.av, AudioDecoding) ||
          !toxav_capability_supported(ASettins.av, AudioEncoding) )
+        return -1;
+    
+    /* Now open our devices */
+    if ( -1 == device_open(NULL, input) )
+        return -1;
+    if ( -1 == device_open(NULL, output))
         return -1;
     
     /* Don't provide support for video */
@@ -585,46 +650,9 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         error_str = "No device with such index";
         goto on_error;
     }
-    
-    /* Close default device */
-    if ( ASettins.device[type].dhndl ) {
-        alcCloseDevice(ASettins.device[type].dhndl);
-        
-        if ( ASettins.device[type].ctx) { /* Output device has context with it */
-            alcMakeContextCurrent(NULL);
-            alcDestroyContext(ASettins.device[type].ctx);
-        }
-    }
-    
-    /* Open new device */
-    
-    if ( type == input ) {
-        ASettins.device[input].dhndl = alcCaptureOpenDevice(
-            ASettins.device[input].devices[selection], AUDIO_SAMPLE_RATE, AL_FORMAT_MONO16, AUDIO_FRAME_SIZE * 4);
-        
-        if (alcGetError(ASettins.device[input].dhndl) != AL_NO_ERROR) {
-            error_str = "Error starting input device!";
-            ASettins.errors |= ErrorStartingCaptureDevice;
-        }
-        
-        ASettins.device[input].ctx = NULL;    
-        
-        wprintw(window, "Input device: %s\n", ASettins.device[type].devices[selection]);
-    }
-    else {
-        ASettins.device[output].dhndl = alcOpenDevice(ASettins.device[output].devices[selection]);
-        
-        if (alcGetError(ASettins.device[output].dhndl) != AL_NO_ERROR) {
-            error_str = "Error starting output device!";
-            ASettins.errors |= ErrorStartingOutputDevice;
-        }
-        
-        ASettins.device[output].ctx = alcCreateContext(ASettins.device[output].dhndl, NULL);
-        
-        wprintw(window, "Output device: %s\n", ASettins.device[type].devices[selection]);
-    }
-    
-    
+
+    ASettins.device[type].index = selection;
+    wprintw(window, "Selected: %s\n", ASettins.device[type].devices[selection]); 
     
     return;
 on_error: 
