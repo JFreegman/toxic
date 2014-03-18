@@ -47,7 +47,7 @@ void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userd
 {
     int i;
     
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
             windows[i].onFriendRequest(&windows[i], public_key, data, length);
     }
@@ -57,7 +57,7 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onConnectionChange != NULL)
             windows[i].onConnectionChange(&windows[i], m, friendnumber, status);
     }
@@ -67,7 +67,7 @@ void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata)
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onTypingChange != NULL)
             windows[i].onTypingChange(&windows[i], m, friendnumber, is_typing);
     }
@@ -77,7 +77,7 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onMessage != NULL)
             windows[i].onMessage(&windows[i], m, friendnumber, string, length);
     }
@@ -87,7 +87,7 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onAction != NULL)
             windows[i].onAction(&windows[i], m, friendnumber, string, length);
     }
@@ -100,7 +100,7 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
 
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onNickChange != NULL)
             windows[i].onNickChange(&windows[i], m, friendnumber, string, length);
     }
@@ -113,7 +113,7 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
             windows[i].onStatusMessageChange(&windows[i], friendnumber, string, length);
     }
@@ -123,7 +123,7 @@ void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *user
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusChange != NULL)
             windows[i].onStatusChange(&windows[i], m, friendnumber, status);
     }
@@ -133,7 +133,7 @@ void on_friendadded(Tox *m, int friendnumber, bool sort)
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendAdded != NULL)
             windows[i].onFriendAdded(&windows[i], m, friendnumber, sort);
     }
@@ -147,7 +147,7 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, 
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
             windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, message, length);
     }
@@ -158,7 +158,7 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, ui
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupAction != NULL)
             windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, action, length);
     }
@@ -168,7 +168,7 @@ void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *user
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupInvite != NULL)
             windows[i].onGroupInvite(&windows[i], m, friendnumber, group_pub_key);
     }
@@ -178,7 +178,7 @@ void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t ch
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupNamelistChange != NULL)
             windows[i].onGroupNamelistChange(&windows[i], m, groupnumber, peernumber, change);
     }
@@ -189,7 +189,7 @@ void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t 
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileSendRequest != NULL)
             windows[i].onFileSendRequest(&windows[i], m, friendnumber, filenumber, filesize,
                                          filename, filename_length);
@@ -201,7 +201,7 @@ void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t fi
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileControl != NULL)
             windows[i].onFileControl(&windows[i], m, friendnumber, receive_send, filenumber,
                                      control_type, data, length);
@@ -213,7 +213,7 @@ void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, u
 {
     int i;
 
-    for (i = 0; i < num_active_windows; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileData != NULL)
             windows[i].onFileData(&windows[i], m, friendnumber, filenumber, data, length);
     }
