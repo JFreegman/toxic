@@ -428,6 +428,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 case TOX_USERSTATUS_BUSY:
                     colour = RED;
                     break;
+                case TOX_USERSTATUS_INVALID:
+                    colour = MAGENTA;
+                    break;
                 }
 
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);

@@ -714,7 +714,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     /* Draw name, status and note in statusbar */
     if (statusbar->is_online) {
-        char *status_text = "Unknown";
+        const char *status_text = "Unknown";
         int colour = WHITE;
 
         TOX_USERSTATUS status = statusbar->status;
@@ -731,6 +731,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         case TOX_USERSTATUS_BUSY:
             status_text = "Busy";
             colour = RED;
+            break;
+        case TOX_USERSTATUS_INVALID:
+            status_text = "ERROR";
+            colour = MAGENTA;
             break;
         }
 

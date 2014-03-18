@@ -325,7 +325,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (statusbar->is_online) {
         int colour = WHITE;
-        char *status_text = "Unknown";
+        const char *status_text = "Unknown";
 
         switch (statusbar->status) {
         case TOX_USERSTATUS_NONE:
@@ -339,6 +339,10 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         case TOX_USERSTATUS_BUSY:
             status_text = "Busy";
             colour = RED;
+            break;
+        case TOX_USERSTATUS_INVALID:
+            status_text = "ERROR";
+            colour = MAGENTA;
             break;
         }
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
