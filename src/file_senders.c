@@ -68,8 +68,8 @@ void do_file_senders(Tox *m)
             continue;
 
         uint8_t *pathname = file_senders[i].pathname;
-        uint8_t filenum = file_senders[i].filenum;
-        int friendnum = file_senders[i].friendnum;
+        int filenum = file_senders[i].filenum;
+        int32_t friendnum = file_senders[i].friendnum;
         FILE *fp = file_senders[i].file;
         uint64_t current_time = get_unix_time();
 

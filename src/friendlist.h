@@ -41,13 +41,13 @@ typedef struct {
     uint16_t statusmsg_len;
     uint8_t pending_groupchat[TOX_CLIENT_ID_SIZE];
     uint8_t pub_key[TOX_CLIENT_ID_SIZE];
-    int num;
+    int32_t num;
     int chatwin;
     bool active;
     bool online;
     bool is_typing;
     bool logging_on;    /* saves preference for friend irrespective of chat windows */
-    TOX_USERSTATUS status;
+    uint8_t status;
     struct LastOnline last_online;
     struct FileReceiver file_receiver;
 } ToxicFriend;

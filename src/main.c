@@ -300,7 +300,7 @@ static void do_connection(Tox *m, ToxWindow *prompt)
 
 static void load_friendlist(Tox *m)
 {
-    int i;
+    int32_t i;
     uint32_t numfriends = tox_count_friendlist(m);
 
     for (i = 0; i < numfriends; ++i)

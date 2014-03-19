@@ -93,22 +93,22 @@ struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
-    void(*onFriendRequest)(ToxWindow *, uint8_t *, uint8_t *, uint16_t);
-    void(*onFriendAdded)(ToxWindow *, Tox *, int, bool);
-    void(*onConnectionChange)(ToxWindow *, Tox *, int, uint8_t);
-    void(*onMessage)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
-    void(*onNickChange)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
-    void(*onStatusChange)(ToxWindow *, Tox *, int, TOX_USERSTATUS);
-    void(*onStatusMessageChange)(ToxWindow *, int, uint8_t *, uint16_t);
-    void(*onAction)(ToxWindow *, Tox *, int, uint8_t *, uint16_t);
+    void(*onFriendRequest)(ToxWindow *, Tox *, uint8_t *, uint8_t *, uint16_t);
+    void(*onFriendAdded)(ToxWindow *, Tox *, int32_t, bool);
+    void(*onConnectionChange)(ToxWindow *, Tox *, int32_t, uint8_t);
+    void(*onMessage)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
+    void(*onNickChange)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
+    void(*onStatusChange)(ToxWindow *, Tox *, int32_t, uint8_t);
+    void(*onStatusMessageChange)(ToxWindow *, int32_t, uint8_t *, uint16_t);
+    void(*onAction)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
     void(*onGroupAction)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
-    void(*onGroupInvite)(ToxWindow *, Tox *, int, uint8_t *);
+    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t *);
     void(*onGroupNamelistChange)(ToxWindow *, Tox*, int, int, uint8_t);
-    void(*onFileSendRequest)(ToxWindow *, Tox *, int, uint8_t, uint64_t, uint8_t *, uint16_t);
-    void(*onFileControl)(ToxWindow *, Tox *, int, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
-    void(*onFileData)(ToxWindow *, Tox *, int, uint8_t, uint8_t *, uint16_t);
-    void(*onTypingChange)(ToxWindow *, Tox *, int, int);
+    void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, uint8_t *, uint16_t);
+    void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
+    void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t *, uint16_t);
+    void(*onTypingChange)(ToxWindow *, Tox *, int32_t, int);
 
 #ifdef _SUPPORT_AUDIO
 
@@ -127,7 +127,7 @@ struct ToxWindow {
 #endif /* _SUPPORT_AUDIO */
     
     char name[TOX_MAX_NAME_LENGTH];
-    int num;
+    int32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;
     int x;
 
@@ -155,7 +155,7 @@ struct StatusBar {
     uint16_t statusmsg_len;
     uint8_t nick[TOX_MAX_NAME_LENGTH];
     uint16_t nick_len;
-    TOX_USERSTATUS status;
+    uint8_t status;
     bool is_online;
 };
 
@@ -216,9 +216,9 @@ struct PromptBuf {
 typedef struct {
     FILE *file;
     ToxWindow *toxwin;
-    int friendnum;
+    int32_t friendnum;
     bool active;
-    uint8_t filenum;
+    int filenum;
     uint8_t nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
     uint8_t pathname[MAX_STR_SIZE];
@@ -238,22 +238,22 @@ struct _Winthread {
     pthread_mutex_t lock;
 };
 
-void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
-void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata);
-void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata);
-void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_friendadded(Tox *m, int friendnumber, bool sort);
+void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
+void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
+void on_message(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_action(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_nickchange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
+void on_statusmessagechange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_friendadded(Tox *m, int32_t friendnumber, bool sort);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
 void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata);
+void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t *group_pub_key, void *userdata);
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname, uint16_t pathname_length, void *userdata);
-void on_file_control(Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
-void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
-void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata);
+void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname, uint16_t pathname_length, void *userdata);
+void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
+void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
+void on_typing_change(Tox *m, int32_t friendnumber, int is_typing, void *userdata);
 
 ToxWindow *init_windows(Tox *m);
 void draw_active_window(Tox *m);

@@ -43,17 +43,17 @@ extern ToxWindow *prompt;
 static int num_active_windows;
 
 /* CALLBACKS START */
-void on_request(uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
+void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
     int i;
     
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
-            windows[i].onFriendRequest(&windows[i], public_key, data, length);
+            windows[i].onFriendRequest(&windows[i], m, public_key, data, length);
     }
 }
 
-void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdata)
+void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata)
 {
     int i;
 
@@ -63,7 +63,7 @@ void on_connectionchange(Tox *m, int friendnumber, uint8_t status, void *userdat
     }
 }
 
-void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata)
+void on_typing_change(Tox *m, int32_t friendnumber, int is_typing, void *userdata)
 {
     int i;
 
@@ -73,7 +73,7 @@ void on_typing_change(Tox *m, int friendnumber, int is_typing, void *userdata)
     }
 }
 
-void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_message(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     int i;
 
@@ -83,7 +83,7 @@ void on_message(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void
     }
 }
 
-void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_action(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     int i;
 
@@ -93,7 +93,7 @@ void on_action(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void 
     }
 }
 
-void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_nickchange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     if (friendnumber < 0 || friendnumber > MAX_FRIENDS_NUM)
         return;
@@ -109,7 +109,7 @@ void on_nickchange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, v
         wprintw(prompt->window, "\nCould not store Tox data\n");
 }
 
-void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t length, void *userdata)
+void on_statusmessagechange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata)
 {
     int i;
 
@@ -119,7 +119,7 @@ void on_statusmessagechange(Tox *m, int friendnumber, uint8_t *string, uint16_t 
     }
 }
 
-void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *userdata)
+void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata)
 {
     int i;
 
@@ -129,7 +129,7 @@ void on_statuschange(Tox *m, int friendnumber, TOX_USERSTATUS status, void *user
     }
 }
 
-void on_friendadded(Tox *m, int friendnumber, bool sort)
+void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
 {
     int i;
 
@@ -164,7 +164,7 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, ui
     }
 }
 
-void on_groupinvite(Tox *m, int friendnumber, uint8_t *group_pub_key, void *userdata)
+void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t *group_pub_key, void *userdata)
 {
     int i;
 
@@ -184,7 +184,7 @@ void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t ch
     }
 }
 
-void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t filesize, 
+void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, 
                          uint8_t *filename, uint16_t filename_length, void *userdata)
 {
     int i;
@@ -196,7 +196,7 @@ void on_file_sendrequest(Tox *m, int friendnumber, uint8_t filenumber, uint64_t 
     }
 }
 
-void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t filenumber, 
+void on_file_control (Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, 
                       uint8_t control_type, uint8_t *data, uint16_t length, void *userdata)
 {
     int i;
@@ -208,7 +208,7 @@ void on_file_control (Tox *m, int friendnumber, uint8_t receive_send, uint8_t fi
     }
 }
 
-void on_file_data(Tox *m, int friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length,
+void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length,
                   void *userdata)
 {
     int i;

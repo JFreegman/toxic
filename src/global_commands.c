@@ -103,7 +103,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         snprintf(msg, sizeof(msg), "%s", temp);
     } else {
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
+        tox_get_self_name(m, selfname);
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 

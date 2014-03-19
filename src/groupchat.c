@@ -145,7 +145,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     bool beep = false;
 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
+    tox_get_self_name(m, selfnick);
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
     bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH);
@@ -187,7 +187,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     bool beep = false;
 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_self_name(m, selfnick, TOX_MAX_NAME_LENGTH);
+    tox_get_self_name(m, selfnick);
 
     bool nick_match = strcasestr(action, selfnick);
 
@@ -329,14 +329,6 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t
         wprintw(ctx->history, "Invalid syntax.\n");
         return;
     }
-
-    /* uint8_t selfname[TOX_MAX_NAME_LENGTH];
-       tox_get_self_name(m, selfname, TOX_MAX_NAME_LENGTH);
-
-       print_time(ctx->history);
-       wattron(ctx->history, COLOR_PAIR(YELLOW));
-       wprintw(ctx->history, "* %s %s\n", selfname, action);
-       wattroff(ctx->history, COLOR_PAIR(YELLOW)); */
 
     if (tox_group_action_send(m, self->num, action, strlen(action) + 1) == -1) {
         wattron(ctx->history, COLOR_PAIR(RED));
