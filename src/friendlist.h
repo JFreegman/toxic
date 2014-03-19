@@ -53,10 +53,10 @@ typedef struct {
 } ToxicFriend;
 
 ToxWindow new_friendlist(void);
-void disable_chatwin(int f_num);
+void disable_chatwin(int32_t f_num);
 int get_friendnum(uint8_t *name);
 
-void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int num, bool sort);
+void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort);
 
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void);

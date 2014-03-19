@@ -272,7 +272,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     ChatContext *ctx = self->chatwin;
     print_time(ctx->history);
 
-    uint8_t *event;
+    const uint8_t *event;
 
     switch (change) {
     case TOX_CHAT_CHANGE_PEER_ADD:

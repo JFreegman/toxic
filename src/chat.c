@@ -271,7 +271,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
         return;
 
     ChatContext *ctx = self->chatwin;
-    uint8_t *filename;
+    const uint8_t *filename;
 
     if (receive_send == 0)
         filename = friends[num].file_receiver.filenames[filenum];
@@ -714,7 +714,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     /* Draw name, status and note in statusbar */
     if (statusbar->is_online) {
-        const char *status_text = "Unknown";
+        const uint8_t *status_text = "Unknown";
         int colour = WHITE;
 
         uint8_t status = statusbar->status;
@@ -837,7 +837,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_chat(Tox *m, int friendnum)
+ToxWindow new_chat(Tox *m, int32_t friendnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));

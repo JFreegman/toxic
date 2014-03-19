@@ -241,7 +241,9 @@ int add_window(Tox *m, ToxWindow w)
         wbkgd(w.window, COLOR_PAIR(6));
 #endif
         windows[i] = w;
-        w.onInit(&w, m);
+
+        if (w.onInit)
+            w.onInit(&w, m);
 
         ++num_active_windows;
 

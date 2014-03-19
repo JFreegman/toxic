@@ -86,6 +86,8 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
 {
     friends[num].last_online.last_on = timestamp;
     friends[num].last_online.tm = *localtime(&timestamp);
+
+    /* if the format changes make sure TIME_STR_SIZE is the correct size */
     strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, "%I:%M %p", 
             &friends[num].last_online.tm);
 }
@@ -519,11 +521,6 @@ void disable_chatwin(int32_t f_num)
     friends[f_num].chatwin = -1;
 }
 
-static void friendlist_onInit(ToxWindow *self, Tox *m)
-{
-
-}
-
 #ifdef _SUPPORT_AUDIO
 static void friendlist_onAv(ToxWindow *self, ToxAv *av)
 {
@@ -563,7 +560,6 @@ ToxWindow new_friendlist(void)
 
     ret.onKey = &friendlist_onKey;
     ret.onDraw = &friendlist_onDraw;
-    ret.onInit = &friendlist_onInit;
     ret.onFriendAdded = &friendlist_onFriendAdded;
     ret.onMessage = &friendlist_onMessage;
     ret.onConnectionChange = &friendlist_onConnectionChange;
