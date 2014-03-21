@@ -83,7 +83,7 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* _SUPPORT_AUDIO */
 };
 
-static void set_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
+static void set_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -149,11 +149,11 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
         friends[num].is_typing = tox_get_is_typing(m, num);
     } else {
         statusbar->is_online = false;
-        friends[num].is_typing = false;
+        friends[num].is_typing = 0;
     }
 }
 
-static void chat_onTypingChange(ToxWindow *self, Tox *m, int32_t num, int is_typing)
+static void chat_onTypingChange(ToxWindow *self, Tox *m, int32_t num, uint8_t is_typing)
 {
     if (self->num != num)
         return;
@@ -626,7 +626,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         }
 
         if (!ctx->self_is_typing && ctx->line[0] != '/')
-            set_typingstatus(self, m, true);
+            set_typingstatus(self, m, 1);
     }
     /* RETURN key: Execute command or print line */
     else if (key == '\n') {
@@ -645,7 +645,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (line[0] == '/') {
             if (strcmp(line, "/close") == 0) {
                 if (ctx->self_is_typing)
-                    set_typingstatus(self, m, false);
+                    set_typingstatus(self, m, 0);
 
                 kill_chat_window(self);
                 return;
@@ -683,7 +683,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing)
-        set_typingstatus(self, m, false);
+        set_typingstatus(self, m, 0);
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)

@@ -45,7 +45,7 @@ typedef struct {
     int chatwin;
     bool active;
     bool online;
-    bool is_typing;
+    uint8_t is_typing;
     bool logging_on;    /* saves preference for friend irrespective of chat windows */
     uint8_t status;
     struct LastOnline last_online;

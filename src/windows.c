@@ -63,7 +63,7 @@ void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *use
     }
 }
 
-void on_typing_change(Tox *m, int32_t friendnumber, int is_typing, void *userdata)
+void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata)
 {
     int i;
 
