@@ -48,7 +48,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
         path_len += (KEY_IDENT_DIGITS * 2 + 5);
 
         sprintf(&ident[0], "%02X", key[0] & 0xff);
-        sprintf(&ident[2], "%02X", key[2] & 0xff);
+        sprintf(&ident[2], "%02X", key[1] & 0xff);
         ident[KEY_IDENT_DIGITS*2+1] = '\0';
     } else {
         uint8_t s[MAX_STR_SIZE];
