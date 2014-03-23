@@ -47,7 +47,7 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 extern struct _Winthread Winthread;
 
 #ifdef _SUPPORT_AUDIO
-    #define AC_NUM_CHAT_COMMANDS 22
+    #define AC_NUM_CHAT_COMMANDS 23
 #else
     #define AC_NUM_CHAT_COMMANDS 18
 #endif /* _SUPPORT_AUDIO */
@@ -78,6 +78,7 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/call"       },
     { "/cancel"     },
     { "/answer"     },
+    { "/reject"     },
     { "/hangup"     },
     
 #endif /* _SUPPORT_AUDIO */
@@ -349,7 +350,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av)
     ChatContext *ctx = self->chatwin;
     
     wprintw(ctx->history, "Incoming audio call!\n"
-                          "Answer: \"/answer\" \"/cancel\"\n");
+                          "Answer: \"/answer\" \"/reject\"\n");
     
     alert_window(self, WINDOW_ALERT_0, true);
 }
