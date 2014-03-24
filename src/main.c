@@ -405,11 +405,13 @@ void exit_toxic(Tox *m)
     store_data(m, DATA_FILE);
     close_all_file_senders();
     kill_all_windows();
-    log_disable(prompt->promptbuf->log);
+    log_disable(prompt->chatwin->log);
+    line_info_cleanup(prompt->chatwin->hst);
     free(DATA_FILE);
     free(prompt->stb);
-    free(prompt->promptbuf->log);
-    free(prompt->promptbuf);
+    free(prompt->chatwin->log);
+    free(prompt->chatwin->hst);
+    free(prompt->chatwin);
     tox_kill(m);
     #ifdef _SUPPORT_AUDIO
     terminate_audio();

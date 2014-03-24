@@ -148,7 +148,6 @@ struct ToxWindow {
     bool alert2;
 
     ChatContext *chatwin;
-    PromptBuf *promptbuf;
     StatusBar *stb;
 
     WINDOW *popup;
@@ -189,31 +188,17 @@ struct ChatContext {
 
     struct history *hst;
     struct chatlog *log;
+
     uint8_t self_is_typing;
 
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
-};
 
-/* prompt window/buffer holder */
-struct PromptBuf {
-    wchar_t line[MAX_STR_SIZE];
-    size_t pos;
-    size_t len;
-
+    /* specific for prompt */
     bool at_bottom;    /* true if line end is at bottom of window */
     int orig_y;        /* y axis point of line origin */
     bool scroll;       /* used for prompt window hack to determine when to scroll down */
-
-    wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];
-    int hst_pos;
-    int hst_tot;
-
-    struct history *hst;
-    struct chatlog *log;
-
-    WINDOW *linewin;
 };
 
 /* Start file transfer code */

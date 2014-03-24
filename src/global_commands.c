@@ -222,15 +222,10 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    struct chatlog *log = self->chatwin->log;
+
     if (argc == 0) {
-        bool on;
-
-        if (self->is_chat || self->is_groupchat)
-            on = self->chatwin->log->log_on;
-        else if (self->is_prompt)
-            on = self->promptbuf->log->log_on;
-
-        if (on) {
+        if (log->log_on) {
             wprintw(window, "Logging for this window is ");
             wattron(window, COLOR_PAIR(GREEN) | A_BOLD);
             wprintw(window, "[on]");
@@ -253,13 +248,13 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
         if (self->is_chat) {
             friends[self->num].logging_on = true;
-            log_enable(self->name, friends[self->num].pub_key, self->chatwin->log);
+            log_enable(self->name, friends[self->num].pub_key, log);
         } else if (self->is_prompt) {
             uint8_t myid[TOX_FRIEND_ADDRESS_SIZE];
             tox_get_address(m, myid);
-            log_enable(self->name, &myid, self->promptbuf->log);
+            log_enable(self->name, &myid, log);
         } else if (self->is_groupchat) {
-            log_enable(self->name, NULL, self->chatwin->log);
+            log_enable(self->name, NULL, log);
         }
 
         wprintw(window, "Logging ");
@@ -268,14 +263,10 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         wattroff(window, COLOR_PAIR(GREEN) | A_BOLD);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
-        if (self->is_chat) {
+        if (self->is_chat)
             friends[self->num].logging_on = false;
-            log_disable(self->chatwin->log);
-        } else if (self->is_prompt) {
-            log_disable(self->promptbuf->log);
-        } else if (self->is_groupchat) {
-            log_disable(self->chatwin->log);
-        }
+
+        log_disable(log);
 
         wprintw(window, "Logging ");
         wattron(window, COLOR_PAIR(RED) | A_BOLD);

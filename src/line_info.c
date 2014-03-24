@@ -65,17 +65,18 @@ static void line_info_reset_start(struct history *hst)
 void line_info_toggle_scroll(ToxWindow *self, bool scroll)
 {
     ChatContext *ctx = self->chatwin;
+    WINDOW *win = self->is_prompt ? self->window : ctx->history;
     struct history *hst = self->chatwin->hst;
 
     if (scroll) {
         hst->scroll_mode = true;
-        scrollok(ctx->history, 0);
+        scrollok(win, 0);
         curs_set(0);
     } else {
         hst->scroll_mode = false;
-        scrollok(ctx->history, 1);
-        line_info_reset_start(hst);
+        scrollok(win, 1);
         curs_set(1);
+        line_info_reset_start(hst);
     }
 }
 
@@ -93,7 +94,7 @@ void line_info_cleanup(struct history *hst)
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
                    uint8_t msgtype, uint8_t bold, uint8_t colour)
 {
-    ChatContext *ctx = self->chatwin;
+    WINDOW *win = self->is_prompt ? self->window : self->chatwin->history;
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = malloc(sizeof(struct line_info));
     memset(new_line, 0, sizeof(struct line_info));
@@ -158,7 +159,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
-    getyx(ctx->history, y, x);
+    getyx(win, y, x);
 
     /* move line_start forward proportionate to the number of new rows */
     if (y >= y2 - CHATBOX_HEIGHT) {
@@ -176,8 +177,9 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 void line_info_print(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
-    wclear(ctx->history);
-    wmove(ctx->history, 1, 0);
+    WINDOW *win = self->is_prompt ? self->window : win;
+    wclear(win);
+    wmove(win, 1, 0);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
@@ -191,9 +193,9 @@ void line_info_print(ToxWindow *self)
         switch (type) {
         case OUT_MSG:
         case IN_MSG:
-            wattron(ctx->history, COLOR_PAIR(BLUE));
-            wprintw(ctx->history, "%s", line->timestamp);
-            wattroff(ctx->history, COLOR_PAIR(BLUE));
+            wattron(win, COLOR_PAIR(BLUE));
+            wprintw(win, "%s", line->timestamp);
+            wattroff(win, COLOR_PAIR(BLUE));
 
             int nameclr = GREEN;
 
@@ -202,49 +204,49 @@ void line_info_print(ToxWindow *self)
             if (line->colour)
                 nameclr = line->colour;
 
-            wattron(ctx->history, COLOR_PAIR(nameclr));
-            wprintw(ctx->history, "%s: ", line->name1);
-            wattroff(ctx->history, COLOR_PAIR(nameclr));
+            wattron(win, COLOR_PAIR(nameclr));
+            wprintw(win, "%s: ", line->name1);
+            wattroff(win, COLOR_PAIR(nameclr));
 
             if (line->msg[0] == '>')
-                wattron(ctx->history, COLOR_PAIR(GREEN));
+                wattron(win, COLOR_PAIR(GREEN));
 
-            wprintw(ctx->history, "%s\n", line->msg);
+            wprintw(win, "%s\n", line->msg);
 
             if (line->msg[0] == '>')
-                wattroff(ctx->history, COLOR_PAIR(GREEN));
+                wattroff(win, COLOR_PAIR(GREEN));
 
             break;
 
         case ACTION:
-            wattron(ctx->history, COLOR_PAIR(BLUE));
-            wprintw(ctx->history, "%s", line->timestamp);
-            wattroff(ctx->history, COLOR_PAIR(BLUE));
+            wattron(win, COLOR_PAIR(BLUE));
+            wprintw(win, "%s", line->timestamp);
+            wattroff(win, COLOR_PAIR(BLUE));
 
-            wattron(ctx->history, COLOR_PAIR(YELLOW));
-            wprintw(ctx->history, "* %s %s\n", line->name1, line->msg);
-            wattroff(ctx->history, COLOR_PAIR(YELLOW));
+            wattron(win, COLOR_PAIR(YELLOW));
+            wprintw(win, "* %s %s\n", line->name1, line->msg);
+            wattroff(win, COLOR_PAIR(YELLOW));
 
             break;
 
         case SYS_MSG:
             if (line->timestamp[0]) {
-                wattron(ctx->history, COLOR_PAIR(BLUE));
-                wprintw(ctx->history, "%s", line->timestamp);
-                wattroff(ctx->history, COLOR_PAIR(BLUE));
+                wattron(win, COLOR_PAIR(BLUE));
+                wprintw(win, "%s", line->timestamp);
+                wattroff(win, COLOR_PAIR(BLUE));
             }
 
             if (line->bold)
-                wattron(ctx->history, A_BOLD);
+                wattron(win, A_BOLD);
             if (line->colour)
-                wattron(ctx->history, COLOR_PAIR(line->colour));
+                wattron(win, COLOR_PAIR(line->colour));
 
-            wprintw(ctx->history, "%s\n", line->msg);
+            wprintw(win, "%s\n", line->msg);
 
             if (line->bold)
-                wattroff(ctx->history, A_BOLD);
+                wattroff(win, A_BOLD);
             if (line->colour)
-                wattroff(ctx->history, COLOR_PAIR(line->colour));
+                wattroff(win, COLOR_PAIR(line->colour));
 
             break;
         }
