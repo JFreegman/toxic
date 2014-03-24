@@ -252,7 +252,6 @@ void terminate_audio()
         toxav_kill(ASettins.av);
 }
 
-
 int errors()
 {
     return ASettins.errors;

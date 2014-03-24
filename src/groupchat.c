@@ -427,13 +427,13 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == KEY_UP) {    /* fetches previous item in history */
         fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, LN_HIST_MV_UP);
+                        &ctx->hst_pos, MOVE_UP);
         mv_curs_end(self->window, ctx->len, y2, x2);
     }
 
     else if (key == KEY_DOWN) {    /* fetches next item in history */
         fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, LN_HIST_MV_DWN);
+                        &ctx->hst_pos, MOVE_DOWN);
         mv_curs_end(self->window, ctx->len, y2, x2);
     }
 

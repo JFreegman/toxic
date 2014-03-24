@@ -30,6 +30,7 @@
 #include <limits.h>
 
 #include "toxic_windows.h"
+#include "misc_tools.h"
 
 extern ToxWindow *prompt;
 
@@ -63,6 +64,11 @@ void print_time(WINDOW *window)
     wattron(window, COLOR_PAIR(BLUE));
     wprintw(window, "%s", s);
     wattroff(window,COLOR_PAIR(BLUE));
+}
+
+void get_time_str(uint8_t *buf)
+{
+    strftime(buf, TIME_STR_SIZE, "[%H:%M:%S] ", get_time());
 }
 
 /* XXX: FIX */

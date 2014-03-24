@@ -51,9 +51,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
         sprintf(&ident[2], "%02X", key[1] & 0xff);
         ident[KEY_IDENT_DIGITS*2+1] = '\0';
     } else {
-        uint8_t s[MAX_STR_SIZE];
-        strftime(s, MAX_STR_SIZE, "%Y-%m-%d[%H:%M:%S]", get_time());
-        snprintf(ident, sizeof(ident), "%s", s);
+        strftime(ident, sizeof(ident), "%Y-%m-%d[%H:%M:%S]", get_time());
         path_len += strlen(ident) + 1;
     }
 
