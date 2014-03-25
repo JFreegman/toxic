@@ -60,6 +60,7 @@
 #include "prompt.h"
 #include "misc_tools.h"
 #include "file_senders.h"
+#include "line_info.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "audio_call.h"
@@ -272,6 +273,8 @@ int init_connection(Tox *m)
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
+    uint8_t msg[MAX_STR_SIZE] = {0};
+
     static int conn_try = 0;
     static int conn_err = 0;
     static bool dht_on = false;
@@ -281,21 +284,21 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     if (!dht_on && !is_connected && !(conn_try++ % 100)) {
         if (!conn_err) {
             if ((conn_err = init_connection(m))) {
-                prep_prompt_win();
-                wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
+                snprintf(msg, sizeof(msg), "\nAuto-connect failed with error code %d", conn_err);
             }
         }
     } else if (!dht_on && is_connected) {
         dht_on = true;
         prompt_update_connectionstatus(prompt, dht_on);
-        prep_prompt_win();
-        wprintw(prompt->window, "DHT connected.\n");
+        snprintf(msg, sizeof(msg), "DHT connected.");
     } else if (dht_on && !is_connected) {
         dht_on = false;
         prompt_update_connectionstatus(prompt, dht_on);
-        prep_prompt_win();
-        wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
+        snprintf(msg, sizeof(msg), "\nDHT disconnected. Attempting to reconnect.");
     }
+
+    if (msg[0])
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
 static void load_friendlist(Tox *m)

@@ -34,7 +34,6 @@
 void line_info_init(struct history *hst)
 {
     hst->line_root = malloc(sizeof(struct line_info));
-    memset(hst->line_root, 0, sizeof(struct line_info));
 
     if (hst->line_root == NULL) {
         endwin();
@@ -42,6 +41,7 @@ void line_info_init(struct history *hst)
         exit(EXIT_FAILURE);
     }
 
+    memset(hst->line_root, 0, sizeof(struct line_info));
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
 }
@@ -64,8 +64,7 @@ static void line_info_reset_start(struct history *hst)
 
 void line_info_toggle_scroll(ToxWindow *self, bool scroll)
 {
-    ChatContext *ctx = self->chatwin;
-    WINDOW *win = self->is_prompt ? self->window : ctx->history;
+    WINDOW *win = self->chatwin->history;
     struct history *hst = self->chatwin->hst;
 
     if (scroll) {
@@ -94,10 +93,8 @@ void line_info_cleanup(struct history *hst)
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
                    uint8_t msgtype, uint8_t bold, uint8_t colour)
 {
-    WINDOW *win = self->is_prompt ? self->window : self->chatwin->history;
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = malloc(sizeof(struct line_info));
-    memset(new_line, 0, sizeof(struct line_info));
 
     if (new_line == NULL) {
         endwin();
@@ -105,16 +102,17 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
         exit(EXIT_FAILURE);
     }
 
+    memset(new_line, 0, sizeof(struct line_info));
+
     int len = 1;     /* there will always be a newline */
 
     /* for type-specific formatting in print function */
     switch (msgtype) {
-    case OUT_MSG:
-    case IN_MSG:
-        len += 2;
-        break;
     case ACTION:
         len += 3;
+        break;
+    default:
+        len += 2;
         break;
     }
 
@@ -143,7 +141,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     hst->line_end = new_line;
 
     /* If chat history exceeds limit move root forward and free old root */
-    if (++(hst->line_items) >= MAX_HISTORY) {
+    if (++hst->line_items > MAX_HISTORY) {
         --hst->line_items;
         struct line_info *tmp = hst->line_root->next;
         tmp->prev = NULL;
@@ -159,10 +157,12 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
-    getyx(win, y, x);
+    getyx(self->chatwin->history, y, x);
+
+    int n = self->is_prompt ? 0 : CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new rows */
-    if (y >= y2 - CHATBOX_HEIGHT) {
+    if (y >= y2 - n) {
         int i;
         int lines = 1 + (len / x2);
 
@@ -177,7 +177,8 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 void line_info_print(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
-    WINDOW *win = self->is_prompt ? self->window : win;
+    WINDOW *win = ctx->history;
+
     wclear(win);
     wmove(win, 1, 0);
     int y2, x2;
@@ -186,7 +187,7 @@ void line_info_print(ToxWindow *self)
     struct line_info *line = ctx->hst->line_start;
     int numlines = 0;
 
-    while(line && numlines <= x2) {
+    while(line && numlines <= y2) {
         uint8_t type = line->msgtype;
         numlines += line->len / x2;
 
@@ -199,10 +200,10 @@ void line_info_print(ToxWindow *self)
 
             int nameclr = GREEN;
 
-            if (type == IN_MSG)
-                nameclr = CYAN;
             if (line->colour)
                 nameclr = line->colour;
+            else if (type == IN_MSG)
+                nameclr = CYAN;
 
             wattron(win, COLOR_PAIR(nameclr));
             wprintw(win, "%s: ", line->name1);
@@ -247,6 +248,31 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, A_BOLD);
             if (line->colour)
                 wattroff(win, COLOR_PAIR(line->colour));
+
+            break;
+
+        case PROMPT:
+            wattron(win, COLOR_PAIR(GREEN));
+            wprintw(win, "$ ");
+            wattroff(win, COLOR_PAIR(GREEN));
+
+            if (line->msg[0])
+                wprintw(win, "%s", line->msg);
+
+            wprintw(win, "\n");
+            break;
+
+        case CONNECTION:
+            wattron(win, COLOR_PAIR(BLUE));
+            wprintw(win, "%s", line->timestamp);
+            wattroff(win, COLOR_PAIR(BLUE));
+
+            wattron(win, COLOR_PAIR(line->colour));
+            wattron(win, A_BOLD);
+            wprintw(win, "* %s ", line->name1);
+            wattroff(win, A_BOLD);
+            wprintw(win, "%s\n", line->msg);
+            wattroff(win, COLOR_PAIR(line->colour));
 
             break;
         }

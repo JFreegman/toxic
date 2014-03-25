@@ -26,6 +26,7 @@ enum {
     SYS_MSG,
     IN_MSG,
     OUT_MSG,
+    PROMPT,
     ACTION,
     CONNECTION,
 } LINE_TYPE;

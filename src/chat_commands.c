@@ -53,22 +53,19 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
 #ifdef _SUPPORT_AUDIO
-    #define NUMLINES 11
+    #define NUMLINES 12
 #else
-    #define NUMLINES 7
+    #define NUMLINES 8
 #endif
 
     uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
 
 #ifdef _SUPPORT_AUDIO
-
     { "    /call                      : Audio call"                           },
     { "    /cancel                    : Cancel call"                          },
     { "    /answer                    : Answer incomming call"                },
     { "    /hangup                    : Hangup active call"                   },
-
 #endif /* _SUPPORT_AUDIO */
-    
     { "    /invite <n>                : Invite friend to a group chat"        },
     { "    /join                      : Join a pending group chat"            },
     { "    /log <on> or <off>         : Enable/disable logging"               },
@@ -76,7 +73,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     { "    /savefile <n>              : Receive a file"                       },
     { "    /close                     : Close the current chat window"        },
     { "    /help                      : Print this message again"             },
-    //{ "    /help global               : Show a list of global commands"       },
+    { "    /help global               : Show a list of global commands"       },
 };
 
     int i;
@@ -84,7 +81,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Use ESC key to toggle history scroll mode";
+    msg = " * Use ESC key to toggle history scroll mode\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 }
 
