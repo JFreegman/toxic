@@ -165,15 +165,6 @@ struct StatusBar {
     bool is_online;
 };
 
-#define LOG_FLUSH_LIMIT 2  /* limits calls to fflush(logfile) to a max of one per LOG_FLUSH_LIMIT seconds */
-
-struct chatlog {
-    FILE *file;
-    uint64_t lastwrite;
-    int pos;
-    bool log_on;    /* specific to current chat window */
-};
-
 #define MAX_LINE_HIST 128
 
 /* chat and groupchat window/buffer holder */

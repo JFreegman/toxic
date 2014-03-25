@@ -31,6 +31,7 @@
 #include "configdir.h"
 #include "toxic_windows.h"
 #include "misc_tools.h"
+#include "log.h"
 
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)

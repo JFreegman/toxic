@@ -30,6 +30,7 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 #include "friendlist.h"
+#include "log.h"
 #include "line_info.h"
 
 extern char *DATA_FILE;
