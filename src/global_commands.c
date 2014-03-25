@@ -181,8 +181,9 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    wclear(window);
-    wprintw(window, "\n\n");
+    struct history *hst = self->chatwin->hst;
+    line_info_cleanup(hst);
+    line_info_init(hst);
 }
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -393,7 +394,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     { "    /groupchat                 : Create a group chat"                            },
     { "    /myid                      : Print your ID"                                  },
     { "    /help                      : Print this message again"                       },
-    { "    /clear                     : Clear the window"                               },
+    { "    /clear                     : Clear window history"                           },
     { "    /quit or /exit             : Exit Toxic"                                     },
 #ifdef _SUPPORT_AUDIO
     { "    /lsdev <type>              : List devices where type: in|out"                },

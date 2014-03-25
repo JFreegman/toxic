@@ -793,12 +793,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
 static void chat_onInit(ToxWindow *self, Tox *m)
 {
+    curs_set(1);
     int x2, y2;
     getmaxyx(self->window, y2, x2);
     self->x = x2;
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
+
     statusbar->status = tox_get_user_status(m, self->num);
     statusbar->is_online = tox_get_friend_connection_status(m, self->num) == 1;
 
@@ -809,6 +811,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init subwindows */
     ChatContext *ctx = self->chatwin;
+
     statusbar->topline = subwin(self->window, 2, x2, 0, 0);
     ctx->history = subwin(self->window, y2-CHATBOX_HEIGHT+1, x2, 0, 0);
     scrollok(ctx->history, 1);

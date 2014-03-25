@@ -20,7 +20,7 @@
  *
  */
 
-#define MAX_HISTORY 50
+#define MAX_HISTORY 200
 
 enum {
     SYS_MSG,
@@ -29,6 +29,7 @@ enum {
     PROMPT,
     ACTION,
     CONNECTION,
+    NAME_CHANGE,
 } LINE_TYPE;
 
 struct line_info {
@@ -36,7 +37,7 @@ struct line_info {
     uint8_t name1[TOXIC_MAX_NAME_LENGTH];
     uint8_t name2[TOXIC_MAX_NAME_LENGTH];
     uint8_t msg[MAX_STR_SIZE];
-    uint8_t msgtype;
+    uint8_t type;
     uint8_t bold;
     uint8_t colour;
     uint32_t id;
@@ -57,7 +58,7 @@ struct history {
 };
 
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
-                   uint8_t msgtype, uint8_t bold, uint8_t colour);
+                   uint8_t type, uint8_t bold, uint8_t colour);
 void line_info_cleanup(struct history *hst);
 void line_info_toggle_scroll(ToxWindow *self, bool scroll);
 void line_info_init(struct history *hst);

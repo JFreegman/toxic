@@ -29,8 +29,8 @@ unsigned char *hex_string_to_bin(char hex_string[]);
 /* get the current unix time */
 uint64_t get_unix_time(void);
 
-/* Prints the time to given window */
-void print_time(WINDOW *window);
+/*Puts the current time in buf in the format of [Hour:Min:Sec] */
+void get_time_str(uint8_t *buf);
 
 /* get the current local time */
 struct tm *get_time(void);

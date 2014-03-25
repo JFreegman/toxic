@@ -35,6 +35,7 @@
 #include "prompt.h"
 #include "toxic_strings.h"
 #include "log.h"
+#include "line_info.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
@@ -103,29 +104,38 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
     kill_groupchat_window(self);
 }
 
-static void print_groupchat_help(ChatContext *ctx)
+static void print_groupchat_help(ToxWindow *self)
 {
-    wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(ctx->history, "Group chat commands:\n");
-    wattroff(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
+    uint8_t *msg = "Group chat commands:";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
-    wprintw(ctx->history, "    /add <id> <msg>     : Add friend with optional message\n");
-    wprintw(ctx->history, "    /status <type> <msg>: Set your status with optional note\n");
-    wprintw(ctx->history, "    /note <msg>         : Set a personal note\n");
-    wprintw(ctx->history, "    /nick <nick>        : Set your nickname\n");
-    wprintw(ctx->history, "    /groupchat          : Create a group chat\n");
-    wprintw(ctx->history, "    /log <on> or <off>  : Enable/disable logging\n");
-    wprintw(ctx->history, "    /close              : Close the current group chat\n");
-    wprintw(ctx->history, "    /help               : Print this message again\n");
-    wprintw(ctx->history, "    /help global        : Show a list of global commands\n");
-    
-    wattron(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
-    wprintw(ctx->history, " * Argument messages must be enclosed in quotation marks.\n");
-    wprintw(ctx->history, " * Scroll peer list with the Page Up/Page Down keys.\n\n");
-    wattroff(ctx->history, COLOR_PAIR(CYAN) | A_BOLD);
-    wattron(ctx->history, COLOR_PAIR(WHITE) | A_BOLD);
-    wprintw(ctx->history, "    Notice, some friends will be missing names while finding peers\n\n");
-    wattroff(ctx->history, COLOR_PAIR(WHITE) | A_BOLD);
+    #define NUMLINES 9
+
+    uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
+
+    { "    /add <id> <msg>     : Add friend with optional message"               },
+    { "    /status <type> <msg>: Set your status with optional note"             },
+    { "    /note <msg>         : Set a personal note"                            },
+    { "    /nick <nick>        : Set your nickname"                              },
+    { "    /groupchat          : Create a group chat"                            },
+    { "    /log <on> or <off>  : Enable/disable logging"                         },
+    { "    /close              : Close the current group chat"                   },
+    { "    /help               : Print this message again"                       },
+    { "    /help global        : Show a list of global commands"                 },
+
+};
+
+    int i;
+
+    for (i = 0; i < NUMLINES; ++i)
+        line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
+
+    msg = " * Use ESC key to toggle history scroll mode";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    msg = " * Scroll peer list with the Page Up/Page Down keys.\n";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    msg = " * Notice, some friends will be missing names while finding peers\n";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum,
@@ -158,19 +168,10 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     alert_window(self, alert_type, beep);
 
-    print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(nick_clr));
-    wprintw(ctx->history, "%s: ", nick);
-    wattroff(ctx->history, COLOR_PAIR(nick_clr));
-    
-    if (msg[0] == '>') {
-        wattron(ctx->history, COLOR_PAIR(GREEN));
-        wprintw(ctx->history, "%s\n", msg);
-        wattroff(ctx->history, COLOR_PAIR(GREEN));
-    } else {
-        wprintw(ctx->history, "%s\n", msg);
-    }
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
 
+    line_info_add(self, timefrmt, nick, NULL, msg, IN_MSG, 0, nick_clr);
     write_to_log(msg, nick, ctx->log, false);
 }
 
@@ -202,11 +203,10 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     tox_group_peername(m, groupnum, peernum, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
 
-    print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(YELLOW));
-    wprintw(ctx->history, "* %s %s\n", nick, action);
-    wattroff(ctx->history, COLOR_PAIR(YELLOW));
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
 
+    line_info_add(self, timefrmt, nick, NULL, action, ACTION, 0, 0);
     write_to_log(action, nick, ctx->log, true);
 }
 
@@ -270,31 +270,21 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     qsort(groupchats[groupnum].peer_names, groupchats[groupnum].num_peers, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 
     ChatContext *ctx = self->chatwin;
-    print_time(ctx->history);
 
-    const uint8_t *event;
+    uint8_t *event;
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
 
     switch (change) {
     case TOX_CHAT_CHANGE_PEER_ADD:
         event = "has joined the room";
-
-        wattron(ctx->history, COLOR_PAIR(GREEN));
-        wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "* %s", peername);
-        wattroff(ctx->history, A_BOLD);
-        wprintw(ctx->history, " %s\n", event);
-        wattroff(ctx->history, COLOR_PAIR(GREEN));
-
+        line_info_add(self, timefrmt, peername, NULL, event, CONNECTION, 0, GREEN);
         write_to_log(event, peername, ctx->log, true);
         break;
 
     case TOX_CHAT_CHANGE_PEER_DEL:
         event = "has left the room";
-
-        wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "* %s", oldpeername);
-        wattroff(ctx->history, A_BOLD);
-        wprintw(ctx->history, " %s\n", event);
+        line_info_add(self, timefrmt, oldpeername, NULL, event, CONNECTION, 0, 0);
 
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
@@ -303,17 +293,8 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         break;
 
     case TOX_CHAT_CHANGE_PEER_NAME:
-        wattron(ctx->history, COLOR_PAIR(MAGENTA));
-        wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "* %s", oldpeername);
-        wattroff(ctx->history, A_BOLD);
-
-        wprintw(ctx->history, " is now known as ");
-
-        wattron(ctx->history, A_BOLD);
-        wprintw(ctx->history, "%s\n", peername);
-        wattroff(ctx->history, A_BOLD);
-        wattroff(ctx->history, COLOR_PAIR(MAGENTA));
+        event = " is now known as ";
+        line_info_add(self, timefrmt, oldpeername, peername, event, NAME_CHANGE, 0, 0);
 
         uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH + 32];
         snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
@@ -331,9 +312,8 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t
     }
 
     if (tox_group_action_send(m, self->num, action, strlen(action) + 1) == -1) {
-        wattron(ctx->history, COLOR_PAIR(RED));
-        wprintw(ctx->history, " * Failed to send action\n");
-        wattroff(ctx->history, COLOR_PAIR(RED));
+        uint8_t *errmsg = " * Failed to send action.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
     }
 }
 
@@ -345,6 +325,17 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
+
+    if (key == T_KEY_ESC) {   /* ESC key: Toggle history scroll mode */
+        bool scroll = ctx->hst->scroll_mode ? false : true;
+        line_info_toggle_scroll(self, scroll);
+    }
+
+    /* If we're in scroll mode ignore rest of function */
+    if (ctx->hst->scroll_mode) {
+        line_info_onKey(self, key);
+        return;
+    }
 
     if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
         if (ctx->pos > 0) {
@@ -502,7 +493,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        wclrtobot(self->window);
+
 
         if (!string_is_empty(line))
             add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
@@ -515,7 +506,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
                 if (strcmp(line, "help global") == 0)
                     execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
                 else
-                    print_groupchat_help(ctx);
+                    print_groupchat_help(self);
 
             } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_group_action(self, ctx, m, line + strlen("/me "));
@@ -524,9 +515,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
             }
         } else if (!string_is_empty(line)) {
             if (tox_group_message_send(m, self->num, line, strlen(line) + 1) == -1) {
-                wattron(ctx->history, COLOR_PAIR(RED));
-                wprintw(ctx->history, " * Failed to send message.\n");
-                wattroff(ctx->history, COLOR_PAIR(RED));
+                uint8_t *errmsg = " * Failed to send message.";
+                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
             }
         }
 
@@ -536,13 +526,17 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
 static void groupchat_onDraw(ToxWindow *self, Tox *m)
 {
-    curs_set(1);
+
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
     ChatContext *ctx = self->chatwin;
 
+    if (!ctx->hst->scroll_mode)
+        scrollok(ctx->history, 1);
+
     wclear(ctx->linewin);
+    line_info_print(self);
 
     if (ctx->len > 0) {
         uint8_t line[MAX_STR_SIZE];
@@ -593,22 +587,26 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y, x);
 
     ChatContext *ctx = self->chatwin;
+
     ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x-SIDEBAR_WIDTH-1, 0, 0);
-    scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y-CHATBOX_HEIGHT, 0);
     ctx->sidebar = subwin(self->window, y-CHATBOX_HEIGHT+1, SIDEBAR_WIDTH, 0, x-SIDEBAR_WIDTH);
 
+    ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
 
-    if (ctx->log == NULL) {
+    if (ctx->log == NULL || ctx->hst == NULL) {
         endwin();
         fprintf(stderr, "malloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 
+    memset(ctx->hst, 0, sizeof(struct history));
     memset(ctx->log, 0, sizeof(struct chatlog));
 
-    print_groupchat_help(ctx);
+    line_info_init(ctx->hst);
+
+    print_groupchat_help(self);
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
     wmove(self->window, y-CURS_Y_OFFSET, 0);

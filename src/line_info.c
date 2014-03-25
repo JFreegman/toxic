@@ -50,7 +50,7 @@ void line_info_init(struct history *hst)
 static void line_info_reset_start(struct history *hst)
 {
     struct line_info *line = hst->line_end;
-    uint32_t start_id = hst->start_id;
+    uint32_t start_id = hst->start_id + 1;
 
     while (line) {
         if (line->id == start_id) {
@@ -91,7 +91,7 @@ void line_info_cleanup(struct history *hst)
 }
 
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
-                   uint8_t msgtype, uint8_t bold, uint8_t colour)
+                   uint8_t type, uint8_t bold, uint8_t colour)
 {
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = malloc(sizeof(struct line_info));
@@ -107,8 +107,9 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     int len = 1;     /* there will always be a newline */
 
     /* for type-specific formatting in print function */
-    switch (msgtype) {
+    switch (type) {
     case ACTION:
+    case NAME_CHANGE:
         len += 3;
         break;
     default:
@@ -131,7 +132,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     }
 
     new_line->len = len;
-    new_line->msgtype = msgtype;
+    new_line->type = type;
     new_line->bold = bold;
     new_line->colour = colour;
     new_line->id = hst->line_end->id + 1;
@@ -180,15 +181,19 @@ void line_info_print(ToxWindow *self)
     WINDOW *win = ctx->history;
 
     wclear(win);
-    wmove(win, 1, 0);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    struct line_info *line = ctx->hst->line_start;
+    if (self->is_groupchat)
+        wmove(win, 0, 0);
+    else
+        wmove(win, 2, 0);
+
+    struct line_info *line = ctx->hst->line_start->next;
     int numlines = 0;
 
     while(line && numlines <= y2) {
-        uint8_t type = line->msgtype;
+        uint8_t type = line->type;
         numlines += line->len / x2;
 
         switch (type) {
@@ -273,6 +278,25 @@ void line_info_print(ToxWindow *self)
             wattroff(win, A_BOLD);
             wprintw(win, "%s\n", line->msg);
             wattroff(win, COLOR_PAIR(line->colour));
+
+            break;
+
+        case NAME_CHANGE:
+            wattron(win, COLOR_PAIR(BLUE));
+            wprintw(win, "%s", line->timestamp);
+            wattroff(win, COLOR_PAIR(BLUE));
+
+            wattron(win, COLOR_PAIR(MAGENTA));
+            wattron(win, A_BOLD);
+            wprintw(win, "* %s", line->name1);
+            wattroff(win, A_BOLD);
+
+            wprintw(win, "%s", line->msg);
+
+            wattron(win, A_BOLD);
+            wprintw(win, "%s\n", line->name2);
+            wattroff(win, A_BOLD);
+            wattroff(win, COLOR_PAIR(MAGENTA));
 
             break;
         }

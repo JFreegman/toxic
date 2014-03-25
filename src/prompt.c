@@ -215,7 +215,6 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
             int k = ctx->orig_y + ((ctx->len + p_ofst) / px2);
 
             if (k >= y2) {
-                wprintw(ctx->history, "\n");
                 --ctx->orig_y;
             }
         }
@@ -403,24 +402,25 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, uint8_t *key, uint8_
     data[length - 1] = 0;
     ChatContext *ctx = self->chatwin;
 
-    wprintw(ctx->history, "\n");
-    print_time(ctx->history);
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
 
     uint8_t msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "Friend request with the message '%s'\n", data);
-    wprintw(ctx->history, "%s", msg);
+    snprintf(msg, sizeof(msg), "Friend request with the message '%s'", data);
+    line_info_add(self, timefrmt, NULL, NULL, msg, SYS_MSG, 0, 0);
     write_to_log(msg, "", ctx->log, true);
 
     int n = add_friend_request(key);
 
     if (n == -1) {
-        const uint8_t *errmsg = "Friend request queue is full. Discarding request.\n";
-        wprintw(ctx->history, "%s", errmsg);
+        uint8_t *errmsg = "Friend request queue is full. Discarding request.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
         write_to_log(errmsg, "", ctx->log, true);
         return;
     }
 
-    wprintw(ctx->history, "Type \"/accept %d\" to accept it.\n", n);
+    snprintf(msg, sizeof(msg), "Type \"/accept %d\" to accept it.", n);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
