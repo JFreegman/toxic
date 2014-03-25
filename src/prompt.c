@@ -273,6 +273,10 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     int x, y, x2, y2;
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
+
+    if (!ctx->hst->scroll_mode)
+        curs_set(1);
+
     line_info_print(self);
 
     /* if len is >= screen width offset max x by X_OFST to account for prompt char */

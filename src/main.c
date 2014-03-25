@@ -518,19 +518,18 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-#ifdef _SUPPORT_AUDIO 
+    uint8_t *msg;
 
-    attron(COLOR_PAIR(RED) | A_BOLD);
-    wprintw(prompt->window, "Starting audio...\n");
-    attroff(COLOR_PAIR(RED) | A_BOLD);
+#ifdef _SUPPORT_AUDIO
 
     av = init_audio(prompt, m);
 
     if ( errors() == NoError )
-        wprintw(prompt->window, "Audio started with no problems.\n");
+        msg = "Audio started with no problems.";
     else /* Get error code and stuff */
-        wprintw(prompt->window, "Error starting audio!\n");
+        msg = "Error starting audio!";
 
+    line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
 #endif /* _SUPPORT_AUDIO */
 
@@ -538,17 +537,13 @@ int main(int argc, char *argv[])
         load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
-        attron(COLOR_PAIR(RED) | A_BOLD);
-        wprintw(prompt->window, "You passed '-f' without giving an argument.\n"
-                "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(RED) | A_BOLD);
+        msg = "You passed '-f' without giving an argument. Defaulting to 'data' for a keyfile...";
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
     if (config_err) {
-        attron(COLOR_PAIR(RED) | A_BOLD);
-        wprintw(prompt->window, "Unable to determine configuration directory.\n"
-                "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(RED) | A_BOLD);
+        msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
     sort_friendlist_index();

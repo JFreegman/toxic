@@ -364,7 +364,7 @@ void chat_onStarting (ToxWindow *self, ToxAv *av)
 
     uint8_t *msg;
 
-    if ( 0 != start_transmission() ) {/* YEAH! */
+    if ( 0 != start_transmission(self) ) {/* YEAH! */
         msg = "Error starting transmission!";
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
@@ -401,7 +401,7 @@ void chat_onStart (ToxWindow *self, ToxAv *av)
 
     uint8_t *msg;
 
-    if ( 0 != start_transmission() ) {/* YEAH! */
+    if ( 0 != start_transmission(self) ) {/* YEAH! */
         msg = "Error starting transmission!";
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
@@ -687,6 +687,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     ChatContext *ctx = self->chatwin;
 
+    if (!ctx->hst->scroll_mode)
+        curs_set(1);
+
     wclear(ctx->linewin);
     line_info_print(self);
 
@@ -790,7 +793,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
 static void chat_onInit(ToxWindow *self, Tox *m)
 {
-    curs_set(1);
     int x2, y2;
     getmaxyx(self->window, y2, x2);
     self->x = x2;
