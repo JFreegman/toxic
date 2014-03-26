@@ -65,7 +65,7 @@ void callback_requ_timeout ( void *arg );
 void callback_peer_timeout ( void* arg );
 
 
-static void print_err (ToxWindow *self, char *error_str)
+static void print_err (ToxWindow *self, uint8_t *error_str)
 {
     line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
 }
