@@ -30,6 +30,7 @@
 
 #include "toxic_windows.h"
 #include "line_info.h"
+#include "groupchat.h"
 
 void line_info_init(struct history *hst)
 {
@@ -156,19 +157,27 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
         hst->line_root = tmp;
     }
 
+    int newlines = 0;
+    int i;
+
+    for (i = 0; msg[i]; ++i) {
+        if (msg[i] == '\n')
+            ++newlines;
+    }
+
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
     getyx(self->chatwin->history, y, x);
 
-    int n = self->is_prompt ? 0 : CHATBOX_HEIGHT;
+    int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
+    int lines = 1 + (len / (x2 - offst));
 
-    /* move line_start forward proportionate to the number of new rows */
-    if (y >= y2 - n) {
-        int i;
-        int lines = 1 + (len / x2);
+    int max_y = self->is_prompt ? y2 : y2 - CHATBOX_HEIGHT;
 
+    /* move line_start forward proportionate to the number of new lines */
+    if (y >= max_y) {
         while (lines > 0 && hst->line_start->next) {
-            lines -= (1 + hst->line_start->len / x2);
+            lines -= (1 + hst->line_start->len / (x2 - offst));
             hst->line_start = hst->line_start->next;
             ++hst->start_id;
         }
@@ -370,4 +379,9 @@ void line_info_onKey(ToxWindow *self, wint_t key)
         line_info_reset_start(hst);
         break;
     }
+}
+
+void line_info_clear(struct history *hst)
+{
+    hst->line_start = hst->line_end;
 }

@@ -182,9 +182,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    struct history *hst = self->chatwin->hst;
-    line_info_cleanup(hst);
-    line_info_init(hst);
+    line_info_clear(self->chatwin->hst);
 }
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -270,7 +268,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         } else if (self->is_prompt) {
             uint8_t myid[TOX_FRIEND_ADDRESS_SIZE];
             tox_get_address(m, myid);
-            log_enable(self->name, &myid, log);
+            log_enable(self->name, myid, log);
         } else if (self->is_groupchat) {
             log_enable(self->name, NULL, log);
         }

@@ -189,7 +189,6 @@ struct ChatContext {
     /* specific for prompt */
     bool at_bottom;    /* true if line end is at bottom of window */
     int orig_y;        /* y axis point of line origin */
-    bool scroll;       /* used for prompt window hack to determine when to scroll down */
 };
 
 /* Start file transfer code */

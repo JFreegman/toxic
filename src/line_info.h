@@ -55,12 +55,25 @@ struct history {
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
     uint32_t line_items;
     bool scroll_mode;
+    int y;
+    int old_y;
 };
 
+/* adds a line to history (also moves line_start and/or line_root forward if necessary) */
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
                    uint8_t type, uint8_t bold, uint8_t colour);
-void line_info_cleanup(struct history *hst);
-void line_info_toggle_scroll(ToxWindow *self, bool scroll);
-void line_info_init(struct history *hst);
+
+/* Prints a section of history starting at line_start */
 void line_info_print(ToxWindow *self);
+
+/* frees all history lines */
+void line_info_cleanup(struct history *hst);
+
+/* Toggles scroll mode for current window */
+void line_info_toggle_scroll(ToxWindow *self, bool scroll);
+
+/* clears the screen (does not delete anything) */
+void line_info_clear(struct history *hst);
+
+void line_info_init(struct history *hst);
 void line_info_onKey(ToxWindow *self, wint_t key);

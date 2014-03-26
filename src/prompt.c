@@ -144,7 +144,6 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
         if (ctx->pos > 0) {
             del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
             wmove(ctx->history, y, x-1);    /* not necessary but fixes a display glitch */
-            ctx->scroll = false;
         } else {
             beep();
         }
@@ -153,7 +152,6 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
         if (ctx->pos != ctx->len) {
             del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
-            ctx->scroll = false;
         } else {
             beep();
         }
@@ -246,7 +244,6 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     {
         if (ctx->len < (MAX_STR_SIZE-1)) {
             add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
-            ctx->scroll = true;
         }
     }
     /* RETURN key: execute command */
@@ -303,10 +300,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         bool edge = (ctx->len + p_ofst) % px2 == 0;
 
         /* move point of line origin up when input scrolls screen down */
-        if (ctx->scroll && edge && botm) {
+        if (edge && botm)
             --ctx->orig_y;
-            ctx->scroll = false;
-        }
 
     } else {    /* Mark point of origin for new line */
         ctx->orig_y = y;    
