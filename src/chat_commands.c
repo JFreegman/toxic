@@ -53,9 +53,9 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
 #ifdef _SUPPORT_AUDIO
-    #define NUMLINES 12
+    #define NUMLINES 13
 #else
-    #define NUMLINES 8
+    #define NUMLINES 9
 #endif
 
     uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
@@ -64,6 +64,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     { "    /call                      : Audio call"                           },
     { "    /cancel                    : Cancel call"                          },
     { "    /answer                    : Answer incomming call"                },
+    { "    /reject                    : Reject incoming call"                 },
     { "    /hangup                    : Hangup active call"                   },
 #endif /* _SUPPORT_AUDIO */
     { "    /invite <n>                : Invite friend to a group chat"        },

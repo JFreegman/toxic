@@ -521,7 +521,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     return;
 on_error:
-    snprintf(msg ,sizeof(msg), "%s %d", error_str, argc);
+    snprintf(msg, sizeof(msg), "%s", error_str);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
@@ -537,6 +537,31 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
+        else if ( error == ErrorNoCall ) error_str = "No incomming call!";
+        else error_str = "Internal error!";
+        
+        goto on_error;
+    }
+    
+    /* Callback will print status... */
+    
+    return;
+on_error: 
+    print_err (self, error_str);
+}
+
+void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    uint8_t* error_str;
+    
+    if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
+    
+    if ( !ASettins.av ) { error_str = "Audio not supported!"; goto on_error; }
+    
+    ToxAvError error = toxav_reject(ASettins.av, "Why not?");
+    
+    if ( error != ErrorNone ) {
+        if ( error == ErrorInvalidState ) error_str = "Cannot reject in invalid state!";
         else if ( error == ErrorNoCall ) error_str = "No incomming call!";
         else error_str = "Internal error!";
         
@@ -581,7 +606,7 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     if ( !ASettins.av ) { error_str = "Audio not supported!"; goto on_error; }
     
-    ToxAvError error = toxav_hangup(ASettins.av);
+    ToxAvError error = toxav_cancel(ASettins.av, self->num, "Only those who appreciate small things know the beauty of life");
     
     if ( error != ErrorNone ) {
         if ( error == ErrorNoCall ) error_str = "No call!";

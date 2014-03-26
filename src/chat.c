@@ -48,7 +48,7 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 extern struct _Winthread Winthread;
 
 #ifdef _SUPPORT_AUDIO
-    #define AC_NUM_CHAT_COMMANDS 22
+    #define AC_NUM_CHAT_COMMANDS 23
 #else
     #define AC_NUM_CHAT_COMMANDS 18
 #endif /* _SUPPORT_AUDIO */
@@ -79,6 +79,7 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/call"       },
     { "/cancel"     },
     { "/answer"     },
+    { "/reject"     },
     { "/hangup"     },
     
 #endif /* _SUPPORT_AUDIO */
@@ -342,7 +343,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av)
     if (self->num != toxav_get_peer_id(av, 0))
         return;
 
-    uint8_t *msg = "Incoming audio call!\nType: \"/answer\" or \"/cancel\"";
+    uint8_t *msg = "Incoming audio call!\nType: \"/answer\" or \"/reject\"";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     
     alert_window(self, WINDOW_ALERT_0, true);
@@ -353,7 +354,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av)
     if (self->num != toxav_get_peer_id(av, 0))
         return;
 
-    uint8_t *msg = "Ringing...\n\"/cancel\" ?";
+    uint8_t *msg = "Ringing...\n\"cancel\" ?";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
