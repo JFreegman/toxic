@@ -55,8 +55,7 @@ struct history {
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
     uint32_t line_items;
     bool scroll_mode;
-    int y;
-    int old_y;
+    uint8_t queue;   /* keeps track of lines added between window refreshes */
 };
 
 /* adds a line to history (also moves line_start and/or line_root forward if necessary) */

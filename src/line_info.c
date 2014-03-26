@@ -51,7 +51,7 @@ void line_info_init(struct history *hst)
 static void line_info_reset_start(struct history *hst)
 {
     struct line_info *line = hst->line_end;
-    uint32_t start_id = hst->start_id + 1;
+    uint32_t start_id = hst->start_id;
 
     while (line) {
         if (line->id == start_id) {
@@ -110,7 +110,6 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     /* for type-specific formatting in print function */
     switch (type) {
     case ACTION:
-    case NAME_CHANGE:
         len += 3;
         break;
     default:
@@ -170,12 +169,13 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     getyx(self->chatwin->history, y, x);
 
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
-    int lines = 1 + (len / (x2 - offst));
+    int lines = (1 + newlines + (len / (x2 - offst)));
+    hst->queue += lines;
 
     int max_y = self->is_prompt ? y2 : y2 - CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new lines */
-    if (y >= max_y) {
+    if (y + hst->queue - 1 >= max_y) {
         while (lines > 0 && hst->line_start->next) {
             lines -= (1 + hst->line_start->len / (x2 - offst));
             hst->line_start = hst->line_start->next;
@@ -192,6 +192,8 @@ void line_info_print(ToxWindow *self)
     wclear(win);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
+
+    ctx->hst->queue = 0;
 
     if (self->is_groupchat)
         wmove(win, 0, 0);

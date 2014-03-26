@@ -84,7 +84,6 @@ struct _Winthread Winthread;
 
 void on_window_resize(int sig)
 {
-    endwin();
     refresh();
     clear();
 }
