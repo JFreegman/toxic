@@ -20,6 +20,15 @@
  *
  */
 
+#define LOG_FLUSH_LIMIT 2  /* limits calls to fflush(logfile) to a max of one per LOG_FLUSH_LIMIT seconds */
+
+struct chatlog {
+    FILE *file;
+    uint64_t lastwrite;
+    int pos;
+    bool log_on;    /* specific to current chat window */
+};
+
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log);
 

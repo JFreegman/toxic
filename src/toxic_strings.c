@@ -148,7 +148,7 @@ void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZ
 void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_STR_SIZE],
                      int hst_tot, int *hst_pos, int key_dir)
 {
-    if (key_dir == LN_HIST_MV_UP) {
+    if (key_dir == MOVE_UP) {
         if (--(*hst_pos) < 0) {
             *hst_pos = 0;
             beep();

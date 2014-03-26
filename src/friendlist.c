@@ -34,6 +34,7 @@
 #include "chat.h"
 #include "friendlist.h"
 #include "misc_tools.h"
+#include "line_info.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -104,13 +105,14 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             tox_get_name(m, num, nick);
             nick[TOXIC_MAX_NAME_LENGTH] = '\0';
-            wprintw(prompt->window, "%s: %s\n", nick, str);
 
-            prep_prompt_win();
-            wattron(prompt->window, COLOR_PAIR(RED));
-            wprintw(prompt->window, "* Warning: Too many windows are open.\n");
-            wattron(prompt->window, COLOR_PAIR(RED));
+            uint8_t timefrmt[TIME_STR_SIZE];
+            get_time_str(timefrmt);
 
+            line_info_add(prompt, timefrmt, nick, NULL, str, IN_MSG, 0, 0);
+
+            uint8_t *msg = "* Warning: Too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
     }
@@ -121,7 +123,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, 
     if (num >= max_friends_index)
         return;
 
-    friends[num].online = status == 1 ? true : false;
+    friends[num].online = status;
     update_friend_last_online(num, get_unix_time());
     store_data(m, DATA_FILE);
     sort_friendlist_index();
@@ -211,10 +213,9 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
             tox_get_name(m, num, nick);
             nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
-            prep_prompt_win();
-            wattron(prompt->window, COLOR_PAIR(RED));
-            wprintw(prompt->window, "* File transfer from %s failed: too many windows are open.\n", nick);
-            wattron(prompt->window, COLOR_PAIR(RED));
+            uint8_t msg[MAX_STR_SIZE];
+            snprintf(msg, sizeof(msg), "* File transfer from %s failed: too many windows are open.", nick);
+            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
@@ -234,10 +235,9 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
             tox_get_name(m, num, nick);
             nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
-            prep_prompt_win();
-            wattron(prompt->window, COLOR_PAIR(RED));
-            wprintw(prompt->window, "* Group chat invite from %s failed: too many windows are open.\n", nick);
-            wattron(prompt->window, COLOR_PAIR(RED));
+            uint8_t msg[MAX_STR_SIZE];
+            snprintf(msg, sizeof(msg), "* Group chat invite from %s failed: too many windows are open.", nick);
+            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
@@ -343,10 +343,8 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
             friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
             set_active_window(friends[f].chatwin);
         } else {
-            prep_prompt_win();
-            wattron(prompt->window, COLOR_PAIR(RED));
-            wprintw(prompt->window, "* Warning: Too many windows are open.\n");
-            wattron(prompt->window, COLOR_PAIR(RED));
+            uint8_t *msg = "* Warning: Too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
@@ -538,12 +536,13 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av)
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             tox_get_name(m, id, nick);
             nick[TOXIC_MAX_NAME_LENGTH] = '\0';
-            wprintw(prompt->window, "Audio action from: %s!\n", nick);
-            
-            prep_prompt_win();
-            wattron(prompt->window, COLOR_PAIR(RED));
-            wprintw(prompt->window, "* Warning: Too many windows are open.\n");
-            wattron(prompt->window, COLOR_PAIR(RED));
+
+            uint8_t msg[MAX_STR_SIZE];
+            snprintf(msg, sizeof(msg), "Audio action from: %s!", nick);
+            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+
+            uint8_t *errmsg = "* Warning: Too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
             
             alert_window(prompt, WINDOW_ALERT_0, true);
         }

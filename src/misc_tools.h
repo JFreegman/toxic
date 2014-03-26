@@ -29,8 +29,8 @@ unsigned char *hex_string_to_bin(char hex_string[]);
 /* get the current unix time */
 uint64_t get_unix_time(void);
 
-/* Prints the time to given window */
-void print_time(WINDOW *window);
+/*Puts the current time in buf in the format of [Hour:Min:Sec] */
+void get_time_str(uint8_t *buf);
 
 /* get the current local time */
 struct tm *get_time(void);
@@ -67,7 +67,7 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
       - cannot be empty
       - cannot start with a space
       - must not contain contiguous spaces */
-bool valid_nick(uint8_t *nick);
+int valid_nick(uint8_t *nick);
 
 /* Moves the cursor to the end of the line in given window */
 void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);
