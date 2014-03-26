@@ -372,6 +372,10 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    struct history *hst = self->chatwin->hst;
+    line_info_clear(hst);
+    struct line_info *start = hst->line_start;
+
     uint8_t *msg = "Global commands:";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
@@ -409,6 +413,8 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     msg = " * Argument messages must be enclosed in quotation marks.\n"
           " * Use ctrl-o and ctrl-p to navigate through the tabs.\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+
+    hst->line_start = start;
 }
 
 void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

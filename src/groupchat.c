@@ -106,6 +106,10 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 
 static void print_groupchat_help(ToxWindow *self)
 {
+    struct history *hst = self->chatwin->hst;
+    line_info_clear(hst);
+    struct line_info *start = hst->line_start;
+
     uint8_t *msg = "Group chat commands:";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
@@ -136,6 +140,8 @@ static void print_groupchat_help(ToxWindow *self)
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
     msg = " * Notice, some friends will be missing names while finding peers\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
+
+    hst->line_start = start;
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum,

@@ -20,7 +20,7 @@
  *
  */
 
-#define MAX_HISTORY 200
+#define MAX_HISTORY 1000
 
 enum {
     SYS_MSG,
@@ -55,7 +55,10 @@ struct history {
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
     uint32_t line_items;
     bool scroll_mode;
-    uint8_t queue;   /* keeps track of lines added between window refreshes */
+
+    /* keeps track of lines added between window refreshes */
+    uint8_t queue;   
+    uint8_t queue_lns;
 };
 
 /* adds a line to history (also moves line_start and/or line_root forward if necessary) */

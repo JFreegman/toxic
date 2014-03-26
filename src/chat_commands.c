@@ -42,6 +42,10 @@ extern uint8_t max_file_senders_index;
 
 void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    struct history *hst = self->chatwin->hst;
+    line_info_clear(hst);
+    struct line_info *start = hst->line_start;
+
     if (argc == 1) {
         if (!strcmp(argv[1], "global")) {
             execute(window, self, m, "/help", GLOBAL_COMMAND_MODE);
@@ -84,6 +88,8 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     msg = " * Use ESC key to toggle history scroll mode\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+
+    hst->line_start = start;
 }
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
