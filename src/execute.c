@@ -32,6 +32,7 @@
 #include "execute.h"
 #include "chat_commands.h"
 #include "global_commands.h"
+#include "line_info.h"
 
 struct cmd_func {
     const char *name;
@@ -77,7 +78,7 @@ static struct cmd_func chat_commands[] = {
 
 /* Parses input command and puts args into arg array. 
    Returns number of arguments on success, -1 on failure. */
-static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])
+static int parse_command(WINDOW *w, ToxWindow *self, char *cmd, char (*args)[MAX_STR_SIZE])
 {
     int num_args = 0;
     bool cmd_end = false;    /* flags when we get to the end of cmd */
@@ -89,7 +90,8 @@ static int parse_command(WINDOW *w, char *cmd, char (*args)[MAX_STR_SIZE])
             end = strchr(cmd+1, '\"');
 
             if (end++ == NULL) {    /* Increment past the end quote */
-                wprintw(w, "Invalid argument. Did you forget a closing \"?\n");
+                uint8_t *errmsg = "Invalid argument. Did you forget a closing \"?";
+                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
                 return -1;
             }
 
@@ -132,7 +134,7 @@ void execute(WINDOW* w, ToxWindow *self, Tox *m, char *cmd, int mode)
         return;
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE] = {0};
-    int num_args = parse_command(w, cmd, args);
+    int num_args = parse_command(w, self, cmd, args);
 
     if (num_args == -1)
         return;
@@ -154,5 +156,6 @@ void execute(WINDOW* w, ToxWindow *self, Tox *m, char *cmd, int mode)
     if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
 
-    wprintw(w, "Invalid command.\n");
+    uint8_t *errmsg = "Invalid command.";
+    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
 }

@@ -20,11 +20,11 @@ typedef enum _AudioError
 /* You will have to pass pointer to first member of 'windows' 
  * declared in windows.c otherwise undefined behaviour will 
  */
-ToxAv* init_audio(ToxWindow* window, Tox* tox);
+ToxAv* init_audio(ToxWindow* self, Tox* tox);
 void terminate_audio();
 
 int errors();
 
-int start_transmission();
+int start_transmission(ToxWindow *self);
 
 #endif /* _audio_h */

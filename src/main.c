@@ -60,6 +60,7 @@
 #include "prompt.h"
 #include "misc_tools.h"
 #include "file_senders.h"
+#include "line_info.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "audio_call.h"
@@ -272,6 +273,8 @@ int init_connection(Tox *m)
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
+    uint8_t msg[MAX_STR_SIZE] = {0};
+
     static int conn_try = 0;
     static int conn_err = 0;
     static bool dht_on = false;
@@ -281,21 +284,21 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     if (!dht_on && !is_connected && !(conn_try++ % 100)) {
         if (!conn_err) {
             if ((conn_err = init_connection(m))) {
-                prep_prompt_win();
-                wprintw(prompt->window, "\nAuto-connect failed with error code %d\n", conn_err);
+                snprintf(msg, sizeof(msg), "\nAuto-connect failed with error code %d", conn_err);
             }
         }
     } else if (!dht_on && is_connected) {
         dht_on = true;
         prompt_update_connectionstatus(prompt, dht_on);
-        prep_prompt_win();
-        wprintw(prompt->window, "DHT connected.\n");
+        snprintf(msg, sizeof(msg), "DHT connected.");
     } else if (dht_on && !is_connected) {
         dht_on = false;
         prompt_update_connectionstatus(prompt, dht_on);
-        prep_prompt_win();
-        wprintw(prompt->window, "\nDHT disconnected. Attempting to reconnect.\n");
+        snprintf(msg, sizeof(msg), "\nDHT disconnected. Attempting to reconnect.");
     }
+
+    if (msg[0])
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
 static void load_friendlist(Tox *m)
@@ -405,11 +408,13 @@ void exit_toxic(Tox *m)
     store_data(m, DATA_FILE);
     close_all_file_senders();
     kill_all_windows();
-    log_disable(prompt->promptbuf->log);
+    log_disable(prompt->chatwin->log);
+    line_info_cleanup(prompt->chatwin->hst);
     free(DATA_FILE);
     free(prompt->stb);
-    free(prompt->promptbuf->log);
-    free(prompt->promptbuf);
+    free(prompt->chatwin->log);
+    free(prompt->chatwin->hst);
+    free(prompt->chatwin);
     tox_kill(m);
     #ifdef _SUPPORT_AUDIO
     terminate_audio();
@@ -513,19 +518,18 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-#ifdef _SUPPORT_AUDIO 
+    uint8_t *msg;
 
-    attron(COLOR_PAIR(RED) | A_BOLD);
-    wprintw(prompt->window, "Starting audio...\n");
-    attroff(COLOR_PAIR(RED) | A_BOLD);
+#ifdef _SUPPORT_AUDIO
 
     av = init_audio(prompt, m);
 
     if ( errors() == NoError )
-        wprintw(prompt->window, "Audio started with no problems.\n");
+        msg = "Audio started with no problems.";
     else /* Get error code and stuff */
-        wprintw(prompt->window, "Error starting audio!\n");
+        msg = "Error starting audio!";
 
+    line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
 #endif /* _SUPPORT_AUDIO */
 
@@ -533,17 +537,13 @@ int main(int argc, char *argv[])
         load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
-        attron(COLOR_PAIR(RED) | A_BOLD);
-        wprintw(prompt->window, "You passed '-f' without giving an argument.\n"
-                "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(RED) | A_BOLD);
+        msg = "You passed '-f' without giving an argument. Defaulting to 'data' for a keyfile...";
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
     if (config_err) {
-        attron(COLOR_PAIR(RED) | A_BOLD);
-        wprintw(prompt->window, "Unable to determine configuration directory.\n"
-                "defaulting to 'data' for a keyfile...\n");
-        attroff(COLOR_PAIR(RED) | A_BOLD);
+        msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
     sort_friendlist_index();

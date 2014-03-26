@@ -34,6 +34,7 @@
 #include "friendlist.h"
 #include "toxic_strings.h"
 #include "log.h"
+#include "line_info.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "audio_call.h"
@@ -99,6 +100,7 @@ void kill_chat_window(ToxWindow *self)
     StatusBar *statusbar = self->stb;
 
     log_disable(ctx->log);
+    line_info_cleanup(ctx->hst);
 
     int f_num = self->num;
     delwin(ctx->linewin);
@@ -107,6 +109,7 @@ void kill_chat_window(ToxWindow *self)
     disable_chatwin(f_num);
 
     free(ctx->log);
+    free(ctx->hst);
     free(ctx);
     free(statusbar);
 }
@@ -122,17 +125,10 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *msg, u
     tox_get_name(m, num, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
-    print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(CYAN));
-    wprintw(ctx->history, "%s: ", nick);
-    wattroff(ctx->history, COLOR_PAIR(CYAN));
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
 
-    if (msg[0] == '>') {
-        wattron(ctx->history, COLOR_PAIR(GREEN));
-        wprintw(ctx->history, "%s\n", msg);
-        wattroff(ctx->history, COLOR_PAIR(GREEN));
-    } else
-        wprintw(ctx->history, "%s\n", msg);
+    line_info_add(self, timefrmt, nick, NULL, msg, IN_MSG, 0, 0);
 
     write_to_log(msg, nick, ctx->log, false);
     alert_window(self, WINDOW_ALERT_1, true);
@@ -173,11 +169,10 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action,
     tox_get_name(m, num, nick);
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';
 
-    print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(YELLOW));
-    wprintw(ctx->history, "* %s %s\n", nick, action);
-    wattroff(ctx->history, COLOR_PAIR(YELLOW));
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
 
+    line_info_add(self, timefrmt, nick, NULL, action, ACTION, 0, 0);
     write_to_log(action, nick, ctx->log, true);
     alert_window(self, WINDOW_ALERT_1, true);
 }
@@ -217,16 +212,19 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     if (self->num != num)
         return;
 
-    ChatContext *ctx = self->chatwin;
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t *errmsg;
 
     uint8_t filename[MAX_STR_SIZE];
     get_file_name(pathname, filename);
 
-    wprintw(ctx->history, "File transfer request for '%s' (%llu bytes).\n", filename, 
-            (long long unsigned int)filesize);
+    snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename, 
+                                                       (long long unsigned int)filesize);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
     if (filenum >= MAX_FILES) {
-        wprintw(ctx->history, "Too many pending file requests; discarding.\n");
+        errmsg = "Too many pending file requests; discarding.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
         return;
     }
 
@@ -243,12 +241,14 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         filename[len + strlen(d)] = '\0';
 
         if (count > 999) {
-            wprintw(ctx->history, "Error saving file to disk.\n");
+            errmsg = "Error saving file to disk.";
+            line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
             return;
         }
     }
 
-    wprintw(ctx->history, "Type '/savefile %d' to accept the file transfer.\n", filenum);
+    snprintf(msg, sizeof(msg), "Type '/savefile %d' to accept the file transfer.", filenum);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
     friends[num].file_receiver.pending[filenum] = true;
     strcpy(friends[num].file_receiver.filenames[filenum], filename);
@@ -271,8 +271,8 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     if (self->num != num)
         return;
 
-    ChatContext *ctx = self->chatwin;
     const uint8_t *filename;
+    uint8_t msg[MAX_STR_SIZE] = {0};
 
     if (receive_send == 0)
         filename = friends[num].file_receiver.filenames[filenum];
@@ -281,25 +281,23 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     switch (control_type) {
     case TOX_FILECONTROL_ACCEPT:
-        wprintw(ctx->history, "File transfer for '%s' accepted.\n", filename);
+        snprintf(msg, sizeof(msg), "File transfer for '%s' accepted.", filename);
         break;
     /*case TOX_FILECONTROL_PAUSE:
         wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
         break; */
     case TOX_FILECONTROL_KILL:
-        wprintw(ctx->history, "File transfer for '%s' failed.\n", filename);
-
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
         if (receive_send == 0)
-            chat_close_file_receiver(num, filenum);
-        else
             chat_close_file_receiver(num, filenum);
         break;
     case TOX_FILECONTROL_FINISHED:
-        wprintw(ctx->history, "File transfer for '%s' complete.\n", filename);
+        snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
         chat_close_file_receiver(num, filenum);
         break;
     }
 
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
@@ -309,12 +307,9 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (self->num != num)
         return;
 
-    ChatContext *ctx = self->chatwin;
-
     if (fwrite(data, length, 1, friends[num].file_receiver.files[filenum]) != 1) {
-        wattron(ctx->history, COLOR_PAIR(RED));
-        wprintw(ctx->history, "* Error writing to file.\n");
-        wattroff(ctx->history, COLOR_PAIR(RED));
+        uint8_t *msg = " * Error writing to file.";
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
         tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
         chat_close_file_receiver(num, filenum);
@@ -326,16 +321,17 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     if (self->num != friendnumber)
         return;
 
-    ChatContext *ctx = self->chatwin;
-    uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
+    uint8_t name[TOX_MAX_NAME_LENGTH];
+    uint8_t msg[MAX_STR_SIZE];
 
     if (tox_get_name(m, friendnumber, name) == -1)
         return;
 
-    wprintw(ctx->history, "%s has invited you to a group chat.\n", name);
+    snprintf(msg, sizeof(msg), "%s has invited you to a group chat.\n"
+                               "Type \"/join\" to join the chat.", name);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
     memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
-    wprintw(ctx->history, "Type \"/join\" to join the chat.\n");
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
@@ -346,144 +342,140 @@ void chat_onInvite (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "Incoming audio call!\n"
-                          "Answer: \"/answer\" \"/reject\"\n");
+
+    uint8_t *msg = "Incoming audio call!\nType: \"/answer\" or \"/reject\"";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     
     alert_window(self, WINDOW_ALERT_0, true);
 }
+
 void chat_onRinging (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "Ringing...\n"
-                          "\"/cancel\" ?\n");
+
+    uint8_t *msg = "Ringing...\n\"cancel\" ?";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onStarting (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    if ( 0 != start_transmission() ) {/* YEAH! */
-        wprintw(ctx->history, "Error starting transmission!\n");
+
+    uint8_t *msg;
+
+    if ( 0 != start_transmission(self) ) {/* YEAH! */
+        msg = "Error starting transmission!";
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
     }
-    
-    wprintw(ctx->history, "Call started! \n"
-                          "Type: \"/hangup\" to end it.\n");
-    
+
+    msg = "Call started!\nType: \"/hangup\" to end it.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onEnding (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
+
+    uint8_t *msg = "Call ended!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+
     toxav_kill_transmission(av);
-    
-    wprintw(ctx->history, "Call ended! \n");
 }
+
 void chat_onError (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "Error! \n");
+
+    uint8_t *msg = "Error!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onStart (ToxWindow *self, ToxAv *av)
 {    
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    if ( 0 != start_transmission() ) {/* YEAH! */
-        wprintw(ctx->history, "Error starting transmission!\n");
+
+    uint8_t *msg;
+
+    if ( 0 != start_transmission(self) ) {/* YEAH! */
+        msg = "Error starting transmission!";
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
     }
-    
-    wprintw(ctx->history, "Call started! \n"
-                          "Type: \"/hangup\" to end it.\n");
+
+    msg = "Call started!\nType: \"/hangup\" to end it.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onCancel (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "Call canceled! \n");
+
+    uint8_t *msg = "Call canceled!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onReject (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "Rejected! \n");
+
+    uint8_t *msg = "Rejected!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onEnd (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
+
     toxav_kill_transmission(av);
-    
-    wprintw(ctx->history, "Call ended! \n");
+
+    uint8_t *msg = "Call ended!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
+
 void chat_onRequestTimeout (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "No answer! \n");
+
+    uint8_t *msg = "No answer!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
 void chat_onPeerTimeout (ToxWindow *self, ToxAv *av)
 {
     if (self->num != toxav_get_peer_id(av, 0))
         return;
-    
-    ChatContext *ctx = self->chatwin;
-    
-    wprintw(ctx->history, "Peer disconnected; call ended! \n");
+
+    uint8_t *msg = "Peer disconnected; call ended!";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
 #endif /* _SUPPORT_AUDIO */
 
 static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
-    if (action == NULL) {
-        wprintw(ctx->history, "Invalid syntax.\n");
+    if (action == NULL)
         return;
-    }
 
     uint8_t selfname[TOX_MAX_NAME_LENGTH];
     tox_get_self_name(m, selfname);
 
-    print_time(ctx->history);
-    wattron(ctx->history, COLOR_PAIR(YELLOW));
-    wprintw(ctx->history, "* %s %s\n", selfname, action);
-    wattroff(ctx->history, COLOR_PAIR(YELLOW));
+    uint8_t timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt);
+
+    line_info_add(self, timefrmt, selfname, NULL, action, ACTION, 0, 0);
 
     if (tox_send_action(m, self->num, action, strlen(action) + 1) == 0) {
-        wattron(ctx->history, COLOR_PAIR(RED));
-        wprintw(ctx->history, " * Failed to send action\n");
-        wattroff(ctx->history, COLOR_PAIR(RED));
+        uint8_t *errmsg = " * Failed to send action.";
+        line_info_add(self, NULL, selfname, NULL, errmsg, SYS_MSG, 0, RED);
     } else {
         write_to_log(action, selfname, ctx->log, true);
     }
@@ -499,7 +491,18 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
 
-    if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
+    if (key == T_KEY_ESC) {   /* ESC key: Toggle history scroll mode */
+        bool scroll = ctx->hst->scroll_mode ? false : true;
+        line_info_toggle_scroll(self, scroll);
+    }
+
+    /* If we're in scroll mode ignore rest of function */
+    if (ctx->hst->scroll_mode) {
+        line_info_onKey(self, key);
+        return;
+    }
+
+    if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
         if (ctx->pos > 0) {
             cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
             del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
@@ -580,13 +583,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
     else if (key == KEY_UP) {    /* fetches previous item in history */
         fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, LN_HIST_MV_UP);
+                        &ctx->hst_pos, MOVE_UP);
         mv_curs_end(self->window, ctx->len, y2, x2);
     }
 
     else if (key == KEY_DOWN) {    /* fetches next item in history */
         fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, LN_HIST_MV_DWN);
+                        &ctx->hst_pos, MOVE_DOWN);
         mv_curs_end(self->window, ctx->len, y2, x2);
     }
 
@@ -638,7 +641,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        wclrtobot(self->window);
 
         if (!string_is_empty(line))
             add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
@@ -659,22 +661,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
             uint8_t selfname[TOX_MAX_NAME_LENGTH];
             tox_get_self_name(m, selfname);
 
-            print_time(ctx->history);
-            wattron(ctx->history, COLOR_PAIR(GREEN));
-            wprintw(ctx->history, "%s: ", selfname);
-            wattroff(ctx->history, COLOR_PAIR(GREEN));
+            uint8_t timefrmt[TIME_STR_SIZE];
+            get_time_str(timefrmt);
 
-            if (line[0] == '>') {
-                wattron(ctx->history, COLOR_PAIR(GREEN));
-                wprintw(ctx->history, "%s\n", line);
-                wattroff(ctx->history, COLOR_PAIR(GREEN));
-            } else
-                wprintw(ctx->history, "%s\n", line);
+            line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
 
             if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
-                wattron(ctx->history, COLOR_PAIR(RED));
-                wprintw(ctx->history, " * Failed to send message.\n");
-                wattroff(ctx->history, COLOR_PAIR(RED));
+                uint8_t *errmsg = " * Failed to send message.";
+                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
             } else {
                 write_to_log(line, selfname, ctx->log, false);
             }
@@ -689,13 +683,16 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
 static void chat_onDraw(ToxWindow *self, Tox *m)
 {
-    curs_set(1);
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
     ChatContext *ctx = self->chatwin;
 
+    if (!ctx->hst->scroll_mode)
+        curs_set(1);
+
     wclear(ctx->linewin);
+    line_info_print(self);
 
     if (ctx->len > 0) {
         uint8_t line[MAX_STR_SIZE];
@@ -797,12 +794,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
 static void chat_onInit(ToxWindow *self, Tox *m)
 {
+    curs_set(1);
     int x2, y2;
     getmaxyx(self->window, y2, x2);
     self->x = x2;
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
+
     statusbar->status = tox_get_user_status(m, self->num);
     statusbar->is_online = tox_get_friend_connection_status(m, self->num) == 1;
 
@@ -813,25 +812,29 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init subwindows */
     ChatContext *ctx = self->chatwin;
+
     statusbar->topline = subwin(self->window, 2, x2, 0, 0);
     ctx->history = subwin(self->window, y2-CHATBOX_HEIGHT+1, x2, 0, 0);
     scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2-CHATBOX_HEIGHT, 0);
 
+    ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
 
-    if (ctx->log == NULL) {
+    if (ctx->log == NULL || ctx->hst == NULL) {
         endwin();
         fprintf(stderr, "malloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 
+    memset(ctx->hst, 0, sizeof(struct history));
     memset(ctx->log, 0, sizeof(struct chatlog));
+
+    line_info_init(ctx->hst);
 
     if (friends[self->num].logging_on)
         log_enable(self->name, friends[self->num].pub_key, ctx->log);
 
-    wprintw(ctx->history, "\n\n");
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
@@ -881,7 +884,10 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.name[TOXIC_MAX_NAME_LENGTH] = '\0';
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
+    memset(chatwin, 0, sizeof(ChatContext));
+
     StatusBar *stb = calloc(1, sizeof(StatusBar));
+    memset(stb, 0, sizeof(StatusBar));
 
     if (stb != NULL && chatwin != NULL) {
         ret.chatwin = chatwin;

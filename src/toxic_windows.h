@@ -49,6 +49,7 @@
 #define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 4
 #define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
+#define TIME_STR_SIZE 16
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
@@ -60,6 +61,7 @@
 #define T_KEY_PREV       0x0F     /* ctrl-o */
 #define T_KEY_C_E        0x05     /* ctrl-e */
 #define T_KEY_C_A        0x01     /* ctrl-a */
+#define T_KEY_ESC        0x1B     /* ESC key */
 
 /* Curses foreground colours (background is black) */
 enum {
@@ -78,6 +80,11 @@ enum {
     WINDOW_ALERT_0,
     WINDOW_ALERT_1,
     WINDOW_ALERT_2,
+};
+
+enum {
+    MOVE_UP,
+    MOVE_DOWN,
 };
 
 /* Fixes text color problem on some terminals. 
@@ -141,7 +148,6 @@ struct ToxWindow {
     bool alert2;
 
     ChatContext *chatwin;
-    PromptBuf *promptbuf;
     StatusBar *stb;
 
     WINDOW *popup;
@@ -159,15 +165,6 @@ struct StatusBar {
     bool is_online;
 };
 
-#define LOG_FLUSH_LIMIT 2  /* limits calls to fflush(logfile) to a max of one per LOG_FLUSH_LIMIT seconds */
-
-struct chatlog {
-    FILE *file;
-    uint64_t lastwrite;
-    int pos;
-    bool log_on;    /* specific to current chat window */
-};
-
 #define MAX_LINE_HIST 128
 
 /* chat and groupchat window/buffer holder */
@@ -176,35 +173,22 @@ struct ChatContext {
     size_t pos;
     size_t len;
 
-    wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];
+    wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];  /* history for input lines/commands */
     int hst_pos;
     int hst_tot;
 
-    uint8_t self_is_typing;
-
+    struct history *hst;
     struct chatlog *log;
+
+    uint8_t self_is_typing;
 
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
-};
 
-/* prompt window/buffer holder */
-struct PromptBuf {
-    wchar_t line[MAX_STR_SIZE];
-    size_t pos;
-    size_t len;
-
+    /* specific for prompt */
     bool at_bottom;    /* true if line end is at bottom of window */
     int orig_y;        /* y axis point of line origin */
-    bool scroll;       /* used for prompt window hack to determine when to scroll down */
-
-    wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];
-    int hst_pos;
-    int hst_tot;
-
-    struct chatlog *log;
-    WINDOW *linewin;
 };
 
 /* Start file transfer code */
