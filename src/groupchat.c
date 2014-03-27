@@ -78,9 +78,11 @@ void kill_groupchat_window(ToxWindow *self)
     ChatContext *ctx = self->chatwin;
 
     log_disable(ctx->log);
+    line_info_cleanup(ctx->hst);
     delwin(ctx->linewin);
     del_window(self);
     free(ctx->log);
+    free(ctx->hst);
     free(ctx);
 }
 
