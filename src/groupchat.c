@@ -538,20 +538,23 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     ChatContext *ctx = self->chatwin;
 
-    if (!ctx->hst->scroll_mode)
-        scrollok(ctx->history, 1);
-
-    wclear(ctx->linewin);
     line_info_print(self);
+    wclear(ctx->linewin);
 
-    if (ctx->len > 0) {
-        uint8_t line[MAX_STR_SIZE];
+    if (ctx->hst->scroll_mode) {
+        line_info_onDraw(self);
+    } else {
+        curs_set(1);
 
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
-            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        } else {
-            mvwprintw(ctx->linewin, 1, 0, "%s", line);
+        if (ctx->len > 0) {
+            uint8_t line[MAX_STR_SIZE];
+
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+                reset_buf(ctx->line, &ctx->pos, &ctx->len);
+                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+            } else {
+                mvwprintw(ctx->linewin, 1, 0, "%s", line);
+            }
         }
     }
 

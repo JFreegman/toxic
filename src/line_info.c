@@ -392,6 +392,17 @@ void line_info_onKey(ToxWindow *self, wint_t key)
     }
 }
 
+void line_info_onDraw(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    wattron(ctx->linewin, A_BOLD | COLOR_PAIR(BLUE));
+    mvwprintw(ctx->linewin, 1, 0, "Scroll mode:\n");
+    wattroff(ctx->linewin, A_BOLD | COLOR_PAIR(BLUE));
+    mvwprintw(ctx->linewin, 1, 13, "Use up/down arrows, page up/page down, and home/end to navigate.\n"
+                                   "             ESC to exit.\n");
+}
+
 void line_info_clear(struct history *hst)
 {
     hst->line_start = hst->line_end;

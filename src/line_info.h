@@ -79,3 +79,4 @@ void line_info_clear(struct history *hst);
 
 void line_info_init(struct history *hst);
 void line_info_onKey(ToxWindow *self, wint_t key);
+void line_info_onDraw(ToxWindow *self);
