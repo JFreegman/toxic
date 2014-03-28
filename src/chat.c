@@ -251,6 +251,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
     friends[num].file_receiver.pending[filenum] = true;
+    friends[num].file_receiver.size[filenum] = filesize;
     strcpy(friends[num].file_receiver.filenames[filenum], filename);
 
     alert_window(self, WINDOW_ALERT_2, true);
@@ -259,6 +260,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 static void chat_close_file_receiver(int num, uint8_t filenum)
 {
     friends[num].file_receiver.pending[filenum] = false;
+    friends[num].file_receiver.size[filenum]  = 0;
     FILE *file = friends[num].file_receiver.files[filenum];
 
     if (file != NULL)
@@ -281,7 +283,8 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     switch (control_type) {
     case TOX_FILECONTROL_ACCEPT:
-        snprintf(msg, sizeof(msg), "File transfer for '%s' accepted.", filename);
+        snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
+        file_senders[filenum].line_id = self->chatwin->hst->line_end->id + 1;
         break;
     /*case TOX_FILECONTROL_PAUSE:
         wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
@@ -314,6 +317,20 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
         tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
         chat_close_file_receiver(num, filenum);
     }
+
+    /* refresh line with percentage complete */
+    uint8_t msg[MAX_STR_SIZE];
+    uint64_t size = friends[num].file_receiver.size[filenum];
+    long double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
+    long double pct_remain = 100;
+
+    if (remain)
+        pct_remain = (1 - (remain / size)) * 100;
+
+    const uint8_t *name = friends[num].file_receiver.filenames[filenum];
+    snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
+    line_info_set(self, friends[num].file_receiver.line_id, msg);
+
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t *group_pub_key)

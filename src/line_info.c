@@ -325,6 +325,20 @@ void line_info_print(ToxWindow *self)
     }
 }
 
+void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)
+{
+    struct line_info *line = self->chatwin->hst->line_end;
+
+    while (line) {
+        if (line->id == id) {
+            snprintf(line->msg, sizeof(line->msg), "%s", msg);
+            return;
+        }
+
+        line = line->prev;
+    }
+}
+
 static void line_info_goto_root(struct history *hst)
 {
     hst->line_start = hst->line_root;

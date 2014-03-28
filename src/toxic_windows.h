@@ -207,12 +207,16 @@ typedef struct {
     uint16_t piecelen;
     uint8_t pathname[MAX_STR_SIZE];
     uint64_t timestamp;
+    uint64_t size;
+    uint32_t line_id;
 } FileSender;
 
 struct FileReceiver {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
     FILE *files[MAX_FILES];
     bool pending[MAX_FILES];
+    uint64_t size[MAX_FILES];
+    uint32_t line_id;
 };
 
 /* End file transfer code */

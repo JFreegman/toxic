@@ -29,6 +29,7 @@
 #include <time.h>
 
 #include "toxic_windows.h"
+#include "line_info.h"
 
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
@@ -61,12 +62,14 @@ void close_all_file_senders(void)
 
 void do_file_senders(Tox *m)
 {
+    uint8_t msg[MAX_STR_SIZE];
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
         if (!file_senders[i].active)
             continue;
 
+        ToxWindow *self = file_senders[i].toxwin;
         uint8_t *pathname = file_senders[i].pathname;
         int filenum = file_senders[i].filenum;
         int32_t friendnum = file_senders[i].friendnum;
@@ -75,10 +78,9 @@ void do_file_senders(Tox *m)
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
-            ChatContext *ctx = file_senders[i].toxwin->chatwin;
-
-            if (ctx != NULL) {
-                wprintw(ctx->history, "File transfer for '%s' timed out.\n", pathname);
+            if (self->chatwin->history != NULL) {
+                snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", pathname);
+                line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
                 alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
             }
 
@@ -96,11 +98,22 @@ void do_file_senders(Tox *m)
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, 
                                              tox_file_data_size(m, friendnum), fp);
 
-            if (file_senders[i].piecelen == 0) {
-                ChatContext *ctx = file_senders[i].toxwin->chatwin;
+            /* refresh line with percentage complete */
+            uint64_t size = file_senders[i].size;
+            long double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
+            long double pct_remain = 100;
 
-                if (ctx != NULL) {
-                    wprintw(ctx->history, "File '%s' successfuly sent.\n", pathname);
+            if (remain)
+                pct_remain = (1 - (remain / size)) * 100;
+
+            const uint8_t *name = file_senders[filenum].pathname;
+            snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1Lf%%)", name, pct_remain);
+            line_info_set(self, file_senders[filenum].line_id, msg);
+
+            if (file_senders[i].piecelen == 0) {
+                if (self->chatwin->history != NULL) {
+                    snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
+                    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
                     alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
                 }
 

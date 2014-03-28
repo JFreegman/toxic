@@ -183,8 +183,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
         uint8_t msg[MAX_STR_SIZE];
-        snprintf(msg, sizeof(msg), "Accepted file transfer %u. Saving file as: '%s'", filenum, filename);
+        snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1f%%)", filename, 0.0);
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        friends[self->num].file_receiver.line_id = self->chatwin->hst->line_end->id;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
             errmsg = "* Error writing to file.";
@@ -265,6 +266,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].filenum = filenum;
             file_senders[i].friendnum = self->num;
             file_senders[i].timestamp = get_unix_time();
+            file_senders[i].size = filesize;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 
