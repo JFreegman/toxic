@@ -143,7 +143,6 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 
     /* If chat history exceeds limit move root forward and free old root */
     if (++hst->line_items > MAX_HISTORY) {
-        --hst->line_items;
         struct line_info *tmp = hst->line_root->next;
         tmp->prev = NULL;
 
@@ -181,9 +180,11 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     /* move line_start forward proportionate to the number of new lines */
     if (y + hst->queue_lns - hst->queue >= max_y) {
         while (lines > 0 && hst->line_start->next) {
-            lines -= (1 + hst->line_start->len / (x2 - offst));
-            hst->line_start = hst->line_start->next;
             ++hst->start_id;
+            lines -= (1 + hst->line_start->len / (x2 - offst));
+
+            if (!hst->scroll_mode)
+                hst->line_start = hst->line_start->next;
         }
     }
 }
@@ -193,15 +194,15 @@ void line_info_print(ToxWindow *self)
     ChatContext *ctx = self->chatwin;
     WINDOW *win = ctx->history;
 
+    ctx->hst->queue = 0;
+    ctx->hst->queue_lns = 0;
+
     wclear(win);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
     if (x2 <= SIDEBAR_WIDTH)
         return;
-
-    ctx->hst->queue = 0;
-    ctx->hst->queue_lns = 0;
 
     if (self->is_groupchat)
         wmove(win, 0, 0);
@@ -212,9 +213,8 @@ void line_info_print(ToxWindow *self)
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
     int numlines = 0;
 
-    while(line && numlines <= y2) {
+    while(line && numlines++ <= y2) {
         uint8_t type = line->type;
-        numlines += line->len / (x2 - offst);
 
         switch (type) {
         case OUT_MSG:
