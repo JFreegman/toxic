@@ -184,7 +184,8 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_t *nic
 
     nick[TOXIC_MAX_NAME_LENGTH] = '\0';
     len = strlen(nick) + 1;
-    memcpy(self->name, nick, len);
+    strcpy(self->name, nick);
+    self->name[len-1] = '\0';
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -203,7 +204,8 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, uint8_t *st
 
     StatusBar *statusbar = self->stb;
     statusbar->statusmsg_len = len;
-    memcpy(statusbar->statusmsg, status, len);
+    strcpy(statusbar->statusmsg, status);
+    statusbar->statusmsg[len-1] = '\0';
 }
 
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, 

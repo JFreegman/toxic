@@ -135,8 +135,9 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_
         return;
 
     str[TOXIC_MAX_NAME_LENGTH] = '\0';
+    strcpy(friends[num].name, str);
     len = strlen(str) + 1;
-    memcpy(friends[num].name, str, len);
+    friends[num].name[len-1] = '\0';
     friends[num].namelength = len;
     sort_friendlist_index();
 }
@@ -154,7 +155,8 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, uint8
     if (len > TOX_MAX_STATUSMESSAGE_LENGTH || num >= max_friends_index)
         return;
 
-    memcpy(friends[num].statusmsg, str, len);
+    strcpy(friends[num].statusmsg, str);
+    friends[num].statusmsg[len-1] = '\0';
     friends[num].statusmsg_len = len;
 }
 
