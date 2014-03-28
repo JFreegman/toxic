@@ -78,7 +78,7 @@ void do_file_senders(Tox *m)
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, current_time, TIMEOUT_FILESENDER)) {
-            if (self->chatwin->history != NULL) {
+            if (self->chatwin != NULL) {
                 snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", pathname);
                 line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
                 alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
@@ -99,19 +99,21 @@ void do_file_senders(Tox *m)
                                              tox_file_data_size(m, friendnum), fp);
 
             /* refresh line with percentage complete */
-            uint64_t size = file_senders[i].size;
-            long double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
-            long double pct_remain = 100;
+            if (self->chatwin != NULL) {
+                uint64_t size = file_senders[i].size;
+                long double remain = (long double) tox_file_data_remaining(m, friendnum, filenum, 0);
+                long double pct_remain = 100;
 
-            if (remain)
-                pct_remain = (1 - (remain / size)) * 100;
+                if (remain)
+                    pct_remain = (1 - (remain / size)) * 100;
 
-            const uint8_t *name = file_senders[filenum].pathname;
-            snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1Lf%%)", name, pct_remain);
-            line_info_set(self, file_senders[filenum].line_id, msg);
+                const uint8_t *name = file_senders[filenum].pathname;
+                snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1Lf%%)", name, pct_remain);
+                line_info_set(self, file_senders[filenum].line_id, msg);
+            }
 
             if (file_senders[i].piecelen == 0) {
-                if (self->chatwin->history != NULL) {
+                if (self->chatwin != NULL) {
                     snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
                     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
                     alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);

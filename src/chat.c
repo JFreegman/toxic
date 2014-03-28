@@ -321,7 +321,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     /* refresh line with percentage complete */
     uint8_t msg[MAX_STR_SIZE];
     uint64_t size = friends[num].file_receiver.size[filenum];
-    long double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
+    long double remain = (long double) tox_file_data_remaining(m, num, filenum, 1);
     long double pct_remain = 100;
 
     if (remain)
