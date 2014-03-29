@@ -118,16 +118,16 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     }
 
     if (msg) {
-        memcpy(new_line->msg, msg, MAX_STR_SIZE);
+        memcpy(new_line->msg, msg, sizeof(new_line->msg));
         len += strlen(msg);
     } if (tmstmp) {
-        memcpy(new_line->timestamp, tmstmp, TIME_STR_SIZE);
+        memcpy(new_line->timestamp, tmstmp, sizeof(new_line->timestamp));
         len += strlen(tmstmp);
     } if (name1) {
-        memcpy(new_line->name1, name1, TOXIC_MAX_NAME_LENGTH);
+        memcpy(new_line->name1, name1, sizeof(new_line->name1));
         len += strlen(name1);
     } if (name2) {
-        memcpy(new_line->name2, name2, TOXIC_MAX_NAME_LENGTH);
+        memcpy(new_line->name2, name2, sizeof(new_line->name2));
         len += strlen(name2);
     }
 
