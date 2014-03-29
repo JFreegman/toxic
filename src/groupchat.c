@@ -546,6 +546,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     if (ctx->hst->scroll_mode) {
         line_info_onDraw(self);
     } else {
+        scrollok(ctx->history, 1);
         curs_set(1);
 
         if (ctx->len > 0) {

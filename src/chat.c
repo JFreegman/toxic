@@ -714,6 +714,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         line_info_onDraw(self);
     } else {
         curs_set(1);
+        scrollok(ctx->history, 1);
 
         if (ctx->len > 0 && !ctx->hst->scroll_mode) {
             uint8_t line[MAX_STR_SIZE];

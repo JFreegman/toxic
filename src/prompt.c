@@ -271,8 +271,10 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
 
-    if (!ctx->hst->scroll_mode)
+    if (!ctx->hst->scroll_mode) {
         curs_set(1);
+        scrollok(ctx->history, 1);
+    }
 
     line_info_print(self);
 
