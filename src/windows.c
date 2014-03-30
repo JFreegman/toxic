@@ -397,12 +397,14 @@ void draw_active_window(Tox *m)
     bool ltr;
 #ifdef HAVE_WIDECHAR
     int status = wget_wch(stdscr, &ch);
-    if (status == OK)
-        ltr = true;
-    else if (status == KEY_CODE_YES)
-        ltr = false;
-    else
+
+    if (status == ERR)
         return;
+
+    if (status == OK)
+        ltr = iswprint(ch);
+    else /* if (status == KEY_CODE_YES) */
+        ltr = false;
 #else
     ch = getch();
 
@@ -413,7 +415,7 @@ void draw_active_window(Tox *m)
     ltr = isprint(ch);
 #endif
 
-    if (ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV) ) {
+    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV) ) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);
