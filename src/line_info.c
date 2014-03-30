@@ -201,6 +201,9 @@ void line_info_print(ToxWindow *self)
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
+    if (self->is_prompt)
+        y2 = MAX_HISTORY;   /* temporary fix to make prompt scroll */
+
     if (x2 <= SIDEBAR_WIDTH)
         return;
 
