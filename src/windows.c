@@ -46,7 +46,7 @@ static int num_active_windows;
 void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
 {
     int i;
-    
+
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
             windows[i].onFriendRequest(&windows[i], m, public_key, data, length);
@@ -394,18 +394,32 @@ void draw_active_window(Tox *m)
     wrefresh(a->window);
 
     /* Handle input */
+    bool ltr;
 #ifdef HAVE_WIDECHAR
-    if (wget_wch(stdscr, &ch) == ERR)
-#else
-    if ((ch = getch()) == ERR)
-#endif
+    int status = wget_wch(stdscr, &ch);
+
+    if (status == ERR)
         return;
 
-    if (ch == T_KEY_NEXT || ch == T_KEY_PREV) {
+    if (status == OK)
+        ltr = iswprint(ch);
+    else /* if (status == KEY_CODE_YES) */
+        ltr = false;
+#else
+    ch = getch();
+
+    if (ch == ERR)
+        return;
+
+    /* TODO verify if this works */
+    ltr = isprint(ch);
+#endif
+
+    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV) ) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);
-        a->onKey(a, m, ch);
+        a->onKey(a, m, ch, ltr);
         pthread_mutex_unlock(&Winthread.lock);
     }
 }
