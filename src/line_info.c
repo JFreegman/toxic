@@ -149,6 +149,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
         if (hst->line_start->prev == NULL) {  /* if line_start is root move it forward as well */
             hst->line_start = hst->line_start->next;
             hst->line_start->prev = NULL;
+            ++hst->start_id;
         }
 
         free(hst->line_root);
