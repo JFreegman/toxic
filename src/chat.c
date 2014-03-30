@@ -500,7 +500,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
     }
 }
 
-static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
+static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
@@ -510,7 +510,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
 
-    if (key == T_KEY_ESC) {   /* ESC key: Toggle history scroll mode */
+    if (ltr && (key == T_KEY_ESC)) {   /* ESC key: Toggle history scroll mode */
         bool scroll = ctx->hst->scroll_mode ? false : true;
         line_info_toggle_scroll(self, scroll);
     }
@@ -521,124 +521,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
         return;
     }
 
-    if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
-        if (ctx->pos > 0) {
-            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
-            del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
-
-            if (x == 0)
-                wmove(self->window, y-1, x2 - cur_len);
-            else
-                wmove(self->window, y, x - cur_len);
-        } else {
-            beep();
-        }
-    }
-
-    else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-        if (ctx->pos != ctx->len)
-            del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
-        else
-            beep();
-    }
-
-    else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
-        if (ctx->pos > 0) {
-            discard_buf(ctx->line, &ctx->pos, &ctx->len);
-            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        } else {
-            beep();
-        }
-    }
-
-    else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
-        if (ctx->pos != ctx->len)
-            kill_buf(ctx->line, &ctx->pos, &ctx->len);
-        else
-            beep();
-    }
-
-    else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
-        if (ctx->pos > 0) {
-            ctx->pos = 0;
-            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        }
-    } 
-
-    else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
-        if (ctx->pos != ctx->len) {
-            ctx->pos = ctx->len;
-            mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT-1)*x2)), y2, x2);
-        }
-    }
-
-    else if (key == KEY_LEFT) {
-        if (ctx->pos > 0) {
-            --ctx->pos;
-            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
-
-            if (x == 0)
-                wmove(self->window, y-1, x2 - cur_len);
-            else
-                wmove(self->window, y, x - cur_len);
-        } else {
-            beep();
-        }
-    } 
-
-    else if (key == KEY_RIGHT) {
-        if (ctx->pos < ctx->len) {
-            cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
-            ++ctx->pos;
-
-            if (x == x2-1)
-                wmove(self->window, y+1, 0);
-            else
-                wmove(self->window, y, x + cur_len);
-        } else {
-            beep();
-        }
-    } 
-
-    else if (key == KEY_UP) {    /* fetches previous item in history */
-        fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, MOVE_UP);
-        mv_curs_end(self->window, ctx->len, y2, x2);
-    }
-
-    else if (key == KEY_DOWN) {    /* fetches next item in history */
-        fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, MOVE_DOWN);
-        mv_curs_end(self->window, ctx->len, y2, x2);
-    }
-
-    else if (key == '\t') {    /* TAB key: completes command */
-        if (ctx->len > 1 && ctx->line[0] == '/') {
-            int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, chat_cmd_list, AC_NUM_CHAT_COMMANDS,
-                                     MAX_CMDNAME_SIZE);
-
-            if (diff != -1) {
-                if (x + diff > x2 - 1) {
-                    int ofst = (x + diff - 1) - (x2 - 1);
-                    wmove(self->window, y+1, ofst);
-                } else {
-                    wmove(self->window, y, x+diff);
-                }
-            } else {
-                beep();
-            }
-        } else {
-            beep();
-        }
-    }
-
-    else
-#if HAVE_WIDECHAR
-    if (iswprint(key))
-#else
-    if (isprint(key))
-#endif
-    {   /* prevents buffer overflows and strange behaviour when cursor goes past the window */
+    if (ltr) {
+        /* prevents buffer overflows and strange behaviour when cursor goes past the window */
         if ( (ctx->len < MAX_STR_SIZE-1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1)-1)) ) {
             add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
 
@@ -650,50 +534,164 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key)
 
         if (!ctx->self_is_typing && ctx->line[0] != '/')
             set_typingstatus(self, m, 1);
-    }
-    /* RETURN key: Execute command or print line */
-    else if (key == '\n') {
-        uint8_t line[MAX_STR_SIZE];
 
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
+    } else { /* if (!ltr) */
 
-        wclear(ctx->linewin);
-        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
+            if (ctx->pos > 0) {
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
+                del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
 
-        if (!string_is_empty(line))
-            add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
-
-        if (line[0] == '/') {
-            if (strcmp(line, "/close") == 0) {
-                if (ctx->self_is_typing)
-                    set_typingstatus(self, m, 0);
-
-                kill_chat_window(self);
-                return;
-            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                send_action(self, ctx, m, line + strlen("/me "));
+                if (x == 0)
+                    wmove(self->window, y-1, x2 - cur_len);
+                else
+                    wmove(self->window, y, x - cur_len);
             } else {
-                execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
-            }
-        } else if (!string_is_empty(line)) {
-            uint8_t selfname[TOX_MAX_NAME_LENGTH];
-            tox_get_self_name(m, selfname);
-
-            uint8_t timefrmt[TIME_STR_SIZE];
-            get_time_str(timefrmt);
-
-            line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
-
-            if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
-                uint8_t *errmsg = " * Failed to send message.";
-                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
-            } else {
-                write_to_log(line, selfname, ctx->log, false);
+                beep();
             }
         }
 
-        reset_buf(ctx->line, &ctx->pos, &ctx->len);
+        else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
+            if (ctx->pos != ctx->len)
+                del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+            else
+                beep();
+        }
+
+        else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
+            if (ctx->pos > 0) {
+                discard_buf(ctx->line, &ctx->pos, &ctx->len);
+                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+            } else {
+                beep();
+            }
+        }
+
+        else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
+            if (ctx->pos != ctx->len)
+                kill_buf(ctx->line, &ctx->pos, &ctx->len);
+            else
+                beep();
+        }
+
+        else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
+            if (ctx->pos > 0) {
+                ctx->pos = 0;
+                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+            }
+        }
+
+        else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
+            if (ctx->pos != ctx->len) {
+                ctx->pos = ctx->len;
+                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT-1)*x2)), y2, x2);
+            }
+        }
+
+        else if (key == KEY_LEFT) {
+            if (ctx->pos > 0) {
+                --ctx->pos;
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
+
+                if (x == 0)
+                    wmove(self->window, y-1, x2 - cur_len);
+                else
+                    wmove(self->window, y, x - cur_len);
+            } else {
+                beep();
+            }
+        }
+
+        else if (key == KEY_RIGHT) {
+            if (ctx->pos < ctx->len) {
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
+                ++ctx->pos;
+
+                if (x == x2-1)
+                    wmove(self->window, y+1, 0);
+                else
+                    wmove(self->window, y, x + cur_len);
+            } else {
+                beep();
+            }
+        }
+
+        else if (key == KEY_UP) {    /* fetches previous item in history */
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
+                            &ctx->hst_pos, MOVE_UP);
+            mv_curs_end(self->window, ctx->len, y2, x2);
+        }
+
+        else if (key == KEY_DOWN) {    /* fetches next item in history */
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
+                            &ctx->hst_pos, MOVE_DOWN);
+            mv_curs_end(self->window, ctx->len, y2, x2);
+        }
+
+        else if (key == '\t') {    /* TAB key: completes command */
+            if (ctx->len > 1 && ctx->line[0] == '/') {
+                int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, chat_cmd_list, AC_NUM_CHAT_COMMANDS,
+                                         MAX_CMDNAME_SIZE);
+
+                if (diff != -1) {
+                    if (x + diff > x2 - 1) {
+                        int ofst = (x + diff - 1) - (x2 - 1);
+                        wmove(self->window, y+1, ofst);
+                    } else {
+                        wmove(self->window, y, x+diff);
+                    }
+                } else {
+                    beep();
+                }
+            } else {
+                beep();
+            }
+        }
+
+        /* RETURN key: Execute command or print line */
+        else if (key == '\n') {
+            uint8_t line[MAX_STR_SIZE];
+
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+                memset(&line, 0, sizeof(line));
+
+            wclear(ctx->linewin);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+
+            if (!string_is_empty(line))
+                add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+
+            if (line[0] == '/') {
+                if (strcmp(line, "/close") == 0) {
+                    if (ctx->self_is_typing)
+                        set_typingstatus(self, m, 0);
+
+                    kill_chat_window(self);
+                    return;
+                } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
+                    send_action(self, ctx, m, line + strlen("/me "));
+                } else {
+                    execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
+                }
+            } else if (!string_is_empty(line)) {
+                uint8_t selfname[TOX_MAX_NAME_LENGTH];
+                tox_get_self_name(m, selfname);
+
+                uint8_t timefrmt[TIME_STR_SIZE];
+                get_time_str(timefrmt);
+
+                line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
+
+                if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
+                    uint8_t *errmsg = " * Failed to send message.";
+                    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+                } else {
+                    write_to_log(line, selfname, ctx->log, false);
+                }
+            }
+
+            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+        }
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing)

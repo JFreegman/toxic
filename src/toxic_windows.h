@@ -87,7 +87,7 @@ enum {
     MOVE_DOWN,
 };
 
-/* Fixes text color problem on some terminals. 
+/* Fixes text color problem on some terminals.
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
@@ -97,7 +97,7 @@ typedef struct PromptBuf PromptBuf;
 typedef struct ChatContext ChatContext;
 
 struct ToxWindow {
-    void(*onKey)(ToxWindow *, Tox *, wint_t);
+    void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
     void(*onFriendRequest)(ToxWindow *, Tox *, uint8_t *, uint8_t *, uint16_t);
@@ -130,9 +130,9 @@ struct ToxWindow {
     void(*onEnd)(ToxWindow *, ToxAv *);
     void(*onRequestTimeout)(ToxWindow *, ToxAv *);
     void(*onPeerTimeout)(ToxWindow *, ToxAv *);
-    
+
 #endif /* _SUPPORT_AUDIO */
-    
+
     char name[TOX_MAX_NAME_LENGTH];
     int32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;
@@ -156,7 +156,7 @@ struct ToxWindow {
 
 /* statusbar info holder */
 struct StatusBar {
-    WINDOW *topline;    
+    WINDOW *topline;
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
     uint8_t nick[TOX_MAX_NAME_LENGTH];

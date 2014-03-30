@@ -119,7 +119,7 @@ static int add_friend_request(uint8_t *public_key)
     return -1;
 }
 
-static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
+static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -127,11 +127,14 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
 
-    /* this is buggy */
-    //if (key == T_KEY_ESC) {   /* ESC key: Toggle history scroll mode */
-    //    bool scroll = ctx->hst->scroll_mode ? false : true;
-    //    line_info_toggle_scroll(self, scroll);
-    //}
+    /* TODO this is buggy */
+    /* ESC key: Toggle history scroll mode */
+    /*
+    if (key == T_KEY_ESC) {
+        bool scroll = ctx->hst->scroll_mode ? false : true;
+        line_info_toggle_scroll(self, scroll);
+    }
+    */
 
     /* If we're in scroll mode ignore rest of function */
     if (ctx->hst->scroll_mode) {
@@ -139,127 +142,123 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key)
         return;
     }
 
-    /* BACKSPACE key: Remove one character from line */
-    if (key == 0x107 || key == 0x8 || key == 0x7f) {
-        if (ctx->pos > 0) {
-            del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
-            wmove(ctx->history, y, x-1);    /* not necessary but fixes a display glitch */
-        } else {
-            beep();
-        }
-    }
-
-    else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-        if (ctx->pos != ctx->len) {
-            del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
-        } else {
-            beep();
-        }
-    }
-
-    else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
-        if (ctx->pos > 0) {
-            wmove(ctx->history, ctx->orig_y, X_OFST);
-            wclrtobot(ctx->history);
-            discard_buf(ctx->line, &ctx->pos, &ctx->len);
-        } else {
-            beep();
-        }
-    }
-
-    else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
-        if (ctx->len != ctx->pos)
-            kill_buf(ctx->line, &ctx->pos, &ctx->len);
-        else
-            beep();
-    }
-
-    else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
-        if (ctx->pos != 0)
-            ctx->pos = 0;
-    }
-
-    else if (key == KEY_END || key == T_KEY_C_E) {   /* END/C-e key: move cursor to end of line */
-        if (ctx->pos != ctx->len)
-            ctx->pos = ctx->len;
-    }
-
-    else if (key == KEY_LEFT) {
-        if (ctx->pos > 0)
-            --ctx->pos;
-        else
-            beep();
-    } 
-
-    else if (key == KEY_RIGHT) {
-        if (ctx->pos < ctx->len)
-            ++ctx->pos;
-        else 
-            beep();
-    } 
-
-    else if (key == KEY_UP) {     /* fetches previous item in history */
-        wmove(ctx->history, ctx->orig_y, X_OFST);
-        fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, MOVE_UP);
-
-        /* adjust line y origin appropriately when window scrolls down */
-        if (ctx->at_bottom && ctx->len >= x2 - X_OFST) {
-            int px2 = ctx->len >= x2 ? x2 : x2 - X_OFST;
-            int p_ofst = px2 != x2 ? 0 : X_OFST;
-
-            if (px2 <= 0)
-                return;
-
-            int k = ctx->orig_y + ((ctx->len + p_ofst) / px2);
-
-            if (k >= y2) {
-                --ctx->orig_y;
-            }
-        }
-    }
-
-    else if (key == KEY_DOWN) {    /* fetches next item in history */
-        wmove(ctx->history, ctx->orig_y, X_OFST);
-        fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                        &ctx->hst_pos, MOVE_DOWN);
-    }
-
-    else if (key == '\t') {    /* TAB key: completes command */
-        if (ctx->len > 1 && ctx->line[0] == '/') {
-            if (complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
-                              MAX_CMDNAME_SIZE) == -1) 
-                beep();
-        } else {
-            beep();
-        }
-    }
-
-    else
-#if HAVE_WIDECHAR
-    if (iswprint(key))
-#else
-    if (isprint(key))
-#endif
-    {
+    if (ltr) {
         if (ctx->len < (MAX_STR_SIZE-1)) {
             add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
         }
-    }
-    /* RETURN key: execute command */
-    else if (key == '\n') {
-        wprintw(ctx->history, "\n");
-        uint8_t line[MAX_STR_SIZE] = {0};
+    } else { /* if (!ltr) */
 
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
+        /* BACKSPACE key: Remove one character from line */
+        if (key == 0x107 || key == 0x8 || key == 0x7f) {
+            if (ctx->pos > 0) {
+                del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+                wmove(ctx->history, y, x-1);    /* not necessary but fixes a display glitch */
+            } else {
+                beep();
+            }
+        }
 
-        if (!string_is_empty(line))
-            add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+        else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
+            if (ctx->pos != ctx->len) {
+                del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+            } else {
+                beep();
+            }
+        }
 
-        line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
-        execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
-        reset_buf(ctx->line, &ctx->pos, &ctx->len);
+        else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
+            if (ctx->pos > 0) {
+                wmove(ctx->history, ctx->orig_y, X_OFST);
+                wclrtobot(ctx->history);
+                discard_buf(ctx->line, &ctx->pos, &ctx->len);
+            } else {
+                beep();
+            }
+        }
+
+        else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
+            if (ctx->len != ctx->pos)
+                kill_buf(ctx->line, &ctx->pos, &ctx->len);
+            else
+                beep();
+        }
+
+        else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
+            if (ctx->pos != 0)
+                ctx->pos = 0;
+        }
+
+        else if (key == KEY_END || key == T_KEY_C_E) {   /* END/C-e key: move cursor to end of line */
+            if (ctx->pos != ctx->len)
+                ctx->pos = ctx->len;
+        }
+
+        else if (key == KEY_LEFT) {
+            if (ctx->pos > 0)
+                --ctx->pos;
+            else
+                beep();
+        }
+
+        else if (key == KEY_RIGHT) {
+            if (ctx->pos < ctx->len)
+                ++ctx->pos;
+            else
+                beep();
+        }
+
+        else if (key == KEY_UP) {     /* fetches previous item in history */
+            wmove(ctx->history, ctx->orig_y, X_OFST);
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
+                            &ctx->hst_pos, MOVE_UP);
+
+            /* adjust line y origin appropriately when window scrolls down */
+            if (ctx->at_bottom && ctx->len >= x2 - X_OFST) {
+                int px2 = ctx->len >= x2 ? x2 : x2 - X_OFST;
+                int p_ofst = px2 != x2 ? 0 : X_OFST;
+
+                if (px2 <= 0)
+                    return;
+
+                int k = ctx->orig_y + ((ctx->len + p_ofst) / px2);
+
+                if (k >= y2) {
+                    --ctx->orig_y;
+                }
+            }
+        }
+
+        else if (key == KEY_DOWN) {    /* fetches next item in history */
+            wmove(ctx->history, ctx->orig_y, X_OFST);
+            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
+                            &ctx->hst_pos, MOVE_DOWN);
+        }
+
+        else if (key == '\t') {    /* TAB key: completes command */
+            if (ctx->len > 1 && ctx->line[0] == '/') {
+                if (complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
+                                  MAX_CMDNAME_SIZE) == -1)
+                    beep();
+            } else {
+                beep();
+            }
+        }
+
+        /* RETURN key: execute command */
+        else if (key == '\n') {
+            wprintw(ctx->history, "\n");
+            uint8_t line[MAX_STR_SIZE] = {0};
+
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+                memset(&line, 0, sizeof(line));
+
+            if (!string_is_empty(line))
+                add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+
+            line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
+            execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
+            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+        }
     }
 }
 

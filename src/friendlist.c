@@ -322,7 +322,7 @@ static void draw_popup(ToxWindow *self, Tox *m)
     wrefresh(self->popup);
 }
 
-static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
+static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     if (num_friends == 0)
         return;
@@ -337,23 +337,25 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key)
         return;
     }
 
-    if (key == '\n') {
-        /* Jump to chat window if already open */
-        if (friends[f].chatwin != -1) {
-            set_active_window(friends[f].chatwin);
-        } else if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
-            set_active_window(friends[f].chatwin);
-        } else {
-            uint8_t *msg = "* Warning: Too many windows are open.";
-            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+    if (key != ltr) {
+        if (key == '\n') {
+            /* Jump to chat window if already open */
+            if (friends[f].chatwin != -1) {
+                set_active_window(friends[f].chatwin);
+            } else if (get_num_active_windows() < MAX_WINDOWS_NUM) {
+                friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
+                set_active_window(friends[f].chatwin);
+            } else {
+                uint8_t *msg = "* Warning: Too many windows are open.";
+                line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
-            alert_window(prompt, WINDOW_ALERT_1, true);
+                alert_window(prompt, WINDOW_ALERT_1, true);
+            }
+        } else if (key == KEY_DC) {
+            del_friend_activate(self, m, f);
+        } else {
+            select_friend(self, m, key);
         }
-    } else if (key == KEY_DC) {
-        del_friend_activate(self, m, f);
-    } else {
-        select_friend(self, m, key);
     }
 }
 
