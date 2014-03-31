@@ -510,7 +510,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
 
-    if (ltr && (key == T_KEY_ESC)) {   /* ESC key: Toggle history scroll mode */
+    if (!ltr && (key == T_KEY_ESC)) {   /* ESC key: Toggle history scroll mode */
         bool scroll = ctx->hst->scroll_mode ? false : true;
         line_info_toggle_scroll(self, scroll);
     }
