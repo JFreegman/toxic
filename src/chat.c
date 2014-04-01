@@ -349,10 +349,10 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
         return;
 
     uint8_t name[TOX_MAX_NAME_LENGTH];
-    uint8_t msg[MAX_STR_SIZE];
-    int n_len;
+    uint8_t msg[MAX_STR_SIZE + TOX_MAX_NAME_LENGTH];
+    uint16_t n_len = tox_get_name(m, friendnumber, name);
 
-    if (n_len = tox_get_name(m, friendnumber, name) == -1)
+    if (n_len == -1)
         return;
 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
