@@ -91,6 +91,22 @@ void line_info_cleanup(struct history *hst)
     }
 }
 
+/* moves root forward and frees previous root */
+static void line_info_root_fwd(struct history *hst)
+{
+    struct line_info *tmp = hst->line_root->next;
+    tmp->prev = NULL;
+
+    if (hst->line_start->prev == NULL) {    /* if line_start is root move it forward as well */
+        hst->line_start = hst->line_start->next;
+        hst->line_start->prev = NULL;
+        ++hst->start_id;
+    }
+
+    free(hst->line_root);
+    hst->line_root = tmp;
+}
+
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
                    uint8_t type, uint8_t bold, uint8_t colour)
 {
@@ -141,19 +157,9 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     hst->line_end->next = new_line;
     hst->line_end = new_line;
 
-    /* If chat history exceeds limit move root forward and free old root */
     if (++hst->line_items > MAX_HISTORY) {
-        struct line_info *tmp = hst->line_root->next;
-        tmp->prev = NULL;
-
-        if (hst->line_start->prev == NULL) {  /* if line_start is root move it forward as well */
-            hst->line_start = hst->line_start->next;
-            hst->line_start->prev = NULL;
-            ++hst->start_id;
-        }
-
-        free(hst->line_root);
-        hst->line_root = tmp;
+        --hst->line_items;
+        line_info_root_fwd(hst);
     }
 
     int newlines = 0;
@@ -180,11 +186,11 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 
     /* move line_start forward proportionate to the number of new lines */
     if (y + hst->queue_lns - hst->queue >= max_y) {
-        while (lines > 0 && hst->line_start->next) {
+        while (lines > 0) {
             ++hst->start_id;
             lines -= (1 + hst->line_start->len / (x2 - offst));
 
-            if (!hst->scroll_mode)
+            if (!hst->scroll_mode && hst->line_start->next)
                 hst->line_start = hst->line_start->next;
         }
     }
