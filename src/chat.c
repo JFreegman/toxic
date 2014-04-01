@@ -119,11 +119,15 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *msg, u
     if (self->num != num)
         return;
 
+    msg[len] = '\0';
+
     ChatContext *ctx = self->chatwin;
 
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_name(m, num, nick);
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+    uint8_t nick[TOX_MAX_NAME_LENGTH];
+    uint16_t n_len = tox_get_name(m, num, nick);
+
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+    nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt);
@@ -163,11 +167,16 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action,
     if (self->num != num)
         return;
 
+
+    action[len] = '\0';
+
     ChatContext *ctx = self->chatwin;
 
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_name(m, num, nick);
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+    uint8_t nick[TOX_MAX_NAME_LENGTH];
+    int n_len = tox_get_name(m, num, nick);
+
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);;
+    nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt);
@@ -182,10 +191,9 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_t *nic
     if (self->num != num)
         return;
 
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';
-    len = strlen(nick) + 1;
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH);
+    nick[len] = '\0';
     strcpy(self->name, nick);
-    self->name[len-1] = '\0';
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -205,7 +213,7 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, uint8_t *st
     StatusBar *statusbar = self->stb;
     statusbar->statusmsg_len = len;
     strcpy(statusbar->statusmsg, status);
-    statusbar->statusmsg[len-1] = '\0';
+    statusbar->statusmsg[len] = '\0';
 }
 
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, 
@@ -485,14 +493,15 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
         return;
 
     uint8_t selfname[TOX_MAX_NAME_LENGTH];
-    tox_get_self_name(m, selfname);
+    uint16_t len = tox_get_self_name(m, selfname);
+    selfname[len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt);
 
     line_info_add(self, timefrmt, selfname, NULL, action, ACTION, 0, 0);
 
-    if (tox_send_action(m, self->num, action, strlen(action) + 1) == 0) {
+    if (tox_send_action(m, self->num, action, strlen(action)) == 0) {
         uint8_t *errmsg = " * Failed to send action.";
         line_info_add(self, NULL, selfname, NULL, errmsg, SYS_MSG, 0, RED);
     } else {
@@ -675,14 +684,15 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 }
             } else if (!string_is_empty(line)) {
                 uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                tox_get_self_name(m, selfname);
+                uint16_t len = tox_get_self_name(m, selfname);
+                selfname[len] = '\0';
 
                 uint8_t timefrmt[TIME_STR_SIZE];
                 get_time_str(timefrmt);
 
                 line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
 
-                if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line) + 1) == 0) {
+                if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line)) == 0) {
                     uint8_t *errmsg = " * Failed to send message.";
                     line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
                 } else {
@@ -782,10 +792,12 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
 
         pthread_mutex_lock(&Winthread.lock);
-        tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        uint16_t s_len = tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
         pthread_mutex_unlock(&Winthread.lock);
+        statusmsg[s_len] = '\0';
+
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-        statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
+        statusbar->statusmsg_len = s_len;
     }
 
     self->x = x2;
@@ -827,9 +839,10 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     statusbar->is_online = tox_get_friend_connection_status(m, self->num) == 1;
 
     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-    tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    uint16_t s_len = tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    statusmsg[s_len] = '\0';
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = tox_get_status_message_size(m, self->num);
+    statusbar->statusmsg_len = s_len;
 
     /* Init subwindows */
     ChatContext *ctx = self->chatwin;
@@ -901,8 +914,11 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
     uint16_t len = tox_get_name(m, friendnum, name);
-    memcpy(ret.name, name, len);
-    ret.name[TOXIC_MAX_NAME_LENGTH] = '\0';
+
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH);
+
+    name[len] = '\0';
+    strcpy(ret.name, name);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     memset(chatwin, 0, sizeof(ChatContext));

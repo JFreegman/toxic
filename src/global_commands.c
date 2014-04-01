@@ -114,7 +114,8 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         snprintf(msg, sizeof(msg), "%s", temp);
     } else {
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
-        tox_get_self_name(m, selfname);
+        uint16_t n_len = tox_get_self_name(m, selfname);
+        selfname[n_len] = '\0';
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 
@@ -147,7 +148,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         id[i] = toupper(id[i]);
     }
 
-    int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg) + 1);
+    int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
 
     switch (f_num) {
     case TOX_FAERR_TOOLONG:
@@ -334,13 +335,13 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    if (len >= TOXIC_MAX_NAME_LENGTH) {
+    if (len >= TOXIC_MAX_NAME_LENGTH)
         len = TOXIC_MAX_NAME_LENGTH;
-        nick[len-1] = L'\0';
-    }
 
-    tox_set_name(m, nick, len+1);
-    prompt_update_nick(prompt, nick, len+1);
+    nick[len] = L'\0';
+
+    tox_set_name(m, nick, len);
+    prompt_update_nick(prompt, nick, len);
 
     store_data(m, DATA_FILE);
 }
@@ -364,9 +365,8 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     msg[strlen(++msg)-1] = L'\0';
-    uint16_t len = strlen(msg) + 1;
+    uint16_t len = strlen(msg);
     tox_set_status_message(m, msg, len);
-
     prompt_update_statusmessage(prompt, msg, len);
 }
 
@@ -468,7 +468,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if (msg != NULL) {
         msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
-        uint16_t len = strlen(msg) + 1;
+        uint16_t len = strlen(msg);
         tox_set_status_message(m, msg, len);
         prompt_update_statusmessage(prompt, msg, len);
     }

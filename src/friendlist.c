@@ -102,9 +102,13 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
+            str[len] = '\0';
+
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-            tox_get_name(m, num, nick);
-            nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+            uint16_t n_len = tox_get_name(m, num, nick);
+
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            nick[n_len] = '\0';
 
             uint8_t timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt);
@@ -134,10 +138,10 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
 
-    str[TOXIC_MAX_NAME_LENGTH] = '\0';
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH);
+
+    str[len] = '\0';
     strcpy(friends[num].name, str);
-    len = strlen(str) + 1;
-    friends[num].name[len-1] = '\0';
     friends[num].namelength = len;
     sort_friendlist_index();
 }
@@ -156,7 +160,7 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, uint8
         return;
 
     strcpy(friends[num].statusmsg, str);
-    friends[num].statusmsg[len-1] = '\0';
+    friends[num].statusmsg[len] = '\0';
     friends[num].statusmsg_len = len;
 }
 
@@ -180,10 +184,10 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
 
             if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
                 strcpy(friends[i].name, (uint8_t *) UNKNOWN_NAME);
-                friends[i].namelength = strlen(UNKNOWN_NAME) + 1;
+                friends[i].namelength = strlen(UNKNOWN_NAME);
             } else {    /* Enforce toxic's maximum name length */
-                friends[i].name[TOXIC_MAX_NAME_LENGTH] = '\0';
-                friends[i].namelength = strlen(friends[i].name) + 1;
+                friends[i].namelength = MIN(friends[i].namelength, TOXIC_MAX_NAME_LENGTH);
+                friends[i].name[friends[i].namelength] = '\0';
             }
 
             num_friends = tox_count_friendlist(m);
@@ -211,9 +215,9 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
         } else {
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
 
-            uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-            tox_get_name(m, num, nick);
-            nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+            uint8_t nick[TOX_MAX_NAME_LENGTH];
+            uint16_t n_len = tox_get_name(m, num, nick);
+            nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* File transfer from %s failed: too many windows are open.", nick);
@@ -233,9 +237,9 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
-            uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-            tox_get_name(m, num, nick);
-            nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+            uint8_t nick[TOX_MAX_NAME_LENGTH];
+            uint16_t n_len = tox_get_name(m, num, nick);
+            nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* Group chat invite from %s failed: too many windows are open.", nick);
@@ -456,10 +460,12 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
 
                     pthread_mutex_lock(&Winthread.lock);
-                    tox_get_status_message(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
-                    friends[f].statusmsg_len = tox_get_status_message_size(m, f);
+                    uint16_t s_len = tox_get_status_message(m, friends[f].num, statusmsg, 
+                                                      TOX_MAX_STATUSMESSAGE_LENGTH);
                     pthread_mutex_unlock(&Winthread.lock);
 
+                    friends[f].statusmsg_len = s_len;
+                    friends[f].statusmsg[s_len] = '\0';
                     snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
                 }
 
@@ -538,8 +544,10 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av)
             friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-            tox_get_name(m, id, nick);
-            nick[TOXIC_MAX_NAME_LENGTH] = '\0';
+            uint16_t n_len = tox_get_name(m, id, nick);
+
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "Audio action from: %s!", nick);

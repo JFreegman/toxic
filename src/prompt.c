@@ -395,8 +395,8 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 
 static void prompt_onFriendRequest(ToxWindow *self, Tox *m, uint8_t *key, uint8_t *data, uint16_t length)
 {
-    /* make sure message data is null-terminated */
-    data[length - 1] = 0;
+    data[length] = '\0';
+
     ChatContext *ctx = self->chatwin;
 
     uint8_t timefrmt[TIME_STR_SIZE];
@@ -431,27 +431,32 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     statusbar->status = TOX_USERSTATUS_NONE;
     statusbar->is_online = false;
 
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    uint8_t nick[TOX_MAX_NAME_LENGTH];
     uint8_t statusmsg[MAX_STR_SIZE];
 
     pthread_mutex_lock(&Winthread.lock);
-    tox_get_self_name(m, nick);
-    tox_get_self_status_message(m, statusmsg, MAX_STR_SIZE);
+    uint16_t n_len = tox_get_self_name(m, nick);
+    uint16_t s_len = tox_get_self_status_message(m, statusmsg, MAX_STR_SIZE);
     uint8_t status = tox_get_self_user_status(m);
     pthread_mutex_unlock(&Winthread.lock);
 
-    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+    nick[n_len] = '\0';
+    statusmsg[s_len] = '\0';
 
     /* load prev status message or show toxic version if it has never been set */
     uint8_t ver[strlen(TOXICVER) + 1];
     strcpy(ver, TOXICVER);
     const uint8_t *toxic_ver = strtok(ver, "_");
 
-    if ( (!strcmp("Online", statusmsg) || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL)
+    if ( (!strcmp("Online", statusmsg) || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
         snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
+        s_len = strlen(statusmsg); 
+        statusmsg[s_len] = '\0';
+    }
 
-    prompt_update_statusmessage(prompt, statusmsg, strlen(statusmsg) + 1);
+    prompt_update_statusmessage(prompt, statusmsg, s_len);
     prompt_update_status(prompt, status);
+    prompt_update_nick(prompt, nick, n_len);
 
     /* Init statusbar subwindow */
     statusbar->topline = subwin(self->window, 2, x2, 0, 0);

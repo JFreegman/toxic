@@ -20,7 +20,7 @@
  *
  */
 
-#define MAX_HISTORY 1000
+#define MAX_HISTORY 100
 
 enum {
     SYS_MSG,

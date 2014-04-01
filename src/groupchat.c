@@ -57,6 +57,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].num_peers = 0;
             groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             groupchats[i].oldpeer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
+            groupchats[i].peer_name_lengths = malloc(sizeof(uint16_t));
 
             /* temp fix */
             memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
@@ -93,6 +94,7 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 
     free(groupchats[groupnum].peer_names);
     free(groupchats[groupnum].oldpeer_names);
+    free(groupchats[groupnum].peer_name_lengths);
     memset(&groupchats[groupnum], 0, sizeof(GroupChat));
 
     int i;
@@ -152,18 +154,24 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     if (self->num != groupnum)
         return;
 
+    msg[len] = '\0';
+
     ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_group_peername(m, groupnum, peernum, nick);
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
+    uint16_t n_len = tox_group_peername(m, groupnum, peernum, nick);
+
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);    /* enforce client max name length */
+    nick[n_len] = '\0';
 
     /* check if message contains own name and alert appropriately */
     int alert_type = WINDOW_ALERT_1;
     bool beep = false;
 
-    uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_self_name(m, selfnick);
+    uint8_t selfnick[TOX_MAX_NAME_LENGTH];
+    n_len = tox_get_self_name(m, selfnick);
+    selfnick[n_len] = '\0';
+
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
     bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH);
@@ -189,14 +197,17 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     if (self->num != groupnum)
         return;
 
+    action[len] = '\0';
+
     ChatContext *ctx = self->chatwin;
 
     /* check if message contains own name and alert appropriately */
     int alert_type = WINDOW_ALERT_1;
     bool beep = false;
 
-    uint8_t selfnick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_self_name(m, selfnick);
+    uint8_t selfnick[TOX_MAX_NAME_LENGTH];
+    uint16_t n_len = tox_get_self_name(m, selfnick);
+    selfnick[n_len] = '\0';
 
     bool nick_match = strcasestr(action, selfnick);
 
@@ -208,8 +219,10 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     alert_window(self, alert_type, beep);
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_group_peername(m, groupnum, peernum, nick);
-    nick[TOXIC_MAX_NAME_LENGTH] = '\0';    /* enforce client max name length */
+    n_len = tox_group_peername(m, groupnum, peernum, nick);
+
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+    nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt);
@@ -218,36 +231,50 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     write_to_log(action, nick, ctx->log, true);
 }
 
-/* Puts two copies of peerlist in chat instance */
-static void copy_peernames(int gnum, int npeers, uint8_t tmp_peerlist[][TOX_MAX_NAME_LENGTH])
+/* Puts two copies of peerlist/lengths in chat instance */
+static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], uint16_t lengths[], int npeers)
 {
     /* Assumes these are initiated in init_groupchat_win */
     free(groupchats[gnum].peer_names);
     free(groupchats[gnum].oldpeer_names);
+    free(groupchats[gnum].peer_name_lengths);
+    free(groupchats[gnum].oldpeer_name_lengths);
 
     int N = TOX_MAX_NAME_LENGTH;
 
     groupchats[gnum].peer_names = malloc(sizeof(uint8_t) * npeers * N);
     groupchats[gnum].oldpeer_names = malloc(sizeof(uint8_t) * npeers * N);
+    groupchats[gnum].peer_name_lengths = malloc(sizeof(uint16_t) * npeers);
+    groupchats[gnum].oldpeer_name_lengths = malloc(sizeof(uint16_t) * npeers);
 
-    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL) {
+    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL
+        || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
         endwin();
         fprintf(stderr, "malloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
     }
 
+    uint16_t unknown_len = strlen(UNKNOWN_NAME);
     int i;
 
     for (i = 0; i < npeers; ++i) {
-        if (string_is_empty(tmp_peerlist[i])) {
+        if (string_is_empty(peerlist[i])) {
             memcpy(&groupchats[gnum].peer_names[i*N], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
+            groupchats[gnum].peer_name_lengths[i] = unknown_len;
         } else {
-            memcpy(&groupchats[gnum].peer_names[i*N], tmp_peerlist[i], N);
-            groupchats[gnum].peer_names[i*N+TOXIC_MAX_NAME_LENGTH] = '\0';
+            memcpy(&groupchats[gnum].peer_names[i*N], peerlist[i], N);
+            uint16_t n_len = lengths[i];
+
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+
+            groupchats[gnum].peer_names[i*N+n_len] = '\0';
+            groupchats[gnum].peer_name_lengths[i] = n_len;
         }
     }
 
     memcpy(groupchats[gnum].oldpeer_names, groupchats[gnum].peer_names, N*npeers);
+    memcpy(groupchats[gnum].oldpeer_name_lengths, groupchats[gnum].peer_name_lengths, 
+                                                           sizeof(uint16_t) * npeers);
 }
 
 static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum, int peernum,
@@ -260,20 +287,26 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     int num_peers = groupchats[groupnum].num_peers;
 
     /* get old peer name before updating name list */
-    uint8_t oldpeername[TOX_MAX_NAME_LENGTH] = {0};
+    uint8_t oldpeername[TOX_MAX_NAME_LENGTH];
 
-    if (change != TOX_CHAT_CHANGE_PEER_ADD)
+    if (change != TOX_CHAT_CHANGE_PEER_ADD) {
         memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum*TOX_MAX_NAME_LENGTH], 
                sizeof(oldpeername));
+        uint16_t old_n_len = groupchats[groupnum].oldpeer_name_lengths[peernum];
+        oldpeername[old_n_len] = '\0';
+    }
 
-    /* Update name lists */
+    /* Update name/len lists */
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
-    tox_group_get_names(m, groupnum, tmp_peerlist, num_peers);
-    copy_peernames(groupnum, num_peers, tmp_peerlist);
+    uint16_t tmp_peerlens[num_peers];
+    tox_group_get_names(m, groupnum, tmp_peerlist, tmp_peerlens, num_peers);
+    copy_peernames(groupnum, tmp_peerlist, tmp_peerlens, num_peers);
 
     /* get current peername then sort namelist */
-    uint8_t peername[TOX_MAX_NAME_LENGTH] = {0};
+    uint8_t peername[TOX_MAX_NAME_LENGTH];
+    uint16_t n_len = groupchats[groupnum].peer_name_lengths[peernum];
     memcpy(peername, &groupchats[groupnum].peer_names[peernum*TOX_MAX_NAME_LENGTH], sizeof(peername));
+    peername[n_len] = '\0';
 
     qsort(groupchats[groupnum].peer_names, groupchats[groupnum].num_peers, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 
@@ -319,7 +352,7 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t
         return;
     }
 
-    if (tox_group_action_send(m, self->num, action, strlen(action) + 1) == -1) {
+    if (tox_group_action_send(m, self->num, action, strlen(action)) == -1) {
         uint8_t *errmsg = " * Failed to send action.";
         line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
     }
@@ -517,7 +550,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
                 }
             } else if (!string_is_empty(line)) {
-                if (tox_group_message_send(m, self->num, line, strlen(line) + 1) == -1) {
+                if (tox_group_message_send(m, self->num, line, strlen(line)) == -1) {
                     uint8_t *errmsg = " * Failed to send message.";
                     line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
                 }

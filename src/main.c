@@ -157,20 +157,20 @@ static Tox *init_tox(int ipv4)
     tox_callback_file_data(m, on_file_data, NULL);
 
 #ifdef __linux__
-    tox_set_name(m, (uint8_t *) "Cool guy", sizeof("Cool guy"));
+    tox_set_name(m, (uint8_t *) "Cool guy", strlen("Cool guy"));
 #elif defined(_WIN32)
-    tox_set_name(m, (uint8_t *) "I should install GNU/Linux", sizeof("I should install GNU/Linux"));
+    tox_set_name(m, (uint8_t *) "I should install GNU/Linux", strlen("I should install GNU/Linux"));
 #elif defined(__APPLE__)
-    tox_set_name(m, (uint8_t *) "Hipster", sizeof("Hipster")); /* This used to users of other Unixes are hipsters */
+    tox_set_name(m, (uint8_t *) "Hipster", strlen("Hipster")); /* This used to users of other Unixes are hipsters */
 #else
-    tox_set_name(m, (uint8_t *) "Registered Minix user #4", sizeof("Registered Minix user #4"));
+    tox_set_name(m, (uint8_t *) "Registered Minix user #4", strlen("Registered Minix user #4"));
 #endif
 
     return m;
 }
 
-#define MINLINE    50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
-#define MAXLINE   256 /* Approx max number of chars in a sever line (name + port + key) */
+#define MINLINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
+#define MAXLINE  256 /* Approx max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
 #define NODELEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
 
