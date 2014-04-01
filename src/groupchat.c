@@ -164,7 +164,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     int n_len = tox_group_peername(m, groupnum, peernum, nick);
 
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);    /* enforce client max name length */
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);    /* enforce client max name length */
     nick[n_len] = '\0';
 
     /* check if message contains own name and alert appropriately */
@@ -224,7 +224,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     n_len = tox_group_peername(m, groupnum, peernum, nick);
 
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
     nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
@@ -268,7 +268,7 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
             memcpy(&groupchats[gnum].peer_names[i*N], peerlist[i], N);
             uint16_t n_len = lengths[i];
 
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
 
             groupchats[gnum].peer_names[i*N+n_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = n_len;

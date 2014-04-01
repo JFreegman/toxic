@@ -335,8 +335,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    if (len >= TOXIC_MAX_NAME_LENGTH)
-        len = TOXIC_MAX_NAME_LENGTH;
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH-1);
 
     nick[len] = L'\0';
 

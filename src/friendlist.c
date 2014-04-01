@@ -106,7 +106,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *
 
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
             nick[n_len] = '\0';
 
             uint8_t timefrmt[TIME_STR_SIZE];
@@ -137,7 +137,7 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH-1);
 
     str[len] = '\0';
     strcpy(friends[num].name, str);
@@ -216,7 +216,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
 
             uint8_t nick[TOX_MAX_NAME_LENGTH];
             int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
             nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
@@ -239,7 +239,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH];
             int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
             nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
@@ -547,7 +547,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av)
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             int n_len = tox_get_name(m, id, nick);
 
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
             nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
