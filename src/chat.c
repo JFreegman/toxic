@@ -124,7 +124,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *msg, u
     ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH];
-    uint16_t n_len = tox_get_name(m, num, nick);
+    int n_len = tox_get_name(m, num, nick);
 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
     nick[n_len] = '\0';
@@ -173,7 +173,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action,
     ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH];
-    uint16_t n_len = tox_get_name(m, num, nick);
+    int n_len = tox_get_name(m, num, nick);
 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);;
     nick[n_len] = '\0';
@@ -350,10 +350,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
 
     uint8_t name[TOX_MAX_NAME_LENGTH];
     uint8_t msg[MAX_STR_SIZE + TOX_MAX_NAME_LENGTH];
-    uint16_t n_len = tox_get_name(m, friendnumber, name);
-
-    if (n_len == -1)
-        return;
+    int n_len = tox_get_name(m, friendnumber, name);
 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
     name[n_len] = '\0';
@@ -917,7 +914,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
 #endif /* _SUPPORT_AUDIO */
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};
-    uint16_t len = tox_get_name(m, friendnum, name);
+    int len = tox_get_name(m, friendnum, name);
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH);
 

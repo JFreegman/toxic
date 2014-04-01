@@ -162,7 +162,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-    uint16_t n_len = tox_group_peername(m, groupnum, peernum, nick);
+    int n_len = tox_group_peername(m, groupnum, peernum, nick);
 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);    /* enforce client max name length */
     nick[n_len] = '\0';
@@ -172,8 +172,8 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     bool beep = false;
 
     uint8_t selfnick[TOX_MAX_NAME_LENGTH];
-    n_len = tox_get_self_name(m, selfnick);
-    selfnick[n_len] = '\0';
+    uint16_t sn_len = tox_get_self_name(m, selfnick);
+    selfnick[sn_len] = '\0';
 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
