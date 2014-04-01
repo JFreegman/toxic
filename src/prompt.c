@@ -369,13 +369,20 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 
     ChatContext *ctx = self->chatwin;
 
-    uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
+    uint8_t nick[TOX_MAX_NAME_LENGTH];
+    uint16_t n_len;
 
-    if (tox_get_name(m, friendnum, nick) == -1)
+    if (n_len = tox_get_name(m, friendnum, nick) == -1)
         return;
 
-    if (!nick[0])
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+
+    if (!nick[0]) {
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
+        n_len = strlen(UNKNOWN_NAME);
+    }
+
+    nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt);

@@ -173,7 +173,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action,
     ChatContext *ctx = self->chatwin;
 
     uint8_t nick[TOX_MAX_NAME_LENGTH];
-    int n_len = tox_get_name(m, num, nick);
+    uint16_t n_len = tox_get_name(m, num, nick);
 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);;
     nick[n_len] = '\0';
@@ -350,9 +350,13 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
 
     uint8_t name[TOX_MAX_NAME_LENGTH];
     uint8_t msg[MAX_STR_SIZE];
+    int n_len;
 
-    if (tox_get_name(m, friendnumber, name) == -1)
+    if (n_len = tox_get_name(m, friendnumber, name) == -1)
         return;
+
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH);
+    name[n_len] = '\0';
 
     snprintf(msg, sizeof(msg), "%s has invited you to a group chat.\n"
                                "Type \"/join\" to join the chat.", name);
