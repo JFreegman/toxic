@@ -41,7 +41,7 @@ struct line_info {
     uint8_t bold;
     uint8_t colour;
     uint32_t id;
-    int len;   /* combined len of all strings */
+    uint16_t len;   /* combined len of all strings */
 
     struct line_info *prev;
     struct line_info *next;
@@ -57,8 +57,8 @@ struct history {
     bool scroll_mode;
 
     /* keeps track of lines added between window refreshes */
-    uint8_t queue;   
-    uint8_t queue_lns;
+    uint32_t queue;   
+    uint32_t queue_lns;
 };
 
 /* adds a line to history (also moves line_start and/or line_root forward if necessary) */
