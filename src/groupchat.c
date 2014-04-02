@@ -312,9 +312,12 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     /* get current peername then sort namelist */
     uint8_t peername[TOX_MAX_NAME_LENGTH];
-    uint16_t n_len = groupchats[groupnum].peer_name_lengths[peernum];
-    memcpy(peername, &groupchats[groupnum].peer_names[peernum*TOX_MAX_NAME_LENGTH], sizeof(peername));
-    peername[n_len] = '\0';
+
+    if (change != TOX_CHAT_CHANGE_PEER_DEL) {
+        uint16_t n_len = groupchats[groupnum].peer_name_lengths[peernum];
+        memcpy(peername, &groupchats[groupnum].peer_names[peernum*TOX_MAX_NAME_LENGTH], sizeof(peername));
+        peername[n_len] = '\0';
+    }
 
     qsort(groupchats[groupnum].peer_names, groupchats[groupnum].num_peers, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 
