@@ -106,14 +106,19 @@ static void init_term(void)
     timeout(100);
 
     if (has_colors()) {
+        short bg_color = COLOR_BLACK;
         start_color();
+#ifdef NCURSES_EXT_FUNCS
+        if (assume_default_colors(-1,-1) == OK)
+            bg_color = -1;
+#endif
         init_pair(0, COLOR_WHITE, COLOR_BLACK);
-        init_pair(1, COLOR_GREEN, COLOR_BLACK);
-        init_pair(2, COLOR_CYAN, COLOR_BLACK);
-        init_pair(3, COLOR_RED, COLOR_BLACK);
-        init_pair(4, COLOR_BLUE, COLOR_BLACK);
-        init_pair(5, COLOR_YELLOW, COLOR_BLACK);
-        init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(1, COLOR_GREEN, bg_color);
+        init_pair(2, COLOR_CYAN, bg_color);
+        init_pair(3, COLOR_RED, bg_color);
+        init_pair(4, COLOR_BLUE, bg_color);
+        init_pair(5, COLOR_YELLOW, bg_color);
+        init_pair(6, COLOR_MAGENTA, bg_color);
         init_pair(7, COLOR_BLACK, COLOR_BLACK);
         init_pair(8, COLOR_BLACK, COLOR_WHITE);
     }
