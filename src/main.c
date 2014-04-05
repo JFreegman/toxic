@@ -108,7 +108,7 @@ static void init_term(void)
     if (has_colors()) {
         short bg_color = COLOR_BLACK;
         start_color();
-#ifdef NCURSES_EXT_FUNCS
+#ifdef TOXIC_NATIVE_COLOURS
         if (assume_default_colors(-1,-1) == OK)
             bg_color = -1;
 #endif
