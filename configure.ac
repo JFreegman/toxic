@@ -452,10 +452,10 @@ fi
 AM_CONDITIONAL(BUILD_AV, test "x$BUILD_AV" = "xyes")
 
 # check for ncurses default colour capabilities
-NATIVE_COLOURS="yes"
+NATIVE_COLOURS="no"
 AC_ARG_ENABLE([native-colours],
     [AC_HELP_STRING(
-        [--disable-native-colours], [use terminal-default fg/bg colours])
+        [--enable-native-colours], [use terminal-default fg/bg colours])
     ],
     [
         if test "x$enableval" = "xno"; then
