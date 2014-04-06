@@ -219,7 +219,11 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
     }
     else {
         /* Streaming stuff from core */
-        ASettins.av = toxav_new(tox, 0, 0);
+        
+        ToxAvCodecSettings cs = av_DefaultSettings;
+        cs.video_height = cs.video_width = 0;
+        
+        ASettins.av = toxav_new(tox, &cs);
         
         if ( !ASettins.av ) {
             ASettins.errors |= ErrorStartingCoreAudio;
