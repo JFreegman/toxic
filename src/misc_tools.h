@@ -26,11 +26,17 @@
 /* convert a hex string to binary */
 unsigned char *hex_string_to_bin(char hex_string[]);
 
+/* get the current unix time */
+uint64_t get_unix_time(void);
+
+/*Puts the current time in buf in the format of [Hour:Min:Sec] */
+void get_time_str(uint8_t *buf);
+
 /* get the current local time */
 struct tm *get_time(void);
 
-/* Prints the time to given window */
-void print_time(WINDOW *window);
+/* updates current unix time (should be run once per do_toxic loop) */
+void update_unix_time(void);
 
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(char *string);
@@ -61,7 +67,7 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
       - cannot be empty
       - cannot start with a space
       - must not contain contiguous spaces */
-bool valid_nick(uint8_t *nick);
+int valid_nick(uint8_t *nick);
 
 /* Moves the cursor to the end of the line in given window */
 void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);

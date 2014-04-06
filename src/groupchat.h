@@ -28,8 +28,10 @@ typedef struct {
     bool active;
     int num_peers;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
-    uint8_t *peer_names;
-    uint8_t *oldpeer_names;
+    uint8_t  *peer_names;
+    uint8_t  *oldpeer_names;
+    uint16_t *peer_name_lengths;
+    uint16_t *oldpeer_name_lengths;
 } GroupChat;
 
 void kill_groupchat_window(ToxWindow *self);

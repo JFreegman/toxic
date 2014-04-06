@@ -26,6 +26,6 @@
 #include "toxic_windows.h"
 
 void kill_chat_window(ToxWindow *self);
-ToxWindow new_chat(Tox *m, int friendnum);
+ToxWindow new_chat(Tox *m, int32_t friendnum);
 
 #endif /* end of include guard: CHAT_H_6489PZ13 */

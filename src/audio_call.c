@@ -11,6 +11,7 @@
 #include "chat_commands.h"
 #include "global_commands.h"
 #include "toxic_windows.h"
+#include "line_info.h"
 
 #include <curses.h>
 #include <AL/al.h>
@@ -51,7 +52,6 @@ struct _ASettings {
     int ttas; /* Transmission thread active status (0 - stopped, 1- running) */
 } ASettins;
 
-
 void callback_recv_invite ( void *arg );
 void callback_recv_ringing ( void *arg );
 void callback_recv_starting ( void *arg );
@@ -65,16 +65,24 @@ void callback_requ_timeout ( void *arg );
 void callback_peer_timeout ( void* arg );
 
 
+static void print_err (ToxWindow *self, uint8_t *error_str)
+{
+    line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
+}
+
 /* Opens device under current index
  */
-int device_open (WINDOW *window, _Devices type)
+int device_open (ToxWindow *self, _Devices type)
 {
+    WINDOW *window = self->chatwin->history;
+
     /* Do not error if no device */
     if ( !ASettins.device[type].size ) return 0;
     
     ALCdevice* prev_device = ASettins.device[type].dhndl;
     
-    const char* error = NULL;
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t* error = NULL;
     
     if ( type == input ) {
         ASettins.device[type].dhndl = alcCaptureOpenDevice(
@@ -101,7 +109,10 @@ int device_open (WINDOW *window, _Devices type)
             if ( prev_device )
                 alcCaptureCloseDevice(prev_device);
             
-            if ( window ) wprintw(window, "Input device: %s\n", ASettins.device[type].devices[ASettins.device[type].index]);
+            if ( window ) {
+                snprintf(msg, sizeof(msg), "Input device: %s", ASettins.device[type].devices[ASettins.device[type].index]);
+                line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+            }
         }
         
         ASettins.device[type].ctx = NULL;
@@ -136,20 +147,27 @@ int device_open (WINDOW *window, _Devices type)
             
             ASettins.device[type].ctx = alcCreateContext(ASettins.device[type].dhndl, NULL);
             
-            if ( window ) wprintw(window, "Output device: %s\n", ASettins.device[type].devices[ASettins.device[type].index]);
+            if ( window ) {
+                snprintf(msg, sizeof(msg), "Output device: %s", ASettins.device[type].devices[ASettins.device[type].index]);
+                line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+            }
         }
     }
     
     if ( error ) {
-        if ( window ) wprintw(window, "Error: %s\n", error);
+        if ( window ) {
+            snprintf(msg, sizeof(msg), "Error: %s", error);
+            line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        }
+
         return -1;
     }
     else return 0;
 }
 
-int device_close (WINDOW *window, _Devices type)
+int device_close (ToxWindow *self, _Devices type)
 {
-    const char* device = NULL;
+    uint8_t* device = NULL;
     
     if ( ASettins.device[type].dhndl ) {
         if (type == input) {
@@ -169,11 +187,14 @@ int device_close (WINDOW *window, _Devices type)
         ASettins.device[type].index = ASettins.device[type].dix;
     }
     
-    if ( window && device ) wprintw(window, "Closed %s device\n", device);
+    if ( self && device ) {
+        uint8_t msg[MAX_STR_SIZE];
+        snprintf(msg, sizeof(msg), "Closed %s device", device);
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    }
 }
 
-
-ToxAv* init_audio(ToxWindow* window, Tox* tox)
+ToxAv* init_audio(ToxWindow* self, Tox* tox)
 {
     ASettins.errors = NoError;
     ASettins.ttas = 0; /* Not running */
@@ -214,7 +235,8 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
     }
     
     if (!ASettins.device[input].size && !ASettins.device[output].size) {
-        wprintw(window->window, "No devices: disabling audio!\n");
+        uint8_t *msg = "No devices: disabling audio!";
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         ASettins.av = NULL;
     }
     else {
@@ -230,19 +252,19 @@ ToxAv* init_audio(ToxWindow* window, Tox* tox)
             return NULL;
         }    
         
-        toxav_register_callstate_callback(callback_call_started, av_OnStart, window);
-        toxav_register_callstate_callback(callback_call_canceled, av_OnCancel, window);
-        toxav_register_callstate_callback(callback_call_rejected, av_OnReject, window);
-        toxav_register_callstate_callback(callback_call_ended, av_OnEnd, window);
-        toxav_register_callstate_callback(callback_recv_invite, av_OnInvite, window);
+        toxav_register_callstate_callback(callback_call_started, av_OnStart, self);
+        toxav_register_callstate_callback(callback_call_canceled, av_OnCancel, self);
+        toxav_register_callstate_callback(callback_call_rejected, av_OnReject, self);
+        toxav_register_callstate_callback(callback_call_ended, av_OnEnd, self);
+        toxav_register_callstate_callback(callback_recv_invite, av_OnInvite, self);
         
-        toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging, window);
-        toxav_register_callstate_callback(callback_recv_starting, av_OnStarting, window);
-        toxav_register_callstate_callback(callback_recv_ending, av_OnEnding, window);
+        toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging, self);
+        toxav_register_callstate_callback(callback_recv_starting, av_OnStarting, self);
+        toxav_register_callstate_callback(callback_recv_ending, av_OnEnding, self);
         
-        toxav_register_callstate_callback(callback_recv_error, av_OnError, window);
-        toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, window);
-        toxav_register_callstate_callback(callback_peer_timeout, av_OnPeerTimeout, window);
+        toxav_register_callstate_callback(callback_recv_error, av_OnError, self);
+        toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, self);
+        toxav_register_callstate_callback(callback_peer_timeout, av_OnPeerTimeout, self);
     }
     
     return ASettins.av;
@@ -255,7 +277,6 @@ void terminate_audio()
     if ( ASettins.av )
         toxav_kill(ASettins.av);
 }
-
 
 int errors()
 {
@@ -376,7 +397,7 @@ cleanup:
     _cbend;
 }
 
-int start_transmission()
+int start_transmission(ToxWindow *self)
 {
     if ( !ASettins.av ) return -1;
     
@@ -385,9 +406,9 @@ int start_transmission()
         return -1;
     
     /* Now open our devices */
-    if ( -1 == device_open(NULL, input) )
+    if ( -1 == device_open(self, input) )
         return -1;
-    if ( -1 == device_open(NULL, output))
+    if ( -1 == device_open(self, output))
         return -1;
     
     /* Don't provide support for video */
@@ -483,7 +504,8 @@ void callback_peer_timeout ( void* arg )
  */
 void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t* error_str;
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
@@ -497,17 +519,19 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         
         goto on_error;
     }
-    
-    wprintw(window, "Calling...\n");
-    
+
+    error_str = "Calling...";
+    line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
+
     return;
-on_error: 
-    wprintw(window, "%s\n", error_str);
+on_error:
+    snprintf(msg, sizeof(msg), "%s", error_str);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
 void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t* error_str;
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
@@ -527,12 +551,12 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     return;
 on_error: 
-    wprintw(window, "%s\n", error_str);
+    print_err (self, error_str);
 }
 
 void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t* error_str;
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
@@ -552,12 +576,12 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     return;
 on_error: 
-    wprintw(window, "%s\n", error_str);
+    print_err (self, error_str);
 }
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t* error_str;
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
@@ -575,12 +599,12 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         
     return;
 on_error: 
-    wprintw(window, "%s\n", error_str);
+    print_err (self, error_str);
 }
 
 void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t* error_str;
     
     if (argc != 0) { error_str = "Invalid syntax!"; goto on_error; }
     
@@ -599,13 +623,14 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     
     return;
 on_error: 
-    wprintw(window, "%s\n", error_str);
+    print_err (self, error_str);
 }
 
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t* error_str;
     
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";        
@@ -623,22 +648,26 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         type = output;
     
     else {
-        wprintw(window, "Invalid type: %s\n", argv[1]);
+        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
     }
     
     int i = 0;
-    for ( ; i < ASettins.device[type].size; i ++) 
-        wprintw(window, "%d: %s\n", i, ASettins.device[type].devices[i]);
-    
+    for ( ; i < ASettins.device[type].size; i ++) {
+        snprintf(msg, sizeof(msg), "%d: %s", i, ASettins.device[type].devices[i]);
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    }
+
     return;
 on_error: 
-    wprintw(window, "%s\n", error_str); 
+    print_err (self, error_str);
 }
 
 void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char* error_str;
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t* error_str;
     
     if ( argc != 2 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -662,7 +691,8 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         type = output;
     
     else {
-        wprintw(window, "Invalid type: %s\n", argv[1]);
+        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
     }
     
@@ -681,9 +711,10 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     }
 
     ASettins.device[type].index = selection;
-    wprintw(window, "Selected: %s\n", ASettins.device[type].devices[selection]); 
+    snprintf(msg, sizeof(msg), "Selected: %s", ASettins.device[type].devices[selection]);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     
     return;
 on_error: 
-    wprintw(window, "%s\n", error_str); 
+    print_err (self, error_str);
 }

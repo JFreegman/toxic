@@ -31,6 +31,7 @@
 #include "configdir.h"
 #include "toxic_windows.h"
 #include "misc_tools.h"
+#include "log.h"
 
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
@@ -48,17 +49,16 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
         path_len += (KEY_IDENT_DIGITS * 2 + 5);
 
         sprintf(&ident[0], "%02X", key[0] & 0xff);
-        sprintf(&ident[2], "%02X", key[2] & 0xff);
+        sprintf(&ident[2], "%02X", key[1] & 0xff);
         ident[KEY_IDENT_DIGITS*2+1] = '\0';
     } else {
-        uint8_t s[MAX_STR_SIZE];
-        strftime(s, MAX_STR_SIZE, "%Y-%m-%d[%H:%M:%S]", get_time());
-        snprintf(ident, sizeof(ident), "%s", s);
+        strftime(ident, sizeof(ident), "%Y-%m-%d[%H:%M:%S]", get_time());
         path_len += strlen(ident) + 1;
     }
 
     if (path_len > MAX_STR_SIZE) {
         log->log_on = false;
+        free(user_config_dir);
         return;
     }
 
@@ -66,6 +66,8 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
     snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
              user_config_dir, CONFIGDIR, name, ident);
+
+    free(user_config_dir);
 
     log->file = fopen(log_path, "a");
 
@@ -75,10 +77,9 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
     }
 
     fprintf(log->file, "\n*** NEW SESSION ***\n\n");
-    free(user_config_dir);
 }
 
-void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
+void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
 {
     if (!log->log_on)
         return;
@@ -99,7 +100,7 @@ void write_to_log(uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
     strftime(s, MAX_STR_SIZE, "%Y/%m/%d [%H:%M:%S]", get_time());
     fprintf(log->file,"%s %s %s\n", s, name_frmt, msg);
 
-    uint64_t curtime = (uint64_t) time(NULL);
+    uint64_t curtime = get_unix_time();
 
     if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT)) {
         fflush(log->file);

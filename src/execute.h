@@ -24,7 +24,7 @@
 
 #ifdef _SUPPORT_AUDIO 
     #define GLOBAL_NUM_COMMANDS 16
-    #define CHAT_NUM_COMMANDS 9
+    #define CHAT_NUM_COMMANDS 10
 #else 
     #define GLOBAL_NUM_COMMANDS 14
     #define CHAT_NUM_COMMANDS 5
