@@ -58,6 +58,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
     if (path_len > MAX_STR_SIZE) {
         log->log_on = false;
+        free(user_config_dir);
         return;
     }
 
@@ -65,6 +66,8 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
     snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
              user_config_dir, CONFIGDIR, name, ident);
+
+    free(user_config_dir);
 
     log->file = fopen(log_path, "a");
 
@@ -74,7 +77,6 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
     }
 
     fprintf(log->file, "\n*** NEW SESSION ***\n\n");
-    free(user_config_dir);
 }
 
 void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
