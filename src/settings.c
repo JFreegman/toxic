@@ -62,19 +62,21 @@ int settings_load(struct user_settings *s, char *path)
 {
     char *user_config_dir = get_user_config_dir();
     FILE *fp = NULL;
+    char dflt_path[MAX_STR_SIZE];
 
     if (path) {
         fp = fopen(path, "r");
     } else {
-        char dflt_path[MAX_STR_SIZE];
         snprintf(dflt_path, sizeof(dflt_path), "%s%stoxic.conf", user_config_dir, CONFIGDIR);
         fp = fopen(dflt_path, "r");
     }
 
     free(user_config_dir);
 
-    if (fp == NULL)
-        return -1;
+    if (fp == NULL) {
+        if ((fp = fopen(dflt_path, "w")) == NULL)
+            return -1;
+    }
 
     char line[MAX_STR_SIZE];
 
@@ -99,5 +101,6 @@ int settings_load(struct user_settings *s, char *path)
         }
     }
 
+    fclose(fp);
     return 0;
 }

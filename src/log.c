@@ -99,7 +99,7 @@ void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool e
     else
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
-    const char *t = user_settings->time == TIME_24 ? "%Y/%m/%d [%H:%M:%S]" : "%Y/%m/%d [%I:%M:%S %p]";
+    const char *t = user_settings->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
     uint8_t s[MAX_STR_SIZE];
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file,"%s %s %s\n", s, name_frmt, msg);

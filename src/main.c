@@ -559,12 +559,12 @@ int main(int argc, char *argv[])
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
-    /*
+    
     if (settings_err == -1) {
         msg = "Failed to load user settings";
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
-    */
+    
 
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);

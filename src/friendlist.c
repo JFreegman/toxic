@@ -92,7 +92,7 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
     friends[num].last_online.tm = *localtime(&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
-    const char *t = user_settings->time == TIME_24 ? "%H:%M" : "%I:%M %p";
+    const char *t = user_settings->time == TIME_12 ? "%I:%M %p" : "%H:%M";
     strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, t, 
             &friends[num].last_online.tm);
 }
