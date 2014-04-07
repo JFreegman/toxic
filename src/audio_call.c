@@ -24,6 +24,8 @@
 #define MAX_DEVICES 32
 #define _cbend pthread_exit(NULL)
 
+#define AUDIO_FRAME_SIZE (av_DefaultSettings.audio_sample_rate * av_DefaultSettings.audio_frame_duration / 1000)
+
 typedef struct _DeviceIx {
     
     ALCdevice* dhndl; /* Handle of device selected/opened */
@@ -86,7 +88,10 @@ int device_open (ToxWindow *self, _Devices type)
     
     if ( type == input ) {
         ASettins.device[type].dhndl = alcCaptureOpenDevice(
-            ASettins.device[type].devices[ASettins.device[type].index], AUDIO_SAMPLE_RATE, AL_FORMAT_MONO16, AUDIO_FRAME_SIZE * 4);
+            ASettins.device[type].devices[ASettins.device[type].index], 
+            av_DefaultSettings.audio_sample_rate, 
+            AL_FORMAT_MONO16, 
+            AUDIO_FRAME_SIZE * 4);
         
         if (alcGetError(ASettins.device[type].dhndl) != AL_NO_ERROR) {
             
@@ -241,7 +246,11 @@ ToxAv* init_audio(ToxWindow* self, Tox* tox)
     }
     else {
         /* Streaming stuff from core */
-        ASettins.av = toxav_new(tox, 0, 0);
+        
+        ToxAvCodecSettings cs = av_DefaultSettings;
+        cs.video_height = cs.video_width = 0;
+        
+        ASettins.av = toxav_new(tox, &cs);
         
         if ( !ASettins.av ) {
             ASettins.errors |= ErrorStartingCoreAudio;
