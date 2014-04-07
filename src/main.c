@@ -496,15 +496,6 @@ int main(int argc, char *argv[])
 
     free(user_config_dir);
 
-    init_term();
-    Tox *m = init_tox(f_use_ipv4);
-
-    if (m == NULL) {
-        endwin();
-        fprintf(stderr, "Failed to initialize network. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
-
     /* init user_settings struct and load settings from conf file */
     user_settings = malloc(sizeof(struct user_settings));
 
@@ -515,6 +506,15 @@ int main(int argc, char *argv[])
     }
 
     int settings_err = settings_load(user_settings, NULL);
+
+    init_term();
+    Tox *m = init_tox(f_use_ipv4);
+
+    if (m == NULL) {
+        endwin();
+        fprintf(stderr, "Failed to initialize network. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
 
     prompt = init_windows(m);
 
