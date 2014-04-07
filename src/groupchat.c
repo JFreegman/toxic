@@ -36,12 +36,15 @@
 #include "toxic_strings.h"
 #include "log.h"
 #include "line_info.h"
+#include "settings.h"
 
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
 static GroupChat groupchats[MAX_WINDOWS_NUM];
 static int max_groupchat_index = 0;
+
+extern struct user_settings *user_settings;
 
 /* temporary until group chats have unique commands */
 extern const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
@@ -657,8 +660,11 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     memset(ctx->log, 0, sizeof(struct chatlog));
 
     line_info_init(ctx->hst);
-
     print_groupchat_help(self);
+
+    if (user_settings->autolog == AUTOLOG_ON)
+        log_enable(self->name, NULL, ctx->log);
+
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
     wmove(self->window, y-CURS_Y_OFFSET, 0);

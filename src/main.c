@@ -61,6 +61,7 @@
 #include "misc_tools.h"
 #include "file_senders.h"
 #include "line_info.h"
+#include "settings.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "audio_call.h"
@@ -81,6 +82,7 @@ ToxWindow *prompt = NULL;
 static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
 
 struct _Winthread Winthread;
+struct user_settings *user_settings = NULL;
 
 void on_window_resize(int sig)
 {
@@ -414,6 +416,7 @@ void exit_toxic(Tox *m)
     free(prompt->chatwin->log);
     free(prompt->chatwin->hst);
     free(prompt->chatwin);
+    free(user_settings);
     tox_kill(m);
     #ifdef _SUPPORT_AUDIO
     terminate_audio();
@@ -502,6 +505,17 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    /* init user_settings struct and load settings from conf file */
+    user_settings = malloc(sizeof(struct user_settings));
+
+    if (user_settings == NULL) {
+        endwin();
+        fprintf(stderr, "malloc() failed. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int settings_err = settings_load(user_settings, NULL);
+
     prompt = init_windows(m);
 
     /* create new thread for ncurses stuff */
@@ -544,6 +558,13 @@ int main(int argc, char *argv[])
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
+
+    /*
+    if (settings_err == -1) {
+        msg = "Failed to load user settings";
+        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    }
+    */
 
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);

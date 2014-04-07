@@ -32,6 +32,9 @@
 #include "toxic_windows.h"
 #include "misc_tools.h"
 #include "log.h"
+#include "settings.h"
+
+extern struct user_settings *user_settings;
 
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
@@ -96,8 +99,9 @@ void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool e
     else
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
+    const char *t = user_settings->time == TIME_24 ? "%Y/%m/%d [%H:%M:%S]" : "%Y/%m/%d [%I:%M:%S %p]";
     uint8_t s[MAX_STR_SIZE];
-    strftime(s, MAX_STR_SIZE, "%Y/%m/%d [%H:%M:%S]", get_time());
+    strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file,"%s %s %s\n", s, name_frmt, msg);
 
     uint64_t curtime = get_unix_time();

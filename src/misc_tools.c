@@ -31,8 +31,10 @@
 
 #include "toxic_windows.h"
 #include "misc_tools.h"
+#include "settings.h"
 
 extern ToxWindow *prompt;
+extern struct user_settings *user_settings;
 
 static uint64_t current_unix_time;
 
@@ -57,7 +59,8 @@ struct tm *get_time(void)
 
 void get_time_str(uint8_t *buf)
 {
-    strftime(buf, TIME_STR_SIZE, "[%H:%M:%S] ", get_time());
+    const char *t = user_settings->time == TIME_24 ? "[%H:%M:%S] " : "[%I:%M:%S %p] ";
+    strftime(buf, TIME_STR_SIZE, t, get_time());
 }
 
 /* XXX: FIX */

@@ -31,7 +31,9 @@ toxic_SOURCES = $(top_srcdir)/src/main.c \
                 $(top_srcdir)/src/file_senders.c \
                 $(top_srcdir)/src/file_senders.h \
                 $(top_srcdir)/src/line_info.c \
-                $(top_srcdir)/src/line_info.h
+                $(top_srcdir)/src/line_info.h \
+                $(top_srcdir)/src/settings.c \
+                $(top_srcdir)/src/settings.h
 
 toxic_CFLAGS =                 -I$(top_srcdir) \
 				$(NCURSES_CFLAGS) \

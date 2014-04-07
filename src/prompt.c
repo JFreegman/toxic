@@ -34,11 +34,14 @@
 #include "toxic_strings.h"
 #include "log.h"
 #include "line_info.h"
+#include "settings.h"
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
 extern ToxWindow *prompt;
 struct _Winthread Winthread;
+
+extern struct user_settings *user_settings;
 
 /* Array of global command names used for tab completion. */
 const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -489,6 +492,13 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     memset(ctx->hst, 0, sizeof(struct history));
 
     line_info_init(ctx->hst);
+
+    if (user_settings->autolog == AUTOLOG_ON) {
+        uint8_t myid[TOX_FRIEND_ADDRESS_SIZE];
+        tox_get_address(m, myid);
+        log_enable(self->name, myid, ctx->log);
+    }
+
     execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
 
     wmove(ctx->history, y2-1, 2);

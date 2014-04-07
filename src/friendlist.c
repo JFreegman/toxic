@@ -35,6 +35,7 @@
 #include "friendlist.h"
 #include "misc_tools.h"
 #include "line_info.h"
+#include "settings.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -48,6 +49,8 @@ static int num_selected = 0;
 static int num_friends = 0;
 
 extern struct _Winthread Winthread;
+extern struct user_settings *user_settings;
+
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
@@ -89,7 +92,8 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
     friends[num].last_online.tm = *localtime(&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
-    strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, "%I:%M %p", 
+    const char *t = user_settings->time == TIME_24 ? "%H:%M" : "%I:%M %p";
+    strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, t, 
             &friends[num].last_online.tm);
 }
 
@@ -178,6 +182,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
             friends[i].namelength = tox_get_name(m, num, friends[i].name);
+            friends[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
             tox_get_client_id(m, num, friends[i].pub_key);
             update_friend_last_online(i, tox_get_last_online(m, i));
 

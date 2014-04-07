@@ -35,6 +35,7 @@
 #include "toxic_strings.h"
 #include "log.h"
 #include "line_info.h"
+#include "settings.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "audio_call.h"
@@ -45,7 +46,9 @@ extern int store_data(Tox *m, char *path);
 
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
+
 extern struct _Winthread Winthread;
+extern struct user_settings *user_settings;
 
 #ifdef _SUPPORT_AUDIO
     #define AC_NUM_CHAT_COMMANDS 23
