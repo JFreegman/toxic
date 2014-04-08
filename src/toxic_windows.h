@@ -28,6 +28,7 @@
 #endif
 
 #include <curses.h>
+#include <pthread.h>
 #include <wctype.h>
 #include <wchar.h>
 
