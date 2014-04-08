@@ -7,8 +7,6 @@
 
 #include <tox/toxav.h>
 
-typedef struct ToxWindow ToxWindow;
-
 typedef enum _AudioError
 {
     NoError = 0,
