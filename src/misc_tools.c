@@ -59,7 +59,7 @@ struct tm *get_time(void)
 
 void get_time_str(uint8_t *buf)
 {
-    const char *t = user_settings->time == TIME_12 ? "[%I:%M:%S %p] " : "[%H:%M:%S] ";
+    const char *t = user_settings->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
     strftime(buf, TIME_STR_SIZE, t, get_time());
 }
 
