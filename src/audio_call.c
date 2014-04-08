@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define MAX_DEVICES 32
 #define _cbend pthread_exit(NULL)
 
 #define AUDIO_FRAME_SIZE (av_DefaultSettings.audio_sample_rate * av_DefaultSettings.audio_frame_duration / 1000)
@@ -35,12 +34,6 @@ typedef struct _DeviceIx {
     int dix; /* Index of default device */
     int index; /* Current index */
 } DeviceIx;
-
-typedef enum _Devices
-{
-    input,
-    output,
-} _Devices;
 
 struct _ASettings {
     
@@ -70,6 +63,21 @@ void callback_peer_timeout ( void* arg );
 static void print_err (ToxWindow *self, uint8_t *error_str)
 {
     line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
+}
+
+int device_set(ToxWindow *self, _Devices type, long int selection)
+{
+    uint8_t error_str[MAX_STR_SIZE];
+    uint8_t *s_type = type == input ? "input" : "output";
+
+    if ( selection < 0 || selection >= ASettins.device[type].size ) {
+        snprintf(error_str, sizeof(error_str), "Cannot set audio %s device: Invalid index", s_type);
+        line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
+        return -1;
+    }
+
+    ASettins.device[type].index = selection;
+    return 0;
 }
 
 /* Opens device under current index
@@ -709,16 +717,12 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         error_str = "Invalid input";
         goto on_error;
     }
-    
-    if ( selection < 0 || selection >= ASettins.device[type].size ) {
-        error_str = "No device with such index";
-        goto on_error;
+
+    if ( device_set(self, type, selection ) == 0) {
+        snprintf(msg, sizeof(msg), "Selected: %s", ASettins.device[type].devices[selection]);
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
-    ASettins.device[type].index = selection;
-    snprintf(msg, sizeof(msg), "Selected: %s", ASettins.device[type].devices[selection]);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    
     return;
 on_error: 
     print_err (self, error_str);

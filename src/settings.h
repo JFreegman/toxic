@@ -20,13 +20,15 @@
  *
  */
 
-#define NUM_SETTINGS 3
+#define NUM_SETTINGS 5
 
 /* holds user setting values */
 struct user_settings {
-    int autolog;      /* boolean */
-    int time;         /* 12 or 24 */
-    int colour_theme; /* boolean (0 for default toxic colours) */
+    int autolog;           /* boolean */
+    int time;              /* 12 or 24 */
+    int colour_theme;      /* boolean (0 for default toxic colours) */
+    long int audio_in_dev;
+    long int audio_out_dev;
 };
 
 enum {

@@ -7,6 +7,8 @@
 
 #include <tox/toxav.h>
 
+#define MAX_DEVICES 32
+
 typedef struct ToxWindow ToxWindow;
 
 typedef enum _AudioError
@@ -17,6 +19,12 @@ typedef enum _AudioError
     ErrorStartingCoreAudio = 1 << 2
 } AudioError;
 
+typedef enum _Devices
+{
+    input,
+    output,
+} _Devices;
+
 /* You will have to pass pointer to first member of 'windows' 
  * declared in windows.c otherwise undefined behaviour will 
  */
@@ -26,5 +34,6 @@ void terminate_audio();
 int errors();
 
 int start_transmission(ToxWindow *self);
+int device_set(ToxWindow *self, _Devices type, long int selection);
 
 #endif /* _audio_h */

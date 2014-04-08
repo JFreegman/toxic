@@ -25,11 +25,14 @@
 
 #include "toxic_windows.h"
 #include "configdir.h"
+#include "audio_call.h"
 #include "settings.h"
 
 static void uset_autolog(struct user_settings *s, int val);
 static void uset_time(struct user_settings *s, int val);
 static void uset_colours(struct user_settings *s, int val);
+static void uset_ain_dev(struct user_settings *s, int val);
+static void uset_aout_dev(struct user_settings *s, int val);
 
 struct {
     const char *name;
@@ -38,10 +41,12 @@ struct {
     { "autolog",        uset_autolog    }, 
     { "time",           uset_time       },
     { "colour_theme",   uset_colours    },
+    { "audio_in_dev",   uset_ain_dev    },
+    { "audio_out_dev",  uset_aout_dev   },
 };
 
 static void uset_autolog(struct user_settings *s, int val) 
-{ 
+{
     /* default off if invalid value */
     s->autolog = val == AUTOLOG_ON ? AUTOLOG_ON : AUTOLOG_OFF;
 }
@@ -56,6 +61,22 @@ static void uset_colours(struct user_settings *s, int val)
 {
     /* use default toxic colours if invalid value */
     s->colour_theme = val == NATIVE_COLS ? NATIVE_COLS : DFLT_COLS;
+}
+
+static void uset_ain_dev(struct user_settings *s, int val)
+{
+    if (val < 0 || val > MAX_DEVICES)
+        val = (long int) 0;
+
+    s->audio_in_dev = (long int) val;
+}
+
+static void uset_aout_dev(struct user_settings *s, int val)
+{
+    if (val < 0 || val > MAX_DEVICES)
+        val = (long int) 0;
+
+    s->audio_out_dev = (long int) val;
 }
 
 int settings_load(struct user_settings *s, char *path)

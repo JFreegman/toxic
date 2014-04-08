@@ -505,6 +505,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    memset(user_settings, 0, sizeof(struct user_settings));
+
     int settings_err = settings_load(user_settings, NULL);
 
     init_term();
@@ -538,11 +540,14 @@ int main(int argc, char *argv[])
     av = init_audio(prompt, m);
 
     if ( errors() == NoError )
-        msg = "Audio started with no problems.";
+        msg = "Audio initiated with no problems.";
     else /* Get error code and stuff */
-        msg = "Error starting audio!";
+        msg = "Error initiating audio!";
 
     line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+
+    device_set(prompt, input, user_settings->audio_in_dev);
+    device_set(prompt, output, user_settings->audio_out_dev);
 
 #endif /* _SUPPORT_AUDIO */
 
