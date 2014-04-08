@@ -20,3 +20,5 @@ If you dont already have them, you may need to install the ncurses libraries. Fo
 ```
 sudo apt-get install libncurses5-dev libncursesw5-dev
 ```
+## Settings
+After running Toxic for the first time an empty file called toxic.conf should reside in your home configuration directory (~/.config/tox for Linux users). For an example on how to use this config file to save settings such as auto-logging and time format see: toxic/misc/toxic.conf
