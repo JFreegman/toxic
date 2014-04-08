@@ -9,8 +9,6 @@
 
 #define MAX_DEVICES 32
 
-typedef struct ToxWindow ToxWindow;
-
 typedef enum _AudioError
 {
     NoError = 0,
