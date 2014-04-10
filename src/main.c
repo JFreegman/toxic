@@ -304,7 +304,7 @@ static void do_connection(Tox *m, ToxWindow *prompt)
 
 static void load_friendlist(Tox *m)
 {
-    int32_t i;
+    uint32_t i;
     uint32_t numfriends = tox_count_friendlist(m);
 
     for (i = 0; i < numfriends; ++i)
@@ -506,7 +506,6 @@ int main(int argc, char *argv[])
     }
 
     memset(user_settings, 0, sizeof(struct user_settings));
-
     int settings_err = settings_load(user_settings, NULL);
 
     init_term();

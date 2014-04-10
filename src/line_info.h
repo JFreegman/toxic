@@ -36,7 +36,7 @@ struct line_info {
     uint8_t timestamp[TIME_STR_SIZE];
     uint8_t name1[TOXIC_MAX_NAME_LENGTH];
     uint8_t name2[TOXIC_MAX_NAME_LENGTH];
-    uint8_t msg[MAX_STR_SIZE];
+    uint8_t msg[TOX_MAX_MESSAGE_LENGTH];
     uint8_t type;
     uint8_t bold;
     uint8_t colour;
