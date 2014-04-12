@@ -189,7 +189,7 @@ void alert_window(ToxWindow *self, int type, bool is_beep)
 
     StatusBar *stb = prompt->stb;
 
-    if (is_beep && stb->status != TOX_USERSTATUS_BUSY)
+    if (is_beep && stb->status != TOX_USERSTATUS_BUSY && user_settings->alerts == ALERTS_ENABLED)
         beep();
 }
 

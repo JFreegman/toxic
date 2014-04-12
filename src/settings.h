@@ -20,11 +20,12 @@
  *
  */
 
-#define NUM_SETTINGS 5
+#define NUM_SETTINGS 6
 
 /* holds user setting values */
 struct user_settings {
     int autolog;           /* boolean */
+    int alerts;            /* boolean */
     int time;              /* 12 or 24 */
     int colour_theme;      /* boolean (0 for default toxic colours) */
     long int audio_in_dev;
@@ -37,6 +38,9 @@ enum {
 
     TIME_24 = 24,
     TIME_12 = 12,
+
+    ALERTS_DISABLED = 1,
+    ALERTS_ENABLED = 0,
 
     NATIVE_COLS = 1,
     DFLT_COLS = 0,
