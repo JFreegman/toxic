@@ -61,8 +61,10 @@ static void uset_time(struct user_settings *s, int val)
 
 static void uset_alerts(struct user_settings *s, int val) 
 {
+    /* alerts default on if invalid value */
     s->alerts = val == ALERTS_DISABLED ? ALERTS_DISABLED : ALERTS_ENABLED;
 }
+
 static void uset_colours(struct user_settings *s, int val)
 {
     /* use default toxic colours if invalid value */

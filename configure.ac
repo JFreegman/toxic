@@ -451,29 +451,6 @@ fi
 
 AM_CONDITIONAL(BUILD_AV, test "x$BUILD_AV" = "xyes")
 
-# check for ncurses default colour capabilities
-NATIVE_COLOURS="no"
-AC_ARG_ENABLE([native-colours],
-    [AC_HELP_STRING(
-        [--enable-native-colours], [use terminal-default fg/bg colours])
-    ],
-    [
-        if test "x$enableval" = "xno"; then
-            NATIVE_COLOURS="no"
-        elif test "x$enableval" = "xyes"; then
-            NATIVE_COLOURS="yes"
-        fi
-    ]
-)
-if test "x$NATIVE_COLOURS" = "xyes"; then
-    AC_CHECK_LIB([ncurses], [assume_default_colors],
-        [AC_DEFINE(
-            [TOXIC_NATIVE_COLOURS], [1], [use terminal-default fg/bg colours])
-        ],
-        [AC_MSG_WARN([curses library does not support native colours])]
-    )
-fi
-
 TOXIC_VERSION="$PACKAGE_VERSION"
 AC_PATH_PROG([GIT], [git], [no])
 if test "x$GIT" != "xno"; then

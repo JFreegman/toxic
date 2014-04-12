@@ -110,10 +110,12 @@ static void init_term(void)
     if (has_colors()) {
         short bg_color = COLOR_BLACK;
         start_color();
-#ifdef TOXIC_NATIVE_COLOURS
-        if (assume_default_colors(-1,-1) == OK)
-            bg_color = -1;
-#endif
+
+        if (user_settings->colour_theme == NATIVE_COLS) {
+            if (assume_default_colors(-1,-1) == OK)
+                bg_color = -1;
+        }
+
         init_pair(0, COLOR_WHITE, COLOR_BLACK);
         init_pair(1, COLOR_GREEN, bg_color);
         init_pair(2, COLOR_CYAN, bg_color);
