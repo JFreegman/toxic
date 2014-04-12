@@ -42,6 +42,9 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
     if (!log->log_on)
         return;
 
+    if (!valid_nick(name))
+        name = UNKNOWN_NAME;
+
     char *user_config_dir = get_user_config_dir();
     int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name); 
 

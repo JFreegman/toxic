@@ -202,6 +202,7 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2)
 /* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
       - cannot be empty
       - cannot start with a space
+      - must not contain a forward slash (for logfile naming purposes)
       - must not contain contiguous spaces */
 int valid_nick(uint8_t *nick)
 {
@@ -212,6 +213,8 @@ int valid_nick(uint8_t *nick)
 
     for (i = 0; nick[i]; ++i) {
         if (nick[i] == ' ' && nick[i+1] == ' ')
+            return 0;
+        if (nick[i] == '/')
             return 0;
     }
 
