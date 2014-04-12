@@ -524,6 +524,9 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if (f_loadfromfile)
+        load_data(m, DATA_FILE);
+
     prompt = init_windows(m);
 
     /* create new thread for ncurses stuff */
@@ -556,9 +559,6 @@ int main(int argc, char *argv[])
     device_set(prompt, output, user_settings->audio_out_dev);
 
 #endif /* _SUPPORT_AUDIO */
-
-    if (f_loadfromfile)
-        load_data(m, DATA_FILE);
 
     if (f_flag == -1) {
         msg = "You passed '-f' without giving an argument. Defaulting to 'data' for a keyfile...";

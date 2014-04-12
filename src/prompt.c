@@ -500,7 +500,6 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     }
 
     execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
-
     wmove(ctx->history, y2-1, 2);
 }
 
