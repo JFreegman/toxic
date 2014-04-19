@@ -184,7 +184,7 @@ void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t ch
     }
 }
 
-void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, 
+void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize,
                          uint8_t *filename, uint16_t filename_length, void *userdata)
 {
     int i;
@@ -196,7 +196,7 @@ void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint6
     }
 }
 
-void on_file_control (Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, 
+void on_file_control (Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber,
                       uint8_t control_type, uint8_t *data, uint16_t length, void *userdata)
 {
     int i;
@@ -236,6 +236,7 @@ int add_window(Tox *m, ToxWindow w)
 
         if (w.window == NULL)
             return -1;
+
 #ifdef URXVT_FIX
         /* Fixes text color problem on some terminals. */
         wbkgd(w.window, COLOR_PAIR(6));
@@ -405,6 +406,7 @@ void draw_active_window(Tox *m)
         ltr = iswprint(ch);
     else /* if (status == KEY_CODE_YES) */
         ltr = false;
+
 #else
     ch = getch();
 

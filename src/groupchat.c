@@ -108,7 +108,7 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
     int i;
 
     for (i = max_groupchat_index; i > 0; --i) {
-        if (groupchats[i-1].active)
+        if (groupchats[i - 1].active)
             break;
     }
 
@@ -125,21 +125,21 @@ static void print_groupchat_help(ToxWindow *self)
     uint8_t *msg = "Group chat commands:";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
-    #define NUMLINES 9
+#define NUMLINES 9
 
     uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
 
-    { "    /add <id> <msg>     : Add friend with optional message"               },
-    { "    /status <type> <msg>: Set your status with optional note"             },
-    { "    /note <msg>         : Set a personal note"                            },
-    { "    /nick <nick>        : Set your nickname"                              },
-    { "    /groupchat          : Create a group chat"                            },
-    { "    /log <on> or <off>  : Enable/disable logging"                         },
-    { "    /close              : Close the current group chat"                   },
-    { "    /help               : Print this message again"                       },
-    { "    /help global        : Show a list of global commands"                 },
+        { "    /add <id> <msg>     : Add friend with optional message"               },
+        { "    /status <type> <msg>: Set your status with optional note"             },
+        { "    /note <msg>         : Set a personal note"                            },
+        { "    /nick <nick>        : Set your nickname"                              },
+        { "    /groupchat          : Create a group chat"                            },
+        { "    /log <on> or <off>  : Enable/disable logging"                         },
+        { "    /close              : Close the current group chat"                   },
+        { "    /help               : Print this message again"                       },
+        { "    /help global        : Show a list of global commands"                 },
 
-};
+    };
 
     int i;
 
@@ -169,7 +169,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     int n_len = tox_group_peername(m, groupnum, peernum, nick);
 
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);    /* enforce client max name length */
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);  /* enforce client max name length */
     nick[n_len] = '\0';
 
     /* check if message contains own name and alert appropriately */
@@ -229,7 +229,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
     n_len = tox_group_peername(m, groupnum, peernum, nick);
 
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
     nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
@@ -259,7 +259,7 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
     memset(groupchats[gnum].peer_name_lengths, 0, sizeof(uint16_t) * npeers);
 
     if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL
-        || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
+            || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
         endwin();
         fprintf(stderr, "malloc() failed. Aborting...\n");
         exit(EXIT_FAILURE);
@@ -270,26 +270,26 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
 
     for (i = 0; i < npeers; ++i) {
         if (string_is_empty(peerlist[i])) {
-            memcpy(&groupchats[gnum].peer_names[i*N], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
+            memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
             groupchats[gnum].peer_name_lengths[i] = unknown_len;
         } else {
-            memcpy(&groupchats[gnum].peer_names[i*N], peerlist[i], N);
+            memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], N);
             uint16_t n_len = lengths[i];
 
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
 
-            groupchats[gnum].peer_names[i*N+n_len] = '\0';
+            groupchats[gnum].peer_names[i * N + n_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = n_len;
         }
     }
 
-    memcpy(groupchats[gnum].oldpeer_names, groupchats[gnum].peer_names, N*npeers);
-    memcpy(groupchats[gnum].oldpeer_name_lengths, groupchats[gnum].peer_name_lengths, 
-                                                           sizeof(uint16_t) * npeers);
+    memcpy(groupchats[gnum].oldpeer_names, groupchats[gnum].peer_names, N * npeers);
+    memcpy(groupchats[gnum].oldpeer_name_lengths, groupchats[gnum].peer_name_lengths,
+           sizeof(uint16_t) * npeers);
 }
 
 static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum, int peernum,
-                                            uint8_t change)
+        uint8_t change)
 {
     if (self->num != groupnum)
         return;
@@ -301,7 +301,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     uint8_t oldpeername[TOX_MAX_NAME_LENGTH];
 
     if (change != TOX_CHAT_CHANGE_PEER_ADD) {
-        memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum*TOX_MAX_NAME_LENGTH], 
+        memcpy(oldpeername, &groupchats[groupnum].oldpeer_names[peernum * TOX_MAX_NAME_LENGTH],
                sizeof(oldpeername));
         uint16_t old_n_len = groupchats[groupnum].oldpeer_name_lengths[peernum];
         oldpeername[old_n_len] = '\0';
@@ -318,7 +318,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     if (change != TOX_CHAT_CHANGE_PEER_DEL) {
         uint16_t n_len = groupchats[groupnum].peer_name_lengths[peernum];
-        memcpy(peername, &groupchats[groupnum].peer_names[peernum*TOX_MAX_NAME_LENGTH], sizeof(peername));
+        memcpy(peername, &groupchats[groupnum].peer_names[peernum * TOX_MAX_NAME_LENGTH], sizeof(peername));
         peername[n_len] = '\0';
     }
 
@@ -331,36 +331,37 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     get_time_str(timefrmt);
 
     switch (change) {
-    case TOX_CHAT_CHANGE_PEER_ADD:
-        event = "has joined the room";
-        line_info_add(self, timefrmt, peername, NULL, event, CONNECTION, 0, GREEN);
-        write_to_log(event, peername, ctx->log, true);
-        break;
+        case TOX_CHAT_CHANGE_PEER_ADD:
+            event = "has joined the room";
+            line_info_add(self, timefrmt, peername, NULL, event, CONNECTION, 0, GREEN);
+            write_to_log(event, peername, ctx->log, true);
+            break;
 
-    case TOX_CHAT_CHANGE_PEER_DEL:
-        event = "has left the room";
-        line_info_add(self, timefrmt, oldpeername, NULL, event, CONNECTION, 0, 0);
+        case TOX_CHAT_CHANGE_PEER_DEL:
+            event = "has left the room";
+            line_info_add(self, timefrmt, oldpeername, NULL, event, CONNECTION, 0, 0);
 
-        if (groupchats[self->num].side_pos > 0)
-            --groupchats[self->num].side_pos;
+            if (groupchats[self->num].side_pos > 0)
+                --groupchats[self->num].side_pos;
 
-        write_to_log(event, oldpeername, ctx->log, true);
-        break;
+            write_to_log(event, oldpeername, ctx->log, true);
+            break;
 
-    case TOX_CHAT_CHANGE_PEER_NAME:
-        event = " is now known as ";
-        line_info_add(self, timefrmt, oldpeername, peername, event, NAME_CHANGE, 0, 0);
+        case TOX_CHAT_CHANGE_PEER_NAME:
+            event = " is now known as ";
+            line_info_add(self, timefrmt, oldpeername, peername, event, NAME_CHANGE, 0, 0);
 
-        uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
-        snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
-        write_to_log(tmp_event, oldpeername, ctx->log, true);
-        break;
+            uint8_t tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
+            snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", peername);
+            write_to_log(tmp_event, oldpeername, ctx->log, true);
+            break;
     }
 
     alert_window(self, WINDOW_ALERT_2, false);
 }
 
-static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action) {
+static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *action)
+{
     if (action == NULL) {
         wprintw(ctx->history, "Invalid syntax.\n");
         return;
@@ -393,11 +394,11 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ltr) {
-        if ( (ctx->len < MAX_STR_SIZE-1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1)-1)) ) {
+        if ( (ctx->len < MAX_STR_SIZE - 1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1) - 1)) ) {
             add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
 
-            if (x == x2-1)
-                wmove(self->window, y+1, 0);
+            if (x == x2 - 1)
+                wmove(self->window, y + 1, 0);
             else
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
         }
@@ -410,7 +411,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
 
                 if (x == 0)
-                    wmove(self->window, y-1, x2 - cur_len);
+                    wmove(self->window, y - 1, x2 - cur_len);
                 else
                     wmove(self->window, y, x - cur_len);
             } else {
@@ -451,7 +452,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
             if (ctx->pos != ctx->len) {
                 ctx->pos = ctx->len;
-                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT-1)*x2)), y2, x2);
+                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT - 1)*x2)), y2, x2);
             }
         }
 
@@ -461,7 +462,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
 
                 if (x == 0)
-                    wmove(self->window, y-1, x2 - cur_len);
+                    wmove(self->window, y - 1, x2 - cur_len);
                 else
                     wmove(self->window, y, x - cur_len);
             } else {
@@ -474,8 +475,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                 ++ctx->pos;
 
-                if (x == x2-1)
-                    wmove(self->window, y+1, 0);
+                if (x == x2 - 1)
+                    wmove(self->window, y + 1, 0);
                 else
                     wmove(self->window, y, x + cur_len);
             } else {
@@ -500,7 +501,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 int diff;
 
                 if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
-                    diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names, 
+                    diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names,
                                          groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
                 else
                     diff = complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
@@ -509,9 +510,9 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 if (diff != -1) {
                     if (x + diff > x2 - 1) {
                         int ofst = (x + diff - 1) - (x2 - 1);
-                        wmove(self->window, y+1, ofst);
+                        wmove(self->window, y + 1, ofst);
                     } else {
-                        wmove(self->window, y, x+diff);
+                        wmove(self->window, y, x + diff);
                     }
                 } else {
                     beep();
@@ -606,8 +607,8 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     wclear(ctx->sidebar);
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
-    mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2-CHATBOX_HEIGHT);
-    mvwaddch(ctx->sidebar, y2-CHATBOX_HEIGHT, 0, ACS_BTEE);  
+    mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
+    mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
 
     int num_peers = groupchats[self->num].num_peers;
 
@@ -617,20 +618,20 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     wattroff(ctx->sidebar, A_BOLD);
 
     mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
-    mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH-1);
+    mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
 
     int N = TOX_MAX_NAME_LENGTH;
     int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
     int i;
 
     for (i = 0; i < num_peers && i < maxlines; ++i) {
-        wmove(ctx->sidebar, i+2, 1);
+        wmove(ctx->sidebar, i + 2, 1);
         int peer = i + groupchats[self->num].side_pos;
 
         /* truncate nick to fit in side panel without modifying list */
         uint8_t tmpnck[TOX_MAX_NAME_LENGTH];
-        memcpy(tmpnck, &groupchats[self->num].peer_names[peer*N], SIDEBAR_WIDTH-2);
-        tmpnck[SIDEBAR_WIDTH-2] = '\0';
+        memcpy(tmpnck, &groupchats[self->num].peer_names[peer * N], SIDEBAR_WIDTH - 2);
+        tmpnck[SIDEBAR_WIDTH - 2] = '\0';
 
         wprintw(ctx->sidebar, "%s\n", tmpnck);
     }
@@ -643,9 +644,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     ChatContext *ctx = self->chatwin;
 
-    ctx->history = subwin(self->window, y-CHATBOX_HEIGHT+1, x-SIDEBAR_WIDTH-1, 0, 0);
-    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y-CHATBOX_HEIGHT, 0);
-    ctx->sidebar = subwin(self->window, y-CHATBOX_HEIGHT+1, SIDEBAR_WIDTH, 0, x-SIDEBAR_WIDTH);
+    ctx->history = subwin(self->window, y - CHATBOX_HEIGHT + 1, x - SIDEBAR_WIDTH - 1, 0, 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y - CHATBOX_HEIGHT, 0);
+    ctx->sidebar = subwin(self->window, y - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x - SIDEBAR_WIDTH);
 
     ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
@@ -667,7 +668,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
-    wmove(self->window, y-CURS_Y_OFFSET, 0);
+    wmove(self->window, y - CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)

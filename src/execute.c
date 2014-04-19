@@ -66,7 +66,7 @@ static struct cmd_func chat_commands[] = {
     { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
-    
+
 #ifdef _SUPPORT_AUDIO
     { "/call",      cmd_call        },
     { "/cancel",    cmd_cancel      },
@@ -76,7 +76,7 @@ static struct cmd_func chat_commands[] = {
 #endif /* _SUPPORT_AUDIO */
 };
 
-/* Parses input command and puts args into arg array. 
+/* Parses input command and puts args into arg array.
    Returns number of arguments on success, -1 on failure. */
 static int parse_command(WINDOW *w, ToxWindow *self, char *cmd, char (*args)[MAX_STR_SIZE])
 {
@@ -87,7 +87,7 @@ static int parse_command(WINDOW *w, ToxWindow *self, char *cmd, char (*args)[MAX
     /* characters wrapped in double quotes count as one arg */
     while (!cmd_end && num_args < MAX_NUM_ARGS) {
         if (*cmd == '\"') {
-            end = strchr(cmd+1, '\"');
+            end = strchr(cmd + 1, '\"');
 
             if (end++ == NULL) {    /* Increment past the end quote */
                 uint8_t *errmsg = "Invalid argument. Did you forget a closing \"?";
@@ -120,7 +120,7 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, int num_
 
     for (i = 0; i < num_cmds; ++i) {
         if (strcmp(args[0], commands[i].name) == 0) {
-            (commands[i].func)(w, self, m, num_args-1, args);
+            (commands[i].func)(w, self, m, num_args - 1, args);
             return 0;
         }
     }
@@ -128,7 +128,7 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, int num_
     return 1;
 }
 
-void execute(WINDOW* w, ToxWindow *self, Tox *m, char *cmd, int mode)
+void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode)
 {
     if (string_is_empty(cmd))
         return;
@@ -139,18 +139,19 @@ void execute(WINDOW* w, ToxWindow *self, Tox *m, char *cmd, int mode)
     if (num_args == -1)
         return;
 
-    /* Try to match input command to command functions. If non-global command mode is specified, 
-       try specified mode's commands first, then upon failure try global commands. 
+    /* Try to match input command to command functions. If non-global command mode is specified,
+       try specified mode's commands first, then upon failure try global commands.
 
        Note: Global commands must come last in case of duplicate command names */
     switch (mode) {
-    case CHAT_COMMAND_MODE:
-        if (do_command(w, self, m, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
-            return;
-        break;
+        case CHAT_COMMAND_MODE:
+            if (do_command(w, self, m, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
+                return;
 
-    case GROUPCHAT_COMMAND_MODE:
-        break;
+            break;
+
+        case GROUPCHAT_COMMAND_MODE:
+            break;
     }
 
     if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)

@@ -57,29 +57,29 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
 #ifdef _SUPPORT_AUDIO
-    #define NUMLINES 13
+#define NUMLINES 13
 #else
-    #define NUMLINES 9
+#define NUMLINES 9
 #endif
 
     uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
 
 #ifdef _SUPPORT_AUDIO
-    { "    /call                      : Audio call"                           },
-    { "    /cancel                    : Cancel call"                          },
-    { "    /answer                    : Answer incomming call"                },
-    { "    /reject                    : Reject incoming call"                 },
-    { "    /hangup                    : Hangup active call"                   },
+        { "    /call                      : Audio call"                           },
+        { "    /cancel                    : Cancel call"                          },
+        { "    /answer                    : Answer incomming call"                },
+        { "    /reject                    : Reject incoming call"                 },
+        { "    /hangup                    : Hangup active call"                   },
 #endif /* _SUPPORT_AUDIO */
-    { "    /invite <n>                : Invite friend to a group chat"        },
-    { "    /join                      : Join a pending group chat"            },
-    { "    /log <on> or <off>         : Enable/disable logging"               },
-    { "    /sendfile <filepath>       : Send a file"                          },
-    { "    /savefile <n>              : Receive a file"                       },
-    { "    /close                     : Close the current chat window"        },
-    { "    /help                      : Print this message again"             },
-    { "    /help global               : Show a list of global commands"       },
-};
+        { "    /invite <n>                : Invite friend to a group chat"        },
+        { "    /join                      : Join a pending group chat"            },
+        { "    /log <on> or <off>         : Enable/disable logging"               },
+        { "    /sendfile <filepath>       : Send a file"                          },
+        { "    /savefile <n>              : Receive a file"                       },
+        { "    /close                     : Close the current chat window"        },
+        { "    /help                      : Print this message again"             },
+        { "    /help global               : Show a list of global commands"       },
+    };
 
     int i;
 
@@ -160,9 +160,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint8_t *errmsg;
 
     if (argc != 1) {
-      errmsg = "Invalid syntax.";
-      line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-      return;
+        errmsg = "Invalid syntax.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        return;
     }
 
     uint8_t filenum = atoi(argv[1]);
@@ -204,16 +204,16 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 {
     uint8_t *errmsg;
 
-    if (max_file_senders_index >= (MAX_FILES-1)) {
+    if (max_file_senders_index >= (MAX_FILES - 1)) {
         errmsg = "Please wait for some of your outgoing file transfers to complete.";
         line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
         return;
     }
 
     if (argc < 1) {
-      errmsg = "Invalid syntax.";
-      line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-      return;
+        errmsg = "Invalid syntax.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        return;
     }
 
     uint8_t *path = argv[1];
@@ -224,7 +224,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    path[strlen(++path)-1] = L'\0';
+    path[strlen(++path) - 1] = L'\0';
     int path_len = strlen(path);
 
     if (path_len > MAX_STR_SIZE) {
@@ -279,5 +279,5 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
             return;
         }
-    } 
+    }
 }

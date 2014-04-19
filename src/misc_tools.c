@@ -98,7 +98,7 @@ int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = mbstowcs(buf, string, n)) == (size_t) -1)
+    if ((len = mbstowcs(buf, string, n)) == (size_t) - 1)
         return -1;
 
     return len;
@@ -113,7 +113,7 @@ int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = wcstombs(buf, string, n)) == (size_t) -1)
+    if ((len = wcstombs(buf, string, n)) == (size_t) - 1)
         return -1;
 
     return len;
@@ -125,11 +125,11 @@ uint8_t *wcs_to_mbs(wchar_t *string)
     uint8_t *ret = NULL;
     size_t len = wcstombs(NULL, string, 0);
 
-    if (len != (size_t) -1) {
+    if (len != (size_t) - 1) {
         ret = malloc(++len);
 
         if (ret != NULL) {
-            if (wcstombs(ret, string, len) == (size_t) -1)
+            if (wcstombs(ret, string, len) == (size_t) - 1)
                 return NULL;
         }
     } else {
@@ -176,15 +176,17 @@ int timed_out(uint64_t timestamp, uint64_t curtime, uint64_t timeout)
 void alert_window(ToxWindow *self, int type, bool is_beep)
 {
     switch (type) {
-    case WINDOW_ALERT_0:
-        self->alert0 = true;
-        break;
-    case WINDOW_ALERT_1:
-        self->alert1 = true;
-        break;
-    case WINDOW_ALERT_2:
-        self->alert2 = true;
-        break;
+        case WINDOW_ALERT_0:
+            self->alert0 = true;
+            break;
+
+        case WINDOW_ALERT_1:
+            self->alert1 = true;
+            break;
+
+        case WINDOW_ALERT_2:
+            self->alert2 = true;
+            break;
     }
 
     StatusBar *stb = prompt->stb;
@@ -212,8 +214,9 @@ int valid_nick(uint8_t *nick)
     int i;
 
     for (i = 0; nick[i]; ++i) {
-        if (nick[i] == ' ' && nick[i+1] == ' ')
+        if (nick[i] == ' ' && nick[i + 1] == ' ')
             return 0;
+
         if (nick[i] == '/')
             return 0;
     }
@@ -226,7 +229,7 @@ void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
 {
     int end_y = (len / max_x) + (max_y - CURS_Y_OFFSET);
     int end_x = len % max_x;
-    wmove(w, end_y, end_x);  
+    wmove(w, end_y, end_x);
 }
 
 /* gets base file name from path or original file name if no path is supplied */
@@ -235,10 +238,10 @@ void get_file_name(uint8_t *pathname, uint8_t *namebuf)
     int idx = strlen(pathname) - 1;
 
     while (idx >= 0 && pathname[idx] == '/')
-      pathname[idx--] = '\0';
+        pathname[idx--] = '\0';
 
     uint8_t *filename = strrchr(pathname, '/');    /* Try unix style paths */
-    
+
     if (filename != NULL) {
         if (!strlen(++filename))
             filename = pathname;

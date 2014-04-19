@@ -9,24 +9,22 @@
 
 #define MAX_DEVICES 32
 
-typedef enum _AudioError
-{
+typedef enum _AudioError {
     NoError = 0,
     ErrorStartingCaptureDevice = 1 << 0,
     ErrorStartingOutputDevice = 1 << 1,
     ErrorStartingCoreAudio = 1 << 2
 } AudioError;
 
-typedef enum _Devices
-{
+typedef enum _Devices {
     input,
     output,
 } _Devices;
 
-/* You will have to pass pointer to first member of 'windows' 
- * declared in windows.c otherwise undefined behaviour will 
+/* You will have to pass pointer to first member of 'windows'
+ * declared in windows.c otherwise undefined behaviour will
  */
-ToxAv* init_audio(ToxWindow* self, Tox* tox);
+ToxAv *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio();
 
 int errors();

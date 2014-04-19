@@ -57,12 +57,12 @@ struct history {
     bool scroll_mode;
 
     /* keeps track of lines added between window refreshes */
-    uint32_t queue;   
+    uint32_t queue;
     uint32_t queue_lns;
 };
 
 /* adds a line to history (also moves line_start and/or line_root forward if necessary) */
-void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg, 
+void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg,
                    uint8_t type, uint8_t bold, uint8_t colour);
 
 /* Prints a section of history starting at line_start */

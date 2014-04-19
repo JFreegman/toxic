@@ -54,7 +54,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     int req = atoi(argv[1]);
 
-    if ((req == 0 && strcmp(argv[1], "0"))|| req >= MAX_FRIENDS_NUM) {
+    if ((req == 0 && strcmp(argv[1], "0")) || req >= MAX_FRIENDS_NUM) {
         msg = "No pending friend request with that number.";
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         return;
@@ -80,7 +80,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     int i;
 
     for (i = num_frnd_requests; i > 0; --i) {
-        if (!strlen(pending_frnd_requests[i-1]))
+        if (!strlen(pending_frnd_requests[i - 1]))
             break;
     }
 
@@ -110,7 +110,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             return;
         }
 
-        temp[strlen(++temp)-1] = L'\0';
+        temp[strlen(++temp) - 1] = L'\0';
         snprintf(msg, sizeof(msg), "%s", temp);
     } else {
         uint8_t selfname[TOX_MAX_NAME_LENGTH];
@@ -151,31 +151,38 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
 
     switch (f_num) {
-    case TOX_FAERR_TOOLONG:
-        errmsg = "Message is too long.";
-        break;
-    case TOX_FAERR_NOMESSAGE:
-        errmsg = "Please add a message to your request.";
-        break;
-    case TOX_FAERR_OWNKEY:
-        errmsg = "That appears to be your own ID.";
-        break;
-    case TOX_FAERR_ALREADYSENT:
-        errmsg = "Friend request has already been sent.";
-        break;
-    case TOX_FAERR_UNKNOWN:
-        errmsg = "Undefined error when adding friend.";
-        break;
-    case TOX_FAERR_BADCHECKSUM:
-        errmsg = "Bad checksum in address.";
-        break;
-    case TOX_FAERR_SETNEWNOSPAM:
-        errmsg = "Nospam was different (is this contact already added?";
-        break;
-    default:
-        errmsg = "Friend request sent.";
-        on_friendadded(m, f_num, true);
-        break;
+        case TOX_FAERR_TOOLONG:
+            errmsg = "Message is too long.";
+            break;
+
+        case TOX_FAERR_NOMESSAGE:
+            errmsg = "Please add a message to your request.";
+            break;
+
+        case TOX_FAERR_OWNKEY:
+            errmsg = "That appears to be your own ID.";
+            break;
+
+        case TOX_FAERR_ALREADYSENT:
+            errmsg = "Friend request has already been sent.";
+            break;
+
+        case TOX_FAERR_UNKNOWN:
+            errmsg = "Undefined error when adding friend.";
+            break;
+
+        case TOX_FAERR_BADCHECKSUM:
+            errmsg = "Bad checksum in address.";
+            break;
+
+        case TOX_FAERR_SETNEWNOSPAM:
+            errmsg = "Nospam was different (is this contact already added?";
+            break;
+
+        default:
+            errmsg = "Friend request sent.";
+            on_friendadded(m, f_num, true);
+            break;
     }
 
     line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
@@ -192,9 +199,9 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     /* check arguments */
     if (argc != 3) {
-      errmsg = "Invalid syntax.";
-      line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-      return;
+        errmsg = "Invalid syntax.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        return;
     }
 
     char *ip = argv[1];
@@ -314,9 +321,9 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     /* check arguments */
     if (argc < 1) {
-      errmsg = "Invalid name.";
-      line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-      return;
+        errmsg = "Invalid name.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        return;
     }
 
     uint8_t *nick = argv[1];
@@ -334,7 +341,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH-1);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
 
     nick[len] = L'\0';
 
@@ -362,7 +369,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    msg[strlen(++msg)-1] = L'\0';
+    msg[strlen(++msg) - 1] = L'\0';
     uint16_t len = strlen(msg);
     tox_set_status_message(m, msg, len);
     prompt_update_statusmessage(prompt, msg, len);
@@ -378,31 +385,31 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
 #ifdef _SUPPORT_AUDIO
-    #define NUMLINES 14
+#define NUMLINES 14
 #else
-    #define NUMLINES 12
+#define NUMLINES 12
 #endif
 
     uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
 
-    { "    /add <id> <msg>            : Add friend with optional message"               },
-    { "    /accept <n>                : Accept friend request"                          },
-    { "    /connect <ip> <port> <key> : Manually connect to a DHT node"                 },
-    { "    /status <type> <msg>       : Set status with optional note"                  },
-    { "    /note <msg>                : Set a personal note"                            },
-    { "    /nick <nick>               : Set your nickname"                              },
-    { "    /log <on> or <off>         : Enable/disable logging"                         },
-    { "    /groupchat                 : Create a group chat"                            },
-    { "    /myid                      : Print your ID"                                  },
-    { "    /help                      : Print this message again"                       },
-    { "    /clear                     : Clear window history"                           },
-    { "    /quit or /exit             : Exit Toxic"                                     },
+        { "    /add <id> <msg>            : Add friend with optional message"               },
+        { "    /accept <n>                : Accept friend request"                          },
+        { "    /connect <ip> <port> <key> : Manually connect to a DHT node"                 },
+        { "    /status <type> <msg>       : Set status with optional note"                  },
+        { "    /note <msg>                : Set a personal note"                            },
+        { "    /nick <nick>               : Set your nickname"                              },
+        { "    /log <on> or <off>         : Enable/disable logging"                         },
+        { "    /groupchat                 : Create a group chat"                            },
+        { "    /myid                      : Print your ID"                                  },
+        { "    /help                      : Print this message again"                       },
+        { "    /clear                     : Clear window history"                           },
+        { "    /quit or /exit             : Exit Toxic"                                     },
 #ifdef _SUPPORT_AUDIO
-    { "    /lsdev <type>              : List devices where type: in|out"                },
-    { "    /sdev <type> <id>          : Set active device"                              },
+        { "    /lsdev <type>              : List devices where type: in|out"                },
+        { "    /sdev <type> <id>          : Set active device"                              },
 #endif /* _SUPPORT_AUDIO */
 
-};
+    };
     int i;
 
     for (i = 0; i < NUMLINES; ++i)
@@ -441,7 +448,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     char *status = argv[1];
     int len = strlen(status);
-    char l_status[len+1];
+    char l_status[len + 1];
     int i;
 
     for (i = 0; i <= len; ++i)
@@ -465,7 +472,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     prompt_update_status(prompt, status_kind);
 
     if (msg != NULL) {
-        msg[strlen(++msg)-1] = L'\0';   /* remove opening and closing quotes */
+        msg[strlen(++msg) - 1] = L'\0'; /* remove opening and closing quotes */
         uint16_t len = strlen(msg);
         tox_set_status_message(m, msg, len);
         prompt_update_statusmessage(prompt, msg, len);

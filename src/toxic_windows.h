@@ -35,7 +35,7 @@
 #include <tox/tox.h>
 
 #ifdef _SUPPORT_AUDIO
-    #include <tox/toxav.h>
+#include <tox/toxav.h>
 #endif /* _SUPPORT_AUDIO */
 
 #define UNKNOWN_NAME "Anonymous"
@@ -112,7 +112,7 @@ struct ToxWindow {
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
     void(*onGroupAction)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
     void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t *);
-    void(*onGroupNamelistChange)(ToxWindow *, Tox*, int, int, uint8_t);
+    void(*onGroupNamelistChange)(ToxWindow *, Tox *, int, int, uint8_t);
     void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, uint8_t *, uint16_t);
     void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
     void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t *, uint16_t);
@@ -239,8 +239,10 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, 
 void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, uint16_t length, void *userdata);
 void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t *group_pub_key, void *userdata);
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname, uint16_t pathname_length, void *userdata);
-void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type, uint8_t *data, uint16_t length, void *userdata);
+void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname,
+                         uint16_t pathname_length, void *userdata);
+void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type,
+                     uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
 
