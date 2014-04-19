@@ -197,7 +197,6 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
       return;
     }
 
-    tox_IP_Port dht;
     char *ip = argv[1];
     char *port = argv[2];
     char *key = argv[3];
