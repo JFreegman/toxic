@@ -38,8 +38,8 @@ static void uset_aout_dev(struct user_settings *s, int val);
 struct {
     const char *name;
     void (*func)(struct user_settings *s, int val);
-} user_settings_list[] = { 
-    { "autolog",        uset_autolog    }, 
+} user_settings_list[] = {
+    { "autolog",        uset_autolog    },
     { "time",           uset_time       },
     { "disable_alerts", uset_alerts     },
     { "colour_theme",   uset_colours    },
@@ -53,13 +53,13 @@ static void uset_autolog(struct user_settings *s, int val)
     s->autolog = val == AUTOLOG_ON ? AUTOLOG_ON : AUTOLOG_OFF;
 }
 
-static void uset_time(struct user_settings *s, int val) 
+static void uset_time(struct user_settings *s, int val)
 {
     /* default to 24 hour time if invalid value */
     s->time = val == TIME_12 ? TIME_12 : TIME_24;
 }
 
-static void uset_alerts(struct user_settings *s, int val) 
+static void uset_alerts(struct user_settings *s, int val)
 {
     /* alerts default on if invalid value */
     s->alerts = val == ALERTS_DISABLED ? ALERTS_DISABLED : ALERTS_ENABLED;

@@ -93,8 +93,8 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
     const char *t = user_settings->time == TIME_12 ? "%I:%M %p" : "%H:%M";
-    strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, t, 
-            &friends[num].last_online.tm);
+    strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, t,
+             &friends[num].last_online.tm);
 }
 
 static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *str, uint16_t len)
@@ -110,7 +110,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *
 
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
             nick[n_len] = '\0';
 
             uint8_t timefrmt[TIME_STR_SIZE];
@@ -141,7 +141,7 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH-1);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
 
     str[len] = '\0';
     strcpy(friends[num].name, str);
@@ -207,8 +207,8 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
     }
 }
 
-static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, 
-                                         uint64_t filesize, uint8_t *filename, uint16_t filename_len)
+static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
+        uint64_t filesize, uint8_t *filename, uint16_t filename_len)
 {
     if (num >= max_friends_index)
         return;
@@ -221,7 +221,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
 
             uint8_t nick[TOX_MAX_NAME_LENGTH];
             int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
             nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
@@ -244,7 +244,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH];
             int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
             nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
@@ -270,11 +270,11 @@ static void delete_friend(Tox *m, int32_t f_num)
 {
     tox_del_friend(m, f_num);
     memset(&friends[f_num], 0, sizeof(ToxicFriend));
-    
+
     int i;
 
     for (i = max_friends_index; i > 0; --i) {
-        if (friends[i-1].active)
+        if (friends[i - 1].active)
             break;
     }
 
@@ -305,7 +305,7 @@ static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
 {
     if (key == 'y')
         delete_friend(m, pendingdelete.num);
- 
+
     memset(&pendingdelete, 0, sizeof(pendingdelete));
     delwin(self->popup);
     self->popup = NULL;
@@ -427,24 +427,27 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             } else {
                 wprintw(self->window, "   ");
             }
-            
+
             if (friends[f].online) {
                 uint8_t status = friends[f].status;
                 int colour = WHITE;
 
                 switch (status) {
-                case TOX_USERSTATUS_NONE:
-                    colour = GREEN;
-                    break;
-                case TOX_USERSTATUS_AWAY:
-                    colour = YELLOW;
-                    break;
-                case TOX_USERSTATUS_BUSY:
-                    colour = RED;
-                    break;
-                case TOX_USERSTATUS_INVALID:
-                    colour = MAGENTA;
-                    break;
+                    case TOX_USERSTATUS_NONE:
+                        colour = GREEN;
+                        break;
+
+                    case TOX_USERSTATUS_AWAY:
+                        colour = YELLOW;
+                        break;
+
+                    case TOX_USERSTATUS_BUSY:
+                        colour = RED;
+                        break;
+
+                    case TOX_USERSTATUS_INVALID:
+                        colour = MAGENTA;
+                        break;
                 }
 
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
@@ -466,8 +469,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
 
                     pthread_mutex_lock(&Winthread.lock);
-                    uint16_t s_len = tox_get_status_message(m, friends[f].num, statusmsg, 
-                                                      TOX_MAX_STATUSMESSAGE_LENGTH);
+                    uint16_t s_len = tox_get_status_message(m, friends[f].num, statusmsg,
+                                                            TOX_MAX_STATUSMESSAGE_LENGTH);
                     pthread_mutex_unlock(&Winthread.lock);
 
                     friends[f].statusmsg_len = s_len;
@@ -477,8 +480,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 /* Truncate note if it doesn't fit on one line */
                 uint16_t maxlen = x2 - getcurx(self->window) - 2;
+
                 if (friends[f].statusmsg_len > maxlen) {
-                    friends[f].statusmsg[maxlen-3] = '\0';
+                    friends[f].statusmsg[maxlen - 3] = '\0';
                     strcat(friends[f].statusmsg, "...");
                     friends[f].statusmsg[maxlen] = '\0';
                     friends[f].statusmsg_len = maxlen;
@@ -500,7 +504,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 if (f_selected)
                     wattroff(self->window, COLOR_PAIR(YELLOW));
-    
+
                 uint64_t last_seen = friends[f].last_online.last_on;
 
                 if (last_seen != 0) {
@@ -508,16 +512,18 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     const uint8_t *hourmin = friends[f].last_online.hour_min_str;
 
                     switch (day_dist) {
-                    case 0:
-                        wprintw(self->window, " Last seen: Today %s\n", hourmin);
-                        break;
-                    case 1:
-                        wprintw(self->window, " Last seen: Yesterday %s\n", hourmin);
-                        break;
-                    default:
-                        wprintw(self->window, " Last seen: %d days ago\n", day_dist);
-                        break;
-                    } 
+                        case 0:
+                            wprintw(self->window, " Last seen: Today %s\n", hourmin);
+                            break;
+
+                        case 1:
+                            wprintw(self->window, " Last seen: Yesterday %s\n", hourmin);
+                            break;
+
+                        default:
+                            wprintw(self->window, " Last seen: %d days ago\n", day_dist);
+                            break;
+                    }
                 } else {
                     wprintw(self->window, " Last seen: Never\n");
                 }
@@ -539,12 +545,13 @@ void disable_chatwin(int32_t f_num)
 static void friendlist_onAv(ToxWindow *self, ToxAv *av)
 {
     int id = toxav_get_peer_id(av, 0);
+
     /*id++;*/
     if ( id != ErrorInternal && id >= max_friends_index)
         return;
-    
-    Tox* m = toxav_get_tox(av);
-    
+
+    Tox *m = toxav_get_tox(av);
+
     if (friends[id].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
@@ -552,7 +559,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av)
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             int n_len = tox_get_name(m, id, nick);
 
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
             nick[n_len] = '\0';
 
             uint8_t msg[MAX_STR_SIZE];
@@ -561,7 +568,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av)
 
             uint8_t *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
-            
+
             alert_window(prompt, WINDOW_ALERT_0, true);
         }
     }
@@ -586,7 +593,7 @@ ToxWindow new_friendlist(void)
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
     ret.onFileSendRequest = &friendlist_onFileSendRequest;
     ret.onGroupInvite = &friendlist_onGroupInvite;
-    
+
 #ifdef _SUPPORT_AUDIO
     ret.onInvite = &friendlist_onAv;
     ret.onRinging = &friendlist_onAv;

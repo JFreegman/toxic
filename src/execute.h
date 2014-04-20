@@ -22,12 +22,12 @@
 
 #define MAX_NUM_ARGS 4     /* Includes command */
 
-#ifdef _SUPPORT_AUDIO 
-    #define GLOBAL_NUM_COMMANDS 16
-    #define CHAT_NUM_COMMANDS 10
-#else 
-    #define GLOBAL_NUM_COMMANDS 14
-    #define CHAT_NUM_COMMANDS 5
+#ifdef _SUPPORT_AUDIO
+#define GLOBAL_NUM_COMMANDS 16
+#define CHAT_NUM_COMMANDS 10
+#else
+#define GLOBAL_NUM_COMMANDS 14
+#define CHAT_NUM_COMMANDS 5
 #endif /* _SUPPORT_AUDIO */
 
 enum {

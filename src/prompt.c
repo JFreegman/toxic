@@ -60,12 +60,12 @@ const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/note"       },
     { "/quit"       },
     { "/status"     },
-    
+
 #ifdef _SUPPORT_AUDIO
-    
+
     { "/lsdev"       },
     { "/sdev"        },
-    
+
 #endif /* _SUPPORT_AUDIO */
 };
 
@@ -99,7 +99,7 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
     statusbar->is_online = is_connected;
 }
 
-/* Adds friend request to pending friend requests. 
+/* Adds friend request to pending friend requests.
    Returns request number on success, -1 if queue is full or other error. */
 static int add_friend_request(uint8_t *public_key)
 {
@@ -146,7 +146,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ltr) {
-        if (ctx->len < (MAX_STR_SIZE-1)) {
+        if (ctx->len < (MAX_STR_SIZE - 1)) {
             add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
         }
     } else { /* if (!ltr) */
@@ -155,7 +155,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (key == 0x107 || key == 0x8 || key == 0x7f) {
             if (ctx->pos > 0) {
                 del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
-                wmove(ctx->history, y, x-1);    /* not necessary but fixes a display glitch */
+                wmove(ctx->history, y, x - 1);  /* not necessary but fixes a display glitch */
             } else {
                 beep();
             }
@@ -308,7 +308,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
             --ctx->orig_y;
 
     } else {    /* Mark point of origin for new line */
-        ctx->orig_y = y;    
+        ctx->orig_y = y;
     }
 
     wattron(ctx->history, COLOR_PAIR(GREEN));
@@ -325,23 +325,27 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         const uint8_t *status_text = "Unknown";
 
         switch (statusbar->status) {
-        case TOX_USERSTATUS_NONE:
-            status_text = "Online";
-            colour = GREEN;
-            break;
-        case TOX_USERSTATUS_AWAY:
-            status_text = "Away";
-            colour = YELLOW;
-            break;
-        case TOX_USERSTATUS_BUSY:
-            status_text = "Busy";
-            colour = RED;
-            break;
-        case TOX_USERSTATUS_INVALID:
-            status_text = "ERROR";
-            colour = MAGENTA;
-            break;
+            case TOX_USERSTATUS_NONE:
+                status_text = "Online";
+                colour = GREEN;
+                break;
+
+            case TOX_USERSTATUS_AWAY:
+                status_text = "Away";
+                colour = YELLOW;
+                break;
+
+            case TOX_USERSTATUS_BUSY:
+                status_text = "Busy";
+                colour = RED;
+                break;
+
+            case TOX_USERSTATUS_INVALID:
+                status_text = "ERROR";
+                colour = MAGENTA;
+                break;
         }
+
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
         wprintw(statusbar->topline, " [%s]", status_text);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
@@ -374,7 +378,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 
     uint8_t nick[TOX_MAX_NAME_LENGTH] = {0};
     int n_len = tox_get_name(m, friendnum, nick);
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH-1);
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
 
     if (!nick[0]) {
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
@@ -456,7 +460,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 
     if ( (!strcmp("Online", statusmsg) || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
         snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
-        s_len = strlen(statusmsg); 
+        s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
     }
 
@@ -500,7 +504,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     }
 
     execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
-    wmove(ctx->history, y2-1, 2);
+    wmove(ctx->history, y2 - 1, 2);
 }
 
 ToxWindow new_prompt(void)

@@ -110,6 +110,7 @@ char *get_user_config_dir(void)
 # else /* __APPLE__ */
 
     const char *tmp;
+
     if (!(tmp = getenv("XDG_CONFIG_HOME"))) {
         len = strlen(home) + strlen("/.config") + 1;
         user_config_dir = malloc(len);

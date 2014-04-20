@@ -46,7 +46,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
         name = UNKNOWN_NAME;
 
     char *user_config_dir = get_user_config_dir();
-    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name); 
+    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name);
 
     /* use first 4 digits of key as log ident. If no key use a timestamp */
     uint8_t ident[32];
@@ -56,7 +56,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
         sprintf(&ident[0], "%02X", key[0] & 0xff);
         sprintf(&ident[2], "%02X", key[1] & 0xff);
-        ident[KEY_IDENT_DIGITS*2+1] = '\0';
+        ident[KEY_IDENT_DIGITS * 2 + 1] = '\0';
     } else {
         strftime(ident, sizeof(ident), "%Y-%m-%d[%H:%M:%S]", get_time());
         path_len += strlen(ident) + 1;
@@ -70,7 +70,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
 
     uint8_t log_path[MAX_STR_SIZE];
 
-    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", 
+    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log",
              user_config_dir, CONFIGDIR, name, ident);
 
     free(user_config_dir);
@@ -105,7 +105,7 @@ void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool e
     const char *t = user_settings->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
     uint8_t s[MAX_STR_SIZE];
     strftime(s, MAX_STR_SIZE, t, get_time());
-    fprintf(log->file,"%s %s %s\n", s, name_frmt, msg);
+    fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
 
     uint64_t curtime = get_unix_time();
 

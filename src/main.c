@@ -25,7 +25,7 @@
 #endif
 
 #ifndef SIGWINCH
-    #define SIGWINCH 28
+#define SIGWINCH 28
 #endif
 
 #include <curses.h>
@@ -41,9 +41,9 @@
 #include <pthread.h>
 
 #ifdef _WIN32
-    #include <direct.h>
-    #include <winsock2.h>
-    #include <ws2tcpip.h>
+#include <direct.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <netdb.h>
 #include <sys/stat.h>
@@ -64,7 +64,7 @@
 #include "settings.h"
 
 #ifdef _SUPPORT_AUDIO
-    #include "audio_call.h"
+#include "audio_call.h"
 #endif /* _SUPPORT_AUDIO */
 
 #ifndef PACKAGE_DATADIR
@@ -72,7 +72,7 @@
 #endif
 
 #ifdef _SUPPORT_AUDIO
-    ToxAv* av;
+ToxAv *av;
 #endif /* _SUPPORT_AUDIO */
 
 /* Export for use in Callbacks */
@@ -95,11 +95,13 @@ static void init_term(void)
     /* Setup terminal */
     signal(SIGWINCH, on_window_resize);
 #if HAVE_WIDECHAR
+
     if (setlocale(LC_ALL, "") == NULL) {
         fprintf(stderr, "Could not set your locale, plese check your locale settings or"
-               "disable wide char support\n");
+                "disable wide char support\n");
         exit(EXIT_FAILURE);
     }
+
 #endif
     initscr();
     cbreak();
@@ -112,7 +114,7 @@ static void init_term(void)
         start_color();
 
         if (user_settings->colour_theme == NATIVE_COLS) {
-            if (assume_default_colors(-1,-1) == OK)
+            if (assume_default_colors(-1, -1) == OK)
                 bg_color = -1;
         }
 
@@ -136,7 +138,7 @@ static Tox *init_tox(int ipv4)
     int ipv6 = !ipv4;
     Tox *m = tox_new(ipv6);
 
-    /* 
+    /*
     * TOX_ENABLE_IPV6_DEFAULT is always 1.
     * Checking it is redundant, this *should* be doing ipv4 fallback
     */
@@ -199,11 +201,13 @@ static int nodelist_load(char *filename)
         return 1;
 
     char line[MAXLINE];
+
     while (fgets(line, sizeof(line), fp) && linecnt < MAXNODES) {
         if (strlen(line) > MINLINE) {
             char *name = strtok(line, " ");
             char *port = strtok(NULL, " ");
             char *key_ascii = strtok(NULL, " ");
+
             /* invalid line */
             if (name == NULL || port == NULL || key_ascii == NULL)
                 continue;
@@ -232,7 +236,7 @@ static int nodelist_load(char *filename)
 int init_connection_helper(Tox *m, int line)
 {
     return tox_bootstrap_from_address(m, nodes[line], TOX_ENABLE_IPV6_DEFAULT,
-                                                ports[line], keys[line]);
+                                      ports[line], keys[line]);
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
@@ -267,7 +271,7 @@ int init_connection(Tox *m)
         int i;
         int n = MIN(NUM_INIT_NODES, linecnt);
 
-        for(i = 0; i < n; ++i) {
+        for (i = 0; i < n; ++i) {
             if (init_connection_helper(m, rand() % linecnt))
                 res = 0;
         }
@@ -425,9 +429,9 @@ void exit_toxic(Tox *m)
     free(prompt->chatwin);
     free(user_settings);
     tox_kill(m);
-    #ifdef _SUPPORT_AUDIO
+#ifdef _SUPPORT_AUDIO
     terminate_audio();
-    #endif /* _SUPPORT_AUDIO */
+#endif /* _SUPPORT_AUDIO */
     endwin();
     exit(EXIT_SUCCESS);
 }
@@ -484,15 +488,17 @@ int main(int argc, char *argv[])
     }
 
     config_err = create_user_config_dir(user_config_dir);
+
     if (DATA_FILE == NULL ) {
         if (config_err) {
             DATA_FILE = strdup("data");
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
+
             if (DATA_FILE != NULL) {
                 strcpy(DATA_FILE, user_config_dir);
                 strcat(DATA_FILE, CONFIGDIR);
-                strcat(DATA_FILE, "data");     
+                strcat(DATA_FILE, "data");
             } else {
                 endwin();
                 fprintf(stderr, "malloc() failed. Aborting...\n");
@@ -570,12 +576,12 @@ int main(int argc, char *argv[])
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
-    
+
     if (settings_err == -1) {
         msg = "Failed to load user settings";
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
-    
+
 
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
@@ -585,6 +591,6 @@ int main(int argc, char *argv[])
         do_toxic(m, prompt);
         usleep(10000);
     }
-        
+
     return 0;
 }

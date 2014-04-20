@@ -42,7 +42,7 @@ static void close_file_sender(int i)
     int j;
 
     for (j = max_file_senders_index; j > 0; --j) {
-        if (file_senders[j-1].active)
+        if (file_senders[j - 1].active)
             break;
     }
 
@@ -90,12 +90,12 @@ void do_file_senders(Tox *m)
         }
 
         while (true) {
-            if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece, 
+            if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece,
                                    file_senders[i].piecelen) == -1)
                 break;
 
             file_senders[i].timestamp = current_time;
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1, 
+            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, friendnum), fp);
 
             /* refresh line with percentage complete */
