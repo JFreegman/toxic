@@ -47,7 +47,7 @@ struct {
     { "audio_out_dev",  uset_aout_dev   },
 };
 
-static void uset_autolog(struct user_settings *s, int val) 
+static void uset_autolog(struct user_settings *s, int val)
 {
     /* default off if invalid value */
     s->autolog = val == AUTOLOG_ON ? AUTOLOG_ON : AUTOLOG_OFF;
@@ -102,9 +102,11 @@ int settings_load(struct user_settings *s, char *path)
 
     free(user_config_dir);
 
-    if (fp == NULL) {
+    if (fp == NULL && !path) {
         if ((fp = fopen(dflt_path, "w")) == NULL)
             return -1;
+    } else if (fp == NULL && path) {
+        return -1;
     }
 
     char line[MAX_STR_SIZE];
