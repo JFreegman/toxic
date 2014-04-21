@@ -7,6 +7,7 @@ Toxic is an ncurses based instant messaging client for [Tox](http://tox.im) whic
 * Execute the configure script with ```./configure``` (you may need to pass it the location of your dependency libraries, i.e.):
 ```./configure --prefix=/where/to/install --with-libtoxcore-headers=/path/to/ProjectTox-Core/toxcore --with-libtoxcore-libs=/path/to/ProjectTox-Core/build/toxcore --with-libsodium-headers=/path/to/libsodium/include/ --with-libsodium-libs=/path/to/sodiumtest/lib/ ```
 
+* Audio calling support requires openal installed
 * Compile with --disable-av to build without audio call support
 * Compile and install the program with ```make && sudo make install```
 
