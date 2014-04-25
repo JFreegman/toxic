@@ -369,7 +369,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 }
 
-#define FLIST_OFST 4    /* Accounts for the lines at top */
+#define FLIST_OFST 6    /* Accounts for space at top and bottom */
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
 {
@@ -407,6 +407,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
         return;
 
+    int selected_num = 0;
+
     /* Determine which portion of friendlist to draw based on current position */
     int page = num_selected / (y2 - FLIST_OFST);
     int start = (y2 - FLIST_OFST) * page;
@@ -423,6 +425,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattron(self->window, A_BOLD);
                 wprintw(self->window, " > ");
                 wattroff(self->window, A_BOLD);
+                selected_num = f;
                 f_selected = true;
             } else {
                 wprintw(self->window, "   ");
@@ -534,6 +537,19 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     self->x = x2;
     wrefresh(self->window);
     draw_popup(self, m);
+
+    if (num_friends) {
+        wmove(self->window, y2 - 1, 1);
+
+        wattron(self->window, A_BOLD);
+        wprintw(self->window, " ID: ");
+        wattroff(self->window, A_BOLD);
+
+        int i;
+
+        for (i = 0; i < TOX_CLIENT_ID_SIZE; ++i)
+            wprintw(self->window, "%02X", friends[selected_num].pub_key[i] & 0xff);
+    }
 }
 
 void disable_chatwin(int32_t f_num)
