@@ -506,7 +506,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wattroff(self->window, A_BOLD);
 
                 if (f_selected)
-                    wattroff(self->window, COLOR_PAIR(YELLOW));
+                    wattroff(self->window, COLOR_PAIR(BLUE));
 
                 uint64_t last_seen = friends[f].last_online.last_on;
 
