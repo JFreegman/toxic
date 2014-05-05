@@ -228,6 +228,8 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     uint8_t msg[MAX_STR_SIZE];
     uint8_t *errmsg;
 
+    pathname[path_len] = '\0';
+
     uint8_t filename[MAX_STR_SIZE];
     get_file_name(pathname, filename);
 
