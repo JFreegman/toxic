@@ -172,7 +172,7 @@ static Tox *init_tox(int ipv4)
 #elif defined(__FreeBSD__)
     tox_set_name(m, (uint8_t *) "Very cool guy", strlen("Very cool guy"));
 #elif defined(_WIN32)
-    tox_set_name(m, (uint8_t *) "I should buy a Mac", strlen("I should install buy a Mac"));
+    tox_set_name(m, (uint8_t *) "I should insta....... buy a Mac", strlen("I should insta....... buy a Mac"));
 #elif defined(__APPLE__)
     tox_set_name(m, (uint8_t *) "Hipster", strlen("Hipster")); /* This used to users of other Unixes are hipsters */
 #else
