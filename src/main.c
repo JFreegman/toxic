@@ -523,8 +523,8 @@ int main(int argc, char *argv[])
     memset(user_settings, 0, sizeof(struct user_settings));
     int settings_err = settings_load(user_settings, NULL);
 
-    init_term();
     Tox *m = init_tox(f_use_ipv4);
+    init_term();
 
     if (m == NULL) {
         endwin();
@@ -555,6 +555,9 @@ int main(int argc, char *argv[])
 #ifdef _SUPPORT_AUDIO
 
     av = init_audio(prompt, m);
+    
+    device_set(prompt, input, user_settings->audio_in_dev);
+    device_set(prompt, output, user_settings->audio_out_dev);
 
     if ( errors() == NoError )
         msg = "Audio initiated with no problems.";
@@ -562,9 +565,6 @@ int main(int argc, char *argv[])
         msg = "Error initiating audio!";
 
     line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-
-    device_set(prompt, input, user_settings->audio_in_dev);
-    device_set(prompt, output, user_settings->audio_out_dev);
 
 #endif /* _SUPPORT_AUDIO */
 
