@@ -194,8 +194,8 @@ struct ChatContext {
 
 /* Start file transfer code */
 
+#define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
 #define MAX_FILES 256
-#define FILE_PIECE_SIZE 1024
 #define TIMEOUT_FILESENDER 300
 
 typedef struct {
