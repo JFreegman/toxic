@@ -252,8 +252,15 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         filename[len] = '\0';
         char d[9];
         sprintf(d, "(%d)", count++);
+        int d_len = strlen(d);
+
+        if (len + d_len >= sizeof(filename)) {
+            len -= d_len;
+            filename[len] = '\0';
+        }
+
         strcat(filename, d);
-        filename[len + strlen(d)] = '\0';
+        filename[len + d_len] = '\0';;
 
         if (count > 999) {
             errmsg = "Error saving file to disk.";
