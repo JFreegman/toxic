@@ -27,6 +27,7 @@
 #include "configdir.h"
 #include "audio_call.h"
 #include "settings.h"
+#include "line_info.h"
 
 static void uset_autolog(struct user_settings *s, int val);
 static void uset_time(struct user_settings *s, int val);
@@ -34,6 +35,7 @@ static void uset_alerts(struct user_settings *s, int val);
 static void uset_colours(struct user_settings *s, int val);
 static void uset_ain_dev(struct user_settings *s, int val);
 static void uset_aout_dev(struct user_settings *s, int val);
+static void uset_hst_size(struct user_settings *s, int val);
 
 struct {
     const char *name;
@@ -45,6 +47,7 @@ struct {
     { "colour_theme",   uset_colours    },
     { "audio_in_dev",   uset_ain_dev    },
     { "audio_out_dev",  uset_aout_dev   },
+    { "history_size",   uset_hst_size   },
 };
 
 static void uset_autolog(struct user_settings *s, int val)
@@ -87,6 +90,12 @@ static void uset_aout_dev(struct user_settings *s, int val)
     s->audio_out_dev = (long int) val;
 }
 
+static void uset_hst_size(struct user_settings *s, int val)
+{
+    /* if val is out of range use default history size */
+    s->history_size = (val > MAX_HISTORY || val < MIN_HISTORY) ? DFLT_HST_SIZE : val;
+}
+
 int settings_load(struct user_settings *s, char *path)
 {
     char *user_config_dir = get_user_config_dir();
@@ -101,6 +110,8 @@ int settings_load(struct user_settings *s, char *path)
     }
 
     free(user_config_dir);
+
+    uset_hst_size(s, DFLT_HST_SIZE);    /* must be forced in case no setting specified */
 
     if (fp == NULL && !path) {
         if ((fp = fopen(dflt_path, "w")) == NULL)

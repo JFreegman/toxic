@@ -31,6 +31,9 @@
 #include "toxic_windows.h"
 #include "line_info.h"
 #include "groupchat.h"
+#include "settings.h"
+
+extern struct user_settings *user_settings;
 
 void line_info_init(struct history *hst)
 {
@@ -164,7 +167,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     hst->line_end->next = new_line;
     hst->line_end = new_line;
 
-    if (++hst->line_items > MAX_HISTORY) {
+    if (++hst->line_items > user_settings->history_size) {
         --hst->line_items;
         line_info_root_fwd(hst);
     }
@@ -216,7 +219,7 @@ void line_info_print(ToxWindow *self)
     getmaxyx(self->window, y2, x2);
 
     if (self->is_prompt)
-        y2 = MAX_HISTORY;   /* temporary fix to make prompt scroll */
+        y2 = user_settings->history_size;   /* temporary fix to make prompt scroll */
 
     if (x2 <= SIDEBAR_WIDTH)
         return;

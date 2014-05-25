@@ -20,7 +20,7 @@
  *
  */
 
-#define NUM_SETTINGS 6
+#define NUM_SETTINGS 7
 
 /* holds user setting values */
 struct user_settings {
@@ -30,6 +30,7 @@ struct user_settings {
     int colour_theme;      /* boolean (0 for default toxic colours) */
     long int audio_in_dev;
     long int audio_out_dev;
+    int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
 };
 
 enum {
@@ -44,6 +45,8 @@ enum {
 
     NATIVE_COLS = 1,
     DFLT_COLS = 0,
+
+    DFLT_HST_SIZE = 700,
 };
 
 int settings_load(struct user_settings *s, char *path);
