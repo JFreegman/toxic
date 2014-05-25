@@ -613,7 +613,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No incomming call!";
+        else if ( error == ErrorNoCall ) error_str = "No incoming call!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -644,7 +644,7 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot reject in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No incomming call!";
+        else if ( error == ErrorNoCall ) error_str = "No incoming call!";
         else error_str = "Internal error!";
 
         goto on_error;
