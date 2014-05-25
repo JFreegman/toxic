@@ -209,7 +209,7 @@ int device_set(ToxWindow *self, _Devices type, long int selection)
     uint8_t *s_type = type == input ? "input" : "output";
     
     if ( selection < 0 || selection >= ASettins.device[type].size ) {
-        snprintf(str, sizeof(str), "Cannot set audio %s device: Invalid index: %d", s_type);
+        snprintf(str, sizeof(str), "Cannot set audio %s device: Invalid index: %ld", s_type, selection);
         line_info_add(self, NULL, NULL, NULL, str, SYS_MSG, 0, 0);
         return -1;
     }
@@ -217,7 +217,7 @@ int device_set(ToxWindow *self, _Devices type, long int selection)
     ASettins.device[type].index = selection;
     
     if ( device_open(self, type) != 0 ) {
-        snprintf(str, sizeof(str), "Cannot open audio %s device index: %d", s_type);
+        snprintf(str, sizeof(str), "Cannot open audio %s device index: %ld", s_type, selection);
         line_info_add(self, NULL, NULL, NULL, str, SYS_MSG, 0, 0);
         return -1;
     }

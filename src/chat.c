@@ -260,7 +260,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         }
 
         strcat(filename, d);
-        filename[len + d_len] = '\0';;
+        filename[len + d_len] = '\0';
 
         if (count > 999) {
             errmsg = "Error saving file to disk.";
