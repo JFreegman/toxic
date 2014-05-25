@@ -120,18 +120,20 @@ struct ToxWindow {
 
 #ifdef _SUPPORT_AUDIO
 
-    void(*onInvite)(ToxWindow *, ToxAv *);
-    void(*onRinging)(ToxWindow *, ToxAv *);
-    void(*onStarting)(ToxWindow *, ToxAv *);
-    void(*onEnding)(ToxWindow *, ToxAv *);
-    void(*onError)(ToxWindow *, ToxAv *);
-    void(*onStart)(ToxWindow *, ToxAv *);
-    void(*onCancel)(ToxWindow *, ToxAv *);
-    void(*onReject)(ToxWindow *, ToxAv *);
-    void(*onEnd)(ToxWindow *, ToxAv *);
-    void(*onRequestTimeout)(ToxWindow *, ToxAv *);
-    void(*onPeerTimeout)(ToxWindow *, ToxAv *);
+    void(*onInvite)(ToxWindow *, ToxAv *, int);
+    void(*onRinging)(ToxWindow *, ToxAv *, int);
+    void(*onStarting)(ToxWindow *, ToxAv *, int);
+    void(*onEnding)(ToxWindow *, ToxAv *, int);
+    void(*onError)(ToxWindow *, ToxAv *, int);
+    void(*onStart)(ToxWindow *, ToxAv *, int);
+    void(*onCancel)(ToxWindow *, ToxAv *, int);
+    void(*onReject)(ToxWindow *, ToxAv *, int);
+    void(*onEnd)(ToxWindow *, ToxAv *, int);
+    void(*onRequestTimeout)(ToxWindow *, ToxAv *, int);
+    void(*onPeerTimeout)(ToxWindow *, ToxAv *, int);
 
+    int call_index; /* If in a call will have this index set, otherwise it's -1. 
+                     * Don't modify outside av callbacks. */
 #endif /* _SUPPORT_AUDIO */
 
     char name[TOX_MAX_NAME_LENGTH];

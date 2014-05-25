@@ -382,125 +382,98 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
 /* Av Stuff */
 #ifdef _SUPPORT_AUDIO
 
-void chat_onInvite (ToxWindow *self, ToxAv *av)
+void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Incoming audio call!\nType: \"/answer\" or \"/reject\"";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    /* call_index is set here and reset on call end */
+    
+    self->call_index = call_index;
+    
+    line_info_add(self, NULL, NULL, NULL, "Incoming audio call!\nType: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
 
     alert_window(self, WINDOW_ALERT_0, true);
 }
 
-void chat_onRinging (ToxWindow *self, ToxAv *av)
+void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Ringing...\n\"cancel\" ?";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Ringing...\n\"cancel\" ?", SYS_MSG, 0, 0);
 }
 
-void chat_onStarting (ToxWindow *self, ToxAv *av)
+void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg;
-
-    if ( 0 != start_transmission(self) ) {/* YEAH! */
-        msg = "Error starting transmission!";
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-        return;
-    }
-
-    msg = "Call started!\nType: \"/hangup\" to end it.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call started!\nType: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
-void chat_onEnding (ToxWindow *self, ToxAv *av)
+void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Call ended!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-
-    toxav_kill_transmission(av);
+    line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
 }
 
-void chat_onError (ToxWindow *self, ToxAv *av)
+void chat_onError (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Error!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Error!", SYS_MSG, 0, 0);
 }
 
-void chat_onStart (ToxWindow *self, ToxAv *av)
+void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg;
-
-    if ( 0 != start_transmission(self) ) {/* YEAH! */
-        msg = "Error starting transmission!";
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-        return;
-    }
-
-    msg = "Call started!\nType: \"/hangup\" to end it.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call started!\nType: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
-void chat_onCancel (ToxWindow *self, ToxAv *av)
+void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Call canceled!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call canceled!", SYS_MSG, 0, 0);
 }
 
-void chat_onReject (ToxWindow *self, ToxAv *av)
+void chat_onReject (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Rejected!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Rejected!", SYS_MSG, 0, 0);
 }
 
-void chat_onEnd (ToxWindow *self, ToxAv *av)
+void chat_onEnd (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    toxav_kill_transmission(av);
-
-    uint8_t *msg = "Call ended!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
 }
 
-void chat_onRequestTimeout (ToxWindow *self, ToxAv *av)
+void chat_onRequestTimeout (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "No answer!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "No answer!", SYS_MSG, 0, 0);
 }
 
-void chat_onPeerTimeout (ToxWindow *self, ToxAv *av)
+void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, 0))
+    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    uint8_t *msg = "Peer disconnected; call ended!";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Peer disconnected; call ended!", SYS_MSG, 0, 0);
 }
 
 #endif /* _SUPPORT_AUDIO */
@@ -932,6 +905,8 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.onEnd = &chat_onEnd;
     ret.onRequestTimeout = &chat_onRequestTimeout;
     ret.onPeerTimeout = &chat_onPeerTimeout;
+    
+    ret.call_index = -1;
 #endif /* _SUPPORT_AUDIO */
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};

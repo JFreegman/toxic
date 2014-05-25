@@ -558,9 +558,9 @@ void disable_chatwin(int32_t f_num)
 }
 
 #ifdef _SUPPORT_AUDIO
-static void friendlist_onAv(ToxWindow *self, ToxAv *av)
+static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 {
-    int id = toxav_get_peer_id(av, 0);
+    int id = toxav_get_peer_id(av, call_index, 0);
 
     /*id++;*/
     if ( id != ErrorInternal && id >= max_friends_index)
@@ -622,6 +622,8 @@ ToxWindow new_friendlist(void)
     ret.onEnd = &friendlist_onAv;
     ret.onRequestTimeout = &friendlist_onAv;
     ret.onPeerTimeout = &friendlist_onAv;
+    
+    ret.call_index = -1;
 #endif /* _SUPPORT_AUDIO */
 
     strcpy(ret.name, "friends");
