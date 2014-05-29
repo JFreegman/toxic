@@ -25,7 +25,7 @@
 
 
 #ifdef _SUPPORT_AUDIO
-    #include "device.h"
+    #include "audio_call.h"
 #endif /* _SUPPORT_AUDIO */
 
 #include "toxic_windows.h"
