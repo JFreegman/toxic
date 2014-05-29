@@ -96,6 +96,17 @@ static void uset_hst_size(struct user_settings *s, int val)
     s->history_size = (val > MAX_HISTORY || val < MIN_HISTORY) ? DFLT_HST_SIZE : val;
 }
 
+static void set_default_settings(struct user_settings *s)
+{
+    uset_autolog(s, AUTOLOG_OFF);
+    uset_time(s, TIME_24);
+    uset_alerts(s, ALERTS_ENABLED);
+    uset_colours(s, DFLT_COLS);
+    uset_ain_dev(s, 0);
+    uset_aout_dev(s, 0);
+    uset_hst_size(s, DFLT_HST_SIZE);
+}
+
 int settings_load(struct user_settings *s, char *path)
 {
     char *user_config_dir = get_user_config_dir();
@@ -111,7 +122,7 @@ int settings_load(struct user_settings *s, char *path)
 
     free(user_config_dir);
 
-    uset_hst_size(s, DFLT_HST_SIZE);    /* must be forced in case no setting specified */
+    set_default_settings(s);
 
     if (fp == NULL && !path) {
         if ((fp = fopen(dflt_path, "w")) == NULL)
