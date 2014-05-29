@@ -20,7 +20,11 @@
  *
  */
 
-#define NUM_SETTINGS 6
+#ifdef _SUPPORT_AUDIO
+    #define NUM_SETTINGS 6
+#else
+    #define NUM_SETTINGS 4
+#endif /* _SUPPORT_AUDIO */
 
 /* holds user setting values */
 struct user_settings {
@@ -28,8 +32,11 @@ struct user_settings {
     int alerts;            /* boolean */
     int time;              /* 12 or 24 */
     int colour_theme;      /* boolean (0 for default toxic colours) */
+    
+#ifdef _SUPPORT_AUDIO
     long int audio_in_dev;
     long int audio_out_dev;
+#endif /* _SUPPORT_AUDIO */
 };
 
 enum {

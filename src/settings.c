@@ -23,10 +23,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#ifdef _SUPPORT_AUDIO
+    #include "device.h"
+#endif /* _SUPPORT_AUDIO */
+
 #include "toxic_windows.h"
 #include "configdir.h"
-#include "audio_call.h"
 #include "settings.h"
+
 
 static void uset_autolog(struct user_settings *s, int val);
 static void uset_time(struct user_settings *s, int val);
@@ -43,8 +48,11 @@ struct {
     { "time",           uset_time       },
     { "disable_alerts", uset_alerts     },
     { "colour_theme",   uset_colours    },
+    
+#ifdef _SUPPORT_AUDIO
     { "audio_in_dev",   uset_ain_dev    },
     { "audio_out_dev",  uset_aout_dev   },
+#endif
 };
 
 static void uset_autolog(struct user_settings *s, int val)
@@ -71,6 +79,8 @@ static void uset_colours(struct user_settings *s, int val)
     s->colour_theme = val == NATIVE_COLS ? NATIVE_COLS : DFLT_COLS;
 }
 
+#ifdef _SUPPORT_AUDIO
+
 static void uset_ain_dev(struct user_settings *s, int val)
 {
     if (val < 0 || val > MAX_DEVICES)
@@ -86,6 +96,8 @@ static void uset_aout_dev(struct user_settings *s, int val)
 
     s->audio_out_dev = (long int) val;
 }
+
+#endif /* _SUPPORT_AUDIO */
 
 int settings_load(struct user_settings *s, char *path)
 {
