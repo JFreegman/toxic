@@ -435,10 +435,8 @@ void refresh_inactive_windows(void)
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *a = &windows[i];
 
-        if (!a->active || a == active_window || a->is_prompt)  /* if prompt doesn't have scroll mode */
-            continue;
-
-        line_info_print(a);
+        if (a->active && a != active_window && !a->is_prompt)  /* if prompt doesn't have scroll mode */
+            line_info_print(a);
     }
 }
 

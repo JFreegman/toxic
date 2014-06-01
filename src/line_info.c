@@ -138,23 +138,23 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     }
 
     if (msg) {
-        strcpy(new_line->msg, msg);
-        len += strlen(msg);
+        snprintf(new_line->msg, sizeof(new_line->msg), "%s", msg);
+        len += strlen(new_line->msg);
     }
 
     if (tmstmp) {
-        strcpy(new_line->timestamp, tmstmp);
-        len += strlen(tmstmp);
+        snprintf(new_line->timestamp, sizeof(new_line->timestamp), "%s", tmstmp);
+        len += strlen(new_line->timestamp);
     }
 
     if (name1) {
-        strcpy(new_line->name1, name1);
-        len += strlen(name1);
+        snprintf(new_line->name1, sizeof(new_line->name1), "%s", name1);
+        len += strlen(new_line->name1);
     }
 
     if (name2) {
-        strcpy(new_line->name2, name2);
-        len += strlen(name2);
+        snprintf(new_line->name2, sizeof(new_line->name2), "%s", name2);
+        len += strlen(new_line->name2);
     }
 
     new_line->len = len;
