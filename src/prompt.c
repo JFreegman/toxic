@@ -74,7 +74,7 @@ void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
-    statusbar->nick_len = len;
+    statusbar->nick_len = strlen(statusbar->nick);
 }
 
 /* Updates own statusmessage in prompt statusbar */
@@ -82,7 +82,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg, uint16_t
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = len;
+    statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 }
 
 /* Updates own status in prompt statusbar */

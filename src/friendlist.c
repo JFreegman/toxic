@@ -162,9 +162,11 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, uint8
     if (len > TOX_MAX_STATUSMESSAGE_LENGTH || num >= max_friends_index)
         return;
 
-    strcpy(friends[num].statusmsg, str);
-    friends[num].statusmsg[len] = '\0';
+    str[len] = '\0';
+    snprintf(friends[num].statusmsg, sizeof(friends[num].statusmsg), "%s", str);
+    len = strlen(friends[num].statusmsg);
     friends[num].statusmsg_len = len;
+    friends[num].statusmsg[len] = '\0';
 }
 
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)

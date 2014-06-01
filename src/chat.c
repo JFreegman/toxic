@@ -214,8 +214,11 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, uint8_t *st
         return;
 
     StatusBar *statusbar = self->stb;
+
+    status[len] = '\0';
+    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", status);
+    len = strlen(statusbar->statusmsg);
     statusbar->statusmsg_len = len;
-    strcpy(statusbar->statusmsg, status);
     statusbar->statusmsg[len] = '\0';
 }
 
