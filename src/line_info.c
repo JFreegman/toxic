@@ -209,6 +209,10 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 void line_info_print(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
+
+    if (ctx == NULL)
+        return;
+
     WINDOW *win = ctx->history;
 
     ctx->hst->queue = 0;

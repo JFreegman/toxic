@@ -417,12 +417,28 @@ void draw_active_window(Tox *m)
     ltr = isprint(ch);
 #endif
 
-    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV) ) {
+    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV)) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);
         a->onKey(a, m, ch, ltr);
         pthread_mutex_unlock(&Winthread.lock);
+    }
+}
+
+/* refresh inactive windows to prevent scrolling bugs. 
+   call at least once per second */
+void refresh_inactive_windows(void)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *a = &windows[i];
+
+        if (!a->active || a == active_window || a->is_prompt)  /* if prompt doesn't have scroll mode */
+            continue;
+
+        line_info_print(a);
     }
 }
 

@@ -453,8 +453,10 @@ void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
 
-    while (true)
+    while (true) {
         draw_active_window(m);
+        refresh_inactive_windows();
+    }
 }
 
 int main(int argc, char *argv[])
