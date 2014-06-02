@@ -195,18 +195,30 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int 
     uint8_t tmp[MAX_STR_SIZE];
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[*pos] = '\0';
+    int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": ", 0 = append nothing */
+    const uint8_t *endchrs;
+
     uint8_t *sub = strrchr(tmp, ' ');
-    int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */
 
     if (!sub++) {
         sub = tmp;
-
-        if (sub[0] != '/')    /* make sure it's not a command */
-            n_endchrs = 2;
+        n_endchrs = sub[0] == '/' ? 0 : 2;    /* no end chars if command */
     }
 
     if (string_is_empty(sub))
         return -1;
+
+    switch(n_endchrs) {
+        case 0:
+            endchrs = "";
+            break;
+        case 1:
+            endchrs = " ";
+            break;
+        case 2:
+            endchrs = ": ";
+            break;
+        }
 
     int s_len = strlen(sub);
     const uint8_t *match;
@@ -225,9 +237,8 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int 
         return -1;
 
     /* put match in correct spot in buf and append endchars (space or ": ") */
-    const uint8_t *endchrs = n_endchrs == 1 ? " " : ": ";
     int m_len = strlen(match);
-    int strt = (int) * pos - s_len;
+    int strt = *pos - s_len;
     int diff = m_len - s_len + n_endchrs;
 
     if (*len + diff > MAX_STR_SIZE)

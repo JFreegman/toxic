@@ -212,7 +212,7 @@ static int nodelist_load(char *filename)
             if (name == NULL || port == NULL || key_ascii == NULL)
                 continue;
 
-            strncpy(nodes[linecnt], name, NODELEN);
+            snprintf(nodes[linecnt], sizeof(nodes[linecnt]), "%s", name);
             nodes[linecnt][NODELEN - 1] = 0;
             ports[linecnt] = htons(atoi(port));
 
