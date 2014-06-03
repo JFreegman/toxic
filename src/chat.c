@@ -324,21 +324,28 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     const uint8_t *filename;
     uint8_t msg[MAX_STR_SIZE] = {0};
+    int i;   /* file_sender index */
 
-    if (receive_send == 0)
+    if (receive_send == 0) {
         filename = friends[num].file_receiver.filenames[filenum];
-    else
-        filename = file_senders[filenum].pathname;
+    } else {
+        for (i = 0; i < MAX_FILES; ++i) {
+            if (file_senders[i].filenum == filenum)
+                break;
+        }
+
+        filename = file_senders[i].pathname;
+    }
 
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
-            snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
-            file_senders[filenum].line_id = self->chatwin->hst->line_end->id + 1;
+            if (receive_send == 1) {
+                snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
+                file_senders[i].line_id = self->chatwin->hst->line_end->id + 1;
+            }
+
             break;
 
-            /*case TOX_FILECONTROL_PAUSE:
-                wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
-                break; */
         case TOX_FILECONTROL_KILL:
             snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
 
@@ -348,8 +355,11 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             break;
 
         case TOX_FILECONTROL_FINISHED:
-            snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
-            chat_close_file_receiver(num, filenum);
+            if (receive_send == 0) {
+                snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
+                chat_close_file_receiver(num, filenum);
+            }
+
             break;
     }
 
@@ -382,7 +392,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
 
     const uint8_t *name = friends[num].file_receiver.filenames[filenum];
     snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
-    line_info_set(self, friends[num].file_receiver.line_id, msg);
+    line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
 
 }
 

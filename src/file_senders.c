@@ -107,9 +107,9 @@ void do_file_senders(Tox *m)
                 if (remain)
                     pct_remain = (1 - (remain / size)) * 100;
 
-                const uint8_t *name = file_senders[filenum].pathname;
+                const uint8_t *name = file_senders[i].pathname;
                 snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1Lf%%)", name, pct_remain);
-                line_info_set(self, file_senders[filenum].line_id, msg);
+                line_info_set(self, file_senders[i].line_id, msg);
             }
 
             if (file_senders[i].piecelen == 0) {

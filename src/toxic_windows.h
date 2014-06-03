@@ -219,7 +219,7 @@ struct FileReceiver {
     FILE *files[MAX_FILES];
     bool pending[MAX_FILES];
     uint64_t size[MAX_FILES];
-    uint32_t line_id;
+    uint32_t line_id[MAX_FILES];
 };
 
 /* End file transfer code */

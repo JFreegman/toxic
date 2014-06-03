@@ -185,7 +185,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         uint8_t msg[MAX_STR_SIZE];
         snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1f%%)", filename, 0.0);
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-        friends[self->num].file_receiver.line_id = self->chatwin->hst->line_end->id;
+        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
             errmsg = "* Error writing to file.";
