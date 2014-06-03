@@ -63,9 +63,10 @@ void alert_window(ToxWindow *self, int type, bool is_beep);
 /* case-insensitive string compare function for use with qsort */
 int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
 
-/* Returns true if nick is valid. A valid toxic nick:
+/* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
       - cannot be empty
       - cannot start with a space
+      - must not contain a forward slash (for logfile naming purposes)
       - must not contain contiguous spaces */
 int valid_nick(uint8_t *nick);
 
@@ -73,4 +74,4 @@ int valid_nick(uint8_t *nick);
 void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *pathname, uint8_t *namebuf);
+void get_file_name(uint8_t *namebuf, uint8_t *pathname);

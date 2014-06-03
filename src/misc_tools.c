@@ -233,7 +233,7 @@ void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
 }
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *pathname, uint8_t *namebuf)
+void get_file_name(uint8_t *namebuf, uint8_t *pathname)
 {
     int idx = strlen(pathname) - 1;
 

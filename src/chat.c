@@ -228,15 +228,21 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     if (self->num != num)
         return;
 
-    uint8_t msg[MAX_STR_SIZE];
+    uint8_t msg[MAX_STR_SIZE * 2];
     uint8_t *errmsg;
 
     pathname[path_len] = '\0';
 
-    uint8_t filename[MAX_STR_SIZE];
-    get_file_name(pathname, filename);
 
-    snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename,
+    /* holds the filename appended to the user specified path */
+    uint8_t filename_path[MAX_STR_SIZE] = {0};
+
+    /* holds the lone filename */
+    uint8_t filename_nopath[MAX_STR_SIZE];
+    get_file_name(filename_nopath, pathname);
+    int len = strlen(filename_nopath);
+
+    snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename_nopath,
              (long long unsigned int)filesize);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
@@ -246,10 +252,28 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         return;
     }
 
+    /* use specified path in config if possible */
+    if (user_settings->download_path[0]) {
+        snprintf(filename_path, sizeof(filename_path), "%s%s", user_settings->download_path, filename_nopath);
+        len += strlen(user_settings->download_path);
+    }
+
+    if (len >= sizeof(friends[num].file_receiver.filenames[filenum])) {
+        errmsg = "File name too long; discarding.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        return;
+    }
+
+    uint8_t filename[MAX_STR_SIZE];
+
+    if (filename_path[0])
+        strcpy(filename, filename_path);
+    else
+        strcpy(filename, filename_nopath);
+
     /* Append a number to duplicate file names */
     FILE *filecheck = NULL;
     int count = 1;
-    int len = strlen(filename);
 
     while ((filecheck = fopen(filename, "r"))) {
         filename[len] = '\0';

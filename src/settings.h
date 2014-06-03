@@ -20,7 +20,7 @@
  *
  */
 
-#define NUM_SETTINGS 7
+#define NUM_SETTINGS 8
 
 /* holds user setting values */
 struct user_settings {
@@ -31,6 +31,7 @@ struct user_settings {
     long int audio_in_dev;
     long int audio_out_dev;
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
+    char download_path[MAX_STR_SIZE];
 };
 
 enum {
@@ -47,6 +48,6 @@ enum {
     DFLT_COLS = 0,
 
     DFLT_HST_SIZE = 700,
-};
+} settings_values;
 
 int settings_load(struct user_settings *s, char *path);
