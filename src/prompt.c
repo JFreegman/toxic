@@ -249,6 +249,8 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         /* RETURN key: execute command */
         else if (key == '\n') {
+            rm_trailing_spaces_buf(ctx->line, &ctx->pos, &ctx->len);
+
             wprintw(ctx->history, "\n");
             uint8_t line[MAX_STR_SIZE] = {0};
 

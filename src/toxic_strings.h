@@ -38,6 +38,9 @@ void kill_buf(wchar_t *buf, size_t *pos, size_t *len);
 /* nulls buf and sets pos and len to 0 */
 void reset_buf(wchar_t *buf, size_t *pos, size_t *len);
 
+/* Removes trailing spaces from buf. */
+void rm_trailing_spaces_buf(wchar_t *buf, size_t *pos, size_t *len);
+
 /* looks for the first instance in list that begins with the last entered word in buf according to pos,
    then fills buf with the complete word. e.g. "Hello jo" would complete the buffer
    with "Hello john".

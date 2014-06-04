@@ -591,6 +591,7 @@ int main(int argc, char *argv[])
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);
+        // uint32_t st = MIN(tox_do_interval(m) * 1000, 20000); 
         usleep(10000);
     }
 

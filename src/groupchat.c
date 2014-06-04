@@ -537,6 +537,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         /* RETURN key: Execute command or print line */
         else if (key == '\n') {
+            rm_trailing_spaces_buf(ctx->line, &ctx->pos, &ctx->len);
+
             uint8_t line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
