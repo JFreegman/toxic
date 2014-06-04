@@ -120,11 +120,16 @@ void rm_trailing_spaces_buf(wchar_t *buf, size_t *pos, size_t *len)
     if (buf[*len - 1] != ' ')
         return;
 
-    if (*pos == *len)
-        --(*pos);
+    int i;
 
-    buf[--(*len)] = L'\0';
-    rm_trailing_spaces_buf(buf, pos, len);
+    for (i = *len - 1; i >= 0; --i) {
+        if (buf[i] != ' ')
+            break;
+    }
+
+    *len = i + 1;
+    *pos = MIN(*pos, i + 1);
+    buf[*len] = L'\0';
 }
 
 #define HIST_PURGE MAX_LINE_HIST / 4
