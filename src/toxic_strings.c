@@ -31,177 +31,174 @@
 #include "misc_tools.h"
 #include "toxic_strings.h"
 
-/* Adds char to buffer at pos */
-void add_char_to_buf(wchar_t *buf, size_t *pos, size_t *len, wint_t ch)
+/* Adds char to line at pos */
+void add_char_to_buf(ChatContext *ctx, wint_t ch)
 {
-    if (*pos < 0 || *len >= MAX_STR_SIZE)
+    if (ctx->pos < 0 || ctx->len >= MAX_STR_SIZE)
         return;
 
     /* move all chars including null in front of pos one space forward and insert char in pos */
     int i;
 
-    for (i = *len; i >= *pos && i >= 0; --i)
-        buf[i + 1] = buf[i];
+    for (i = ctx->len; i >= ctx->pos && i >= 0; --i)
+        ctx->line[i + 1] = ctx->line[i];
 
-    buf[(*pos)++] = ch;
-    ++(*len);
+    ctx->line[ctx->pos++] = ch;
+    ++ctx->len;
 }
 
 /* Deletes the character before pos */
-void del_char_buf_bck(wchar_t *buf, size_t *pos, size_t *len)
+void del_char_buf_bck(ChatContext *ctx)
 {
-    if (*pos <= 0)
+    if (ctx->pos <= 0)
         return;
 
     int i;
 
     /* similar to add_char_to_buf but deletes a char */
-    for (i = *pos - 1; i <= *len; ++i)
-        buf[i] = buf[i + 1];
+    for (i = ctx->pos - 1; i <= ctx->len; ++i)
+        ctx->line[i] = ctx->line[i + 1];
 
-    --(*pos);
-    --(*len);
+    --ctx->pos;
+    --ctx->len;
 }
 
 /* Deletes the character at pos */
-void del_char_buf_frnt(wchar_t *buf, size_t *pos, size_t *len)
+void del_char_buf_frnt(ChatContext *ctx)
 {
-    if (*pos < 0 || *pos >= *len)
+    if (ctx->pos < 0 || ctx->pos >= ctx->len)
         return;
 
     int i;
 
-    for (i = *pos; i < *len; ++i)
-        buf[i] = buf[i + 1];
+    for (i = ctx->pos; i < ctx->len; ++i)
+        ctx->line[i] = ctx->line[i + 1];
 
-    --(*len);
+    --ctx->len;
 }
 
 /* Deletes the line from beginning to pos */
-void discard_buf(wchar_t *buf, size_t *pos, size_t *len)
+void discard_buf(ChatContext *ctx)
 {
-    if (*pos <= 0)
+    if (ctx->pos <= 0)
         return;
 
     int i;
     int c = 0;
 
-    for (i = *pos; i <= *len; ++i)
-        buf[c++] = buf[i];
+    for (i = ctx->pos; i <= ctx->len; ++i)
+        ctx->line[c++] = ctx->line[i];
 
-    *pos = 0;
-    *len = c - 1;
+    ctx->pos = 0;
+    ctx->len = c - 1;
 }
 
 /* Deletes the line from pos to len */
-void kill_buf(wchar_t *buf, size_t *pos, size_t *len)
+void kill_buf(ChatContext *ctx)
 {
-    if (*len == *pos)
+    if (ctx->len == ctx->pos)
         return;
 
-    buf[*pos] = L'\0';
-    *len = *pos;
+    ctx->line[ctx->pos] = L'\0';
+    ctx->len = ctx->pos;
 }
 
-/* nulls buf and sets pos and len to 0 */
-void reset_buf(wchar_t *buf, size_t *pos, size_t *len)
+/* nulls line and sets pos and len to 0 */
+void reset_buf(ChatContext *ctx)
 {
-    buf[0] = L'\0';
-    *pos = 0;
-    *len = 0;
+    ctx->line[0] = L'\0';
+    ctx->pos = 0;
+    ctx->len = 0;
 }
 
-/* Removes trailing spaces from buf. */
-void rm_trailing_spaces_buf(wchar_t *buf, size_t *pos, size_t *len)
+/* Removes trailing spaces from line. */
+void rm_trailing_spaces_buf(ChatContext *ctx)
 {
-    if (*len <= 0)
+    if (ctx->len <= 0)
         return;
 
-    if (buf[*len - 1] != ' ')
+    if (ctx->line[ctx->len - 1] != ' ')
         return;
 
     int i;
 
-    for (i = *len - 1; i >= 0; --i) {
-        if (buf[i] != ' ')
+    for (i = ctx->len - 1; i >= 0; --i) {
+        if (ctx->line[i] != ' ')
             break;
     }
 
-    *len = i + 1;
-    *pos = MIN(*pos, i + 1);
-    buf[*len] = L'\0';
+    ctx->len = i + 1;
+    ctx->pos = MIN(ctx->pos, i + 1);
+    ctx->line[ctx->len] = L'\0';
 }
 
 #define HIST_PURGE MAX_LINE_HIST / 4
 
 /* shifts hist items back and makes room for HIST_PURGE new entries */
-static void shift_hist_back(wchar_t (*hst)[MAX_STR_SIZE], int *hst_tot)
+static void shift_hist_back(ChatContext *ctx)
 {
     int i;
     int n = MAX_LINE_HIST - HIST_PURGE;
 
     for (i = 0; i < n; ++i)
-        wmemcpy(hst[i], hst[i + HIST_PURGE], MAX_STR_SIZE);
+        wmemcpy(ctx->ln_history[i], ctx->ln_history[i + HIST_PURGE], MAX_STR_SIZE);
 
-    *hst_tot = n;
+    ctx->hst_tot = n;
 }
 
 /* adds a line to the ln_history buffer at hst_pos and sets hst_pos to end of history. */
-void add_line_to_hist(const wchar_t *buf, size_t len, wchar_t (*hst)[MAX_STR_SIZE], int *hst_tot,
-                      int *hst_pos)
+void add_line_to_hist(ChatContext *ctx)
 {
-    if (len > MAX_STR_SIZE)
+    if (ctx->len > MAX_STR_SIZE)
         return;
 
-    if (*hst_tot >= MAX_LINE_HIST)
-        shift_hist_back(hst, hst_tot);
+    if (ctx->hst_tot >= MAX_LINE_HIST)
+        shift_hist_back(ctx);
 
-    ++(*hst_tot);
-    *hst_pos = *hst_tot;
+    ++ctx->hst_tot;
+    ctx->hst_pos = ctx->hst_tot;
 
-    wmemcpy(hst[*hst_tot - 1], buf, len + 1);
+    wmemcpy(ctx->ln_history[ctx->hst_tot - 1], ctx->line, ctx->len + 1);
 }
 
-/* copies history item at hst_pos to buf. Sets pos and len to the len of the history item.
+/* copies history item at hst_pos to line. Sets pos and len to the len of the history item.
    hst_pos is decremented or incremented depending on key_dir.
 
-   resets buffer if at end of history */
-void fetch_hist_item(wchar_t *buf, size_t *pos, size_t *len, wchar_t (*hst)[MAX_STR_SIZE],
-                     int hst_tot, int *hst_pos, int key_dir)
+   resets line if at end of history */
+void fetch_hist_item(ChatContext *ctx, int key_dir)
 {
     if (key_dir == MOVE_UP) {
-        if (--(*hst_pos) < 0) {
-            *hst_pos = 0;
+        if (--ctx->hst_pos < 0) {
+            ctx->hst_pos = 0;
             beep();
         }
     } else {
-        if (++(*hst_pos) >= hst_tot) {
-            *hst_pos = hst_tot;
-            reset_buf(buf, pos, len);
+        if (++ctx->hst_pos >= ctx->hst_tot) {
+            ctx->hst_pos = ctx->hst_tot;
+            reset_buf(ctx);
             return;
         }
     }
 
-    const wchar_t *hst_line = hst[*hst_pos];
+    const wchar_t *hst_line = ctx->ln_history[ctx->hst_pos];
     size_t h_len = wcslen(hst_line);
 
-    wmemcpy(buf, hst_line, h_len + 1);
-
-    *pos = h_len;
-    *len = h_len;
+    wmemcpy(ctx->line, hst_line, h_len + 1);
+    ctx->pos = h_len;
+    ctx->len = h_len;
 }
 
-/* looks for the first instance in list that begins with the last entered word in buf according to pos,
-   then fills buf with the complete word. e.g. "Hello jo" would complete the buffer
+/* looks for the first instance in list that begins with the last entered word in line according to pos,
+   then fills line with the complete word. e.g. "Hello jo" would complete the line
    with "Hello john".
 
    list is a pointer to the list of strings being compared, n_items is the number of items
    in the list, and size is the size of each item in the list.
 
-   Returns the difference between the old len and new len of buf on success, -1 if error */
-int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int n_items, int size)
+   Returns the difference between the old len and new len of line on success, -1 if error */
+int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
 {
-    if (*pos <= 0 || *len <= 0 || *len >= MAX_STR_SIZE)
+    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->len >= MAX_STR_SIZE)
         return -1;
 
     const uint8_t *L = (uint8_t *) list;
@@ -209,13 +206,13 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int 
     uint8_t ubuf[MAX_STR_SIZE];
 
     /* work with multibyte string copy of buf for simplicity */
-    if (wcs_to_mbs_buf(ubuf, buf, MAX_STR_SIZE) == -1)
+    if (wcs_to_mbs_buf(ubuf, ctx->line, MAX_STR_SIZE) == -1)
         return -1;
 
     /* isolate substring from space behind pos to pos */
     uint8_t tmp[MAX_STR_SIZE];
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
-    tmp[*pos] = '\0';
+    tmp[ctx->pos] = '\0';
     uint8_t *sub = strrchr(tmp, ' ');
     int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */
 
@@ -248,14 +245,14 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int 
     /* put match in correct spot in buf and append endchars (space or ": ") */
     const uint8_t *endchrs = n_endchrs == 1 ? " " : ": ";
     int m_len = strlen(match);
-    int strt = *pos - s_len;
+    int strt = ctx->pos - s_len;
     int diff = m_len - s_len + n_endchrs;
 
-    if (*len + diff > MAX_STR_SIZE)
+    if (ctx->len + diff > MAX_STR_SIZE)
         return -1;
 
     uint8_t tmpend[MAX_STR_SIZE];
-    strcpy(tmpend, &ubuf[*pos]);
+    strcpy(tmpend, &ubuf[ctx->pos]);
     strcpy(&ubuf[strt], match);
     strcpy(&ubuf[strt + m_len], endchrs);
     strcpy(&ubuf[strt + m_len + n_endchrs], tmpend);
@@ -266,10 +263,10 @@ int complete_line(wchar_t *buf, size_t *pos, size_t *len, const void *list, int 
     if (mbs_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
         return -1;
 
-    wcscpy(buf, newbuf);
+    wcscpy(ctx->line, newbuf);
 
-    *len += (size_t) diff;
-    *pos += (size_t) diff;
+    ctx->len += (size_t) diff;
+    ctx->pos += (size_t) diff;
 
     return diff;
 }

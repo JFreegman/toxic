@@ -147,14 +147,14 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (ltr) {
         if (ctx->len < (MAX_STR_SIZE - 1)) {
-            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
+            add_char_to_buf(ctx, key);
         }
     } else { /* if (!ltr) */
 
         /* BACKSPACE key: Remove one character from line */
         if (key == 0x107 || key == 0x8 || key == 0x7f) {
             if (ctx->pos > 0) {
-                del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+                del_char_buf_bck(ctx);
                 wmove(ctx->history, y, x - 1);  /* not necessary but fixes a display glitch */
             } else {
                 beep();
@@ -163,7 +163,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
             if (ctx->pos != ctx->len) {
-                del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+                del_char_buf_frnt(ctx);
             } else {
                 beep();
             }
@@ -173,7 +173,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (ctx->pos > 0) {
                 wmove(ctx->history, ctx->orig_y, X_OFST);
                 wclrtobot(ctx->history);
-                discard_buf(ctx->line, &ctx->pos, &ctx->len);
+                discard_buf(ctx);
             } else {
                 beep();
             }
@@ -181,7 +181,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
             if (ctx->len != ctx->pos)
-                kill_buf(ctx->line, &ctx->pos, &ctx->len);
+                kill_buf(ctx);
             else
                 beep();
         }
@@ -212,8 +212,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_UP) {     /* fetches previous item in history */
             wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_UP);
+            fetch_hist_item(ctx, MOVE_UP);
 
             /* adjust line y origin appropriately when window scrolls down */
             if (ctx->at_bottom && ctx->len >= x2 - X_OFST) {
@@ -233,14 +232,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
             wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_DOWN);
+            fetch_hist_item(ctx, MOVE_DOWN);
         }
 
         else if (key == '\t') {    /* TAB key: completes command */
             if (ctx->len > 1 && ctx->line[0] == '/') {
-                if (complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
-                                  MAX_CMDNAME_SIZE) == -1)
+                if (complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE) == -1)
                     beep();
             } else {
                 beep();
@@ -249,7 +246,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         /* RETURN key: execute command */
         else if (key == '\n') {
-            rm_trailing_spaces_buf(ctx->line, &ctx->pos, &ctx->len);
+            rm_trailing_spaces_buf(ctx);
 
             wprintw(ctx->history, "\n");
             uint8_t line[MAX_STR_SIZE] = {0};
@@ -258,11 +255,11 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 memset(&line, 0, sizeof(line));
 
             if (!string_is_empty(line))
-                add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+                add_line_to_hist(ctx);
 
             line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
             execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            reset_buf(ctx);
         }
     }
 }
@@ -295,7 +292,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         uint8_t line[MAX_STR_SIZE];
 
         if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            reset_buf(ctx);
         else
             mvwprintw(ctx->history, ctx->orig_y, X_OFST, line);
 
