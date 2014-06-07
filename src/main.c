@@ -473,22 +473,28 @@ void *thread_winref(void *data)
     }
 }
 
-void print_usage(void)
+static void print_usage(void)
 {
-    fprintf(stderr, "Usage: Print usage here\n");
+    fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
+    fprintf(stderr, "  -f, --file           Use specified data file\n");
+    fprintf(stderr, "  -x, --nodata         Ignore data file\n");
+    fprintf(stderr, "  -4, --ipv4           Force IPv4 connection\n");
+    fprintf(stderr, "  -c, --config         Use specified config file\n");
+    fprintf(stderr, "  -n, --nodes          Use specified DHTnodes file\n");
+    fprintf(stderr, "  -h, --help           Show this message and exit\n");
 }
 
-void set_default_opts(void)
+static void set_default_opts(void)
 {
     arg_opts.use_ipv4 = 0;
     arg_opts.load_data_file = 1;
 }
 
-void parse_args(int argc, char *argv[])
+static void parse_args(int argc, char *argv[])
 {
     set_default_opts();
 
-    const char *opts_str = "4xf:c:n:";
+    const char *opts_str = "4xf:c:n:h";
     int opt, indexptr;
 
     while (true) {
@@ -498,6 +504,7 @@ void parse_args(int argc, char *argv[])
             {"ipv4", no_argument, 0, '4'},
             {"config", required_argument, 0, 'c'},
             {"nodes", required_argument, 0, 'n'},
+            {"help", no_argument, 0, 'h'},
         };
 
         opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr);
@@ -526,6 +533,7 @@ void parse_args(int argc, char *argv[])
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
                 break;
 
+            case 'h':
             default:
                 print_usage();
                 exit(EXIT_FAILURE);
