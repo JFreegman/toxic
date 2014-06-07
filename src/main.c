@@ -39,6 +39,7 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <getopt.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -79,7 +80,12 @@ ToxAv *av;
 char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
-static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
+struct arg_opts {
+    int load_data_file;
+    int use_ipv4;
+    char config_path[MAX_STR_SIZE];
+    char nodes_path[MAX_STR_SIZE];
+} arg_opts;
 
 struct _Winthread Winthread;
 struct user_settings *user_settings = NULL;
@@ -146,6 +152,9 @@ static Tox *init_tox(int ipv4)
         fprintf(stderr, "IPv6 didn't initialize, trying IPv4\n");
         m = tox_new(0);
     }
+
+    if (ipv4)
+        fprintf(stderr, "Forcing IPv4 connection\n");
 
     if (m == NULL)
         return NULL;
@@ -262,7 +271,12 @@ int init_connection(Tox *m)
      */
     if (!srvlist_loaded) {
         srvlist_loaded = true;
-        int res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
+        int res;
+
+        if (!arg_opts.nodes_path[0])
+            res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
+        else
+            res = nodelist_load(arg_opts.nodes_path);
 
         if (linecnt < 1)
             return res;
@@ -332,7 +346,7 @@ static void load_friendlist(Tox *m)
  */
 int store_data(Tox *m, char *path)
 {
-    if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
+    if (arg_opts.load_data_file == 0) /*If file loading/saving is disabled*/
         return 0;
 
     if (path == NULL)
@@ -370,7 +384,7 @@ int store_data(Tox *m, char *path)
 
 static void load_data(Tox *m, char *path)
 {
-    if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
+    if (arg_opts.load_data_file == 0) /*If file loading/saving is disabled*/
         return;
 
     FILE *fd;
@@ -459,35 +473,75 @@ void *thread_winref(void *data)
     }
 }
 
+void print_usage(void)
+{
+    fprintf(stderr, "Usage: Print usage here\n");
+}
+
+void set_default_opts(void)
+{
+    arg_opts.use_ipv4 = 0;
+    arg_opts.load_data_file = 1;
+}
+
+void parse_args(int argc, char *argv[])
+{
+    set_default_opts();
+
+    const char *opts_str = "4xf:c:n:";
+    int opt, indexptr;
+
+    while (true) {
+        static struct option long_opts[] = {
+            {"file", required_argument, 0, 'f'},
+            {"nodata", no_argument, 0, 'x'},
+            {"ipv4", no_argument, 0, '4'},
+            {"config", required_argument, 0, 'c'},
+            {"nodes", required_argument, 0, 'n'},
+        };
+
+        opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr);
+
+        if (opt == -1)
+            break;
+
+        switch (opt) {
+            case 'f':
+                DATA_FILE = strdup(optarg);
+                break;
+
+            case 'x':
+                arg_opts.load_data_file = 0;
+                break;
+
+            case '4':
+                arg_opts.use_ipv4 = 1;
+                break;
+
+            case 'c':
+                snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
+                break;
+
+            case 'n':
+                snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
+                break;
+
+            default:
+                print_usage();
+                exit(EXIT_FAILURE);
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     char *user_config_dir = get_user_config_dir();
     int config_err = 0;
 
-    f_loadfromfile = 1;
-    int f_flag = 0;
-    int i = 0;
-    int f_use_ipv4 = 0;
+    parse_args(argc, argv);
 
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-
-    for (i = 0; i < argc; ++i) {
-        if (argv[i] == NULL)
-            break;
-        else if (argv[i][0] == '-') {
-            if (argv[i][1] == 'f') {
-                if (argv[i + 1] != NULL)
-                    DATA_FILE = strdup(argv[i + 1]);
-                else
-                    f_flag = -1;
-            } else if (argv[i][1] == 'n') {
-                f_loadfromfile = 0;
-            } else if (argv[i][1] == '4') {
-                f_use_ipv4 = 1;
-            }
-        }
-    }
 
     config_err = create_user_config_dir(user_config_dir);
 
@@ -521,9 +575,11 @@ int main(int argc, char *argv[])
     }
 
     memset(user_settings, 0, sizeof(struct user_settings));
-    int settings_err = settings_load(user_settings, NULL);
 
-    Tox *m = init_tox(f_use_ipv4);
+    char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
+    int settings_err = settings_load(user_settings, p);
+
+    Tox *m = init_tox(arg_opts.use_ipv4);
     init_term();
 
     if (m == NULL) {
@@ -532,7 +588,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (f_loadfromfile)
+    if (arg_opts.load_data_file)
         load_data(m, DATA_FILE);
 
     prompt = init_windows(m);
@@ -567,11 +623,6 @@ int main(int argc, char *argv[])
     line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
 #endif /* _SUPPORT_AUDIO */
-
-    if (f_flag == -1) {
-        msg = "You passed '-f' without giving an argument. Defaulting to 'data' for a keyfile...";
-        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    }
 
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";

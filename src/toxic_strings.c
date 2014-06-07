@@ -128,7 +128,7 @@ void rm_trailing_spaces_buf(ChatContext *ctx)
     }
 
     ctx->len = i + 1;
-    ctx->pos = MIN(ctx->pos, i + 1);
+    ctx->pos = MIN(ctx->pos, ctx->len);
     ctx->line[ctx->len] = L'\0';
 }
 
