@@ -442,10 +442,10 @@ void exit_toxic(Tox *m)
     free(prompt->chatwin->hst);
     free(prompt->chatwin);
     free(user_settings);
-    tox_kill(m);
 #ifdef _SUPPORT_AUDIO
     terminate_audio();
 #endif /* _SUPPORT_AUDIO */
+    tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
 }
