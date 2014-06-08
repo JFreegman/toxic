@@ -81,7 +81,7 @@ char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
 struct arg_opts {
-    int load_data_file;
+    int ignore_data_file;
     int use_ipv4;
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
@@ -346,7 +346,7 @@ static void load_friendlist(Tox *m)
  */
 int store_data(Tox *m, char *path)
 {
-    if (arg_opts.load_data_file == 0) /*If file loading/saving is disabled*/
+    if (arg_opts.ignore_data_file)
         return 0;
 
     if (path == NULL)
@@ -384,7 +384,7 @@ int store_data(Tox *m, char *path)
 
 static void load_data(Tox *m, char *path)
 {
-    if (arg_opts.load_data_file == 0) /*If file loading/saving is disabled*/
+    if (arg_opts.ignore_data_file)
         return;
 
     FILE *fd;
@@ -487,7 +487,7 @@ static void print_usage(void)
 static void set_default_opts(void)
 {
     arg_opts.use_ipv4 = 0;
-    arg_opts.load_data_file = 1;
+    arg_opts.ignore_data_file = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -518,7 +518,7 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'x':
-                arg_opts.load_data_file = 0;
+                arg_opts.ignore_data_file = 1;
                 break;
 
             case '4':
@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (arg_opts.load_data_file)
+    if (!arg_opts.ignore_data_file)
         load_data(m, DATA_FILE);
 
     prompt = init_windows(m);

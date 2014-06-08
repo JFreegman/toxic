@@ -178,8 +178,8 @@ int settings_load(struct user_settings *s, char *path)
         if (line[0] == '#' || !line[0])
             continue;
 
-        char *key = strtok(line, ":");
-        char *val = strtok(NULL, ";");
+        const char *key = strtok(line, ":");
+        const char *val = strtok(NULL, ";");
 
         if (key == NULL || val == NULL)
             continue;
