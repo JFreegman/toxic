@@ -25,7 +25,11 @@
 
 #include "toxic_windows.h"
 #include "configdir.h"
-#include "audio_call.h"
+
+#ifdef _SUPPORT_AUDIO
+    #include "audio_call.h"
+#endif
+
 #include "settings.h"
 #include "line_info.h"
 
@@ -33,10 +37,13 @@ static void uset_autolog(struct user_settings *s, const char *val);
 static void uset_time(struct user_settings *s, const char *val);
 static void uset_alerts(struct user_settings *s, const char *val);
 static void uset_colours(struct user_settings *s, const char *val);
-static void uset_ain_dev(struct user_settings *s, const char *val);
-static void uset_aout_dev(struct user_settings *s, const char *val);
 static void uset_hst_size(struct user_settings *s, const char *val);
 static void uset_dwnld_path(struct user_settings *s, const char *val);
+
+#ifdef _SUPPORT_AUDIO
+static void uset_ain_dev(struct user_settings *s, const char *val);
+static void uset_aout_dev(struct user_settings *s, const char *val);
+#endif
 
 struct {
     const char *key;
@@ -46,10 +53,13 @@ struct {
     { "time",           uset_time       },
     { "disable_alerts", uset_alerts     },
     { "colour_theme",   uset_colours    },
-    { "audio_in_dev",   uset_ain_dev    },
-    { "audio_out_dev",  uset_aout_dev   },
     { "history_size",   uset_hst_size   },
     { "download_path",  uset_dwnld_path },
+
+#ifdef _SUPPORT_AUDIO
+    { "audio_in_dev",   uset_ain_dev    },
+    { "audio_out_dev",  uset_aout_dev   },
+#endif
 };
 
 static void uset_autolog(struct user_settings *s, const char *val)
@@ -84,6 +94,8 @@ static void uset_colours(struct user_settings *s, const char *val)
     s->colour_theme = n == NATIVE_COLS ? NATIVE_COLS : DFLT_COLS;
 }
 
+#ifdef _SUPPORT_AUDIO
+
 static void uset_ain_dev(struct user_settings *s, const char *val)
 {
     int n = atoi(val);
@@ -103,6 +115,8 @@ static void uset_aout_dev(struct user_settings *s, const char *val)
 
     s->audio_out_dev = (long int) n;
 }
+
+#endif /* _SUPPORT_AUDIO */
 
 static void uset_hst_size(struct user_settings *s, const char *val)
 {
@@ -142,10 +156,13 @@ static void set_default_settings(struct user_settings *s)
     uset_time(s, "24");
     uset_alerts(s, "0");
     uset_colours(s, "0");
-    uset_ain_dev(s, "0");
-    uset_aout_dev(s, "0");
     uset_hst_size(s, "700");
     uset_dwnld_path(s, NULL);
+
+#ifdef _SUPPORT_AUDIO
+    uset_ain_dev(s, "0");
+    uset_aout_dev(s, "0");
+#endif
 }
 
 int settings_load(struct user_settings *s, char *path)

@@ -20,7 +20,11 @@
  *
  */
 
-#define NUM_SETTINGS 8
+#ifdef _SUPPORT_AUDIO
+    #define NUM_SETTINGS 8
+#else
+    #define NUM_SETTINGS 6
+#endif
 
 /* holds user setting values */
 struct user_settings {
@@ -28,10 +32,13 @@ struct user_settings {
     int alerts;            /* boolean */
     int time;              /* 12 or 24 */
     int colour_theme;      /* boolean (0 for default toxic colours) */
-    long int audio_in_dev;
-    long int audio_out_dev;
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     char download_path[MAX_STR_SIZE];
+
+#ifdef _SUPPORT_AUDIO
+    long int audio_in_dev;
+    long int audio_out_dev;
+#endif
 };
 
 enum {
