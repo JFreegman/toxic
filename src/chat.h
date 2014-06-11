@@ -23,7 +23,8 @@
 #ifndef CHAT_H_6489PZ13
 #define CHAT_H_6489PZ13
 
-#include "toxic_windows.h"
+#include "windows.h"
+#include "toxic.h"
 
 void kill_chat_window(ToxWindow *self);
 ToxWindow new_chat(Tox *m, int32_t friendnum);

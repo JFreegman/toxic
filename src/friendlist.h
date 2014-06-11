@@ -24,9 +24,20 @@
 #define FRIENDLIST_H_53I41IM
 
 #include <time.h>
-#include "toxic_windows.h"
+
+#include "toxic.h"
+#include "windows.h"
+#include "file_senders.h"
 
 #define TIME_STR_SIZE 16
+
+struct FileReceiver {
+    uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
+    FILE *files[MAX_FILES];
+    bool pending[MAX_FILES];
+    uint64_t size[MAX_FILES];
+    uint32_t line_id[MAX_FILES];
+};
 
 struct LastOnline {
     uint64_t last_on;

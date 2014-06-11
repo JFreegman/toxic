@@ -20,6 +20,11 @@
  *
  */
 
+#ifndef _toxic_strings_h
+#define _toxic_strings_h
+
+#include "windows.h"
+
 /* Adds char to line at pos */
 void add_char_to_buf(ChatContext *ctx, wint_t ch);
 
@@ -59,3 +64,5 @@ void add_line_to_hist(ChatContext *ctx);
 
    resets line if at end of history */
 void fetch_hist_item(ChatContext *ctx, int key_dir);
+
+#endif /* #define _toxic_strings_h */

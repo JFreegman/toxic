@@ -20,6 +20,9 @@
  *
  */
 
+#ifndef _configdir_h
+#define _configdir_h
+
 #define CONFIGDIR "/tox/"
 
 #ifndef S_ISDIR
@@ -29,3 +32,5 @@
 char *get_user_config_dir(void);
 
 int create_user_config_dir(char *path);
+
+#endif /* #define _configdir_h */

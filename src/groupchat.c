@@ -28,7 +28,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "toxic_windows.h"
+#include "windows.h"
+#include "toxic.h"
 #include "execute.h"
 #include "misc_tools.h"
 #include "groupchat.h"

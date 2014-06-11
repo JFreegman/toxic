@@ -28,7 +28,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
+#include "file_senders.h"
 #include "line_info.h"
 
 FileSender file_senders[MAX_FILES];

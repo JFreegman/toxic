@@ -20,6 +20,11 @@
  *
  */
 
+#ifndef _settings_h
+#define _settings_h
+
+#include "toxic.h"
+
 #ifdef _SUPPORT_AUDIO
     #define NUM_SETTINGS 8
 #else
@@ -58,3 +63,5 @@ enum {
 } settings_values;
 
 int settings_load(struct user_settings *s, char *path);
+
+#endif /* #define _settings_h */

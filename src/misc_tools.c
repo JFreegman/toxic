@@ -29,7 +29,8 @@
 #include <time.h>
 #include <limits.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "misc_tools.h"
 #include "settings.h"
 

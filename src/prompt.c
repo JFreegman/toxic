@@ -27,7 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "prompt.h"
 #include "execute.h"
 #include "misc_tools.h"

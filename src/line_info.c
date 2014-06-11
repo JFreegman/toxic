@@ -28,7 +28,8 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "line_info.h"
 #include "groupchat.h"
 #include "settings.h"

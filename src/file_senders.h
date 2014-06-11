@@ -20,7 +20,33 @@
  *
  */
 
+#ifndef _filesenders_h
+#define _filesenders_h
+
+#include "toxic.h"
+#include "windows.h"
+
+#define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
+#define MAX_FILES 256
+#define TIMEOUT_FILESENDER 300
+
+typedef struct {
+    FILE *file;
+    ToxWindow *toxwin;
+    int32_t friendnum;
+    bool active;
+    int filenum;
+    uint8_t nextpiece[FILE_PIECE_SIZE];
+    uint16_t piecelen;
+    uint8_t pathname[MAX_STR_SIZE];
+    uint64_t timestamp;
+    uint64_t size;
+    uint32_t line_id;
+} FileSender;
+
 /* Should only be called on exit */
 void close_all_file_senders(void);
 
 void do_file_senders(Tox *m);
+
+#endif  /* #define _filesenders_h */

@@ -31,6 +31,8 @@
 
 #include <tox/tox.h>
 
+#include "toxic.h"
+#include "windows.h"
 #include "chat.h"
 #include "friendlist.h"
 #include "misc_tools.h"

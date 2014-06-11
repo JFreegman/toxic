@@ -30,7 +30,8 @@
 
 #include "friendlist.h"
 #include "prompt.h"
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "groupchat.h"
 
 extern char *DATA_FILE;

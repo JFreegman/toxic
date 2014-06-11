@@ -19,6 +19,11 @@
  *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef _misc_tools_h
+#define _misc_tools_h
+
+#include "windows.h"
+#include "toxic.h"
 
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -75,3 +80,5 @@ void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);
 
 /* gets base file name from path or original file name if no path is supplied */
 void get_file_name(uint8_t *namebuf, uint8_t *pathname);
+
+#endif /* #define _misc_tools_h */

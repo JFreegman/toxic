@@ -20,6 +20,12 @@
  *
  */
 
+#ifndef _chat_commands_h
+#define _chat_commands_h
+
+#include "windows.h"
+#include "toxic.h"
+
 void cmd_chat_help(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_groupinvite(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_join_group(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
@@ -34,3 +40,5 @@ void cmd_reject(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZ
 void cmd_hangup(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_cancel(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 #endif /* _SUPPORT_AUDIO */
+
+#endif /* #define _chat_commands_h */
