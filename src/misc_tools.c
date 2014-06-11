@@ -240,16 +240,12 @@ void get_file_name(uint8_t *namebuf, uint8_t *pathname)
     while (idx >= 0 && pathname[idx] == '/')
         pathname[idx--] = '\0';
 
-    uint8_t *filename = strrchr(pathname, '/');    /* Try unix style paths */
+    uint8_t *filename = strrchr(pathname, '/');
 
-    if (filename != NULL) {
-        if (!strlen(++filename))
-            filename = pathname;
-    } else {
-        filename = strrchr(pathname, '\\');    /* Try windows style paths */
-
-        if (filename == NULL)
-            filename = pathname;
+    if (filename == NULL) {
+        filename = pathname;
+    } else if (!strlen(++filename)) {
+        filename = pathname;
     }
 
     snprintf(namebuf, MAX_STR_SIZE, "%s", filename);

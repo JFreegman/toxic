@@ -30,14 +30,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-
-#ifdef _WIN32
-#include <shlobj.h>
-#include <direct.h>
-#else /* WIN32 */
 #include <unistd.h>
 #include <pwd.h>
-#endif /* WIN32 */
 
 #include "configdir.h"
 
@@ -51,25 +45,6 @@
 char *get_user_config_dir(void)
 {
     char *user_config_dir;
-#ifdef _WIN32
-#warning Please fix configdir for Win32
-    return NULL;
-#if 0
-    char appdata[MAX_PATH];
-    BOOL ok;
-
-    ok = SHGetSpecialFolderPathA(NULL, appdata, CSIDL_PROFILE, TRUE);
-
-    if (!ok) {
-        return NULL;
-    }
-
-    user_config_dir = strdup(appdata);
-
-    return user_config_dir;
-#endif
-
-#else /* WIN32 */
 
 #ifndef NSS_BUFLEN_PASSWD
 #define NSS_BUFLEN_PASSWD 4096
@@ -128,7 +103,6 @@ char *get_user_config_dir(void)
 
     return user_config_dir;
 #undef NSS_BUFLEN_PASSWD
-#endif /* WIN32 */
 }
 
 /*
@@ -136,26 +110,6 @@ char *get_user_config_dir(void)
  */
 int create_user_config_dir(char *path)
 {
-#ifdef _WIN32
-#warning Please fix configdir for Win32
-    return -1;
-#if 0
-    char *fullpath = malloc(strlen(path) + strlen(CONFIGDIR) + 1);
-    strcpy(fullpath, path);
-    strcat(fullpath, CONFIGDIR);
-
-    mkdir_err = _mkdir(fullpath);
-    struct __stat64 buf;
-
-    if (mkdir_err && (errno != EEXIST || _wstat64(fullpath, &buf) || !S_ISDIR(buf.st_mode))) {
-        free(fullpath);
-        return -1;
-    }
-
-    free(fullpath);
-#endif
-
-#else
     int mkdir_err;
 
     mkdir_err = mkdir(path, 0700);
@@ -178,5 +132,4 @@ int create_user_config_dir(char *path)
 
     free(fullpath);
     return 0;
-#endif
 }

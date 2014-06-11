@@ -20,11 +20,7 @@
  *
  */
 
-#ifdef _win32
-#define CONFIGDIR "\\tox\\"
-#else
 #define CONFIGDIR "/tox/"
-#endif
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)

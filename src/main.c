@@ -40,18 +40,11 @@
 #include <time.h>
 #include <pthread.h>
 #include <getopt.h>
-
-#ifdef _WIN32
-#include <direct.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
 #include <netdb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#endif
 
 #include <tox/tox.h>
 
