@@ -32,13 +32,19 @@
 #include "line_info.h"
 
 #include <curses.h>
-#include <AL/al.h>
-#include <AL/alc.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
 
 #define _cbend pthread_exit(NULL)
 
