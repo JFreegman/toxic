@@ -243,9 +243,10 @@ void get_file_name(uint8_t *namebuf, uint8_t *pathname)
 
     uint8_t *filename = strrchr(pathname, '/');
 
-    if (filename == NULL) {
-        filename = pathname;
-    } else if (!strlen(++filename)) {
+    if (filename != NULL) {
+        if (!strlen(++filename))
+            filename = pathname;
+    } else {
         filename = pathname;
     }
 

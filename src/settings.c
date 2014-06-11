@@ -146,7 +146,7 @@ static void uset_dwnld_path(struct user_settings *s, const char *val)
 
     strcpy(s->download_path, val);
 
-    if (val[len] != '/')
+    if (val[len - 1] != '/')
         strcat(s->download_path, "/");
 }
 

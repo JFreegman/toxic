@@ -1,4 +1,4 @@
-/*  toxic.c
+/*  main.c
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -92,8 +92,8 @@ void on_window_resize(int sig)
 
 static void init_term(void)
 {
-    /* Setup terminal */
     signal(SIGWINCH, on_window_resize);
+
 #if HAVE_WIDECHAR
 
     if (setlocale(LC_ALL, "") == NULL) {
@@ -103,6 +103,7 @@ static void init_term(void)
     }
 
 #endif
+
     initscr();
     cbreak();
     keypad(stdscr, 1);
@@ -450,9 +451,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
 
     do_connection(m, prompt);
     do_file_senders(m);
-
-    /* main tox-core loop */
-    tox_do(m);
+    tox_do(m);    /* main tox-core loop */
 
     pthread_mutex_unlock(&Winthread.lock);
 }
@@ -488,24 +487,19 @@ static void parse_args(int argc, char *argv[])
 {
     set_default_opts();
 
+    static struct option long_opts[] = {
+        {"file", required_argument, 0, 'f'},
+        {"nodata", no_argument, 0, 'x'},
+        {"ipv4", no_argument, 0, '4'},
+        {"config", required_argument, 0, 'c'},
+        {"nodes", required_argument, 0, 'n'},
+        {"help", no_argument, 0, 'h'},
+    };
+
     const char *opts_str = "4xf:c:n:h";
     int opt, indexptr;
 
-    while (true) {
-        static struct option long_opts[] = {
-            {"file", required_argument, 0, 'f'},
-            {"nodata", no_argument, 0, 'x'},
-            {"ipv4", no_argument, 0, '4'},
-            {"config", required_argument, 0, 'c'},
-            {"nodes", required_argument, 0, 'n'},
-            {"help", no_argument, 0, 'h'},
-        };
-
-        opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr);
-
-        if (opt == -1)
-            break;
-
+    while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
         switch (opt) {
             case 'f':
                 DATA_FILE = strdup(optarg);
@@ -644,7 +638,6 @@ int main(int argc, char *argv[])
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);
-        // uint32_t st = MIN(tox_do_interval(m) * 1000, 20000); 
         usleep(10000);
     }
 

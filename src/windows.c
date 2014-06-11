@@ -352,25 +352,28 @@ static void draw_bar(void)
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].active) {
-            if (windows + i == active_window) {
-#ifdef URXVT_FIX
-                attron(A_BOLD | COLOR_PAIR(GREEN));
-            } else {
-#endif
-                attron(A_BOLD);
-            }
+        if (!windows[i].active)
+            continue;
 
-            draw_window_tab(windows[i]);
+        if (windows + i == active_window)
 
-            if (windows + i == active_window) {
 #ifdef URXVT_FIX
-                attroff(A_BOLD | COLOR_PAIR(GREEN));
-            } else {
+            attron(A_BOLD | COLOR_PAIR(GREEN));
+        else
 #endif
-                attroff(A_BOLD);
-            }
-        }
+
+            attron(A_BOLD);
+
+        draw_window_tab(windows[i]);
+
+        if (windows + i == active_window)
+
+#ifdef URXVT_FIX
+            attroff(A_BOLD | COLOR_PAIR(GREEN));
+        else
+#endif
+
+            attroff(A_BOLD);
     }
 
     refresh();
