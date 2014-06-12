@@ -76,7 +76,7 @@ struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
-    void(*onFriendRequest)(ToxWindow *, Tox *, uint8_t *, uint8_t *, uint16_t);
+    void(*onFriendRequest)(ToxWindow *, Tox *, const uint8_t *, const uint8_t *, uint16_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, int32_t, bool);
     void(*onConnectionChange)(ToxWindow *, Tox *, int32_t, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);

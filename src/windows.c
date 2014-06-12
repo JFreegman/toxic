@@ -44,7 +44,7 @@ extern ToxWindow *prompt;
 static int num_active_windows;
 
 /* CALLBACKS START */
-void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
+void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata)
 {
     int i;
 

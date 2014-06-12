@@ -21,7 +21,7 @@
  */
 
 #ifndef _line_info_h
-#define line_info_h
+#define _line_info_h
 
 #include "windows.h"
 #include "toxic.h"
@@ -91,4 +91,4 @@ void line_info_init(struct history *hst);
 void line_info_onKey(ToxWindow *self, wint_t key);
 void line_info_onDraw(ToxWindow *self);
 
-#endif /* #define line_info_h */
+#endif /* #define _line_info_h */

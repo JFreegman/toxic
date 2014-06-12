@@ -62,7 +62,7 @@ enum {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
-void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
+void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
 void on_message(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
 void on_action(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);

@@ -102,7 +102,7 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 
 /* Adds friend request to pending friend requests.
    Returns request number on success, -1 if queue is full or other error. */
-static int add_friend_request(uint8_t *public_key)
+static int add_friend_request(const uint8_t *public_key)
 {
     if (num_frnd_requests >= MAX_FRIENDS_NUM)
         return -1;
@@ -403,10 +403,9 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
     }
 }
 
-static void prompt_onFriendRequest(ToxWindow *self, Tox *m, uint8_t *key, uint8_t *data, uint16_t length)
+static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const uint8_t *key, const uint8_t *data,
+                                   uint16_t length)
 {
-    data[length] = '\0';
-
     ChatContext *ctx = self->chatwin;
 
     uint8_t timefrmt[TIME_STR_SIZE];
