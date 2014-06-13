@@ -52,6 +52,8 @@
 #define T_KEY_C_E        0x05     /* ctrl-e */
 #define T_KEY_C_A        0x01     /* ctrl-a */
 #define T_KEY_ESC        0x1B     /* ESC key */
+#define T_KEY_C_CMA      0x2C     /* ctrl-comma */
+#define T_KEY_C_PRD      0x2E     /* ctrl-period */
 
 enum {
     MOVE_UP,

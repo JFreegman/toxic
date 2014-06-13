@@ -147,9 +147,9 @@ static void print_groupchat_help(ToxWindow *self)
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Use ESC key to toggle history scroll mode";
+    msg = " * Use Page Up/Page Down to scroll chat history";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Scroll peer list with the Page Up/Page Down keys.\n";
+    msg = " * Scroll peer list with the < and > keys.\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
     msg = " * Notice, some friends will be missing names while finding peers\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
@@ -383,17 +383,6 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
 
-    if (!ltr && (key == T_KEY_ESC) ) {   /* ESC key: Toggle history scroll mode */
-        bool scroll = ctx->hst->scroll_mode ? false : true;
-        line_info_toggle_scroll(self, scroll);
-    }
-
-    /* If we're in scroll mode ignore rest of function */
-    if (ctx->hst->scroll_mode) {
-        line_info_onKey(self, key);
-        return;
-    }
-
     if (ltr) {
         if ( (ctx->len < MAX_STR_SIZE - 1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1) - 1)) ) {
             add_char_to_buf(ctx, key);
@@ -405,6 +394,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
     } else { /* if (!ltr) */
+        if (line_info_onKey(self, key))
+            return;
 
         if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
             if (ctx->pos > 0) {
@@ -521,14 +512,14 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         /* Scroll peerlist up and down one position if list overflows window */
-        else if (key == KEY_NPAGE) {
+        else if (key == T_KEY_C_PRD) {
             int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
             if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
                 ++groupchats[self->num].side_pos;
         }
 
-        else if (key == KEY_PPAGE) {
+        else if (key == T_KEY_C_CMA) {
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
         }
@@ -587,21 +578,17 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     line_info_print(self);
     wclear(ctx->linewin);
 
-    if (ctx->hst->scroll_mode) {
-        line_info_onDraw(self);
-    } else {
-        scrollok(ctx->history, 1);
-        curs_set(1);
+    scrollok(ctx->history, 0);
+    curs_set(1);
 
-        if (ctx->len > 0) {
-            uint8_t line[MAX_STR_SIZE];
+    if (ctx->len > 0) {
+        uint8_t line[MAX_STR_SIZE];
 
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                reset_buf(ctx);
-                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-            } else {
-                mvwprintw(ctx->linewin, 1, 0, "%s", line);
-            }
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            reset_buf(ctx);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            mvwprintw(ctx->linewin, 1, 0, "%s", line);
         }
     }
 

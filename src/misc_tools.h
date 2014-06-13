@@ -29,7 +29,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 /* convert a hex string to binary */
-unsigned char *hex_string_to_bin(char hex_string[]);
+char *hex_string_to_bin(const char *hex_string);
 
 /* get the current unix time */
 uint64_t get_unix_time(void);

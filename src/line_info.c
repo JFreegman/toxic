@@ -51,7 +51,7 @@ void line_info_init(struct history *hst)
     hst->line_end = hst->line_start;
 }
 
-/* resets line_start when scroll mode is disabled */
+/* resets line_start */
 static void line_info_reset_start(struct history *hst)
 {
     struct line_info *line = hst->line_end;
@@ -59,28 +59,11 @@ static void line_info_reset_start(struct history *hst)
 
     while (line) {
         if (line->id == start_id) {
-            hst->line_start = line;
+            hst->line_start = line->next;
             break;
         }
 
         line = line->prev;
-    }
-}
-
-void line_info_toggle_scroll(ToxWindow *self, bool scroll)
-{
-    WINDOW *win = self->chatwin->history;
-    struct history *hst = self->chatwin->hst;
-
-    if (scroll) {
-        hst->scroll_mode = true;
-        scrollok(win, 0);
-        curs_set(0);
-    } else {
-        hst->scroll_mode = false;
-        scrollok(win, 1);
-        curs_set(1);
-        line_info_reset_start(hst);
     }
 }
 
@@ -201,7 +184,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
             ++hst->start_id;
             lines -= (1 + hst->line_start->len / (x2 - offst));
 
-            if (!hst->scroll_mode && hst->line_start->next)
+            if (hst->line_start->next)
                 hst->line_start = hst->line_start->next;
         }
     }
@@ -407,24 +390,26 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
         hst->line_start = hst->line_start->next;
 }
 
-void line_info_onKey(ToxWindow *self, wint_t key)
+bool line_info_onKey(ToxWindow *self, wint_t key)
 {
     struct history *hst = self->chatwin->hst;
+    bool match = true;
 
     switch (key) {
-        case KEY_PPAGE:
+        /* TODO: Find good key bindings for page up/page down scroll behaviour */
+    /*    case KEY_SPREVIOUS:
             line_info_page_up(self, hst);
             break;
 
-        case KEY_NPAGE:
+        case KEY_SNEXT:
             line_info_page_down(self, hst);
-            break;
+            break; */
 
-        case KEY_UP:
+        case KEY_PPAGE:
             line_info_scroll_up(hst);
             break;
 
-        case KEY_DOWN:
+        case KEY_NPAGE:
             line_info_scroll_down(hst);
             break;
 
@@ -435,18 +420,13 @@ void line_info_onKey(ToxWindow *self, wint_t key)
         case KEY_END:
             line_info_reset_start(hst);
             break;
+
+        default:
+            match = false;
+            break;
     }
-}
 
-void line_info_onDraw(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    wattron(ctx->linewin, A_BOLD | COLOR_PAIR(BLUE));
-    mvwprintw(ctx->linewin, 1, 0, "Scroll mode:\n");
-    wattroff(ctx->linewin, A_BOLD | COLOR_PAIR(BLUE));
-    mvwprintw(ctx->linewin, 1, 13, "Use up/down arrows, page up/page down, and home/end to navigate.\n"
-              "             ESC to exit.\n");
+    return match;
 }
 
 void line_info_clear(struct history *hst)

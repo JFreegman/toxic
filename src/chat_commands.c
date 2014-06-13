@@ -87,7 +87,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Use ESC key to toggle history scroll mode\n";
+    msg = " * Use Page Up/Page Down to scroll chat history\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
     hst->line_start = start;

@@ -131,21 +131,6 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
 
-    /* TODO this is buggy */
-    /* ESC key: Toggle history scroll mode */
-    /*
-    if (key == T_KEY_ESC) {
-        bool scroll = ctx->hst->scroll_mode ? false : true;
-        line_info_toggle_scroll(self, scroll);
-    }
-    */
-
-    /* If we're in scroll mode ignore rest of function */
-    if (ctx->hst->scroll_mode) {
-        line_info_onKey(self, key);
-        return;
-    }
-
     if (ltr) {
         if (ctx->len < (MAX_STR_SIZE - 1)) {
             add_char_to_buf(ctx, key);
@@ -273,10 +258,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
 
-    if (!ctx->hst->scroll_mode) {
-        curs_set(1);
-        scrollok(ctx->history, 1);
-    }
+    curs_set(1);
+    scrollok(ctx->history, 1);
 
     line_info_print(self);
 

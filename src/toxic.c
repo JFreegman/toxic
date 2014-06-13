@@ -84,12 +84,6 @@ struct arg_opts {
 struct _Winthread Winthread;
 struct user_settings *user_settings = NULL;
 
-void on_window_resize(int sig)
-{
-    refresh();
-    clear();
-}
-
 static void init_term(void)
 {
     signal(SIGWINCH, on_window_resize);
@@ -208,9 +202,9 @@ static int nodelist_load(char *filename)
 
     while (fgets(line, sizeof(line), fp) && linecnt < MAXNODES) {
         if (strlen(line) > MINLINE) {
-            char *name = strtok(line, " ");
-            char *port = strtok(NULL, " ");
-            char *key_ascii = strtok(NULL, " ");
+            const char *name = strtok(line, " ");
+            const char *port = strtok(NULL, " ");
+            const char *key_ascii = strtok(NULL, " ");
 
             /* invalid line */
             if (name == NULL || port == NULL || key_ascii == NULL)

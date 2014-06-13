@@ -64,11 +64,10 @@ void get_time_str(uint8_t *buf)
     strftime(buf, TIME_STR_SIZE, t, get_time());
 }
 
-/* XXX: FIX */
-unsigned char *hex_string_to_bin(char hex_string[])
+char *hex_string_to_bin(const char *hex_string)
 {
     size_t len = strlen(hex_string);
-    unsigned char *val = malloc(len);
+    char *val = malloc(len);
 
     if (val == NULL) {
         endwin();
@@ -76,11 +75,10 @@ unsigned char *hex_string_to_bin(char hex_string[])
         exit(EXIT_FAILURE);
     }
 
-    char *pos = hex_string;
     size_t i;
 
-    for (i = 0; i < len; ++i, pos += 2)
-        sscanf(pos, "%2hhx", &val[i]);
+    for (i = 0; i < len; ++i, hex_string += 2)
+        sscanf(hex_string, "%2hhx", &val[i]);
 
     return val;
 }

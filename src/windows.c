@@ -316,6 +316,12 @@ ToxWindow *init_windows(Tox *m)
     return prompt;
 }
 
+void on_window_resize(int sig)
+{
+    refresh();
+    clear();
+}
+
 static void draw_window_tab(ToxWindow toxwin)
 {
     /* alert0 takes priority */

@@ -61,7 +61,6 @@ struct history {
     struct line_info *line_end;
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
     uint32_t line_items;
-    bool scroll_mode;
 
     /* keeps track of lines added between window refreshes */
     uint32_t queue;
@@ -78,9 +77,6 @@ void line_info_print(ToxWindow *self);
 /* frees all history lines */
 void line_info_cleanup(struct history *hst);
 
-/* Toggles scroll mode for current window */
-void line_info_toggle_scroll(ToxWindow *self, bool scroll);
-
 /* clears the screen (does not delete anything) */
 void line_info_clear(struct history *hst);
 
@@ -88,7 +84,6 @@ void line_info_clear(struct history *hst);
 void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg);
 
 void line_info_init(struct history *hst);
-void line_info_onKey(ToxWindow *self, wint_t key);
-void line_info_onDraw(ToxWindow *self);
+bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */
 
 #endif /* #define _line_info_h */

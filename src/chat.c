@@ -548,17 +548,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;
 
-    if (!ltr && (key == T_KEY_ESC)) {   /* ESC key: Toggle history scroll mode */
-        bool scroll = ctx->hst->scroll_mode ? false : true;
-        line_info_toggle_scroll(self, scroll);
-    }
-
-    /* If we're in scroll mode ignore rest of function */
-    if (ctx->hst->scroll_mode) {
-        line_info_onKey(self, key);
-        return;
-    }
-
     if (ltr) {
         /* prevents buffer overflows and strange behaviour when cursor goes past the window */
         if ( (ctx->len < MAX_STR_SIZE - 1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1) - 1)) ) {
@@ -574,6 +563,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             set_typingstatus(self, m, 1);
 
     } else { /* if (!ltr) */
+        if (line_info_onKey(self, key))
+            return;
 
         if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
             if (ctx->pos > 0) {
@@ -746,21 +737,17 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     line_info_print(self);
     wclear(ctx->linewin);
 
-    if (ctx->hst->scroll_mode) {
-        line_info_onDraw(self);
-    } else {
-        curs_set(1);
-        scrollok(ctx->history, 1);
+    curs_set(1);
+    scrollok(ctx->history, 0);
 
-        if (ctx->len > 0 && !ctx->hst->scroll_mode) {
-            uint8_t line[MAX_STR_SIZE];
+    if (ctx->len> 0) {
+        uint8_t line[MAX_STR_SIZE];
 
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                reset_buf(ctx);
-                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-            } else {
-                mvwprintw(ctx->linewin, 1, 0, "%s", line);
-            }
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            reset_buf(ctx);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            mvwprintw(ctx->linewin, 1, 0, "%s", line);
         }
     }
 
