@@ -147,9 +147,9 @@ static void print_groupchat_help(ToxWindow *self)
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Use Page Up/Page Down to scroll chat history";
+    msg = " * Use Page Up/Page Down keys to scroll chat history";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Scroll peer list with the < and > keys.\n";
+    msg = " * Scroll peer list with the ctrl-] and ctrl-[ keys.\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
     msg = " * Notice, some friends will be missing names while finding peers\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
@@ -394,6 +394,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
     } else { /* if (!ltr) */
+
         if (line_info_onKey(self, key))
             return;
 
@@ -512,14 +513,14 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         /* Scroll peerlist up and down one position if list overflows window */
-        else if (key == T_KEY_C_PRD) {
+        else if (key == T_KEY_C_LB) {
             int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
             if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
                 ++groupchats[self->num].side_pos;
         }
 
-        else if (key == T_KEY_C_CMA) {
+        else if (key == T_KEY_C_RB) {
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
         }
