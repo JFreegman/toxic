@@ -52,19 +52,21 @@ void line_info_init(struct history *hst)
 }
 
 /* resets line_start */
-static void line_info_reset_start(struct history *hst)
+static void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
+    int y2, x2;
+    getmaxyx(self->window, y2, x2);
+
     struct line_info *line = hst->line_end;
-    uint32_t start_id = hst->start_id;
+    uint16_t lncnt = 0;
+    int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
 
-    while (line) {
-        if (line->id == start_id) {
-            hst->line_start = line->next;
-            break;
-        }
-
+    while (line->prev && lncnt < (y2 - CHATBOX_HEIGHT - 3)) {
         line = line->prev;
+        lncnt += (1 + line->len / (x2 - offst));
     }
+
+    hst->line_start = line;
 }
 
 void line_info_cleanup(struct history *hst)
@@ -418,7 +420,7 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
             break;
 
         case KEY_END:
-            line_info_reset_start(hst);
+            line_info_reset_start(self, hst);
             break;
 
         default:
