@@ -59,11 +59,13 @@ static void line_info_reset_start(ToxWindow *self, struct history *hst)
 
     struct line_info *line = hst->line_end;
     uint16_t lncnt = 0;
-    int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
+    int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
+    int top_offst = self->is_chat ? 4 : 1;    /* leave one blank space at bottom */
+    int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
-    while (line->prev && lncnt < (y2 - CHATBOX_HEIGHT - 3)) {
+    while (line->prev && lncnt < max_y) {
         line = line->prev;
-        lncnt += (1 + line->len / (x2 - offst));
+        lncnt += (1 + line->len / (x2 - side_offst));
     }
 
     hst->line_start = line;
