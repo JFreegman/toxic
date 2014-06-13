@@ -868,7 +868,6 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     statusbar->topline = subwin(self->window, 2, x2, 0, 0);
     ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
-    scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
     ctx->hst = malloc(sizeof(struct history));
