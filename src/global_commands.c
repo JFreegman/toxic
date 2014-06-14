@@ -423,9 +423,11 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Argument messages must be enclosed in quotation marks.\n"
-          " * Use ctrl-o and ctrl-p to navigate through the tabs.\n";
+    msg = " * Argument messages must be enclosed in quotation marks.";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    msg = " * Use ctrl-o and ctrl-p to navigate through the tabs.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
 
     hst->line_start = start;
 }

@@ -49,6 +49,7 @@ void line_info_init(struct history *hst)
     memset(hst->line_root, 0, sizeof(struct line_info));
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
+    hst->queue_sz = 0;
 }
 
 /* resets line_start */
@@ -60,7 +61,7 @@ static void line_info_reset_start(ToxWindow *self, struct history *hst)
     struct line_info *line = hst->line_end;
     uint16_t lncnt = 0;
     int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
-    int top_offst = self->is_chat ? 4 : 1;    /* leave one blank space at bottom */
+    int top_offst = self->is_chat ? 3 : 0;
     int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
     while (line->prev && lncnt < max_y) {
@@ -96,6 +97,33 @@ static void line_info_root_fwd(struct history *hst)
 
     free(hst->line_root);
     hst->line_root = tmp;
+}
+
+/* adds a line_info line to queue */
+static void line_info_add_queue(struct history *hst, struct line_info *line)
+{
+    if (hst->queue_sz >= MAX_QUEUE)
+        return;
+
+    hst->queue[hst->queue_sz++] = line;
+}
+
+/* returns ptr to queue item 0 and removes it from queue */
+static struct line_info *line_info_ret_queue(struct history *hst)
+{
+    if (hst->queue_sz <= 0)
+        return NULL;
+
+    struct line_info *ret = hst->queue[0];
+
+    int i;
+
+    for (i = 0; i < hst->queue_sz; ++i)
+        hst->queue[i] = hst->queue[i + 1];
+
+    --hst->queue_sz;
+
+    return ret;
 }
 
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg,
@@ -149,24 +177,28 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     new_line->type = type;
     new_line->bold = bold;
     new_line->colour = colour;
-    new_line->id = hst->line_end->id + 1;
 
-    new_line->prev = hst->line_end;
-    hst->line_end->next = new_line;
-    hst->line_end = new_line;
+    line_info_add_queue(hst, new_line);
+}
+
+/* adds a single queue item to hst if possible. only called once per call to line_info_print() */
+static void line_info_check_queue(ToxWindow *self) 
+{
+    struct history *hst = self->chatwin->hst;
+    struct line_info *line = line_info_ret_queue(hst);
+
+    if (line == NULL)
+        return;
 
     if (++hst->line_items > user_settings->history_size) {
         --hst->line_items;
         line_info_root_fwd(hst);
     }
 
-    int newlines = 0;
-    int i;
-
-    for (i = 0; msg[i]; ++i) {
-        if (msg[i] == '\n')
-            ++newlines;
-    }
+    line->id = hst->line_end->id + 1;
+    line->prev = hst->line_end;
+    hst->line_end->next = line;
+    hst->line_end = line;
 
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
@@ -176,17 +208,14 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
         return;
 
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
-    int lines = (1 + newlines + (len / (x2 - offst)));
-    hst->queue_lns += lines;
-    ++hst->queue;
-
+    int lines = 1 + (line->len / (x2 - offst));
     int max_y = self->is_prompt ? y2 : y2 - CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new lines */
-    if (y + hst->queue_lns - hst->queue >= max_y) {
+    if (y >= max_y) {
         while (lines > 0) {
             ++hst->start_id;
-            lines -= (1 + hst->line_start->len / (x2 - offst));
+            lines -= 1 + (hst->line_start->len / (x2 - offst));
 
             if (hst->line_start->next)
                 hst->line_start = hst->line_start->next;
@@ -201,11 +230,12 @@ void line_info_print(ToxWindow *self)
     if (ctx == NULL)
         return;
 
+    struct history *hst = ctx->hst;
+
+    /* Only allow one new item to be added to chat window per call to this function */
+    line_info_check_queue(self);
+
     WINDOW *win = ctx->history;
-
-    ctx->hst->queue = 0;
-    ctx->hst->queue_lns = 0;
-
     wclear(win);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
@@ -221,7 +251,7 @@ void line_info_print(ToxWindow *self)
     else
         wmove(win, 2, 0);
 
-    struct line_info *line = ctx->hst->line_start->next;
+    struct line_info *line = hst->line_start->next;
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
     int numlines = 0;
 
@@ -337,6 +367,10 @@ void line_info_print(ToxWindow *self)
 
         line = line->next;
     }
+
+    /* keep calling until queue is empty */
+    if (hst->queue_sz > 0)
+        line_info_print(self);
 }
 
 void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)

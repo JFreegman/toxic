@@ -149,10 +149,11 @@ static void print_groupchat_help(ToxWindow *self)
 
     msg = " * Use Page Up/Page Down keys to scroll chat history";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Scroll peer list with the ctrl-] and ctrl-[ keys.\n";
+    msg = " * Scroll peer list with the ctrl-] and ctrl-[ keys.";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Notice, some friends will be missing names while finding peers\n";
+    msg = " * Notice, some friends will be missing names while finding peers";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
 
     hst->line_start = start;
 }

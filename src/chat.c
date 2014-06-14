@@ -409,8 +409,9 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
     name[n_len] = '\0';
 
-    snprintf(msg, sizeof(msg), "%s has invited you to a group chat.\n"
-             "Type \"/join\" to join the chat.", name);
+    snprintf(msg, sizeof(msg), "%s has invited you to a group chat.", name);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    snprintf(msg, sizeof(msg), "Type \"/join\" to join the chat.", name);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
     memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
@@ -429,7 +430,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
     
     self->call_index = call_index;
     
-    line_info_add(self, NULL, NULL, NULL, "Incoming audio call!\nType: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Incoming audio call! Type: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
 
     alert_window(self, WINDOW_ALERT_0, true);
 }
@@ -439,7 +440,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Ringing...\n\"cancel\" ?", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Ringing...\"cancel\" ?", SYS_MSG, 0, 0);
 }
 
 void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
@@ -447,7 +448,7 @@ void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Call started!\nType: \"/hangup\" to end it.", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
 void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
@@ -471,7 +472,7 @@ void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Call started!\nType: \"/hangup\" to end it.", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
 void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)

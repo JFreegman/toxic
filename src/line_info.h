@@ -28,6 +28,7 @@
 
 #define MAX_HISTORY 10000
 #define MIN_HISTORY 20
+#define MAX_QUEUE 32
 
 enum {
     SYS_MSG,
@@ -62,9 +63,8 @@ struct history {
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
     uint32_t line_items;
 
-    /* keeps track of lines added between window refreshes */
-    uint32_t queue;
-    uint32_t queue_lns;
+    struct line_info *queue[MAX_QUEUE];
+    int queue_sz;   /* -1 if no queue items */
 };
 
 /* adds a line to history (also moves line_start and/or line_root forward if necessary) */
