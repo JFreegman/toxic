@@ -50,6 +50,7 @@ struct line_info {
     uint8_t colour;
     uint32_t id;
     uint16_t len;   /* combined len of all strings */
+    uint8_t newlines;
 
     struct line_info *prev;
     struct line_info *next;
@@ -61,10 +62,9 @@ struct history {
     struct line_info *line_start;   /* the first line we want to start printing at */
     struct line_info *line_end;
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
-    uint32_t line_items;
 
     struct line_info *queue[MAX_QUEUE];
-    int queue_sz;   /* -1 if no queue items */
+    int queue_sz;
 };
 
 /* adds a line to history (also moves line_start and/or line_root forward if necessary) */

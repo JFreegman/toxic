@@ -156,6 +156,13 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     if (msg) {
         snprintf(new_line->msg, sizeof(new_line->msg), "%s", msg);
         len += strlen(new_line->msg);
+
+        int i;
+
+        for (i = 0; msg[i]; ++i) {
+            if (msg[i] == '\n')
+                ++new_line->newlines;
+        }
     }
 
     if (tmstmp) {
@@ -190,10 +197,8 @@ static void line_info_check_queue(ToxWindow *self)
     if (line == NULL)
         return;
 
-    if (++hst->line_items > user_settings->history_size) {
-        --hst->line_items;
+    if (hst->start_id > user_settings->history_size)
         line_info_root_fwd(hst);
-    }
 
     line->id = hst->line_end->id + 1;
     line->prev = hst->line_end;
@@ -208,17 +213,15 @@ static void line_info_check_queue(ToxWindow *self)
         return;
 
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
-    int lines = 1 + (line->len / (x2 - offst));
+    int lines = 1 + line->newlines + (line->len / (x2 - offst));
     int max_y = self->is_prompt ? y2 : y2 - CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new lines */
-    if (y >= max_y) {
-        while (lines > 0) {
+    if (y + lines - 1 >= max_y) {
+        while (lines > 0 && hst->line_start->next) {
+            lines -= 1 + hst->line_start->newlines + (hst->line_start->len / (x2 - offst));
+            hst->line_start = hst->line_start->next;
             ++hst->start_id;
-            lines -= 1 + (hst->line_start->len / (x2 - offst));
-
-            if (hst->line_start->next)
-                hst->line_start = hst->line_start->next;
         }
     }
 }
