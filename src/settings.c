@@ -20,6 +20,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -28,7 +32,7 @@
 #include "configdir.h"
 
 #ifdef _SUPPORT_AUDIO
-    #include "audio_call.h"
+#include "audio_call.h"
 #endif
 
 #include "settings.h"
