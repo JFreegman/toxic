@@ -37,7 +37,7 @@ if test -n "$DEPSEARCH"; then
     CFLAGS="$CFLAGS -I$DEPSEARCH/include"
     CPPFLAGS="$CPPFLAGS -I$DEPSEARCH/include"
     LDFLAGS="$LDFLAGS -L$DEPSEARCH/lib"
-    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$DEPSEARCH/lib/pkgconfig
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$DEPSEARCH/lib/pkgconfig:/usr/local/lib/pkgconfig
 fi
 
 AC_ARG_WITH(libtoxcore-headers,
@@ -77,10 +77,14 @@ AC_ARG_WITH(libsodium-libs,
 )
 
 WIN32=no
+MACH=no
 AC_CANONICAL_HOST
 case $host_os in
     *mingw*)
         WIN32="yes"
+    ;;
+    darwin*)
+        MACH=yes
     ;;
     *freebsd*)
         LDFLAGS="$LDFLAGS -L/usr/local/lib"
@@ -422,29 +426,46 @@ AC_ARG_ENABLE([av],
 
 if test "x$BUILD_AV" = "xyes"; then
     PKG_CHECK_MODULES([OPENAL], [openal],
-    [        
-        export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
-
-        PKG_CHECK_MODULES([LIBTOXAV], [libtoxav], 
-        [
-            AC_CHECK_HEADER([tox/toxav.h],
-            [
-                # Place define for audio support
-                AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
-                AC_MSG_NOTICE([Building with audio support])
-            ],
-            [
-                AC_MSG_NOTICE([No A/V headers; disabling A/V support])
-                BUILD_AV="no"
-            ],)
-        ], 
-        [
-            AC_MSG_NOTICE([No A/V library; disabling A/V support])
+    [],
+    [
+        if test "x$MACH" = "xyes"; then
+            CFLAGS="$CFLAGS -framework OpenAL"
+            AC_CHECK_HEADER([OpenAL/al.h],
+                [
+                    OPENAL_CFLAGS="-framework OpenAL"
+                    OPENAL_LIBS="-framework OpenAL"
+                    AC_SUBST(OPENAL_CFLAGS)
+                    AC_SUBST(OPENAL_LIBS)
+                ],
+                [
+                    AC_MSG_NOTICE([No openal framework; disabling A/V support])
+                    BUILD_AV="no"
+                ]
+            )
+            CFLAGS="$CFLAGS_SAVE"
+        else
+            AC_MSG_NOTICE([No openal library; disabling A/V support])
             BUILD_AV="no"
-        ])
+        fi
+    ])
+fi
+
+if test "x$BUILD_AV" = "xyes"; then
+    PKG_CHECK_MODULES([LIBTOXAV], [libtoxav],
+    [
+        AC_CHECK_HEADER([tox/toxav.h],
+        [
+            # Place define for audio support
+            AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
+            AC_MSG_NOTICE([Building with audio support])
+        ],
+        [
+            AC_MSG_NOTICE([No A/V headers; disabling A/V support])
+            BUILD_AV="no"
+        ],)
     ],
     [
-        AC_MSG_NOTICE([No openal library; disabling A/V support])
+        AC_MSG_NOTICE([No A/V library; disabling A/V support])
         BUILD_AV="no"
     ])
 fi
