@@ -126,6 +126,7 @@ static struct line_info *line_info_ret_queue(struct history *hst)
     return ret;
 }
 
+/* creates new line_info line and puts it in the queue */
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg,
                    uint8_t type, uint8_t bold, uint8_t colour)
 {
@@ -145,7 +146,15 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     /* for type-specific formatting in print function */
     switch (type) {
         case ACTION:
+        case CONNECTION:
             len += 3;
+            break;
+
+        case SYS_MSG:
+            break;
+
+        case PROMPT:
+            ++len;
             break;
 
         default:
