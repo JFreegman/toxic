@@ -439,6 +439,11 @@ void exit_toxic(Tox *m)
     exit(EXIT_SUCCESS);
 }
 
+void ignore_SIGINT(int sig)
+{
+    return;
+}
+
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
     pthread_mutex_lock(&Winthread.lock);
@@ -628,6 +633,7 @@ int main(int argc, char *argv[])
 
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
+    signal(SIGINT, ignore_SIGINT);
 
     while (true) {
         update_unix_time();
