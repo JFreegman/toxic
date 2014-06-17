@@ -387,19 +387,15 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
     AC_SUBST(LIBTOXCORE_LDFLAGS)
 fi
 
-PKG_CHECK_MODULES([LRESOLV], [lresolv],
-[],
-[
-    AC_CHECK_HEADER([resolv.h],
-        [
-            LRESOLV_CFLAGS="-lresolv"
-            LRESOLV_LIBS="-lresolv"
-            AC_SUBST(LRESOLV_CFLAGS)
-            AC_SUBST(LRESOLV_LIBS)
-        ], 
-        []
-    )
-])
+AC_CHECK_HEADER([resolv.h], [],
+                [
+                    AC_MSG_ERROR([resolv.h header was not found on your system])
+                ])
+
+AC_CHECK_LIB(resolv, __res_init, [],
+             [
+                AC_MSG_ERROR([libresolv library was not found on your system])
+             ])
 
 ####
 #### A/V Stuff
@@ -503,7 +499,7 @@ if test "x$NCURSES_WIDECHAR_SUPPORT" = "xyes"; then
     AC_DEFINE([_XOPEN_SOURCE_EXTENDED], [1],
               [enable X/Open Portability Guide functionality])
 fi
- 
+
 AC_CONFIG_FILES([Makefile
                  misc/Makefile
                  build/Makefile])
