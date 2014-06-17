@@ -83,12 +83,13 @@ static int dns_error(ToxWindow *self, uint8_t *errmsg)
     return -1;
 }
 
-static int cleanup_dns_thread(void *dns_obj)
+static void kill_dns_thread(void *dns_obj)
 {
     if (dns_obj)
         tox_dns3_kill(dns_obj);
 
     memset(&t_data, 0, sizeof(struct _thread_data));
+    pthread_exit(0);
 }
 
 /* puts TXT from dns response in buf. Returns length of TXT on success, -1 on fail.*/
@@ -190,8 +191,7 @@ void *dns3_lookup_thread(void *data)
 
     if (namelen == -1) {
         dns_error(self, "Must be a Tox key or an address in the form username@domain");
-        cleanup_dns_thread(NULL);
-        return;
+        kill_dns_thread(NULL);
     }
 
     /* get domain name/pub key */
@@ -208,16 +208,14 @@ void *dns3_lookup_thread(void *data)
 
     if (domname == NULL) {
         dns_error(self, "Domain not found.");
-        cleanup_dns_thread(NULL);
-        return;
+        kill_dns_thread(NULL);
     }
 
     void *dns_obj = tox_dns3_new(DNS_pubkey);
 
     if (dns_obj == NULL) {
         dns_error(self, "Core failed to create DNS object.");
-        cleanup_dns_thread(NULL);
-        return;
+        kill_dns_thread(NULL);
     }
 
     uint8_t string[MAX_DNS_REQST_SIZE];
@@ -227,8 +225,7 @@ void *dns3_lookup_thread(void *data)
 
     if (str_len == -1) {
         dns_error(self, "Core failed to generate dns3 string.");
-        cleanup_dns_thread(dns_obj);
-        return;
+        kill_dns_thread(dns_obj);
     }
 
     string[str_len] = '\0';
@@ -242,16 +239,14 @@ void *dns3_lookup_thread(void *data)
 
     if (ans_len <= 0) {
         dns_error(self, "Query failed.");
-        cleanup_dns_thread(dns_obj);
-        return;
+        kill_dns_thread(dns_obj);
     }
 
     uint8_t ans_id[MAX_DNS_REQST_SIZE];
 
     /* extract TXT from DNS response */
     if (parse_dns_response(self, answer, ans_len, ans_id) == -1) {
-        cleanup_dns_thread(dns_obj);
-        return;
+        kill_dns_thread(dns_obj);
     }
 
     uint8_t encrypted_id[MAX_DNS_REQST_SIZE];
@@ -260,24 +255,21 @@ void *dns3_lookup_thread(void *data)
     /* extract the encrypted ID from TXT response */
     if (strncmp(ans_id, TOX_DNS3_TXT_PREFIX, prfx_len) != 0) {
         dns_error(self, "Bad dns3 TXT response.");
-        cleanup_dns_thread(dns_obj);
-        return;
+        kill_dns_thread(dns_obj);
     }
 
     memcpy(encrypted_id, ans_id + prfx_len, ans_len - prfx_len);
 
     if (tox_decrypt_dns3_TXT(dns_obj, t_data.id_bin, encrypted_id, strlen(encrypted_id), request_id) == -1) {
         dns_error(self, "Core failed to decrypt response.");
-        cleanup_dns_thread(dns_obj);
-        return;
+        kill_dns_thread(dns_obj);
     }
 
     pthread_mutex_lock(&dns_thread.lock);
     cmd_add_helper(self, t_data.m, t_data.id_bin, t_data.msg);
     pthread_mutex_unlock(&dns_thread.lock);
 
-    cleanup_dns_thread(dns_obj);
-    return;
+    kill_dns_thread(dns_obj);
 }
 
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */
