@@ -90,6 +90,49 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
+void cmd_add_helper(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *msg)
+{
+    uint8_t *errmsg;
+    int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
+
+    switch (f_num) {
+        case TOX_FAERR_TOOLONG:
+            errmsg = "Message is too long.";
+            break;
+
+        case TOX_FAERR_NOMESSAGE:
+            errmsg = "Please add a message to your request.";
+            break;
+
+        case TOX_FAERR_OWNKEY:
+            errmsg = "That appears to be your own ID.";
+            break;
+
+        case TOX_FAERR_ALREADYSENT:
+            errmsg = "Friend request has already been sent.";
+            break;
+
+        case TOX_FAERR_UNKNOWN:
+            errmsg = "Undefined error when adding friend.";
+            break;
+
+        case TOX_FAERR_BADCHECKSUM:
+            errmsg = "Bad checksum in address.";
+            break;
+
+        case TOX_FAERR_SETNEWNOSPAM:
+            errmsg = "Nospam was different.";
+            break;
+
+        default:
+            errmsg = "Friend request sent.";
+            on_friendadded(m, f_num, true);
+            break;
+    }
+
+    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+}
+
 void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     uint8_t *errmsg;
@@ -143,49 +186,11 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
             id_bin[i] = x;
         }
+
+        cmd_add_helper(self, m, id_bin, msg);
     } else {    /* assume id is a username@domain address and do DNS lookup */
-        if (dns3_lookup(self, id_bin, id, id_len) == -1)
-            return;
+        dns3_lookup(self, m, id_bin, id, msg);
     }
-
-    int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
-
-    switch (f_num) {
-        case TOX_FAERR_TOOLONG:
-            errmsg = "Message is too long.";
-            break;
-
-        case TOX_FAERR_NOMESSAGE:
-            errmsg = "Please add a message to your request.";
-            break;
-
-        case TOX_FAERR_OWNKEY:
-            errmsg = "That appears to be your own ID.";
-            break;
-
-        case TOX_FAERR_ALREADYSENT:
-            errmsg = "Friend request has already been sent.";
-            break;
-
-        case TOX_FAERR_UNKNOWN:
-            errmsg = "Undefined error when adding friend.";
-            break;
-
-        case TOX_FAERR_BADCHECKSUM:
-            errmsg = "Bad checksum in address.";
-            break;
-
-        case TOX_FAERR_SETNEWNOSPAM:
-            errmsg = "Nospam was different.";
-            break;
-
-        default:
-            errmsg = "Friend request sent.";
-            on_friendadded(m, f_num, true);
-            break;
-    }
-
-    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
 }
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

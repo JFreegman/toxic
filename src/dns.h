@@ -22,4 +22,11 @@
 
 /* Does DNS lookup for addr and puts resulting tox id in id_bin.
    Return 0 on success, -1 on failure. */
-int dns3_lookup(ToxWindow *self, uint8_t *id_bin, uint8_t *name, uint16_t id_len);
+
+#ifndef _dns_h
+#define _dns_h
+
+/* creates new thread for dns3 lookup. Only allows one lookup at a time. */
+void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_t *msg);
+
+#endif /* #define _dns_h */
