@@ -462,16 +462,9 @@ fi
 if test "x$BUILD_AV" = "xyes"; then
     PKG_CHECK_MODULES([LIBTOXAV], [libtoxav],
     [
-        AC_CHECK_HEADER([tox/toxav.h],
-        [
             # Place define for audio support
             AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
             AC_MSG_NOTICE([Building with audio support])
-        ],
-        [
-            AC_MSG_NOTICE([No A/V headers; disabling A/V support])
-            BUILD_AV="no"
-        ],)
     ],
     [
         AC_MSG_NOTICE([No A/V library; disabling A/V support])
