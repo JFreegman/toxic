@@ -42,8 +42,7 @@ toxic_CFLAGS =  -I$(top_srcdir) \
 				  $(NCURSES_CFLAGS) \
 				  $(LIBSODIUM_CFLAGS) \
 				  $(LIBTOXCORE_CFLAGS) \
-				  $(PTHREAD_CFLAGS) \
-                  $(LRESOLV_CFLAGS)
+				  $(PTHREAD_CFLAGS)
 
 toxic_CPPFLAGS = '-DTOXICVER="$(TOXIC_VERSION)"'
 
@@ -53,8 +52,7 @@ toxic_LDADD =	$(LIBTOXCORE_LDFLAGS) \
 				$(LIBTOXCORE_LIBS) \
 				$(LIBSODIUM_LIBS) \
                 $(WINSOCK2_LIBS) \
-                $(PTHREAD_LIBS) \
-                $(LRESOLV_LIBS)
+                $(PTHREAD_LIBS)
 
 
 # For audio support
