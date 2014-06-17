@@ -25,8 +25,13 @@
 #include "windows.h"
 #include "toxic.h"
 
+#ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
+#ifndef MAX
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
 
 /* convert a hex string to binary */
 char *hex_string_to_bin(const char *hex_string);

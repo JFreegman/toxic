@@ -34,13 +34,16 @@ toxic_SOURCES = $(top_srcdir)/src/toxic.c \
                 $(top_srcdir)/src/line_info.c \
                 $(top_srcdir)/src/line_info.h \
                 $(top_srcdir)/src/settings.c \
-                $(top_srcdir)/src/settings.h
+                $(top_srcdir)/src/settings.h \
+                $(top_srcdir)/src/dns.c \
+                $(top_srcdir)/src/dns.h
 
 toxic_CFLAGS =  -I$(top_srcdir) \
 				  $(NCURSES_CFLAGS) \
 				  $(LIBSODIUM_CFLAGS) \
 				  $(LIBTOXCORE_CFLAGS) \
-				  $(PTHREAD_CFLAGS)
+				  $(PTHREAD_CFLAGS) \
+                  $(LRESOLV_CFLAGS)
 
 toxic_CPPFLAGS = '-DTOXICVER="$(TOXIC_VERSION)"'
 
@@ -50,7 +53,8 @@ toxic_LDADD =	$(LIBTOXCORE_LDFLAGS) \
 				$(LIBTOXCORE_LIBS) \
 				$(LIBSODIUM_LIBS) \
                 $(WINSOCK2_LIBS) \
-                $(PTHREAD_LIBS)
+                $(PTHREAD_LIBS) \
+                $(LRESOLV_LIBS)
 
 
 # For audio support

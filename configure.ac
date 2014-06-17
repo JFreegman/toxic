@@ -387,6 +387,19 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
     AC_SUBST(LIBTOXCORE_LDFLAGS)
 fi
 
+PKG_CHECK_MODULES([LRESOLV], [lresolv],
+[],
+[
+    AC_CHECK_HEADER([resolv.h],
+        [
+            LRESOLV_CFLAGS="-lresolv"
+            LRESOLV_LIBS="-lresolv"
+            AC_SUBST(LRESOLV_CFLAGS)
+            AC_SUBST(LRESOLV_LIBS)
+        ], 
+        []
+    )
+])
 
 ####
 #### A/V Stuff

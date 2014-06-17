@@ -84,6 +84,11 @@ struct arg_opts {
 struct _Winthread Winthread;
 struct user_settings *user_settings = NULL;
 
+static void ignore_SIGINT(int sig)
+{
+    return;
+}
+
 static void init_term(void)
 {
     signal(SIGWINCH, on_window_resize);
@@ -439,11 +444,6 @@ void exit_toxic(Tox *m)
     exit(EXIT_SUCCESS);
 }
 
-void ignore_SIGINT(int sig)
-{
-    return;
-}
-
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
     pthread_mutex_lock(&Winthread.lock);
@@ -537,6 +537,8 @@ int main(int argc, char *argv[])
 
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+    signal(SIGINT, ignore_SIGINT);
 
     config_err = create_user_config_dir(user_config_dir);
 
@@ -633,7 +635,6 @@ int main(int argc, char *argv[])
 
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
-    signal(SIGINT, ignore_SIGINT);
 
     while (true) {
         update_unix_time();

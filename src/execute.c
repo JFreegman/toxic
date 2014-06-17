@@ -55,6 +55,7 @@ static struct cmd_func global_commands[] = {
     { "/q",         cmd_quit          },
     { "/quit",      cmd_quit          },
     { "/status",    cmd_status        },
+
 #ifdef _SUPPORT_AUDIO
     { "/lsdev",     cmd_list_devices  },
     { "/sdev",      cmd_change_device },

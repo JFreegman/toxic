@@ -33,6 +33,7 @@
 #include "friendlist.h"
 #include "log.h"
 #include "line_info.h"
+#include "dns.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -120,33 +121,31 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 
-    if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
-        errmsg = "Invalid ID length.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-        return;
-    }
+    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE] = {0};
+    uint16_t id_len = strlen(id);
 
-    size_t i;
-    char xx[3];
-    uint32_t x;
-    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
+    /* try to add tox ID */
+    if (id_len == 2 * TOX_FRIEND_ADDRESS_SIZE) {
+        size_t i;
+        char xx[3];
+        uint32_t x;
 
-    for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
-        xx[0] = id[2 * i];
-        xx[1] = id[2 * i + 1];
-        xx[2] = '\0';
+        for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
+            xx[0] = id[2 * i];
+            xx[1] = id[2 * i + 1];
+            xx[2] = '\0';
 
-        if (sscanf(xx, "%02x", &x) != 1) {
-            errmsg = "Invalid ID.";
-            line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-            return;
+            if (sscanf(xx, "%02x", &x) != 1) {
+                errmsg = "Invalid ID.";
+                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+                return;
+            }
+
+            id_bin[i] = x;
         }
-
-        id_bin[i] = x;
-    }
-
-    for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; i++) {
-        id[i] = toupper(id[i]);
+    } else {    /* assume id is a username@domain address and do DNS lookup */
+        if (dns3_lookup(self, id_bin, id, id_len) == -1)
+            return;
     }
 
     int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
@@ -177,7 +176,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             break;
 
         case TOX_FAERR_SETNEWNOSPAM:
-            errmsg = "Nospam was different (is this contact already added?";
+            errmsg = "Nospam was different.";
             break;
 
         default:
