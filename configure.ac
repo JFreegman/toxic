@@ -387,6 +387,15 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
     AC_SUBST(LIBTOXCORE_LDFLAGS)
 fi
 
+AC_CHECK_HEADER([resolv.h], [],
+                [
+                    AC_MSG_ERROR([resolv.h header was not found on your system])
+                ])
+
+AC_CHECK_LIB(resolv, __res_init, [],
+             [
+                AC_MSG_ERROR([libresolv library was not found on your system])
+             ])
 
 ####
 #### A/V Stuff
@@ -453,16 +462,9 @@ fi
 if test "x$BUILD_AV" = "xyes"; then
     PKG_CHECK_MODULES([LIBTOXAV], [libtoxav],
     [
-        AC_CHECK_HEADER([tox/toxav.h],
-        [
             # Place define for audio support
             AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
             AC_MSG_NOTICE([Building with audio support])
-        ],
-        [
-            AC_MSG_NOTICE([No A/V headers; disabling A/V support])
-            BUILD_AV="no"
-        ],)
     ],
     [
         AC_MSG_NOTICE([No A/V library; disabling A/V support])
@@ -490,7 +492,7 @@ if test "x$NCURSES_WIDECHAR_SUPPORT" = "xyes"; then
     AC_DEFINE([_XOPEN_SOURCE_EXTENDED], [1],
               [enable X/Open Portability Guide functionality])
 fi
- 
+
 AC_CONFIG_FILES([Makefile
                  misc/Makefile
                  build/Makefile])
