@@ -111,14 +111,14 @@ void exit_toxic_success(Tox *m)
     exit(EXIT_SUCCESS);
 }
 
-void exit_toxic_err(const char *errmsg, int retcode)
+void exit_toxic_err(const char *errmsg, int errcode)
 {
     if (errmsg == NULL)
         errmsg = "No error message";
 
     endwin();
-    fprintf(stderr, "Toxic session aborted with return code %d (%s)\n", retcode, errmsg);
-    exit(retcode);
+    fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
+    exit(EXIT_FAILURE);
 }
 
 static void init_term(void)

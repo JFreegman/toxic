@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.65])
-AC_INIT([toxic], [0.4.0], [https://tox.im/])
+AC_INIT([toxic], [0.4.1], [https://tox.im/])
 AC_CONFIG_AUX_DIR(configure_aux)
 AC_CONFIG_SRCDIR([src/toxic.c])
 AC_CONFIG_HEADERS([config.h])

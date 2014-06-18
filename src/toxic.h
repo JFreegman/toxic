@@ -41,8 +41,6 @@
 #define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
 #define TIME_STR_SIZE 16
 
-#define EXIT_SUCCESS 0
-
 /* ASCII key codes */
 #define T_KEY_KILL       0x0B     /* ctrl-k */
 #define T_KEY_DISCARD    0x15     /* ctrl-u */
@@ -60,15 +58,15 @@ enum {
 } KEY_DIRS;
 
 typedef enum _FATAL_ERRS {
-    FATALERR_MEMORY = -1,
-    FATALERR_FREAD = -2,
+    FATALERR_MEMORY = -1,    /* malloc() or calloc() failed */
+    FATALERR_FREAD = -2,     /* fread() failed on critical read */
     FATALERR_THREAD_CREATE = -3,
     FATALERR_MUTEX_INIT = -4,
     FATALERR_LOCALE_SET = -5,
     FATALERR_STORE_DATA = -6,
-    FATALERR_NETWORKINIT = -7,
-    FATALERR_INFLOOP = -8,
-    FATALERR_WININIT = -9,
+    FATALERR_NETWORKINIT = -7,   /* Tox network failed to init */
+    FATALERR_INFLOOP = -8,       /* infinite loop detected */
+    FATALERR_WININIT = -9,       /* window init failed */
 } FATAL_ERRS;
 
 /* Fixes text color problem on some terminals.
@@ -76,7 +74,7 @@ typedef enum _FATAL_ERRS {
 /* #define URXVT_FIX */
 
 void exit_toxic_success(Tox *m);
-void exit_toxic_err(const char *errmsg, int retcode);
+void exit_toxic_err(const char *errmsg, int errcode);
 
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
