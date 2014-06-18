@@ -874,11 +874,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
 
-    if (ctx->log == NULL || ctx->hst == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (ctx->log == NULL || ctx->hst == NULL)
+        exit_toxic_err("failed in chat_onInit", FATALERR_MEMORY);
 
     memset(ctx->hst, 0, sizeof(struct history));
     memset(ctx->log, 0, sizeof(struct chatlog));
@@ -951,9 +948,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
         ret.chatwin = chatwin;
         ret.stb = stb;
     } else {
-        endwin();
-        fprintf(stderr, "calloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
+        exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
     }
 
     ret.num = friendnum;

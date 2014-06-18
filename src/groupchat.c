@@ -260,15 +260,13 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
     groupchats[gnum].peer_name_lengths = malloc(sizeof(uint16_t) * npeers);
     groupchats[gnum].oldpeer_name_lengths = malloc(sizeof(uint16_t) * npeers);
 
+    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL
+        || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
+        exit_toxic_err("failed in copy_peernames", FATALERR_MEMORY);
+    }
+
     memset(groupchats[gnum].peer_names, 0, sizeof(uint8_t) * npeers * N);
     memset(groupchats[gnum].peer_name_lengths, 0, sizeof(uint16_t) * npeers);
-
-    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL
-            || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
 
     uint16_t unknown_len = strlen(UNKNOWN_NAME);
     int i;
@@ -649,11 +647,8 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
 
-    if (ctx->log == NULL || ctx->hst == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (ctx->log == NULL || ctx->hst == NULL)
+        exit_toxic_err("failed in groupchat_onInit", FATALERR_MEMORY);
 
     memset(ctx->hst, 0, sizeof(struct history));
     memset(ctx->log, 0, sizeof(struct chatlog));
@@ -688,14 +683,10 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
 
-    if (chatwin != NULL)
-        ret.chatwin = chatwin;
-    else {
-        endwin();
-        fprintf(stderr, "calloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (chatwin == NULL)
+        exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
 
+    ret.chatwin = chatwin;
     ret.num = groupnum;
 
     return ret;

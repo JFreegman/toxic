@@ -89,18 +89,47 @@ static void ignore_SIGINT(int sig)
     return;
 }
 
+void exit_toxic_success(Tox *m)
+{
+    store_data(m, DATA_FILE);
+    close_all_file_senders();
+    kill_all_windows();
+    log_disable(prompt->chatwin->log);
+    line_info_cleanup(prompt->chatwin->hst);
+    free(DATA_FILE);
+    free(prompt->stb);
+    free(prompt->chatwin->log);
+    free(prompt->chatwin->hst);
+    free(prompt->chatwin);
+    free(user_settings);
+#ifdef _SUPPORT_AUDIO
+    terminate_audio();
+#endif /* _SUPPORT_AUDIO */
+    tox_kill(m);
+    endwin();
+    fprintf(stderr, "Toxic session ended gracefully.\n");
+    exit(EXIT_SUCCESS);
+}
+
+void exit_toxic_err(const char *errmsg, int retcode)
+{
+    if (errmsg == NULL)
+        errmsg = "No error message";
+
+    endwin();
+    fprintf(stderr, "Toxic session aborted with return code %d (%s)\n", retcode, errmsg);
+    exit(retcode);
+}
+
 static void init_term(void)
 {
     signal(SIGWINCH, on_window_resize);
 
 #if HAVE_WIDECHAR
 
-    if (setlocale(LC_ALL, "") == NULL) {
-        fprintf(stderr, "Could not set your locale, plese check your locale settings or"
-                "disable wide char support\n");
-        exit(EXIT_FAILURE);
-    }
-
+    if (setlocale(LC_ALL, "") == NULL)
+        exit_toxic_err("Could not set your locale, plese check your locale settings or"
+                       "disable wide char support", FATALERR_LOCALE_SET);
 #endif
 
     initscr();
@@ -394,17 +423,13 @@ static void load_data(Tox *m, char *path)
 
         if (buf == NULL) {
             fclose(fd);
-            endwin();
-            fprintf(stderr, "malloc() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
+            exit_toxic_err("failed in load_data", FATALERR_MEMORY);
         }
 
         if (fread(buf, len, 1, fd) != 1) {
             free(buf);
             fclose(fd);
-            endwin();
-            fprintf(stderr, "fread() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
+            exit_toxic_err("failed in load_data", FATALERR_FREAD);
         }
 
         tox_load(m, buf, len);
@@ -415,33 +440,9 @@ static void load_data(Tox *m, char *path)
     } else {
         int st;
 
-        if ((st = store_data(m, path)) != 0) {
-            endwin();
-            fprintf(stderr, "Store messenger failed with return code: %d\n", st);
-            exit(EXIT_FAILURE);
-        }
+        if ((st = store_data(m, path)) == 0)
+            exit_toxic_err("failed in load_data", FATALERR_STORE_DATA);
     }
-}
-
-void exit_toxic(Tox *m)
-{
-    store_data(m, DATA_FILE);
-    close_all_file_senders();
-    kill_all_windows();
-    log_disable(prompt->chatwin->log);
-    line_info_cleanup(prompt->chatwin->hst);
-    free(DATA_FILE);
-    free(prompt->stb);
-    free(prompt->chatwin->log);
-    free(prompt->chatwin->hst);
-    free(prompt->chatwin);
-    free(user_settings);
-#ifdef _SUPPORT_AUDIO
-    terminate_audio();
-#endif /* _SUPPORT_AUDIO */
-    tox_kill(m);
-    endwin();
-    exit(EXIT_SUCCESS);
 }
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
@@ -523,7 +524,7 @@ static void parse_args(int argc, char *argv[])
             case 'h':
             default:
                 print_usage();
-                exit(EXIT_FAILURE);
+                exit(EXIT_SUCCESS);
         }
     }
 }
@@ -548,15 +549,12 @@ int main(int argc, char *argv[])
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
 
-            if (DATA_FILE != NULL) {
-                strcpy(DATA_FILE, user_config_dir);
-                strcat(DATA_FILE, CONFIGDIR);
-                strcat(DATA_FILE, "data");
-            } else {
-                endwin();
-                fprintf(stderr, "malloc() failed. Aborting...\n");
-                exit(EXIT_FAILURE);
-            }
+            if (DATA_FILE == NULL)
+                exit_toxic_err("failed in main", FATALERR_MEMORY);
+
+            strcpy(DATA_FILE, user_config_dir);
+            strcat(DATA_FILE, CONFIGDIR);
+            strcat(DATA_FILE, "data");
         }
     }
 
@@ -565,11 +563,8 @@ int main(int argc, char *argv[])
     /* init user_settings struct and load settings from conf file */
     user_settings = malloc(sizeof(struct user_settings));
 
-    if (user_settings == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (user_settings == NULL)
+        exit_toxic_err("failed in main", FATALERR_MEMORY);
 
     memset(user_settings, 0, sizeof(struct user_settings));
 
@@ -579,11 +574,8 @@ int main(int argc, char *argv[])
     Tox *m = init_tox(arg_opts.use_ipv4);
     init_term();
 
-    if (m == NULL) {
-        endwin();
-        fprintf(stderr, "Failed to initialize network. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (m == NULL)
+        exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
 
     if (!arg_opts.ignore_data_file)
         load_data(m, DATA_FILE);
@@ -591,17 +583,12 @@ int main(int argc, char *argv[])
     prompt = init_windows(m);
 
     /* create new thread for ncurses stuff */
-    if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
-        endwin();
-        fprintf(stderr, "Mutex init failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
+        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
 
-    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0) {
-        endwin();
-        fprintf(stderr, "Thread creation failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+        
 
     uint8_t *msg;
 

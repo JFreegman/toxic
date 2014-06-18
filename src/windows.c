@@ -284,11 +284,8 @@ void set_next_window(int ch)
         if (active_window->window)
             return;
 
-        if (active_window == inf) {    /* infinite loop check */
-            endwin();
-            fprintf(stderr, "set_next_window() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
-        }
+        if (active_window == inf)    /* infinite loop check */
+            exit_toxic_err("failed in set_next_window", FATALERR_INFLOOP);
     }
 }
 
@@ -304,11 +301,8 @@ ToxWindow *init_windows(Tox *m)
 {
     int n_prompt = add_window(m, new_prompt());
 
-    if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
-        endwin();
-        fprintf(stderr, "add_window() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (n_prompt == -1 || add_window(m, new_friendlist()) == -1)
+        exit_toxic_err("failed in init_windows", FATALERR_WININIT);
 
     prompt = &windows[n_prompt];
     active_window = prompt;

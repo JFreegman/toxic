@@ -56,7 +56,7 @@ extern struct user_settings *user_settings;
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 
-struct _pendingDel {
+static struct _pendingDel {
     int num;
     bool active;
 } pendingdelete;

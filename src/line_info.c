@@ -40,11 +40,8 @@ void line_info_init(struct history *hst)
 {
     hst->line_root = malloc(sizeof(struct line_info));
 
-    if (hst->line_root == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (hst->line_root == NULL)
+        exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
 
     memset(hst->line_root, 0, sizeof(struct line_info));
     hst->line_start = hst->line_root;
@@ -133,11 +130,8 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = malloc(sizeof(struct line_info));
 
-    if (new_line == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (new_line == NULL)
+        exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
 
     memset(new_line, 0, sizeof(struct line_info));
 

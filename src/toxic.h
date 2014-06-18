@@ -42,7 +42,6 @@
 #define TIME_STR_SIZE 16
 
 #define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
 
 /* ASCII key codes */
 #define T_KEY_KILL       0x0B     /* ctrl-k */
@@ -60,9 +59,24 @@ enum {
     MOVE_DOWN,
 } KEY_DIRS;
 
+typedef enum _FATAL_ERRS {
+    FATALERR_MEMORY = -1,
+    FATALERR_FREAD = -2,
+    FATALERR_THREAD_CREATE = -3,
+    FATALERR_MUTEX_INIT = -4,
+    FATALERR_LOCALE_SET = -5,
+    FATALERR_STORE_DATA = -6,
+    FATALERR_NETWORKINIT = -7,
+    FATALERR_INFLOOP = -8,
+    FATALERR_WININIT = -9,
+} FATAL_ERRS;
+
 /* Fixes text color problem on some terminals.
    Uncomment if necessary */
 /* #define URXVT_FIX */
+
+void exit_toxic_success(Tox *m);
+void exit_toxic_err(const char *errmsg, int retcode);
 
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);

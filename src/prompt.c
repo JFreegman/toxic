@@ -468,11 +468,8 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     ctx->log = malloc(sizeof(struct chatlog));
     ctx->hst = malloc(sizeof(struct history));
 
-    if (ctx->log == NULL || ctx->hst == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (ctx->log == NULL || ctx->hst == NULL)
+        exit_toxic_err("failed in prompt_onInit", FATALERR_MEMORY);
 
     memset(ctx->log, 0, sizeof(struct chatlog));
     memset(ctx->hst, 0, sizeof(struct history));
@@ -508,14 +505,11 @@ ToxWindow new_prompt(void)
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
 
-    if (stb != NULL && chatwin != NULL) {
-        ret.chatwin = chatwin;
-        ret.stb = stb;
-    } else {
-        endwin();
-        fprintf(stderr, "calloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (stb == NULL || chatwin == NULL)
+        exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+
+    ret.chatwin = chatwin;
+    ret.stb = stb;
 
     return ret;
 }

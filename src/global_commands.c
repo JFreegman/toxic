@@ -438,7 +438,7 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
 void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    exit_toxic(m);
+    exit_toxic_success(m);
 }
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

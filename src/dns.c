@@ -57,7 +57,7 @@ static struct dns3_server {
     },
 };
 
-struct _thread_data {
+static struct _thread_data {
     ToxWindow *self;
     uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
     uint8_t addr[MAX_STR_SIZE];
@@ -276,7 +276,7 @@ void *dns3_lookup_thread(void *data)
 void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_t *msg)
 {
     if (t_data.busy) {
-        uint8_t *err = "Please wait for previous DNS lookup to finish.";
+        uint8_t *err = "Please wait for previous user lookup to finish.";
         line_info_add(self, NULL, NULL, NULL, err, SYS_MSG, 0, 0);
         return;
     }
@@ -288,15 +288,9 @@ void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_
     t_data.m = m;
     t_data.busy = 1;
 
-    if (pthread_create(&dns_thread.tid, NULL, dns3_lookup_thread, NULL) != 0) {
-        endwin();
-        fprintf(stderr, "DNS thread creation failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (pthread_create(&dns_thread.tid, NULL, dns3_lookup_thread, NULL) != 0)
+        exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_CREATE);
 
-    if (pthread_mutex_init(&dns_thread.lock, NULL) != 0) {
-        endwin();
-        fprintf(stderr, "DNS thread mutex creation failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (pthread_mutex_init(&dns_thread.lock, NULL) != 0)
+        exit_toxic_err("failed in dns3_lookup", FATALERR_MUTEX_INIT);
 }
