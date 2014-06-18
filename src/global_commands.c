@@ -461,20 +461,16 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     char *status = argv[1];
+    str_to_lower(status);
     int len = strlen(status);
-    char l_status[len + 1];
-    int i;
-
-    for (i = 0; i <= len; ++i)
-        l_status[i] = tolower(status[i]);
 
     TOX_USERSTATUS status_kind;
 
-    if (!strcmp(l_status, "online"))
+    if (!strcmp(status, "online"))
         status_kind = TOX_USERSTATUS_NONE;
-    else if (!strcmp(l_status, "away"))
+    else if (!strcmp(status, "away"))
         status_kind = TOX_USERSTATUS_AWAY;
-    else if (!strcmp(l_status, "busy"))
+    else if (!strcmp(status, "busy"))
         status_kind = TOX_USERSTATUS_BUSY;
     else {
         errmsg = "Invalid status. Valid statuses are: online, busy and away.";

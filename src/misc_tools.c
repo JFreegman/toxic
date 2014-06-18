@@ -250,3 +250,12 @@ void get_file_name(uint8_t *namebuf, uint8_t *pathname)
 
     snprintf(namebuf, MAX_STR_SIZE, "%s", filename);
 }
+
+/* converts str to all lowercase */
+void str_to_lower(uint8_t *str)
+{
+    int i;
+
+    for (i = 0; str[i]; ++i)
+        str[i] = tolower(str[i]);
+}

@@ -37,8 +37,8 @@
 #include "line_info.h"
 #include "dns.h"
 #include "global_commands.h"
+#include "misc_tools.h"
 
-#define MAX_DNS_THREADS 10
 #define MAX_DNS_REQST_SIZE 256
 #define NUM_DNS3_SERVERS 1    /* must correspond to number of items in dns3_servers array */
 #define TOX_DNS3_TXT_PREFIX "v=tox3;id="
@@ -173,6 +173,7 @@ static int parse_addr(uint8_t *addr, uint8_t *namebuf, uint8_t *dombuf)
     if (tmpname == NULL || tmpdom == NULL)
         return -1;
 
+    str_to_lower(tmpdom);
     strcpy(namebuf, tmpname);
     strcpy(dombuf, tmpdom);
 
@@ -190,7 +191,7 @@ void *dns3_lookup_thread(void *data)
     int namelen = parse_addr(t_data.addr, name, domain);
 
     if (namelen == -1) {
-        dns_error(self, "Must be a Tox key or an address in the form username@domain");
+        dns_error(self, "Must be a Tox ID or an address in the form username@domain");
         kill_dns_thread(NULL);
     }
 
@@ -245,9 +246,8 @@ void *dns3_lookup_thread(void *data)
     uint8_t ans_id[MAX_DNS_REQST_SIZE];
 
     /* extract TXT from DNS response */
-    if (parse_dns_response(self, answer, ans_len, ans_id) == -1) {
+    if (parse_dns_response(self, answer, ans_len, ans_id) == -1)
         kill_dns_thread(dns_obj);
-    }
 
     uint8_t encrypted_id[MAX_DNS_REQST_SIZE];
     int prfx_len = strlen(TOX_DNS3_TXT_PREFIX);
