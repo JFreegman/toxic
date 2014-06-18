@@ -222,7 +222,7 @@ static void line_info_check_queue(ToxWindow *self)
     /* move line_start forward proportionate to the number of new lines */
     if (y + lines - 1 >= max_y) {
         while (lines > 0 && hst->line_start->next) {
-            lines -= 1 + hst->line_start->newlines + (hst->line_start->len / (x2 - offst));
+            lines -= 1 + hst->line_start->next->newlines + (hst->line_start->next->len / (x2 - offst));
             hst->line_start = hst->line_start->next;
             ++hst->start_id;
         }
