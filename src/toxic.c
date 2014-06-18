@@ -440,7 +440,7 @@ static void load_data(Tox *m, char *path)
     } else {
         int st;
 
-        if ((st = store_data(m, path)) == 0)
+        if ((st = store_data(m, path)) != 0)
             exit_toxic_err("failed in load_data", FATALERR_STORE_DATA);
     }
 }
