@@ -28,6 +28,7 @@
 
 #define SIDEBAR_WIDTH 16
 #define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
+#define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM
 
 typedef struct {
     int chatwin;

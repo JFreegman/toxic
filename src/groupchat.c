@@ -42,7 +42,7 @@
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
-static GroupChat groupchats[MAX_WINDOWS_NUM];
+static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
 
 extern struct user_settings *user_settings;
@@ -52,6 +52,9 @@ extern const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
+    if (groupnum > MAX_GROUPCHAT_NUM)
+        return -1;
+
     int i;
 
     for (i = 0; i <= max_groupchat_index; ++i) {
@@ -296,8 +299,14 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     if (self->num != groupnum)
         return;
 
+    if (groupnum > MAX_GROUPCHAT_NUM)
+        return;
+
     groupchats[groupnum].num_peers = tox_group_number_peers(m, groupnum);
     int num_peers = groupchats[groupnum].num_peers;
+
+    if (peernum >= num_peers)
+        return;
 
     /* get old peer name before updating name list */
     uint8_t oldpeername[TOX_MAX_NAME_LENGTH];
