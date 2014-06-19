@@ -440,14 +440,14 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
     bool match = true;
 
     switch (key) {
-        /* TODO: Find good key bindings for page up/page down scroll behaviour */
-    /*    case KEY_SPREVIOUS:
+        /* TODO: Find good key bindings for all this stuff */
+        case T_KEY_C_H:
             line_info_page_up(self, hst);
             break;
 
-        case KEY_SNEXT:
+        case T_KEY_C_B:
             line_info_page_down(self, hst);
-            break; */
+            break; 
 
         case KEY_PPAGE:
             line_info_scroll_up(hst);
@@ -457,13 +457,13 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
             line_info_scroll_down(hst);
             break;
 
-        case KEY_HOME:
+        /* case ?:
             line_info_goto_root(hst);
             break;
 
-        case KEY_END:
+        case ?:
             line_info_reset_start(self, hst);
-            break;
+            break; */
 
         default:
             match = false;
