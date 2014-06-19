@@ -297,7 +297,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     if (self->num != groupnum)
         return;
 
-    if (groupnum > MAX_GROUPCHAT_NUM)
+    if (groupnum > max_groupchat_index)
         return;
 
     groupchats[groupnum].num_peers = tox_group_number_peers(m, groupnum);

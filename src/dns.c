@@ -50,8 +50,8 @@ static struct dns3_server {
     uint8_t key[DNS3_KEY_SZ];
 } dns3_servers[] = {
     {
-        "utox.org", 
-        { 
+        "utox.org",
+        {
           0xD3, 0x15, 0x4F, 0x65, 0xD2, 0x8A, 0x5B, 0x41, 0xA0, 0x5D, 0x4A, 0xC7, 0xE4, 0xB3, 0x9C, 0x6B,
           0x1C, 0x23, 0x3C, 0xC8, 0x57, 0xFB, 0x36, 0x5C, 0x56, 0xE8, 0x39, 0x27, 0x37, 0x46, 0x2A, 0x12
         }
@@ -78,6 +78,7 @@ static struct _dns_thread {
     pthread_t tid;
     pthread_mutex_t lock;
 } dns_thread;
+
 
 static int dns_error(ToxWindow *self, uint8_t *errmsg)
 {
@@ -289,10 +290,10 @@ void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_
         return;
     }
 
-    t_data.self = self;
     snprintf(t_data.id_bin, sizeof(t_data.id_bin), "%s", id_bin);
     snprintf(t_data.addr, sizeof(t_data.addr), "%s", addr);
     snprintf(t_data.msg, sizeof(t_data.msg), "%s", msg);
+    t_data.self = self;
     t_data.m = m;
     t_data.busy = 1;
 

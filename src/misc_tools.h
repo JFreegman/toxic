@@ -86,7 +86,7 @@ void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);
 /* gets base file name from path or original file name if no path is supplied */
 void get_file_name(uint8_t *namebuf, uint8_t *pathname);
 
-/* converts str to all uppercase */
+/* converts str to all lowercase */
 void str_to_lower(uint8_t *str);
 
 #endif /* #define _misc_tools_h */

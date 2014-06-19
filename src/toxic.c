@@ -128,7 +128,7 @@ static void init_term(void)
 #if HAVE_WIDECHAR
 
     if (setlocale(LC_ALL, "") == NULL)
-        exit_toxic_err("Could not set your locale, plese check your locale settings or"
+        exit_toxic_err("Could not set your locale, please check your locale settings or"
                        "disable wide char support", FATALERR_LOCALE_SET);
 #endif
 
@@ -217,10 +217,12 @@ static Tox *init_tox(int ipv4)
 #define MAXNODES 50
 #define NODELEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
 
-static int  linecnt = 0;
-static char nodes[MAXNODES][NODELEN];
-static uint16_t ports[MAXNODES];
-static uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+static struct _toxNodes {
+    int lines;
+    char nodes[MAXNODES][NODELEN];
+    uint16_t ports[MAXNODES];
+    uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+} toxNodes;
 
 static int nodelist_load(char *filename)
 {
@@ -234,7 +236,7 @@ static int nodelist_load(char *filename)
 
     char line[MAXLINE];
 
-    while (fgets(line, sizeof(line), fp) && linecnt < MAXNODES) {
+    while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
         if (strlen(line) > MINLINE) {
             const char *name = strtok(line, " ");
             const char *port = strtok(NULL, " ");
@@ -244,19 +246,19 @@ static int nodelist_load(char *filename)
             if (name == NULL || port == NULL || key_ascii == NULL)
                 continue;
 
-            snprintf(nodes[linecnt], sizeof(nodes[linecnt]), "%s", name);
-            nodes[linecnt][NODELEN - 1] = 0;
-            ports[linecnt] = htons(atoi(port));
+            snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
+            toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
+            toxNodes.ports[toxNodes.lines] = htons(atoi(port));
 
             uint8_t *key_binary = hex_string_to_bin(key_ascii);
-            memcpy(keys[linecnt], key_binary, TOX_CLIENT_ID_SIZE);
+            memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);
             free(key_binary);
 
-            linecnt++;
+            toxNodes.lines++;
         }
     }
 
-    if (linecnt < 1) {
+    if (toxNodes.lines < 1) {
         fclose(fp);
         return 2;
     }
@@ -267,8 +269,8 @@ static int nodelist_load(char *filename)
 
 int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap_from_address(m, nodes[line], TOX_ENABLE_IPV6_DEFAULT,
-                                      ports[line], keys[line]);
+    return tox_bootstrap_from_address(m, toxNodes.nodes[line], TOX_ENABLE_IPV6_DEFAULT,
+                                      toxNodes.ports[line], toxNodes.keys[line]);
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
@@ -285,8 +287,8 @@ static bool srvlist_loaded = false;
 
 int init_connection(Tox *m)
 {
-    if (linecnt > 0) /* already loaded nodelist */
-        return init_connection_helper(m, rand() % linecnt) ? 0 : 3;
+    if (toxNodes.lines > 0) /* already loaded nodelist */
+        return init_connection_helper(m, rand() % toxNodes.lines) ? 0 : 3;
 
     /* only once:
      * - load the nodelist
@@ -301,15 +303,15 @@ int init_connection(Tox *m)
         else
             res = nodelist_load(arg_opts.nodes_path);
 
-        if (linecnt < 1)
+        if (toxNodes.lines < 1)
             return res;
 
         res = 3;
         int i;
-        int n = MIN(NUM_INIT_NODES, linecnt);
+        int n = MIN(NUM_INIT_NODES, toxNodes.lines);
 
         for (i = 0; i < n; ++i) {
-            if (init_connection_helper(m, rand() % linecnt))
+            if (init_connection_helper(m, rand() % toxNodes.lines))
                 res = 0;
         }
 
@@ -320,30 +322,37 @@ int init_connection(Tox *m)
     return 4;
 }
 
+#define TRY_CONNECT 10
+
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
     uint8_t msg[MAX_STR_SIZE] = {0};
 
-    static int conn_try = 0;
     static int conn_err = 0;
-    static bool dht_on = false;
-
+    static bool was_connected = false;
+    static uint64_t last_conn_try = 0;
+    uint64_t curtime = get_unix_time();
     bool is_connected = tox_isconnected(m);
 
-    if (!dht_on && !is_connected && !(conn_try++ % 100)) {
-        if (!conn_err) {
-            if ((conn_err = init_connection(m))) {
-                snprintf(msg, sizeof(msg), "\nAuto-connect failed with error code %d", conn_err);
-            }
-        }
-    } else if (!dht_on && is_connected) {
-        dht_on = true;
-        prompt_update_connectionstatus(prompt, dht_on);
+    if (was_connected && is_connected)
+        return;
+
+    if (!was_connected && is_connected) {
+        was_connected = true;
+        prompt_update_connectionstatus(prompt, was_connected);
         snprintf(msg, sizeof(msg), "DHT connected.");
-    } else if (dht_on && !is_connected) {
-        dht_on = false;
-        prompt_update_connectionstatus(prompt, dht_on);
-        snprintf(msg, sizeof(msg), "\nDHT disconnected. Attempting to reconnect.");
+    } else if (was_connected && !is_connected) {
+        was_connected = false;
+        prompt_update_connectionstatus(prompt, was_connected);
+        snprintf(msg, sizeof(msg), "DHT disconnected. Attempting to reconnect.");
+    } else if (!was_connected && !is_connected && timed_out(last_conn_try, curtime, TRY_CONNECT)) {
+        /* if autoconnect has already failed there's no point in trying again */
+        if (conn_err == 0) {
+            last_conn_try = curtime;
+
+            if ((conn_err = init_connection(m)) != 0)
+                snprintf(msg, sizeof(msg), "Auto-connect failed with error code %d", conn_err);
+        }
     }
 
     if (msg[0])
