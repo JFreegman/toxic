@@ -73,6 +73,7 @@ static struct cmd_func chat_commands[] = {
     { "/answer",    cmd_answer      },
     { "/reject",    cmd_reject      },
     { "/hangup",    cmd_hangup      },
+    { "/sdev",      cmd_set_this_session_device },
 #endif /* _SUPPORT_AUDIO */
 };
 

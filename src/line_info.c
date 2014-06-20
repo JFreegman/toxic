@@ -121,7 +121,7 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 
     memset(new_line, 0, sizeof(struct line_info));
 
-    int len = 1;     /* there will always be a newline */
+    int len = 1;    /* there will always be a newline */
 
     /* for type-specific formatting in print function */
     switch (type) {

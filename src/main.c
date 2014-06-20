@@ -39,6 +39,7 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <assert.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -62,6 +63,7 @@
 #include "file_senders.h"
 #include "line_info.h"
 #include "settings.h"
+#include "global_commands.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -459,33 +461,66 @@ void *thread_winref(void *data)
         draw_active_window(m);
 }
 
+int exit_print(char* exe_name, char* invalid_arg, char* error_str)
+{
+    const char* help_str = 
+    "usage: \n"
+    " -f <path> tox protocol data file path \n"
+    " -s <path> custom settings path \n"
+    " -n don't load from data file (create new profile) \n"
+    " -h print this help \n"
+    " -4 force ipv4 \n";
+    
+    if (!error_str && !invalid_arg) {
+        printf("%s %s", exe_name, help_str);
+        return 0;
+    } else if (invalid_arg) {
+        fprintf(stderr, "%s invalid arg: %s", exe_name, invalid_arg);
+        return 1;
+    } else if (error_str) {
+        fprintf(stderr, "%s error: %s", exe_name, error_str);
+        return 1;
+    }
+}
+
 int main(int argc, char *argv[])
 {
-    char *user_config_dir = get_user_config_dir();
+    char *user_config_dir = get_user_config_dir(), *settings_path = NULL;
     int config_err = 0;
 
     f_loadfromfile = 1;
-    int f_flag = 0;
     int i = 0;
     int f_use_ipv4 = 0;
 
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-    for (i = 0; i < argc; ++i) {
-        if (argv[i] == NULL)
-            break;
-        else if (argv[i][0] == '-') {
+    for (i = 1; i < argc; ++i) {
+        if (argv[i][0] == '-') {
             if (argv[i][1] == 'f') {
-                if (argv[i + 1] != NULL)
-                    DATA_FILE = strdup(argv[i + 1]);
+                ++i;
+                if (i < argc)
+                    DATA_FILE = strdup(argv[i]);
                 else
-                    f_flag = -1;
+                    return exit_print(argv[0], NULL, "argument 'f' requires value");
+                    
             } else if (argv[i][1] == 'n') {
                 f_loadfromfile = 0;
+            } else if (argv[i][1] == 'h') {
+                return exit_print(argv[0], NULL, NULL);
             } else if (argv[i][1] == '4') {
                 f_use_ipv4 = 1;
+            } else if (argv[i][1] == 's') {
+                ++i;
+                if (i < argc)
+                    settings_path = argv[i];
+                else
+                    return exit_print(argv[0], NULL, "argument 's' requires value");
+            } else {
+                return exit_print(argv[0], argv[i]+1, NULL); /* Invalid arg */
             }
+        } else {
+            return exit_print(argv[0], argv[i], NULL); /* Invalid value/arg */
         }
     }
 
@@ -521,7 +556,7 @@ int main(int argc, char *argv[])
     }
 
     memset(user_settings, 0, sizeof(struct user_settings));
-    int settings_err = settings_load(user_settings, NULL);
+    int settings_err = settings_load(user_settings, settings_path);
 
     Tox *m = init_tox(f_use_ipv4);
     init_term();
@@ -556,22 +591,19 @@ int main(int argc, char *argv[])
 
     av = init_audio(prompt, m);
     
-    device_set(prompt, input, user_settings->audio_in_dev);
-    device_set(prompt, output, user_settings->audio_out_dev);
-
-    if ( errors() == NoError )
-        msg = "Audio initiated with no problems.";
-    else /* Get error code and stuff */
-        msg = "Error initiating audio!";
-
-    line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+//     device_set(prompt, input, user_settings->audio_in_dev);
+//     device_set(prompt, output, user_settings->audio_out_dev);
+    
+    set_primary_device(input, user_settings->audio_in_dev);
+    set_primary_device(output, user_settings->audio_out_dev);
+    
+    char* string = malloc(1000);
+    sprintf(string, "i:%d o:%d", user_settings->audio_in_dev, user_settings->audio_out_dev);
+    
+    line_info_add(prompt, NULL, NULL, NULL, string, SYS_MSG, 0, 0);
+    cmd_myid(NULL, prompt, m, 0, NULL);
 
 #endif /* _SUPPORT_AUDIO */
-
-    if (f_flag == -1) {
-        msg = "You passed '-f' without giving an argument. Defaulting to 'data' for a keyfile...";
-        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    }
 
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";

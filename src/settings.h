@@ -34,8 +34,8 @@ struct user_settings {
     int colour_theme;      /* boolean (0 for default toxic colours) */
     
 #ifdef _SUPPORT_AUDIO
-    long int audio_in_dev;
-    long int audio_out_dev;
+    int audio_in_dev;
+    int audio_out_dev;
 #endif /* _SUPPORT_AUDIO */
 };
 

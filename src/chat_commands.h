@@ -33,4 +33,5 @@ void cmd_answer(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZ
 void cmd_reject(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_hangup(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_cancel(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_set_this_session_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 #endif /* _SUPPORT_AUDIO */

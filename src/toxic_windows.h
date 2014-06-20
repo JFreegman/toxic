@@ -132,8 +132,9 @@ struct ToxWindow {
     void(*onRequestTimeout)(ToxWindow *, ToxAv *, int);
     void(*onPeerTimeout)(ToxWindow *, ToxAv *, int);
 
-    int call_index; /* If in a call will have this index set, otherwise it's -1. 
-                     * Don't modify outside av callbacks. */
+    int call_idx; /* If in a call will have this index set, otherwise it's -1. 
+                   * Don't modify outside av callbacks. */
+    int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
 #endif /* _SUPPORT_AUDIO */
 
     char name[TOX_MAX_NAME_LENGTH];

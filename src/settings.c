@@ -20,12 +20,17 @@
  *
  */
 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
-
+#include <assert.h>
 
 #ifdef _SUPPORT_AUDIO
-    #include "audio_call.h"
+    #include "device.h"
 #endif /* _SUPPORT_AUDIO */
 
 #include "toxic_windows.h"
@@ -84,17 +89,16 @@ static void uset_colours(struct user_settings *s, int val)
 static void uset_ain_dev(struct user_settings *s, int val)
 {
     if (val < 0 || val > MAX_DEVICES)
-        val = (long int) 0;
-
-    s->audio_in_dev = (long int) val;
+        val = 0;
+    s->audio_in_dev = val;
 }
 
 static void uset_aout_dev(struct user_settings *s, int val)
 {
     if (val < 0 || val > MAX_DEVICES)
-        val = (long int) 0;
+        val = 0;
 
-    s->audio_out_dev = (long int) val;
+    s->audio_out_dev = val;
 }
 
 #endif /* _SUPPORT_AUDIO */
@@ -104,7 +108,7 @@ int settings_load(struct user_settings *s, char *path)
     char *user_config_dir = get_user_config_dir();
     FILE *fp = NULL;
     char dflt_path[MAX_STR_SIZE];
-
+    
     if (path) {
         fp = fopen(path, "r");
     } else {
@@ -120,30 +124,28 @@ int settings_load(struct user_settings *s, char *path)
     } else if (fp == NULL && path) {
         return -1;
     }
-
+    
     char line[MAX_STR_SIZE];
 
     while (fgets(line, sizeof(line), fp)) {
         if (line[0] == '#' || !line[0])
             continue;
-
-        char *name = strtok(line, ":");
-        char *val_s = strtok(NULL, ";");
-
-        if (name == NULL || val_s == NULL)
+        
+        const char *key = strtok(line, ":");
+        const char *val = strtok(NULL, ";");
+        
+        if (key == NULL || val == NULL)
             continue;
-
-        int val = atoi(val_s);
+                
         int i;
-
         for (i = 0; i < NUM_SETTINGS; ++i) {
-            if (!strcmp(user_settings_list[i].name, name)) {
-                (user_settings_list[i].func)(s, val);
+            if (strcmp(user_settings_list[i].name, key) == 0) {
+                (user_settings_list[i].func)(s, atoi(val));
                 break;
             }
         }
-    }
-
+    }    
+    
     fclose(fp);
     return 0;
 }
