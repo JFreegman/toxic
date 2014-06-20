@@ -521,14 +521,14 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         /* Scroll peerlist up and down one position if list overflows window */
-        else if (key == T_KEY_C_LB) {
+        else if (key == T_KEY_C_RB) {
             int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
             if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
                 ++groupchats[self->num].side_pos;
         }
 
-        else if (key == T_KEY_C_RB) {
+        else if (key == T_KEY_C_LB) {
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
         }

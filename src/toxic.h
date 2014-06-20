@@ -50,7 +50,8 @@
 #define T_KEY_C_A        0x01     /* ctrl-a */
 #define T_KEY_C_RB       0x1D     /* ctrl-] */
 #define T_KEY_C_LB       0x1B     /* ctrl-[ */
-#define T_KEY_C_B        0x02     /* ctrl-b */
+#define T_KEY_C_V        0x16     /* ctrl-v */
+#define T_KEY_C_F        0x06     /* ctrl-f */
 #define T_KEY_C_H        0x08     /* ctrl-h */
 
 enum {

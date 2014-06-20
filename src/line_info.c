@@ -56,14 +56,15 @@ static void line_info_reset_start(ToxWindow *self, struct history *hst)
     getmaxyx(self->window, y2, x2);
 
     struct line_info *line = hst->line_end;
+
     uint16_t lncnt = 0;
     int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
-    int top_offst = self->is_chat ? 3 : 0;
+    int top_offst = self->is_chat ? 2 : 0;
     int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
     while (line->prev && lncnt < max_y) {
+        lncnt += (1 + line->newlines) +( line->len / (x2 - side_offst));
         line = line->prev;
-        lncnt += (1 + line->len / (x2 - side_offst));
     }
 
     hst->line_start = line;
@@ -441,11 +442,11 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
 
     switch (key) {
         /* TODO: Find good key bindings for all this stuff */
-        case T_KEY_C_H:
+        case T_KEY_C_F:
             line_info_page_up(self, hst);
             break;
 
-        case T_KEY_C_B:
+        case T_KEY_C_V:
             line_info_page_down(self, hst);
             break; 
 
@@ -459,11 +460,11 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
 
         /* case ?:
             line_info_goto_root(hst);
-            break;
-
-        case ?:
-            line_info_reset_start(self, hst);
             break; */
+
+        case T_KEY_C_H:
+            line_info_reset_start(self, hst);
+            break; 
 
         default:
             match = false;
