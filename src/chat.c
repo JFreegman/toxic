@@ -547,8 +547,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
-    int cur_len = 0;   /* widechar len of current char */
-    int len = MAX(0, wcslen(ctx->line));     /* widechar len of line */
+
+    if (x2 <= 0)
+        return;
+
+    int cur_len = 0;   /* widechar size of current char */
     int x2_is_odd = x2 % 2 != 0;
 
     if (ltr) {   /* char is printable */
@@ -576,9 +579,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 del_char_buf_bck(ctx);
 
                 if (x == 0) {
-                    wmove(self->window, y, x2 - cur_len);
                     ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
-                    ctx->pos = ctx->start + x2 - 1;
+                    int new_x = ctx->start == 0 ? ctx->pos : x2 - cur_len;
+                    wmove(self->window, y, new_x);
                 } else {
                     wmove(self->window, y, x - cur_len);
                 }
@@ -621,8 +624,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
             if (ctx->pos != ctx->len) {
                 ctx->pos = ctx->len;
-                ctx->start = x2 * (len / x2);
-                mv_curs_end(self->window, len, y2, x2);
+                ctx->start = x2 * (ctx->len / x2);
+                mv_curs_end(self->window, ctx->len, y2, x2);
             }
         }
 
@@ -662,16 +665,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_UP) {    /* fetches previous item in history */
             fetch_hist_item(ctx, MOVE_UP);
-            len = wcslen(ctx->line);
-            ctx->start = x2 * (len / x2);
-            mv_curs_end(self->window, len, y2, x2);
+            ctx->start = x2 * (ctx->len / x2);
+            mv_curs_end(self->window, ctx->len, y2, x2);
         }
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
             fetch_hist_item(ctx, MOVE_DOWN);
-            len = wcslen(ctx->line);
-            ctx->start = x2 * (len / x2);
-            mv_curs_end(self->window, len, y2, x2);
+            ctx->start = x2 * (ctx->len / x2);
+            mv_curs_end(self->window, ctx->len, y2, x2);
         }
 
         else if (key == '\t') {    /* TAB key: completes command */
