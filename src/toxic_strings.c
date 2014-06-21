@@ -91,6 +91,7 @@ void discard_buf(ChatContext *ctx)
         ctx->line[c++] = ctx->line[i];
 
     ctx->pos = 0;
+    ctx->start = 0;
     ctx->len = c - 1;
 }
 
@@ -104,12 +105,13 @@ void kill_buf(ChatContext *ctx)
     ctx->len = ctx->pos;
 }
 
-/* nulls line and sets pos and len to 0 */
+/* nulls line and sets pos, len and start to 0 */
 void reset_buf(ChatContext *ctx)
 {
     ctx->line[0] = L'\0';
     ctx->pos = 0;
     ctx->len = 0;
+    ctx->start = 0;
 }
 
 /* Removes trailing spaces from line. */

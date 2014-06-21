@@ -35,7 +35,7 @@
 #define UNKNOWN_NAME "Anonymous"
 
 #define MAX_FRIENDS_NUM 500
-#define MAX_STR_SIZE 256
+#define MAX_STR_SIZE 1024
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */

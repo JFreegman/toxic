@@ -226,9 +226,8 @@ int valid_nick(uint8_t *nick)
 /* Moves cursor to the end of the line in given window */
 void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
 {
-    int end_y = (len / max_x) + (max_y - CURS_Y_OFFSET);
-    int end_x = len % max_x;
-    wmove(w, end_y, end_x);
+    int new_x = len < max_x ? len : len % max_x;
+    wmove(w, max_y - CURS_Y_OFFSET, new_x);
 }
 
 /* gets base file name from path or original file name if no path is supplied */

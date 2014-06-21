@@ -36,8 +36,8 @@
 #include "toxic.h"
 
 #define MAX_WINDOWS_NUM 32
-#define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
-#define CHATBOX_HEIGHT 4
+#define CURS_Y_OFFSET 1    /* y-axis cursor offset for chat contexts */
+#define CHATBOX_HEIGHT 2
 
 /* Curses foreground colours (background is black) */
 enum {
@@ -150,6 +150,7 @@ struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     size_t len;
+    size_t start;    /* the position to start printing line at */
 
     wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];  /* history for input lines/commands */
     int hst_pos;

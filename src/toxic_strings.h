@@ -40,7 +40,7 @@ void discard_buf(ChatContext *ctx);
 /* Deletes the line from pos to len */
 void kill_buf(ChatContext *ctx);
 
-/* nulls line and sets pos and len to 0 */
+/* nulls line and sets pos, len and start to 0 */
 void reset_buf(ChatContext *ctx);
 
 /* Removes trailing spaces from line. */

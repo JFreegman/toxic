@@ -389,16 +389,19 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
-    int cur_len = 0;
+    int cur_len = 0;    /* widechar len of current char */
+    int len = MAX(0, wcslen(ctx->line));     /* widechar len of line */
 
-    if (ltr) {
-        if ( (ctx->len < MAX_STR_SIZE - 1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1) - 1)) ) {
+    if (ltr) {    /* char is printable */
+        if (ctx->len < MAX_STR_SIZE - 1) {
             add_char_to_buf(ctx, key);
 
-            if (x == x2 - 1)
-                wmove(self->window, y + 1, 0);
-            else
+            if (x >= x2 - 1) {
+                wmove(self->window, y, x2 / 2);
+                ctx->start += x2 / 2;
+            } else {
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
+            }
         }
 
     } else { /* if (!ltr) */
@@ -406,15 +409,18 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (line_info_onKey(self, key))
             return;
 
-        if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
+        if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
             if (ctx->pos > 0) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                 del_char_buf_bck(ctx);
 
-                if (x == 0)
-                    wmove(self->window, y - 1, x2 - cur_len);
-                else
+                if (x == 0) {
+                    wmove(self->window, y, x2 - cur_len);
+                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
+                    ctx->pos = ctx->start + x2 - 1;
+                } else {
                     wmove(self->window, y, x - cur_len);
+                }
             } else {
                 beep();
             }
@@ -446,6 +452,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
             if (ctx->pos > 0) {
                 ctx->pos = 0;
+                ctx->start = 0;
                 wmove(self->window, y2 - CURS_Y_OFFSET, 0);
             }
         }
@@ -453,7 +460,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
             if (ctx->pos != ctx->len) {
                 ctx->pos = ctx->len;
-                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT - 1)*x2)), y2, x2);
+                ctx->start = x2 * (len / x2);
+                mv_curs_end(self->window, len, y2, x2);
             }
         }
 
@@ -462,10 +470,13 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 --ctx->pos;
                 cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
 
-                if (x == 0)
-                    wmove(self->window, y - 1, x2 - cur_len);
-                else
+                if (x == 0) {
+                    wmove(self->window, y, x2 - cur_len);
+                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
+                    ctx->pos = ctx->start + x2 - 1;
+                } else {
                     wmove(self->window, y, x - cur_len);
+                }
             } else {
                 beep();
             }
@@ -473,13 +484,16 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_RIGHT) {
             if (ctx->pos < ctx->len) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                 ++ctx->pos;
 
-                if (x == x2 - 1)
-                    wmove(self->window, y + 1, 0);
-                else
+                if (x == x2 - 1) {
+                    wmove(self->window, y, 0);
+                    ctx->start += x2;
+                    ctx->pos = ctx->start;
+                } else {
+                    cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                     wmove(self->window, y, x + cur_len);
+                }
             } else {
                 beep();
             }
@@ -487,12 +501,16 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_UP) {    /* fetches previous item in history */
             fetch_hist_item(ctx, MOVE_UP);
-            mv_curs_end(self->window, ctx->len, y2, x2);
+            len = wcslen(ctx->line);
+            ctx->start = x2 * (len / x2);
+            mv_curs_end(self->window, len, y2, x2);
         }
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
             fetch_hist_item(ctx, MOVE_DOWN);
-            mv_curs_end(self->window, ctx->len, y2, x2);
+            len = wcslen(ctx->line);
+            ctx->start = x2 * (len / x2);
+            mv_curs_end(self->window, len, y2, x2);
         }
 
         else if (key == '\t') {    /* TAB key: completes peer name */
@@ -597,7 +615,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
             reset_buf(ctx);
             wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         } else {
-            mvwprintw(ctx->linewin, 1, 0, "%s", line);
+            mvwprintw(ctx->linewin, 1, 0, "%s", &line[ctx->start]);
         }
     }
 
