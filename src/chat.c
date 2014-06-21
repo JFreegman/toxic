@@ -549,13 +549,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getmaxyx(self->window, y2, x2);
     int cur_len = 0;   /* widechar len of current char */
     int len = MAX(0, wcslen(ctx->line));     /* widechar len of line */
+    int x2_is_odd = x2 % 2 != 0;
 
     if (ltr) {   /* char is printable */
         if (ctx->len < MAX_STR_SIZE - 1) {
             add_char_to_buf(ctx, key);
 
             if (x >= x2 - 1) {
-                wmove(self->window, y, x2 / 2);
+                wmove(self->window, y, x2 / 2 + x2_is_odd);
                 ctx->start += x2 / 2;
             } else {
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
