@@ -32,6 +32,7 @@
 #include "windows.h"
 #include "file_senders.h"
 #include "line_info.h"
+#include "misc_tools.h"
 
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;

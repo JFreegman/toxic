@@ -20,6 +20,8 @@
  *
  */
 
+#define _GNU_SOURCE    /* needed for strcasestr() and wcwidth() */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <wchar.h>
 
 #include "windows.h"
 #include "toxic.h"
@@ -40,7 +43,6 @@
 #include "settings.h"
 
 extern char *DATA_FILE;
-extern int store_data(Tox *m, char *path);
 
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;

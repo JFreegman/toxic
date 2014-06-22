@@ -51,6 +51,7 @@ void terminate_audio();
 int errors();
 
 int start_transmission(ToxWindow *self);
+int stop_transmission(int call_index);
 int device_set(ToxWindow *self, _Devices type, long int selection);
 
 #endif /* _audio_h */

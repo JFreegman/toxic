@@ -20,6 +20,8 @@
  *
  */
 
+#define _GNU_SOURCE    /* needed for strcasestr() and wcwidth() */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <wchar.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -43,7 +46,6 @@
 #endif /* _SUPPORT_AUDIO */
 
 extern char *DATA_FILE;
-extern int store_data(Tox *m, char *path);
 
 extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];

@@ -34,6 +34,7 @@
 #include "chat_commands.h"
 #include "global_commands.h"
 #include "line_info.h"
+#include "misc_tools.h"
 
 struct cmd_func {
     const char *name;

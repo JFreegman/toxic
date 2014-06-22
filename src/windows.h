@@ -179,4 +179,8 @@ int get_num_active_windows(void);
 void kill_all_windows(void);    /* should only be called on shutdown */
 void on_window_resize(int sig);
 
+/* refresh inactive windows to prevent scrolling bugs. 
+   call at least once per second */
+void refresh_inactive_windows(void);
+
 #endif  /* #define _windows_h */

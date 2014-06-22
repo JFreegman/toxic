@@ -57,6 +57,7 @@
 #include "file_senders.h"
 #include "line_info.h"
 #include "settings.h"
+#include "log.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"

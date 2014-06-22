@@ -33,6 +33,7 @@
 #include "friendlist.h"
 #include "execute.h"
 #include "line_info.h"
+#include "groupchat.h"
 
 extern ToxWindow *prompt;
 

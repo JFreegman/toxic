@@ -27,12 +27,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #include "friendlist.h"
 #include "prompt.h"
 #include "toxic.h"
 #include "windows.h"
 #include "groupchat.h"
+#include "chat.h"
+#include "line_info.h"
 
 extern char *DATA_FILE;
 extern struct _Winthread Winthread;

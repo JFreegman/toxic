@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "toxic.h"
 #include "windows.h"

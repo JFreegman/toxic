@@ -58,6 +58,9 @@ int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
    Same thing as wcs_to_mbs() but caller must provide its own buffer */
 int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n);
 
+/* convert a multibyte string to a wide character string (must provide buffer) */
+int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
+
 /* convert wide characters to multibyte string: string returned must be free'd */
 uint8_t *wcs_to_mbs(wchar_t *string);
 

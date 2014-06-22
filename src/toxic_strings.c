@@ -47,7 +47,7 @@ void add_char_to_buf(ChatContext *ctx, wint_t ch)
 /* Deletes the character before pos */
 void del_char_buf_bck(ChatContext *ctx)
 {
-    if (ctx->pos <= 0)
+    if (ctx->pos == 0)
         return;
 
     wmemmove(&ctx->line[ctx->pos - 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
@@ -58,7 +58,7 @@ void del_char_buf_bck(ChatContext *ctx)
 /* Deletes the character at pos */
 void del_char_buf_frnt(ChatContext *ctx)
 {
-    if (ctx->pos < 0 || ctx->pos >= ctx->len)
+    if (ctx->pos >= ctx->len)
         return;
 
     wmemmove(&ctx->line[ctx->pos], &ctx->line[ctx->pos + 1], ctx->len - ctx->pos - 1);
