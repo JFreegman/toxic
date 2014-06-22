@@ -54,7 +54,7 @@ extern struct _Winthread Winthread;
 extern struct user_settings *user_settings;
 
 #ifdef _SUPPORT_AUDIO
-#define AC_NUM_CHAT_COMMANDS 23
+#define AC_NUM_CHAT_COMMANDS 26
 #else
 #define AC_NUM_CHAT_COMMANDS 18
 #endif /* _SUPPORT_AUDIO */
@@ -87,6 +87,9 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/answer"     },
     { "/reject"     },
     { "/hangup"     },
+    { "/sdev"       },
+    { "/mute"       },
+    { "/sense"      },
 
 #endif /* _SUPPORT_AUDIO */
 };
@@ -430,7 +433,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
 
     /* call_index is set here and reset on call end */
     
-    self->call_index = call_index;
+    self->call_idx = call_index;
     
     line_info_add(self, NULL, NULL, NULL, "Incoming audio call! Type: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
 
@@ -439,7 +442,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     line_info_add(self, NULL, NULL, NULL, "Ringing...\"cancel\" ?", SYS_MSG, 0, 0);
@@ -447,7 +450,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
@@ -455,23 +458,25 @@ void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
 }
 
 void chat_onError (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Error!", SYS_MSG, 0, 0);
 }
 
 void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
@@ -479,41 +484,46 @@ void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call canceled!", SYS_MSG, 0, 0);
 }
 
 void chat_onReject (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Rejected!", SYS_MSG, 0, 0);
 }
 
 void chat_onEnd (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
 }
 
 void chat_onRequestTimeout (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "No answer!", SYS_MSG, 0, 0);
 }
 
 void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_index != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Peer disconnected; call ended!", SYS_MSG, 0, 0);
 }
 
@@ -949,7 +959,8 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.onRequestTimeout = &chat_onRequestTimeout;
     ret.onPeerTimeout = &chat_onPeerTimeout;
     
-    ret.call_index = -1;
+    ret.call_idx = -1;
+    ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _SUPPORT_AUDIO */
 
     uint8_t name[TOX_MAX_NAME_LENGTH] = {'\0'};

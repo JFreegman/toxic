@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.65])
-AC_INIT([toxic], [0.4.1], [https://tox.im/])
+AC_INIT([toxic], [0.4.2], [https://tox.im/])
 AC_CONFIG_AUX_DIR(configure_aux)
 AC_CONFIG_SRCDIR([src/toxic.c])
 AC_CONFIG_HEADERS([config.h])
@@ -37,7 +37,9 @@ if test -n "$DEPSEARCH"; then
     CFLAGS="$CFLAGS -I$DEPSEARCH/include"
     CPPFLAGS="$CPPFLAGS -I$DEPSEARCH/include"
     LDFLAGS="$LDFLAGS -L$DEPSEARCH/lib"
-    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$DEPSEARCH/lib/pkgconfig:/usr/local/lib/pkgconfig
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$DEPSEARCH/lib/pkgconfig:/usr/local/lib/pkgconfig   
+else
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig   
 fi
 
 AC_ARG_WITH(libtoxcore-headers,
@@ -417,6 +419,8 @@ if test -n "$AV_SEARCH_DIR"; then
     CPPFLAGS="$CPPFLAGS -I$AV_SEARCH_DIR/include"
     LDFLAGS="$LDFLAGS -L$AV_SEARCH_DIR/lib"
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$AV_SEARCH_DIR/lib/pkgconfig
+else
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
 fi
 
 # Check if specified enable

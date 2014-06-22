@@ -29,7 +29,7 @@
     #define NUM_SETTINGS 8
 #else
     #define NUM_SETTINGS 6
-#endif
+#endif /* _SUPPORT_AUDIO */
 
 /* holds user setting values */
 struct user_settings {

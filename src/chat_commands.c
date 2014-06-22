@@ -59,7 +59,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
 #ifdef _SUPPORT_AUDIO
-#define NUMLINES 13
+#define NUMLINES 16
 #else
 #define NUMLINES 9
 #endif
@@ -72,6 +72,9 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         { "    /answer                    : Answer incomming call"                },
         { "    /reject                    : Reject incoming call"                 },
         { "    /hangup                    : Hangup active call"                   },
+        { "    /sdev <type> <id>          : Change active device"                 },
+        { "    /mute <type>               : Mute active device if in call"        },
+        { "    /sense <value>             : VAD sensitivity treshold"             },
 #endif /* _SUPPORT_AUDIO */
         { "    /invite <n>                : Invite friend to a group chat"        },
         { "    /join                      : Join a pending group chat"            },

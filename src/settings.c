@@ -32,8 +32,8 @@
 #include "configdir.h"
 
 #ifdef _SUPPORT_AUDIO
-#include "audio_call.h"
-#endif
+    #include "device.h"
+#endif /* _SUPPORT_AUDIO */
 
 #include "settings.h"
 #include "line_info.h"
@@ -209,7 +209,7 @@ int settings_load(struct user_settings *s, char *path)
         int i;
 
         for (i = 0; i < NUM_SETTINGS; ++i) {
-            if (!strcmp(user_settings_list[i].key, key)) {
+            if (strcmp(user_settings_list[i].key, key) == 0) {
                 (user_settings_list[i].func)(s, val);
                 break;
             }

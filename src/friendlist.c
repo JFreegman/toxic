@@ -627,7 +627,8 @@ ToxWindow new_friendlist(void)
     ret.onRequestTimeout = &friendlist_onAv;
     ret.onPeerTimeout = &friendlist_onAv;
     
-    ret.call_index = -1;
+    ret.call_idx = -1;
+    ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _SUPPORT_AUDIO */
 
     strcpy(ret.name, "friends");

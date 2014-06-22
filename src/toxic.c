@@ -606,16 +606,10 @@ int main(int argc, char *argv[])
 
     av = init_audio(prompt, m);
     
-    device_set(prompt, input, user_settings->audio_in_dev);
-    device_set(prompt, output, user_settings->audio_out_dev);
-
-    if ( errors() == NoError )
-        msg = "Audio initiated with no problems.";
-    else /* Get error code and stuff */
-        msg = "Error initiating audio!";
-
-    line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-
+    
+    set_primary_device(input, user_settings->audio_in_dev);
+    set_primary_device(output, user_settings->audio_out_dev);
+    
 #endif /* _SUPPORT_AUDIO */
 
     if (config_err) {
