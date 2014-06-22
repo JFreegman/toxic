@@ -30,7 +30,8 @@
 
 #include "friendlist.h"
 #include "prompt.h"
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "groupchat.h"
 
 extern char *DATA_FILE;
@@ -43,7 +44,7 @@ extern ToxWindow *prompt;
 static int num_active_windows;
 
 /* CALLBACKS START */
-void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata)
+void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata)
 {
     int i;
 
@@ -283,11 +284,8 @@ void set_next_window(int ch)
         if (active_window->window)
             return;
 
-        if (active_window == inf) {    /* infinite loop check */
-            endwin();
-            fprintf(stderr, "set_next_window() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
-        }
+        if (active_window == inf)    /* infinite loop check */
+            exit_toxic_err("failed in set_next_window", FATALERR_INFLOOP);
     }
 }
 
@@ -303,16 +301,19 @@ ToxWindow *init_windows(Tox *m)
 {
     int n_prompt = add_window(m, new_prompt());
 
-    if (n_prompt == -1 || add_window(m, new_friendlist()) == -1) {
-        endwin();
-        fprintf(stderr, "add_window() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (n_prompt == -1 || add_window(m, new_friendlist()) == -1)
+        exit_toxic_err("failed in init_windows", FATALERR_WININIT);
 
     prompt = &windows[n_prompt];
     active_window = prompt;
 
     return prompt;
+}
+
+void on_window_resize(int sig)
+{
+    refresh();
+    clear();
 }
 
 static void draw_window_tab(ToxWindow toxwin)
@@ -351,25 +352,28 @@ static void draw_bar(void)
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].active) {
-            if (windows + i == active_window) {
-#ifdef URXVT_FIX
-                attron(A_BOLD | COLOR_PAIR(GREEN));
-            } else {
-#endif
-                attron(A_BOLD);
-            }
+        if (!windows[i].active)
+            continue;
 
-            draw_window_tab(windows[i]);
+        if (windows + i == active_window)
 
-            if (windows + i == active_window) {
 #ifdef URXVT_FIX
-                attroff(A_BOLD | COLOR_PAIR(GREEN));
-            } else {
+            attron(A_BOLD | COLOR_PAIR(GREEN));
+        else
 #endif
-                attroff(A_BOLD);
-            }
-        }
+
+            attron(A_BOLD);
+
+        draw_window_tab(windows[i]);
+
+        if (windows + i == active_window)
+
+#ifdef URXVT_FIX
+            attroff(A_BOLD | COLOR_PAIR(GREEN));
+        else
+#endif
+
+            attroff(A_BOLD);
     }
 
     refresh();
@@ -417,12 +421,26 @@ void draw_active_window(Tox *m)
     ltr = isprint(ch);
 #endif
 
-    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV) ) {
+    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV)) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);
         a->onKey(a, m, ch, ltr);
         pthread_mutex_unlock(&Winthread.lock);
+    }
+}
+
+/* refresh inactive windows to prevent scrolling bugs. 
+   call at least once per second */
+void refresh_inactive_windows(void)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *a = &windows[i];
+
+        if (a->active && a != active_window && (a->is_chat || a->is_groupchat))
+            line_info_print(a);
     }
 }
 

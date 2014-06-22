@@ -1,9 +1,15 @@
-#include "toxic_windows.h"
 #include "audio_call.h"
 #include "line_info.h"
 
+
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
+#endif
+
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -22,11 +28,14 @@ typedef struct _Device {
     ALCcontext *ctx;                       /* Device context */
     DataHandleCallback cb;                 /* Use this to handle data from input device usually */
     void* cb_data;                         /* Data to be passed to callback */
+    int32_t call_idx;                      /* ToxAv call index */
     
     uint32_t source, buffers[openal_bufs]; /* Playback source/buffers */
     size_t ref_count;
     int32_t selection;
     _Bool enable_VAD;
+    _Bool muted;
+    float VAD_treshold;                    /* 40 is usually recommended value */
 } Device;
 
 const char *ddevice_names[2];              /* Default device */
@@ -100,6 +109,42 @@ DeviceError terminate_devices()
     return ae_None;
 }
 
+DeviceError device_mute(DeviceType type, uint32_t device_idx)
+{
+    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
+    lock;
+    
+    Device* device = running[type][device_idx];
+    
+    if (!device) { 
+        unlock;
+        return de_DeviceNotActive;
+    }
+    
+    device->muted = !device->muted;
+    
+    unlock;
+    return de_None;
+}
+
+DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
+{
+    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
+    lock;
+    
+    Device* device = running[input][device_idx];
+    
+    if (!device) { 
+        unlock;
+        return de_DeviceNotActive;
+    }
+    
+    device->VAD_treshold = value;
+    
+    unlock;
+    return de_None;
+}
+
 DeviceError set_primary_device(DeviceType type, int32_t selection)
 {
     if (size[type] <= selection || selection < 0) return de_InvalidSelection;
@@ -147,6 +192,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     if (type == input) {
         device->dhndl = alcCaptureOpenDevice(devices_names[type][selection], 
                         av_DefaultSettings.audio_sample_rate, AL_FORMAT_MONO16, frame_size * 4);
+        device->VAD_treshold = 40.0;
     }
     else { 
         device->dhndl = alcOpenDevice(devices_names[type][selection]);
@@ -230,7 +276,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     return de_None;
 }
 
-DeviceError register_device_callback(uint32_t device_idx, DataHandleCallback callback, void* data, _Bool enable_VAD)
+DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, _Bool enable_VAD)
 {
     if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) 
         return de_InvalidSelection;
@@ -239,6 +285,7 @@ DeviceError register_device_callback(uint32_t device_idx, DataHandleCallback cal
     running[input][device_idx]->cb = callback;
     running[input][device_idx]->cb_data = data;
     running[input][device_idx]->enable_VAD = enable_VAD;
+    running[input][device_idx]->call_idx = call_idx;
     unlock;
     
     return de_None;
@@ -265,7 +312,7 @@ inline__ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t leng
     
     Device* device = running[output][device_idx];
     
-    if (!device) return de_DeviceNotActive;
+    if (!device || device->muted) return de_DeviceNotActive;
     
     alcMakeContextCurrent(device->ctx); /* TODO: Check for error */
     
@@ -319,27 +366,27 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
             {
                 lock;
                 if (running[input][i] != NULL) 
-//                     do 
                 {
-                    
                     alcGetIntegerv(running[input][i]->dhndl, ALC_CAPTURE_SAMPLES, sizeof(int32_t), &sample);
                     
                     if (sample < f_size) { 
                         unlock;
                         continue;
                     }
+                    Device* device = running[input][i];
                     
                     int16_t frame[4096];
-                    alcCaptureSamples(running[input][i]->dhndl, frame, f_size);
+                    alcCaptureSamples(device->dhndl, frame, f_size);
                     
-                    if ( running[input][i]->enable_VAD && !toxav_has_activity(frame, f_size, 88.5)) { unlock; continue; } /* Skip if no voice activity */
-                    if ( running[input][i]->cb ) running[input][i]->cb(frame, f_size, running[input][i]->cb_data);
+                    if ( device->muted || 
+                        (device->enable_VAD && !toxav_has_activity(av, device->call_idx, frame, f_size, device->VAD_treshold)))
+                        { unlock; continue; } /* Skip if no voice activity */
                     
+                    if ( device->cb ) device->cb(frame, f_size, device->cb_data);
                 } 
                 unlock;
-//                     while (_True);
             }
-//             usleep(10);
+            usleep(5000);
         }
     }
     

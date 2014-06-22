@@ -27,7 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "misc_tools.h"
 #include "friendlist.h"
 #include "execute.h"
@@ -57,7 +58,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
 #ifdef _SUPPORT_AUDIO
-#define NUMLINES 13
+#define NUMLINES 16
 #else
 #define NUMLINES 9
 #endif
@@ -70,6 +71,9 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         { "    /answer                    : Answer incomming call"                },
         { "    /reject                    : Reject incoming call"                 },
         { "    /hangup                    : Hangup active call"                   },
+        { "    /sdev <type> <id>          : Change active device"                 },
+        { "    /mute <type>               : Mute active device if in call"        },
+        { "    /sense <value>             : VAD sensitivity treshold"             },
 #endif /* _SUPPORT_AUDIO */
         { "    /invite <n>                : Invite friend to a group chat"        },
         { "    /join                      : Join a pending group chat"            },
@@ -86,7 +90,7 @@ void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Use ESC key to toggle history scroll mode\n";
+    msg = " * Use Page Up/Page Down to scroll chat history\n";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
 
     hst->line_start = start;
@@ -185,7 +189,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         uint8_t msg[MAX_STR_SIZE];
         snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1f%%)", filename, 0.0);
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-        friends[self->num].file_receiver.line_id = self->chatwin->hst->line_end->id;
+        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 1;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
             errmsg = "* Error writing to file.";
@@ -246,7 +250,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     fseek(file_to_send, 0, SEEK_SET);
 
     uint8_t filename[MAX_STR_SIZE];
-    get_file_name(path, filename);
+    get_file_name(filename, path);
     int filenum = tox_new_file_sender(m, self->num, filesize, filename, strlen(filename));
 
     if (filenum == -1) {

@@ -28,56 +28,46 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "line_info.h"
 #include "groupchat.h"
+#include "settings.h"
+
+extern struct user_settings *user_settings;
 
 void line_info_init(struct history *hst)
 {
     hst->line_root = malloc(sizeof(struct line_info));
 
-    if (hst->line_root == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (hst->line_root == NULL)
+        exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
 
     memset(hst->line_root, 0, sizeof(struct line_info));
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
+    hst->queue_sz = 0;
 }
 
-/* resets line_start when scroll mode is disabled */
-static void line_info_reset_start(struct history *hst)
+/* resets line_start */
+static void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
+    int y2, x2;
+    getmaxyx(self->window, y2, x2);
+
     struct line_info *line = hst->line_end;
-    uint32_t start_id = hst->start_id;
 
-    while (line) {
-        if (line->id == start_id) {
-            hst->line_start = line;
-            break;
-        }
+    uint16_t lncnt = 0;
+    int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
+    int top_offst = self->is_chat ? 2 : 0;
+    int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
+    while (line->prev && lncnt < max_y) {
+        lncnt += (1 + line->newlines) +( line->len / (x2 - side_offst));
         line = line->prev;
     }
-}
 
-void line_info_toggle_scroll(ToxWindow *self, bool scroll)
-{
-    WINDOW *win = self->chatwin->history;
-    struct history *hst = self->chatwin->hst;
-
-    if (scroll) {
-        hst->scroll_mode = true;
-        scrollok(win, 0);
-        curs_set(0);
-    } else {
-        hst->scroll_mode = false;
-        scrollok(win, 1);
-        curs_set(1);
-        line_info_reset_start(hst);
-    }
+    hst->line_start = line;
 }
 
 void line_info_cleanup(struct history *hst)
@@ -107,26 +97,59 @@ static void line_info_root_fwd(struct history *hst)
     hst->line_root = tmp;
 }
 
+/* adds a line_info line to queue */
+static void line_info_add_queue(struct history *hst, struct line_info *line)
+{
+    if (hst->queue_sz >= MAX_QUEUE)
+        return;
+
+    hst->queue[hst->queue_sz++] = line;
+}
+
+/* returns ptr to queue item 0 and removes it from queue */
+static struct line_info *line_info_ret_queue(struct history *hst)
+{
+    if (hst->queue_sz <= 0)
+        return NULL;
+
+    struct line_info *ret = hst->queue[0];
+
+    int i;
+
+    for (i = 0; i < hst->queue_sz; ++i)
+        hst->queue[i] = hst->queue[i + 1];
+
+    --hst->queue_sz;
+
+    return ret;
+}
+
+/* creates new line_info line and puts it in the queue */
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg,
                    uint8_t type, uint8_t bold, uint8_t colour)
 {
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = malloc(sizeof(struct line_info));
 
-    if (new_line == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (new_line == NULL)
+        exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
 
     memset(new_line, 0, sizeof(struct line_info));
 
-    int len = 1;    /* there will always be a newline */
+    int len = 1;     /* there will always be a newline */
 
     /* for type-specific formatting in print function */
     switch (type) {
         case ACTION:
+        case CONNECTION:
             len += 3;
+            break;
+
+        case SYS_MSG:
+            break;
+
+        case PROMPT:
+            ++len;
             break;
 
         default:
@@ -135,47 +158,56 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
     }
 
     if (msg) {
-        strcpy(new_line->msg, msg);
-        len += strlen(msg);
+        snprintf(new_line->msg, sizeof(new_line->msg), "%s", msg);
+        len += strlen(new_line->msg);
+
+        int i;
+
+        for (i = 0; msg[i]; ++i) {
+            if (msg[i] == '\n')
+                ++new_line->newlines;
+        }
     }
 
     if (tmstmp) {
-        strcpy(new_line->timestamp, tmstmp);
-        len += strlen(tmstmp);
+        snprintf(new_line->timestamp, sizeof(new_line->timestamp), "%s", tmstmp);
+        len += strlen(new_line->timestamp);
     }
 
     if (name1) {
-        strcpy(new_line->name1, name1);
-        len += strlen(name1);
+        snprintf(new_line->name1, sizeof(new_line->name1), "%s", name1);
+        len += strlen(new_line->name1);
     }
 
     if (name2) {
-        strcpy(new_line->name2, name2);
-        len += strlen(name2);
+        snprintf(new_line->name2, sizeof(new_line->name2), "%s", name2);
+        len += strlen(new_line->name2);
     }
 
     new_line->len = len;
     new_line->type = type;
     new_line->bold = bold;
     new_line->colour = colour;
-    new_line->id = hst->line_end->id + 1;
 
-    new_line->prev = hst->line_end;
-    hst->line_end->next = new_line;
-    hst->line_end = new_line;
+    line_info_add_queue(hst, new_line);
+}
 
-    if (++hst->line_items > MAX_HISTORY) {
-        --hst->line_items;
+/* adds a single queue item to hst if possible. only called once per call to line_info_print() */
+static void line_info_check_queue(ToxWindow *self) 
+{
+    struct history *hst = self->chatwin->hst;
+    struct line_info *line = line_info_ret_queue(hst);
+
+    if (line == NULL)
+        return;
+
+    if (hst->start_id > user_settings->history_size)
         line_info_root_fwd(hst);
-    }
 
-    int newlines = 0;
-    int i;
-
-    for (i = 0; msg[i]; ++i) {
-        if (msg[i] == '\n')
-            ++newlines;
-    }
+    line->id = hst->line_end->id + 1;
+    line->prev = hst->line_end;
+    hst->line_end->next = line;
+    hst->line_end = line;
 
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
@@ -185,20 +217,15 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
         return;
 
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
-    int lines = (1 + newlines + (len / (x2 - offst)));
-    hst->queue_lns += lines;
-    ++hst->queue;
-
+    int lines = 1 + line->newlines + (line->len / (x2 - offst));
     int max_y = self->is_prompt ? y2 : y2 - CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new lines */
-    if (y + hst->queue_lns - hst->queue >= max_y) {
-        while (lines > 0) {
+    if (y + lines - 1 >= max_y) {
+        while (lines > 0 && hst->line_start->next) {
+            lines -= 1 + hst->line_start->next->newlines + (hst->line_start->next->len / (x2 - offst));
+            hst->line_start = hst->line_start->next;
             ++hst->start_id;
-            lines -= (1 + hst->line_start->len / (x2 - offst));
-
-            if (!hst->scroll_mode && hst->line_start->next)
-                hst->line_start = hst->line_start->next;
         }
     }
 }
@@ -206,17 +233,22 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
 void line_info_print(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
+
+    if (ctx == NULL)
+        return;
+
+    struct history *hst = ctx->hst;
+
+    /* Only allow one new item to be added to chat window per call to this function */
+    line_info_check_queue(self);
+
     WINDOW *win = ctx->history;
-
-    ctx->hst->queue = 0;
-    ctx->hst->queue_lns = 0;
-
     wclear(win);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
     if (self->is_prompt)
-        y2 = MAX_HISTORY;   /* temporary fix to make prompt scroll */
+        y2 = user_settings->history_size;   /* temporary fix to make prompt scroll */
 
     if (x2 <= SIDEBAR_WIDTH)
         return;
@@ -226,7 +258,7 @@ void line_info_print(ToxWindow *self)
     else
         wmove(win, 2, 0);
 
-    struct line_info *line = ctx->hst->line_start->next;
+    struct line_info *line = hst->line_start->next;
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
     int numlines = 0;
 
@@ -342,6 +374,10 @@ void line_info_print(ToxWindow *self)
 
         line = line->next;
     }
+
+    /* keep calling until queue is empty */
+    if (hst->queue_sz > 0)
+        line_info_print(self);
 }
 
 void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)
@@ -399,46 +435,43 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
         hst->line_start = hst->line_start->next;
 }
 
-void line_info_onKey(ToxWindow *self, wint_t key)
+bool line_info_onKey(ToxWindow *self, wint_t key)
 {
     struct history *hst = self->chatwin->hst;
+    bool match = true;
 
     switch (key) {
-        case KEY_PPAGE:
+        /* TODO: Find good key bindings for all this stuff */
+        case T_KEY_C_F:
             line_info_page_up(self, hst);
             break;
 
-        case KEY_NPAGE:
+        case T_KEY_C_V:
             line_info_page_down(self, hst);
-            break;
+            break; 
 
-        case KEY_UP:
+        case KEY_PPAGE:
             line_info_scroll_up(hst);
             break;
 
-        case KEY_DOWN:
+        case KEY_NPAGE:
             line_info_scroll_down(hst);
             break;
 
-        case KEY_HOME:
+        /* case ?:
             line_info_goto_root(hst);
-            break;
+            break; */
 
-        case KEY_END:
-            line_info_reset_start(hst);
+        case T_KEY_C_H:
+            line_info_reset_start(self, hst);
+            break; 
+
+        default:
+            match = false;
             break;
     }
-}
 
-void line_info_onDraw(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    wattron(ctx->linewin, A_BOLD | COLOR_PAIR(BLUE));
-    mvwprintw(ctx->linewin, 1, 0, "Scroll mode:\n");
-    wattroff(ctx->linewin, A_BOLD | COLOR_PAIR(BLUE));
-    mvwprintw(ctx->linewin, 1, 13, "Use up/down arrows, page up/page down, and home/end to navigate.\n"
-              "             ESC to exit.\n");
+    return match;
 }
 
 void line_info_clear(struct history *hst)

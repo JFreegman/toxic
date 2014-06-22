@@ -20,6 +20,12 @@
  *
  */
 
+#ifndef _global_commands_h
+#define _global_commands_h
+
+#include "windows.h"
+#include "toxic.h"
+
 void cmd_accept(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_add(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_clear(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
@@ -33,7 +39,11 @@ void cmd_prompt_help(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_ST
 void cmd_quit(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_status(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 
+void cmd_add_helper(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *msg);
+
 #ifdef _SUPPORT_AUDIO
 void cmd_list_devices(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_change_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 #endif /* _SUPPORT_AUDIO */
+
+#endif /* #define _global_commands_h */

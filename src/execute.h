@@ -20,11 +20,17 @@
  *
  */
 
+#ifndef _execute_h
+#define _execute_h
+
+#include "toxic.h"
+#include "windows.h"
+
 #define MAX_NUM_ARGS 4     /* Includes command */
 
 #ifdef _SUPPORT_AUDIO
 #define GLOBAL_NUM_COMMANDS 16
-#define CHAT_NUM_COMMANDS 11
+#define CHAT_NUM_COMMANDS 13
 #else
 #define GLOBAL_NUM_COMMANDS 14
 #define CHAT_NUM_COMMANDS 5
@@ -37,3 +43,5 @@ enum {
 };
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode);
+
+#endif /* #define _execute_h */

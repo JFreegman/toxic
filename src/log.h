@@ -20,6 +20,9 @@
  *
  */
 
+#ifndef _log_h
+#define _log_h
+
 #define LOG_FLUSH_LIMIT 2  /* limits calls to fflush(logfile) to a max of one per LOG_FLUSH_LIMIT seconds */
 
 struct chatlog {
@@ -40,3 +43,5 @@ void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log);
 
 /* disables logging for specified log and closes file */
 void log_disable(struct chatlog *log);
+
+#endif /* #define _log_h */

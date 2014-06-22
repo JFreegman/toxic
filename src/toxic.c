@@ -39,31 +39,24 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
-#include <assert.h>
-
-#ifdef _WIN32
-#include <direct.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
+#include <getopt.h>
 #include <netdb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#endif
 
 #include <tox/tox.h>
 
 #include "configdir.h"
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
 #include "file_senders.h"
 #include "line_info.h"
 #include "settings.h"
-#include "global_commands.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -81,30 +74,64 @@ ToxAv *av;
 char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
-static int f_loadfromfile;    /* 1 if we want to load from/save the data file, 0 otherwise */
+struct arg_opts {
+    int ignore_data_file;
+    int use_ipv4;
+    char config_path[MAX_STR_SIZE];
+    char nodes_path[MAX_STR_SIZE];
+} arg_opts;
 
 struct _Winthread Winthread;
 struct user_settings *user_settings = NULL;
 
-void on_window_resize(int sig)
+static void ignore_SIGINT(int sig)
 {
-    refresh();
-    clear();
+    return;
+}
+
+void exit_toxic_success(Tox *m)
+{
+    store_data(m, DATA_FILE);
+    close_all_file_senders();
+    kill_all_windows();
+    log_disable(prompt->chatwin->log);
+    line_info_cleanup(prompt->chatwin->hst);
+    free(DATA_FILE);
+    free(prompt->stb);
+    free(prompt->chatwin->log);
+    free(prompt->chatwin->hst);
+    free(prompt->chatwin);
+    free(user_settings);
+#ifdef _SUPPORT_AUDIO
+    terminate_audio();
+#endif /* _SUPPORT_AUDIO */
+    tox_kill(m);
+    endwin();
+    fprintf(stderr, "Toxic session ended gracefully.\n");
+    exit(EXIT_SUCCESS);
+}
+
+void exit_toxic_err(const char *errmsg, int errcode)
+{
+    if (errmsg == NULL)
+        errmsg = "No error message";
+
+    endwin();
+    fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
+    exit(EXIT_FAILURE);
 }
 
 static void init_term(void)
 {
-    /* Setup terminal */
     signal(SIGWINCH, on_window_resize);
+
 #if HAVE_WIDECHAR
 
-    if (setlocale(LC_ALL, "") == NULL) {
-        fprintf(stderr, "Could not set your locale, plese check your locale settings or"
-                "disable wide char support\n");
-        exit(EXIT_FAILURE);
-    }
-
+    if (setlocale(LC_ALL, "") == NULL)
+        exit_toxic_err("Could not set your locale, please check your locale settings or"
+                       "disable wide char support", FATALERR_LOCALE_SET);
 #endif
+
     initscr();
     cbreak();
     keypad(stdscr, 1);
@@ -149,6 +176,9 @@ static Tox *init_tox(int ipv4)
         m = tox_new(0);
     }
 
+    if (ipv4)
+        fprintf(stderr, "Forcing IPv4 connection\n");
+
     if (m == NULL)
         return NULL;
 
@@ -170,11 +200,9 @@ static Tox *init_tox(int ipv4)
     tox_callback_file_data(m, on_file_data, NULL);
 
 #ifdef __linux__
-    tox_set_name(m, (uint8_t *) "Cool guy", strlen("Cool guy"));
+    tox_set_name(m, (uint8_t *) "Cool dude", strlen("Cool dude"));
 #elif defined(__FreeBSD__)
-    tox_set_name(m, (uint8_t *) "Very cool guy", strlen("Very cool guy"));
-#elif defined(_WIN32)
-    tox_set_name(m, (uint8_t *) "I should buy a Mac", strlen("I should install buy a Mac"));
+    tox_set_name(m, (uint8_t *) "Nerd", strlen("Nerd"));
 #elif defined(__APPLE__)
     tox_set_name(m, (uint8_t *) "Hipster", strlen("Hipster")); /* This used to users of other Unixes are hipsters */
 #else
@@ -189,10 +217,12 @@ static Tox *init_tox(int ipv4)
 #define MAXNODES 50
 #define NODELEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
 
-static int  linecnt = 0;
-static char nodes[MAXNODES][NODELEN];
-static uint16_t ports[MAXNODES];
-static uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+static struct _toxNodes {
+    int lines;
+    char nodes[MAXNODES][NODELEN];
+    uint16_t ports[MAXNODES];
+    uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+} toxNodes;
 
 static int nodelist_load(char *filename)
 {
@@ -206,29 +236,29 @@ static int nodelist_load(char *filename)
 
     char line[MAXLINE];
 
-    while (fgets(line, sizeof(line), fp) && linecnt < MAXNODES) {
+    while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
         if (strlen(line) > MINLINE) {
-            char *name = strtok(line, " ");
-            char *port = strtok(NULL, " ");
-            char *key_ascii = strtok(NULL, " ");
+            const char *name = strtok(line, " ");
+            const char *port = strtok(NULL, " ");
+            const char *key_ascii = strtok(NULL, " ");
 
             /* invalid line */
             if (name == NULL || port == NULL || key_ascii == NULL)
                 continue;
 
-            strncpy(nodes[linecnt], name, NODELEN);
-            nodes[linecnt][NODELEN - 1] = 0;
-            ports[linecnt] = htons(atoi(port));
+            snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
+            toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
+            toxNodes.ports[toxNodes.lines] = htons(atoi(port));
 
             uint8_t *key_binary = hex_string_to_bin(key_ascii);
-            memcpy(keys[linecnt], key_binary, TOX_CLIENT_ID_SIZE);
+            memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);
             free(key_binary);
 
-            linecnt++;
+            toxNodes.lines++;
         }
     }
 
-    if (linecnt < 1) {
+    if (toxNodes.lines < 1) {
         fclose(fp);
         return 2;
     }
@@ -239,8 +269,8 @@ static int nodelist_load(char *filename)
 
 int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap_from_address(m, nodes[line], TOX_ENABLE_IPV6_DEFAULT,
-                                      ports[line], keys[line]);
+    return tox_bootstrap_from_address(m, toxNodes.nodes[line], TOX_ENABLE_IPV6_DEFAULT,
+                                      toxNodes.ports[line], toxNodes.keys[line]);
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
@@ -257,8 +287,8 @@ static bool srvlist_loaded = false;
 
 int init_connection(Tox *m)
 {
-    if (linecnt > 0) /* already loaded nodelist */
-        return init_connection_helper(m, rand() % linecnt) ? 0 : 3;
+    if (toxNodes.lines > 0) /* already loaded nodelist */
+        return init_connection_helper(m, rand() % toxNodes.lines) ? 0 : 3;
 
     /* only once:
      * - load the nodelist
@@ -266,17 +296,22 @@ int init_connection(Tox *m)
      */
     if (!srvlist_loaded) {
         srvlist_loaded = true;
-        int res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
+        int res;
 
-        if (linecnt < 1)
+        if (!arg_opts.nodes_path[0])
+            res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
+        else
+            res = nodelist_load(arg_opts.nodes_path);
+
+        if (toxNodes.lines < 1)
             return res;
 
         res = 3;
         int i;
-        int n = MIN(NUM_INIT_NODES, linecnt);
+        int n = MIN(NUM_INIT_NODES, toxNodes.lines);
 
         for (i = 0; i < n; ++i) {
-            if (init_connection_helper(m, rand() % linecnt))
+            if (init_connection_helper(m, rand() % toxNodes.lines))
                 res = 0;
         }
 
@@ -287,30 +322,37 @@ int init_connection(Tox *m)
     return 4;
 }
 
+#define TRY_CONNECT 10
+
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
     uint8_t msg[MAX_STR_SIZE] = {0};
 
-    static int conn_try = 0;
     static int conn_err = 0;
-    static bool dht_on = false;
-
+    static bool was_connected = false;
+    static uint64_t last_conn_try = 0;
+    uint64_t curtime = get_unix_time();
     bool is_connected = tox_isconnected(m);
 
-    if (!dht_on && !is_connected && !(conn_try++ % 100)) {
-        if (!conn_err) {
-            if ((conn_err = init_connection(m))) {
-                snprintf(msg, sizeof(msg), "\nAuto-connect failed with error code %d", conn_err);
-            }
-        }
-    } else if (!dht_on && is_connected) {
-        dht_on = true;
-        prompt_update_connectionstatus(prompt, dht_on);
+    if (was_connected && is_connected)
+        return;
+
+    if (!was_connected && is_connected) {
+        was_connected = true;
+        prompt_update_connectionstatus(prompt, was_connected);
         snprintf(msg, sizeof(msg), "DHT connected.");
-    } else if (dht_on && !is_connected) {
-        dht_on = false;
-        prompt_update_connectionstatus(prompt, dht_on);
-        snprintf(msg, sizeof(msg), "\nDHT disconnected. Attempting to reconnect.");
+    } else if (was_connected && !is_connected) {
+        was_connected = false;
+        prompt_update_connectionstatus(prompt, was_connected);
+        snprintf(msg, sizeof(msg), "DHT disconnected. Attempting to reconnect.");
+    } else if (!was_connected && !is_connected && timed_out(last_conn_try, curtime, TRY_CONNECT)) {
+        /* if autoconnect has already failed there's no point in trying again */
+        if (conn_err == 0) {
+            last_conn_try = curtime;
+
+            if ((conn_err = init_connection(m)) != 0)
+                snprintf(msg, sizeof(msg), "Auto-connect failed with error code %d", conn_err);
+        }
     }
 
     if (msg[0])
@@ -336,7 +378,7 @@ static void load_friendlist(Tox *m)
  */
 int store_data(Tox *m, char *path)
 {
-    if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
+    if (arg_opts.ignore_data_file)
         return 0;
 
     if (path == NULL)
@@ -374,7 +416,7 @@ int store_data(Tox *m, char *path)
 
 static void load_data(Tox *m, char *path)
 {
-    if (f_loadfromfile == 0) /*If file loading/saving is disabled*/
+    if (arg_opts.ignore_data_file)
         return;
 
     FILE *fd;
@@ -390,17 +432,13 @@ static void load_data(Tox *m, char *path)
 
         if (buf == NULL) {
             fclose(fd);
-            endwin();
-            fprintf(stderr, "malloc() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
+            exit_toxic_err("failed in load_data", FATALERR_MEMORY);
         }
 
         if (fread(buf, len, 1, fd) != 1) {
             free(buf);
             fclose(fd);
-            endwin();
-            fprintf(stderr, "fread() failed. Aborting...\n");
-            exit(EXIT_FAILURE);
+            exit_toxic_err("failed in load_data", FATALERR_FREAD);
         }
 
         tox_load(m, buf, len);
@@ -411,33 +449,9 @@ static void load_data(Tox *m, char *path)
     } else {
         int st;
 
-        if ((st = store_data(m, path)) != 0) {
-            endwin();
-            fprintf(stderr, "Store messenger failed with return code: %d\n", st);
-            exit(EXIT_FAILURE);
-        }
+        if ((st = store_data(m, path)) != 0)
+            exit_toxic_err("failed in load_data", FATALERR_STORE_DATA);
     }
-}
-
-void exit_toxic(Tox *m)
-{
-    store_data(m, DATA_FILE);
-    close_all_file_senders();
-    kill_all_windows();
-    log_disable(prompt->chatwin->log);
-    line_info_cleanup(prompt->chatwin->hst);
-    free(DATA_FILE);
-    free(prompt->stb);
-    free(prompt->chatwin->log);
-    free(prompt->chatwin->hst);
-    free(prompt->chatwin);
-    free(user_settings);
-    tox_kill(m);
-#ifdef _SUPPORT_AUDIO
-    terminate_audio();
-#endif /* _SUPPORT_AUDIO */
-    endwin();
-    exit(EXIT_SUCCESS);
 }
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
@@ -446,9 +460,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
 
     do_connection(m, prompt);
     do_file_senders(m);
-
-    /* main tox-core loop */
-    tox_do(m);
+    tox_do(m);    /* main tox-core loop */
 
     pthread_mutex_unlock(&Winthread.lock);
 }
@@ -457,72 +469,86 @@ void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
 
-    while (true)
+    while (true) {
         draw_active_window(m);
+        refresh_inactive_windows();
+    }
 }
 
-int exit_print(char* exe_name, char* invalid_arg, char* error_str)
+static void print_usage(void)
 {
-    const char* help_str = 
-    "usage: \n"
-    " -f <path> tox protocol data file path \n"
-    " -s <path> custom settings path \n"
-    " -n don't load from data file (create new profile) \n"
-    " -h print this help \n"
-    " -4 force ipv4 \n";
-    
-    if (!error_str && !invalid_arg) {
-        printf("%s %s", exe_name, help_str);
-        return 0;
-    } else if (invalid_arg) {
-        fprintf(stderr, "%s invalid arg: %s", exe_name, invalid_arg);
-        return 1;
-    } else if (error_str) {
-        fprintf(stderr, "%s error: %s", exe_name, error_str);
-        return 1;
+    fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
+    fprintf(stderr, "  -f, --file           Use specified data file\n");
+    fprintf(stderr, "  -x, --nodata         Ignore data file\n");
+    fprintf(stderr, "  -4, --ipv4           Force IPv4 connection\n");
+    fprintf(stderr, "  -c, --config         Use specified config file\n");
+    fprintf(stderr, "  -n, --nodes          Use specified DHTnodes file\n");
+    fprintf(stderr, "  -h, --help           Show this message and exit\n");
+}
+
+static void set_default_opts(void)
+{
+    arg_opts.use_ipv4 = 0;
+    arg_opts.ignore_data_file = 0;
+}
+
+static void parse_args(int argc, char *argv[])
+{
+    set_default_opts();
+
+    static struct option long_opts[] = {
+        {"file", required_argument, 0, 'f'},
+        {"nodata", no_argument, 0, 'x'},
+        {"ipv4", no_argument, 0, '4'},
+        {"config", required_argument, 0, 'c'},
+        {"nodes", required_argument, 0, 'n'},
+        {"help", no_argument, 0, 'h'},
+    };
+
+    const char *opts_str = "4xf:c:n:h";
+    int opt, indexptr;
+
+    while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
+        switch (opt) {
+            case 'f':
+                DATA_FILE = strdup(optarg);
+                break;
+
+            case 'x':
+                arg_opts.ignore_data_file = 1;
+                break;
+
+            case '4':
+                arg_opts.use_ipv4 = 1;
+                break;
+
+            case 'c':
+                snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
+                break;
+
+            case 'n':
+                snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
+                break;
+
+            case 'h':
+            default:
+                print_usage();
+                exit(EXIT_SUCCESS);
+        }
     }
 }
 
 int main(int argc, char *argv[])
 {
-    char *user_config_dir = get_user_config_dir(), *settings_path = NULL;
+    char *user_config_dir = get_user_config_dir();
     int config_err = 0;
 
-    f_loadfromfile = 1;
-    int i = 0;
-    int f_use_ipv4 = 0;
+    parse_args(argc, argv);
 
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-    for (i = 1; i < argc; ++i) {
-        if (argv[i][0] == '-') {
-            if (argv[i][1] == 'f') {
-                ++i;
-                if (i < argc)
-                    DATA_FILE = strdup(argv[i]);
-                else
-                    return exit_print(argv[0], NULL, "argument 'f' requires value");
-                    
-            } else if (argv[i][1] == 'n') {
-                f_loadfromfile = 0;
-            } else if (argv[i][1] == 'h') {
-                return exit_print(argv[0], NULL, NULL);
-            } else if (argv[i][1] == '4') {
-                f_use_ipv4 = 1;
-            } else if (argv[i][1] == 's') {
-                ++i;
-                if (i < argc)
-                    settings_path = argv[i];
-                else
-                    return exit_print(argv[0], NULL, "argument 's' requires value");
-            } else {
-                return exit_print(argv[0], argv[i]+1, NULL); /* Invalid arg */
-            }
-        } else {
-            return exit_print(argv[0], argv[i], NULL); /* Invalid value/arg */
-        }
-    }
+    signal(SIGINT, ignore_SIGINT);
 
     config_err = create_user_config_dir(user_config_dir);
 
@@ -532,15 +558,12 @@ int main(int argc, char *argv[])
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
 
-            if (DATA_FILE != NULL) {
-                strcpy(DATA_FILE, user_config_dir);
-                strcat(DATA_FILE, CONFIGDIR);
-                strcat(DATA_FILE, "data");
-            } else {
-                endwin();
-                fprintf(stderr, "malloc() failed. Aborting...\n");
-                exit(EXIT_FAILURE);
-            }
+            if (DATA_FILE == NULL)
+                exit_toxic_err("failed in main", FATALERR_MEMORY);
+
+            strcpy(DATA_FILE, user_config_dir);
+            strcat(DATA_FILE, CONFIGDIR);
+            strcat(DATA_FILE, "data");
         }
     }
 
@@ -549,41 +572,32 @@ int main(int argc, char *argv[])
     /* init user_settings struct and load settings from conf file */
     user_settings = malloc(sizeof(struct user_settings));
 
-    if (user_settings == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (user_settings == NULL)
+        exit_toxic_err("failed in main", FATALERR_MEMORY);
 
     memset(user_settings, 0, sizeof(struct user_settings));
-    int settings_err = settings_load(user_settings, settings_path);
 
-    Tox *m = init_tox(f_use_ipv4);
+    char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
+    int settings_err = settings_load(user_settings, p);
+
+    Tox *m = init_tox(arg_opts.use_ipv4);
     init_term();
 
-    if (m == NULL) {
-        endwin();
-        fprintf(stderr, "Failed to initialize network. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (m == NULL)
+        exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
 
-    if (f_loadfromfile)
+    if (!arg_opts.ignore_data_file)
         load_data(m, DATA_FILE);
 
     prompt = init_windows(m);
 
     /* create new thread for ncurses stuff */
-    if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
-        endwin();
-        fprintf(stderr, "Mutex init failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
+        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
 
-    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0) {
-        endwin();
-        fprintf(stderr, "Thread creation failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+        
 
     uint8_t *msg;
 
@@ -591,18 +605,10 @@ int main(int argc, char *argv[])
 
     av = init_audio(prompt, m);
     
-//     device_set(prompt, input, user_settings->audio_in_dev);
-//     device_set(prompt, output, user_settings->audio_out_dev);
     
     set_primary_device(input, user_settings->audio_in_dev);
     set_primary_device(output, user_settings->audio_out_dev);
     
-    char* string = malloc(1000);
-    sprintf(string, "i:%d o:%d", user_settings->audio_in_dev, user_settings->audio_out_dev);
-    
-    line_info_add(prompt, NULL, NULL, NULL, string, SYS_MSG, 0, 0);
-    cmd_myid(NULL, prompt, m, 0, NULL);
-
 #endif /* _SUPPORT_AUDIO */
 
     if (config_err) {

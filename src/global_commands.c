@@ -27,11 +27,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "misc_tools.h"
 #include "friendlist.h"
 #include "log.h"
 #include "line_info.h"
+#include "dns.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -88,6 +90,49 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
+void cmd_add_helper(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *msg)
+{
+    uint8_t *errmsg;
+    int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
+
+    switch (f_num) {
+        case TOX_FAERR_TOOLONG:
+            errmsg = "Message is too long.";
+            break;
+
+        case TOX_FAERR_NOMESSAGE:
+            errmsg = "Please add a message to your request.";
+            break;
+
+        case TOX_FAERR_OWNKEY:
+            errmsg = "That appears to be your own ID.";
+            break;
+
+        case TOX_FAERR_ALREADYSENT:
+            errmsg = "Friend request has already been sent.";
+            break;
+
+        case TOX_FAERR_UNKNOWN:
+            errmsg = "Undefined error when adding friend.";
+            break;
+
+        case TOX_FAERR_BADCHECKSUM:
+            errmsg = "Bad checksum in address.";
+            break;
+
+        case TOX_FAERR_SETNEWNOSPAM:
+            errmsg = "Nospam was different.";
+            break;
+
+        default:
+            errmsg = "Friend request sent.";
+            on_friendadded(m, f_num, true);
+            break;
+    }
+
+    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+}
+
 void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     uint8_t *errmsg;
@@ -119,73 +164,33 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 
-    if (strlen(id) != 2 * TOX_FRIEND_ADDRESS_SIZE) {
-        errmsg = "Invalid ID length.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-        return;
-    }
+    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE] = {0};
+    uint16_t id_len = strlen(id);
 
-    size_t i;
-    char xx[3];
-    uint32_t x;
-    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
+    /* try to add tox ID */
+    if (id_len == 2 * TOX_FRIEND_ADDRESS_SIZE) {
+        size_t i;
+        char xx[3];
+        uint32_t x;
 
-    for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
-        xx[0] = id[2 * i];
-        xx[1] = id[2 * i + 1];
-        xx[2] = '\0';
+        for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
+            xx[0] = id[2 * i];
+            xx[1] = id[2 * i + 1];
+            xx[2] = '\0';
 
-        if (sscanf(xx, "%02x", &x) != 1) {
-            errmsg = "Invalid ID.";
-            line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
-            return;
+            if (sscanf(xx, "%02x", &x) != 1) {
+                errmsg = "Invalid ID.";
+                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+                return;
+            }
+
+            id_bin[i] = x;
         }
 
-        id_bin[i] = x;
+        cmd_add_helper(self, m, id_bin, msg);
+    } else {    /* assume id is a username@domain address and do DNS lookup */
+        dns3_lookup(self, m, id_bin, id, msg);
     }
-
-    for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; i++) {
-        id[i] = toupper(id[i]);
-    }
-
-    int32_t f_num = tox_add_friend(m, id_bin, msg, strlen(msg));
-
-    switch (f_num) {
-        case TOX_FAERR_TOOLONG:
-            errmsg = "Message is too long.";
-            break;
-
-        case TOX_FAERR_NOMESSAGE:
-            errmsg = "Please add a message to your request.";
-            break;
-
-        case TOX_FAERR_OWNKEY:
-            errmsg = "That appears to be your own ID.";
-            break;
-
-        case TOX_FAERR_ALREADYSENT:
-            errmsg = "Friend request has already been sent.";
-            break;
-
-        case TOX_FAERR_UNKNOWN:
-            errmsg = "Undefined error when adding friend.";
-            break;
-
-        case TOX_FAERR_BADCHECKSUM:
-            errmsg = "Bad checksum in address.";
-            break;
-
-        case TOX_FAERR_SETNEWNOSPAM:
-            errmsg = "Nospam was different (is this contact already added?";
-            break;
-
-        default:
-            errmsg = "Friend request sent.";
-            on_friendadded(m, f_num, true);
-            break;
-    }
-
-    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
 }
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -422,16 +427,18 @@ void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Argument messages must be enclosed in quotation marks.\n"
-          " * Use ctrl-o and ctrl-p to navigate through the tabs.\n";
+    msg = " * Argument messages must be enclosed in quotation marks.";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    msg = " * Use ctrl-o and ctrl-p to navigate through the tabs.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
 
     hst->line_start = start;
 }
 
 void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    exit_toxic(m);
+    exit_toxic_success(m);
 }
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -454,20 +461,16 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     char *status = argv[1];
+    str_to_lower(status);
     int len = strlen(status);
-    char l_status[len + 1];
-    int i;
-
-    for (i = 0; i <= len; ++i)
-        l_status[i] = tolower(status[i]);
 
     TOX_USERSTATUS status_kind;
 
-    if (!strcmp(l_status, "online"))
+    if (!strcmp(status, "online"))
         status_kind = TOX_USERSTATUS_NONE;
-    else if (!strcmp(l_status, "away"))
+    else if (!strcmp(status, "away"))
         status_kind = TOX_USERSTATUS_AWAY;
-    else if (!strcmp(l_status, "busy"))
+    else if (!strcmp(status, "busy"))
         status_kind = TOX_USERSTATUS_BUSY;
     else {
         errmsg = "Invalid status. Valid statuses are: online, busy and away.";

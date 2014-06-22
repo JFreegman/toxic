@@ -1,4 +1,4 @@
-/*  toxic_windows.h
+/*  windows.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -23,11 +23,6 @@
 #ifndef _windows_h
 #define _windows_h
 
-#ifndef TOXICVER
-#define TOXICVER "NOVER_"    /* Use the -D flag to set this */
-#endif
-
-#include <curses.h>
 #include <pthread.h>
 #include <wctype.h>
 #include <wchar.h>
@@ -38,31 +33,11 @@
 #include <tox/toxav.h>
 #endif /* _SUPPORT_AUDIO */
 
-#define UNKNOWN_NAME "Anonymous"
+#include "toxic.h"
 
 #define MAX_WINDOWS_NUM 32
-#define MAX_FRIENDS_NUM 100
-#define MAX_STR_SIZE 256
-#define MAX_CMDNAME_SIZE 64
-#define KEY_SIZE_BYTES 32
-#define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
-#define N_DEFAULT_WINS 2    /* number of permanent default windows */
-#define CURS_Y_OFFSET 3    /* y-axis cursor offset for chat contexts */
-#define CHATBOX_HEIGHT 4
-#define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
-#define TIME_STR_SIZE 16
-
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
-
-/* ASCII key codes */
-#define T_KEY_KILL       0xB      /* ctrl-k */
-#define T_KEY_DISCARD    0x15     /* ctrl-u */
-#define T_KEY_NEXT       0x10     /* ctrl-p */
-#define T_KEY_PREV       0x0F     /* ctrl-o */
-#define T_KEY_C_E        0x05     /* ctrl-e */
-#define T_KEY_C_A        0x01     /* ctrl-a */
-#define T_KEY_ESC        0x1B     /* ESC key */
+#define CURS_Y_OFFSET 1    /* y-axis cursor offset for chat contexts */
+#define CHATBOX_HEIGHT 2
 
 /* Curses foreground colours (background is black) */
 enum {
@@ -74,23 +49,23 @@ enum {
     YELLOW,
     MAGENTA,
     BLACK,
-};
+} C_COLOURS;
 
 /* tab alert types: lower types take priority */
 enum {
     WINDOW_ALERT_0,
     WINDOW_ALERT_1,
     WINDOW_ALERT_2,
-};
-
-enum {
-    MOVE_UP,
-    MOVE_DOWN,
-};
+} WINDOW_ALERTS;
 
 /* Fixes text color problem on some terminals.
    Uncomment if necessary */
 /* #define URXVT_FIX */
+
+struct _Winthread {
+    pthread_t tid;
+    pthread_mutex_t lock;
+};
 
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
@@ -101,7 +76,7 @@ struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
-    void(*onFriendRequest)(ToxWindow *, Tox *, uint8_t *, uint8_t *, uint16_t);
+    void(*onFriendRequest)(ToxWindow *, Tox *, const uint8_t *, const uint8_t *, uint16_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, int32_t, bool);
     void(*onConnectionChange)(ToxWindow *, Tox *, int32_t, uint8_t);
     void(*onMessage)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
@@ -176,6 +151,7 @@ struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     size_t pos;
     size_t len;
+    size_t start;    /* the position to start printing line at */
 
     wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];  /* history for input lines/commands */
     int hst_pos;
@@ -195,67 +171,13 @@ struct ChatContext {
     int orig_y;        /* y axis point of line origin */
 };
 
-/* Start file transfer code */
-
-#define MAX_FILES 256
-#define FILE_PIECE_SIZE 1024
-#define TIMEOUT_FILESENDER 300
-
-typedef struct {
-    FILE *file;
-    ToxWindow *toxwin;
-    int32_t friendnum;
-    bool active;
-    int filenum;
-    uint8_t nextpiece[FILE_PIECE_SIZE];
-    uint16_t piecelen;
-    uint8_t pathname[MAX_STR_SIZE];
-    uint64_t timestamp;
-    uint64_t size;
-    uint32_t line_id;
-} FileSender;
-
-struct FileReceiver {
-    uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
-    FILE *files[MAX_FILES];
-    bool pending[MAX_FILES];
-    uint64_t size[MAX_FILES];
-    uint32_t line_id;
-};
-
-/* End file transfer code */
-
-struct _Winthread {
-    pthread_t tid;
-    pthread_mutex_t lock;
-};
-
-void on_request(Tox *m, uint8_t *public_key, uint8_t *data, uint16_t length, void *userdata);
-void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
-void on_message(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_action(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_nickchange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
-void on_statusmessagechange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_friendadded(Tox *m, int32_t friendnumber, bool sort);
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
-void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t *group_pub_key, void *userdata);
-void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname,
-                         uint16_t pathname_length, void *userdata);
-void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type,
-                     uint8_t *data, uint16_t length, void *userdata);
-void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
-void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
-
 ToxWindow *init_windows(Tox *m);
 void draw_active_window(Tox *m);
 int add_window(Tox *m, ToxWindow w);
 void del_window(ToxWindow *w);
 void set_active_window(int ch);
 int get_num_active_windows(void);
+void kill_all_windows(void);    /* should only be called on shutdown */
+void on_window_resize(int sig);
 
-/* cleans up all chat and groupchat windows (should only be called on shutdown) */
-void kill_all_windows(void);
-#endif
+#endif  /* #define _windows_h */

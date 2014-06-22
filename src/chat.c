@@ -28,7 +28,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "execute.h"
 #include "misc_tools.h"
 #include "friendlist.h"
@@ -51,7 +52,7 @@ extern struct _Winthread Winthread;
 extern struct user_settings *user_settings;
 
 #ifdef _SUPPORT_AUDIO
-#define AC_NUM_CHAT_COMMANDS 24
+#define AC_NUM_CHAT_COMMANDS 26
 #else
 #define AC_NUM_CHAT_COMMANDS 18
 #endif /* _SUPPORT_AUDIO */
@@ -85,6 +86,8 @@ static const uint8_t chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/reject"     },
     { "/hangup"     },
     { "/sdev"       },
+    { "/mute"       },
+    { "/sense"      },
 
 #endif /* _SUPPORT_AUDIO */
 };
@@ -215,8 +218,11 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, uint8_t *st
         return;
 
     StatusBar *statusbar = self->stb;
+
+    status[len] = '\0';
+    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", status);
+    len = strlen(statusbar->statusmsg);
     statusbar->statusmsg_len = len;
-    strcpy(statusbar->statusmsg, status);
     statusbar->statusmsg[len] = '\0';
 }
 
@@ -226,15 +232,21 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     if (self->num != num)
         return;
 
-    uint8_t msg[MAX_STR_SIZE];
+    uint8_t msg[MAX_STR_SIZE * 2];
     uint8_t *errmsg;
 
     pathname[path_len] = '\0';
 
-    uint8_t filename[MAX_STR_SIZE];
-    get_file_name(pathname, filename);
 
-    snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename,
+    /* holds the filename appended to the user specified path */
+    uint8_t filename_path[MAX_STR_SIZE] = {0};
+
+    /* holds the lone filename */
+    uint8_t filename_nopath[MAX_STR_SIZE];
+    get_file_name(filename_nopath, pathname);
+    int len = strlen(filename_nopath);
+
+    snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename_nopath,
              (long long unsigned int)filesize);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
@@ -244,17 +256,42 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         return;
     }
 
+    /* use specified path in config if possible */
+    if (user_settings->download_path[0]) {
+        snprintf(filename_path, sizeof(filename_path), "%s%s", user_settings->download_path, filename_nopath);
+        len += strlen(user_settings->download_path);
+    }
+
+    if (len >= sizeof(friends[num].file_receiver.filenames[filenum])) {
+        errmsg = "File name too long; discarding.";
+        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        return;
+    }
+
+    uint8_t filename[MAX_STR_SIZE];
+
+    if (filename_path[0])
+        strcpy(filename, filename_path);
+    else
+        strcpy(filename, filename_nopath);
+
     /* Append a number to duplicate file names */
     FILE *filecheck = NULL;
     int count = 1;
-    int len = strlen(filename);
 
     while ((filecheck = fopen(filename, "r"))) {
         filename[len] = '\0';
         char d[9];
         sprintf(d, "(%d)", count++);
+        int d_len = strlen(d);
+
+        if (len + d_len >= sizeof(filename)) {
+            len -= d_len;
+            filename[len] = '\0';
+        }
+
         strcat(filename, d);
-        filename[len + strlen(d)] = '\0';
+        filename[len + d_len] = '\0';
 
         if (count > 999) {
             errmsg = "Error saving file to disk.";
@@ -291,21 +328,28 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     const uint8_t *filename;
     uint8_t msg[MAX_STR_SIZE] = {0};
+    int i;   /* file_sender index */
 
-    if (receive_send == 0)
+    if (receive_send == 0) {
         filename = friends[num].file_receiver.filenames[filenum];
-    else
-        filename = file_senders[filenum].pathname;
+    } else {
+        for (i = 0; i < MAX_FILES; ++i) {
+            if (file_senders[i].filenum == filenum)
+                break;
+        }
+
+        filename = file_senders[i].pathname;
+    }
 
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
-            snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
-            file_senders[filenum].line_id = self->chatwin->hst->line_end->id + 1;
+            if (receive_send == 1) {
+                snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
+                file_senders[i].line_id = self->chatwin->hst->line_end->id + 1;
+            }
+
             break;
 
-            /*case TOX_FILECONTROL_PAUSE:
-                wprintw(ctx->history, "File transfer for '%s' paused.\n", filename);
-                break; */
         case TOX_FILECONTROL_KILL:
             snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
 
@@ -315,8 +359,11 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             break;
 
         case TOX_FILECONTROL_FINISHED:
-            snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
-            chat_close_file_receiver(num, filenum);
+            if (receive_send == 0) {
+                snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
+                chat_close_file_receiver(num, filenum);
+            }
+
             break;
     }
 
@@ -349,7 +396,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
 
     const uint8_t *name = friends[num].file_receiver.filenames[filenum];
     snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
-    line_info_set(self, friends[num].file_receiver.line_id, msg);
+    line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
 
 }
 
@@ -365,8 +412,9 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
     name[n_len] = '\0';
 
-    snprintf(msg, sizeof(msg), "%s has invited you to a group chat.\n"
-             "Type \"/join\" to join the chat.", name);
+    snprintf(msg, sizeof(msg), "%s has invited you to a group chat.", name);
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    snprintf(msg, sizeof(msg), "Type \"/join\" to join the chat.", name);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
     memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
@@ -509,44 +557,44 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
-    int cur_len = 0;
 
-    if (!ltr && (key == T_KEY_ESC)) {   /* ESC key: Toggle history scroll mode */
-        bool scroll = ctx->hst->scroll_mode ? false : true;
-        line_info_toggle_scroll(self, scroll);
-    }
-
-    /* If we're in scroll mode ignore rest of function */
-    if (ctx->hst->scroll_mode) {
-        line_info_onKey(self, key);
+    if (x2 <= 0)
         return;
-    }
 
-    if (ltr) {
-        /* prevents buffer overflows and strange behaviour when cursor goes past the window */
-        if ( (ctx->len < MAX_STR_SIZE - 1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1) - 1)) ) {
-            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
+    int cur_len = 0;   /* widechar size of current char */
+    int x2_is_odd = x2 % 2 != 0;
 
-            if (x == x2 - 1)
-                wmove(self->window, y + 1, 0);
-            else
+    if (ltr) {   /* char is printable */
+        if (ctx->len < MAX_STR_SIZE - 1) {
+            add_char_to_buf(ctx, key);
+
+            if (x >= x2 - 1) {
+                wmove(self->window, y, x2 / 2 + x2_is_odd);
+                ctx->start += x2 / 2;
+            } else {
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
+            }
         }
 
         if (!ctx->self_is_typing && ctx->line[0] != '/')
             set_typingstatus(self, m, 1);
 
     } else { /* if (!ltr) */
+        if (line_info_onKey(self, key))
+            return;
 
         if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
             if (ctx->pos > 0) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
-                del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
+                del_char_buf_bck(ctx);
 
-                if (x == 0)
-                    wmove(self->window, y - 1, x2 - cur_len);
-                else
+                if (x == 0) {
+                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
+                    int new_x = ctx->start == 0 ? ctx->pos : x2 - cur_len;
+                    wmove(self->window, y, new_x);
+                } else {
                     wmove(self->window, y, x - cur_len);
+                }
             } else {
                 beep();
             }
@@ -554,14 +602,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
             if (ctx->pos != ctx->len)
-                del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+                del_char_buf_frnt(ctx);
             else
                 beep();
         }
 
         else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
             if (ctx->pos > 0) {
-                discard_buf(ctx->line, &ctx->pos, &ctx->len);
+                discard_buf(ctx);
                 wmove(self->window, y2 - CURS_Y_OFFSET, 0);
             } else {
                 beep();
@@ -570,7 +618,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
             if (ctx->pos != ctx->len)
-                kill_buf(ctx->line, &ctx->pos, &ctx->len);
+                kill_buf(ctx);
             else
                 beep();
         }
@@ -578,6 +626,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
             if (ctx->pos > 0) {
                 ctx->pos = 0;
+                ctx->start = 0;
                 wmove(self->window, y2 - CURS_Y_OFFSET, 0);
             }
         }
@@ -585,7 +634,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
             if (ctx->pos != ctx->len) {
                 ctx->pos = ctx->len;
-                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT - 1)*x2)), y2, x2);
+                ctx->start = x2 * (ctx->len / x2);
+                mv_curs_end(self->window, ctx->len, y2, x2);
             }
         }
 
@@ -594,10 +644,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 --ctx->pos;
                 cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
 
-                if (x == 0)
-                    wmove(self->window, y - 1, x2 - cur_len);
-                else
+                if (x == 0) {
+                    wmove(self->window, y, x2 - cur_len);
+                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
+                    ctx->pos = ctx->start + x2 - 1;
+                } else {
                     wmove(self->window, y, x - cur_len);
+                }
             } else {
                 beep();
             }
@@ -605,39 +658,42 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_RIGHT) {
             if (ctx->pos < ctx->len) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                 ++ctx->pos;
 
-                if (x == x2 - 1)
-                    wmove(self->window, y + 1, 0);
-                else
+                if (x == x2 - 1) {
+                    wmove(self->window, y, 0);
+                    ctx->start += x2;
+                    ctx->pos = ctx->start;
+                } else {
+                    cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                     wmove(self->window, y, x + cur_len);
+                }
             } else {
                 beep();
             }
         }
 
         else if (key == KEY_UP) {    /* fetches previous item in history */
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_UP);
+            fetch_hist_item(ctx, MOVE_UP);
+            ctx->start = x2 * (ctx->len / x2);
             mv_curs_end(self->window, ctx->len, y2, x2);
         }
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_DOWN);
+            fetch_hist_item(ctx, MOVE_DOWN);
+            ctx->start = x2 * (ctx->len / x2);
             mv_curs_end(self->window, ctx->len, y2, x2);
         }
 
         else if (key == '\t') {    /* TAB key: completes command */
             if (ctx->len > 1 && ctx->line[0] == '/') {
-                int diff = complete_line(ctx->line, &ctx->pos, &ctx->len, chat_cmd_list, AC_NUM_CHAT_COMMANDS,
-                                         MAX_CMDNAME_SIZE);
+                int diff = complete_line(ctx, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
 
                 if (diff != -1) {
                     if (x + diff > x2 - 1) {
-                        int ofst = (x + diff - 1) - (x2 - 1);
-                        wmove(self->window, y + 1, ofst);
+                        //int ofst = x + diff - x2;
+                        wmove(self->window, y, x + diff);
+                        ctx->start += x2 / 2;
                     } else {
                         wmove(self->window, y, x + diff);
                     }
@@ -651,6 +707,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         /* RETURN key: Execute command or print line */
         else if (key == '\n') {
+            rm_trailing_spaces_buf(ctx);
+
             uint8_t line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
@@ -660,7 +718,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
             if (!string_is_empty(line))
-                add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+                add_line_to_hist(ctx);
 
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
@@ -692,7 +750,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 }
             }
 
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            reset_buf(ctx);
         }
     }
 
@@ -710,21 +768,16 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     line_info_print(self);
     wclear(ctx->linewin);
 
-    if (ctx->hst->scroll_mode) {
-        line_info_onDraw(self);
-    } else {
-        curs_set(1);
-        scrollok(ctx->history, 1);
+    curs_set(1);
 
-        if (ctx->len > 0 && !ctx->hst->scroll_mode) {
-            uint8_t line[MAX_STR_SIZE];
+    if (ctx->len > 0) {
+        uint8_t line[MAX_STR_SIZE];
 
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                reset_buf(ctx->line, &ctx->pos, &ctx->len);
-                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-            } else {
-                mvwprintw(ctx->linewin, 1, 0, "%s", line);
-            }
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            reset_buf(ctx);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            mvwprintw(ctx->linewin, 1, 0, "%s", &line[ctx->start]);
         }
     }
 
@@ -845,17 +898,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     statusbar->topline = subwin(self->window, 2, x2, 0, 0);
     ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
-    scrollok(ctx->history, 1);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
     ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
 
-    if (ctx->log == NULL || ctx->hst == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (ctx->log == NULL || ctx->hst == NULL)
+        exit_toxic_err("failed in chat_onInit", FATALERR_MEMORY);
 
     memset(ctx->hst, 0, sizeof(struct history));
     memset(ctx->log, 0, sizeof(struct chatlog));
@@ -868,6 +917,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
+    scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
@@ -929,9 +979,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
         ret.chatwin = chatwin;
         ret.stb = stb;
     } else {
-        endwin();
-        fprintf(stderr, "calloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
+        exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
     }
 
     ret.num = friendnum;

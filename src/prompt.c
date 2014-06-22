@@ -27,7 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "prompt.h"
 #include "execute.h"
 #include "misc_tools.h"
@@ -74,7 +75,7 @@ void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
-    statusbar->nick_len = len;
+    statusbar->nick_len = strlen(statusbar->nick);
 }
 
 /* Updates own statusmessage in prompt statusbar */
@@ -82,7 +83,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg, uint16_t
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = len;
+    statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 }
 
 /* Updates own status in prompt statusbar */
@@ -101,7 +102,7 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 
 /* Adds friend request to pending friend requests.
    Returns request number on success, -1 if queue is full or other error. */
-static int add_friend_request(uint8_t *public_key)
+static int add_friend_request(const uint8_t *public_key)
 {
     if (num_frnd_requests >= MAX_FRIENDS_NUM)
         return -1;
@@ -130,31 +131,16 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
 
-    /* TODO this is buggy */
-    /* ESC key: Toggle history scroll mode */
-    /*
-    if (key == T_KEY_ESC) {
-        bool scroll = ctx->hst->scroll_mode ? false : true;
-        line_info_toggle_scroll(self, scroll);
-    }
-    */
-
-    /* If we're in scroll mode ignore rest of function */
-    if (ctx->hst->scroll_mode) {
-        line_info_onKey(self, key);
-        return;
-    }
-
     if (ltr) {
         if (ctx->len < (MAX_STR_SIZE - 1)) {
-            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
+            add_char_to_buf(ctx, key);
         }
     } else { /* if (!ltr) */
 
         /* BACKSPACE key: Remove one character from line */
         if (key == 0x107 || key == 0x8 || key == 0x7f) {
             if (ctx->pos > 0) {
-                del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+                del_char_buf_bck(ctx);
                 wmove(ctx->history, y, x - 1);  /* not necessary but fixes a display glitch */
             } else {
                 beep();
@@ -163,7 +149,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
             if (ctx->pos != ctx->len) {
-                del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+                del_char_buf_frnt(ctx);
             } else {
                 beep();
             }
@@ -173,7 +159,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (ctx->pos > 0) {
                 wmove(ctx->history, ctx->orig_y, X_OFST);
                 wclrtobot(ctx->history);
-                discard_buf(ctx->line, &ctx->pos, &ctx->len);
+                discard_buf(ctx);
             } else {
                 beep();
             }
@@ -181,7 +167,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
             if (ctx->len != ctx->pos)
-                kill_buf(ctx->line, &ctx->pos, &ctx->len);
+                kill_buf(ctx);
             else
                 beep();
         }
@@ -212,8 +198,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_UP) {     /* fetches previous item in history */
             wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_UP);
+            fetch_hist_item(ctx, MOVE_UP);
 
             /* adjust line y origin appropriately when window scrolls down */
             if (ctx->at_bottom && ctx->len >= x2 - X_OFST) {
@@ -233,14 +218,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
             wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_DOWN);
+            fetch_hist_item(ctx, MOVE_DOWN);
         }
 
         else if (key == '\t') {    /* TAB key: completes command */
             if (ctx->len > 1 && ctx->line[0] == '/') {
-                if (complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
-                                  MAX_CMDNAME_SIZE) == -1)
+                if (complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE) == -1)
                     beep();
             } else {
                 beep();
@@ -249,6 +232,8 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         /* RETURN key: execute command */
         else if (key == '\n') {
+            rm_trailing_spaces_buf(ctx);
+
             wprintw(ctx->history, "\n");
             uint8_t line[MAX_STR_SIZE] = {0};
 
@@ -256,11 +241,11 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 memset(&line, 0, sizeof(line));
 
             if (!string_is_empty(line))
-                add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+                add_line_to_hist(ctx);
 
             line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
             execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            reset_buf(ctx);
         }
     }
 }
@@ -273,10 +258,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(ctx->history, y, x);
     getmaxyx(ctx->history, y2, x2);
 
-    if (!ctx->hst->scroll_mode) {
-        curs_set(1);
-        scrollok(ctx->history, 1);
-    }
+    curs_set(1);
+    scrollok(ctx->history, 1);
 
     line_info_print(self);
 
@@ -293,7 +276,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         uint8_t line[MAX_STR_SIZE];
 
         if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            reset_buf(ctx);
         else
             mvwprintw(ctx->history, ctx->orig_y, X_OFST, line);
 
@@ -403,10 +386,9 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
     }
 }
 
-static void prompt_onFriendRequest(ToxWindow *self, Tox *m, uint8_t *key, uint8_t *data, uint16_t length)
+static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const uint8_t *key, const uint8_t *data,
+                                   uint16_t length)
 {
-    data[length] = '\0';
-
     ChatContext *ctx = self->chatwin;
 
     uint8_t timefrmt[TIME_STR_SIZE];
@@ -486,11 +468,8 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     ctx->log = malloc(sizeof(struct chatlog));
     ctx->hst = malloc(sizeof(struct history));
 
-    if (ctx->log == NULL || ctx->hst == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (ctx->log == NULL || ctx->hst == NULL)
+        exit_toxic_err("failed in prompt_onInit", FATALERR_MEMORY);
 
     memset(ctx->log, 0, sizeof(struct chatlog));
     memset(ctx->hst, 0, sizeof(struct history));
@@ -526,14 +505,11 @@ ToxWindow new_prompt(void)
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
 
-    if (stb != NULL && chatwin != NULL) {
-        ret.chatwin = chatwin;
-        ret.stb = stb;
-    } else {
-        endwin();
-        fprintf(stderr, "calloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (stb == NULL || chatwin == NULL)
+        exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+
+    ret.chatwin = chatwin;
+    ret.stb = stb;
 
     return ret;
 }

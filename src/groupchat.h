@@ -20,8 +20,15 @@
  *
  */
 
+#ifndef _groupchat_h
+#define _groupchat_h
+
+#include "toxic.h"
+#include "windows.h"
+
 #define SIDEBAR_WIDTH 16
 #define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
+#define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
 
 typedef struct {
     int chatwin;
@@ -37,3 +44,5 @@ typedef struct {
 void kill_groupchat_window(ToxWindow *self);
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
 ToxWindow new_group_chat(Tox *m, int groupnum);
+
+#endif /* #define _groupchat_h */

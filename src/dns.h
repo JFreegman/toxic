@@ -1,4 +1,4 @@
-/*  configdir.h
+/*  dns.c
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,17 +20,13 @@
  *
  */
 
-#ifndef _configdir_h
-#define _configdir_h
+/* Does DNS lookup for addr and puts resulting tox id in id_bin.
+   Return 0 on success, -1 on failure. */
 
-#define CONFIGDIR "/tox/"
+#ifndef _dns_h
+#define _dns_h
 
-#ifndef S_ISDIR
-#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
-#endif
+/* creates new thread for dns3 lookup. Only allows one lookup at a time. */
+void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_t *msg);
 
-char *get_user_config_dir(void);
-
-int create_user_config_dir(char *path);
-
-#endif /* #define _configdir_h */
+#endif /* #define _dns_h */

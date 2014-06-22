@@ -20,10 +20,15 @@
  *
  */
 
+#ifndef _settings_h
+#define _settings_h
+
+#include "toxic.h"
+
 #ifdef _SUPPORT_AUDIO
-    #define NUM_SETTINGS 6
+    #define NUM_SETTINGS 8
 #else
-    #define NUM_SETTINGS 4
+    #define NUM_SETTINGS 6
 #endif /* _SUPPORT_AUDIO */
 
 /* holds user setting values */
@@ -32,11 +37,13 @@ struct user_settings {
     int alerts;            /* boolean */
     int time;              /* 12 or 24 */
     int colour_theme;      /* boolean (0 for default toxic colours) */
-    
+    int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
+    char download_path[MAX_STR_SIZE];
+
 #ifdef _SUPPORT_AUDIO
-    int audio_in_dev;
-    int audio_out_dev;
-#endif /* _SUPPORT_AUDIO */
+    long int audio_in_dev;
+    long int audio_out_dev;
+#endif
 };
 
 enum {
@@ -51,6 +58,10 @@ enum {
 
     NATIVE_COLS = 1,
     DFLT_COLS = 0,
-};
+
+    DFLT_HST_SIZE = 700,
+} settings_values;
 
 int settings_load(struct user_settings *s, char *path);
+
+#endif /* #define _settings_h */

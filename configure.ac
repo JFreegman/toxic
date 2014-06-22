@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.65])
-AC_INIT([toxic], [0.3.3], [https://tox.im/])
+AC_INIT([toxic], [0.4.2], [https://tox.im/])
 AC_CONFIG_AUX_DIR(configure_aux)
-AC_CONFIG_SRCDIR([src/main.c])
+AC_CONFIG_SRCDIR([src/toxic.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.10 -Wall])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -37,7 +37,9 @@ if test -n "$DEPSEARCH"; then
     CFLAGS="$CFLAGS -I$DEPSEARCH/include"
     CPPFLAGS="$CPPFLAGS -I$DEPSEARCH/include"
     LDFLAGS="$LDFLAGS -L$DEPSEARCH/lib"
-    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$DEPSEARCH/lib/pkgconfig
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$DEPSEARCH/lib/pkgconfig:/usr/local/lib/pkgconfig   
+else
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig   
 fi
 
 AC_ARG_WITH(libtoxcore-headers,
@@ -77,10 +79,14 @@ AC_ARG_WITH(libsodium-libs,
 )
 
 WIN32=no
+MACH=no
 AC_CANONICAL_HOST
 case $host_os in
     *mingw*)
         WIN32="yes"
+    ;;
+    darwin*)
+        MACH=yes
     ;;
     *freebsd*)
         LDFLAGS="$LDFLAGS -L/usr/local/lib"
@@ -383,6 +389,15 @@ if test "x$LIBTOXCORE_FOUND" = "xno"; then
     AC_SUBST(LIBTOXCORE_LDFLAGS)
 fi
 
+AC_CHECK_HEADER([resolv.h], [],
+                [
+                    AC_MSG_ERROR([resolv.h header was not found on your system])
+                ])
+
+AC_CHECK_LIB(resolv, __res_init, [],
+             [
+                AC_MSG_ERROR([libresolv library was not found on your system])
+             ])
 
 ####
 #### A/V Stuff
@@ -404,6 +419,8 @@ if test -n "$AV_SEARCH_DIR"; then
     CPPFLAGS="$CPPFLAGS -I$AV_SEARCH_DIR/include"
     LDFLAGS="$LDFLAGS -L$AV_SEARCH_DIR/lib"
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$AV_SEARCH_DIR/lib/pkgconfig
+else
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
 fi
 
 # Check if specified enable
@@ -422,29 +439,46 @@ AC_ARG_ENABLE([av],
 
 if test "x$BUILD_AV" = "xyes"; then
     PKG_CHECK_MODULES([OPENAL], [openal],
-    [        
-        export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
-
-        PKG_CHECK_MODULES([LIBTOXAV], [libtoxav], 
-        [
-            AC_CHECK_HEADER([tox/toxav.h],
-            [
-                # Place define for audio support
-                AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
-                AC_MSG_NOTICE([Building with audio support])
-            ],
-            [
-                AC_MSG_NOTICE([No A/V headers; disabling A/V support])
-                BUILD_AV="no"
-            ],)
-        ], 
-        [
-            AC_MSG_NOTICE([No A/V library; disabling A/V support])
+    [],
+    [
+        if test "x$MACH" = "xyes"; then
+            CFLAGS="$CFLAGS -framework OpenAL"
+            AC_CHECK_HEADER([OpenAL/al.h],
+                [
+                    OPENAL_CFLAGS="-framework OpenAL"
+                    OPENAL_LIBS="-framework OpenAL"
+                    AC_SUBST(OPENAL_CFLAGS)
+                    AC_SUBST(OPENAL_LIBS)
+                ],
+                [
+                    AC_MSG_NOTICE([No openal framework; disabling A/V support])
+                    BUILD_AV="no"
+                ]
+            )
+            CFLAGS="$CFLAGS_SAVE"
+        else
+            AC_MSG_NOTICE([No openal library; disabling A/V support])
             BUILD_AV="no"
-        ])
+        fi
+    ])
+fi
+
+if test "x$BUILD_AV" = "xyes"; then
+    PKG_CHECK_MODULES([LIBTOXAV], [libtoxav],
+    [
+        AC_CHECK_HEADER([tox/toxav.h],
+        [
+            # Place define for audio support
+            AC_DEFINE([_SUPPORT_AUDIO], [], [Is audio supported])
+            AC_MSG_NOTICE([Building with audio support])
+        ],
+        [
+            AC_MSG_NOTICE([No A/V headers; disabling A/V support])
+            BUILD_AV="no"
+        ],)
     ],
     [
-        AC_MSG_NOTICE([No openal library; disabling A/V support])
+        AC_MSG_NOTICE([No A/V library; disabling A/V support])
         BUILD_AV="no"
     ])
 fi
@@ -469,7 +503,7 @@ if test "x$NCURSES_WIDECHAR_SUPPORT" = "xyes"; then
     AC_DEFINE([_XOPEN_SOURCE_EXTENDED], [1],
               [enable X/Open Portability Guide functionality])
 fi
- 
+
 AC_CONFIG_FILES([Makefile
                  misc/Makefile
                  build/Makefile])

@@ -20,7 +20,15 @@
  *
  */
 
-#define MAX_HISTORY 700
+#ifndef _line_info_h
+#define _line_info_h
+
+#include "windows.h"
+#include "toxic.h"
+
+#define MAX_HISTORY 10000
+#define MIN_HISTORY 20
+#define MAX_QUEUE 32
 
 enum {
     SYS_MSG,
@@ -42,6 +50,7 @@ struct line_info {
     uint8_t colour;
     uint32_t id;
     uint16_t len;   /* combined len of all strings */
+    uint8_t newlines;
 
     struct line_info *prev;
     struct line_info *next;
@@ -53,15 +62,12 @@ struct history {
     struct line_info *line_start;   /* the first line we want to start printing at */
     struct line_info *line_end;
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
-    uint32_t line_items;
-    bool scroll_mode;
 
-    /* keeps track of lines added between window refreshes */
-    uint32_t queue;
-    uint32_t queue_lns;
+    struct line_info *queue[MAX_QUEUE];
+    int queue_sz;
 };
 
-/* adds a line to history (also moves line_start and/or line_root forward if necessary) */
+/* creates new line_info line and puts it in the queue */
 void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, uint8_t *msg,
                    uint8_t type, uint8_t bold, uint8_t colour);
 
@@ -71,9 +77,6 @@ void line_info_print(ToxWindow *self);
 /* frees all history lines */
 void line_info_cleanup(struct history *hst);
 
-/* Toggles scroll mode for current window */
-void line_info_toggle_scroll(ToxWindow *self, bool scroll);
-
 /* clears the screen (does not delete anything) */
 void line_info_clear(struct history *hst);
 
@@ -81,5 +84,6 @@ void line_info_clear(struct history *hst);
 void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg);
 
 void line_info_init(struct history *hst);
-void line_info_onKey(ToxWindow *self, wint_t key);
-void line_info_onDraw(ToxWindow *self);
+bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */
+
+#endif /* #define _line_info_h */

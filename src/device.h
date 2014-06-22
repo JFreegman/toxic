@@ -14,7 +14,7 @@
 
 #define MAX_DEVICES 32
 #include <inttypes.h>
-#include "toxic_windows.h"
+#include "windows.h"
 
 #define _True 1
 #define _False 0
@@ -43,8 +43,13 @@ DeviceError init_devices(ToxAv* av);
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
-DeviceError register_device_callback(uint32_t device_idx, DataHandleCallback callback, void* data, _Bool enable_VAD);
+DeviceError register_device_callback(int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, _Bool enable_VAD);
 void* get_device_callback_data(uint32_t device_idx);
+
+/* toggle device mute */
+DeviceError device_mute(DeviceType type, uint32_t device_idx);
+
+DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
 
 DeviceError set_primary_device(DeviceType type, int32_t selection);
 DeviceError open_primary_device(DeviceType type, uint32_t* device_idx);

@@ -28,7 +28,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "toxic_windows.h"
+#include "windows.h"
+#include "toxic.h"
 #include "execute.h"
 #include "misc_tools.h"
 #include "groupchat.h"
@@ -41,7 +42,7 @@
 extern char *DATA_FILE;
 extern int store_data(Tox *m, char *path);
 
-static GroupChat groupchats[MAX_WINDOWS_NUM];
+static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
 
 extern struct user_settings *user_settings;
@@ -51,6 +52,9 @@ extern const uint8_t glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
 {
+    if (groupnum > MAX_GROUPCHAT_NUM)
+        return -1;
+
     int i;
 
     for (i = 0; i <= max_groupchat_index; ++i) {
@@ -146,12 +150,13 @@ static void print_groupchat_help(ToxWindow *self)
     for (i = 0; i < NUMLINES; ++i)
         line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
 
-    msg = " * Use ESC key to toggle history scroll mode";
+    msg = " * Use Page Up/Page Down keys to scroll chat history";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Scroll peer list with the Page Up/Page Down keys.\n";
+    msg = " * Scroll peer list with the ctrl-] and ctrl-[ keys.";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Notice, some friends will be missing names while finding peers\n";
+    msg = " * Notice, some friends will be missing names while finding peers";
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
 
     hst->line_start = start;
 }
@@ -255,15 +260,13 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
     groupchats[gnum].peer_name_lengths = malloc(sizeof(uint16_t) * npeers);
     groupchats[gnum].oldpeer_name_lengths = malloc(sizeof(uint16_t) * npeers);
 
+    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL
+        || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
+        exit_toxic_err("failed in copy_peernames", FATALERR_MEMORY);
+    }
+
     memset(groupchats[gnum].peer_names, 0, sizeof(uint8_t) * npeers * N);
     memset(groupchats[gnum].peer_name_lengths, 0, sizeof(uint16_t) * npeers);
-
-    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].oldpeer_names == NULL
-            || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
 
     uint16_t unknown_len = strlen(UNKNOWN_NAME);
     int i;
@@ -294,8 +297,14 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     if (self->num != groupnum)
         return;
 
+    if (groupnum > max_groupchat_index)
+        return;
+
     groupchats[groupnum].num_peers = tox_group_number_peers(m, groupnum);
     int num_peers = groupchats[groupnum].num_peers;
+
+    if (peernum >= num_peers)
+        return;
 
     /* get old peer name before updating name list */
     uint8_t oldpeername[TOX_MAX_NAME_LENGTH];
@@ -380,40 +389,42 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     int x, y, y2, x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
-    int cur_len = 0;
 
-    if (!ltr && (key == T_KEY_ESC) ) {   /* ESC key: Toggle history scroll mode */
-        bool scroll = ctx->hst->scroll_mode ? false : true;
-        line_info_toggle_scroll(self, scroll);
-    }
-
-    /* If we're in scroll mode ignore rest of function */
-    if (ctx->hst->scroll_mode) {
-        line_info_onKey(self, key);
+    if (x2 <= 0)
         return;
-    }
 
-    if (ltr) {
-        if ( (ctx->len < MAX_STR_SIZE - 1) && (ctx->len < (x2 * (CHATBOX_HEIGHT - 1) - 1)) ) {
-            add_char_to_buf(ctx->line, &ctx->pos, &ctx->len, key);
+    int cur_len = 0;    /* widechar len of current char */
+    int x2_is_odd = x2 % 2 != 0;
 
-            if (x == x2 - 1)
-                wmove(self->window, y + 1, 0);
-            else
+    if (ltr) {    /* char is printable */
+        if (ctx->len < MAX_STR_SIZE - 1) {
+            add_char_to_buf(ctx, key);
+
+            if (x >= x2 - 1) {
+                wmove(self->window, y, x2 / 2 + x2_is_odd);
+                ctx->start += x2 / 2;
+            } else {
                 wmove(self->window, y, x + MAX(1, wcwidth(key)));
+            }
         }
 
     } else { /* if (!ltr) */
 
-        if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key: Remove character behind pos */
-            if (ctx->pos > 0) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
-                del_char_buf_bck(ctx->line, &ctx->pos, &ctx->len);
+        if (line_info_onKey(self, key))
+            return;
 
-                if (x == 0)
-                    wmove(self->window, y - 1, x2 - cur_len);
-                else
+        if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
+            if (ctx->pos > 0) {
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
+                del_char_buf_bck(ctx);
+
+                if (x == 0) {
+                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
+                    int new_x = ctx->start == 0 ? ctx->pos : x2 - cur_len;
+                    wmove(self->window, y, new_x);
+                } else {
                     wmove(self->window, y, x - cur_len);
+                }
             } else {
                 beep();
             }
@@ -421,14 +432,14 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
             if (ctx->pos != ctx->len)
-                del_char_buf_frnt(ctx->line, &ctx->pos, &ctx->len);
+                del_char_buf_frnt(ctx);
             else
                 beep();
         }
 
         else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
             if (ctx->pos > 0) {
-                discard_buf(ctx->line, &ctx->pos, &ctx->len);
+                discard_buf(ctx);
                 wmove(self->window, y2 - CURS_Y_OFFSET, 0);
             } else {
                 beep();
@@ -437,7 +448,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
             if (ctx->pos != ctx->len)
-                kill_buf(ctx->line, &ctx->pos, &ctx->len);
+                kill_buf(ctx);
             else
                 beep();
         }
@@ -445,6 +456,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
             if (ctx->pos > 0) {
                 ctx->pos = 0;
+                ctx->start = 0;
                 wmove(self->window, y2 - CURS_Y_OFFSET, 0);
             }
         }
@@ -452,7 +464,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
             if (ctx->pos != ctx->len) {
                 ctx->pos = ctx->len;
-                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, (CHATBOX_HEIGHT - 1)*x2)), y2, x2);
+                ctx->start = x2 * (ctx->len / x2);
+                mv_curs_end(self->window, ctx->len, y2, x2);
             }
         }
 
@@ -461,10 +474,13 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 --ctx->pos;
                 cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
 
-                if (x == 0)
-                    wmove(self->window, y - 1, x2 - cur_len);
-                else
+                if (x == 0) {
+                    wmove(self->window, y, x2 - cur_len);
+                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
+                    ctx->pos = ctx->start + x2 - 1;
+                } else {
                     wmove(self->window, y, x - cur_len);
+                }
             } else {
                 beep();
             }
@@ -472,27 +488,30 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_RIGHT) {
             if (ctx->pos < ctx->len) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                 ++ctx->pos;
 
-                if (x == x2 - 1)
-                    wmove(self->window, y + 1, 0);
-                else
+                if (x == x2 - 1) {
+                    wmove(self->window, y, 0);
+                    ctx->start += x2;
+                    ctx->pos = ctx->start;
+                } else {
+                    cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
                     wmove(self->window, y, x + cur_len);
+                }
             } else {
                 beep();
             }
         }
 
         else if (key == KEY_UP) {    /* fetches previous item in history */
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_UP);
+            fetch_hist_item(ctx, MOVE_UP);
+            ctx->start = x2 * (ctx->len / x2);
             mv_curs_end(self->window, ctx->len, y2, x2);
         }
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
-            fetch_hist_item(ctx->line, &ctx->pos, &ctx->len, ctx->ln_history, ctx->hst_tot,
-                            &ctx->hst_pos, MOVE_DOWN);
+            fetch_hist_item(ctx, MOVE_DOWN);
+            ctx->start = x2 * (ctx->len / x2);
             mv_curs_end(self->window, ctx->len, y2, x2);
         }
 
@@ -501,11 +520,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 int diff;
 
                 if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
-                    diff = complete_line(ctx->line, &ctx->pos, &ctx->len, groupchats[self->num].peer_names,
+                    diff = complete_line(ctx, groupchats[self->num].peer_names,
                                          groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
                 else
-                    diff = complete_line(ctx->line, &ctx->pos, &ctx->len, glob_cmd_list, AC_NUM_GLOB_COMMANDS,
-                                         MAX_CMDNAME_SIZE);
+                    diff = complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
                 if (diff != -1) {
                     if (x + diff > x2 - 1) {
@@ -523,20 +541,22 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         /* Scroll peerlist up and down one position if list overflows window */
-        else if (key == KEY_NPAGE) {
+        else if (key == T_KEY_C_RB) {
             int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
             if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
                 ++groupchats[self->num].side_pos;
         }
 
-        else if (key == KEY_PPAGE) {
+        else if (key == T_KEY_C_LB) {
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
         }
 
         /* RETURN key: Execute command or print line */
         else if (key == '\n') {
+            rm_trailing_spaces_buf(ctx);
+
             uint8_t line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
@@ -547,7 +567,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 
             if (!string_is_empty(line))
-                add_line_to_hist(ctx->line, ctx->len, ctx->ln_history, &ctx->hst_tot, &ctx->hst_pos);
+                add_line_to_hist(ctx);
 
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
@@ -571,7 +591,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 }
             }
 
-            reset_buf(ctx->line, &ctx->pos, &ctx->len);
+            reset_buf(ctx);
         }
     }
 }
@@ -587,21 +607,17 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     line_info_print(self);
     wclear(ctx->linewin);
 
-    if (ctx->hst->scroll_mode) {
-        line_info_onDraw(self);
-    } else {
-        scrollok(ctx->history, 1);
-        curs_set(1);
+    scrollok(ctx->history, 0);
+    curs_set(1);
 
-        if (ctx->len > 0) {
-            uint8_t line[MAX_STR_SIZE];
+    if (ctx->len > 0) {
+        uint8_t line[MAX_STR_SIZE];
 
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                reset_buf(ctx->line, &ctx->pos, &ctx->len);
-                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-            } else {
-                mvwprintw(ctx->linewin, 1, 0, "%s", line);
-            }
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            reset_buf(ctx);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        } else {
+            mvwprintw(ctx->linewin, 1, 0, "%s", &line[ctx->start]);
         }
     }
 
@@ -651,11 +667,8 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
 
-    if (ctx->log == NULL || ctx->hst == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (ctx->log == NULL || ctx->hst == NULL)
+        exit_toxic_err("failed in groupchat_onInit", FATALERR_MEMORY);
 
     memset(ctx->hst, 0, sizeof(struct history));
     memset(ctx->log, 0, sizeof(struct chatlog));
@@ -690,14 +703,10 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
 
-    if (chatwin != NULL)
-        ret.chatwin = chatwin;
-    else {
-        endwin();
-        fprintf(stderr, "calloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (chatwin == NULL)
+        exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
 
+    ret.chatwin = chatwin;
     ret.num = groupnum;
 
     return ret;

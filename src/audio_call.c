@@ -1,22 +1,38 @@
-/*
- * Toxic -- Tox Curses Client
+/*  audio_call.c
+ *
+ *
+ *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *
+ *  This file is part of Toxic.
+ *
+ *  Toxic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Toxic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "audio_call.h"
 #include "device.h"
 #include "chat_commands.h"
 #include "global_commands.h"
-#include "toxic_windows.h"
 #include "line_info.h"
 
 #include <curses.h>
-#include <AL/al.h>
-#include <AL/alc.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -28,16 +44,6 @@
 #define MAX_CALLS 10
 
 #define frame_size (av_DefaultSettings.audio_sample_rate * av_DefaultSettings.audio_frame_duration / 1000)
-
-typedef struct _DeviceIx {
-
-    ALCdevice *dhndl; /* Handle of device selected/opened */
-    ALCcontext *ctx; /* Device context */
-    const char *devices[MAX_DEVICES]; /* Container of available devices */
-    int size; /* Size of above container */
-    int dix; /* Index of default device */
-    int index; /* Current index */
-} DeviceIx;
 
 typedef struct _Call {
     pthread_t ttid; /* Transmission thread id */
@@ -178,7 +184,7 @@ void *transmission(void *arg)
     
     
     if ( open_primary_device(input, &this_call->in_idx) != de_None ) goto cleanup;
-    if ( register_device_callback(this_call->in_idx, read_device_callback, &call_index, _True) != de_None) 
+    if ( register_device_callback(call_index, this_call->in_idx, read_device_callback, &call_index, _True) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */
         goto cleanup;
     
@@ -582,7 +588,7 @@ on_error:
     print_err (self, error_str);
 }
 
-void cmd_set_this_session_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
     uint8_t msg[MAX_STR_SIZE];
     uint8_t *error_str;
@@ -638,7 +644,7 @@ void cmd_set_this_session_device(WINDOW * window, ToxWindow * self, Tox *m, int 
                 close_device(input, this_call->in_idx);
                 open_device(input, selection, &this_call->in_idx);
                 /* Set VAD as true for all; TODO: Make it more dynamic */
-                register_device_callback(this_call->in_idx, read_device_callback, &self->call_idx, _True);
+                register_device_callback(self->call_idx, this_call->in_idx, read_device_callback, &self->call_idx, _True);
             }
         }
     }
@@ -646,6 +652,77 @@ void cmd_set_this_session_device(WINDOW * window, ToxWindow * self, Tox *m, int 
     self->device_selection[type] = selection;
     
     return;
+    on_error:
+    print_err (self, error_str);
+}
+
+void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{    
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t *error_str;
+    
+    if ( argc != 1 ) {
+        if ( argc < 1 ) error_str = "Type must be specified!";
+        else error_str = "Only two arguments allowed!";
+        
+        goto on_error;
+    }
+    
+    DeviceType type;
+    
+    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+        type = input;
+    
+    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+        type = output;
+    
+    else {
+        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        return;
+    }
+    
+    
+    /* If call is active, use this_call values */
+    if ( self->call_idx > -1) {
+        Call* this_call = &ASettins.calls[self->call_idx];
+        
+        pthread_mutex_lock(&this_call->mutex);        
+        device_mute(type, type == input ? this_call->in_idx : this_call->out_idx);        
+        pthread_mutex_unlock(&this_call->mutex);   
+    }
+    
+    return;
+    
+    on_error:
+    print_err (self, error_str);
+}
+
+void cmd_sense(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{    
+    uint8_t msg[MAX_STR_SIZE];
+    uint8_t *error_str;
+    
+    if ( argc != 1 ) {
+        if ( argc < 1 ) error_str = "Must have value!";
+        else error_str = "Only two arguments allowed!";
+        
+        goto on_error;
+    }
+    
+    char *end;
+    float value = strtof(argv[1], &end);
+    
+    if ( *end ) {
+        error_str = "Invalid input";
+        goto on_error;
+    }
+    
+    /* Call must be active */
+    if ( self->call_idx > -1) device_set_VAD_treshold(ASettins.calls[self->call_idx].in_idx, value);    
+    
+    return;
+    
 on_error:
     print_err (self, error_str);
 }

@@ -29,7 +29,8 @@
 #include <time.h>
 #include <limits.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "misc_tools.h"
 #include "settings.h"
 
@@ -63,11 +64,10 @@ void get_time_str(uint8_t *buf)
     strftime(buf, TIME_STR_SIZE, t, get_time());
 }
 
-/* XXX: FIX */
-unsigned char *hex_string_to_bin(char hex_string[])
+char *hex_string_to_bin(const char *hex_string)
 {
     size_t len = strlen(hex_string);
-    unsigned char *val = malloc(len);
+    char *val = malloc(len);
 
     if (val == NULL) {
         endwin();
@@ -75,11 +75,10 @@ unsigned char *hex_string_to_bin(char hex_string[])
         exit(EXIT_FAILURE);
     }
 
-    char *pos = hex_string;
     size_t i;
 
-    for (i = 0; i < len; ++i, pos += 2)
-        sscanf(pos, "%2hhx", &val[i]);
+    for (i = 0; i < len; ++i, hex_string += 2)
+        sscanf(hex_string, "%2hhx", &val[i]);
 
     return val;
 }
@@ -227,30 +226,35 @@ int valid_nick(uint8_t *nick)
 /* Moves cursor to the end of the line in given window */
 void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
 {
-    int end_y = (len / max_x) + (max_y - CURS_Y_OFFSET);
-    int end_x = len % max_x;
-    wmove(w, end_y, end_x);
+    int new_x = len < max_x ? len : len % max_x;
+    wmove(w, max_y - CURS_Y_OFFSET, new_x);
 }
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *pathname, uint8_t *namebuf)
+void get_file_name(uint8_t *namebuf, uint8_t *pathname)
 {
     int idx = strlen(pathname) - 1;
 
     while (idx >= 0 && pathname[idx] == '/')
         pathname[idx--] = '\0';
 
-    uint8_t *filename = strrchr(pathname, '/');    /* Try unix style paths */
+    uint8_t *filename = strrchr(pathname, '/');
 
     if (filename != NULL) {
         if (!strlen(++filename))
             filename = pathname;
     } else {
-        filename = strrchr(pathname, '\\');    /* Try windows style paths */
-
-        if (filename == NULL)
-            filename = pathname;
+        filename = pathname;
     }
 
     snprintf(namebuf, MAX_STR_SIZE, "%s", filename);
+}
+
+/* converts str to all lowercase */
+void str_to_lower(uint8_t *str)
+{
+    int i;
+
+    for (i = 0; str[i]; ++i)
+        str[i] = tolower(str[i]);
 }

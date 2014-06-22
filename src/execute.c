@@ -28,7 +28,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "toxic_windows.h"
+#include "toxic.h"
+#include "windows.h"
 #include "execute.h"
 #include "chat_commands.h"
 #include "global_commands.h"
@@ -54,6 +55,7 @@ static struct cmd_func global_commands[] = {
     { "/q",         cmd_quit          },
     { "/quit",      cmd_quit          },
     { "/status",    cmd_status        },
+
 #ifdef _SUPPORT_AUDIO
     { "/lsdev",     cmd_list_devices  },
     { "/sdev",      cmd_change_device },
@@ -73,7 +75,9 @@ static struct cmd_func chat_commands[] = {
     { "/answer",    cmd_answer      },
     { "/reject",    cmd_reject      },
     { "/hangup",    cmd_hangup      },
-    { "/sdev",      cmd_set_this_session_device },
+    { "/sdev",      cmd_ccur_device },
+    { "/mute",      cmd_mute        },
+    { "/sense",     cmd_sense       },
 #endif /* _SUPPORT_AUDIO */
 };
 
