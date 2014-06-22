@@ -39,6 +39,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
+
 #define _cbend pthread_exit(NULL)
 
 #define MAX_CALLS 10
@@ -403,7 +411,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No incomming call!";
+        else if ( error == ErrorNoCall ) error_str = "No incoming call!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -434,7 +442,7 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot reject in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No incomming call!";
+        else if ( error == ErrorNoCall ) error_str = "No incoming call!";
         else error_str = "Internal error!";
 
         goto on_error;

@@ -433,7 +433,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
     
     self->call_idx = call_index;
     
-    line_info_add(self, NULL, NULL, NULL, "Incoming audio call!\nType: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Incoming audio call! Type: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
 
     alert_window(self, WINDOW_ALERT_0, true);
 }
@@ -443,7 +443,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Ringing...\n\"cancel\" ?", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Ringing...\"cancel\" ?", SYS_MSG, 0, 0);
 }
 
 void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
@@ -451,7 +451,7 @@ void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Call started!\nType: \"/hangup\" to end it.", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
 void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
@@ -477,7 +477,7 @@ void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Call started!\nType: \"/hangup\" to end it.", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
 void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)

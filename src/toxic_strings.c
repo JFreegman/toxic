@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -38,14 +39,9 @@ void add_char_to_buf(ChatContext *ctx, wint_t ch)
     if (ctx->pos < 0 || ctx->len >= MAX_STR_SIZE)
         return;
 
-    /* move all chars including null in front of pos one space forward and insert char in pos */
-    int i;
-
-    for (i = ctx->len; i >= ctx->pos && i >= 0; --i)
-        ctx->line[i + 1] = ctx->line[i];
-
+    wmemmove(&ctx->line[ctx->pos + 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     ctx->line[ctx->pos++] = ch;
-    ++ctx->len;
+    ctx->line[++ctx->len] = L'\0';
 }
 
 /* Deletes the character before pos */
@@ -54,14 +50,9 @@ void del_char_buf_bck(ChatContext *ctx)
     if (ctx->pos <= 0)
         return;
 
-    int i;
-
-    /* similar to add_char_to_buf but deletes a char */
-    for (i = ctx->pos - 1; i <= ctx->len; ++i)
-        ctx->line[i] = ctx->line[i + 1];
-
+    wmemmove(&ctx->line[ctx->pos - 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     --ctx->pos;
-    --ctx->len;
+    ctx->line[--ctx->len] = L'\0';
 }
 
 /* Deletes the character at pos */
@@ -70,12 +61,8 @@ void del_char_buf_frnt(ChatContext *ctx)
     if (ctx->pos < 0 || ctx->pos >= ctx->len)
         return;
 
-    int i;
-
-    for (i = ctx->pos; i < ctx->len; ++i)
-        ctx->line[i] = ctx->line[i + 1];
-
-    --ctx->len;
+    wmemmove(&ctx->line[ctx->pos], &ctx->line[ctx->pos + 1], ctx->len - ctx->pos - 1);
+    ctx->line[--ctx->len] = L'\0';
 }
 
 /* Deletes the line from beginning to pos */
@@ -84,15 +71,11 @@ void discard_buf(ChatContext *ctx)
     if (ctx->pos <= 0)
         return;
 
-    int i;
-    int c = 0;
-
-    for (i = ctx->pos; i <= ctx->len; ++i)
-        ctx->line[c++] = ctx->line[i];
-
+    wmemmove(ctx->line, &ctx->line[ctx->pos], ctx->len - ctx->pos);
+    ctx->len -= ctx->pos;
     ctx->pos = 0;
     ctx->start = 0;
-    ctx->len = c - 1;
+    ctx->line[ctx->len] = L'\0';
 }
 
 /* Deletes the line from pos to len */
