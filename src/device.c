@@ -323,16 +323,17 @@ inline__ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t leng
     alSourceUnqueueBuffers(device->source, 1, &buffer);
     alBufferData(buffer, AL_FORMAT_MONO16, data, lenght * 2 * 1 /*channels*/, sample_rate); // TODO: Frequency must be set dynamically
     
-    
-    if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "Error setting buffer %d\n");
+    int rc = alGetError();
+    if (rc != AL_NO_ERROR) {
+        fprintf(stderr, "Error setting buffer %d\n", rc);
         return de_BufferError;
     }
     
     alSourceQueueBuffers(device->source, 1, &buffer);
     
+    rc = alGetError();
     if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "Error: could not buffer audio\n");
+        fprintf(stderr, "Error: could not buffer audio: %d\n", rc);
         return de_BufferError;
     }
     

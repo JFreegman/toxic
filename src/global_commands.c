@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -34,6 +35,8 @@
 #include "log.h"
 #include "line_info.h"
 #include "dns.h"
+#include "groupchat.h"
+#include "prompt.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;

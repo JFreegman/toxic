@@ -78,6 +78,8 @@ typedef enum _FATAL_ERRS {
 void exit_toxic_success(Tox *m);
 void exit_toxic_err(const char *errmsg, int errcode);
 
+int store_data(Tox *m, char *path);
+
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
 void on_message(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
