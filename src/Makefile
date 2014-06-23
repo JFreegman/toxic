@@ -3,7 +3,7 @@ SUPPORT_AUDIO ?= 0
 LIBS = ncurses
 
 CFLAGS = -std=gnu99 -pthread
-LDFLAGS = -ltoxcore -ltoxav -ltoxdns -ldl -lresolv
+LDFLAGS = -ltoxcore -ltoxdns -ldl -lresolv
 DESTDIR=/usr/local
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
@@ -11,13 +11,16 @@ OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 ifeq ($(SUPPORT_AUDIO), 1)
-        CFLAGS += "-D_SUPPORT_AUDIO"
+        CFLAGS += -D_SUPPORT_AUDIO
+        LDFLAGS += -ltoxav
         OBJ += device.o audio_call.o
         LIBS += openal
 endif
 
-CFLAGS += $(shell pkg-config --cflags $(LIBS))
-LDFLAGS += $(shell pkg-config --libs $(LIBS))
+ifneq ($(LIBS),)
+	CFLAGS += $(shell pkg-config --cflags $(LIBS))
+	LDFLAGS += $(shell pkg-config --libs $(LIBS))
+endif
 
 all: toxic
 
