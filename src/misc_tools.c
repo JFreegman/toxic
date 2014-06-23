@@ -55,7 +55,7 @@ struct tm *get_time(void)
 {
     struct tm *timeinfo;
     uint64_t t = get_unix_time();
-    timeinfo = localtime(&t);
+    timeinfo = localtime((const time_t*)&t);
     return timeinfo;
 }
 
