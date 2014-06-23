@@ -189,37 +189,41 @@ void *transmission(void *arg)
 
     int32_t dec_frame_len;
     int16_t PCM[frame_size];
+    _Bool has_output = 1;
     
-    
-    if ( open_primary_device(input, &this_call->in_idx) != de_None ) goto cleanup;
+    if ( open_primary_device(input, &this_call->in_idx) != de_None ) 
+        line_info_add(self, NULL, NULL, NULL, "Failed to open input device!", SYS_MSG, 0, 0);
     if ( register_device_callback(call_index, this_call->in_idx, read_device_callback, &call_index, _True) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */
-        goto cleanup;
+        line_info_add(self, NULL, NULL, NULL, "Failed to register input handler!", SYS_MSG, 0, 0);
     
-    if ( open_primary_device(output, &this_call->out_idx) != de_None ) goto cleanup;
-        
+    if ( open_primary_device(output, &this_call->out_idx) != de_None ) {
+        line_info_add(self, NULL, NULL, NULL, "Failed to open output device!", SYS_MSG, 0, 0);
+        has_output = 0;
+    }
     /* Start transmission */
     while (this_call->ttas) {
         
-        lock;
-        
-        if (playback_device_ready(this_call->out_idx) == de_Busy) {
-            unlock;
-            continue;
-        }
-        
-        dec_frame_len = toxav_recv_audio(ASettins.av, call_index, frame_size, PCM);
+        if ( has_output ) {
+            lock;
+            
+            if (playback_device_ready(this_call->out_idx) == de_Busy) {
+                unlock;
+                continue;
+            }
+            
+            dec_frame_len = toxav_recv_audio(ASettins.av, call_index, frame_size, PCM);
 
-        /* Play the packet */
-        if (dec_frame_len > 0) {
-            write_out(this_call->out_idx, PCM, dec_frame_len, av_DefaultSettings.audio_channels);
+            /* Play the packet */
+            if (dec_frame_len > 0) {
+                write_out(this_call->out_idx, PCM, dec_frame_len, av_DefaultSettings.audio_channels);
+            }
+            else if (dec_frame_len != 0) {
+                /* >implying it'll ever get an error */
+            }
+            
+            unlock;
         }
-        else if (dec_frame_len != 0) {
-            /* >implying it'll ever get an error */
-        }
-        
-        unlock;
-        
         usleep(1000);
     }
 
@@ -304,10 +308,12 @@ void callback_recv_ending ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnding);
     stop_transmission(call_index);
+    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_recv_error ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onError);
+    stop_transmission(call_index);
 }
 void callback_call_started ( int32_t call_index, void* arg )
 {    
@@ -328,6 +334,7 @@ void callback_call_canceled ( int32_t call_index, void* arg )
 
     /* In case call is active */
     stop_transmission(call_index);
+    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_call_rejected ( int32_t call_index, void* arg )
 {
@@ -337,6 +344,7 @@ void callback_call_ended ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnd);
     stop_transmission(call_index);
+    ((ToxWindow*)arg)->call_idx = -1;
 }
 
 void callback_requ_timeout ( int32_t call_index, void* arg )
@@ -351,6 +359,7 @@ void callback_peer_timeout ( int32_t call_index, void* arg )
      * actions that one can possibly take on timeout
      */
     toxav_stop_call(ASettins.av, call_index);
+    ((ToxWindow*)arg)->call_idx = -1;
 }
 /*
  * End of Callbacks
