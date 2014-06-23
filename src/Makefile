@@ -1,6 +1,10 @@
+TOXIC_VERSION = 0.4.1
+REV = $(shell git rev-list HEAD --count)
+VERSION = $(TOXIC_VERSION)_r$(REV)
+
 LIBS = libtoxcore ncurses
 
-CFLAGS = -std=gnu99 -pthread
+CFLAGS = -DTOXICVER="\"$(VERSION)\"" -std=gnu99 -pthread
 LDFLAGS = -ldl -lresolv
 DESTDIR ?= /usr/local
 
