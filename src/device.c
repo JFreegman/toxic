@@ -192,7 +192,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     if (type == input) {
         device->dhndl = alcCaptureOpenDevice(devices_names[type][selection], 
                         av_DefaultSettings.audio_sample_rate, AL_FORMAT_MONO16, frame_size * 4);
-        device->VAD_treshold = 40.0;
+        device->VAD_treshold = VAD_THRESHOLD_DEFAULT;
     }
     else { 
         device->dhndl = alcOpenDevice(devices_names[type][selection]);

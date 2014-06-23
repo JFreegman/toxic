@@ -59,10 +59,24 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
-void get_time_str(uint8_t *buf)
+/*Puts the current time in buf in the format of [Hour:Min:Sec] */
+void get_time_str(uint8_t *buf, int bufsize)
 {
     const char *t = user_settings->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
-    strftime(buf, TIME_STR_SIZE, t, get_time());
+    strftime(buf, bufsize, t, get_time());
+}
+
+/* Converts seconds to hours:minutes:seconds string */
+void get_elapsed_time_str(uint8_t *buf, int bufsize, uint64_t secs)
+{
+    if (!secs)
+        return;
+
+    uint64_t seconds = secs % 60;
+    uint64_t minutes = (secs % 3600) / 60;
+    uint64_t hours = secs / 3600;
+
+    snprintf(buf, bufsize, "%.2ld:%.2ld:%.2ld", hours, minutes, seconds);
 }
 
 char *hex_string_to_bin(const char *hex_string)

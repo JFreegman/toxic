@@ -40,7 +40,10 @@ char *hex_string_to_bin(const char *hex_string);
 uint64_t get_unix_time(void);
 
 /*Puts the current time in buf in the format of [Hour:Min:Sec] */
-void get_time_str(uint8_t *buf);
+void get_time_str(uint8_t *buf, int bufsize);
+
+/* Converts seconds to hours:minutes:seconds string */
+void get_elapsed_time_str(uint8_t *buf, int bufsize, uint64_t secs);
 
 /* get the current local time */
 struct tm *get_time(void);

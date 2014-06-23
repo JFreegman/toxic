@@ -110,6 +110,7 @@ struct ToxWindow {
     int call_idx; /* If in a call will have this index set, otherwise it's -1. 
                    * Don't modify outside av callbacks. */
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
+
 #endif /* _SUPPORT_AUDIO */
 
     char name[TOX_MAX_NAME_LENGTH];
@@ -129,7 +130,6 @@ struct ToxWindow {
     ChatContext *chatwin;
     StatusBar *stb;
 
-    WINDOW *popup;
     WINDOW *window;
 };
 
@@ -143,6 +143,23 @@ struct StatusBar {
     uint8_t status;
     bool is_online;
 };
+
+#ifdef _SUPPORT_AUDIO
+/* holds display info for audio calls */
+struct infobox {
+    float vad_lvl;
+    bool in_is_muted;
+    bool out_is_muted;
+    bool hide;
+    bool active;
+
+    uint64_t calltime;
+    uint64_t deltatime;
+    char timestr[TIME_STR_SIZE];
+
+    WINDOW *win;
+};
+#endif
 
 #define MAX_LINE_HIST 128
 
@@ -159,6 +176,10 @@ struct ChatContext {
 
     struct history *hst;
     struct chatlog *log;
+
+#ifdef _SUPPORT_AUDIO
+    struct infobox infobox;
+#endif
 
     uint8_t self_is_typing;
 

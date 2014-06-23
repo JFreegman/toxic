@@ -83,7 +83,7 @@ static struct _dns_thread {
 static int dns_error(ToxWindow *self, uint8_t *errmsg)
 {
     uint8_t msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "DNS lookup failed: %s", errmsg);
+    snprintf(msg, sizeof(msg), "User lookup failed: %s", errmsg);
 
     pthread_mutex_lock(&dns_thread.lock);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
@@ -116,13 +116,13 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, uint
     ans_pt += len;
 
     if (ans_pt > ans_end - 4)
-         return dns_error(self, "Reply was too short."); 
+         return dns_error(self, "DNS reply was too short."); 
 
     int type;
     GETSHORT(type, ans_pt);
 
     if (type != T_TXT)
-        return dns_error(self, "Broken reply."); 
+        return dns_error(self, "Broken DNS reply."); 
  
 
     ans_pt += INT16SZ;    /* class */
@@ -139,7 +139,7 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, uint
         ans_pt += len;
 
         if (ans_pt > ans_end - 10)
-            return dns_error(self, "Reply was too short."); 
+            return dns_error(self, "DNS reply was too short."); 
 
         GETSHORT(type, ans_pt);
         ans_pt += INT16SZ;
@@ -152,7 +152,7 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, uint
     } while (type == T_CNAME);
 
     if (type != T_TXT)
-        return dns_error(self, "Not a TXT record."); 
+        return dns_error(self, "DNS response failed."); 
 
     uint32_t txt_len = *ans_pt;
 
@@ -234,7 +234,7 @@ void *dns3_lookup_thread(void *data)
     int str_len = tox_generate_dns3_string(dns_obj, string, sizeof(string), &request_id, name, namelen);
 
     if (str_len == -1) {
-        dns_error(self, "Core failed to generate dns3 string.");
+        dns_error(self, "Core failed to generate DNS3 string.");
         kill_dns_thread(dns_obj);
     }
 
@@ -248,7 +248,7 @@ void *dns3_lookup_thread(void *data)
     int ans_len = res_query(d_string, C_IN, T_TXT, answer, sizeof(answer));
 
     if (ans_len <= 0) {
-        dns_error(self, "Query failed.");
+        dns_error(self, "DNS query failed.");
         kill_dns_thread(dns_obj);
     }
 
@@ -263,14 +263,14 @@ void *dns3_lookup_thread(void *data)
 
     /* extract the encrypted ID from TXT response */
     if (strncmp(ans_id, TOX_DNS3_TXT_PREFIX, prfx_len) != 0) {
-        dns_error(self, "Bad dns3 TXT response.");
+        dns_error(self, "Bad DNS3 TXT response.");
         kill_dns_thread(dns_obj);
     }
 
     memcpy(encrypted_id, ans_id + prfx_len, ans_len - prfx_len);
 
     if (tox_decrypt_dns3_TXT(dns_obj, t_data.id_bin, encrypted_id, strlen(encrypted_id), request_id) == -1) {
-        dns_error(self, "Core failed to decrypt response.");
+        dns_error(self, "Core failed to decrypt DNS response.");
         kill_dns_thread(dns_obj);
     }
 

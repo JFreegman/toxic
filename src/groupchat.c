@@ -200,7 +200,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     alert_window(self, alert_type, beep);
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, nick, NULL, msg, IN_MSG, 0, nick_clr);
     write_to_log(msg, nick, ctx->log, false);
@@ -240,7 +240,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, nick, NULL, action, ACTION, 0, 0);
     write_to_log(action, nick, ctx->log, true);
@@ -339,7 +339,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     uint8_t *event;
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     switch (change) {
         case TOX_CHAT_CHANGE_PEER_ADD:
