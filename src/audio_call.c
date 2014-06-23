@@ -315,6 +315,7 @@ void callback_recv_error ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onError);
     stop_transmission(call_index);
+    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_call_started ( int32_t call_index, void* arg )
 {    
@@ -351,6 +352,7 @@ void callback_call_ended ( int32_t call_index, void* arg )
 void callback_requ_timeout ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onRequestTimeout);
+    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_peer_timeout ( int32_t call_index, void* arg )
 {
