@@ -154,7 +154,7 @@ struct infobox {
     bool active;
 
     uint64_t calltime;
-    uint64_t deltatime;
+    uint64_t lastupdate;
     char timestr[TIME_STR_SIZE];
 
     WINDOW *win;

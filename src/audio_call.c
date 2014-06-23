@@ -61,7 +61,7 @@ typedef struct _Call {
 } Call;
 
 
-void set_call(ToxWindow *self, Call* call, _Bool start)
+void set_call(Call* call, _Bool start)
 {
     call->in_idx = -1;
     call->out_idx = -1;
@@ -76,7 +76,7 @@ void set_call(ToxWindow *self, Call* call, _Bool start)
     }
 }
 
-struct _ASettins {
+struct _ASettings {
     AudioError errors;
 
     ToxAv *av;
@@ -234,7 +234,7 @@ cleanup:
     if ( this_call->out_idx != -1 ) if ( close_device(output, this_call->out_idx) != de_None )
         line_info_add(self, NULL, NULL, NULL, "Failed to close output device!", SYS_MSG, 0, 0);
     
-    set_call(self, this_call, _False);
+    set_call(this_call, _False);
     
     _cbend;
 }
@@ -252,7 +252,7 @@ int start_transmission(ToxWindow *self)
          !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
         return -1;
 
-    set_call(self, &ASettins.calls[self->call_idx], _True);
+    set_call(&ASettins.calls[self->call_idx], _True);
     
     if ( 0 != pthread_create(&ASettins.calls[self->call_idx].ttid, NULL, transmission, self ) &&
          0 != pthread_detach(ASettins.calls[self->call_idx].ttid) ) {
@@ -514,6 +514,7 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if ( error != ErrorNone ) {
         if ( error == ErrorNoCall ) error_str = "No call!";
+        else if ( error == ErrorInvalidState ) error_str = "Cannot cancel in invalid state!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -712,8 +713,8 @@ void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[
             device_mute(type, this_call->in_idx);
             self->chatwin->infobox.in_is_muted ^= 1;
         } else {
-            self->chatwin->infobox.out_is_muted ^= 1;
             device_mute(type, this_call->out_idx);
+            self->chatwin->infobox.out_is_muted ^= 1;
         }
         pthread_mutex_unlock(&this_call->mutex);
     }
@@ -755,6 +756,3 @@ void cmd_sense(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)
 on_error:
     print_err (self, error_str);
 }
-/*
- * end of commands
- */

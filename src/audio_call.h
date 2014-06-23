@@ -26,7 +26,6 @@
 #include <tox/toxav.h>
 
 #include "device.h"
-#include "windows.h"
 
 #define VAD_THRESHOLD_DEFAULT 40.0
 

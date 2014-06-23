@@ -40,7 +40,6 @@
 #include "log.h"
 #include "line_info.h"
 #include "settings.h"
-#include "chat.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -498,7 +497,6 @@ void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    kill_infobox(self);
     self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call canceled!", SYS_MSG, 0, 0);
 }
@@ -585,12 +583,12 @@ static void draw_infobox(ToxWindow *self)
     uint64_t curtime = get_unix_time();
 
     /* update elapsed time string once per second */
-    if (curtime > infobox.deltatime) {
+    if (curtime > infobox.lastupdate) {
         infobox.calltime = curtime - infobox.calltime;
         get_elapsed_time_str(infobox.timestr, sizeof(infobox.timestr), infobox.calltime);
     }
 
-    infobox.deltatime = curtime;
+    infobox.lastupdate = curtime;
 
     const char *in_is_muted = infobox.in_is_muted ? "yes" : "no";
     const char *out_is_muted = infobox.out_is_muted ? "yes" : "no";
