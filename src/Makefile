@@ -1,9 +1,9 @@
 SUPPORT_AUDIO ?= 0
 
-LIBS = ncurses
+LIBS = libtoxcore ncurses
 
 CFLAGS = -std=gnu99 -pthread
-LDFLAGS = -ltoxcore -ltoxdns -ldl -lresolv
+LDFLAGS = -ldl -lresolv
 DESTDIR=/usr/local
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
@@ -11,10 +11,15 @@ OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 ifeq ($(SUPPORT_AUDIO), 1)
-        CFLAGS += -D_SUPPORT_AUDIO
-        LDFLAGS += -ltoxav
-        OBJ += device.o audio_call.o
-        LIBS += openal
+CHECK_OPENAL = $(shell pkg-config openal || echo -n "no_audio")
+CHECK_TOXAV = $(shell pkg-config libtoxav || echo -n "no_audio")
+ifeq (no_audio, $(filter no_audio, $(CHECK_OPENAL) $(CHECK_TOXAV)))
+	SUPPORT_AUDIO = 0
+else
+	CFLAGS += -D_SUPPORT_AUDIO
+	OBJ += device.o audio_call.o
+	LIBS += openal libtoxav
+endif
 endif
 
 ifneq ($(LIBS),)
