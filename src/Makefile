@@ -43,16 +43,16 @@ else
                 CFLAGS +=
                 LDFLAGS +=
         endif
-        UNAME_P = $(shell uname -p)
-        ifeq ($(UNAME_P), x86_64)
+        UNAME_M = $(shell uname -m)
+        ifeq ($(UNAME_M), x86_64)
                 CFLAGS +=
                 LDFLAGS +=
         endif
-        ifneq ($(filter %86, $(UNAME_P)),)
+        ifneq ($(filter %86, $(UNAME_M)),)
                 CFLAGS +=
                 LDFLAGS +=
         endif
-        ifneq ($(filter arm%, $(UNAME_P)),)
+        ifneq ($(filter arm%, $(UNAME_M)),)
                 CFLAGS +=
                 LDFLAGS +=
         endif
