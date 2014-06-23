@@ -4,18 +4,61 @@ VERSION = $(TOXIC_VERSION)_r$(REV)
 
 LIBS = libtoxcore ncurses
 
-CFLAGS = -DTOXICVER="\"$(VERSION)\"" -std=gnu99 -pthread
-LDFLAGS = -ldl -lresolv
+CFLAGS ?= $(USER_CFLAGS) -DTOXICVER="\"$(VERSION)\"" -std=gnu99 -pthread
+LDFLAGS ?= $(USER_LDFLAGS)
 DESTDIR ?= /usr/local
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
 OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
+# Variables for audio support
 AUDIO_LIBS = libtoxav openal
 AUDIO_CFLAGS = -D_SUPPORT_AUDIO
 AUDIO_OBJ = device.o audio_call.o
 
+# Check on wich system we are running
+ifeq ($(OS), Windows_NT)
+	CFLAGS +=
+	LDFLAGS +=
+	ifeq ($(PROCESSOR_ARCHITECTURE), AMD64)
+		CFLAGS +=
+                LDFLAGS +=
+        endif
+        ifeq ($(PROCESSOR_ARCHITECTURE), x86)
+                CFLAGS +=
+                LDFLAGS +=
+        endif
+else
+        UNAME_S = $(shell uname -s)
+        ifeq ($(UNAME_S), Linux)
+                CFLAGS +=
+                LDFLAGS += -ldl -lresolv
+        endif
+        ifeq ($(UNAME_S), Darwin)
+                CFLAGS +=
+                LDFLAGS +=
+        endif
+        ifeq ($(UNAME_S), Solaris)
+                CFLAGS +=
+                LDFLAGS +=
+        endif
+        UNAME_P = $(shell uname -p)
+        ifeq ($(UNAME_P), x86_64)
+                CFLAGS +=
+                LDFLAGS +=
+        endif
+        ifneq ($(filter %86, $(UNAME_P)),)
+                CFLAGS +=
+                LDFLAGS +=
+        endif
+        ifneq ($(filter arm%, $(UNAME_P)),)
+                CFLAGS +=
+                LDFLAGS +=
+        endif
+endif
+
+# Check if we can build audio
 CHECK_AUDIO_LIBS = $(shell pkg-config $(AUDIO_LIBS) || echo -n "error")
 ifneq ($(CHECK_AUDIO_LIBS), error)
         LIBS += $(AUDIO_LIBS)
@@ -30,6 +73,7 @@ $(warning WARNING -- $(MISSING_AUDIO_LIBS))
 endif
 endif
 
+# Check if we can build Toxic
 CHECK_LIBS = $(shell pkg-config $(LIBS) || echo -n "error")
 ifneq ($(CHECK_LIBS), error)
         CFLAGS += $(shell pkg-config --cflags $(LIBS))
@@ -44,6 +88,7 @@ $(error ERROR)
 endif
 endif
 
+# Targets
 all: toxic
 
 toxic: $(OBJ)
