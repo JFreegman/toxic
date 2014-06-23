@@ -91,7 +91,7 @@ void sort_friendlist_index(void)
 static void update_friend_last_online(int32_t num, uint64_t timestamp)
 {
     friends[num].last_online.last_on = timestamp;
-    friends[num].last_online.tm = *localtime(&timestamp);
+    friends[num].last_online.tm = *localtime((const time_t*)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
     const char *t = user_settings->time == TIME_12 ? "%I:%M %p" : "%H:%M";
@@ -383,7 +383,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y2, x2);
 
     uint64_t cur_time = get_unix_time();
-    struct tm cur_loc_tm = *localtime(&cur_time);
+    struct tm cur_loc_tm = *localtime((const time_t*)&cur_time);
 
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
