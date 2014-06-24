@@ -5,7 +5,7 @@ Toxic is an ncurses based instant messaging client for [Tox](https://tox.im) whi
 
 ### Base dependencies
 * libtoxcore
-* ncursesw (for Debian based systems: libncursesw5-dev)
+* ncurses (for Debian based systems: libncurses5-dev libncursesw5-dev)
 
 ### Audio dependencies
 * libtoxav
@@ -33,3 +33,4 @@ sudo ldconfig
 
 ## Settings
 After running Toxic for the first time an empty file called toxic.conf should reside in your home configuration directory ("~/.config/tox" for Linux users). For an example on how to use this config file to save settings such as auto-logging and time format see: [misc/toxic.conf](misc/toxic.conf).
+
