@@ -20,7 +20,9 @@
  *
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE    /* needed for strcasestr() and wcwidth() */
+#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
