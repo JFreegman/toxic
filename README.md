@@ -1,4 +1,4 @@
-# Toxic
+# Toxic [![Build Status](https://travis-ci.org/Tox/toxic.png?branch=master)](https://travis-ci.org/Tox/toxic)
 Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
 
 ![Toxic Screenshot](http://i.imgur.com/hL7WhVl.png "Main Screen").
@@ -8,7 +8,7 @@ Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) whi
 ### Dependencies
 ##### Base
 * [libtoxcore](https://github.com/irungentoo/toxcore)
-* [ncurses](http://www.gnu.org/software/ncurses) (for Debian based systems, 'libncurses5-dev' and 'libncursesw5-dev')
+* [ncurses](https://www.gnu.org/software/ncurses) (for Debian based systems, 'libncurses5-dev' and 'libncursesw5-dev')
 
 ##### Audio
 * libtoxav (libtoxcore compiled with audio support)
@@ -38,3 +38,4 @@ sudo ldconfig
 ## Settings
 Running Toxic for the first time creates an empty file called toxic.conf in your home configuration directory ("~/.config/tox" for Linux users). Adding options to this file allows you to enable auto-logging, change the time format (12/24 hour), and much more.
 You can view our example config file [here](misc/toxic.conf).
+
