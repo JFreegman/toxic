@@ -9,6 +9,7 @@ CFLAGS += -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
 SRC_DIR = ../src
+CFG_DIR = ../cfg
 DESTDIR = /usr/local
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
@@ -23,31 +24,25 @@ AUDIO_OBJ = device.o audio_call.o
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
-	CFLAGS +=
-	LDFLAGS += -ldl -lresolv
+	-include $(CFG_DIR)/Linux.mk
 endif
 ifeq ($(UNAME_S), Darwin)
-	CFLAGS +=
-	LDFLAGS +=
+	-include $(CFG_DIR)/Darwin.mk
 endif
 ifeq ($(UNAME_S), Solaris)
-	CFLAGS +=
-	LDFLAGS +=
+	-include $(CFG_DIR)/Solaris.mk
 endif
 
 # Check on which platform we are running
 UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_M), x86_64)
-	CFLAGS +=
-	LDFLAGS +=
+	-include $(CFG_DIR)/x86_64.mk
 endif
 ifneq ($(filter %86, $(UNAME_M)),)
-	CFLAGS +=
-	LDFLAGS +=
+	-include $(CFG_DIR)/x86.mk
 endif
 ifneq ($(filter arm%, $(UNAME_M)),)
-	CFLAGS +=
-	LDFLAGS +=
+	-include $(CFG_DIR)/arm.mk
 endif
 
 # Check if we can build audio
