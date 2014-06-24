@@ -386,6 +386,11 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         goto on_error;
     }
 
+    if (!self->stb->is_online) {
+        error_str = "Friend is offline.";
+        goto on_error;
+    }
+
     ToxAvError error = toxav_call(ASettins.av, &self->call_idx, self->num, TypeAudio, 30);
 
     if ( error != ErrorNone ) {

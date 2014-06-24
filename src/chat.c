@@ -497,6 +497,7 @@ void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    kill_infobox(self);
     self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call canceled!", SYS_MSG, 0, 0);
 }
