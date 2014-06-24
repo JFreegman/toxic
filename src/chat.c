@@ -546,33 +546,37 @@ void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
 
 static void init_infobox(ToxWindow *self)
 {
+    ChatContext *ctx = self->chatwin;
+
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
-    memset(&self->chatwin->infobox, 0, sizeof(struct infobox));
+    memset(&ctx->infobox, 0, sizeof(struct infobox));
 
-    self->chatwin->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
-    self->chatwin->infobox.calltime = get_unix_time();
-    self->chatwin->infobox.vad_lvl = VAD_THRESHOLD_DEFAULT;
-    self->chatwin->infobox.active = true;
-    strcpy(self->chatwin->infobox.timestr, "00:00:00");
+    ctx->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
+    ctx->infobox.starttime = get_unix_time();
+    ctx->infobox.vad_lvl = VAD_THRESHOLD_DEFAULT;
+    ctx->infobox.active = true;
+    strcpy(ctx->infobox.timestr, "00");
 }
 
 static void kill_infobox(ToxWindow *self)
 {
-    if (!self->chatwin->infobox.win)
+    ChatContext *ctx = self->chatwin;
+
+    if (!ctx->infobox.win)
         return;
 
-    delwin(self->chatwin->infobox.win);
-    memset(&self->chatwin->infobox, 0, sizeof(struct infobox));
+    delwin(ctx->infobox.win);
+    memset(&ctx->infobox, 0, sizeof(struct infobox));
 }
 
 /* update infobox info and draw in respective chat window */
 static void draw_infobox(ToxWindow *self)
 {
-    struct infobox infobox = self->chatwin->infobox;
+    struct infobox *infobox = &self->chatwin->infobox;
 
-    if (infobox.win == NULL)
+    if (infobox->win == NULL)
         return;
 
     int x2, y2;
@@ -584,43 +588,41 @@ static void draw_infobox(ToxWindow *self)
     uint64_t curtime = get_unix_time();
 
     /* update elapsed time string once per second */
-    if (curtime > infobox.lastupdate) {
-        infobox.calltime = curtime - infobox.calltime;
-        get_elapsed_time_str(infobox.timestr, sizeof(infobox.timestr), infobox.calltime);
-    }
+    if (curtime > infobox->lastupdate)
+        get_elapsed_time_str(infobox->timestr, sizeof(infobox->timestr), curtime - infobox->starttime);
 
-    infobox.lastupdate = curtime;
+    infobox->lastupdate = curtime;
 
-    const char *in_is_muted = infobox.in_is_muted ? "yes" : "no";
-    const char *out_is_muted = infobox.out_is_muted ? "yes" : "no";
+    const char *in_is_muted = infobox->in_is_muted ? "yes" : "no";
+    const char *out_is_muted = infobox->out_is_muted ? "yes" : "no";
 
-    wmove(infobox.win, 1, 1);
-    wattron(infobox.win, COLOR_PAIR(RED) | A_BOLD);
-    wprintw(infobox.win, "    Call Active\n");
-    wattroff(infobox.win, COLOR_PAIR(RED) | A_BOLD);
+    wmove(infobox->win, 1, 1);
+    wattron(infobox->win, COLOR_PAIR(RED) | A_BOLD);
+    wprintw(infobox->win, "    Call Active\n");
+    wattroff(infobox->win, COLOR_PAIR(RED) | A_BOLD);
 
-    wattron(infobox.win, A_BOLD);
-    wprintw(infobox.win, " Time: ");
-    wattroff(infobox.win, A_BOLD);
-    wprintw(infobox.win, "%s\n", infobox.timestr);
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " Duration: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%s\n", infobox->timestr);
 
-    wattron(infobox.win, A_BOLD);
-    wprintw(infobox.win, " In muted: ");
-    wattroff(infobox.win, A_BOLD);
-    wprintw(infobox.win, "%s\n", in_is_muted);
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " In muted: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%s\n", in_is_muted);
 
-    wattron(infobox.win, A_BOLD);
-    wprintw(infobox.win, " Out muted: ");
-    wattroff(infobox.win, A_BOLD);
-    wprintw(infobox.win, "%s\n", out_is_muted);
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " Out muted: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%s\n", out_is_muted);
 
-    wattron(infobox.win, A_BOLD);
-    wprintw(infobox.win, " VAD level: ");
-    wattroff(infobox.win, A_BOLD);
-    wprintw(infobox.win, "%.2f\n", infobox.vad_lvl);
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " VAD level: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%.2f\n", infobox->vad_lvl);
 
-    wborder(infobox.win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
-    wrefresh(infobox.win);
+    wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
+    wrefresh(infobox->win);
 }
 
 #endif /* _SUPPORT_AUDIO */

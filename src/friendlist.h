@@ -29,8 +29,6 @@
 #include "windows.h"
 #include "file_senders.h"
 
-#define TIME_STR_SIZE 16
-
 struct FileReceiver {
     uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
     FILE *files[MAX_FILES];

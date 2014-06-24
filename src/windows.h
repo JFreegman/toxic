@@ -153,8 +153,8 @@ struct infobox {
     bool hide;
     bool active;
 
-    uint64_t calltime;
     uint64_t lastupdate;
+    uint64_t starttime;
     char timestr[TIME_STR_SIZE];
 
     WINDOW *win;

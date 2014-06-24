@@ -39,10 +39,10 @@ char *hex_string_to_bin(const char *hex_string);
 /* get the current unix time */
 uint64_t get_unix_time(void);
 
-/*Puts the current time in buf in the format of [Hour:Min:Sec] */
+/*Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(uint8_t *buf, int bufsize);
 
-/* Converts seconds to hours:minutes:seconds string */
+/* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
 void get_elapsed_time_str(uint8_t *buf, int bufsize, uint64_t secs);
 
 /* get the current local time */
@@ -57,18 +57,11 @@ int string_is_empty(char *string);
 /* convert a multibyte string to a wide character string (must provide buffer) */
 int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
 
-/* converts wide character string into a multibyte string.
-   Same thing as wcs_to_mbs() but caller must provide its own buffer */
+/* converts wide character string into a multibyte string and puts in buf. */
 int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n);
 
-/* convert a multibyte string to a wide character string (must provide buffer) */
+/* convert a multibyte string to a wide character string and puts in buf) */
 int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
-
-/* convert wide characters to multibyte string: string returned must be free'd */
-uint8_t *wcs_to_mbs(wchar_t *string);
-
-/* convert a wide char to multibyte char */
-char *wc_to_char(wchar_t ch);
 
 /* Returns 1 if connection has timed out, 0 otherwise */
 int timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
