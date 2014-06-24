@@ -15,10 +15,8 @@ Toxic is an ncurses based instant messaging client for [Tox](https://tox.im) whi
 * `cd build/`
 * `make`
 * `sudo make install DESTDIR="/path/you/like"`
-
 * You can add specific flags to makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
 * You can pass your own flags to makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the defaults one)
-
 * Audio calling support is automatically enabled if all dependencies are found
 
 ### Troubleshooting
