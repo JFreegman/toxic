@@ -4,7 +4,7 @@ VERSION = $(TOXIC_VERSION)_r$(REV)
 
 LIBS = libtoxcore ncursesw
 
-CFLAGS = -std=gnu99 -pthread -DTOXICVER="\"$(VERSION)\""
+CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type -DTOXICVER="\"$(VERSION)\""
 CFLAGS += -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
