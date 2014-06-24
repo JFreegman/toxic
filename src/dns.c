@@ -27,8 +27,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
-#include <arpa/nameser.h>
 #include <resolv.h>
+
+#ifdef __APPLE__
+#include <arpa/nameser_compat.h>
+#else
+#include <arpa/nameser.h>
+#endif  /* ifdef __APPLE__ */
 
 #include <tox/toxdns.h>
 
