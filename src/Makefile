@@ -1,4 +1,4 @@
-TOXIC_VERSION = 0.4.1
+TOXIC_VERSION = 0.4.2
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
@@ -18,44 +18,33 @@ AUDIO_CFLAGS = -D_SUPPORT_AUDIO
 AUDIO_OBJ = device.o audio_call.o
 
 # Check on wich system we are running
-ifeq ($(OS), Windows_NT)
+UNAME_S = $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	CFLAGS +=
+	LDFLAGS += -ldl -lresolv
+endif
+ifeq ($(UNAME_S), Darwin)
 	CFLAGS +=
 	LDFLAGS +=
-	ifeq ($(PROCESSOR_ARCHITECTURE), AMD64)
-		CFLAGS +=
-                LDFLAGS +=
-        endif
-        ifeq ($(PROCESSOR_ARCHITECTURE), x86)
-                CFLAGS +=
-                LDFLAGS +=
-        endif
-else
-        UNAME_S = $(shell uname -s)
-        ifeq ($(UNAME_S), Linux)
-                CFLAGS +=
-                LDFLAGS += -ldl -lresolv
-        endif
-        ifeq ($(UNAME_S), Darwin)
-                CFLAGS +=
-                LDFLAGS +=
-        endif
-        ifeq ($(UNAME_S), Solaris)
-                CFLAGS +=
-                LDFLAGS +=
-        endif
-        UNAME_M = $(shell uname -m)
-        ifeq ($(UNAME_M), x86_64)
-                CFLAGS +=
-                LDFLAGS +=
-        endif
-        ifneq ($(filter %86, $(UNAME_M)),)
-                CFLAGS +=
-                LDFLAGS +=
-        endif
-        ifneq ($(filter arm%, $(UNAME_M)),)
-                CFLAGS +=
-                LDFLAGS +=
-        endif
+endif
+ifeq ($(UNAME_S), Solaris)
+	CFLAGS +=
+	LDFLAGS +=
+endif
+
+# Check on which platform we are running
+UNAME_M = $(shell uname -m)
+ifeq ($(UNAME_M), x86_64)
+	CFLAGS +=
+	LDFLAGS +=
+endif
+ifneq ($(filter %86, $(UNAME_M)),)
+	CFLAGS +=
+	LDFLAGS +=
+endif
+ifneq ($(filter arm%, $(UNAME_M)),)
+	CFLAGS +=
+	LDFLAGS +=
 endif
 
 # Check if we can build audio
