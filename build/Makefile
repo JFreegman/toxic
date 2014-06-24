@@ -2,12 +2,14 @@ TOXIC_VERSION = 0.4.2
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
-LIBS = libtoxcore ncurses
+LIBS = libtoxcore ncursesw
 
-CFLAGS ?= $(USER_CFLAGS) -DTOXICVER="\"$(VERSION)\"" -std=gnu99 -pthread
-LDFLAGS ?= $(USER_LDFLAGS)
+CFLAGS = -std=gnu99 -pthread -DTOXICVER="\"$(VERSION)\""
+CFLAGS += -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
+CFLAGS += $(USER_CFLAGS)
+LDFLAGS = $(USER_LDFLAGS)
 SRC_DIR = ../src
-DESTDIR ?= /usr/local
+DESTDIR = /usr/local
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
 OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
