@@ -1,35 +1,40 @@
-# Toxic [![Build Status](https://travis-ci.org/Tox/toxic.png?branch=master)](https://travis-ci.org/Tox/toxic)
-Toxic is an ncurses based instant messaging client for [Tox](https://tox.im) which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore) and is now available as a standalone program. It looks like [this](http://i.imgur.com/hL7WhVl.png).
+# Toxic
+Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
+
+![Toxic Screenshot](http://i.imgur.com/hL7WhVl.png "Main Screen").
 
 ## Installation
 
-### Base dependencies
-* libtoxcore
-* ncurses (for Debian based systems: libncurses5-dev libncursesw5-dev)
+### Dependencies
+##### Base
+* [libtoxcore](https://github.com/irungentoo/toxcore)
+* [ncurses](http://www.gnu.org/software/ncurses) (for Debian based systems, 'libncurses5-dev' and 'libncursesw5-dev')
 
-### Audio dependencies
-* libtoxav
-* openal
+##### Audio
+* libtoxav (libtoxcore compiled with audio support)
+* [openal](http://openal.org)
 
 ### Compiling
-* `cd build/`
-* `make`
-* `sudo make install DESTDIR="/path/you/like"`
-* You can add specific flags to makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
-* You can pass your own flags to makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the defaults one)
-* Audio calling support is automatically enabled if all dependencies are found
+1. `cd build/`
+2. `make`
+3. `sudo make install DESTDIR="/where/to/install"`
+
+### Compilation Notes
+* You can add specific flags to the Makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
+* You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
+* Audio call support is automatically enabled if all dependencies are found
 
 ### Troubleshooting
-If your default prefix is "/usr/local" and you get the error:
+If your default prefix is "/usr/local" and you receive the following:
 ```
 error while loading shared libraries: libtoxcore.so.0: cannot open shared object file: No such file or directory
 ```
-you can try fix it running `sudo ldconfig`.
-If that doesn't fix it, run:
+you can attempt to correct it by running `sudo ldconfig`. If that doesn't work, run:
 ```
 echo '/usr/local/lib/' | sudo tee -a /etc/ld.so.conf.d/locallib.conf
 sudo ldconfig
 ```
 
 ## Settings
-After running Toxic for the first time an empty file called toxic.conf should reside in your home configuration directory ("~/.config/tox" for Linux users). For an example on how to use this config file to save settings such as auto-logging and time format see: [misc/toxic.conf](misc/toxic.conf).
+Running Toxic for the first time creates an empty file called toxic.conf in your home configuration directory ("~/.config/tox" for Linux users). Adding options to this file allows you to enable auto-logging, change the time format (12/24 hour), and much more.
+You can view our example config file [here](misc/toxic.conf).
