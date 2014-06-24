@@ -50,9 +50,9 @@ endif
 # Check if we can build audio
 CHECK_AUDIO_LIBS = $(shell pkg-config $(AUDIO_LIBS) || echo -n "error")
 ifneq ($(CHECK_AUDIO_LIBS), error)
-        LIBS += $(AUDIO_LIBS)
-        CFLAGS += $(AUDIO_CFLAGS)
-        OBJ += $(AUDIO_OBJ)
+	LIBS += $(AUDIO_LIBS)
+	CFLAGS += $(AUDIO_CFLAGS)
+	OBJ += $(AUDIO_OBJ)
 else
 ifneq ($(MAKECMDGOALS), clean)
 MISSING_AUDIO_LIBS = $(shell for lib in $(AUDIO_LIBS) ; do if ! pkg-config $$lib ; then echo $$lib ; fi ; done)
@@ -65,8 +65,8 @@ endif
 # Check if we can build Toxic
 CHECK_LIBS = $(shell pkg-config $(LIBS) || echo -n "error")
 ifneq ($(CHECK_LIBS), error)
-        CFLAGS += $(shell pkg-config --cflags $(LIBS))
-        LDFLAGS += $(shell pkg-config --libs $(LIBS))
+	CFLAGS += $(shell pkg-config --cflags $(LIBS))
+	LDFLAGS += $(shell pkg-config --libs $(LIBS))
 else
 ifneq ($(MAKECMDGOALS), clean)
 MISSING_LIBS = $(shell for lib in $(LIBS) ; do if ! pkg-config $$lib ; then echo $$lib ; fi ; done)
@@ -81,18 +81,18 @@ endif
 all: toxic
 
 toxic: $(OBJ)
-        $(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
 
 install: toxic
-        mkdir -pv $(DESTDIR)/bin
-        install -m 0755 toxic $(DESTDIR)/bin
+	mkdir -pv $(DESTDIR)/bin
+	install -m 0755 toxic $(DESTDIR)/bin
 
 %.o: %.c
-        $(CC) $(CFLAGS) -o $*.o -c $*.c
-        $(CC) -MM $(CFLAGS) $*.c > $*.d
+	$(CC) $(CFLAGS) -o $*.o -c $*.c
+	$(CC) -MM $(CFLAGS) $*.c > $*.d
 
 clean:
-        rm -rf *.d *.o toxic
+	rm -rf *.d *.o toxic
 
 -include $(OBJ:.o=.d)
 
