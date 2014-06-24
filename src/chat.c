@@ -54,6 +54,11 @@ extern struct _Winthread Winthread;
 extern struct user_settings *user_settings;
 
 #ifdef _SUPPORT_AUDIO
+static void init_infobox(ToxWindow *self);
+static void kill_infobox(ToxWindow *self);
+#endif  /* _SUPPORT_AUDIO */
+
+#ifdef _SUPPORT_AUDIO
 #define AC_NUM_CHAT_COMMANDS 26
 #else
 #define AC_NUM_CHAT_COMMANDS 18
@@ -139,7 +144,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *msg, u
     nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, nick, NULL, msg, IN_MSG, 0, 0);
 
@@ -188,7 +193,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action,
     nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, nick, NULL, action, ACTION, 0, 0);
     write_to_log(action, nick, ctx->log, true);
@@ -434,7 +439,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
     /* call_index is set here and reset on call end */
     
     self->call_idx = call_index;
-    
+
     line_info_add(self, NULL, NULL, NULL, "Incoming audio call! Type: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
 
     alert_window(self, WINDOW_ALERT_0, true);
@@ -453,6 +458,8 @@ void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    init_infobox(self);
+
     line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
@@ -461,6 +468,7 @@ void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
     if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    kill_infobox(self);
     self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
 }
@@ -479,6 +487,8 @@ void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    init_infobox(self);
+
     line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
 }
 
@@ -487,6 +497,7 @@ void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
     if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    kill_infobox(self);
     self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call canceled!", SYS_MSG, 0, 0);
 }
@@ -505,6 +516,7 @@ void chat_onEnd (ToxWindow *self, ToxAv *av, int call_index)
     if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    kill_infobox(self);
     self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
 }
@@ -523,8 +535,94 @@ void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
     if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
+    kill_infobox(self);
     self->call_idx = -1;
     line_info_add(self, NULL, NULL, NULL, "Peer disconnected; call ended!", SYS_MSG, 0, 0);
+}
+
+
+#define INFOBOX_HEIGHT 7
+#define INFOBOX_WIDTH 21
+
+static void init_infobox(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
+
+    memset(&ctx->infobox, 0, sizeof(struct infobox));
+
+    ctx->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
+    ctx->infobox.starttime = get_unix_time();
+    ctx->infobox.vad_lvl = VAD_THRESHOLD_DEFAULT;
+    ctx->infobox.active = true;
+    strcpy(ctx->infobox.timestr, "00");
+}
+
+static void kill_infobox(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (!ctx->infobox.win)
+        return;
+
+    delwin(ctx->infobox.win);
+    memset(&ctx->infobox, 0, sizeof(struct infobox));
+}
+
+/* update infobox info and draw in respective chat window */
+static void draw_infobox(ToxWindow *self)
+{
+    struct infobox *infobox = &self->chatwin->infobox;
+
+    if (infobox->win == NULL)
+        return;
+
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
+
+    if (x2 < INFOBOX_WIDTH || y2 < INFOBOX_HEIGHT)
+        return;
+
+    uint64_t curtime = get_unix_time();
+
+    /* update elapsed time string once per second */
+    if (curtime > infobox->lastupdate)
+        get_elapsed_time_str(infobox->timestr, sizeof(infobox->timestr), curtime - infobox->starttime);
+
+    infobox->lastupdate = curtime;
+
+    const char *in_is_muted = infobox->in_is_muted ? "yes" : "no";
+    const char *out_is_muted = infobox->out_is_muted ? "yes" : "no";
+
+    wmove(infobox->win, 1, 1);
+    wattron(infobox->win, COLOR_PAIR(RED) | A_BOLD);
+    wprintw(infobox->win, "    Call Active\n");
+    wattroff(infobox->win, COLOR_PAIR(RED) | A_BOLD);
+
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " Duration: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%s\n", infobox->timestr);
+
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " In muted: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%s\n", in_is_muted);
+
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " Out muted: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%s\n", out_is_muted);
+
+    wattron(infobox->win, A_BOLD);
+    wprintw(infobox->win, " VAD level: ");
+    wattroff(infobox->win, A_BOLD);
+    wprintw(infobox->win, "%.2f\n", infobox->vad_lvl);
+
+    wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
+    wrefresh(infobox->win);
 }
 
 #endif /* _SUPPORT_AUDIO */
@@ -539,7 +637,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, uint8_t *acti
     selfname[len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, selfname, NULL, action, ACTION, 0, 0);
 
@@ -740,7 +838,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 selfname[len] = '\0';
 
                 uint8_t timefrmt[TIME_STR_SIZE];
-                get_time_str(timefrmt);
+                get_time_str(timefrmt, sizeof(timefrmt));
 
                 line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
 
@@ -874,6 +972,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     wprintw(statusbar->topline, "}\n");
     mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
+
+#ifdef _SUPPORT_AUDIO
+    wrefresh(self->window);
+
+    if (ctx->infobox.active)
+        draw_infobox(self);
+#endif
+
 }
 
 static void chat_onInit(ToxWindow *self, Tox *m)

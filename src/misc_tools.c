@@ -55,14 +55,33 @@ struct tm *get_time(void)
 {
     struct tm *timeinfo;
     uint64_t t = get_unix_time();
-    timeinfo = localtime(&t);
+    timeinfo = localtime((const time_t*)&t);
     return timeinfo;
 }
 
-void get_time_str(uint8_t *buf)
+/*Puts the current time in buf in the format of [HH:mm:ss] */
+void get_time_str(uint8_t *buf, int bufsize)
 {
     const char *t = user_settings->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
-    strftime(buf, TIME_STR_SIZE, t, get_time());
+    strftime(buf, bufsize, t, get_time());
+}
+
+/* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
+void get_elapsed_time_str(uint8_t *buf, int bufsize, uint64_t secs)
+{
+    if (!secs)
+        return;
+
+    uint64_t seconds = secs % 60;
+    uint64_t minutes = (secs % 3600) / 60;
+    uint64_t hours = secs / 3600;
+
+    if (!minutes && !hours)
+        snprintf(buf, bufsize, "%.2ld", seconds);
+    else if (!hours)
+        snprintf(buf, bufsize, "%ld:%.2ld", minutes, seconds);
+    else
+        snprintf(buf, bufsize, "%ld:%.2ld:%.2ld", hours, minutes, seconds);
 }
 
 char *hex_string_to_bin(const char *hex_string)
@@ -70,11 +89,8 @@ char *hex_string_to_bin(const char *hex_string)
     size_t len = strlen(hex_string);
     char *val = malloc(len);
 
-    if (val == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
+    if (val == NULL)
+        exit_toxic_err("failed in hex_string_to_bin", FATALERR_MEMORY);
 
     size_t i;
 
@@ -90,7 +106,7 @@ int string_is_empty(char *string)
     return string[0] == '\0';
 }
 
-/* convert a multibyte string to a wide character string (must provide buffer) */
+/* convert a multibyte string to a wide character string and puts in buf. */
 int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
 {
     size_t len = mbstowcs(NULL, string, 0) + 1;
@@ -98,14 +114,13 @@ int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = mbstowcs(buf, string, n)) == (size_t) - 1)
+    if ((len = mbstowcs(buf, string, n)) == (size_t) -1)
         return -1;
 
     return len;
 }
 
-/* converts wide character string into a multibyte string.
-   Same thing as wcs_to_mbs() but caller must provide its own buffer */
+/* converts wide character string into a multibyte string and puts in buf. */
 int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
 {
     size_t len = wcstombs(NULL, string, 0) + 1;
@@ -113,57 +128,10 @@ int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = wcstombs(buf, string, n)) == (size_t) - 1)
+    if ((len = wcstombs(buf, string, n)) == (size_t) -1)
         return -1;
 
     return len;
-}
-
-/* convert wide characters to multibyte string: string returned must be freed */
-uint8_t *wcs_to_mbs(wchar_t *string)
-{
-    uint8_t *ret = NULL;
-    size_t len = wcstombs(NULL, string, 0);
-
-    if (len != (size_t) - 1) {
-        ret = malloc(++len);
-
-        if (ret != NULL) {
-            if (wcstombs(ret, string, len) == (size_t) - 1)
-                return NULL;
-        }
-    } else {
-        ret = malloc(2);
-
-        if (ret != NULL) {
-            ret[0] = ' ';
-            ret[1] = '\0';
-        }
-    }
-
-    if (ret == NULL) {
-        endwin();
-        fprintf(stderr, "malloc() failed. Aborting...\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return ret;
-}
-
-/* convert a wide char to multibyte string */
-char *wc_to_char(wchar_t ch)
-{
-    static char ret[MB_LEN_MAX + 1];
-    int len = wctomb(ret, ch);
-
-    if (len == -1) {
-        ret[0] = ' ';
-        ret[1] = '\0';
-    } else {
-        ret[len] = '\0';
-    }
-
-    return ret;
 }
 
 /* Returns 1 if connection has timed out, 0 otherwise */

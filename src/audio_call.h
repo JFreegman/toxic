@@ -27,13 +27,14 @@
 
 #include "device.h"
 
+#define VAD_THRESHOLD_DEFAULT 40.0
+
 typedef enum _AudioError {
     ae_None = 0,
     ae_StartingCaptureDevice = 1 << 0,
     ae_StartingOutputDevice = 1 << 1,
     ae_StartingCoreAudio = 1 << 2
 } AudioError;
-
 
 /* You will have to pass pointer to first member of 'windows'
  * declared in windows.c otherwise undefined behaviour will
@@ -43,6 +44,5 @@ void terminate_audio();
 
 int start_transmission(ToxWindow *self);
 int stop_transmission(int call_index);
-
 
 #endif /* _audio_h */

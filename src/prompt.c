@@ -372,7 +372,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
     nick[n_len] = '\0';
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
     uint8_t *msg;
 
     if (status == 1) {
@@ -393,7 +393,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const uint8_t *key, 
     ChatContext *ctx = self->chatwin;
 
     uint8_t timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt);
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     uint8_t msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "Friend request with the message '%s'", data);

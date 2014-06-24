@@ -59,6 +59,7 @@ static int friendlist_index[MAX_FRIENDS_NUM] = {0};
 static struct _pendingDel {
     int num;
     bool active;
+    WINDOW *popup;
 } pendingdelete;
 
 #define S_WEIGHT 100
@@ -91,7 +92,7 @@ void sort_friendlist_index(void)
 static void update_friend_last_online(int32_t num, uint64_t timestamp)
 {
     friends[num].last_online.last_on = timestamp;
-    friends[num].last_online.tm = *localtime(&timestamp);
+    friends[num].last_online.tm = *localtime((const time_t*)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
     const char *t = user_settings->time == TIME_12 ? "%I:%M %p" : "%H:%M";
@@ -116,7 +117,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *
             nick[n_len] = '\0';
 
             uint8_t timefrmt[TIME_STR_SIZE];
-            get_time_str(timefrmt);
+            get_time_str(timefrmt, sizeof(timefrmt));
 
             line_info_add(prompt, timefrmt, nick, NULL, str, IN_MSG, 0, 0);
 
@@ -298,7 +299,7 @@ static void del_friend_activate(ToxWindow *self, Tox *m, int32_t f_num)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
-    self->popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
+    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
 
     pendingdelete.active = true;
     pendingdelete.num = f_num;
@@ -310,30 +311,29 @@ static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
     if (key == 'y')
         delete_friend(m, pendingdelete.num);
 
+    delwin(pendingdelete.popup);
     memset(&pendingdelete, 0, sizeof(pendingdelete));
-    delwin(self->popup);
-    self->popup = NULL;
     clear();
     refresh();
 }
 
-static void draw_popup(ToxWindow *self, Tox *m)
+static void draw_popup(void)
 {
-    if (self->popup == NULL)
+    if (!pendingdelete.active)
         return;
 
-    wattron(self->popup, A_BOLD);
-    box(self->popup, ACS_VLINE, ACS_HLINE);
-    wattroff(self->popup, A_BOLD);
+    wattron(pendingdelete.popup, A_BOLD);
+    box(pendingdelete.popup, ACS_VLINE, ACS_HLINE);
+    wattroff(pendingdelete.popup, A_BOLD);
 
-    wmove(self->popup, 1, 1);
-    wprintw(self->popup, "Delete contact ");
-    wattron(self->popup, A_BOLD);
-    wprintw(self->popup, "%s", friends[pendingdelete.num].name);
-    wattroff(self->popup, A_BOLD);
-    wprintw(self->popup, "? y/n");
+    wmove(pendingdelete.popup, 1, 1);
+    wprintw(pendingdelete.popup, "Delete contact ");
+    wattron(pendingdelete.popup, A_BOLD);
+    wprintw(pendingdelete.popup, "%s", friends[pendingdelete.num].name);
+    wattroff(pendingdelete.popup, A_BOLD);
+    wprintw(pendingdelete.popup, "? y/n");
 
-    wrefresh(self->popup);
+    wrefresh(pendingdelete.popup);
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
@@ -383,7 +383,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y2, x2);
 
     uint64_t cur_time = get_unix_time();
-    struct tm cur_loc_tm = *localtime(&cur_time);
+    struct tm cur_loc_tm = *localtime((const time_t*)&cur_time);
 
     bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
 
@@ -540,7 +540,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     self->x = x2;
     wrefresh(self->window);
-    draw_popup(self, m);
+    draw_popup();
 
     if (num_friends) {
         wmove(self->window, y2 - 1, 1);
