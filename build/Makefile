@@ -6,6 +6,7 @@ LIBS = libtoxcore ncurses
 
 CFLAGS ?= $(USER_CFLAGS) -DTOXICVER="\"$(VERSION)\"" -std=gnu99 -pthread
 LDFLAGS ?= $(USER_LDFLAGS)
+SRC_DIR = ../src
 DESTDIR ?= /usr/local
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
@@ -87,9 +88,9 @@ install: toxic
 	mkdir -pv $(DESTDIR)/bin
 	install -m 0755 toxic $(DESTDIR)/bin
 
-%.o: %.c
-	$(CC) $(CFLAGS) -o $*.o -c $*.c
-	$(CC) -MM $(CFLAGS) $*.c > $*.d
+%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
+	$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
 clean:
 	rm -rf *.d *.o toxic
