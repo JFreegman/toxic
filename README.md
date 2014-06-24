@@ -8,7 +8,7 @@ Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) whi
 ### Dependencies
 ##### Base
 * [libtoxcore](https://github.com/irungentoo/toxcore)
-* [ncurses](https://www.gnu.org/software/ncurses) (for Debian based systems, 'libncurses5-dev' and 'libncursesw5-dev')
+* [ncurses](https://www.gnu.org/software/ncurses) (for Debian based systems, 'libncursesw5-dev')
 
 ##### Audio
 * libtoxav (libtoxcore compiled with audio support)
