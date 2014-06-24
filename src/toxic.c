@@ -20,12 +20,12 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SIGWINCH
 #define SIGWINCH 28
+#endif
+
+#ifndef SIGINT
+#define SIGINT 2
 #endif
 
 #include <curses.h>

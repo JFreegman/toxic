@@ -20,10 +20,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "toxic.h"
 #include "windows.h"
 #include "audio_call.h"
@@ -258,6 +254,8 @@ int start_transmission(ToxWindow *self)
          0 != pthread_detach(ASettins.calls[self->call_idx].ttid) ) {
         return -1;
     }
+
+    return 0;
 }
 
 int stop_transmission(int call_index)
@@ -265,7 +263,10 @@ int stop_transmission(int call_index)
     if ( ASettins.calls[call_index].ttas ) {
         toxav_kill_transmission(ASettins.av, call_index);
         ASettins.calls[call_index].ttas = _False;
+        return 0;
     }
+
+    return -1;
 }
 /*
  * End of transmission
