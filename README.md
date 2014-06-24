@@ -23,7 +23,9 @@ Toxic is an ncurses based instant messaging client for [Tox](https://tox.im) whi
 
 ### Troubleshooting
 If your default prefix is "/usr/local" and you get the error:
-`error while loading shared libraries: libtoxcore.so.0: cannot open shared object file: No such file or directory`
+```
+error while loading shared libraries: libtoxcore.so.0: cannot open shared object file: No such file or directory
+```
 you can try fix it running `sudo ldconfig`.
 If that doesn't fix it, run:
 ```
