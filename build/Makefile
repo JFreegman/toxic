@@ -8,7 +8,7 @@ MISC_DIR = ../misc
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
-DATAFILES = $(MISC_DIR)/DHTnodes $(MISC_DIR)/toxic.config
+DATAFILES = $(MISC_DIR)/DHTnodes $(MISC_DIR)/toxic.conf
 
 LIBS = libtoxcore ncursesw
 
