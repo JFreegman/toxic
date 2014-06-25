@@ -20,15 +20,16 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
-#include <arpa/nameser.h>
 #include <resolv.h>
+
+#ifdef __APPLE__
+#include <arpa/nameser_compat.h>
+#else
+#include <arpa/nameser.h>
+#endif  /* ifdef __APPLE__ */
 
 #include <tox/toxdns.h>
 
@@ -279,6 +280,7 @@ void *dns3_lookup_thread(void *data)
     pthread_mutex_unlock(&dns_thread.lock);
 
     kill_dns_thread(dns_obj);
+    return 0;
 }
 
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */

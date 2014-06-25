@@ -20,10 +20,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
@@ -36,7 +32,7 @@
 /* Adds char to line at pos */
 void add_char_to_buf(ChatContext *ctx, wint_t ch)
 {
-    if (ctx->pos < 0 || ctx->len >= MAX_STR_SIZE)
+    if (ctx->len >= MAX_STR_SIZE)
         return;
 
     wmemmove(&ctx->line[ctx->pos + 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
