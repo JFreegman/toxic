@@ -25,9 +25,9 @@ Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) whi
 * Audio call support is automatically enabled if all dependencies are found
 
 ### Packaging
-* For packaging purpose, you can use `DESTDIR=""` to specify a temporary directory where store installed files
+* For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
 * `DESTDIR=""` can be used in addition to `PREFIX=""`:
-  * `DESTDIR=""` is meant to specify a temporary directory where store installed files (ex: "/tmp/build/pkg")
+  * `DESTDIR=""` is meant to specify a directory where to store installed files (ex: "/tmp/build/pkg")
   * `PREFIX=""` is meant to specify a prefix directory for binaries and data files (ex: "/usr/local")
 
 ### Troubleshooting
