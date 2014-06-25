@@ -662,16 +662,15 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     int cur_len = 0;   /* widechar size of current char */
     int x2_is_odd = x2 % 2 != 0;
 
-    if (ltr) {   /* char is printable */
+
+    if (ltr) {    /* char is printable */
         if (ctx->len < MAX_STR_SIZE - 1) {
             add_char_to_buf(ctx, key);
+            cur_len = MAX(1, wcwidth(key));
+            wmove(self->window, y, x + cur_len);
 
-            if (x >= x2 - 1) {
-                wmove(self->window, y, x2 / 2 + x2_is_odd);
-                ctx->start += x2 / 2;
-            } else {
-                wmove(self->window, y, x + MAX(1, wcwidth(key)));
-            }
+            if (x + cur_len >= x2)
+                ctx->start += cur_len;
         }
 
         if (!ctx->self_is_typing && ctx->line[0] != '/')
@@ -683,10 +682,10 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
             if (ctx->pos > 0) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
                 del_char_buf_bck(ctx);
 
-                if (x == 0) {
+                if (x <= 0) {
                     ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
                     int new_x = ctx->start == 0 ? ctx->pos : x2 - cur_len;
                     wmove(self->window, y, new_x);
@@ -733,7 +732,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (ctx->pos != ctx->len) {
                 ctx->pos = ctx->len;
                 ctx->start = x2 * (ctx->len / x2);
-                mv_curs_end(self->window, ctx->len, y2, x2);
+                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, MAX_STR_SIZE)), y2, x2);
             }
         }
 
@@ -742,7 +741,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 --ctx->pos;
                 cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
 
-                if (x == 0) {
+                if (x <= 0) {
                     wmove(self->window, y, x2 - cur_len);
                     ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
                     ctx->pos = ctx->start + x2 - 1;
@@ -757,15 +756,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_RIGHT) {
             if (ctx->pos < ctx->len) {
                 ++ctx->pos;
+                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
+                wmove(self->window, y, x + cur_len);
 
-                if (x == x2 - 1) {
-                    wmove(self->window, y, 0);
-                    ctx->start += x2;
-                    ctx->pos = ctx->start;
-                } else {
-                    cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
-                    wmove(self->window, y, x + cur_len);
-                }
+                if (x + cur_len >= x2)
+                    ctx->start += cur_len;
             } else {
                 beep();
             }
@@ -774,13 +769,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (key == KEY_UP) {    /* fetches previous item in history */
             fetch_hist_item(ctx, MOVE_UP);
             ctx->start = x2 * (ctx->len / x2);
-            mv_curs_end(self->window, ctx->len, y2, x2);
+            mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, MAX_STR_SIZE)), y2, x2);
         }
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
             fetch_hist_item(ctx, MOVE_DOWN);
             ctx->start = x2 * (ctx->len / x2);
-            mv_curs_end(self->window, ctx->len, y2, x2);
+            mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, MAX_STR_SIZE)), y2, x2);
         }
 
         else if (key == '\t') {    /* TAB key: completes command */
