@@ -2,15 +2,21 @@ TOXIC_VERSION = 0.4.2
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
-LIBS = libtoxcore ncursesw
-
-CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type -DTOXICVER="\"$(VERSION)\""
-CFLAGS += -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
-CFLAGS += $(USER_CFLAGS)
-LDFLAGS = $(USER_LDFLAGS)
 CFG_DIR = ../cfg
 SRC_DIR = ../src
-DESTDIR = /usr/local
+MISC_DIR = ../misc
+PREFIX = /usr/local
+BINDIR = $(PREFIX)/bin
+DATADIR = $(PREFIX)/share/toxic
+DATAFILES = $(MISC_DIR)/DHTnodes $(MISC_DIR)/toxic.conf
+
+LIBS = libtoxcore ncursesw
+
+CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type
+CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
+CFLAGS += -DPACKAGE_DATADIR="\"$(DATADIR)\""
+CFLAGS += $(USER_CFLAGS)
+LDFLAGS = $(USER_LDFLAGS)
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
 OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
@@ -82,8 +88,10 @@ toxic: $(OBJ)
 	$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
 
 install: toxic
-	mkdir -pv $(DESTDIR)/bin
-	install -m 0755 toxic $(DESTDIR)/bin
+	@mkdir -p $(DESTDIR)/$(BINDIR)
+	@mkdir -p $(DESTDIR)/$(DATADIR)
+	install -m 0755 toxic $(DESTDIR)/$(BINDIR)
+	install -m 0644 $(DATAFILES) $(DESTDIR)/$(DATADIR)
 
 %.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c

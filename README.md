@@ -16,13 +16,19 @@ Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) whi
 
 ### Compiling
 1. `cd build/`
-2. `make`
-3. `sudo make install DESTDIR="/where/to/install"`
+2. `make PREFIX="/where/to/install"`
+3. `sudo make install PREFIX="/where/to/install"`
 
 ### Compilation Notes
 * You can add specific flags to the Makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
 * You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
 * Audio call support is automatically enabled if all dependencies are found
+
+### Packaging
+* For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
+* `DESTDIR=""` can be used in addition to `PREFIX=""`:
+  * `DESTDIR=""` is meant to specify a directory where to store installed files (ex: "/tmp/build/pkg")
+  * `PREFIX=""` is meant to specify a prefix directory for binaries and data files (ex: "/usr/local")
 
 ### Troubleshooting
 If your default prefix is "/usr/local" and you receive the following:
