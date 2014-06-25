@@ -91,7 +91,7 @@ install: toxic
 	@mkdir -p $(DESTDIR)/$(BINDIR)
 	@mkdir -p $(DESTDIR)/$(DATADIR)
 	install -m 0755 toxic $(DESTDIR)/$(BINDIR)
-	install -m 0644 $(DATAFILES) $(PREFIX)/$(DATADIR)
+	install -m 0644 $(DATAFILES) $(DESTDIR)/$(DATADIR)
 
 %.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
