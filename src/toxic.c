@@ -54,7 +54,6 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
-#include "file_senders.h"
 #include "line_info.h"
 #include "settings.h"
 #include "log.h"
@@ -460,7 +459,6 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     pthread_mutex_lock(&Winthread.lock);
 
     do_connection(m, prompt);
-    do_file_senders(m);
     tox_do(m);    /* main tox-core loop */
 
     pthread_mutex_unlock(&Winthread.lock);
