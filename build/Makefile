@@ -8,7 +8,9 @@ MISC_DIR = ../misc
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
-DATAFILES = $(MISC_DIR)/DHTnodes $(MISC_DIR)/toxic.conf
+MANDIR = $(PREFIX)/man
+DATAFILES = DHTnodes toxic.conf.example
+MANFILES = toxic.1 toxic.conf.5
 
 LIBS = libtoxcore ncursesw
 
@@ -88,10 +90,25 @@ toxic: $(OBJ)
 	$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
 
 install: toxic
-	@mkdir -p $(DESTDIR)/$(BINDIR)
-	@mkdir -p $(DESTDIR)/$(DATADIR)
-	install -m 0755 toxic $(DESTDIR)/$(BINDIR)
-	install -m 0644 $(DATAFILES) $(DESTDIR)/$(DATADIR)
+	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
+	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))
+	mkdir -p $(abspath $(DESTDIR)/$(MANDIR))
+	@echo "Installing toxic executable"
+	@install -m 0755 toxic $(abspath $(DESTDIR)/$(BINDIR))
+	@echo "Installing data files"
+	@for f in $(DATAFILES) ; do \
+		install -m 0644 $(MISC_DIR)/$$f $(abspath $(DESTDIR)/$(DATADIR)) ;\
+	done
+	@echo "Installing man pages"
+	@for f in $(MANFILES) ; do \
+		section=$(abspath $(DESTDIR)/$(MANDIR))/man`echo $$f | rev | cut -d "." -f 1` ;\
+		file=$$section/$$f ;\
+		mkdir -p $$section ;\
+		install -m 0644 $(DOC_DIR)/$$f $$file ;\
+		sed -i'' -e 's:__VERSION__:'$(VERSION)':g' $$file ;\
+		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
+		gzip -f -9 $$file ;\
+	done
 
 %.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
@@ -99,6 +116,8 @@ install: toxic
 
 clean:
 	rm -rf *.d *.o toxic
+
+-include $(CFG_DIR)/help.mk
 
 -include $(OBJ:.o=.d)
 

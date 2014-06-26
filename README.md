@@ -43,5 +43,5 @@ sudo ldconfig
 
 ## Settings
 Running Toxic for the first time creates an empty file called toxic.conf in your home configuration directory ("~/.config/tox" for Linux users). Adding options to this file allows you to enable auto-logging, change the time format (12/24 hour), and much more.
-You can view our example config file [here](misc/toxic.conf).
+You can view our example config file [here](misc/toxic.conf.example).
 

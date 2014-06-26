@@ -1,0 +1,119 @@
+.TH TOXIC.CONF 5 "June 2014" "Toxic v__VERSION__" "User Manual"
+.SH NAME
+toxic.conf \- Configuration file for toxic(1)
+.SH DESCRIPTION
+The
+.I toxic.conf
+file is the main configuration file for
+.BR toxic (1)
+client.
+.SH SYNTAX
+.IB <KEY> : <VALUE> ;
+.PP
+Lines starting with "#" are comments and will be ignored.
+.PP
+Keys:
+.RS
+.B time
+.RS
+Select between 24 and 12 hour time.
+.br
+Values: 24, 12
+.RE
+.PP
+.B autolog
+.RS
+Enable or disable autologging.
+.br
+Values: 1 to enable, 0 to disable
+.RE
+.PP
+.B disable_alerts
+.RS
+Enable or disable terminal alerts on messages.
+.br
+Values: 0 to enable, 1 to disable
+.RE
+.PP
+.B history_size
+.RS
+Maximum lines for chat window history.
+.br
+Values: <INTEGER> (for example: 700)
+.RE
+.PP
+.B colour_theme
+.RS
+Select between toxic colour theme and notive terminal colours.
+.br
+Values: 0 for toxic colours, 1 for terminal colours
+.RE
+.PP
+.B audio_in_dev
+.RS
+Audio input device.
+.br
+Values: <INTEGER> (number correspond to "/lsdev in")
+.RE
+.PP
+.B audio_out_dev
+.RS
+Audio output device.
+.br
+Values: <INTEGER> (number correspond to "/lsdev out")
+.RE
+.PP
+.B download_path
+.RS
+Default path for downloads.
+.br
+Values: <STRING> (absolute path where to store downloaded files)
+.RE
+.RE
+.SH EXAMPLES
+This is from __DATADIR__/toxic.conf.exmaple:
+.PP
+# 24 or 12 hour time
+.br
+time:24;
+.br
+# 1 to enable autologging, 0 to disable
+.br
+autolog:0;
+.br
+# 1 to disbale terminal alerts on messages, 0 to enable
+.br
+disable_alerts:0;
+.br
+# maximum lines for chat window history
+.br
+history_size:700;
+.br
+# 1 to use native terminal colours, 0 to use toxic default colour theme
+.br
+colour_theme:0;
+.br
+# preferred audio input device; numbers correspond to /lsdev in
+.br
+audio_in_dev:0;
+.br
+# preferred audio output device; numbers correspond to /lsdev out
+.br
+audio_out_dev:0;
+.br
+# preferred path for downloads
+.br
+download_path:/home/USERNAME/Downloads/;
+.SH FILES
+.IP ~/.config/tox/toxic.conf
+Main configuration file.
+.IP __DATADIR__/toxic.conf.example
+Configuration example.
+.SH AUTHORS
+JFreegman <JFreegman@gmail.com>
+.SH SEE ALSO
+.BR toxic (1)
+.SH LINKS
+Project page on github: https://github.com/Tox/toxic
+.br
+IRC channel on Freenode: chat.freenode.net#tox
