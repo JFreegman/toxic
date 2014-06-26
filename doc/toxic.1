@@ -1,0 +1,52 @@
+.TH TOXIC 1 "June 2014" "Toxic v__VERSION__" "User Manual"
+
+.SH NAME
+Toxic \- Reference CLI for Tox
+
+.SH SYNOPSYS
+.B toxic [\-f
+.I data\-file
+.B ] [\-x] [\-4] [\-c
+.I config\-file
+.B ] [\-n
+.I nodes\-file
+.B ] [\-h]
+
+.SH DESCRIPTION
+Toxic is an ncurses-based instant messaging client for Tox which formerly
+resided in the Tox core repository, and is now available as a standalone
+application.
+
+.SH OPTIONS
+.IP "\-f, \-\-file data\-file"
+Use specified
+.I data\-file
+instead of
+.IR ~/.config/tox/data
+.IP "\-x, \-\-nodata"
+Ignore data file
+.IP "\-4, \-\-ipv4"
+Force IPv4 connection
+.IP "\-c, \-\-config config\-file"
+Use specified
+.I config\-file
+instead of
+.IR __DATADIR__/toxic.conf
+.IP "\-n, \-\-nodes nodes\-file"
+Use specified
+.I nodes\-file
+for DHT bootstrap nodes, instead of
+.IR __DATADIR__/DHTnodes
+.IP "\-h, \-\-help"
+Show help message
+
+.SH BUGS
+Expect bugs and other bad things: this software is in pre\-alpha stage.
+
+.SH AUTHORS
+JFreegman (JFreegman@gmail.com)
+
+.SH SEE ALSO
+Project page on github: https://github.com/Tox/toxic
+.br
+IRC channel on Freenode: chat.freenode.net#tox
