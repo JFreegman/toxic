@@ -188,13 +188,6 @@ int valid_nick(uint8_t *nick)
     return 1;
 }
 
-/* Moves cursor to the end of the line in given window */
-void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x)
-{
-    int new_x = len < max_x ? len : len % max_x;
-    wmove(w, max_y - CURS_Y_OFFSET, new_x);
-}
-
 /* gets base file name from path or original file name if no path is supplied */
 void get_file_name(uint8_t *namebuf, uint8_t *pathname)
 {

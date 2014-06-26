@@ -15,14 +15,14 @@ MANFILES = toxic.1
 
 LIBS = libtoxcore ncursesw
 
-CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type
+CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type -Werror
 CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
 CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
 
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
-OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
+OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o input.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 # Variables for audio support

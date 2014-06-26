@@ -79,9 +79,6 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
       - must not contain contiguous spaces */
 int valid_nick(uint8_t *nick);
 
-/* Moves the cursor to the end of the line in given window */
-void mv_curs_end(WINDOW *w, size_t len, int max_y, int max_x);
-
 /* gets base file name from path or original file name if no path is supplied */
 void get_file_name(uint8_t *namebuf, uint8_t *pathname);
 

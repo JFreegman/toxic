@@ -58,7 +58,7 @@ static struct _pendingDel {
     WINDOW *popup;
 } pendingdelete;
 
-#define S_WEIGHT 100
+#define S_WEIGHT 100000
 
 static int index_name_cmp(const void *n1, const void *n2)
 {
