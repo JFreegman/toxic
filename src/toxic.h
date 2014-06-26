@@ -35,7 +35,7 @@
 #define UNKNOWN_NAME "Anonymous"
 
 #define MAX_FRIENDS_NUM 500
-#define MAX_STR_SIZE 1024
+#define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
@@ -53,11 +53,6 @@
 #define T_KEY_C_V        0x16     /* ctrl-v */
 #define T_KEY_C_F        0x06     /* ctrl-f */
 #define T_KEY_C_H        0x08     /* ctrl-h */
-
-enum {
-    MOVE_UP,
-    MOVE_DOWN,
-} KEY_DIRS;
 
 typedef enum _FATAL_ERRS {
     FATALERR_MEMORY = -1,    /* malloc() or calloc() failed */

@@ -20,10 +20,6 @@
  *
  */
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE    /* needed for strcasestr() and wcwidth() */
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -38,6 +34,7 @@
 #include "log.h"
 #include "line_info.h"
 #include "settings.h"
+#include "input.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -105,11 +102,14 @@ static void set_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
     ctx->self_is_typing = is_typing;
 }
 
-void kill_chat_window(ToxWindow *self)
+void kill_chat_window(ToxWindow *self, Tox *m)
 {
     set_active_window(0);
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
+
+    if (ctx->self_is_typing)
+        set_typingstatus(self, m, 0);
 
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
@@ -659,192 +659,75 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (x2 <= 0)
         return;
 
-    int cur_len = 0;   /* widechar size of current char */
-    int x2_is_odd = x2 % 2 != 0;
-
-
     if (ltr) {    /* char is printable */
-        if (ctx->len < MAX_STR_SIZE - 1) {
-            add_char_to_buf(ctx, key);
-            cur_len = MAX(1, wcwidth(key));
-            wmove(self->window, y, x + cur_len);
+        input_new_char(self, key, x, y, x2, y2);
 
-            if (x + cur_len >= x2)
-                ctx->start += cur_len;
-        }
-
-        if (!ctx->self_is_typing && ctx->line[0] != '/')
+        if (ctx->line[0] != '/')
             set_typingstatus(self, m, 1);
 
-    } else { /* if (!ltr) */
-        if (line_info_onKey(self, key))
-            return;
+        return;
+    }
 
-        if (key == 0x107 || key == 0x8 || key == 0x7f) {  /* BACKSPACE key */
-            if (ctx->pos > 0) {
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
-                del_char_buf_bck(ctx);
+    if (line_info_onKey(self, key))
+        return;
 
-                if (x <= 0) {
-                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
-                    int new_x = ctx->start == 0 ? ctx->pos : x2 - cur_len;
-                    wmove(self->window, y, new_x);
+    input_handle(self, key, x, y, x2, y2);
+
+    if (key == '\t') {    /* TAB key: auto-completes command */
+        if (ctx->len > 1 && ctx->line[0] == '/') {
+            int diff = complete_line(ctx, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
+
+            if (diff != -1) {
+                if (x + diff > x2 - 1) {
+                    wmove(self->window, y, x + diff);
+                    ctx->start += diff;
                 } else {
-                    wmove(self->window, y, x - cur_len);
+                    wmove(self->window, y, x + diff);
                 }
+            } else beep();
+        } else beep();
+
+    } else if (key == '\n') {
+        rm_trailing_spaces_buf(ctx);
+
+        uint8_t line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+            memset(&line, 0, sizeof(line));
+
+        if (!string_is_empty(line))
+            add_line_to_hist(ctx);
+
+        if (line[0] == '/') {
+            if (strcmp(line, "/close") == 0) {
+                kill_chat_window(self, m);
+                return;
+            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
+                send_action(self, ctx, m, line + strlen("/me "));
             } else {
-                beep();
+                execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
             }
-        }
+        } else if (!string_is_empty(line)) {
+            uint8_t selfname[TOX_MAX_NAME_LENGTH];
+            uint16_t len = tox_get_self_name(m, selfname);
+            selfname[len] = '\0';
 
-        else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-            if (ctx->pos != ctx->len)
-                del_char_buf_frnt(ctx);
-            else
-                beep();
-        }
+            uint8_t timefrmt[TIME_STR_SIZE];
+            get_time_str(timefrmt, sizeof(timefrmt));
 
-        else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
-            if (ctx->pos > 0) {
-                discard_buf(ctx);
-                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+            line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
+
+            if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line)) == 0) {
+                uint8_t *errmsg = " * Failed to send message.";
+                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
             } else {
-                beep();
+                write_to_log(line, selfname, ctx->log, false);
             }
         }
 
-        else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
-            if (ctx->pos != ctx->len)
-                kill_buf(ctx);
-            else
-                beep();
-        }
-
-        else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
-            if (ctx->pos > 0) {
-                ctx->pos = 0;
-                ctx->start = 0;
-                wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-            }
-        }
-
-        else if (key == KEY_END || key == T_KEY_C_E) {  /* END/C-e key: move cursor to end of line */
-            if (ctx->pos != ctx->len) {
-                ctx->pos = ctx->len;
-                ctx->start = x2 * (ctx->len / x2);
-                mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, MAX_STR_SIZE)), y2, x2);
-            }
-        }
-
-        else if (key == KEY_LEFT) {
-            if (ctx->pos > 0) {
-                --ctx->pos;
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos]));
-
-                if (x <= 0) {
-                    wmove(self->window, y, x2 - cur_len);
-                    ctx->start = ctx->start >= x2 ? ctx->start - x2 : 0;
-                    ctx->pos = ctx->start + x2 - 1;
-                } else {
-                    wmove(self->window, y, x - cur_len);
-                }
-            } else {
-                beep();
-            }
-        }
-
-        else if (key == KEY_RIGHT) {
-            if (ctx->pos < ctx->len) {
-                ++ctx->pos;
-                cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
-                wmove(self->window, y, x + cur_len);
-
-                if (x + cur_len >= x2)
-                    ctx->start += cur_len;
-            } else {
-                beep();
-            }
-        }
-
-        else if (key == KEY_UP) {    /* fetches previous item in history */
-            fetch_hist_item(ctx, MOVE_UP);
-            ctx->start = x2 * (ctx->len / x2);
-            mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, MAX_STR_SIZE)), y2, x2);
-        }
-
-        else if (key == KEY_DOWN) {    /* fetches next item in history */
-            fetch_hist_item(ctx, MOVE_DOWN);
-            ctx->start = x2 * (ctx->len / x2);
-            mv_curs_end(self->window, MAX(0, wcswidth(ctx->line, MAX_STR_SIZE)), y2, x2);
-        }
-
-        else if (key == '\t') {    /* TAB key: completes command */
-            if (ctx->len > 1 && ctx->line[0] == '/') {
-                int diff = complete_line(ctx, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
-
-                if (diff != -1) {
-                    if (x + diff > x2 - 1) {
-                        //int ofst = x + diff - x2;
-                        wmove(self->window, y, x + diff);
-                        ctx->start += x2 / 2;
-                    } else {
-                        wmove(self->window, y, x + diff);
-                    }
-                } else {
-                    beep();
-                }
-            } else {
-                beep();
-            }
-        }
-
-        /* RETURN key: Execute command or print line */
-        else if (key == '\n') {
-            rm_trailing_spaces_buf(ctx);
-
-            uint8_t line[MAX_STR_SIZE];
-
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-                memset(&line, 0, sizeof(line));
-
-            wclear(ctx->linewin);
-            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-
-            if (!string_is_empty(line))
-                add_line_to_hist(ctx);
-
-            if (line[0] == '/') {
-                if (strcmp(line, "/close") == 0) {
-                    if (ctx->self_is_typing)
-                        set_typingstatus(self, m, 0);
-
-                    kill_chat_window(self);
-                    return;
-                } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                    send_action(self, ctx, m, line + strlen("/me "));
-                } else {
-                    execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
-                }
-            } else if (!string_is_empty(line)) {
-                uint8_t selfname[TOX_MAX_NAME_LENGTH];
-                uint16_t len = tox_get_self_name(m, selfname);
-                selfname[len] = '\0';
-
-                uint8_t timefrmt[TIME_STR_SIZE];
-                get_time_str(timefrmt, sizeof(timefrmt));
-
-                line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
-
-                if (!statusbar->is_online || tox_send_message(m, self->num, line, strlen(line)) == 0) {
-                    uint8_t *errmsg = " * Failed to send message.";
-                    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
-                } else {
-                    write_to_log(line, selfname, ctx->log, false);
-                }
-            }
-
-            reset_buf(ctx);
-        }
+        wclear(ctx->linewin);
+        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        reset_buf(ctx);
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing)
@@ -863,16 +746,8 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     curs_set(1);
 
-    if (ctx->len > 0) {
-        uint8_t line[MAX_STR_SIZE];
-
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-            reset_buf(ctx);
-            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        } else {
-            mvwprintw(ctx->linewin, 1, 0, "%s", &line[ctx->start]);
-        }
-    }
+    if (ctx->len > 0)
+        mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
 
     /* Draw status bar */
     StatusBar *statusbar = self->stb;
