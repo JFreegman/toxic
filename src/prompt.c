@@ -195,7 +195,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_UP) {     /* fetches previous item in history */
             wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx, MOVE_UP);
+            fetch_hist_item(ctx, KEY_UP);
 
             /* adjust line y origin appropriately when window scrolls down */
             if (ctx->at_bottom && ctx->len >= x2 - X_OFST) {
@@ -215,7 +215,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         else if (key == KEY_DOWN) {    /* fetches next item in history */
             wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx, MOVE_DOWN);
+            fetch_hist_item(ctx, KEY_DOWN);
         }
 
         else if (key == '\t') {    /* TAB key: completes command */

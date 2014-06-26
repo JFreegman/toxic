@@ -149,7 +149,7 @@ void add_line_to_hist(ChatContext *ctx)
    resets line if at end of history */
 void fetch_hist_item(ChatContext *ctx, int key_dir)
 {
-    if (key_dir == MOVE_UP) {
+    if (key_dir == KEY_UP) {
         if (--ctx->hst_pos < 0) {
             ctx->hst_pos = 0;
             beep();
@@ -247,8 +247,8 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
 
     wcscpy(ctx->line, newbuf);
 
-    ctx->len += (size_t) diff;
-    ctx->pos += (size_t) diff;
+    ctx->len += diff;
+    ctx->pos += diff;
 
     return diff;
 }
