@@ -212,7 +212,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     
     if (type == input) {
         device->dhndl = alcCaptureOpenDevice(devices_names[type][selection], 
-                        av_DefaultSettings.audio_sample_rate, AL_FORMAT_MONO16, frame_size * 4);
+                        av_DefaultSettings.audio_sample_rate, AL_FORMAT_MONO16, frame_size * 2);
         device->VAD_treshold = VAD_THRESHOLD_DEFAULT;
     }
     else { 
@@ -232,10 +232,10 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
         alSourcei(device->source, AL_LOOPING, AL_FALSE);
         
         uint16_t zeros[frame_size];
-        memset(zeros, 0, frame_size);
+        memset(zeros, 0, frame_size*2);
         
         for ( i =0; i < openal_bufs; ++i) {
-            alBufferData(device->buffers[i], AL_FORMAT_MONO16, zeros, frame_size, sample_rate);
+            alBufferData(device->buffers[i], AL_FORMAT_MONO16, zeros, frame_size*2, sample_rate);
         }
         
         alSourceQueueBuffers(device->source, openal_bufs, device->buffers);
