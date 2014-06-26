@@ -628,7 +628,7 @@ int main(int argc, char *argv[])
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);
-        usleep(10000);
+        usleep(40000);
     }
 
     return 0;
