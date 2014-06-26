@@ -10,7 +10,7 @@ PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/man/man1
-DATAFILES = DHTnodes toxic.conf
+DATAFILES = DHTnodes
 MANFILES = toxic.1
 
 LIBS = libtoxcore ncursesw

@@ -1,8 +1,6 @@
 .TH TOXIC 1 "June 2014" "Toxic v__VERSION__" "User Manual"
-
 .SH NAME
-Toxic \- CLI for Tox
-
+Toxic \- CLI client for Tox
 .SH SYNOPSYS
 .B toxic [\-f
 .I data\-file
@@ -11,12 +9,10 @@ Toxic \- CLI for Tox
 .B ] [\-n
 .I nodes\-file
 .B ] [\-h]
-
 .SH DESCRIPTION
 Toxic is an ncurses-based instant messaging client for Tox which formerly
 resided in the Tox core repository, and is now available as a standalone
 application.
-
 .SH OPTIONS
 .IP "\-f, \-\-file data\-file"
 Use specified
@@ -31,7 +27,7 @@ Force IPv4 connection
 Use specified
 .I config\-file
 instead of
-.IR __DATADIR__/toxic.conf
+.IR ~/.config/tox/toxic.conf
 .IP "\-n, \-\-nodes nodes\-file"
 Use specified
 .I nodes\-file
@@ -39,13 +35,10 @@ for DHT bootstrap nodes, instead of
 .IR __DATADIR__/DHTnodes
 .IP "\-h, \-\-help"
 Show help message
-
 .SH BUGS
-Expect bugs and other bad things: this software is in pre\-alpha stage.
-
+Resizing the terminal breaks the layout. We suggest you size your terminal as desired prior to starting the client. Unicode characters with a width larger than 1 column may cause strange behaviour. Expect more bugs and bad behaviour: this software is in a pre\-alpha stage.
 .SH AUTHORS
-JFreegman (JFreegman@gmail.com)
-
+JFreegman <JFreegman@gmail.com>
 .SH SEE ALSO
 Project page on github: https://github.com/Tox/toxic
 .br
