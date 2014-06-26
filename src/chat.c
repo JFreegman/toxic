@@ -42,7 +42,7 @@
 
 extern char *DATA_FILE;
 
-extern FileSender file_senders[MAX_FILES];
+extern FSenderThread file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
 extern struct _Winthread Winthread;
@@ -394,10 +394,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     uint8_t msg[MAX_STR_SIZE];
     uint64_t size = friends[num].file_receiver.size[filenum];
     long double remain = (long double) tox_file_data_remaining(m, num, filenum, 1);
-    long double pct_remain = 100;
-
-    if (remain)
-        pct_remain = (1 - (remain / size)) * 100;
+    long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
 
     const uint8_t *name = friends[num].file_receiver.filenames[filenum];
     snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
