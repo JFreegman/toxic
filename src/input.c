@@ -230,6 +230,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
     bool match = true;
 
     switch (key) {
+        case 0x7f:
         case KEY_BACKSPACE:
             input_backspace(self, x, y, mx_x, mx_y);
             break;
