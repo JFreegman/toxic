@@ -21,8 +21,8 @@ CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
 
-OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
-OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o input.o
+OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
+OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 # Variables for audio support
@@ -104,8 +104,8 @@ install: toxic
 	@for f in $(MANFILES) ; do \
 		file=$(abspath $(DESTDIR)/$(MANDIR))/$$f ;\
 		install -m 0644 $(DOC_DIR)/$$f $(abspath $(DESTDIR)/$(MANDIR)) ;\
-		sed -i 's:__VERSION__:'$(VERSION)':' $$file ;\
-		sed -i 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
+		sed -i'' -e 's:__VERSION__:'$(VERSION)':' $$file ;\
+		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
 		gzip -f -9 $$file ;\
 	done
 
