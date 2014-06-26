@@ -166,9 +166,9 @@ struct infobox {
 /* chat and groupchat window/buffer holder */
 struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
-    size_t pos;
-    size_t len;
-    size_t start;    /* the position to start printing line at */
+    int pos;
+    int len;
+    int start;    /* the position to start printing line at */
 
     wchar_t ln_history[MAX_LINE_HIST][MAX_STR_SIZE];  /* history for input lines/commands */
     int hst_pos;

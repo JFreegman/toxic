@@ -5,21 +5,34 @@ VERSION = $(TOXIC_VERSION)_r$(REV)
 CFG_DIR = ../cfg
 SRC_DIR = ../src
 MISC_DIR = ../misc
+DOC_DIR = ../doc
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
-DATAFILES = $(MISC_DIR)/DHTnodes $(MISC_DIR)/toxic.conf
+MANDIR = $(PREFIX)/man/man1
+DATAFILES = DHTnodes toxic.conf
+MANFILES = toxic.1
 
 LIBS = libtoxcore ncursesw
 
-CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type
+CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type -Werror
 CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
-CFLAGS += -DPACKAGE_DATADIR="\"$(DATADIR)\""
+CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
+OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o
+=======
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o
-OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o
+OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o input.o
+>>>>>>> 09badaa... refactor chat window input code, misc fixes
+=======
+OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
+OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o
+>>>>>>> 052355b... Makefile: try to fix sed on MacOS
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 # Variables for audio support
@@ -88,10 +101,23 @@ toxic: $(OBJ)
 	$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
 
 install: toxic
-	@mkdir -p $(DESTDIR)/$(BINDIR)
-	@mkdir -p $(DESTDIR)/$(DATADIR)
-	install -m 0755 toxic $(DESTDIR)/$(BINDIR)
-	install -m 0644 $(DATAFILES) $(DESTDIR)/$(DATADIR)
+	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
+	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))
+	mkdir -p $(abspath $(DESTDIR)/$(MANDIR))
+	@echo "Installing toxic executable"
+	@install -m 0755 toxic $(abspath $(DESTDIR)/$(BINDIR))
+	@echo "Installing data files"
+	@for f in $(DATAFILES) ; do \
+		install -m 0644 $(MISC_DIR)/$$f $(abspath $(DESTDIR)/$(DATADIR)) ;\
+	done
+	@echo "Installing man pages"
+	@for f in $(MANFILES) ; do \
+		file=$(abspath $(DESTDIR)/$(MANDIR))/$$f ;\
+		install -m 0644 $(DOC_DIR)/$$f $(abspath $(DESTDIR)/$(MANDIR)) ;\
+		sed -i'' -e 's:__VERSION__:'$(VERSION)':' $$file ;\
+		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
+		gzip -f -9 $$file ;\
+	done
 
 %.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
