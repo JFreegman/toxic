@@ -23,6 +23,7 @@ LDFLAGS = $(USER_LDFLAGS)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
 OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o
 =======
@@ -33,6 +34,10 @@ OBJ += file_senders.o friendlist.o global_commands.o groupchat.o line_info.o inp
 OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
 OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o
 >>>>>>> 052355b... Makefile: try to fix sed on MacOS
+=======
+OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
+OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o
+>>>>>>> 79edcc7b6bd53be6b3839d348027c42ffd5780b4
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 # Variables for audio support
