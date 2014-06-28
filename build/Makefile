@@ -15,7 +15,7 @@ MANFILES = toxic.1
 
 LIBS = libtoxcore ncursesw
 
-CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type -Werror
+CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type
 CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
 CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)
