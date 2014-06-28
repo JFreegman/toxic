@@ -385,7 +385,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     FILE *fp = friends[num].file_receiver.files[filenum];
 
     if (fp) {
-        if (fwrite(data, length, 1, friends[num].file_receiver.files[filenum]) != 1) {
+        if (fwrite(data, length, 1, fp) != 1) {
             uint8_t *msg = " * Error writing to file.";
             line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 

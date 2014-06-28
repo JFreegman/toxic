@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -35,17 +34,8 @@
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
 
-static void close_file_sender(ToxWindow *self, Tox *m, int i, uint8_t *msg, int CTRL, int filenum, int32_t friendnum)
+static void set_max_file_senders_index(void)
 {
-    if (self->chatwin != NULL) {
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-        alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
-    }
-
-    tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);
-    fclose(file_senders[i].file);
-    memset(&file_senders[i], 0, sizeof(FileSender));
-
     int j;
 
     for (j = max_file_senders_index; j > 0; --j) {
@@ -56,14 +46,32 @@ static void close_file_sender(ToxWindow *self, Tox *m, int i, uint8_t *msg, int 
     max_file_senders_index = j;
 }
 
-/* Should only be called on exit */
-void close_all_file_senders(void)
+static void close_file_sender(ToxWindow *self, Tox *m, int i, uint8_t *msg, int CTRL, int filenum, int32_t friendnum)
+{
+    if (self->chatwin != NULL) {
+        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
+    }
+
+    tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);
+    fclose(file_senders[i].file);
+    memset(&file_senders[i], 0, sizeof(FileSender));
+    set_max_file_senders_index();
+}
+
+void close_all_file_senders(Tox *m)
 {
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
-        if (file_senders[i].active)
+        if (file_senders[i].active) {
             fclose(file_senders[i].file);
+            tox_file_send_control(m, file_senders[i].friendnum, 0, file_senders[i].filenum,
+                                  TOX_FILECONTROL_KILL, 0, 0);
+            memset(&file_senders[i], 0, sizeof(FileSender));
+        }
+
+        set_max_file_senders_index();
     }
 }
 

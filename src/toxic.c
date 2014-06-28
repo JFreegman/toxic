@@ -95,7 +95,10 @@ static void ignore_SIGINT(int sig)
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
-    close_all_file_senders();
+
+    close_all_file_senders(m);
+    usleep(1000);
+
     kill_all_windows();
     log_disable(prompt->chatwin->log);
     line_info_cleanup(prompt->chatwin->hst);

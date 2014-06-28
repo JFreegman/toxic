@@ -44,9 +44,7 @@ typedef struct {
     uint32_t line_id;
 } FileSender;
 
-/* Should only be called on exit */
-void close_all_file_senders(void);
-
+void close_all_file_senders(Tox *m);
 void do_file_senders(Tox *m);
 
 #endif  /* #define _filesenders_h */
