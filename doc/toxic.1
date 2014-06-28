@@ -35,11 +35,28 @@ for DHT bootstrap nodes, instead of
 .IR __DATADIR__/DHTnodes
 .IP "\-h, \-\-help"
 Show help message
+.SH FILES
+.IP __DATADIR__/DHTnodes
+Default list of DHT bootstrap nodes.
+.IP ~/.config/tox/data
+Savestate which contains your personal info (nickname, Tox ID,...) and
+your contacts list.
+.IP ~/.config/tox/toxic.conf
+Configuration file. See
+.BR toxic.conf (5)
+for more details.
+.IP __DATADIR__/toxic.conf.example
+Configuration example.
 .SH BUGS
-Resizing the terminal breaks the layout. We suggest you size your terminal as desired prior to starting the client. Unicode characters with a width larger than 1 column may cause strange behaviour. Expect more bugs and bad behaviour: this software is in a pre\-alpha stage.
+Resizing the terminal breaks the layout. We suggest you size your terminal as
+desired prior to starting the client. Unicode characters with a width larger
+than 1 column may cause strange behaviour. Expect more bugs and bad
+behaviour: this software is in a pre\-alpha stage.
 .SH AUTHORS
 JFreegman <JFreegman@gmail.com>
 .SH SEE ALSO
+.BR toxic.conf (5)
+.SH LINKS
 Project page on github: https://github.com/Tox/toxic
 .br
 IRC channel on Freenode: chat.freenode.net#tox

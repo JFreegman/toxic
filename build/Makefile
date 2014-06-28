@@ -9,9 +9,9 @@ DOC_DIR = ../doc
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
-MANDIR = $(PREFIX)/man/man1
-DATAFILES = DHTnodes
-MANFILES = toxic.1
+MANDIR = $(PREFIX)/man
+DATAFILES = DHTnodes toxic.conf.example
+MANFILES = toxic.1 toxic.conf.5
 
 LIBS = libtoxcore ncursesw
 
@@ -102,9 +102,11 @@ install: toxic
 	done
 	@echo "Installing man pages"
 	@for f in $(MANFILES) ; do \
-		file=$(abspath $(DESTDIR)/$(MANDIR))/$$f ;\
-		install -m 0644 $(DOC_DIR)/$$f $(abspath $(DESTDIR)/$(MANDIR)) ;\
-		sed -i'' -e 's:__VERSION__:'$(VERSION)':' $$file ;\
+		section=$(abspath $(DESTDIR)/$(MANDIR))/man`echo $$f | rev | cut -d "." -f 1` ;\
+		file=$$section/$$f ;\
+		mkdir -p $$section ;\
+		install -m 0644 $(DOC_DIR)/$$f $$file ;\
+		sed -i'' -e 's:__VERSION__:'$(VERSION)':g' $$file ;\
 		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
 		gzip -f -9 $$file ;\
 	done
@@ -115,6 +117,8 @@ install: toxic
 
 clean:
 	rm -rf *.d *.o toxic
+
+-include $(CFG_DIR)/help.mk
 
 -include $(OBJ:.o=.d)
 
