@@ -54,6 +54,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
+#include "file_senders.h"
 #include "line_info.h"
 #include "settings.h"
 #include "log.h"
@@ -82,6 +83,8 @@ struct arg_opts {
 } arg_opts;
 
 struct _Winthread Winthread;
+struct _FSenderThread FSenderThread;
+
 struct user_settings *user_settings = NULL;
 
 static void ignore_SIGINT(int sig)
@@ -457,11 +460,10 @@ static void load_data(Tox *m, char *path)
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
     pthread_mutex_lock(&Winthread.lock);
-
     do_connection(m, prompt);
-    tox_do(m);    /* main tox-core loop */
-
     pthread_mutex_unlock(&Winthread.lock);
+
+    tox_do(m);    /* main tox-core loop */
 }
 
 void *thread_winref(void *data)
@@ -471,6 +473,19 @@ void *thread_winref(void *data)
     while (true) {
         draw_active_window(m);
         refresh_inactive_windows();
+    }
+}
+
+void *thread_filesenders(void *data)
+{
+    Tox *m = (Tox *) data;
+
+    while (true) {
+        pthread_mutex_lock(&FSenderThread.lock);
+        do_file_senders(m);
+        pthread_mutex_unlock(&FSenderThread.lock);
+
+        usleep(60000);
     }
 }
 
@@ -590,13 +605,19 @@ int main(int argc, char *argv[])
 
     prompt = init_windows(m);
 
-    /* create new thread for ncurses stuff */
+    /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
 
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-        
+    
+    /* thread for filesenders */
+    if (pthread_mutex_init(&FSenderThread.lock, NULL) != 0)
+        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
+
+    if (pthread_create(&FSenderThread.tid, NULL, thread_filesenders, (void *) m) != 0)
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
     uint8_t *msg;
 
@@ -614,7 +635,6 @@ int main(int argc, char *argv[])
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
-
 
     if (settings_err == -1) {
         msg = "Failed to load user settings";

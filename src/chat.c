@@ -42,7 +42,7 @@
 
 extern char *DATA_FILE;
 
-extern FSenderThread file_senders[MAX_FILES];
+extern FileSender file_senders[MAX_FILES];
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
 extern struct _Winthread Winthread;
@@ -315,14 +315,14 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
-static void chat_close_file_receiver(int num, uint8_t filenum)
+static void chat_close_file_receiver(int32_t num, uint8_t filenum)
 {
-    friends[num].file_receiver.pending[filenum] = false;
-    friends[num].file_receiver.size[filenum]  = 0;
     FILE *file = friends[num].file_receiver.files[filenum];
 
-    if (file != NULL)
+    if (file != NULL) {
         fclose(file);
+        friends[num].file_receiver.files[filenum] = NULL;
+    }
 }
 
 static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t receive_send,
@@ -382,12 +382,16 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (self->num != num)
         return;
 
-    if (fwrite(data, length, 1, friends[num].file_receiver.files[filenum]) != 1) {
-        uint8_t *msg = " * Error writing to file.";
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+    FILE *fp = friends[num].file_receiver.files[filenum];
 
-        tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
-        chat_close_file_receiver(num, filenum);
+    if (fp) {
+        if (fwrite(data, length, 1, friends[num].file_receiver.files[filenum]) != 1) {
+            uint8_t *msg = " * Error writing to file.";
+            line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+
+            tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
+            chat_close_file_receiver(num, filenum);
+        }
     }
 
     /* refresh line with percentage complete */

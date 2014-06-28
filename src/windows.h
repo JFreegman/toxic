@@ -67,6 +67,11 @@ struct _Winthread {
     pthread_mutex_t lock;
 };
 
+struct _FSenderThread {
+    pthread_t tid;
+    pthread_mutex_t lock;
+};
+
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;

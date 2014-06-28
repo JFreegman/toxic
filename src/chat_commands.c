@@ -30,11 +30,13 @@
 #include "execute.h"
 #include "line_info.h"
 #include "groupchat.h"
-#include "file_senders.h"
 
 extern ToxWindow *prompt;
-extern int max_file_senders_index;
+
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
+
+extern FileSender file_senders[MAX_FILES];
+extern uint8_t max_file_senders_index;
 
 void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -254,5 +256,29 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    new_filesender_thread(self, m, path, path_len, file_to_send, filenum, filesize);
+    int i;
+
+    for (i = 0; i < MAX_FILES; ++i) {
+        if (!file_senders[i].active) {
+            memcpy(file_senders[i].pathname, path, path_len + 1);
+            file_senders[i].active = true;
+            file_senders[i].toxwin = self;
+            file_senders[i].file = file_to_send;
+            file_senders[i].filenum = filenum;
+            file_senders[i].friendnum = self->num;
+            file_senders[i].timestamp = get_unix_time();
+            file_senders[i].size = filesize;
+            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
+                                             tox_file_data_size(m, self->num), file_to_send);
+
+            uint8_t msg[MAX_STR_SIZE];
+            snprintf(msg, sizeof(msg), "Sending file: '%s'", path);
+            line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+
+            if (i == max_file_senders_index)
+                ++max_file_senders_index;
+
+            return;
+        }
+    }
 }
