@@ -214,7 +214,7 @@ static void line_info_check_queue(ToxWindow *self)
 
     int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
     int lines = 1 + line->newlines + (line->len / (x2 - offst));
-    int max_y = self->is_prompt ? y2 : y2 - CHATBOX_HEIGHT;
+    int max_y = y2 - CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new lines */
     if (y + lines - 1 >= max_y) {
@@ -242,9 +242,6 @@ void line_info_print(ToxWindow *self)
     wclear(win);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
-
-    if (self->is_prompt)
-        y2 = user_settings->history_size;   /* temporary fix to make prompt scroll */
 
     if (x2 <= SIDEBAR_WIDTH)
         return;

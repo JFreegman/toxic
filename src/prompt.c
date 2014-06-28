@@ -33,6 +33,7 @@
 #include "log.h"
 #include "line_info.h"
 #include "settings.h"
+#include "input.h"
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
@@ -125,178 +126,65 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     ChatContext *ctx = self->chatwin;
 
     int x, y, y2, x2;
-    getyx(ctx->history, y, x);
-    getmaxyx(ctx->history, y2, x2);
+    getyx(self->window, y, x);
+    getmaxyx(self->window, y2, x2);
 
-    if (ltr) {
-        if (ctx->len < (MAX_STR_SIZE - 1)) {
-            add_char_to_buf(ctx, key);
-        }
-    } else { /* if (!ltr) */
+    if (x2 <= 0)
+        return;
 
-        /* BACKSPACE key: Remove one character from line */
-        if (key == 0x107 || key == 0x8 || key == 0x7f) {
-            if (ctx->pos > 0) {
-                del_char_buf_bck(ctx);
-                wmove(ctx->history, y, x - 1);  /* not necessary but fixes a display glitch */
-            } else {
+    if (ltr) {    /* char is printable */
+        input_new_char(self, key, x, y, x2, y2);
+        return;
+    }
+
+    if (line_info_onKey(self, key))
+        return;
+
+    input_handle(self, key, x, y, x2, y2);
+
+    if (key == '\t') {    /* TAB key: auto-completes command */
+        if (ctx->len > 1 && ctx->line[0] == '/') {
+            if (complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE) == -1)
                 beep();
-            }
+        } else {
+            beep();
         }
+    } else if (key == '\n') {
+        rm_trailing_spaces_buf(ctx);
 
-        else if (key == KEY_DC) {      /* DEL key: Remove character at pos */
-            if (ctx->pos != ctx->len) {
-                del_char_buf_frnt(ctx);
-            } else {
-                beep();
-            }
-        }
+        uint8_t line[MAX_STR_SIZE] = {0};
 
-        else if (key == T_KEY_DISCARD) {    /* CTRL-U: Delete entire line behind pos */
-            if (ctx->pos > 0) {
-                wmove(ctx->history, ctx->orig_y, X_OFST);
-                wclrtobot(ctx->history);
-                discard_buf(ctx);
-            } else {
-                beep();
-            }
-        }
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+            memset(&line, 0, sizeof(line));
 
-        else if (key == T_KEY_KILL) {    /* CTRL-K: Delete entire line in front of pos */
-            if (ctx->len != ctx->pos)
-                kill_buf(ctx);
-            else
-                beep();
-        }
+        if (!string_is_empty(line))
+            add_line_to_hist(ctx);
 
-        else if (key == KEY_HOME || key == T_KEY_C_A) {  /* HOME/C-a key: Move cursor to start of line */
-            if (ctx->pos != 0)
-                ctx->pos = 0;
-        }
+        line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
+        execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
 
-        else if (key == KEY_END || key == T_KEY_C_E) {   /* END/C-e key: move cursor to end of line */
-            if (ctx->pos != ctx->len)
-                ctx->pos = ctx->len;
-        }
-
-        else if (key == KEY_LEFT) {
-            if (ctx->pos > 0)
-                --ctx->pos;
-            else
-                beep();
-        }
-
-        else if (key == KEY_RIGHT) {
-            if (ctx->pos < ctx->len)
-                ++ctx->pos;
-            else
-                beep();
-        }
-
-        else if (key == KEY_UP) {     /* fetches previous item in history */
-            wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx, KEY_UP);
-
-            /* adjust line y origin appropriately when window scrolls down */
-            if (ctx->at_bottom && ctx->len >= x2 - X_OFST) {
-                int px2 = ctx->len >= x2 ? x2 : x2 - X_OFST;
-                int p_ofst = px2 != x2 ? 0 : X_OFST;
-
-                if (px2 <= 0)
-                    return;
-
-                int k = ctx->orig_y + ((ctx->len + p_ofst) / px2);
-
-                if (k >= y2) {
-                    --ctx->orig_y;
-                }
-            }
-        }
-
-        else if (key == KEY_DOWN) {    /* fetches next item in history */
-            wmove(ctx->history, ctx->orig_y, X_OFST);
-            fetch_hist_item(ctx, KEY_DOWN);
-        }
-
-        else if (key == '\t') {    /* TAB key: completes command */
-            if (ctx->len > 1 && ctx->line[0] == '/') {
-                if (complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE) == -1)
-                    beep();
-            } else {
-                beep();
-            }
-        }
-
-        /* RETURN key: execute command */
-        else if (key == '\n') {
-            rm_trailing_spaces_buf(ctx);
-
-            wprintw(ctx->history, "\n");
-            uint8_t line[MAX_STR_SIZE] = {0};
-
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-                memset(&line, 0, sizeof(line));
-
-            if (!string_is_empty(line))
-                add_line_to_hist(ctx);
-
-            line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
-            execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
-            reset_buf(ctx);
-        }
+        wclear(ctx->linewin);
+        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        reset_buf(ctx);
     }
 }
 
 static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
+
     ChatContext *ctx = self->chatwin;
 
-    int x, y, x2, y2;
-    getyx(ctx->history, y, x);
-    getmaxyx(ctx->history, y2, x2);
+    line_info_print(self);
+    wclear(ctx->linewin);
 
     curs_set(1);
-    scrollok(ctx->history, 1);
 
-    line_info_print(self);
-
-    /* if len is >= screen width offset max x by X_OFST to account for prompt char */
-    int px2 = ctx->len >= x2 ? x2 : x2 - X_OFST;
-
-    if (px2 <= 0)
-        return;
-
-    /* len offset to account for prompt char (0 if len is < width of screen) */
-    int p_ofst = px2 != x2 ? 0 : X_OFST;
-
-    if (ctx->len > 0) {
-        uint8_t line[MAX_STR_SIZE];
-
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            reset_buf(ctx);
-        else
-            mvwprintw(ctx->history, ctx->orig_y, X_OFST, line);
-
-        int k = ctx->orig_y + ((ctx->len + p_ofst) / px2);
-
-        ctx->at_bottom = k == y2 - 1;
-        bool botm = k == y2;
-        bool edge = (ctx->len + p_ofst) % px2 == 0;
-
-        /* move point of line origin up when input scrolls screen down */
-        if (edge && botm)
-            --ctx->orig_y;
-
-    } else {    /* Mark point of origin for new line */
-        ctx->orig_y = y;
-    }
-
-    wattron(ctx->history, COLOR_PAIR(GREEN));
-    mvwprintw(ctx->history, ctx->orig_y, 0, "$ ");
-    wattroff(ctx->history, COLOR_PAIR(GREEN));
+    if (ctx->len > 0)
+        mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
 
     StatusBar *statusbar = self->stb;
-    werase(statusbar->topline);
     mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
@@ -343,10 +231,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     if (statusbar->statusmsg[0])
         wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
 
-    /* put cursor back in correct spot */
-    int y_m = ctx->orig_y + ((ctx->pos + p_ofst) / px2);
-    int x_m = (ctx->pos + X_OFST) % x2;
-    wmove(self->window, y_m, x_m);
+    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
 }
 
 static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum , uint8_t status)
@@ -453,14 +338,13 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
-    ChatContext *ctx = self->chatwin;
-
     curs_set(1);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    ctx->history = subwin(self->window, y2, x2, 0, 0);
-    scrollok(ctx->history, 1);
+    ChatContext *ctx = self->chatwin;
+    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
     ctx->log = malloc(sizeof(struct chatlog));
     ctx->hst = malloc(sizeof(struct history));
@@ -480,7 +364,8 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     }
 
     execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
-    wmove(ctx->history, y2 - 1, 2);
+    scrollok(ctx->history, 0);
+    wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_prompt(void)

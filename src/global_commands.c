@@ -196,12 +196,6 @@ void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 {
     line_info_clear(self->chatwin->hst);
     wclear(window);
-
-    if (self->is_prompt) {
-        int y2, x2;
-        getmaxyx(window, y2, x2);
-        wmove(self->chatwin->history, y2 - 1, 2);
-    }
 }
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

@@ -127,6 +127,7 @@ struct ToxWindow {
     bool is_chat;
     bool is_groupchat;
     bool is_prompt;
+    bool is_friendlist;
 
     bool alert0;
     bool alert1;
@@ -191,10 +192,6 @@ struct ChatContext {
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
-
-    /* specific for prompt */
-    bool at_bottom;    /* true if line end is at bottom of window */
-    int orig_y;        /* y axis point of line origin */
 };
 
 ToxWindow *init_windows(Tox *m);

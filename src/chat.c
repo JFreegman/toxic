@@ -757,35 +757,29 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     /* Draw name, status and note in statusbar */
     if (statusbar->is_online) {
-        const uint8_t *status_text = "Unknown";
         int colour = WHITE;
-
         uint8_t status = statusbar->status;
 
         switch (status) {
             case TOX_USERSTATUS_NONE:
-                status_text = "Online";
                 colour = GREEN;
                 break;
 
             case TOX_USERSTATUS_AWAY:
-                status_text = "Away";
                 colour = YELLOW;
                 break;
 
             case TOX_USERSTATUS_BUSY:
-                status_text = "Busy";
                 colour = RED;
                 break;
 
             case TOX_USERSTATUS_INVALID:
-                status_text = "ERROR";
                 colour = MAGENTA;
                 break;
         }
 
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, " [%s]", status_text);
+        wprintw(statusbar->topline, " O");
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
         if (friends[self->num].is_typing)
@@ -798,7 +792,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         if (friends[self->num].is_typing)
             wattroff(statusbar->topline, COLOR_PAIR(YELLOW));
     } else {
-        wprintw(statusbar->topline, " [Offline]");
+        wprintw(statusbar->topline, " o");
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", self->name);
         wattroff(statusbar->topline, A_BOLD);

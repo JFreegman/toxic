@@ -311,6 +311,7 @@ ToxWindow *init_windows(Tox *m)
 
 void on_window_resize(int sig)
 {
+    endwin();
     refresh();
     clear();
 }
@@ -390,10 +391,6 @@ void draw_active_window(Tox *m)
     draw_bar();
 
     touchwin(a->window);
-#ifndef WIN32
-    wresize(a->window, LINES - 2, COLS);
-#endif
-
     a->onDraw(a, m);
     wrefresh(a->window);
 
@@ -418,7 +415,7 @@ void draw_active_window(Tox *m)
 
     /* TODO verify if this works */
     ltr = isprint(ch);
-#endif
+#endif /* HAVE_WIDECHAR */
 
     if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV)) {
         set_next_window((int) ch);
@@ -438,7 +435,7 @@ void refresh_inactive_windows(void)
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *a = &windows[i];
 
-        if (a->active && a != active_window && (a->is_chat || a->is_groupchat))
+        if (a->active && a != active_window && !a->is_friendlist)
             line_info_print(a);
     }
 }

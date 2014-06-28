@@ -597,6 +597,7 @@ ToxWindow new_friendlist(void)
     memset(&ret, 0, sizeof(ret));
 
     ret.active = true;
+    ret.is_friendlist = true;
 
     ret.onKey = &friendlist_onKey;
     ret.onDraw = &friendlist_onDraw;
