@@ -8,7 +8,7 @@ timestamps:1;
 autolog:0;
 
 # 1 to disbale terminal alerts on messages, 0 to enable
-disable_alerts:0;
+alerts:1;
 
 # maximum lines for chat window history
 history_size:700;

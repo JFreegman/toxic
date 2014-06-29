@@ -35,11 +35,11 @@ Enable or disable autologging.
 Values: 1 to enable, 0 to disable
 .RE
 .PP
-.B disable_alerts
+.B alerts
 .RS
-Enable or disable terminal alerts on messages.
+Enable or disable terminal alerts on events.
 .br
-Values: 0 to enable, 1 to disable
+Values: 1 to enable, 0 to disable
 .RE
 .PP
 .B history_size
@@ -51,7 +51,7 @@ Values: <INTEGER> (for example: 700)
 .PP
 .B colour_theme
 .RS
-Select between toxic colour theme and notive terminal colours.
+Select between toxic colour theme and native terminal colours.
 .br
 Values: 0 for toxic colours, 1 for terminal colours
 .RE
@@ -78,37 +78,23 @@ Values: <STRING> (absolute path where to store downloaded files)
 .RE
 .RE
 .SH EXAMPLES
-This is from __DATADIR__/toxic.conf.exmaple:
+Default settings from __DATADIR__/toxic.conf.exmaple:
 .PP
-# 24 or 12 hour time
-.br
 time:24;
 .br
-# 1 to enable autologging, 0 to disable
+timestamps:1;
 .br
 autolog:0;
 .br
-# 1 to disbale terminal alerts on messages, 0 to enable
-.br
-disable_alerts:0;
-.br
-# maximum lines for chat window history
+alerts:1;
 .br
 history_size:700;
 .br
-# 1 to use native terminal colours, 0 to use toxic default colour theme
-.br
 colour_theme:0;
-.br
-# preferred audio input device; numbers correspond to /lsdev in
 .br
 audio_in_dev:0;
 .br
-# preferred audio output device; numbers correspond to /lsdev out
-.br
 audio_out_dev:0;
-.br
-# preferred path for downloads
 .br
 download_path:/home/USERNAME/Downloads/;
 .SH FILES

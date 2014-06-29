@@ -54,7 +54,7 @@ struct {
     { "autolog",        uset_autolog    },
     { "time",           uset_time       },
     { "timestamps",     uset_timestamps },
-    { "disable_alerts", uset_alerts     },
+    { "alerts",         uset_alerts     },
     { "colour_theme",   uset_colours    },
     { "history_size",   uset_hst_size   },
     { "download_path",  uset_dwnld_path },
@@ -166,7 +166,7 @@ static void set_default_settings(struct user_settings *s)
     uset_autolog(s, "0");
     uset_time(s, "24");
     uset_timestamps(s, "1");
-    uset_alerts(s, "0");
+    uset_alerts(s, "1");
     uset_colours(s, "0");
     uset_hst_size(s, "700");
     uset_dwnld_path(s, NULL);

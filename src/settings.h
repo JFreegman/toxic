@@ -57,8 +57,8 @@ enum {
     TIMESTAMPS_OFF = 0,
     TIMESTAMPS_ON = 1,
 
-    ALERTS_DISABLED = 1,
-    ALERTS_ENABLED = 0,
+    ALERTS_DISABLED = 0,
+    ALERTS_ENABLED = 1,
 
     NATIVE_COLS = 1,
     DFLT_COLS = 0,
