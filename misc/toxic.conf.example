@@ -1,6 +1,9 @@
 # 24 or 12 hour time
 time:24;
 
+# 1 to enable timestamps, 0 to disable
+timestamps:1;
+
 # 1 to enable autologging, 0 to disable
 autolog:0;
 

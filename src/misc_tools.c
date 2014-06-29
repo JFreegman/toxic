@@ -58,6 +58,11 @@ struct tm *get_time(void)
 /*Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(uint8_t *buf, int bufsize)
 {
+    if (user_settings->timestamps == TIMESTAMPS_OFF) {
+        buf[0] = '\0';
+        return;
+    }
+
     const char *t = user_settings->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
     strftime(buf, bufsize, t, get_time());
 }

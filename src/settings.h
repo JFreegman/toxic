@@ -26,9 +26,9 @@
 #include "toxic.h"
 
 #ifdef _SUPPORT_AUDIO
-    #define NUM_SETTINGS 8
+    #define NUM_SETTINGS 9
 #else
-    #define NUM_SETTINGS 6
+    #define NUM_SETTINGS 7
 #endif /* _SUPPORT_AUDIO */
 
 /* holds user setting values */
@@ -36,6 +36,7 @@ struct user_settings {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
     int time;              /* 12 or 24 */
+    int timestamps;        /* boolean */
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     char download_path[MAX_STR_SIZE];
@@ -52,6 +53,9 @@ enum {
 
     TIME_24 = 24,
     TIME_12 = 12,
+
+    TIMESTAMPS_OFF = 0,
+    TIMESTAMPS_ON = 1,
 
     ALERTS_DISABLED = 1,
     ALERTS_ENABLED = 0,

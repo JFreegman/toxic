@@ -36,6 +36,7 @@
 
 static void uset_autolog(struct user_settings *s, const char *val);
 static void uset_time(struct user_settings *s, const char *val);
+static void uset_timestamps(struct user_settings *s, const char *val);
 static void uset_alerts(struct user_settings *s, const char *val);
 static void uset_colours(struct user_settings *s, const char *val);
 static void uset_hst_size(struct user_settings *s, const char *val);
@@ -52,6 +53,7 @@ struct {
 } user_settings_list[] = {
     { "autolog",        uset_autolog    },
     { "time",           uset_time       },
+    { "timestamps",     uset_timestamps },
     { "disable_alerts", uset_alerts     },
     { "colour_theme",   uset_colours    },
     { "history_size",   uset_hst_size   },
@@ -77,6 +79,14 @@ static void uset_time(struct user_settings *s, const char *val)
 
     /* default to 24 hour time if invalid value */
     s->time = n == TIME_12 ? TIME_12 : TIME_24;
+}
+
+static void uset_timestamps(struct user_settings *s, const char *val)
+{
+    int n = atoi(val);
+
+    /* default on if invalid value */
+    s->timestamps = n == TIMESTAMPS_OFF ? TIMESTAMPS_OFF : TIMESTAMPS_ON;
 }
 
 static void uset_alerts(struct user_settings *s, const char *val)
@@ -155,6 +165,7 @@ static void set_default_settings(struct user_settings *s)
     /* see settings_values enum in settings.h for defaults */
     uset_autolog(s, "0");
     uset_time(s, "24");
+    uset_timestamps(s, "1");
     uset_alerts(s, "0");
     uset_colours(s, "0");
     uset_hst_size(s, "700");
