@@ -78,6 +78,7 @@ ToxWindow *prompt = NULL;
 struct arg_opts {
     int ignore_data_file;
     int use_ipv4;
+    int default_locale;
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
 } arg_opts;
@@ -130,9 +131,12 @@ static void init_term(void)
 
 #if HAVE_WIDECHAR
 
-    if (setlocale(LC_ALL, "") == NULL)
-        exit_toxic_err("Could not set your locale, please check your locale settings or"
-                       "disable wide char support", FATALERR_LOCALE_SET);
+    if (!arg_opts.default_locale) {
+        if (setlocale(LC_ALL, "") == NULL)
+            exit_toxic_err("Could not set your locale, please check your locale settings or "
+                           "disable unicode support with the -D flag.", FATALERR_LOCALE_SET);
+    }
+
 #endif
 
     initscr();
@@ -492,18 +496,20 @@ void *thread_filesenders(void *data)
 static void print_usage(void)
 {
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
-    fprintf(stderr, "  -f, --file           Use specified data file\n");
-    fprintf(stderr, "  -x, --nodata         Ignore data file\n");
-    fprintf(stderr, "  -4, --ipv4           Force IPv4 connection\n");
-    fprintf(stderr, "  -c, --config         Use specified config file\n");
-    fprintf(stderr, "  -n, --nodes          Use specified DHTnodes file\n");
-    fprintf(stderr, "  -h, --help           Show this message and exit\n");
+    fprintf(stderr, "  -f, --file               Use specified data file\n");
+    fprintf(stderr, "  -x, --nodata             Ignore data file\n");
+    fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
+    fprintf(stderr, "  -d, --default_locale     Use default locale\n");
+    fprintf(stderr, "  -c, --config             Use specified config file\n");
+    fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
+    fprintf(stderr, "  -h, --help               Show this message and exit\n");
 }
 
 static void set_default_opts(void)
 {
     arg_opts.use_ipv4 = 0;
     arg_opts.ignore_data_file = 0;
+    arg_opts.default_locale = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -514,12 +520,13 @@ static void parse_args(int argc, char *argv[])
         {"file", required_argument, 0, 'f'},
         {"nodata", no_argument, 0, 'x'},
         {"ipv4", no_argument, 0, '4'},
+        {"default_locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
     };
 
-    const char *opts_str = "4xf:c:n:h";
+    const char *opts_str = "4xdf:c:n:h";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -542,6 +549,10 @@ static void parse_args(int argc, char *argv[])
 
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
+                break;
+
+            case 'd':
+                arg_opts.default_locale = 1;
                 break;
 
             case 'h':
