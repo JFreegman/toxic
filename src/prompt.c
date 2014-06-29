@@ -144,8 +144,18 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t') {    /* TAB key: auto-completes command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
-            if (complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE) == -1)
+            int diff = complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+
+            if (diff != -1) {
+                if (x + diff > x2 - 1) {
+                    wmove(self->window, y, x + diff);
+                    ctx->start += diff;
+                } else {
+                    wmove(self->window, y, x + diff);
+                }
+            } else {
                 beep();
+            }
         } else {
             beep();
         }
