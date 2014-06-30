@@ -462,8 +462,11 @@ static void load_data(Tox *m, char *path)
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
+    pthread_mutex_lock(&Winthread.lock);
     do_connection(m, prompt);
     do_file_senders(m);
+    pthread_mutex_unlock(&Winthread.lock);
+
     tox_do(m);    /* main tox-core loop */
 }
 
