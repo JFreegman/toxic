@@ -196,6 +196,8 @@ void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 {
     line_info_clear(self->chatwin->hst);
     wclear(window);
+    endwin();
+    refresh();
 }
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
