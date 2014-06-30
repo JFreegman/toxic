@@ -394,16 +394,20 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
         }
     }
 
-    /* refresh line with percentage complete */
-    uint8_t msg[MAX_STR_SIZE];
-    uint64_t size = friends[num].file_receiver.size[filenum];
     long double remain = (long double) tox_file_data_remaining(m, num, filenum, 1);
-    long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
+    uint64_t curtime = get_unix_time();
 
-    const uint8_t *name = friends[num].file_receiver.filenames[filenum];
-    snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
-    line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
+    /* refresh line with percentage complete */
+    if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
+        friends[num].file_receiver.last_progress[filenum] = curtime;
+        uint8_t msg[MAX_STR_SIZE];
+        uint64_t size = friends[num].file_receiver.size[filenum];
+        long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
 
+        const uint8_t *name = friends[num].file_receiver.filenames[filenum];
+        snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
+        line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
+    }
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t *group_pub_key)

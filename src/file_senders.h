@@ -40,6 +40,7 @@ typedef struct {
     uint16_t piecelen;
     uint8_t pathname[MAX_STR_SIZE];
     uint64_t timestamp;
+    uint64_t last_progress;
     uint64_t size;
     uint32_t line_id;
 } FileSender;

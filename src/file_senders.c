@@ -102,14 +102,17 @@ void do_file_senders(Tox *m)
                                    file_senders[i].piecelen) == -1)
                 break;
 
-            file_senders[i].timestamp = get_unix_time();
+            uint64_t curtime = get_unix_time();
+            file_senders[i].timestamp = curtime;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, friendnum), fp);
 
+            long double remain = (long double) tox_file_data_remaining(m, friendnum, filenum, 0);
+
             /* refresh line with percentage complete */
-            if (self->chatwin != NULL) {
+            if ((self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1)) || !remain) {
+                file_senders[i].last_progress = curtime;
                 uint64_t size = file_senders[i].size;
-                long double remain = (long double) tox_file_data_remaining(m, friendnum, filenum, 0);
                 long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
 
                 snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1Lf%%)", pathname, pct_remain);

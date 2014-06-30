@@ -34,13 +34,14 @@ struct FileReceiver {
     FILE *files[MAX_FILES];
     bool pending[MAX_FILES];
     uint64_t size[MAX_FILES];
+    uint64_t last_progress[MAX_FILES];
     uint32_t line_id[MAX_FILES];
 };
 
 struct LastOnline {
     uint64_t last_on;
     struct tm tm;
-    uint8_t hour_min_str[TIME_STR_SIZE];    /* holds 12-hour time string e.g. "10:43 PM" */
+    uint8_t hour_min_str[TIME_STR_SIZE];    /* holds 12/24-hour time string e.g. "10:43 PM" */
 };
 
 typedef struct {
