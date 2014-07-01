@@ -309,11 +309,50 @@ ToxWindow *init_windows(Tox *m)
     return prompt;
 }
 
-void on_window_resize(int sig)
+void on_window_resize(void)
 {
     endwin();
     refresh();
     clear();
+
+    int i;
+
+    for (i == 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (!windows[i].active || windows[i].is_friendlist)
+            continue;
+
+        ToxWindow *w = &windows[i];
+        ChatContext *ctx = w->chatwin;
+
+        if (w->is_groupchat)
+            delwin(ctx->sidebar);
+        else
+            delwin(w->stb->topline);
+
+        delwin(ctx->linewin);
+        delwin(ctx->history);
+        delwin(w->window);
+
+        w->window = newwin(LINES - 2, COLS, 0, 0);
+
+        int x2, y2, x, y;
+        getmaxyx(w->window, y2, x2);
+        getyx(w->window, y, x);
+        w->x = x2;
+
+        ctx = w->chatwin;
+        ctx->linewin = subwin(w->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
+
+        if (w->is_groupchat) {
+            ctx->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2 - SIDEBAR_WIDTH - 1, 0, 0);
+            ctx->sidebar = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
+        } else {
+            ctx->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
+            w->stb->topline = subwin(w->window, 2, x2, 0, 0);
+        }
+
+        scrollok(ctx->history, 0);
+    }
 }
 
 static void draw_window_tab(ToxWindow toxwin)

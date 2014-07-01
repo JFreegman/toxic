@@ -93,6 +93,9 @@ void kill_groupchat_window(ToxWindow *self)
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
     delwin(ctx->linewin);
+    delwin(ctx->history);
+    delwin(ctx->sidebar);
+    delwin(self->window);
     del_window(self);
     free(ctx->log);
     free(ctx->hst);
@@ -422,8 +425,12 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 } else {
                     wmove(self->window, y, x + diff);
                 }
-            } else beep();
-        } else beep();
+            } else {
+                beep();
+            }
+        } else {
+            beep();
+        }
     } else if (key == T_KEY_C_RB) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
@@ -473,7 +480,6 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 static void groupchat_onDraw(ToxWindow *self, Tox *m)
 {
-
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
@@ -482,14 +488,14 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     line_info_print(self);
     wclear(ctx->linewin);
 
-    scrollok(ctx->history, 0);
     curs_set(1);
 
     if (ctx->len > 0)
         mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
 
     wclear(ctx->sidebar);
-    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
+
+    mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
     mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
     mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
 
@@ -518,18 +524,23 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
         wprintw(ctx->sidebar, "%s\n", tmpnck);
     }
+
+    int y, x;
+    getyx(self->window, y, x);
+    int new_x = ctx->start ? x2 - 1 : ctx->pos;
+    wmove(self->window, y + 1, new_x);
 }
 
 static void groupchat_onInit(ToxWindow *self, Tox *m)
 {
-    int x, y;
-    getmaxyx(self->window, y, x);
+    int x2, y2;
+    getmaxyx(self->window, y2, x2);
 
     ChatContext *ctx = self->chatwin;
 
-    ctx->history = subwin(self->window, y - CHATBOX_HEIGHT + 1, x - SIDEBAR_WIDTH - 1, 0, 0);
-    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x, y - CHATBOX_HEIGHT, 0);
-    ctx->sidebar = subwin(self->window, y - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x - SIDEBAR_WIDTH);
+    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2 - SIDEBAR_WIDTH - 1, 0, 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
+    ctx->sidebar = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
 
     ctx->hst = malloc(sizeof(struct history));
     ctx->log = malloc(sizeof(struct chatlog));
@@ -548,7 +559,8 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
-    wmove(self->window, y - CURS_Y_OFFSET, 0);
+    scrollok(ctx->history, 0);
+    wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
 ToxWindow new_group_chat(Tox *m, int groupnum)

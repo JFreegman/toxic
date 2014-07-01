@@ -65,6 +65,7 @@ enum {
 struct _Winthread {
     pthread_t tid;
     pthread_mutex_t lock;
+    bool flag_resize;
 };
 
 typedef struct ToxWindow ToxWindow;
@@ -196,7 +197,7 @@ void del_window(ToxWindow *w);
 void set_active_window(int ch);
 int get_num_active_windows(void);
 void kill_all_windows(void);    /* should only be called on shutdown */
-void on_window_resize(int sig);
+void on_window_resize(void);
 
 /* refresh inactive windows to prevent scrolling bugs. 
    call at least once per second */

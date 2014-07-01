@@ -241,7 +241,12 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     if (statusbar->statusmsg[0])
         wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
 
-    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
+    mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
+
+    int y, x;
+    getyx(self->window, y, x);
+    int new_x = ctx->start ? x2 - 1 : ctx->pos;
+    wmove(self->window, y + 1, new_x);
 }
 
 static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum , uint8_t status)

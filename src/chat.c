@@ -116,6 +116,8 @@ void kill_chat_window(ToxWindow *self, Tox *m)
 
     int f_num = self->num;
     delwin(ctx->linewin);
+    delwin(ctx->history);
+    delwin(self->window);
     delwin(statusbar->topline);
     del_window(self);
     disable_chatwin(f_num);
@@ -386,9 +388,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
 
     if (fp) {
         if (fwrite(data, length, 1, fp) != 1) {
-            uint8_t *msg = " * Error writing to file.";
-            line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
-
+            line_info_add(self, NULL, NULL, NULL, " * Error writing to file.", SYS_MSG, 0, RED);
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
             chat_close_file_receiver(num, filenum);
         }
@@ -400,10 +400,10 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     /* refresh line with percentage complete */
     if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
         friends[num].file_receiver.last_progress[filenum] = curtime;
-        uint8_t msg[MAX_STR_SIZE];
         uint64_t size = friends[num].file_receiver.size[filenum];
         long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
 
+        uint8_t msg[MAX_STR_SIZE];
         const uint8_t *name = friends[num].file_receiver.filenames[filenum];
         snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
         line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
@@ -838,7 +838,13 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, "%02X", friends[self->num].pub_key[i] & 0xff);
 
     wprintw(statusbar->topline, "}\n");
-    mvwhline(ctx->linewin, 0, 0, ACS_HLINE, x2);
+
+    mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
+
+    int y, x;
+    getyx(self->window, y, x);
+    int new_x = ctx->start ? x2 - 1 : ctx->pos;
+    wmove(self->window, y + 1, new_x);
 
 #ifdef _SUPPORT_AUDIO
     wrefresh(self->window);

@@ -92,6 +92,11 @@ static void ignore_SIGINT(int sig)
     return;
 }
 
+static void flag_window_resize(int sig)
+{
+    Winthread.flag_resize = true;
+}
+
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
@@ -110,7 +115,6 @@ void exit_toxic_success(Tox *m)
 #endif /* _SUPPORT_AUDIO */
     tox_kill(m);
     endwin();
-    fprintf(stderr, "Toxic session ended gracefully.\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -126,14 +130,14 @@ void exit_toxic_err(const char *errmsg, int errcode)
 
 static void init_term(void)
 {
-    signal(SIGWINCH, on_window_resize);
+    signal(SIGWINCH, flag_window_resize);
 
 #if HAVE_WIDECHAR
 
     if (!arg_opts.default_locale) {
         if (setlocale(LC_ALL, "") == NULL)
             exit_toxic_err("Could not set your locale, please check your locale settings or "
-                           "disable unicode support with the -D flag.", FATALERR_LOCALE_SET);
+                           "disable unicode support with the -d flag.", FATALERR_LOCALE_SET);
     }
 
 #endif
@@ -476,7 +480,13 @@ void *thread_winref(void *data)
 
     while (true) {
         draw_active_window(m);
-        refresh_inactive_windows();
+
+        if (Winthread.flag_resize) {
+            on_window_resize();
+            Winthread.flag_resize = false;
+        } else {
+            refresh_inactive_windows();
+        }
     }
 }
 
