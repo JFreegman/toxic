@@ -147,6 +147,10 @@ struct StatusBar {
 };
 
 #ifdef _SUPPORT_AUDIO
+
+
+#define INFOBOX_HEIGHT 7
+#define INFOBOX_WIDTH 21
 /* holds display info for audio calls */
 struct infobox {
     float vad_lvl;
@@ -161,7 +165,7 @@ struct infobox {
 
     WINDOW *win;
 };
-#endif
+#endif /* _SUPPORT_AUDIO */
 
 #define MAX_LINE_HIST 128
 

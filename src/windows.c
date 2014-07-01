@@ -358,6 +358,15 @@ void on_window_resize(void)
             w->stb->topline = subwin(w->window, 2, x2, 0, 0);
         }
 
+#ifdef _SUPPORT_AUDIO
+
+        if (ctx->infobox.active) {
+            delwin(ctx->infobox.win);
+            ctx->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
+        }
+
+#endif /* #ifdef _SUPPORT_AUDIO */
+
         scrollok(ctx->history, 0);
     }
 }

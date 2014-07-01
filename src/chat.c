@@ -543,10 +543,6 @@ void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
     line_info_add(self, NULL, NULL, NULL, "Peer disconnected; call ended!", SYS_MSG, 0, 0);
 }
 
-
-#define INFOBOX_HEIGHT 7
-#define INFOBOX_WIDTH 21
-
 static void init_infobox(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
