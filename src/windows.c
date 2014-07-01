@@ -318,10 +318,17 @@ void on_window_resize(void)
     int i;
 
     for (i == 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (!windows[i].active || windows[i].is_friendlist)
+        if (!windows[i].active)
             continue;
 
         ToxWindow *w = &windows[i];
+
+        if (windows[i].is_friendlist) {
+            delwin(w->window);
+            w->window = newwin(LINES - 2, COLS, 0, 0);
+            continue;
+        }
+
         ChatContext *ctx = w->chatwin;
 
         if (w->is_groupchat)
@@ -337,7 +344,7 @@ void on_window_resize(void)
 
         int x2, y2, x, y;
         getmaxyx(w->window, y2, x2);
-        getyx(w->window, y, x);
+        getyx(w->window, y, x);    /* don't remove this */
         w->x = x2;
 
         ctx = w->chatwin;
