@@ -28,7 +28,7 @@
 
 #define MAX_HISTORY 10000
 #define MIN_HISTORY 20
-#define MAX_QUEUE 32
+#define MAX_QUEUE 128
 
 enum {
     SYS_MSG,

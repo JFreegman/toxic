@@ -358,7 +358,7 @@ void on_window_resize(void)
             delwin(w->chatwin->infobox.win);
             w->chatwin->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
         }
-#endif /* #ifdef _SUPPORT_AUDIO */
+#endif /* _SUPPORT_AUDIO */
 
         scrollok(w->chatwin->history, 0);
     }

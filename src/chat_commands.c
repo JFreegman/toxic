@@ -132,9 +132,9 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    uint8_t *groupkey = friends[self->num].pending_groupchat;
+    uint8_t *groupkey = friends[self->num].groupchat_key;
 
-    if (groupkey[0] == '\0') {
+    if (!friends[self->num].groupchat_pending) {
         errmsg = "No pending group chat invite.";
         line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
         return;

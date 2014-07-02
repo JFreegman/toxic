@@ -424,10 +424,11 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
 
     snprintf(msg, sizeof(msg), "%s has invited you to a group chat.", name);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    snprintf(msg, sizeof(msg), "Type \"/join\" to join the chat.", name);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Type \"/join\" to join the chat.", SYS_MSG, 0, 0);
 
-    memcpy(friends[friendnumber].pending_groupchat, group_pub_key, TOX_CLIENT_ID_SIZE);
+    memcpy(friends[friendnumber].groupchat_key, group_pub_key, TOX_CLIENT_ID_SIZE);
+    friends[friendnumber].groupchat_pending = true;
+
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
