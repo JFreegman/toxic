@@ -194,20 +194,23 @@ int valid_nick(uint8_t *nick)
 }
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *namebuf, uint8_t *pathname)
+void get_file_name(uint8_t *namebuf, const uint8_t *pathname)
 {
     int idx = strlen(pathname) - 1;
 
-    while (idx >= 0 && pathname[idx] == '/')
-        pathname[idx--] = '\0';
+    uint8_t tmpname[MAX_STR_SIZE];
+    snprintf(tmpname, sizeof(tmpname), "%s", pathname);
 
-    uint8_t *filename = strrchr(pathname, '/');
+    while (idx >= 0 && pathname[idx] == '/')
+        tmpname[idx--] = '\0';
+
+    uint8_t *filename = strrchr(tmpname, '/');
 
     if (filename != NULL) {
         if (!strlen(++filename))
-            filename = pathname;
+            filename = tmpname;
     } else {
-        filename = pathname;
+        filename = tmpname;
     }
 
     snprintf(namebuf, MAX_STR_SIZE, "%s", filename);

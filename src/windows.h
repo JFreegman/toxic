@@ -80,18 +80,18 @@ struct ToxWindow {
     void(*onFriendRequest)(ToxWindow *, Tox *, const uint8_t *, const uint8_t *, uint16_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, int32_t, bool);
     void(*onConnectionChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onMessage)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
-    void(*onNickChange)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
+    void(*onMessage)(ToxWindow *, Tox *, int32_t, const uint8_t *, uint16_t);
+    void(*onNickChange)(ToxWindow *, Tox *, int32_t, const uint8_t *, uint16_t);
     void(*onStatusChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onStatusMessageChange)(ToxWindow *, int32_t, uint8_t *, uint16_t);
-    void(*onAction)(ToxWindow *, Tox *, int32_t, uint8_t *, uint16_t);
-    void(*onGroupMessage)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
-    void(*onGroupAction)(ToxWindow *, Tox *, int, int, uint8_t *, uint16_t);
-    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t *);
+    void(*onStatusMessageChange)(ToxWindow *, int32_t, const uint8_t *, uint16_t);
+    void(*onAction)(ToxWindow *, Tox *, int32_t, const uint8_t *, uint16_t);
+    void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const uint8_t *, uint16_t);
+    void(*onGroupAction)(ToxWindow *, Tox *, int, int, const uint8_t *, uint16_t);
+    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const uint8_t *);
     void(*onGroupNamelistChange)(ToxWindow *, Tox *, int, int, uint8_t);
-    void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, uint8_t *, uint16_t);
-    void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, uint8_t *, uint16_t);
-    void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t *, uint16_t);
+    void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, const uint8_t *, uint16_t);
+    void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, const uint8_t *, uint16_t);
+    void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, const uint8_t *, uint16_t);
     void(*onTypingChange)(ToxWindow *, Tox *, int32_t, uint8_t);
 
 #ifdef _SUPPORT_AUDIO

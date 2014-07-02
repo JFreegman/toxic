@@ -96,7 +96,7 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
              &friends[num].last_online.tm);
 }
 
-static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *str, uint16_t len)
+static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const uint8_t *str, uint16_t len)
 {
     if (num >= max_friends_index)
         return;
@@ -105,8 +105,6 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
-            str[len] = '\0';
-
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             int n_len = tox_get_name(m, num, nick);
             n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
@@ -135,16 +133,13 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, 
     sort_friendlist_index();
 }
 
-static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_t *str, uint16_t len)
+static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, const uint8_t *nick, uint16_t len)
 {
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
-
-    str[len] = '\0';
-    strcpy(friends[num].name, str);
-    friends[num].namelength = len;
+    snprintf(friends[num].name, sizeof(friends[num].name), "%s", nick);
+    friends[num].namelength = strlen(friends[num].name);
     sort_friendlist_index();
 }
 
@@ -156,16 +151,13 @@ static void friendlist_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint
     friends[num].status = status;
 }
 
-static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, uint8_t *str, uint16_t len)
+static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, const uint8_t *status, uint16_t len)
 {
     if (len > TOX_MAX_STATUSMESSAGE_LENGTH || num >= max_friends_index)
         return;
 
-    str[len] = '\0';
-    snprintf(friends[num].statusmsg, sizeof(friends[num].statusmsg), "%s", str);
-    len = strlen(friends[num].statusmsg);
-    friends[num].statusmsg_len = len;
-    friends[num].statusmsg[len] = '\0';
+    snprintf(friends[num].statusmsg, sizeof(friends[num].statusmsg), "%s", status);
+    friends[num].statusmsg_len = strlen(friends[num].statusmsg);
 }
 
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
@@ -209,7 +201,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
 }
 
 static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
-        uint64_t filesize, uint8_t *filename, uint16_t filename_len)
+        uint64_t filesize, const uint8_t *filename, uint16_t filename_len)
 {
     if (num >= max_friends_index)
         return;
@@ -234,7 +226,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     }
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8_t *group_pub_key)
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const uint8_t *group_pub_key)
 {
     if (num >= max_friends_index)
         return;
@@ -472,13 +464,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
 
                     pthread_mutex_lock(&Winthread.lock);
-                    uint16_t s_len = tox_get_status_message(m, friends[f].num, statusmsg,
-                                                            TOX_MAX_STATUSMESSAGE_LENGTH);
+                    tox_get_status_message(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     pthread_mutex_unlock(&Winthread.lock);
 
-                    friends[f].statusmsg_len = s_len;
-                    friends[f].statusmsg[s_len] = '\0';
                     snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
+                    friends[f].statusmsg_len = strlen(friends[f].statusmsg);
                 }
 
                 /* Truncate note if it doesn't fit on one line */

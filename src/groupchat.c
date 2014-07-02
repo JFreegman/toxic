@@ -166,12 +166,10 @@ static void print_groupchat_help(ToxWindow *self)
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum,
-                                     uint8_t *msg, uint16_t len)
+                                     const uint8_t *msg, uint16_t len)
 {
     if (self->num != groupnum)
         return;
-
-    msg[len] = '\0';
 
     ChatContext *ctx = self->chatwin;
 
@@ -208,13 +206,11 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     write_to_log(msg, nick, ctx->log, false);
 }
 
-static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t *action,
+static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, const uint8_t *action,
                                     uint16_t len)
 {
     if (self->num != groupnum)
         return;
-
-    action[len] = '\0';
 
     ChatContext *ctx = self->chatwin;
 

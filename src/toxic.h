@@ -77,21 +77,21 @@ int store_data(Tox *m, char *path);
 
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata);
 void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
-void on_message(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_action(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
-void on_nickchange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_message(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata);
+void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata);
+void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata);
 void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
-void on_statusmessagechange(Tox *m, int32_t friendnumber, uint8_t *string, uint16_t length, void *userdata);
+void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata);
 void on_friendadded(Tox *m, int32_t friendnumber, bool sort);
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, uint8_t *message, uint16_t length, void *userdata);
-void on_groupaction(Tox *m, int groupnumber, int peernumber, uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t *group_pub_key, void *userdata);
+void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length, void *userdata);
+void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length, void *userdata);
+void on_groupinvite(Tox *m, int32_t friendnumber, const uint8_t *group_pub_key, void *userdata);
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, uint8_t *pathname,
+void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, const uint8_t *pathname,
                          uint16_t pathname_length, void *userdata);
 void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type,
-                     uint8_t *data, uint16_t length, void *userdata);
-void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, uint8_t *data, uint16_t length, void *userdata);
+                     const uint8_t *data, uint16_t length, void *userdata);
+void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_t *data, uint16_t length, void *userdata);
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
 
 #endif  /* #define _toxic_h */

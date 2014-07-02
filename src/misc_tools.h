@@ -80,7 +80,7 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
 int valid_nick(uint8_t *nick);
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *namebuf, uint8_t *pathname);
+void get_file_name(uint8_t *namebuf, const uint8_t *pathname);
 
 /* converts str to all lowercase */
 void str_to_lower(uint8_t *str);

@@ -128,12 +128,10 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     free(statusbar);
 }
 
-static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, uint8_t *msg, uint16_t len)
+static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const uint8_t *msg, uint16_t len)
 {
     if (self->num != num)
         return;
-
-    msg[len] = '\0';
 
     ChatContext *ctx = self->chatwin;
 
@@ -176,13 +174,10 @@ static void chat_onTypingChange(ToxWindow *self, Tox *m, int32_t num, uint8_t is
     friends[num].is_typing = is_typing;
 }
 
-static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action, uint16_t len)
+static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const uint8_t *action, uint16_t len)
 {
     if (self->num != num)
         return;
-
-
-    action[len] = '\0';
 
     ChatContext *ctx = self->chatwin;
 
@@ -200,14 +195,12 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, uint8_t *action,
     alert_window(self, WINDOW_ALERT_1, true);
 }
 
-static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, uint8_t *nick, uint16_t len)
+static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const uint8_t *nick, uint16_t len)
 {
     if (self->num != num)
         return;
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
-    nick[len] = '\0';
-    strcpy(self->name, nick);
+    snprintf(self->name, sizeof(self->name), "%s", nick);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -219,31 +212,25 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t st
     statusbar->status = status;
 }
 
-static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, uint8_t *status, uint16_t len)
+static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, const uint8_t *status, uint16_t len)
 {
     if (self->num != num)
         return;
 
     StatusBar *statusbar = self->stb;
 
-    status[len] = '\0';
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", status);
-    len = strlen(statusbar->statusmsg);
-    statusbar->statusmsg_len = len;
-    statusbar->statusmsg[len] = '\0';
+    statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 }
 
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
-                                   uint64_t filesize, uint8_t *pathname, uint16_t path_len)
+                                   uint64_t filesize, const uint8_t *pathname, uint16_t path_len)
 {
     if (self->num != num)
         return;
 
     uint8_t msg[MAX_STR_SIZE * 2];
     uint8_t *errmsg;
-
-    pathname[path_len] = '\0';
-
 
     /* holds the filename appended to the user specified path */
     uint8_t filename_path[MAX_STR_SIZE] = {0};
@@ -328,7 +315,7 @@ static void chat_close_file_receiver(int32_t num, uint8_t filenum)
 }
 
 static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t receive_send,
-                               uint8_t filenum, uint8_t control_type, uint8_t *data, uint16_t length)
+                               uint8_t filenum, uint8_t control_type, const uint8_t *data, uint16_t length)
 {
     if (self->num != num)
         return;
@@ -378,7 +365,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     alert_window(self, WINDOW_ALERT_2, true);
 }
 
-static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, uint8_t *data,
+static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, const uint8_t *data,
                             uint16_t length)
 {
     if (self->num != num)
@@ -410,7 +397,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     }
 }
 
-static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t *group_pub_key)
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const uint8_t *group_pub_key)
 {
     if (self->num != friendnumber)
         return;
@@ -804,12 +791,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
 
         pthread_mutex_lock(&Winthread.lock);
-        uint16_t s_len = tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        tox_get_status_message(m, self->num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
         pthread_mutex_unlock(&Winthread.lock);
-        statusmsg[s_len] = '\0';
 
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-        statusbar->statusmsg_len = s_len;
+        statusbar->statusmsg_len = strlen(statusbar->statusmsg);
     }
 
     self->x = x2;
