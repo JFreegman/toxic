@@ -1,7 +1,7 @@
 # Toxic [![Build Status](https://travis-ci.org/Tox/toxic.png?branch=master)](https://travis-ci.org/Tox/toxic)
-Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
+Toxic is a [Tox](https://tox.im)-based instant messanging client which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
 
-![Toxic Screenshot](https://i.imgur.com/LdXXM62.png "Main Screen").
+![Toxic Screenshot](https://i.imgur.com/AOnp7oD.png "Main Screen").
 
 ## Installation
 

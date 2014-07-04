@@ -367,17 +367,18 @@ static void print_welcome_msg(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    line_info_add(self, NULL, NULL, NULL, "   |_   _|____  _(_) ___ ", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "     | |/ _ \\ \\/ / |/ __|", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "     | | (_) >  <| | (__ ", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "     |_|\\___/_/\\_\\_|\\___|", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "    _____ _____  _____ ____ ", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "   |_   _/ _ \\ \\/ /_ _/ ___|", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "     | || | | \\  / | | |    ", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "     | || |_| /  \\ | | |___ ", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "     |_| \\___/_/\\_\\___\\____|", SYS_MSG, 1, BLUE);
     line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
 
-    uint8_t *msg = "Welcome to Toxic, a free open source messenger client for Tox. Type /help for a"\
-                   " list of commands and key bindings. Further help may be found via the man page.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
-    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 1, 0);
-
+    uint8_t *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
 }
 
 static void prompt_onInit(ToxWindow *self, Tox *m)
@@ -390,14 +391,11 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
-    ctx->log = malloc(sizeof(struct chatlog));
-    ctx->hst = malloc(sizeof(struct history));
+    ctx->log = calloc(1, sizeof(struct chatlog));
+    ctx->hst = calloc(1, sizeof(struct history));
 
     if (ctx->log == NULL || ctx->hst == NULL)
         exit_toxic_err("failed in prompt_onInit", FATALERR_MEMORY);
-
-    memset(ctx->log, 0, sizeof(struct chatlog));
-    memset(ctx->hst, 0, sizeof(struct history));
 
     line_info_init(ctx->hst);
 

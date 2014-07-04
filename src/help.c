@@ -233,7 +233,11 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'g':
+#ifdef _SUPPORT_AUDIO
             help_init_window(self, 21, 80);
+#else
+            help_init_window(self, 17, 80);
+#endif
             self->help->type = HELP_GLOBAL;
             break;
 

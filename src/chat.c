@@ -875,14 +875,11 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
-    ctx->hst = malloc(sizeof(struct history));
-    ctx->log = malloc(sizeof(struct chatlog));
+    ctx->hst = calloc(1, sizeof(struct history));
+    ctx->log = calloc(1, sizeof(struct chatlog));
 
     if (ctx->log == NULL || ctx->hst == NULL)
         exit_toxic_err("failed in chat_onInit", FATALERR_MEMORY);
-
-    memset(ctx->hst, 0, sizeof(struct history));
-    memset(ctx->log, 0, sizeof(struct chatlog));
 
     line_info_init(ctx->hst);
 
