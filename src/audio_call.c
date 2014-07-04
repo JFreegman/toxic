@@ -94,6 +94,8 @@ void callback_call_ended    ( int32_t call_index, void *arg );
 void callback_requ_timeout  ( int32_t call_index, void *arg );
 void callback_peer_timeout  ( int32_t call_index, void *arg );
 
+int stop_transmission(int call_index);
+
 static void print_err (ToxWindow *self, uint8_t *error_str)
 {
     line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
@@ -245,17 +247,17 @@ int start_transmission(ToxWindow *self)
     }
     
     if ( !toxav_capability_supported(ASettins.av, self->call_idx, AudioDecoding) ||
-         !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
+        !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
         return -1;
-
+    
     set_call(&ASettins.calls[self->call_idx], _True);
     
     if ( 0 != pthread_create(&ASettins.calls[self->call_idx].ttid, NULL, transmission, self ) &&
-         0 != pthread_detach(ASettins.calls[self->call_idx].ttid) ) {
+        0 != pthread_detach(ASettins.calls[self->call_idx].ttid) ) {
         return -1;
-    }
-
-    return 0;
+        }
+        
+        return 0;
 }
 
 int stop_transmission(int call_index)
@@ -265,7 +267,7 @@ int stop_transmission(int call_index)
         ASettins.calls[call_index].ttas = _False;
         return 0;
     }
-
+    
     return -1;
 }
 /*
