@@ -42,7 +42,6 @@ typedef enum _AudioError {
 ToxAv *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio();
 
-int start_transmission(ToxWindow *self);
-int stop_transmission(int call_index);
+void stop_current_call(ToxWindow *self);
 
 #endif /* _audio_h */

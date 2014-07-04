@@ -309,13 +309,11 @@ void callback_recv_ending ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnding);
     stop_transmission(call_index);
-    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_recv_error ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onError);
     stop_transmission(call_index);
-    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_call_started ( int32_t call_index, void* arg )
 {    
@@ -336,7 +334,6 @@ void callback_call_canceled ( int32_t call_index, void* arg )
 
     /* In case call is active */
     stop_transmission(call_index);
-    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_call_rejected ( int32_t call_index, void* arg )
 {
@@ -346,13 +343,11 @@ void callback_call_ended ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnd);
     stop_transmission(call_index);
-    ((ToxWindow*)arg)->call_idx = -1;
 }
 
 void callback_requ_timeout ( int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onRequestTimeout);
-    ((ToxWindow*)arg)->call_idx = -1;
 }
 void callback_peer_timeout ( int32_t call_index, void* arg )
 {
@@ -362,7 +357,6 @@ void callback_peer_timeout ( int32_t call_index, void* arg )
      * actions that one can possibly take on timeout
      */
     toxav_stop_call(ASettins.av, call_index);
-    ((ToxWindow*)arg)->call_idx = -1;
 }
 /*
  * End of Callbacks
@@ -761,4 +755,28 @@ void cmd_sense(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)
     
 on_error:
     print_err (self, error_str);
+}
+
+
+void stop_current_call(ToxWindow* self)
+{    
+    ToxAvCallState callstate;
+    if ( ASettins.av != NULL && self->call_idx != -1 && 
+       ( callstate = toxav_get_call_state(ASettins.av, self->call_idx) ) != av_CallNonExistant) {
+        switch (callstate)
+        {
+        case av_CallActive:
+        case av_CallHold:
+            toxav_hangup(ASettins.av, self->call_idx);
+            break;
+        case av_CallInviting:
+            toxav_cancel(ASettins.av, self->call_idx, 0, "Not interested anymore");
+            break;
+        case av_CallStarting:
+            toxav_reject(ASettins.av, self->call_idx, "Not interested");
+            break;
+        default:
+            break;
+        }
+    }
 }
