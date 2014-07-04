@@ -40,6 +40,7 @@
 #include "line_info.h"
 #include "settings.h"
 #include "input.h"
+#include "help.h"
 
 extern char *DATA_FILE;
 
@@ -96,10 +97,11 @@ void kill_groupchat_window(ToxWindow *self)
     delwin(ctx->history);
     delwin(ctx->sidebar);
     delwin(self->window);
-    del_window(self);
     free(ctx->log);
     free(ctx->hst);
     free(ctx);
+    free(self->help);
+    del_window(self);
 }
 
 static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
@@ -122,47 +124,6 @@ static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 
     max_groupchat_index = i;
     kill_groupchat_window(self);
-}
-
-static void print_groupchat_help(ToxWindow *self)
-{
-    struct history *hst = self->chatwin->hst;
-    line_info_clear(hst);
-    struct line_info *start = hst->line_start;
-
-    uint8_t *msg = "Group chat commands:";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-
-#define NUMLINES 9
-
-    uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
-
-        { "    /add <id> <msg>     : Add friend with optional message"               },
-        { "    /status <type> <msg>: Set your status with optional note"             },
-        { "    /note <msg>         : Set a personal note"                            },
-        { "    /nick <nick>        : Set your nickname"                              },
-        { "    /groupchat          : Create a group chat"                            },
-        { "    /log <on> or <off>  : Enable/disable logging"                         },
-        { "    /close              : Close the current group chat"                   },
-        { "    /help               : Print this message again"                       },
-        { "    /help global        : Show a list of global commands"                 },
-
-    };
-
-    int i;
-
-    for (i = 0; i < NUMLINES; ++i)
-        line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
-
-    msg = " * Use Page Up/Page Down keys to scroll chat history";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Scroll peer list with the ctrl-] and ctrl-[ keys.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Notice, some friends will be missing names while finding peers";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
-    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
-
-    hst->line_start = start;
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int peernum,
@@ -393,6 +354,11 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (x2 <= 0)
         return;
 
+    if (self->help->active) {
+        help_onKey(self, key);
+        return;
+    }
+
     if (ltr) {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
         return;
@@ -450,12 +416,6 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (strcmp(line, "/close") == 0) {
                 close_groupchat(self, m, self->num);
                 return;
-            } else if (strcmp(line, "/help") == 0) {
-                if (strcmp(line, "help global") == 0)
-                    execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
-                else
-                    print_groupchat_help(self);
-
             } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_group_action(self, ctx, m, line + strlen("/me "));
             } else {
@@ -525,6 +485,11 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     int new_x = ctx->start ? x2 - 1 : ctx->pos;
     wmove(self->window, y + 1, new_x);
+
+    if (self->help->active) {
+        wrefresh(self->window);
+        help_onDraw(self);
+    }
 }
 
 static void groupchat_onInit(ToxWindow *self, Tox *m)
@@ -548,7 +513,6 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     memset(ctx->log, 0, sizeof(struct chatlog));
 
     line_info_init(ctx->hst);
-    print_groupchat_help(self);
 
     if (user_settings->autolog == AUTOLOG_ON)
         log_enable(self->name, NULL, ctx->log);
@@ -577,11 +541,14 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     snprintf(ret.name, sizeof(ret.name), "Room #%d", groupnum);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
+    Help *help = calloc(1, sizeof(Help));
 
-    if (chatwin == NULL)
+    if (chatwin == NULL || help == NULL)
         exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
 
     ret.chatwin = chatwin;
+    ret.help = help;
+
     ret.num = groupnum;
 
     return ret;

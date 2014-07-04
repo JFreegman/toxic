@@ -38,61 +38,6 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 extern FileSender file_senders[MAX_FILES];
 extern uint8_t max_file_senders_index;
 
-void cmd_chat_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    struct history *hst = self->chatwin->hst;
-    line_info_clear(hst);
-    struct line_info *start = hst->line_start;
-
-    if (argc == 1) {
-        if (!strcmp(argv[1], "global")) {
-            execute(window, self, m, "/help", GLOBAL_COMMAND_MODE);
-            return;
-        }
-    }
-
-    uint8_t *msg = "Chat commands:";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-
-#ifdef _SUPPORT_AUDIO
-#define NUMLINES 16
-#else
-#define NUMLINES 9
-#endif
-
-    uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
-
-#ifdef _SUPPORT_AUDIO
-        { "    /call                      : Audio call"                           },
-        { "    /cancel                    : Cancel call"                          },
-        { "    /answer                    : Answer incomming call"                },
-        { "    /reject                    : Reject incoming call"                 },
-        { "    /hangup                    : Hangup active call"                   },
-        { "    /sdev <type> <id>          : Change active device"                 },
-        { "    /mute <type>               : Mute active device if in call"        },
-        { "    /sense <value>             : VAD sensitivity treshold"             },
-#endif /* _SUPPORT_AUDIO */
-        { "    /invite <n>                : Invite friend to a group chat"        },
-        { "    /join                      : Join a pending group chat"            },
-        { "    /log <on> or <off>         : Enable/disable logging"               },
-        { "    /sendfile <filepath>       : Send a file"                          },
-        { "    /savefile <n>              : Receive a file"                       },
-        { "    /close                     : Close the current chat window"        },
-        { "    /help                      : Print this message again"             },
-        { "    /help global               : Show a list of global commands"       },
-    };
-
-    int i;
-
-    for (i = 0; i < NUMLINES; ++i)
-        line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
-
-    msg = " * Use Page Up/Page Down to scroll chat history\n";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-
-    hst->line_start = start;
-}
-
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     uint8_t *errmsg;

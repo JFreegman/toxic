@@ -1,4 +1,4 @@
-/*  execute.h
+/*  help.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,28 +20,22 @@
  *
  */
 
-#ifndef _execute_h
-#define _execute_h
+#ifndef _help_h
+#define _help_h
 
 #include "toxic.h"
 #include "windows.h"
 
-#define MAX_NUM_ARGS 4     /* Includes command */
+typedef enum {
+    HELP_MENU,
+    HELP_GLOBAL,
+    HELP_CHAT,
+    HELP_GROUP,
+    HELP_KEYS,
+} HELP_TYPES;
 
-#ifdef _SUPPORT_AUDIO
-#define GLOBAL_NUM_COMMANDS 16
-#define CHAT_NUM_COMMANDS 12
-#else
-#define GLOBAL_NUM_COMMANDS 14
-#define CHAT_NUM_COMMANDS 4
-#endif /* _SUPPORT_AUDIO */
+void help_onDraw(ToxWindow *self);
+void help_init_menu(ToxWindow *self);
+void help_onKey(ToxWindow *self, wint_t key);
 
-enum {
-    GLOBAL_COMMAND_MODE,
-    CHAT_COMMAND_MODE,
-    GROUPCHAT_COMMAND_MODE,
-};
-
-void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode);
-
-#endif /* #define _execute_h */
+#endif /* #define _help_h */

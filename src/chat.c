@@ -35,6 +35,7 @@
 #include "line_info.h"
 #include "settings.h"
 #include "input.h"
+#include "help.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -119,13 +120,14 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     delwin(ctx->history);
     delwin(self->window);
     delwin(statusbar->topline);
-    del_window(self);
     disable_chatwin(f_num);
 
     free(ctx->log);
     free(ctx->hst);
     free(ctx);
+    free(self->help);
     free(statusbar);
+    del_window(self);
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const uint8_t *msg, uint16_t len)
@@ -648,6 +650,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (x2 <= 0)
         return;
 
+    if (self->help->active) {
+        help_onKey(self, key);
+        return;
+    }
+
     if (ltr) {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
 
@@ -836,6 +843,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         draw_infobox(self);
 #endif
 
+    if (self->help->active) {
+        wrefresh(self->window);
+        help_onDraw(self);
+    }
 }
 
 static void chat_onInit(ToxWindow *self, Tox *m)
@@ -878,7 +889,6 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     if (friends[self->num].logging_on)
         log_enable(self->name, friends[self->num].pub_key, ctx->log);
 
-    execute(ctx->history, self, m, "/help", CHAT_COMMAND_MODE);
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
     scrollok(ctx->history, 0);
@@ -934,17 +944,15 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     strcpy(ret.name, name);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
-    memset(chatwin, 0, sizeof(ChatContext));
-
     StatusBar *stb = calloc(1, sizeof(StatusBar));
-    memset(stb, 0, sizeof(StatusBar));
+    Help *help = calloc(1, sizeof(Help));
 
-    if (stb != NULL && chatwin != NULL) {
-        ret.chatwin = chatwin;
-        ret.stb = stb;
-    } else {
+    if (stb == NULL || chatwin == NULL || help == NULL)
         exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
-    }
+
+    ret.chatwin = chatwin;
+    ret.stb = stb;
+    ret.help = help;
 
     ret.num = friendnum;
 
