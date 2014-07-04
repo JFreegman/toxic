@@ -27,6 +27,14 @@
 #define TOXICVER "NOVER_"    /* Use the -D flag to set this */
 #endif
 
+#ifndef SIGWINCH
+#define SIGWINCH 28
+#endif
+
+#ifndef SIGINT
+#define SIGINT 2
+#endif
+
 #include <stdbool.h>
 #include <curses.h>
 
@@ -42,6 +50,7 @@
 #define TIME_STR_SIZE 16
 
 /* ASCII key codes */
+#define T_KEY_ESC        0X1B     /* esc key */
 #define T_KEY_KILL       0x0B     /* ctrl-k */
 #define T_KEY_DISCARD    0x15     /* ctrl-u */
 #define T_KEY_NEXT       0x10     /* ctrl-p */

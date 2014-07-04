@@ -33,6 +33,7 @@
 #include "dns.h"
 #include "groupchat.h"
 #include "prompt.h"
+#include "help.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -384,51 +385,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    struct history *hst = self->chatwin->hst;
-    line_info_clear(hst);
-    struct line_info *start = hst->line_start;
-
-    uint8_t *msg = "Global commands:";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-
-#ifdef _SUPPORT_AUDIO
-#define NUMLINES 14
-#else
-#define NUMLINES 12
-#endif
-
-    uint8_t lines[NUMLINES][MAX_STR_SIZE] = {
-
-        { "    /add <id> <msg>            : Add friend with optional message"               },
-        { "    /accept <n>                : Accept friend request"                          },
-        { "    /connect <ip> <port> <key> : Manually connect to a DHT node"                 },
-        { "    /status <type> <msg>       : Set status with optional note"                  },
-        { "    /note <msg>                : Set a personal note"                            },
-        { "    /nick <nick>               : Set your nickname"                              },
-        { "    /log <on> or <off>         : Enable/disable logging"                         },
-        { "    /groupchat                 : Create a group chat"                            },
-        { "    /myid                      : Print your ID"                                  },
-        { "    /help                      : Print this message again"                       },
-        { "    /clear                     : Clear window history"                           },
-        { "    /quit or /exit             : Exit Toxic"                                     },
-#ifdef _SUPPORT_AUDIO
-        { "    /lsdev <type>              : List devices where type: in|out"                },
-        { "    /sdev <type> <id>          : Set active device"                              },
-#endif /* _SUPPORT_AUDIO */
-
-    };
-    int i;
-
-    for (i = 0; i < NUMLINES; ++i)
-        line_info_add(self, NULL, NULL, NULL, lines[i], SYS_MSG, 0, 0);
-
-    msg = " * Argument messages must be enclosed in quotation marks.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    msg = " * Use ctrl-o and ctrl-p to navigate through the tabs.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
-
-    hst->line_start = start;
+    help_init_menu(self);
 }
 
 void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

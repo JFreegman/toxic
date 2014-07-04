@@ -60,7 +60,6 @@ static struct cmd_func global_commands[] = {
 };
 
 static struct cmd_func chat_commands[] = {
-    { "/help",      cmd_chat_help   },
     { "/invite",    cmd_groupinvite },
     { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },

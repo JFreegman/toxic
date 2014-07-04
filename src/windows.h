@@ -72,6 +72,7 @@ typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;
 typedef struct ChatContext ChatContext;
+typedef struct Help Help;
 
 struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
@@ -119,7 +120,6 @@ struct ToxWindow {
     bool active;
     int x;
 
-    /* window type identifiers */
     bool is_chat;
     bool is_groupchat;
     bool is_prompt;
@@ -131,6 +131,7 @@ struct ToxWindow {
 
     ChatContext *chatwin;
     StatusBar *stb;
+    Help *help;
 
     WINDOW *window;
 };
@@ -192,6 +193,12 @@ struct ChatContext {
     WINDOW *history;
     WINDOW *linewin;
     WINDOW *sidebar;
+};
+
+struct Help {
+    WINDOW *win;
+    int type;
+    bool active;
 };
 
 ToxWindow *init_windows(Tox *m);

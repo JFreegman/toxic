@@ -34,6 +34,7 @@
 #include "line_info.h"
 #include "settings.h"
 #include "input.h"
+#include "help.h"
 
 uint8_t pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE] = {0};
 uint8_t num_frnd_requests = 0;
@@ -131,6 +132,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (x2 <= 0)
         return;
+
+    /* ignore non-menu related input if active */
+    if (self->help->active) {
+        help_onKey(self, key);
+        return;
+    }
 
     if (ltr) {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
@@ -247,6 +254,11 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     int new_x = ctx->start ? x2 - 1 : ctx->pos;
     wmove(self->window, y + 1, new_x);
+
+    if (self->help->active) {
+        wrefresh(self->window);
+        help_onDraw(self);
+    }
 }
 
 static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum , uint8_t status)
@@ -351,6 +363,23 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     statusbar->topline = subwin(self->window, 2, x2, 0, 0);
 }
 
+static void print_welcome_msg(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    line_info_add(self, NULL, NULL, NULL, "   |_   _|____  _(_) ___ ", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "     | |/ _ \\ \\/ / |/ __|", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "     | | (_) >  <| | (__ ", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "     |_|\\___/_/\\_\\_|\\___|", SYS_MSG, 1, BLUE);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
+
+    uint8_t *msg = "Welcome to Toxic, a free open source messenger client for Tox. Type /help for a"\
+                   " list of commands and key bindings. Further help may be found via the man page.";
+    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, 0);
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 1, 0);
+
+}
+
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     curs_set(1);
@@ -378,9 +407,10 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
         log_enable(self->name, myid, ctx->log);
     }
 
-    execute(ctx->history, self, m, "/help", GLOBAL_COMMAND_MODE);
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+
+    print_welcome_msg(self);
 }
 
 ToxWindow new_prompt(void)
@@ -401,12 +431,14 @@ ToxWindow new_prompt(void)
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
+    Help *help = calloc(1, sizeof(Help));
 
-    if (stb == NULL || chatwin == NULL)
+    if (stb == NULL || chatwin == NULL || help == NULL)
         exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
 
     ret.chatwin = chatwin;
     ret.stb = stb;
+    ret.help = help;
 
     return ret;
 }

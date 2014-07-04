@@ -285,10 +285,7 @@ static void delete_friend(Tox *m, int32_t f_num)
 /* activates delete friend popup */
 static void del_friend_activate(ToxWindow *self, Tox *m, int32_t f_num)
 {
-    int x2, y2;
-    getmaxyx(self->window, y2, x2);
     pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
-
     pendingdelete.active = true;
     pendingdelete.num = f_num;
 }
@@ -373,7 +370,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     uint64_t cur_time = get_unix_time();
     struct tm cur_loc_tm = *localtime((const time_t*)&cur_time);
 
-    bool fix_statuses = x2 != self->x;    /* true if window x axis has changed */
+    bool fix_statuses = x2 != self->x;    /* true if window max x value has changed */
 
     wattron(self->window, COLOR_PAIR(CYAN));
     wprintw(self->window, " Open a chat window with the");
@@ -396,7 +393,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wattroff(self->window, A_BOLD);
     wprintw(self->window, "%d/%d \n\n", nf, num_friends);
 
-    if ((y2 - FLIST_OFST) <= 0)    /* don't allow division by zero */
+    if ((y2 - FLIST_OFST) <= 0)
         return;
 
     int selected_num = 0;

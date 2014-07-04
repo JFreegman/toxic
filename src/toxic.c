@@ -20,14 +20,6 @@
  *
  */
 
-#ifndef SIGWINCH
-#define SIGWINCH 28
-#endif
-
-#ifndef SIGINT
-#define SIGINT 2
-#endif
-
 #include <curses.h>
 #include <errno.h>
 #include <stdio.h>
@@ -106,6 +98,7 @@ void exit_toxic_success(Tox *m)
     line_info_cleanup(prompt->chatwin->hst);
     free(DATA_FILE);
     free(prompt->stb);
+    free(prompt->help);
     free(prompt->chatwin->log);
     free(prompt->chatwin->hst);
     free(prompt->chatwin);
