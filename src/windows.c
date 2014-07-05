@@ -334,6 +334,9 @@ void on_window_resize(void)
         if (windows[i].is_friendlist) 
             continue;
 
+        if (w->help->active)
+            wclear(w->help->win);
+
         if (w->is_groupchat)
             delwin(w->chatwin->sidebar);
         else
@@ -439,7 +442,6 @@ void draw_active_window(Tox *m)
 
     touchwin(a->window);
     a->onDraw(a, m);
-    wrefresh(a->window);
 
     /* Handle input */
     bool ltr;

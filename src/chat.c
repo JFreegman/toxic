@@ -836,9 +836,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int new_x = ctx->start ? x2 - 1 : ctx->pos;
     wmove(self->window, y + 1, new_x);
 
-#ifdef _SUPPORT_AUDIO
     wrefresh(self->window);
 
+#ifdef _SUPPORT_AUDIO
     if (ctx->infobox.active)
         draw_infobox(self);
 #endif

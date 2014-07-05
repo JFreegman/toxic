@@ -486,10 +486,10 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int new_x = ctx->start ? x2 - 1 : ctx->pos;
     wmove(self->window, y + 1, new_x);
 
-    if (self->help->active) {
-        wrefresh(self->window);
+    wrefresh(self->window);
+
+    if (self->help->active)
         help_onDraw(self);
-    }
 }
 
 static void groupchat_onInit(ToxWindow *self, Tox *m)

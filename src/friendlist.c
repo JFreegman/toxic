@@ -522,8 +522,6 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     }
 
     self->x = x2;
-    wrefresh(self->window);
-    draw_popup();
 
     if (num_friends) {
         wmove(self->window, y2 - 1, 1);
@@ -537,6 +535,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         for (i = 0; i < TOX_CLIENT_ID_SIZE; ++i)
             wprintw(self->window, "%02X", friends[selected_num].pub_key[i] & 0xff);
     }
+
+    wrefresh(self->window);
+    draw_popup();
 }
 
 void disable_chatwin(int32_t f_num)

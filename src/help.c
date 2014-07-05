@@ -256,7 +256,6 @@ void help_onKey(ToxWindow *self, wint_t key)
 void help_onDraw(ToxWindow *self)
 {
     curs_set(0);
-    wclear(self->help->win);
 
     switch(self->help->type) {
         case HELP_MENU:
