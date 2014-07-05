@@ -2,7 +2,7 @@ Source: toxic
 Section: net
 Priority: optional
 Maintainer: James Michael DuPont <mdupont@thefr33.com>
-Build-Depends: debhelper (>= 9)
+Build-Depends: debhelper (>= 9), libncursesw5-dev, libtoxcore
 Standards-Version: 3.9.5
 Homepage: https://github.com/h4ck3rm1k3/toxic
 #Vcs-Git: git://anonscm.debian.org/collab-maint/toxic.git
