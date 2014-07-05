@@ -102,7 +102,7 @@ static void print_err (ToxWindow *self, uint8_t *error_str)
 ToxAv *init_audio(ToxWindow *self, Tox *tox)
 {    
     ASettins.cs = av_DefaultSettings;
-    ASettins.cs.video_height = ASettins.cs.video_width = 0;
+    ASettins.cs.max_video_height = ASettins.cs.max_video_width = 0;
     
     ASettins.errors = ae_None;
     
