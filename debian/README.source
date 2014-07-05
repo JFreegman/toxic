@@ -1,9 +1,7 @@
 toxic for Debian
 ----------------
 
-<this file describes information about the source package, see Debian policy
-manual section 4.14. You WILL either need to modify or delete this file>
-
+This is created from the GIT repo and dh_make.
 
 
  -- James Michael DuPont <mdupont@thefr33.com>  Sat, 05 Jul 2014 10:36:05 -0500

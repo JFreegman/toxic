@@ -1,2 +1,2 @@
-?package(toxic):needs="X11|text|vc|wm" section="Applications/see-menu-manual"\
+?package(toxic):needs="text" section="Applications/Network/Communication"\
   title="toxic" command="/usr/bin/toxic"
