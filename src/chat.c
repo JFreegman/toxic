@@ -839,14 +839,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     wrefresh(self->window);
 
 #ifdef _SUPPORT_AUDIO
-    if (ctx->infobox.active)
+    if (ctx->infobox.active) {
         draw_infobox(self);
+        wrefresh(self->window);
+    }
 #endif
 
-    if (self->help->active) {
-        wrefresh(self->window);
+    if (self->help->active)
         help_onDraw(self);
-    }
 }
 
 static void chat_onInit(ToxWindow *self, Tox *m)
