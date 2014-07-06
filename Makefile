@@ -2,11 +2,11 @@ TOXIC_VERSION = 0.4.4
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
-CFG_DIR = ../cfg
-SRC_DIR = ../src
-MISC_DIR = ../misc
-DOC_DIR = ../doc
-PREFIX = /usr/local
+CFG_DIR = ./cfg
+SRC_DIR = ./src
+MISC_DIR = ./misc
+DOC_DIR = ./doc
+PREFIX = /usr
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/man

@@ -1,0 +1,5 @@
+toxic (0.001-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- James Michael DuPont <mdupont@thefr33.com>  Sat, 05 Jul 2014 10:36:05 -0500

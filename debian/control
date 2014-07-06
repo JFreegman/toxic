@@ -1,0 +1,15 @@
+Source: toxic
+Section: net
+Priority: optional
+Maintainer: James Michael DuPont <mdupont@thefr33.com>
+Build-Depends: debhelper (>= 9), libncursesw5-dev, libtoxcore
+Standards-Version: 3.9.5
+Homepage: https://github.com/h4ck3rm1k3/toxic
+#Vcs-Git: git://anonscm.debian.org/collab-maint/toxic.git
+#Vcs-Browser: http://anonscm.debian.org/?p=collab-maint/toxic.git;a=summary
+
+Package: toxic
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Tox.im cli client
+ Toxic is a Tox-based instant messenging client which formerly resided in the Tox core repository, and is now available as a standalone application.
