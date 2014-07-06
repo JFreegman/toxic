@@ -35,6 +35,9 @@ UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	-include $(CFG_DIR)/Linux.mk
 endif
+ifeq ($(UNAME_S), FreeBSD)
+	-include $(CFG_DIR)/FreeBSD.mk
+endif
 ifeq ($(UNAME_S), Darwin)
 	-include $(CFG_DIR)/Darwin.mk
 endif
