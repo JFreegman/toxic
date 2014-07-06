@@ -467,18 +467,23 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     tox_do(m);    /* main tox-core loop */
 }
 
+#define INACTIVE_WIN_REFRESH_RATE 10
+
 void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
+    uint8_t draw_count = 0;
 
     while (true) {
         draw_active_window(m);
+        draw_count++;
 
         if (Winthread.flag_resize) {
             on_window_resize();
             Winthread.flag_resize = false;
-        } else {
+        } else if (draw_count >= INACTIVE_WIN_REFRESH_RATE) {
             refresh_inactive_windows();
+            draw_count = 0;
         }
     }
 }
