@@ -35,6 +35,9 @@ UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	-include $(CFG_DIR)/Linux.mk
 endif
+ifeq ($(UNAME_S), FreeBSD)
+	-include $(CFG_DIR)/FreeBSD.mk
+endif
 ifeq ($(UNAME_S), Darwin)
 	-include $(CFG_DIR)/Darwin.mk
 endif
@@ -54,7 +57,8 @@ ifneq ($(filter arm%, $(UNAME_M)),)
 	-include $(CFG_DIR)/arm.mk
 endif
 
-# Check if we can build audio
+# Check if we want/can build audio
+ifneq ($(DISABLE_AV), 1)
 CHECK_AUDIO_LIBS = $(shell pkg-config $(AUDIO_LIBS) || echo -n "error")
 ifneq ($(CHECK_AUDIO_LIBS), error)
 	LIBS += $(AUDIO_LIBS)
@@ -66,6 +70,7 @@ MISSING_AUDIO_LIBS = $(shell for lib in $(AUDIO_LIBS) ; do if ! pkg-config $$lib
 $(warning WARNING -- Toxic will be compiled without audio support)
 $(warning WARNING -- You need these libraries for audio support)
 $(warning WARNING -- $(MISSING_AUDIO_LIBS))
+endif
 endif
 endif
 
