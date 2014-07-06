@@ -203,11 +203,11 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "Key bindings:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  Ctrl+O / Ctrl+P         : Navigate through the windows/tabs\n"); 
-    wprintw(win, "  Page Up / Page Down     : Scroll window history one line\n");
-    wprintw(win, "  Ctrl+F / Ctrl+V         : Scroll window history half a page\n");
-    wprintw(win, "  Ctrl+H                  : Move to the bottom of window history\n");
-    wprintw(win, "  Ctrl+[ / Ctrl+]         : Scroll peer list in groupchats\n");
+    wprintw(win, "  Ctrl+O and Ctrl+P         : Navigate through the tabs\n"); 
+    wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
+    wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
+    wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
+    wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n");
 
     help_draw_bottom_menu(win);
 

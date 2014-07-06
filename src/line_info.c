@@ -34,34 +34,39 @@ extern struct user_settings *user_settings;
 
 void line_info_init(struct history *hst)
 {
-    hst->line_root = malloc(sizeof(struct line_info));
+    hst->line_root = calloc(1, sizeof(struct line_info));
 
     if (hst->line_root == NULL)
         exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
 
-    memset(hst->line_root, 0, sizeof(struct line_info));
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
     hst->queue_sz = 0;
 }
 
-/* resets line_start */
+/* resets line_start (page end) */
 static void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
+    struct line_info *line = hst->line_end;
+
+    if (line->prev == NULL)
+        return;
+
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    struct line_info *line = hst->line_end;
-
-    uint16_t lncnt = 0;
     int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
-    int top_offst = self->is_chat ? 2 : 0;
+    int top_offst = self->is_chat || self->is_prompt ? 2 : 0;
     int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
-    while (line->prev && lncnt < max_y) {
-        lncnt += (1 + line->newlines) +( line->len / (x2 - side_offst));
+    int curlines = 0;
+    int nxtlines = line->newlines + (line->len / (x2 - side_offst));
+
+    do {
+        curlines += 1 + nxtlines;
         line = line->prev;
-    }
+        nxtlines = line->newlines + (line->len / (x2 - side_offst));
+    } while (line->prev && curlines + nxtlines < max_y);
 
     hst->line_start = line;
 }
@@ -125,12 +130,10 @@ void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *na
                    uint8_t type, uint8_t bold, uint8_t colour)
 {
     struct history *hst = self->chatwin->hst;
-    struct line_info *new_line = malloc(sizeof(struct line_info));
+    struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
     if (new_line == NULL)
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
-
-    memset(new_line, 0, sizeof(struct line_info));
 
     int len = 1;     /* there will always be a newline */
 
