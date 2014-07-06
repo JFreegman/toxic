@@ -558,7 +558,8 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 
     if (friends[id].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
+            if (toxav_get_call_state(av, call_index) == av_CallStarting) /* Only open windows when call is incoming */
+                friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
         } else {
             uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
             int n_len = tox_get_name(m, id, nick);

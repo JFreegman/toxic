@@ -24,6 +24,7 @@
 #include <string.h>
 #include <time.h>
 #include <wchar.h>
+#include <assert.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -115,13 +116,20 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
 
+#ifdef _SUPPORT_AUDIO
+    stop_current_call(self);
+#endif
+
     int f_num = self->num;
+    
     delwin(ctx->linewin);
     delwin(ctx->history);
     delwin(self->window);
     delwin(statusbar->topline);
+    
+    del_window(self);
     disable_chatwin(f_num);
-
+    
     free(ctx->log);
     free(ctx->hst);
     free(ctx);
@@ -426,7 +434,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
 
 void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     /* call_index is set here and reset on call end */
@@ -440,7 +448,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( !self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     line_info_add(self, NULL, NULL, NULL, "Ringing...\"cancel\" ?", SYS_MSG, 0, 0);
@@ -448,7 +456,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( !self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     init_infobox(self);
@@ -458,7 +466,7 @@ void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     kill_infobox(self);
@@ -468,7 +476,7 @@ void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onError (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     self->call_idx = -1;
@@ -477,7 +485,7 @@ void chat_onError (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( !self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     init_infobox(self);
@@ -487,7 +495,7 @@ void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if ( self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if ( !self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     kill_infobox(self);
@@ -497,7 +505,7 @@ void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onReject (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     self->call_idx = -1;
@@ -506,7 +514,7 @@ void chat_onReject (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onEnd (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     kill_infobox(self);
@@ -516,7 +524,7 @@ void chat_onEnd (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onRequestTimeout (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     self->call_idx = -1;
@@ -525,7 +533,7 @@ void chat_onRequestTimeout (ToxWindow *self, ToxAv *av, int call_index)
 
 void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
 {
-    if (self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
+    if (!self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
     kill_infobox(self);
