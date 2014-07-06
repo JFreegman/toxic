@@ -69,9 +69,6 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].peer_name_lengths = malloc(sizeof(uint16_t));
             groupchats[i].oldpeer_name_lengths = malloc(sizeof(uint16_t));
 
-            memset(groupchats[i].peer_names, 0, sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
-            memset(groupchats[i].peer_name_lengths, 0, sizeof(uint16_t));
-
             memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
             groupchats[i].oldpeer_name_lengths[0] = (uint16_t) strlen(UNKNOWN_NAME);
 
@@ -225,9 +222,6 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
         || groupchats[gnum].peer_name_lengths == NULL || groupchats[gnum].oldpeer_name_lengths == NULL) {
         exit_toxic_err("failed in copy_peernames", FATALERR_MEMORY);
     }
-
-    memset(groupchats[gnum].peer_names, 0, sizeof(uint8_t) * npeers * N);
-    memset(groupchats[gnum].peer_name_lengths, 0, sizeof(uint16_t) * npeers);
 
     uint16_t unknown_len = strlen(UNKNOWN_NAME);
     int i;
