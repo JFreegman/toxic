@@ -133,7 +133,6 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     char nick[TOX_MAX_NAME_LENGTH];
     int n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
-
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);  /* enforce client max name length */
     nick[n_len] = '\0';
 
@@ -147,7 +146,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
-    bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH);
+    bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1);
 
     if (nick_match) {
         alert_type = WINDOW_ALERT_0;

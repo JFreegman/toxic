@@ -45,7 +45,7 @@ struct LastOnline {
 };
 
 typedef struct {
-    char name[TOX_MAX_NAME_LENGTH];
+    char name[TOXIC_MAX_NAME_LENGTH];
     int namelength;
     char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;

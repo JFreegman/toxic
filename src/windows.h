@@ -115,7 +115,7 @@ struct ToxWindow {
 
 #endif /* _SUPPORT_AUDIO */
 
-    char name[TOX_MAX_NAME_LENGTH];
+    char name[TOXIC_MAX_NAME_LENGTH];
     int32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;
     int x;
@@ -141,8 +141,8 @@ struct StatusBar {
     WINDOW *topline;
     char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
-    char nick[TOX_MAX_NAME_LENGTH];
-    uint16_t nick_len;
+    char nick[TOXIC_MAX_NAME_LENGTH];
+    int nick_len;
     uint8_t status;
     bool is_online;
 };

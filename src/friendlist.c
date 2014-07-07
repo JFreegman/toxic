@@ -138,8 +138,12 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, const 
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
 
-    snprintf(friends[num].name, sizeof(friends[num].name), "%s", nick);
-    friends[num].namelength = strlen(friends[num].name);
+    char tempname[TOX_MAX_NAME_LENGTH];
+    strcpy(tempname, nick);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    tempname[len] = '\0';
+    snprintf(friends[num].name, sizeof(friends[num].name), "%s", tempname);
+    friends[num].namelength = len;
     sort_friendlist_index();
 }
 
@@ -174,17 +178,21 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
-            friends[i].namelength = tox_get_name(m, num, (uint8_t *) friends[i].name);
             friends[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
             tox_get_client_id(m, num, (uint8_t *) friends[i].pub_key);
             update_friend_last_online(i, tox_get_last_online(m, i));
 
-            if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
+            char tempname[TOX_MAX_NAME_LENGTH] = {0};
+            int len = tox_get_name(m, num, (uint8_t *) tempname);
+
+            if (len == -1 || tempname[0] == '\0') {
                 strcpy(friends[i].name, UNKNOWN_NAME);
                 friends[i].namelength = strlen(UNKNOWN_NAME);
             } else {    /* Enforce toxic's maximum name length */
-                friends[i].namelength = MIN(friends[i].namelength, TOXIC_MAX_NAME_LENGTH);
-                friends[i].name[friends[i].namelength] = '\0';
+                len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+                friends[i].namelength = len;
+                tempname[len] = '\0';
+                snprintf(friends[i].name, sizeof(friends[i].name), "%s", tempname);
             }
 
             num_friends = tox_count_friendlist(m);
@@ -285,7 +293,7 @@ static void delete_friend(Tox *m, int32_t f_num)
 /* activates delete friend popup */
 static void del_friend_activate(ToxWindow *self, Tox *m, int32_t f_num)
 {
-    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
+    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH - 1, 8, 8);
     pendingdelete.active = true;
     pendingdelete.num = f_num;
 }

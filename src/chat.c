@@ -191,8 +191,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *acti
 
     char nick[TOX_MAX_NAME_LENGTH];
     int n_len = tox_get_name(m, num, (uint8_t *) nick);
-
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);;
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
     nick[n_len] = '\0';
 
     char timefrmt[TIME_STR_SIZE];
@@ -208,7 +207,15 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *
     if (self->num != num)
         return;
 
-    snprintf(self->name, sizeof(self->name), "%s", nick);
+    StatusBar *statusbar = self->stb;
+
+    char tmpname[TOX_MAX_NAME_LENGTH];
+    strcpy(tmpname, nick);
+    int n_len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    tmpname[n_len] = '\0';
+
+    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", tmpname);
+    snprintf(self->name, sizeof(self->name), "%s", tmpname);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -786,7 +793,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             wattron(statusbar->topline, COLOR_PAIR(YELLOW));
 
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", self->name);
+        wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
 
         if (friends[self->num].is_typing)
@@ -794,7 +801,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     } else {
         wprintw(statusbar->topline, " o");
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", self->name);
+        wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
     }
 
@@ -874,6 +881,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
     statusbar->statusmsg_len = s_len;
 
+    char nick[TOX_MAX_NAME_LENGTH];
+    int n_len = tox_get_name(m, self->num, (uint8_t *) nick);
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
+    nick[n_len] = '\0';
+    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+    statusbar->nick_len = n_len;
+
     /* Init subwindows */
     ChatContext *ctx = self->chatwin;
 
@@ -938,8 +952,10 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _SUPPORT_AUDIO */
 
-    char name[TOX_MAX_NAME_LENGTH] = {'\0'};
-    tox_get_name(m, friendnum, (uint8_t *) name);
+    char name[TOX_MAX_NAME_LENGTH];
+    int len = tox_get_name(m, friendnum, (uint8_t *) name);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    name[len] = '\0';
     snprintf(ret.name, sizeof(ret.name), "%s", name);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
