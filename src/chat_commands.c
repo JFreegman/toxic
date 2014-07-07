@@ -171,8 +171,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     ++path;
-    path[strlen(path) - 1] = L'\0';
-    int path_len = strlen(path);
+    int path_len = strlen(path) - 1;
+    path[path_len] = '\0';
 
     if (path_len > MAX_STR_SIZE) {
         errmsg = "File path exceeds character limit.";

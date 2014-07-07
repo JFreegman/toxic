@@ -156,7 +156,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         }
 
         ++temp;
-        temp[strlen(temp) - 1] = L'\0';
+        temp[strlen(temp) - 1] = '\0';
         snprintf(msg, sizeof(msg), "%s", temp);
     } else {
         char selfname[TOX_MAX_NAME_LENGTH];
@@ -377,8 +377,8 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     ++msg;
-    msg[strlen(msg) - 1] = '\0';
-    int len = strlen(msg);
+    int len = strlen(msg) - 1;
+    msg[len] = '\0';
     tox_set_status_message(m, (uint8_t *) msg, (uint16_t) len);
     prompt_update_statusmessage(prompt, msg);
 }
@@ -434,8 +434,8 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if (msg != NULL) {
         ++msg;
-        msg[strlen(msg) - 1] = L'\0'; /* remove opening and closing quotes */
-        int len = strlen(msg);
+        int len = strlen(msg) - 1;
+        msg[len] = '\0';    /* remove opening and closing quotes */
         tox_set_status_message(m, (uint8_t *) msg, (uint16_t) len);
         prompt_update_statusmessage(prompt, msg);
     }
