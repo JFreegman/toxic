@@ -78,21 +78,21 @@ struct ToxWindow {
     void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
-    void(*onFriendRequest)(ToxWindow *, Tox *, const uint8_t *, const uint8_t *, uint16_t);
+    void(*onFriendRequest)(ToxWindow *, Tox *, const char *, const char *, uint16_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, int32_t, bool);
     void(*onConnectionChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onMessage)(ToxWindow *, Tox *, int32_t, const uint8_t *, uint16_t);
-    void(*onNickChange)(ToxWindow *, Tox *, int32_t, const uint8_t *, uint16_t);
+    void(*onMessage)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
+    void(*onNickChange)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
     void(*onStatusChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onStatusMessageChange)(ToxWindow *, int32_t, const uint8_t *, uint16_t);
-    void(*onAction)(ToxWindow *, Tox *, int32_t, const uint8_t *, uint16_t);
-    void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const uint8_t *, uint16_t);
-    void(*onGroupAction)(ToxWindow *, Tox *, int, int, const uint8_t *, uint16_t);
-    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const uint8_t *);
+    void(*onStatusMessageChange)(ToxWindow *, int32_t, const char *, uint16_t);
+    void(*onAction)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
+    void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
+    void(*onGroupAction)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
+    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const char *);
     void(*onGroupNamelistChange)(ToxWindow *, Tox *, int, int, uint8_t);
-    void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, const uint8_t *, uint16_t);
-    void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, const uint8_t *, uint16_t);
-    void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, const uint8_t *, uint16_t);
+    void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, const char *, uint16_t);
+    void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, const char *, uint16_t);
+    void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
     void(*onTypingChange)(ToxWindow *, Tox *, int32_t, uint8_t);
 
 #ifdef _SUPPORT_AUDIO
@@ -139,9 +139,9 @@ struct ToxWindow {
 /* statusbar info holder */
 struct StatusBar {
     WINDOW *topline;
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
-    uint8_t nick[TOX_MAX_NAME_LENGTH];
+    char nick[TOX_MAX_NAME_LENGTH];
     uint16_t nick_len;
     uint8_t status;
     bool is_online;

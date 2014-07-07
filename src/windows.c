@@ -49,7 +49,7 @@ void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
-            windows[i].onFriendRequest(&windows[i], m, public_key, data, length);
+            windows[i].onFriendRequest(&windows[i], m, (const char *) public_key, (const char *) data, length);
     }
 }
 
@@ -79,7 +79,7 @@ void on_message(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t le
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onMessage != NULL)
-            windows[i].onMessage(&windows[i], m, friendnumber, string, length);
+            windows[i].onMessage(&windows[i], m, friendnumber, (const char *) string, length);
     }
 }
 
@@ -89,7 +89,7 @@ void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t len
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onAction != NULL)
-            windows[i].onAction(&windows[i], m, friendnumber, string, length);
+            windows[i].onAction(&windows[i], m, friendnumber, (const char *) string, length);
     }
 }
 
@@ -102,7 +102,7 @@ void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onNickChange != NULL)
-            windows[i].onNickChange(&windows[i], m, friendnumber, string, length);
+            windows[i].onNickChange(&windows[i], m, friendnumber, (const char *) string, length);
     }
 
     if (store_data(m, DATA_FILE))
@@ -115,7 +115,7 @@ void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string,
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
-            windows[i].onStatusMessageChange(&windows[i], friendnumber, string, length);
+            windows[i].onStatusMessageChange(&windows[i], friendnumber, (const char *) string, length);
     }
 }
 
@@ -149,7 +149,7 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *mes
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, message, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, (const char *) message, length);
     }
 }
 
@@ -160,7 +160,7 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *acti
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupAction != NULL)
-            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, action, length);
+            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, (const char *) action, length);
     }
 }
 
@@ -170,7 +170,7 @@ void on_groupinvite(Tox *m, int32_t friendnumber, const uint8_t *group_pub_key, 
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupInvite != NULL)
-            windows[i].onGroupInvite(&windows[i], m, friendnumber, group_pub_key);
+            windows[i].onGroupInvite(&windows[i], m, friendnumber, (const char *) group_pub_key);
     }
 }
 
@@ -192,7 +192,7 @@ void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint6
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileSendRequest != NULL)
             windows[i].onFileSendRequest(&windows[i], m, friendnumber, filenumber, filesize,
-                                         filename, filename_length);
+                                         (const char *) filename, filename_length);
     }
 }
 
@@ -204,7 +204,7 @@ void on_file_control (Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileControl != NULL)
             windows[i].onFileControl(&windows[i], m, friendnumber, receive_send, filenumber,
-                                     control_type, data, length);
+                                     control_type, (const char *) data, length);
     }
 }
 
@@ -215,7 +215,7 @@ void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileData != NULL)
-            windows[i].onFileData(&windows[i], m, friendnumber, filenumber, data, length);
+            windows[i].onFileData(&windows[i], m, friendnumber, filenumber, (const char *) data, length);
     }
 }
 
@@ -322,7 +322,7 @@ void on_window_resize(void)
 
     int i;
 
-    for (i == 0; i < MAX_WINDOWS_NUM; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (!windows[i].active)
             continue;
 

@@ -62,8 +62,8 @@ typedef struct _Device {
 const char *ddevice_names[2];              /* Default device */
 const char *devices_names[2][MAX_DEVICES]; /* Container of available devices */
 static int size[2];                        /* Size of above containers */
-Device *running[2][MAX_DEVICES]={NULL};    /* Running devices */
-uint32_t primary_device[2] = {0};          /* Primary device */
+Device *running[2][MAX_DEVICES];     /* Running devices */
+uint32_t primary_device[2];          /* Primary device */
 
 static ToxAv* av = NULL;
 
@@ -116,7 +116,7 @@ DeviceError init_devices(ToxAv* av_)
     
     av = av_;
     
-    return ae_None;
+    return (DeviceError) ae_None;
 }
 
 DeviceError terminate_devices()
@@ -127,7 +127,7 @@ DeviceError terminate_devices()
     
     pthread_mutex_destroy(&mutex);
     
-    return ae_None;
+    return (DeviceError) ae_None;
 }
 
 DeviceError device_mute(DeviceType type, uint32_t device_idx)
@@ -419,7 +419,7 @@ void print_devices(ToxWindow* self, DeviceType type)
 {
     int i = 0;
     for ( ; i < size[type]; i ++) {
-        uint8_t msg[MAX_STR_SIZE];
+        char msg[MAX_STR_SIZE];
         snprintf(msg, sizeof(msg), "%d: %s", i, devices_names[type][i]);
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }

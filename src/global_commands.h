@@ -39,7 +39,7 @@ void cmd_prompt_help(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_ST
 void cmd_quit(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_status(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 
-void cmd_add_helper(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *msg);
+void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg);
 
 #ifdef _SUPPORT_AUDIO
 void cmd_list_devices(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);

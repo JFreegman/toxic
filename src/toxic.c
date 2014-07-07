@@ -224,10 +224,10 @@ static struct _toxNodes {
     int lines;
     char nodes[MAXNODES][NODELEN];
     uint16_t ports[MAXNODES];
-    uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+    char keys[MAXNODES][TOX_CLIENT_ID_SIZE];
 } toxNodes;
 
-static int nodelist_load(char *filename)
+static int nodelist_load(const char *filename)
 {
     if (!filename)
         return 1;
@@ -253,7 +253,7 @@ static int nodelist_load(char *filename)
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
             toxNodes.ports[toxNodes.lines] = htons(atoi(port));
 
-            uint8_t *key_binary = hex_string_to_bin(key_ascii);
+            char *key_binary = hex_string_to_bin(key_ascii);
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);
             free(key_binary);
 
@@ -273,7 +273,7 @@ static int nodelist_load(char *filename)
 int init_connection_helper(Tox *m, int line)
 {
     return tox_bootstrap_from_address(m, toxNodes.nodes[line], TOX_ENABLE_IPV6_DEFAULT,
-                                      toxNodes.ports[line], toxNodes.keys[line]);
+                                      toxNodes.ports[line], (uint8_t *) toxNodes.keys[line]);
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
@@ -329,7 +329,7 @@ int init_connection(Tox *m)
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
-    uint8_t msg[MAX_STR_SIZE] = {0};
+    char msg[MAX_STR_SIZE] = {0};
 
     static int conn_err = 0;
     static bool was_connected = false;
@@ -388,8 +388,8 @@ int store_data(Tox *m, char *path)
         return 1;
 
     FILE *fd;
-    size_t len;
-    uint8_t *buf;
+    int len;
+    char *buf;
 
     len = tox_size(m);
     buf = malloc(len);
@@ -397,7 +397,7 @@ int store_data(Tox *m, char *path)
     if (buf == NULL)
         return 2;
 
-    tox_save(m, buf);
+    tox_save(m, (uint8_t *) buf);
 
     fd = fopen(path, "wb");
 
@@ -423,8 +423,8 @@ static void load_data(Tox *m, char *path)
         return;
 
     FILE *fd;
-    size_t len;
-    uint8_t *buf;
+    int len;
+    char *buf;
 
     if ((fd = fopen(path, "rb")) != NULL) {
         fseek(fd, 0, SEEK_END);
@@ -444,7 +444,7 @@ static void load_data(Tox *m, char *path)
             exit_toxic_err("failed in load_data", FATALERR_FREAD);
         }
 
-        tox_load(m, buf, len);
+        tox_load(m, (uint8_t *) buf, len);
         load_friendlist(m);
 
         free(buf);
@@ -618,7 +618,7 @@ int main(int argc, char *argv[])
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
-    uint8_t *msg;
+    char *msg;
 
 #ifdef _SUPPORT_AUDIO
 

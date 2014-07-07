@@ -27,7 +27,7 @@
 #include "windows.h"
 
 #define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
-#define MAX_FILES 256
+#define MAX_FILES 255
 #define TIMEOUT_FILESENDER 120
 
 typedef struct {
@@ -36,9 +36,9 @@ typedef struct {
     int32_t friendnum;
     bool active;
     int filenum;
-    uint8_t nextpiece[FILE_PIECE_SIZE];
+    char nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
-    uint8_t pathname[MAX_STR_SIZE];
+    char pathname[MAX_STR_SIZE];
     uint64_t timestamp;
     uint64_t last_progress;
     uint64_t size;

@@ -52,7 +52,7 @@
 typedef struct _Call {
     pthread_t ttid; /* Transmission thread id */
     _Bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
-    int in_idx, out_idx;
+    uint32_t in_idx, out_idx;
     pthread_mutex_t mutex;
 } Call;
 
@@ -96,7 +96,7 @@ void callback_peer_timeout  ( int32_t call_index, void *arg );
 
 int stop_transmission(int call_index);
 
-static void print_err (ToxWindow *self, uint8_t *error_str)
+static void print_err (ToxWindow *self, char *error_str)
 {
     line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
 }
@@ -225,14 +225,14 @@ void *transmission(void *arg)
         usleep(1000);
     }
 
-cleanup:
+/* cleanup:
     if ( this_call->in_idx != -1 ) if ( close_device(input, this_call->in_idx) != de_None )
         line_info_add(self, NULL, NULL, NULL, "Failed to close input device!", SYS_MSG, 0, 0);
     
     if ( this_call->out_idx != -1 ) if ( close_device(output, this_call->out_idx) != de_None )
         line_info_add(self, NULL, NULL, NULL, "Failed to close output device!", SYS_MSG, 0, 0);
     
-    set_call(this_call, _False);
+    set_call(this_call, _False); */
     
     _cbend;
 }
@@ -370,8 +370,8 @@ void callback_peer_timeout ( int32_t call_index, void* arg )
  */
 void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t msg[MAX_STR_SIZE];
-    uint8_t *error_str;
+    char msg[MAX_STR_SIZE];
+    char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -408,7 +408,7 @@ on_error:
 
 void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *error_str;
+    char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -439,7 +439,7 @@ on_error:
 
 void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *error_str;
+    char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -470,7 +470,7 @@ on_error:
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *error_str;
+    char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -499,7 +499,7 @@ on_error:
 
 void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *error_str;
+    char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -532,8 +532,8 @@ on_error:
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t msg[MAX_STR_SIZE];
-    uint8_t *error_str;
+    char msg[MAX_STR_SIZE];
+    char *error_str;
 
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -566,8 +566,8 @@ on_error:
 /* This changes primary device only */
 void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t msg[MAX_STR_SIZE];
-    uint8_t *error_str;
+    char msg[MAX_STR_SIZE];
+    char *error_str;
 
     if ( argc != 2 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -612,8 +612,8 @@ on_error:
 
 void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
-    uint8_t msg[MAX_STR_SIZE];
-    uint8_t *error_str;
+    char msg[MAX_STR_SIZE];
+    char *error_str;
     
     if ( argc != 2 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -681,8 +681,8 @@ void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (
 
 void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
-    uint8_t msg[MAX_STR_SIZE];
-    uint8_t *error_str;
+    char msg[MAX_STR_SIZE];
+    char *error_str;
     
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -728,9 +728,8 @@ void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[
 }
 
 void cmd_sense(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{    
-    uint8_t msg[MAX_STR_SIZE];
-    uint8_t *error_str;
+{
+    char *error_str;
     
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Must have value!";

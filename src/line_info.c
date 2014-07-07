@@ -126,8 +126,8 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 }
 
 /* creates new line_info line and puts it in the queue */
-void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, const uint8_t *msg,
-                   uint8_t type, uint8_t bold, uint8_t colour)
+void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, const char *msg, uint8_t type, 
+                   uint8_t bold, uint8_t colour)
 {
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
@@ -211,6 +211,7 @@ static void line_info_check_queue(ToxWindow *self)
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
     getyx(self->chatwin->history, y, x);
+    (void) x;
 
     if (x2 <= SIDEBAR_WIDTH)
         return;
@@ -255,7 +256,6 @@ void line_info_print(ToxWindow *self)
         wmove(win, 2, 0);
 
     struct line_info *line = hst->line_start->next;
-    int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
     int numlines = 0;
 
     while (line && numlines++ <= y2) {
@@ -376,7 +376,7 @@ void line_info_print(ToxWindow *self)
         line_info_print(self);
 }
 
-void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)
+void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 {
     struct line_info *line = self->chatwin->hst->line_end;
 
@@ -390,10 +390,10 @@ void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)
     }
 }
 
-static void line_info_goto_root(struct history *hst)
+/* static void line_info_goto_root(struct history *hst)
 {
     hst->line_start = hst->line_root;
-}
+} */
 
 static void line_info_scroll_up(struct history *hst)
 {
@@ -413,6 +413,7 @@ static void line_info_page_up(ToxWindow *self, struct history *hst)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+    (void) x2;
     int jump_dist = y2 / 2;
     int i;
 
@@ -424,6 +425,7 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+    (void) x2;
     int jump_dist = y2 / 2;
     int i;
 

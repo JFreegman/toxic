@@ -51,12 +51,12 @@ struct tm *get_time(void)
 {
     struct tm *timeinfo;
     uint64_t t = get_unix_time();
-    timeinfo = localtime((const time_t*)&t);
+    timeinfo = localtime((const time_t*) &t);
     return timeinfo;
 }
 
 /*Puts the current time in buf in the format of [HH:mm:ss] */
-void get_time_str(uint8_t *buf, int bufsize)
+void get_time_str(char *buf, int bufsize)
 {
     if (user_settings->timestamps == TIMESTAMPS_OFF) {
         buf[0] = '\0';
@@ -68,7 +68,7 @@ void get_time_str(uint8_t *buf, int bufsize)
 }
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(uint8_t *buf, int bufsize, uint64_t secs)
+void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs)
 {
     if (!secs)
         return;
@@ -108,7 +108,7 @@ int string_is_empty(char *string)
 }
 
 /* convert a multibyte string to a wide character string and puts in buf. */
-int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
+int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
 {
     size_t len = mbstowcs(NULL, string, 0) + 1;
 
@@ -122,7 +122,7 @@ int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n)
 }
 
 /* converts wide character string into a multibyte string and puts in buf. */
-int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n)
+int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
 {
     size_t len = wcstombs(NULL, string, 0) + 1;
 
@@ -175,7 +175,7 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2)
       - cannot start with a space
       - must not contain a forward slash (for logfile naming purposes)
       - must not contain contiguous spaces */
-int valid_nick(uint8_t *nick)
+int valid_nick(char *nick)
 {
     if (!nick[0] || nick[0] == ' ')
         return 0;
@@ -194,17 +194,17 @@ int valid_nick(uint8_t *nick)
 }
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *namebuf, const uint8_t *pathname)
+void get_file_name(char *namebuf, const char *pathname)
 {
     int idx = strlen(pathname) - 1;
 
-    uint8_t tmpname[MAX_STR_SIZE];
+    char tmpname[MAX_STR_SIZE];
     snprintf(tmpname, sizeof(tmpname), "%s", pathname);
 
     while (idx >= 0 && pathname[idx] == '/')
         tmpname[idx--] = '\0';
 
-    uint8_t *filename = strrchr(tmpname, '/');
+    char *filename = strrchr(tmpname, '/');
 
     if (filename != NULL) {
         if (!strlen(++filename))
@@ -217,7 +217,7 @@ void get_file_name(uint8_t *namebuf, const uint8_t *pathname)
 }
 
 /* converts str to all lowercase */
-void str_to_lower(uint8_t *str)
+void str_to_lower(char *str)
 {
     int i;
 

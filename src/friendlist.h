@@ -30,7 +30,7 @@
 #include "file_senders.h"
 
 struct FileReceiver {
-    uint8_t filenames[MAX_FILES][MAX_STR_SIZE];
+    char filenames[MAX_FILES][MAX_STR_SIZE];
     FILE *files[MAX_FILES];
     bool pending[MAX_FILES];
     uint64_t size[MAX_FILES];
@@ -41,17 +41,17 @@ struct FileReceiver {
 struct LastOnline {
     uint64_t last_on;
     struct tm tm;
-    uint8_t hour_min_str[TIME_STR_SIZE];    /* holds 12/24-hour time string e.g. "10:43 PM" */
+    char hour_min_str[TIME_STR_SIZE];    /* holds 12/24-hour time string e.g. "10:43 PM" */
 };
 
 typedef struct {
-    uint8_t name[TOX_MAX_NAME_LENGTH];
+    char name[TOX_MAX_NAME_LENGTH];
     uint16_t namelength;
-    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
+    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
-    uint8_t groupchat_key[TOX_CLIENT_ID_SIZE];
+    char groupchat_key[TOX_CLIENT_ID_SIZE];
     bool groupchat_pending;
-    uint8_t pub_key[TOX_CLIENT_ID_SIZE];
+    char pub_key[TOX_CLIENT_ID_SIZE];
     int32_t num;
     int chatwin;
     bool active;

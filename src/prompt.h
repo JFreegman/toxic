@@ -35,8 +35,8 @@
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m);
-void prompt_update_nick(ToxWindow *prompt, uint8_t *nick, uint16_t len);
-void prompt_update_statusmessage(ToxWindow *prompt, uint8_t *statusmsg, uint16_t len);
+void prompt_update_nick(ToxWindow *prompt, char *nick);
+void prompt_update_statusmessage(ToxWindow *prompt, char *statusmsg);
 void prompt_update_status(ToxWindow *prompt, uint8_t status);
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
 
