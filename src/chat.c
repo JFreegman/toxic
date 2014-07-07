@@ -104,6 +104,16 @@ static void set_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
     ctx->self_is_typing = is_typing;
 }
 
+static void chat_set_window_name(ToxWindow *self, char *nick, int len)
+{
+    if (len > MAX_WINDOW_NAME_LENGTH) {
+        strcpy(&nick[MAX_WINDOW_NAME_LENGTH - 3], "...");
+        nick[MAX_WINDOW_NAME_LENGTH] = '\0';
+    }
+
+    snprintf(self->name, sizeof(self->name), "%s", nick);
+}
+
 void kill_chat_window(ToxWindow *self, Tox *m)
 {
     set_active_window(0);
@@ -207,6 +217,9 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *
     if (self->num != num)
         return;
 
+    if (len > TOX_MAX_NAME_LENGTH)
+        return;
+
     StatusBar *statusbar = self->stb;
 
     char tmpname[TOX_MAX_NAME_LENGTH];
@@ -215,7 +228,7 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *
     tmpname[n_len] = '\0';
 
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", tmpname);
-    snprintf(self->name, sizeof(self->name), "%s", tmpname);
+    chat_set_window_name(self, tmpname, n_len);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -952,11 +965,11 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _SUPPORT_AUDIO */
 
-    char name[TOX_MAX_NAME_LENGTH];
-    int len = tox_get_name(m, friendnum, (uint8_t *) name);
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
-    name[len] = '\0';
-    snprintf(ret.name, sizeof(ret.name), "%s", name);
+    char nick[TOX_MAX_NAME_LENGTH];
+    int n_len = tox_get_name(m, friendnum, (uint8_t *) nick);
+    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
+    nick[n_len] = '\0';
+    chat_set_window_name(&ret, nick, n_len);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
