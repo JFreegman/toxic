@@ -46,6 +46,12 @@ uint64_t get_unix_time(void)
     return current_unix_time;
 }
 
+/* Returns 1 if connection has timed out, 0 otherwise */
+int timed_out(uint64_t timestamp, uint64_t curtime, uint64_t timeout)
+{
+    return timestamp + timeout <= curtime;
+}
+
 /* Get the current local time */
 struct tm *get_time(void)
 {
@@ -133,12 +139,6 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
         return -1;
 
     return len;
-}
-
-/* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t curtime, uint64_t timeout)
-{
-    return timestamp + timeout <= curtime;
 }
 
 /* Colours the window tab according to type. Beeps if is_beep is true */

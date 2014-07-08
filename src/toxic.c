@@ -67,6 +67,8 @@ ToxAv *av;
 char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
+#define AUTOSAVE_FREQ 60
+
 struct arg_opts {
     int ignore_data_file;
     int use_ipv4;
@@ -640,13 +642,21 @@ int main(int argc, char *argv[])
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
-
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
+
+    uint64_t last_save = get_unix_time();
 
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);
+        uint64_t cur_time = get_unix_time();
+
+        if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
+            store_data(m, DATA_FILE);
+            last_save = cur_time;
+        }
+
         usleep(40000);
     }
 
