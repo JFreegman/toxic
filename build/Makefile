@@ -93,7 +93,8 @@ endif
 all: toxic
 
 toxic: $(OBJ)
-	$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
+	@echo "  LD    $@"
+	@$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
 
 install: toxic
 	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
@@ -117,8 +118,9 @@ install: toxic
 	done
 
 %.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
-	$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
+	@echo "  CC    $@"
+	@$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
+	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
 clean:
 	rm -rf *.d *.o toxic
