@@ -80,6 +80,13 @@ void line_info_cleanup(struct history *hst)
         free(tmp1);
         tmp1 = tmp2;
     }
+
+    int i;
+
+    for (i = 0; i < hst->queue_sz; ++i) {
+        if (hst->queue[i])
+            free(hst->queue[i]);
+    }
 }
 
 /* moves root forward and frees previous root */

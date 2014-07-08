@@ -213,7 +213,7 @@ void get_file_name(char *namebuf, const char *pathname)
         filename = tmpname;
     }
 
-    snprintf(namebuf, MAX_STR_SIZE, "%s", filename);
+    snprintf(namebuf, sizeof(namebuf), "%s", filename);
 }
 
 /* converts str to all lowercase */

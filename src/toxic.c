@@ -96,15 +96,10 @@ void exit_toxic_success(Tox *m)
     store_data(m, DATA_FILE);
     close_all_file_senders(m);
     kill_all_windows();
-    log_disable(prompt->chatwin->log);
-    line_info_cleanup(prompt->chatwin->hst);
+
     free(DATA_FILE);
-    free(prompt->stb);
-    free(prompt->help);
-    free(prompt->chatwin->log);
-    free(prompt->chatwin->hst);
-    free(prompt->chatwin);
     free(user_settings);
+
 #ifdef _SUPPORT_AUDIO
     terminate_audio();
 #endif /* _SUPPORT_AUDIO */

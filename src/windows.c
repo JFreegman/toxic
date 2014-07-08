@@ -254,17 +254,12 @@ int add_window(Tox *m, ToxWindow w)
     return -1;
 }
 
-/* Deletes window w and cleans up */
-void del_window(ToxWindow *w)
+void set_active_window(int index)
 {
-    active_window = windows; /* Go to prompt screen */
+    if (index < 0 || index >= MAX_WINDOWS_NUM)
+        return;
 
-    delwin(w->window);
-    memset(w, 0, sizeof(ToxWindow));
-
-    clear();
-    refresh();
-    --num_active_windows;
+    active_window = windows + index;
 }
 
 /* Shows next window when tab or back-tab is pressed */
@@ -288,12 +283,17 @@ void set_next_window(int ch)
     }
 }
 
-void set_active_window(int index)
+/* Deletes window w and cleans up */
+void del_window(ToxWindow *w)
 {
-    if (index < 0 || index >= MAX_WINDOWS_NUM)
-        return;
+    set_active_window(0);    /* Go to prompt screen */
 
-    active_window = windows + index;
+    delwin(w->window);
+    memset(w, 0, sizeof(ToxWindow));
+
+    clear();
+    refresh();
+    --num_active_windows;
 }
 
 ToxWindow *init_windows(Tox *m)
@@ -497,6 +497,8 @@ int get_num_active_windows(void)
 /* destroys all chat and groupchat windows (should only be called on shutdown) */
 void kill_all_windows(void)
 {
+    kill_prompt_window(prompt);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {

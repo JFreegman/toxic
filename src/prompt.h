@@ -39,5 +39,6 @@ void prompt_update_nick(ToxWindow *prompt, char *nick);
 void prompt_update_statusmessage(ToxWindow *prompt, char *statusmsg);
 void prompt_update_status(ToxWindow *prompt, uint8_t status);
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
+void kill_prompt_window(ToxWindow *self);
 
 #endif /* end of include guard: PROMPT_H_UZYGWFFL */

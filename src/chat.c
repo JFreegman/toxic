@@ -114,14 +114,10 @@ static void chat_set_window_name(ToxWindow *self, char *nick, int len)
     snprintf(self->name, sizeof(self->name), "%s", nick);
 }
 
-void kill_chat_window(ToxWindow *self, Tox *m)
+void kill_chat_window(ToxWindow *self)
 {
-    set_active_window(0);
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
-
-    if (ctx->self_is_typing)
-        set_typingstatus(self, m, 0);
 
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
@@ -130,21 +126,17 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     stop_current_call(self);
 #endif
 
-    int f_num = self->num;
-    
     delwin(ctx->linewin);
     delwin(ctx->history);
-    delwin(self->window);
     delwin(statusbar->topline);
-    
-    del_window(self);
-    disable_chatwin(f_num);
-    
+
     free(ctx->log);
     free(ctx->hst);
     free(ctx);
     free(self->help);
     free(statusbar);
+
+    disable_chatwin(self->num);
     del_window(self);
 }
 
@@ -716,7 +708,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         if (line[0] == '/') {
             if (strcmp(line, "/close") == 0) {
-                kill_chat_window(self, m);
+                kill_chat_window(self);
                 return;
             } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_action(self, ctx, m, line + strlen("/me "));

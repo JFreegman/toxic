@@ -93,7 +93,6 @@ void kill_groupchat_window(ToxWindow *self)
     delwin(ctx->linewin);
     delwin(ctx->history);
     delwin(ctx->sidebar);
-    delwin(self->window);
     free(ctx->log);
     free(ctx->hst);
     free(ctx);
@@ -103,7 +102,6 @@ void kill_groupchat_window(ToxWindow *self)
 
 static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 {
-    set_active_window(0);
     tox_del_groupchat(m, groupnum);
 
     free(groupchats[groupnum].peer_names);

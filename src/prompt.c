@@ -69,6 +69,26 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* _SUPPORT_AUDIO */
 };
 
+void kill_prompt_window(ToxWindow *self) {
+    ChatContext *ctx = self->chatwin;
+    StatusBar *statusbar = self->stb;
+
+    log_disable(ctx->log);
+    line_info_cleanup(ctx->hst);
+
+    delwin(ctx->linewin);
+    delwin(ctx->history);
+    delwin(statusbar->topline);
+
+    free(ctx->log);
+    free(ctx->hst);
+    free(ctx);
+    free(self->help);
+    free(statusbar);
+
+    del_window(self);
+}
+
 /* Updates own nick in prompt statusbar */
 void prompt_update_nick(ToxWindow *prompt, char *nick)
 {
@@ -348,7 +368,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     const char *toxic_ver = strtok(ver, "_");
 
     if ( (!strcmp("Online", statusmsg) || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
-        snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
+        snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver);
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
     }
