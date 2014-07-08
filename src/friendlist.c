@@ -106,9 +106,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
-            int n_len = tox_get_name(m, num, (uint8_t *) nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            get_nick_truncate(m, nick, num);
 
             char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
@@ -183,15 +181,13 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
             update_friend_last_online(i, tox_get_last_online(m, i));
 
             char tempname[TOX_MAX_NAME_LENGTH] = {0};
-            int len = tox_get_name(m, num, (uint8_t *) tempname);
+            int len = get_nick_truncate(m, tempname, num);
 
             if (len == -1 || tempname[0] == '\0') {
                 strcpy(friends[i].name, UNKNOWN_NAME);
                 friends[i].namelength = strlen(UNKNOWN_NAME);
             } else {    /* Enforce toxic's maximum name length */
-                len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
                 friends[i].namelength = len;
-                tempname[len] = '\0';
                 snprintf(friends[i].name, sizeof(friends[i].name), "%s", tempname);
             }
 
@@ -221,9 +217,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
 
             char nick[TOX_MAX_NAME_LENGTH];
-            int n_len = tox_get_name(m, num, (uint8_t *) nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            get_nick_truncate(m, nick, num);
 
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* File transfer from %s failed: too many windows are open.", nick);
@@ -244,9 +238,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
-            int n_len = tox_get_name(m, num, (uint8_t *) nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            get_nick_truncate(m, nick, num);
 
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* Group chat invite from %s failed: too many windows are open.", nick);
@@ -570,10 +562,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
                 friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
-            int n_len = tox_get_name(m, id, (uint8_t *) nick);
-
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            get_nick_truncate(m, nick, friends[id].num);
 
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "Audio action from: %s!", nick);

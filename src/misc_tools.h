@@ -85,4 +85,8 @@ void get_file_name(char *namebuf, const char *pathname);
 /* converts str to all lowercase */
 void str_to_lower(char *str);
 
+/* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
+   Returns nick len on success, -1 on failure */
+int get_nick_truncate(Tox *m, char *buf, int friendnum);
+
 #endif /* #define _misc_tools_h */

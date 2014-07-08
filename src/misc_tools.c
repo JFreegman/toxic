@@ -224,3 +224,13 @@ void str_to_lower(char *str)
     for (i = 0; str[i]; ++i)
         str[i] = tolower(str[i]);
 }
+
+/* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
+   Returns nick len on success, -1 on failure */
+int get_nick_truncate(Tox *m, char *buf, int friendnum)
+{
+    int len = tox_get_name(m, friendnum, (uint8_t *) buf);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    buf[len] = '\0';
+    return len;
+}

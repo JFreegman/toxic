@@ -156,9 +156,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    int n_len = tox_get_name(m, num, (uint8_t *) nick);
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-    nick[n_len] = '\0';
+    get_nick_truncate(m, nick, num);
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -200,9 +198,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *acti
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    int n_len = tox_get_name(m, num, (uint8_t *) nick);
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-    nick[n_len] = '\0';
+    get_nick_truncate(m, nick, num);
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -430,11 +426,10 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     if (self->num != friendnumber)
         return;
 
-    char name[TOX_MAX_NAME_LENGTH];
     char msg[MAX_STR_SIZE + TOX_MAX_NAME_LENGTH];
-    int n_len = tox_get_name(m, friendnumber, (uint8_t *) name);
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-    name[n_len] = '\0';
+
+    char name[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, name, friendnumber);
 
     snprintf(msg, sizeof(msg), "%s has invited you to a group chat.", name);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
@@ -895,9 +890,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     statusbar->statusmsg_len = s_len;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    int n_len = tox_get_name(m, self->num, (uint8_t *) nick);
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-    nick[n_len] = '\0';
+    int n_len = get_nick_truncate(m, nick, self->num);
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
     statusbar->nick_len = n_len;
 
@@ -966,9 +959,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
 #endif /* _SUPPORT_AUDIO */
 
     char nick[TOX_MAX_NAME_LENGTH];
-    int n_len = tox_get_name(m, friendnum, (uint8_t *) nick);
-    n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-    nick[n_len] = '\0';
+    int n_len = get_nick_truncate(m, nick, friendnum);
     chat_set_window_name(&ret, nick, n_len);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
