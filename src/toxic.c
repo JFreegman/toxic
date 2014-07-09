@@ -78,12 +78,12 @@ struct arg_opts {
 } arg_opts;
 
 struct _Winthread Winthread;
-
 struct user_settings *user_settings = NULL;
 
-static void ignore_SIGINT(int sig)
+static bool sig_exit_toxic = false;
+static void catch_SIGINT(int sig)
 {
-    return;
+    sig_exit_toxic = true;
 }
 
 static void flag_window_resize(int sig)
@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-    signal(SIGINT, ignore_SIGINT);
+    signal(SIGINT, catch_SIGINT);
 
     config_err = create_user_config_dir(user_config_dir);
 
@@ -651,6 +651,9 @@ int main(int argc, char *argv[])
             store_data(m, DATA_FILE);
             last_save = cur_time;
         }
+
+        if (sig_exit_toxic)
+            exit_toxic_success(m);
 
         usleep(40000);
     }
