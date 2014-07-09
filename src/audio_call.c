@@ -93,6 +93,7 @@ void callback_call_rejected ( int32_t call_index, void *arg );
 void callback_call_ended    ( int32_t call_index, void *arg );
 void callback_requ_timeout  ( int32_t call_index, void *arg );
 void callback_peer_timeout  ( int32_t call_index, void *arg );
+void callback_av_audio      ( ToxAv *av, int32_t call_index, int16_t *data, int length );
 
 int stop_transmission(int call_index);
 
@@ -139,6 +140,8 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     toxav_register_callstate_callback(callback_recv_error, av_OnError, self);
     toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, self);
     toxav_register_callstate_callback(callback_peer_timeout, av_OnPeerTimeout, self);
+
+    toxav_register_audio_recv_callback(ASettins.av, callback_av_audio);
     
 
     return ASettins.av;
@@ -184,8 +187,6 @@ void *transmission(void *arg)
 
     Call* this_call = &ASettins.calls[call_index];
 
-    int32_t dec_frame_len;
-    int16_t PCM[frame_size];
     this_call->has_output = 1;
     
     if ( open_primary_device(input, &this_call->in_idx) != de_None ) 
@@ -208,17 +209,6 @@ void *transmission(void *arg)
                 unlock;
                 continue;
             }
-            
-            dec_frame_len = toxav_recv_audio(ASettins.av, call_index, frame_size, PCM);
-
-            /* Play the packet */
-            if (dec_frame_len > 0) {
-                write_out(this_call->out_idx, PCM, dec_frame_len, av_DefaultSettings.audio_channels);
-            }
-            else if (dec_frame_len != 0) {
-                /* >implying it'll ever get an error */
-            }
-            
         }
         unlock;
         
@@ -359,6 +349,11 @@ void callback_peer_timeout ( int32_t call_index, void* arg )
      * actions that one can possibly take on timeout
      */
     toxav_stop_call(ASettins.av, call_index);
+}
+
+void callback_av_audio(ToxAv *av, int32_t call_index, int16_t *data, int length) {
+    Call* this_call = &ASettins.calls[call_index];
+    write_out(this_call->out_idx, data, length, av_DefaultSettings.audio_channels);
 }
 /*
  * End of Callbacks
