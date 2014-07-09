@@ -95,6 +95,7 @@ void callback_requ_timeout  ( int32_t call_index, void *arg );
 void callback_peer_timeout  ( int32_t call_index, void *arg );
 
 int stop_transmission(int call_index);
+void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size);
 
 static void print_err (ToxWindow *self, char *error_str)
 {
@@ -140,6 +141,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, self);
     toxav_register_callstate_callback(callback_peer_timeout, av_OnPeerTimeout, self);
     
+    toxav_register_audio_recv_callback(ASettins.av, write_device_callback);
 
     return ASettins.av;
 }
@@ -167,74 +169,11 @@ void read_device_callback (const int16_t* captured, uint32_t size, void* data)
     }
 }
 
-/*
- * Transmission
- */
 
-void *transmission(void *arg)
+void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size)
 {
-#define lock pthread_mutex_lock(&this_call->mutex)
-#define unlock pthread_mutex_unlock(&this_call->mutex)
-
-    ToxWindow* self = arg;
-    int32_t call_index = self->call_idx;
-
-    /* Missing audio support */
-    if ( !ASettins.av ) _cbend;
-
-    Call* this_call = &ASettins.calls[call_index];
-
-    int32_t dec_frame_len;
-    int16_t PCM[frame_size];
-    this_call->has_output = 1;
-    
-    if ( open_primary_device(input, &this_call->in_idx) != de_None ) 
-        line_info_add(self, NULL, NULL, NULL, "Failed to open input device!", SYS_MSG, 0, 0);
-    if ( register_device_callback(call_index, this_call->in_idx, read_device_callback, &call_index, _True) != de_None) 
-        /* Set VAD as true for all; TODO: Make it more dynamic */
-        line_info_add(self, NULL, NULL, NULL, "Failed to register input handler!", SYS_MSG, 0, 0);
-    
-    if ( open_primary_device(output, &this_call->out_idx) != de_None ) {
-        line_info_add(self, NULL, NULL, NULL, "Failed to open output device!", SYS_MSG, 0, 0);
-        this_call->has_output = 0;
-    }
-    /* Start transmission */
-    while (this_call->ttas) {
-        
-        lock;
-        if ( this_call->has_output ) {
-            
-            if (playback_device_ready(this_call->out_idx) == de_Busy) {
-                unlock;
-                continue;
-            }
-            
-            dec_frame_len = toxav_recv_audio(ASettins.av, call_index, frame_size, PCM);
-
-            /* Play the packet */
-            if (dec_frame_len > 0) {
-                write_out(this_call->out_idx, PCM, dec_frame_len, av_DefaultSettings.audio_channels);
-            }
-            else if (dec_frame_len != 0) {
-                /* >implying it'll ever get an error */
-            }
-            
-        }
-        unlock;
-        
-        usleep(1000);
-    }
-
-/* cleanup:
-    if ( this_call->in_idx != -1 ) if ( close_device(input, this_call->in_idx) != de_None )
-        line_info_add(self, NULL, NULL, NULL, "Failed to close input device!", SYS_MSG, 0, 0);
-    
-    if ( this_call->out_idx != -1 ) if ( close_device(output, this_call->out_idx) != de_None )
-        line_info_add(self, NULL, NULL, NULL, "Failed to close output device!", SYS_MSG, 0, 0);
-    
-    set_call(this_call, _False); */
-    
-    _cbend;
+    if (ASettins.calls[call_index].ttas)
+        write_out(ASettins.calls[call_index].out_idx, data, size, 1);
 }
 
 int start_transmission(ToxWindow *self)
@@ -247,17 +186,25 @@ int start_transmission(ToxWindow *self)
     }
     
     if ( !toxav_capability_supported(ASettins.av, self->call_idx, AudioDecoding) ||
-        !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
+         !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
         return -1;
     
     set_call(&ASettins.calls[self->call_idx], _True);
-    
-    if ( 0 != pthread_create(&ASettins.calls[self->call_idx].ttid, NULL, transmission, self ) &&
-        0 != pthread_detach(ASettins.calls[self->call_idx].ttid) ) {
-        return -1;
-        }
         
-        return 0;
+    if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx) != de_None ) 
+        line_info_add(self, NULL, NULL, NULL, "Failed to open input device!", SYS_MSG, 0, 0);
+    
+    if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
+         read_device_callback, &self->call_idx, _True) != de_None) 
+        /* Set VAD as true for all; TODO: Make it more dynamic */
+        line_info_add(self, NULL, NULL, NULL, "Failed to register input handler!", SYS_MSG, 0, 0);
+    
+    if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx) != de_None ) {
+        line_info_add(self, NULL, NULL, NULL, "Failed to open output device!", SYS_MSG, 0, 0);
+        ASettins.calls[self->call_idx].has_output = 0;
+    }
+    
+    return 0;
 }
 
 int stop_transmission(int call_index)
@@ -265,6 +212,14 @@ int stop_transmission(int call_index)
     if ( ASettins.calls[call_index].ttas ) {
         toxav_kill_transmission(ASettins.av, call_index);
         ASettins.calls[call_index].ttas = _False;
+        
+        if ( ASettins.calls[call_index].in_idx != -1 )
+            close_device(input, ASettins.calls[call_index].in_idx);
+        
+        if ( ASettins.calls[call_index].out_idx != -1 )
+            close_device(output, ASettins.calls[call_index].out_idx);
+        
+        set_call(&ASettins.calls[call_index], _False);
         return 0;
     }
     
@@ -302,10 +257,9 @@ void callback_recv_starting ( int32_t call_index, void* arg )
             windows[i].onStarting(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i]) ) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, "Error starting transmission!", SYS_MSG, 0, 0);
-                return;
             }
+            return;
         }
-    
 }
 void callback_recv_ending ( int32_t call_index, void* arg )
 {
