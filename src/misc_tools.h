@@ -40,10 +40,10 @@ char *hex_string_to_bin(const char *hex_string);
 uint64_t get_unix_time(void);
 
 /*Puts the current time in buf in the format of [HH:mm:ss] */
-void get_time_str(uint8_t *buf, int bufsize);
+void get_time_str(char *buf, int bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(uint8_t *buf, int bufsize, uint64_t secs);
+void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs);
 
 /* get the current local time */
 struct tm *get_time(void);
@@ -55,13 +55,13 @@ void update_unix_time(void);
 int string_is_empty(char *string);
 
 /* convert a multibyte string to a wide character string (must provide buffer) */
-int char_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
+int char_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* converts wide character string into a multibyte string and puts in buf. */
-int wcs_to_mbs_buf(uint8_t *buf, const wchar_t *string, size_t n);
+int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n);
 
 /* convert a multibyte string to a wide character string and puts in buf) */
-int mbs_to_wcs_buf(wchar_t *buf, const uint8_t *string, size_t n);
+int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* Returns 1 if connection has timed out, 0 otherwise */
 int timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
@@ -77,12 +77,16 @@ int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
       - cannot start with a space
       - must not contain a forward slash (for logfile naming purposes)
       - must not contain contiguous spaces */
-int valid_nick(uint8_t *nick);
+int valid_nick(char *nick);
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(uint8_t *namebuf, const uint8_t *pathname);
+void get_file_name(char *namebuf, int bufsize, const char *pathname);
 
 /* converts str to all lowercase */
-void str_to_lower(uint8_t *str);
+void str_to_lower(char *str);
+
+/* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
+   Returns nick len on success, -1 on failure */
+int get_nick_truncate(Tox *m, char *buf, int friendnum);
 
 #endif /* #define _misc_tools_h */

@@ -46,7 +46,7 @@ static void set_max_file_senders_index(void)
     max_file_senders_index = j;
 }
 
-static void close_file_sender(ToxWindow *self, Tox *m, int i, uint8_t *msg, int CTRL, int filenum, int32_t friendnum)
+static void close_file_sender(ToxWindow *self, Tox *m, int i, char *msg, int CTRL, int filenum, int32_t friendnum)
 {
     if (self->chatwin != NULL) {
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
@@ -77,7 +77,7 @@ void close_all_file_senders(Tox *m)
 
 void do_file_senders(Tox *m)
 {
-    uint8_t msg[MAX_STR_SIZE];
+    char msg[MAX_STR_SIZE];
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
@@ -85,7 +85,7 @@ void do_file_senders(Tox *m)
             continue;
 
         ToxWindow *self = file_senders[i].toxwin;
-        uint8_t *pathname = file_senders[i].pathname;
+        char *pathname = file_senders[i].pathname;
         int filenum = file_senders[i].filenum;
         int32_t friendnum = file_senders[i].friendnum;
         FILE *fp = file_senders[i].file;
@@ -98,7 +98,7 @@ void do_file_senders(Tox *m)
         }
 
         while (true) {
-            if (tox_file_send_data(m, friendnum, filenum, file_senders[i].nextpiece,
+            if (tox_file_send_data(m, friendnum, filenum, (uint8_t *) file_senders[i].nextpiece,
                                    file_senders[i].piecelen) == -1)
                 break;
 

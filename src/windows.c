@@ -49,7 +49,7 @@ void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
-            windows[i].onFriendRequest(&windows[i], m, public_key, data, length);
+            windows[i].onFriendRequest(&windows[i], m, (const char *) public_key, (const char *) data, length);
     }
 }
 
@@ -79,7 +79,7 @@ void on_message(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t le
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onMessage != NULL)
-            windows[i].onMessage(&windows[i], m, friendnumber, string, length);
+            windows[i].onMessage(&windows[i], m, friendnumber, (const char *) string, length);
     }
 }
 
@@ -89,7 +89,7 @@ void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t len
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onAction != NULL)
-            windows[i].onAction(&windows[i], m, friendnumber, string, length);
+            windows[i].onAction(&windows[i], m, friendnumber, (const char *) string, length);
     }
 }
 
@@ -102,11 +102,10 @@ void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onNickChange != NULL)
-            windows[i].onNickChange(&windows[i], m, friendnumber, string, length);
+            windows[i].onNickChange(&windows[i], m, friendnumber, (const char *) string, length);
     }
 
-    if (store_data(m, DATA_FILE))
-        wprintw(prompt->window, "\nCould not store Tox data\n");
+    store_data(m, DATA_FILE);
 }
 
 void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
@@ -115,7 +114,7 @@ void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string,
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
-            windows[i].onStatusMessageChange(&windows[i], friendnumber, string, length);
+            windows[i].onStatusMessageChange(&windows[i], friendnumber, (const char *) string, length);
     }
 }
 
@@ -138,8 +137,7 @@ void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
             windows[i].onFriendAdded(&windows[i], m, friendnumber, sort);
     }
 
-    if (store_data(m, DATA_FILE))
-        wprintw(prompt->window, "\nCould not store Tox data\n");
+    store_data(m, DATA_FILE);
 }
 
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,
@@ -149,7 +147,7 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *mes
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, message, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, (const char *) message, length);
     }
 }
 
@@ -160,7 +158,7 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *acti
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupAction != NULL)
-            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, action, length);
+            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, (const char *) action, length);
     }
 }
 
@@ -170,7 +168,7 @@ void on_groupinvite(Tox *m, int32_t friendnumber, const uint8_t *group_pub_key, 
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupInvite != NULL)
-            windows[i].onGroupInvite(&windows[i], m, friendnumber, group_pub_key);
+            windows[i].onGroupInvite(&windows[i], m, friendnumber, (const char *) group_pub_key);
     }
 }
 
@@ -192,7 +190,7 @@ void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint6
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileSendRequest != NULL)
             windows[i].onFileSendRequest(&windows[i], m, friendnumber, filenumber, filesize,
-                                         filename, filename_length);
+                                         (const char *) filename, filename_length);
     }
 }
 
@@ -204,7 +202,7 @@ void on_file_control (Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileControl != NULL)
             windows[i].onFileControl(&windows[i], m, friendnumber, receive_send, filenumber,
-                                     control_type, data, length);
+                                     control_type, (const char *) data, length);
     }
 }
 
@@ -215,7 +213,7 @@ void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileData != NULL)
-            windows[i].onFileData(&windows[i], m, friendnumber, filenumber, data, length);
+            windows[i].onFileData(&windows[i], m, friendnumber, filenumber, (const char *) data, length);
     }
 }
 
@@ -254,17 +252,12 @@ int add_window(Tox *m, ToxWindow w)
     return -1;
 }
 
-/* Deletes window w and cleans up */
-void del_window(ToxWindow *w)
+void set_active_window(int index)
 {
-    active_window = windows; /* Go to prompt screen */
+    if (index < 0 || index >= MAX_WINDOWS_NUM)
+        return;
 
-    delwin(w->window);
-    memset(w, 0, sizeof(ToxWindow));
-
-    clear();
-    refresh();
-    --num_active_windows;
+    active_window = windows + index;
 }
 
 /* Shows next window when tab or back-tab is pressed */
@@ -288,12 +281,17 @@ void set_next_window(int ch)
     }
 }
 
-void set_active_window(int index)
+/* Deletes window w and cleans up */
+void del_window(ToxWindow *w)
 {
-    if (index < 0 || index >= MAX_WINDOWS_NUM)
-        return;
+    set_active_window(0);    /* Go to prompt screen */
 
-    active_window = windows + index;
+    delwin(w->window);
+    memset(w, 0, sizeof(ToxWindow));
+
+    clear();
+    refresh();
+    --num_active_windows;
 }
 
 ToxWindow *init_windows(Tox *m)
@@ -322,7 +320,7 @@ void on_window_resize(void)
 
     int i;
 
-    for (i == 0; i < MAX_WINDOWS_NUM; ++i) {
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (!windows[i].active)
             continue;
 
@@ -333,6 +331,9 @@ void on_window_resize(void)
 
         if (windows[i].is_friendlist) 
             continue;
+
+        if (w->help->active)
+            wclear(w->help->win);
 
         if (w->is_groupchat)
             delwin(w->chatwin->sidebar);
@@ -439,7 +440,6 @@ void draw_active_window(Tox *m)
 
     touchwin(a->window);
     a->onDraw(a, m);
-    wrefresh(a->window);
 
     /* Handle input */
     bool ltr;
@@ -495,6 +495,8 @@ int get_num_active_windows(void)
 /* destroys all chat and groupchat windows (should only be called on shutdown) */
 void kill_all_windows(void)
 {
+    kill_prompt_window(prompt);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {

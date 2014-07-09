@@ -183,19 +183,19 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     if (ctx->pos <= 0 || ctx->len <= 0 || ctx->len >= MAX_STR_SIZE)
         return -1;
 
-    const uint8_t *L = (uint8_t *) list;
+    const char *L = (char *) list;
 
-    uint8_t ubuf[MAX_STR_SIZE];
+    char ubuf[MAX_STR_SIZE];
 
     /* work with multibyte string copy of buf for simplicity */
-    if (wcs_to_mbs_buf(ubuf, ctx->line, MAX_STR_SIZE) == -1)
+    if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1)
         return -1;
 
     /* isolate substring from space behind pos to pos */
-    uint8_t tmp[MAX_STR_SIZE];
+    char tmp[MAX_STR_SIZE];
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[ctx->pos] = '\0';
-    uint8_t *sub = strrchr(tmp, ' ');
+    char *sub = strrchr(tmp, ' ');
     int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */
 
     if (!sub++) {
@@ -209,7 +209,7 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
         return -1;
 
     int s_len = strlen(sub);
-    const uint8_t *match;
+    const char *match;
     bool is_match = false;
     int i;
 
@@ -217,7 +217,7 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     for (i = 0; i < n_items; ++i) {
         match = &L[i * size];
 
-        if (is_match = strncasecmp(match, sub, s_len) == 0)
+        if ((is_match = strncasecmp(match, sub, s_len) == 0))
             break;
     }
 
@@ -225,7 +225,7 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
         return -1;
 
     /* put match in correct spot in buf and append endchars (space or ": ") */
-    const uint8_t *endchrs = n_endchrs == 1 ? " " : ": ";
+    const char *endchrs = n_endchrs == 1 ? " " : ": ";
     int m_len = strlen(match);
     int strt = ctx->pos - s_len;
     int diff = m_len - s_len + n_endchrs;
@@ -233,7 +233,7 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     if (ctx->len + diff > MAX_STR_SIZE)
         return -1;
 
-    uint8_t tmpend[MAX_STR_SIZE];
+    char tmpend[MAX_STR_SIZE];
     strcpy(tmpend, &ubuf[ctx->pos]);
     strcpy(&ubuf[strt], match);
     strcpy(&ubuf[strt + m_len], endchrs);

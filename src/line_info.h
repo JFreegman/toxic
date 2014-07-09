@@ -27,7 +27,7 @@
 #include "toxic.h"
 
 #define MAX_HISTORY 10000
-#define MIN_HISTORY 20
+#define MIN_HISTORY 40
 #define MAX_QUEUE 128
 
 enum {
@@ -41,10 +41,10 @@ enum {
 } LINE_TYPE;
 
 struct line_info {
-    uint8_t timestamp[TIME_STR_SIZE];
-    uint8_t name1[TOXIC_MAX_NAME_LENGTH];
-    uint8_t name2[TOXIC_MAX_NAME_LENGTH];
-    uint8_t msg[TOX_MAX_MESSAGE_LENGTH];
+    char timestamp[TIME_STR_SIZE];
+    char name1[TOXIC_MAX_NAME_LENGTH];
+    char name2[TOXIC_MAX_NAME_LENGTH];
+    char msg[TOX_MAX_MESSAGE_LENGTH];
     uint8_t type;
     uint8_t bold;
     uint8_t colour;
@@ -68,7 +68,7 @@ struct history {
 };
 
 /* creates new line_info line and puts it in the queue */
-void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, const uint8_t *msg,
+void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, const char *msg,
                    uint8_t type, uint8_t bold, uint8_t colour);
 
 /* Prints a section of history starting at line_start */
@@ -81,7 +81,7 @@ void line_info_cleanup(struct history *hst);
 void line_info_clear(struct history *hst);
 
 /* puts msg in specified line_info msg buffer */
-void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg);
+void line_info_set(ToxWindow *self, uint32_t id, char *msg);
 
 void line_info_init(struct history *hst);
 bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */

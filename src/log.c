@@ -34,7 +34,7 @@
 extern struct user_settings *user_settings;
 
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
-void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
+void init_logging_session(char *name, char *key, struct chatlog *log)
 {
     if (!log->log_on)
         return;
@@ -46,7 +46,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
     int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name);
 
     /* use first 4 digits of key as log ident. If no key use a timestamp */
-    uint8_t ident[32];
+    char ident[32];
 
     if (key != NULL) {
         path_len += (KEY_IDENT_DIGITS * 2 + 5);
@@ -65,7 +65,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
         return;
     }
 
-    uint8_t log_path[MAX_STR_SIZE];
+    char log_path[MAX_STR_SIZE];
 
     snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log",
              user_config_dir, CONFIGDIR, name, ident);
@@ -82,7 +82,7 @@ void init_logging_session(uint8_t *name, uint8_t *key, struct chatlog *log)
     fprintf(log->file, "\n*** NEW SESSION ***\n\n");
 }
 
-void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool event)
+void write_to_log(const char *msg, char *name, struct chatlog *log, bool event)
 {
     if (!log->log_on)
         return;
@@ -92,7 +92,7 @@ void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool e
         return;
     }
 
-    uint8_t name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
+    char name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
 
     if (event)
         snprintf(name_frmt, sizeof(name_frmt), "* %s", name);
@@ -100,7 +100,7 @@ void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool e
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
     const char *t = user_settings->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
-    uint8_t s[MAX_STR_SIZE];
+    char s[MAX_STR_SIZE];
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
 
@@ -112,7 +112,7 @@ void write_to_log(const uint8_t *msg, uint8_t *name, struct chatlog *log, bool e
     }
 }
 
-void log_enable(uint8_t *name, uint8_t *key, struct chatlog *log)
+void log_enable(char *name, char *key, struct chatlog *log)
 {
     log->log_on = true;
 

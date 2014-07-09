@@ -45,10 +45,12 @@
 #define TOX_DNS3_TXT_PREFIX "v=tox3;id="
 #define DNS3_KEY_SZ 32
 
+extern struct _Winthread Winthread;
+
 /* TODO: process keys from key file instead of hard-coding like a noob */
 static struct dns3_server {
-    uint8_t *name;
-    uint8_t key[DNS3_KEY_SZ];
+    char *name;
+    char key[DNS3_KEY_SZ];
 } dns3_servers[] = {
     {
         "utox.org",
@@ -68,27 +70,26 @@ static struct dns3_server {
 
 static struct _thread_data {
     ToxWindow *self;
-    uint8_t id_bin[TOX_FRIEND_ADDRESS_SIZE];
-    uint8_t addr[MAX_STR_SIZE];
-    uint8_t msg[MAX_STR_SIZE];
+    char id_bin[TOX_FRIEND_ADDRESS_SIZE];
+    char addr[MAX_STR_SIZE];
+    char msg[MAX_STR_SIZE];
     uint8_t busy;
     Tox *m;
 } t_data;
 
 static struct _dns_thread {
     pthread_t tid;
-    pthread_mutex_t lock;
 } dns_thread;
 
 
-static int dns_error(ToxWindow *self, uint8_t *errmsg)
+static int dns_error(ToxWindow *self, char *errmsg)
 {
-    uint8_t msg[MAX_STR_SIZE];
+    char msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "User lookup failed: %s", errmsg);
 
-    pthread_mutex_lock(&dns_thread.lock);
+    pthread_mutex_lock(&Winthread.lock);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    pthread_mutex_unlock(&dns_thread.lock);
+    pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
 }
@@ -103,11 +104,11 @@ static void kill_dns_thread(void *dns_obj)
 }
 
 /* puts TXT from dns response in buf. Returns length of TXT on success, -1 on fail.*/
-static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, uint8_t *buf)
+static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char *buf)
 {
     uint8_t *ans_pt = answer + sizeof(HEADER);
     uint8_t *ans_end = answer + ans_len;
-    uint8_t exp_ans[PACKETSZ];
+    char exp_ans[PACKETSZ];
     
     int len = dn_expand(answer, ans_end, ans_pt, exp_ans, sizeof(exp_ans));
 
@@ -171,10 +172,10 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, uint
    and the domain in dombuf.
 
    return length of username on success, -1 on failure */
-static int parse_addr(uint8_t *addr, uint8_t *namebuf, uint8_t *dombuf)
+static int parse_addr(char *addr, char *namebuf, char *dombuf)
 {
-    uint8_t tmpaddr[MAX_STR_SIZE];
-    uint8_t *tmpname, *tmpdom;
+    char tmpaddr[MAX_STR_SIZE];
+    char *tmpname, *tmpdom;
 
     strcpy(tmpaddr, addr);
     tmpname = strtok(tmpaddr, "@");
@@ -195,8 +196,8 @@ void *dns3_lookup_thread(void *data)
 {
     ToxWindow *self = t_data.self;
 
-    uint8_t domain[MAX_STR_SIZE];
-    uint8_t name[MAX_STR_SIZE];
+    char domain[MAX_STR_SIZE];
+    char name[MAX_STR_SIZE];
 
     int namelen = parse_addr(t_data.addr, name, domain);
 
@@ -206,7 +207,8 @@ void *dns3_lookup_thread(void *data)
     }
 
     /* get domain name/pub key */
-    uint8_t *DNS_pubkey, *domname = NULL;
+    char *DNS_pubkey = NULL;
+    char *domname = NULL;
     int i;
 
     for (i = 0; i < NUM_DNS3_SERVERS; ++i) {
@@ -222,17 +224,18 @@ void *dns3_lookup_thread(void *data)
         kill_dns_thread(NULL);
     }
 
-    void *dns_obj = tox_dns3_new(DNS_pubkey);
+    void *dns_obj = tox_dns3_new((uint8_t *) DNS_pubkey);
 
     if (dns_obj == NULL) {
         dns_error(self, "Core failed to create DNS object.");
         kill_dns_thread(NULL);
     }
 
-    uint8_t string[MAX_DNS_REQST_SIZE];
+    char string[MAX_DNS_REQST_SIZE];
     uint32_t request_id;
 
-    int str_len = tox_generate_dns3_string(dns_obj, string, sizeof(string), &request_id, name, namelen);
+    int str_len = tox_generate_dns3_string(dns_obj, (uint8_t *) string, sizeof(string), &request_id, 
+                                           (uint8_t *) name, namelen);
 
     if (str_len == -1) {
         dns_error(self, "Core failed to generate DNS3 string.");
@@ -242,7 +245,7 @@ void *dns3_lookup_thread(void *data)
     string[str_len] = '\0';
 
     u_char answer[PACKETSZ];
-    uint8_t d_string[MAX_DNS_REQST_SIZE];
+    char d_string[MAX_DNS_REQST_SIZE];
 
     /* format string and create dns query */
     snprintf(d_string, sizeof(d_string), "_%s._tox.%s", string, domname);
@@ -253,13 +256,13 @@ void *dns3_lookup_thread(void *data)
         kill_dns_thread(dns_obj);
     }
 
-    uint8_t ans_id[MAX_DNS_REQST_SIZE];
+    char ans_id[MAX_DNS_REQST_SIZE];
 
     /* extract TXT from DNS response */
     if (parse_dns_response(self, answer, ans_len, ans_id) == -1)
         kill_dns_thread(dns_obj);
 
-    uint8_t encrypted_id[MAX_DNS_REQST_SIZE];
+    char encrypted_id[MAX_DNS_REQST_SIZE];
     int prfx_len = strlen(TOX_DNS3_TXT_PREFIX);
 
     /* extract the encrypted ID from TXT response */
@@ -270,24 +273,25 @@ void *dns3_lookup_thread(void *data)
 
     memcpy(encrypted_id, ans_id + prfx_len, ans_len - prfx_len);
 
-    if (tox_decrypt_dns3_TXT(dns_obj, t_data.id_bin, encrypted_id, strlen(encrypted_id), request_id) == -1) {
+    if (tox_decrypt_dns3_TXT(dns_obj, (uint8_t *) t_data.id_bin, (uint8_t *) encrypted_id, 
+                             strlen(encrypted_id), request_id) == -1) {
         dns_error(self, "Core failed to decrypt DNS response.");
         kill_dns_thread(dns_obj);
     }
 
-    pthread_mutex_lock(&dns_thread.lock);
+    pthread_mutex_lock(&Winthread.lock);
     cmd_add_helper(self, t_data.m, t_data.id_bin, t_data.msg);
-    pthread_mutex_unlock(&dns_thread.lock);
+    pthread_mutex_unlock(&Winthread.lock);
 
     kill_dns_thread(dns_obj);
     return 0;
 }
 
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */
-void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_t *msg)
+void dns3_lookup(ToxWindow *self, Tox *m, char *id_bin, char *addr, char *msg)
 {
     if (t_data.busy) {
-        uint8_t *err = "Please wait for previous user lookup to finish.";
+        char *err = "Please wait for previous user lookup to finish.";
         line_info_add(self, NULL, NULL, NULL, err, SYS_MSG, 0, 0);
         return;
     }
@@ -299,9 +303,10 @@ void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_
     t_data.m = m;
     t_data.busy = 1;
 
+    pthread_mutex_unlock(&Winthread.lock);
+
     if (pthread_create(&dns_thread.tid, NULL, dns3_lookup_thread, NULL) != 0)
         exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_CREATE);
 
-    if (pthread_mutex_init(&dns_thread.lock, NULL) != 0)
-        exit_toxic_err("failed in dns3_lookup", FATALERR_MUTEX_INIT);
+    pthread_mutex_lock(&Winthread.lock);
 }

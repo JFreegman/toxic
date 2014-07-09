@@ -67,6 +67,8 @@ ToxAv *av;
 char *DATA_FILE = NULL;
 ToxWindow *prompt = NULL;
 
+#define AUTOSAVE_FREQ 60
+
 struct arg_opts {
     int ignore_data_file;
     int use_ipv4;
@@ -76,12 +78,11 @@ struct arg_opts {
 } arg_opts;
 
 struct _Winthread Winthread;
-
 struct user_settings *user_settings = NULL;
 
-static void ignore_SIGINT(int sig)
+static void catch_SIGINT(int sig)
 {
-    return;
+    Winthread.sig_exit_toxic = true;
 }
 
 static void flag_window_resize(int sig)
@@ -94,15 +95,10 @@ void exit_toxic_success(Tox *m)
     store_data(m, DATA_FILE);
     close_all_file_senders(m);
     kill_all_windows();
-    log_disable(prompt->chatwin->log);
-    line_info_cleanup(prompt->chatwin->hst);
+
     free(DATA_FILE);
-    free(prompt->stb);
-    free(prompt->help);
-    free(prompt->chatwin->log);
-    free(prompt->chatwin->hst);
-    free(prompt->chatwin);
     free(user_settings);
+
 #ifdef _SUPPORT_AUDIO
     terminate_audio();
 #endif /* _SUPPORT_AUDIO */
@@ -224,10 +220,10 @@ static struct _toxNodes {
     int lines;
     char nodes[MAXNODES][NODELEN];
     uint16_t ports[MAXNODES];
-    uint8_t keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+    char keys[MAXNODES][TOX_CLIENT_ID_SIZE];
 } toxNodes;
 
-static int nodelist_load(char *filename)
+static int nodelist_load(const char *filename)
 {
     if (!filename)
         return 1;
@@ -253,7 +249,7 @@ static int nodelist_load(char *filename)
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
             toxNodes.ports[toxNodes.lines] = htons(atoi(port));
 
-            uint8_t *key_binary = hex_string_to_bin(key_ascii);
+            char *key_binary = hex_string_to_bin(key_ascii);
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);
             free(key_binary);
 
@@ -273,7 +269,7 @@ static int nodelist_load(char *filename)
 int init_connection_helper(Tox *m, int line)
 {
     return tox_bootstrap_from_address(m, toxNodes.nodes[line], TOX_ENABLE_IPV6_DEFAULT,
-                                      toxNodes.ports[line], toxNodes.keys[line]);
+                                      toxNodes.ports[line], (uint8_t *) toxNodes.keys[line]);
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
@@ -329,7 +325,7 @@ int init_connection(Tox *m)
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
-    uint8_t msg[MAX_STR_SIZE] = {0};
+    char msg[MAX_STR_SIZE] = {0};
 
     static int conn_err = 0;
     static bool was_connected = false;
@@ -388,8 +384,8 @@ int store_data(Tox *m, char *path)
         return 1;
 
     FILE *fd;
-    size_t len;
-    uint8_t *buf;
+    int len;
+    char *buf;
 
     len = tox_size(m);
     buf = malloc(len);
@@ -397,7 +393,7 @@ int store_data(Tox *m, char *path)
     if (buf == NULL)
         return 2;
 
-    tox_save(m, buf);
+    tox_save(m, (uint8_t *) buf);
 
     fd = fopen(path, "wb");
 
@@ -423,8 +419,8 @@ static void load_data(Tox *m, char *path)
         return;
 
     FILE *fd;
-    size_t len;
-    uint8_t *buf;
+    int len;
+    char *buf;
 
     if ((fd = fopen(path, "rb")) != NULL) {
         fseek(fd, 0, SEEK_END);
@@ -444,7 +440,7 @@ static void load_data(Tox *m, char *path)
             exit_toxic_err("failed in load_data", FATALERR_FREAD);
         }
 
-        tox_load(m, buf, len);
+        tox_load(m, (uint8_t *) buf, len);
         load_friendlist(m);
 
         free(buf);
@@ -462,23 +458,32 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     pthread_mutex_lock(&Winthread.lock);
     do_connection(m, prompt);
     do_file_senders(m);
-    pthread_mutex_unlock(&Winthread.lock);
-
     tox_do(m);    /* main tox-core loop */
+    pthread_mutex_unlock(&Winthread.lock);
 }
+
+#define INACTIVE_WIN_REFRESH_RATE 10
 
 void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
+    uint8_t draw_count = 0;
 
     while (true) {
         draw_active_window(m);
+        draw_count++;
 
         if (Winthread.flag_resize) {
             on_window_resize();
             Winthread.flag_resize = false;
-        } else {
+        } else if (draw_count >= INACTIVE_WIN_REFRESH_RATE) {
             refresh_inactive_windows();
+            draw_count = 0;
+        }
+
+        if (Winthread.sig_exit_toxic) {
+            pthread_mutex_lock(&Winthread.lock);
+            exit_toxic_success(m);
         }
     }
 }
@@ -563,7 +568,7 @@ int main(int argc, char *argv[])
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-    signal(SIGINT, ignore_SIGINT);
+    signal(SIGINT, catch_SIGINT);
 
     config_err = create_user_config_dir(user_config_dir);
 
@@ -613,7 +618,7 @@ int main(int argc, char *argv[])
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
-    uint8_t *msg;
+    char *msg;
 
 #ifdef _SUPPORT_AUDIO
 
@@ -635,13 +640,24 @@ int main(int argc, char *argv[])
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
     }
 
-
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
+
+    uint64_t last_save = get_unix_time();
 
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);
+        uint64_t cur_time = get_unix_time();
+
+        if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
+            pthread_mutex_lock(&Winthread.lock);
+            store_data(m, DATA_FILE);
+            pthread_mutex_unlock(&Winthread.lock);
+
+            last_save = cur_time;
+        }
+
         usleep(40000);
     }
 

@@ -91,7 +91,7 @@ static int parse_command(WINDOW *w, ToxWindow *self, char *cmd, char (*args)[MAX
             end = strchr(cmd + 1, '\"');
 
             if (end++ == NULL) {    /* Increment past the end quote */
-                uint8_t *errmsg = "Invalid argument. Did you forget a closing \"?";
+                char *errmsg = "Invalid argument. Did you forget a closing \"?";
                 line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
                 return -1;
             }
@@ -134,7 +134,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode)
     if (string_is_empty(cmd))
         return;
 
-    char args[MAX_NUM_ARGS][MAX_STR_SIZE] = {0};
+    char args[MAX_NUM_ARGS][MAX_STR_SIZE];
     int num_args = parse_command(w, self, cmd, args);
 
     if (num_args == -1)
@@ -158,6 +158,5 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode)
     if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
 
-    uint8_t *errmsg = "Invalid command.";
-    line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, "Invalid command.", SYS_MSG, 0, 0);
 }

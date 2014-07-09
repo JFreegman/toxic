@@ -1,7 +1,7 @@
 # Toxic [![Build Status](https://travis-ci.org/Tox/toxic.png?branch=master)](https://travis-ci.org/Tox/toxic)
-Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
+Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
 
-![Toxic Screenshot](https://i.imgur.com/LdXXM62.png "Main Screen").
+![Toxic Screenshot](https://i.imgur.com/YOZ5NIB.png "Main Screen").
 
 ## Installation
 
@@ -23,6 +23,7 @@ Toxic is an ncurses-based instant messaging client for [Tox](https://tox.im) whi
 * You can add specific flags to the Makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
 * You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
 * Audio call support is automatically enabled if all dependencies are found
+* If you want to build toxic without audio call support, you can use `make DISABLE_AV=1`
 
 ### Packaging
 * For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files

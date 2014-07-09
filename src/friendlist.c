@@ -96,7 +96,7 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
              &friends[num].last_online.tm);
 }
 
-static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const uint8_t *str, uint16_t len)
+static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *str, uint16_t len)
 {
     if (num >= max_friends_index)
         return;
@@ -105,17 +105,15 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const uin
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
-            uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-            int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            char nick[TOX_MAX_NAME_LENGTH];
+            get_nick_truncate(m, nick, num);
 
-            uint8_t timefrmt[TIME_STR_SIZE];
+            char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
 
             line_info_add(prompt, timefrmt, nick, NULL, str, IN_MSG, 0, 0);
 
-            uint8_t *msg = "* Warning: Too many windows are open.";
+            char *msg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
             alert_window(prompt, WINDOW_ALERT_1, true);
         }
@@ -133,13 +131,17 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, 
     sort_friendlist_index();
 }
 
-static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, const uint8_t *nick, uint16_t len)
+static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *nick, uint16_t len)
 {
     if (len > TOX_MAX_NAME_LENGTH || num >= max_friends_index)
         return;
 
-    snprintf(friends[num].name, sizeof(friends[num].name), "%s", nick);
-    friends[num].namelength = strlen(friends[num].name);
+    char tempname[TOX_MAX_NAME_LENGTH];
+    strcpy(tempname, nick);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    tempname[len] = '\0';
+    snprintf(friends[num].name, sizeof(friends[num].name), "%s", tempname);
+    friends[num].namelength = len;
     sort_friendlist_index();
 }
 
@@ -151,7 +153,7 @@ static void friendlist_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint
     friends[num].status = status;
 }
 
-static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, const uint8_t *status, uint16_t len)
+static void friendlist_onStatusMessageChange(ToxWindow *self, int32_t num, const char *status, uint16_t len)
 {
     if (len > TOX_MAX_STATUSMESSAGE_LENGTH || num >= max_friends_index)
         return;
@@ -174,17 +176,19 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
-            friends[i].namelength = tox_get_name(m, num, friends[i].name);
             friends[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
-            tox_get_client_id(m, num, friends[i].pub_key);
+            tox_get_client_id(m, num, (uint8_t *) friends[i].pub_key);
             update_friend_last_online(i, tox_get_last_online(m, i));
 
-            if (friends[i].namelength == -1 || friends[i].name[0] == '\0') {
-                strcpy(friends[i].name, (uint8_t *) UNKNOWN_NAME);
+            char tempname[TOX_MAX_NAME_LENGTH] = {0};
+            int len = get_nick_truncate(m, tempname, num);
+
+            if (len == -1 || tempname[0] == '\0') {
+                strcpy(friends[i].name, UNKNOWN_NAME);
                 friends[i].namelength = strlen(UNKNOWN_NAME);
             } else {    /* Enforce toxic's maximum name length */
-                friends[i].namelength = MIN(friends[i].namelength, TOXIC_MAX_NAME_LENGTH);
-                friends[i].name[friends[i].namelength] = '\0';
+                friends[i].namelength = len;
+                snprintf(friends[i].name, sizeof(friends[i].name), "%s", tempname);
             }
 
             num_friends = tox_count_friendlist(m);
@@ -201,7 +205,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
 }
 
 static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
-        uint64_t filesize, const uint8_t *filename, uint16_t filename_len)
+        uint64_t filesize, const char *filename, uint16_t filename_len)
 {
     if (num >= max_friends_index)
         return;
@@ -212,12 +216,10 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
         } else {
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
 
-            uint8_t nick[TOX_MAX_NAME_LENGTH];
-            int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            char nick[TOX_MAX_NAME_LENGTH];
+            get_nick_truncate(m, nick, num);
 
-            uint8_t msg[MAX_STR_SIZE];
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* File transfer from %s failed: too many windows are open.", nick);
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
@@ -226,7 +228,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     }
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const uint8_t *group_pub_key)
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const char *group_pub_key)
 {
     if (num >= max_friends_index)
         return;
@@ -235,12 +237,10 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
         } else {
-            uint8_t nick[TOX_MAX_NAME_LENGTH];
-            int n_len = tox_get_name(m, num, nick);
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
+            char nick[TOX_MAX_NAME_LENGTH];
+            get_nick_truncate(m, nick, num);
 
-            uint8_t msg[MAX_STR_SIZE];
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* Group chat invite from %s failed: too many windows are open.", nick);
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
@@ -285,7 +285,7 @@ static void delete_friend(Tox *m, int32_t f_num)
 /* activates delete friend popup */
 static void del_friend_activate(ToxWindow *self, Tox *m, int32_t f_num)
 {
-    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
+    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH - 1, 8, 8);
     pendingdelete.active = true;
     pendingdelete.num = f_num;
 }
@@ -345,7 +345,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
                 set_active_window(friends[f].chatwin);
             } else {
-                uint8_t *msg = "* Warning: Too many windows are open.";
+                char *msg = "* Warning: Too many windows are open.";
                 line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
                 alert_window(prompt, WINDOW_ALERT_1, true);
@@ -458,10 +458,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 /* Reset friends[f].statusmsg on window resize */
                 if (fix_statuses) {
-                    uint8_t statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+                    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
 
                     pthread_mutex_lock(&Winthread.lock);
-                    tox_get_status_message(m, friends[f].num, statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+                    tox_get_status_message(m, friends[f].num, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
                     pthread_mutex_unlock(&Winthread.lock);
 
                     snprintf(friends[f].statusmsg, sizeof(friends[f].statusmsg), "%s", statusmsg);
@@ -499,7 +499,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 if (last_seen != 0) {
                     int day_dist = (cur_loc_tm.tm_yday - friends[f].last_online.tm.tm_yday) % 365;
-                    const uint8_t *hourmin = friends[f].last_online.hour_min_str;
+                    const char *hourmin = friends[f].last_online.hour_min_str;
 
                     switch (day_dist) {
                         case 0:
@@ -522,8 +522,6 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     }
 
     self->x = x2;
-    wrefresh(self->window);
-    draw_popup();
 
     if (num_friends) {
         wmove(self->window, y2 - 1, 1);
@@ -537,6 +535,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         for (i = 0; i < TOX_CLIENT_ID_SIZE; ++i)
             wprintw(self->window, "%02X", friends[selected_num].pub_key[i] & 0xff);
     }
+
+    wrefresh(self->window);
+    draw_popup();
 }
 
 void disable_chatwin(int32_t f_num)
@@ -560,17 +561,14 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
             if (toxav_get_call_state(av, call_index) == av_CallStarting) /* Only open windows when call is incoming */
                 friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
         } else {
-            uint8_t nick[TOX_MAX_NAME_LENGTH] = {'\0'};
-            int n_len = tox_get_name(m, id, nick);
+            char nick[TOX_MAX_NAME_LENGTH];
+            get_nick_truncate(m, nick, friends[id].num);
 
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-            nick[n_len] = '\0';
-
-            uint8_t msg[MAX_STR_SIZE];
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "Audio action from: %s!", nick);
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 
-            uint8_t *errmsg = "* Warning: Too many windows are open.";
+            char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
 
             alert_window(prompt, WINDOW_ALERT_0, true);

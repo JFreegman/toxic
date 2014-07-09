@@ -40,7 +40,7 @@ extern uint8_t max_file_senders_index;
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *errmsg;
+    char *errmsg;
 
     if (argc < 1) {
         errmsg = "Invalid syntax";
@@ -62,14 +62,14 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    uint8_t msg[MAX_STR_SIZE];
+    char msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "Invited friend to Room #%d.", groupnum);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *errmsg;
+    char *errmsg;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         errmsg = " * Warning: Too many windows are open.";
@@ -77,7 +77,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    uint8_t *groupkey = friends[self->num].groupchat_key;
+    char *groupkey = friends[self->num].groupchat_key;
 
     if (!friends[self->num].groupchat_pending) {
         errmsg = "No pending group chat invite.";
@@ -85,7 +85,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    int groupnum = tox_join_groupchat(m, self->num, groupkey);
+    int groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey);
 
     if (groupnum == -1) {
         errmsg = "Group chat instance failed to initialize.";
@@ -103,7 +103,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *errmsg;
+    char *errmsg;
 
     if (argc != 1) {
         errmsg = "Invalid syntax.";
@@ -125,10 +125,10 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    uint8_t *filename = friends[self->num].file_receiver.filenames[filenum];
+    char *filename = friends[self->num].file_receiver.filenames[filenum];
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        uint8_t msg[MAX_STR_SIZE];
+        char msg[MAX_STR_SIZE];
         snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1f%%)", filename, 0.0);
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
         friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 1;
@@ -148,7 +148,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint8_t *errmsg;
+    char *errmsg;
 
     if (max_file_senders_index >= (MAX_FILES - 1)) {
         errmsg = "Please wait for some of your outgoing file transfers to complete.";
@@ -162,7 +162,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    uint8_t *path = argv[1];
+    char *path = argv[1];
 
     if (path[0] != '\"') {
         errmsg = "File path must be enclosed in quotes.";
@@ -170,8 +170,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    path[strlen(++path) - 1] = L'\0';
-    int path_len = strlen(path);
+    ++path;
+    int path_len = strlen(path) - 1;
+    path[path_len] = '\0';
 
     if (path_len > MAX_STR_SIZE) {
         errmsg = "File path exceeds character limit.";
@@ -191,9 +192,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint64_t filesize = ftell(file_to_send);
     fseek(file_to_send, 0, SEEK_SET);
 
-    uint8_t filename[MAX_STR_SIZE];
-    get_file_name(filename, path);
-    int filenum = tox_new_file_sender(m, self->num, filesize, filename, strlen(filename));
+    char filename[MAX_STR_SIZE];
+    get_file_name(filename, sizeof(filename), path);
+    int filenum = tox_new_file_sender(m, self->num, filesize, (const uint8_t *) filename, strlen(filename));
 
     if (filenum == -1) {
         errmsg = "Error sending file.";
@@ -216,7 +217,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 
-            uint8_t msg[MAX_STR_SIZE];
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "Sending file: '%s'", path);
             line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 

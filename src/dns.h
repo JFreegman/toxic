@@ -27,6 +27,6 @@
 #define _dns_h
 
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */
-void dns3_lookup(ToxWindow *self, Tox *m, uint8_t *id_bin, uint8_t *addr, uint8_t *msg);
+void dns3_lookup(ToxWindow *self, Tox *m, char *id_bin, char *addr, char *msg);
 
 #endif /* #define _dns_h */

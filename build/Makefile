@@ -15,7 +15,7 @@ MANFILES = toxic.1 toxic.conf.5
 
 LIBS = libtoxcore ncursesw
 
-CFLAGS = -std=gnu99 -pthread -Wimplicit-function-declaration -Wreturn-type -O1
+CFLAGS = -std=gnu99 -pthread -Wall
 CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
 CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)
@@ -34,6 +34,9 @@ AUDIO_OBJ = device.o audio_call.o
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	-include $(CFG_DIR)/Linux.mk
+endif
+ifeq ($(UNAME_S), FreeBSD)
+	-include $(CFG_DIR)/FreeBSD.mk
 endif
 ifeq ($(UNAME_S), Darwin)
 	-include $(CFG_DIR)/Darwin.mk
@@ -54,7 +57,8 @@ ifneq ($(filter arm%, $(UNAME_M)),)
 	-include $(CFG_DIR)/arm.mk
 endif
 
-# Check if we can build audio
+# Check if we want/can build audio
+ifneq ($(DISABLE_AV), 1)
 CHECK_AUDIO_LIBS = $(shell pkg-config $(AUDIO_LIBS) || echo -n "error")
 ifneq ($(CHECK_AUDIO_LIBS), error)
 	LIBS += $(AUDIO_LIBS)
@@ -66,6 +70,7 @@ MISSING_AUDIO_LIBS = $(shell for lib in $(AUDIO_LIBS) ; do if ! pkg-config $$lib
 $(warning WARNING -- Toxic will be compiled without audio support)
 $(warning WARNING -- You need these libraries for audio support)
 $(warning WARNING -- $(MISSING_AUDIO_LIBS))
+endif
 endif
 endif
 
@@ -88,7 +93,8 @@ endif
 all: toxic
 
 toxic: $(OBJ)
-	$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
+	@echo "  LD    $@"
+	@$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
 
 install: toxic
 	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
@@ -112,8 +118,9 @@ install: toxic
 	done
 
 %.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
-	$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
+	@echo "  CC    $@"
+	@$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
+	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
 clean:
 	rm -rf *.d *.o toxic

@@ -34,34 +34,39 @@ extern struct user_settings *user_settings;
 
 void line_info_init(struct history *hst)
 {
-    hst->line_root = malloc(sizeof(struct line_info));
+    hst->line_root = calloc(1, sizeof(struct line_info));
 
     if (hst->line_root == NULL)
         exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
 
-    memset(hst->line_root, 0, sizeof(struct line_info));
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
     hst->queue_sz = 0;
 }
 
-/* resets line_start */
+/* resets line_start (page end) */
 static void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
+    struct line_info *line = hst->line_end;
+
+    if (line->prev == NULL)
+        return;
+
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    struct line_info *line = hst->line_end;
-
-    uint16_t lncnt = 0;
     int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
-    int top_offst = self->is_chat ? 2 : 0;
+    int top_offst = self->is_chat || self->is_prompt ? 2 : 0;
     int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
-    while (line->prev && lncnt < max_y) {
-        lncnt += (1 + line->newlines) +( line->len / (x2 - side_offst));
+    int curlines = 0;
+    int nxtlines = line->newlines + (line->len / (x2 - side_offst));
+
+    do {
+        curlines += 1 + nxtlines;
         line = line->prev;
-    }
+        nxtlines = line->newlines + (line->len / (x2 - side_offst));
+    } while (line->prev && curlines + nxtlines < max_y);
 
     hst->line_start = line;
 }
@@ -74,6 +79,13 @@ void line_info_cleanup(struct history *hst)
         struct line_info *tmp2 = tmp1->next;
         free(tmp1);
         tmp1 = tmp2;
+    }
+
+    int i;
+
+    for (i = 0; i < hst->queue_sz; ++i) {
+        if (hst->queue[i])
+            free(hst->queue[i]);
     }
 }
 
@@ -121,16 +133,14 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 }
 
 /* creates new line_info line and puts it in the queue */
-void line_info_add(ToxWindow *self, uint8_t *tmstmp, uint8_t *name1, uint8_t *name2, const uint8_t *msg,
-                   uint8_t type, uint8_t bold, uint8_t colour)
+void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, const char *msg, uint8_t type, 
+                   uint8_t bold, uint8_t colour)
 {
     struct history *hst = self->chatwin->hst;
-    struct line_info *new_line = malloc(sizeof(struct line_info));
+    struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
     if (new_line == NULL)
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
-
-    memset(new_line, 0, sizeof(struct line_info));
 
     int len = 1;     /* there will always be a newline */
 
@@ -208,6 +218,7 @@ static void line_info_check_queue(ToxWindow *self)
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
     getyx(self->chatwin->history, y, x);
+    (void) x;
 
     if (x2 <= SIDEBAR_WIDTH)
         return;
@@ -252,7 +263,6 @@ void line_info_print(ToxWindow *self)
         wmove(win, 2, 0);
 
     struct line_info *line = hst->line_start->next;
-    int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
     int numlines = 0;
 
     while (line && numlines++ <= y2) {
@@ -373,7 +383,7 @@ void line_info_print(ToxWindow *self)
         line_info_print(self);
 }
 
-void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)
+void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 {
     struct line_info *line = self->chatwin->hst->line_end;
 
@@ -387,10 +397,10 @@ void line_info_set(ToxWindow *self, uint32_t id, uint8_t *msg)
     }
 }
 
-static void line_info_goto_root(struct history *hst)
+/* static void line_info_goto_root(struct history *hst)
 {
     hst->line_start = hst->line_root;
-}
+} */
 
 static void line_info_scroll_up(struct history *hst)
 {
@@ -410,6 +420,7 @@ static void line_info_page_up(ToxWindow *self, struct history *hst)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+    (void) x2;
     int jump_dist = y2 / 2;
     int i;
 
@@ -421,6 +432,7 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+    (void) x2;
     int jump_dist = y2 / 2;
     int i;
 
