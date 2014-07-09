@@ -66,6 +66,7 @@ enum {
 struct _Winthread {
     pthread_t tid;
     pthread_mutex_t lock;
+    bool sig_exit_toxic;
     bool flag_resize;
 };
 

@@ -253,7 +253,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 
     /* holds the lone filename */
     char filename_nopath[MAX_STR_SIZE];
-    get_file_name(filename_nopath, pathname);
+    get_file_name(filename_nopath, sizeof(filename_nopath), pathname);
     int len = strlen(filename_nopath);
 
     snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename_nopath,

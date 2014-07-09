@@ -259,7 +259,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, " %s", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
     } else {
-        wprintw(statusbar->topline, "[Offline]");
+        wprintw(statusbar->topline, " [Offline]");
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
@@ -368,7 +368,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     const char *toxic_ver = strtok(ver, "_");
 
     if ( (!strcmp("Online", statusmsg) || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
-        snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver);
+        snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
     }

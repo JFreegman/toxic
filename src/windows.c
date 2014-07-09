@@ -105,8 +105,7 @@ void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t
             windows[i].onNickChange(&windows[i], m, friendnumber, (const char *) string, length);
     }
 
-    if (store_data(m, DATA_FILE))
-        wprintw(prompt->window, "\nCould not store Tox data\n");
+    store_data(m, DATA_FILE);
 }
 
 void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
@@ -138,8 +137,7 @@ void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
             windows[i].onFriendAdded(&windows[i], m, friendnumber, sort);
     }
 
-    if (store_data(m, DATA_FILE))
-        wprintw(prompt->window, "\nCould not store Tox data\n");
+    store_data(m, DATA_FILE);
 }
 
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,

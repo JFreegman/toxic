@@ -194,7 +194,7 @@ int valid_nick(char *nick)
 }
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(char *namebuf, const char *pathname)
+void get_file_name(char *namebuf, int bufsize, const char *pathname)
 {
     int idx = strlen(pathname) - 1;
 
@@ -213,7 +213,7 @@ void get_file_name(char *namebuf, const char *pathname)
         filename = tmpname;
     }
 
-    snprintf(namebuf, sizeof(namebuf), "%s", filename);
+    snprintf(namebuf, bufsize, "%s", filename);
 }
 
 /* converts str to all lowercase */

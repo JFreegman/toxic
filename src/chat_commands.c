@@ -193,7 +193,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     fseek(file_to_send, 0, SEEK_SET);
 
     char filename[MAX_STR_SIZE];
-    get_file_name(filename, path);
+    get_file_name(filename, sizeof(filename), path);
     int filenum = tox_new_file_sender(m, self->num, filesize, (const uint8_t *) filename, strlen(filename));
 
     if (filenum == -1) {

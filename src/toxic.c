@@ -80,10 +80,9 @@ struct arg_opts {
 struct _Winthread Winthread;
 struct user_settings *user_settings = NULL;
 
-static bool sig_exit_toxic = false;
 static void catch_SIGINT(int sig)
 {
-    sig_exit_toxic = true;
+    Winthread.sig_exit_toxic = true;
 }
 
 static void flag_window_resize(int sig)
@@ -459,9 +458,8 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     pthread_mutex_lock(&Winthread.lock);
     do_connection(m, prompt);
     do_file_senders(m);
-    pthread_mutex_unlock(&Winthread.lock);
-
     tox_do(m);    /* main tox-core loop */
+    pthread_mutex_unlock(&Winthread.lock);
 }
 
 #define INACTIVE_WIN_REFRESH_RATE 10
@@ -481,6 +479,11 @@ void *thread_winref(void *data)
         } else if (draw_count >= INACTIVE_WIN_REFRESH_RATE) {
             refresh_inactive_windows();
             draw_count = 0;
+        }
+
+        if (Winthread.sig_exit_toxic) {
+            pthread_mutex_lock(&Winthread.lock);
+            exit_toxic_success(m);
         }
     }
 }
@@ -648,12 +651,12 @@ int main(int argc, char *argv[])
         uint64_t cur_time = get_unix_time();
 
         if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
+            pthread_mutex_lock(&Winthread.lock);
             store_data(m, DATA_FILE);
+            pthread_mutex_unlock(&Winthread.lock);
+
             last_save = cur_time;
         }
-
-        if (sig_exit_toxic)
-            exit_toxic_success(m);
 
         usleep(40000);
     }

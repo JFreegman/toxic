@@ -45,6 +45,8 @@
 #define TOX_DNS3_TXT_PREFIX "v=tox3;id="
 #define DNS3_KEY_SZ 32
 
+extern struct _Winthread Winthread;
+
 /* TODO: process keys from key file instead of hard-coding like a noob */
 static struct dns3_server {
     char *name;
@@ -77,7 +79,6 @@ static struct _thread_data {
 
 static struct _dns_thread {
     pthread_t tid;
-    pthread_mutex_t lock;
 } dns_thread;
 
 
@@ -86,9 +87,9 @@ static int dns_error(ToxWindow *self, char *errmsg)
     char msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "User lookup failed: %s", errmsg);
 
-    pthread_mutex_lock(&dns_thread.lock);
+    pthread_mutex_lock(&Winthread.lock);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    pthread_mutex_unlock(&dns_thread.lock);
+    pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
 }
@@ -272,15 +273,15 @@ void *dns3_lookup_thread(void *data)
 
     memcpy(encrypted_id, ans_id + prfx_len, ans_len - prfx_len);
 
-    if (tox_decrypt_dns3_TXT(dns_obj, (uint8_t *) t_data.id_bin, (uint8_t *) encrypted_id, strlen(encrypted_id),
-                             request_id) == -1) {
+    if (tox_decrypt_dns3_TXT(dns_obj, (uint8_t *) t_data.id_bin, (uint8_t *) encrypted_id, 
+                             strlen(encrypted_id), request_id) == -1) {
         dns_error(self, "Core failed to decrypt DNS response.");
         kill_dns_thread(dns_obj);
     }
 
-    pthread_mutex_lock(&dns_thread.lock);
+    pthread_mutex_lock(&Winthread.lock);
     cmd_add_helper(self, t_data.m, t_data.id_bin, t_data.msg);
-    pthread_mutex_unlock(&dns_thread.lock);
+    pthread_mutex_unlock(&Winthread.lock);
 
     kill_dns_thread(dns_obj);
     return 0;
@@ -302,9 +303,10 @@ void dns3_lookup(ToxWindow *self, Tox *m, char *id_bin, char *addr, char *msg)
     t_data.m = m;
     t_data.busy = 1;
 
+    pthread_mutex_unlock(&Winthread.lock);
+
     if (pthread_create(&dns_thread.tid, NULL, dns3_lookup_thread, NULL) != 0)
         exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_CREATE);
 
-    if (pthread_mutex_init(&dns_thread.lock, NULL) != 0)
-        exit_toxic_err("failed in dns3_lookup", FATALERR_MUTEX_INIT);
+    pthread_mutex_lock(&Winthread.lock);
 }
