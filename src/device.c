@@ -57,6 +57,7 @@ typedef struct _Device {
     _Bool enable_VAD;
     _Bool muted;
     float VAD_treshold;                    /* 40 is usually recommended value */
+    pthread_mutex_t mutex[1];
 } Device;
 
 const char *ddevice_names[2];              /* Default device */
@@ -190,7 +191,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     uint32_t i;
     for (i = 0; i < MAX_DEVICES && running[type][i] != NULL; i ++);
     
-    if (i == size[type]) { unlock; return de_AllDevicesBusy; }
+    if (i == MAX_DEVICES) { unlock; return de_AllDevicesBusy; }
     else *device_idx = i;
     
     Device* device = running[type][*device_idx] = calloc(1, sizeof(Device));;
@@ -205,6 +206,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
                 device->source = running[type][i]->source;
             }
             device->ref_count++;
+            pthread_mutex_init(device->mutex, NULL);
             unlock;
             return de_None;
         }
@@ -254,6 +256,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
         thread_paused = _False;
     }
     
+    pthread_mutex_init(device->mutex, NULL);
     unlock;
     return de_None;
 }
@@ -269,7 +272,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
         unlock;
         return de_DeviceNotActive;
     }
-            
+    
     if ( !(device->ref_count--) ) {
         running[type][device_idx] = NULL;
         unlock;
@@ -289,10 +292,12 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
             alcMakeContextCurrent(NULL);
             if ( device->ctx ) alcDestroyContext(device->ctx);
         }
-                
+        
         free(device);
         return rc;
     }
+    
+    unlock;
     
     return de_None;
 }
@@ -312,21 +317,6 @@ DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, Dat
     return de_None;
 }
 
-inline__ DeviceError playback_device_ready(uint32_t device_idx)
-{
-    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
-    
-    Device* device = running[output][device_idx];
-    
-    if (!device) return de_DeviceNotActive;
-    
-    int32_t ready;
-    alGetSourcei(device->source, AL_BUFFERS_PROCESSED, &ready);
-    
-    return ready <= 0 ? de_Busy : de_None;
-}
-
-/* TODO: thread safety? */
 inline__ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t lenght, uint8_t channels)
 {
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
@@ -335,37 +325,38 @@ inline__ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t leng
     
     if (!device || device->muted) return de_DeviceNotActive;
     
-    alcMakeContextCurrent(device->ctx); /* TODO: Check for error */
-    
-    uint32_t buffer;
-    int32_t ready;
+    pthread_mutex_lock(device->mutex);
     
     
-    alSourceUnqueueBuffers(device->source, 1, &buffer);
-    alBufferData(buffer, AL_FORMAT_MONO16, data, lenght * 2 * 1 /*channels*/, sample_rate); // TODO: Frequency must be set dynamically
+    ALuint bufid;
+    ALint processed, queued;
+    alGetSourcei(device->source, AL_BUFFERS_PROCESSED, &processed);
+    alGetSourcei(device->source, AL_BUFFERS_QUEUED, &queued);
     
-    int rc = alGetError();
-    if (rc != AL_NO_ERROR) {
-        fprintf(stderr, "Error setting buffer %d\n", rc);
-        return de_BufferError;
+    if(processed) {
+        ALuint bufids[processed];
+        alSourceUnqueueBuffers(device->source, processed, bufids);
+        alDeleteBuffers(processed - 1, bufids + 1);
+        bufid = bufids[0];
+    } 
+    else if(queued < 16) alGenBuffers(1, &bufid);
+    else { 
+        pthread_mutex_unlock(device->mutex);
+        return de_Busy;
     }
     
-    alSourceQueueBuffers(device->source, 1, &buffer);
     
-    rc = alGetError();
-    if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "Error: could not buffer audio: %d\n", rc);
-        return de_BufferError;
-    }
+    alBufferData(bufid, AL_FORMAT_MONO16, data, lenght * 2 * channels, av_DefaultSettings.audio_sample_rate);
+    alSourceQueueBuffers(device->source, 1, &bufid);
     
-    alGetSourcei(device->source, AL_SOURCE_STATE, &ready);
+    ALint state;
+    alGetSourcei(device->source, AL_SOURCE_STATE, &state);
     
-    if (ready != AL_PLAYING) {
-        alSourcePlay(device->source);
-        return de_None;
-    }
+    if(state != AL_PLAYING) alSourcePlay(device->source);
     
-    return de_Busy;
+    
+    pthread_mutex_unlock(device->mutex);
+    return de_None;
 }
 
 void* thread_poll (void* arg) // TODO: maybe use thread for every input source
@@ -438,4 +429,4 @@ void* get_device_callback_data(uint32_t device_idx)
         return NULL;
         
     return running[input][device_idx]->cb_data;
-}
+}       

@@ -75,7 +75,6 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
 /* Stop device */
 DeviceError close_device(DeviceType type, uint32_t device_idx);
 
-DeviceError playback_device_ready(uint32_t device_idx);
 /* Write data to device */
 DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t lenght, uint8_t channels);
 
