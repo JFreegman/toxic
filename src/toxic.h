@@ -64,15 +64,16 @@
 #define T_KEY_C_H        0x08     /* ctrl-h */
 
 typedef enum _FATAL_ERRS {
-    FATALERR_MEMORY = -1,    /* malloc() or calloc() failed */
-    FATALERR_FREAD = -2,     /* fread() failed on critical read */
-    FATALERR_THREAD_CREATE = -3,
-    FATALERR_MUTEX_INIT = -4,
-    FATALERR_LOCALE_SET = -5,
-    FATALERR_STORE_DATA = -6,
-    FATALERR_NETWORKINIT = -7,   /* Tox network failed to init */
-    FATALERR_INFLOOP = -8,       /* infinite loop detected */
-    FATALERR_WININIT = -9,       /* window init failed */
+    FATALERR_MEMORY = -1,           /* malloc() or calloc() failed */
+    FATALERR_FREAD = -2,            /* fread() failed on critical read */
+    FATALERR_THREAD_CREATE = -3,    /* thread creation failed */
+    FATALERR_MUTEX_INIT = -4,       /* mutex init failed */
+    FATALERR_THREAD_ATTR = -5,      /* thread attr object init failed */
+    FATALERR_LOCALE_SET = -6,       /* system locale not set */
+    FATALERR_STORE_DATA = -7,       /* store_data failed in critical section */
+    FATALERR_NETWORKINIT = -8,      /* Tox network failed to init */
+    FATALERR_INFLOOP = -9,          /* infinite loop detected */
+    FATALERR_WININIT = -10,         /* window init failed */
 } FATAL_ERRS;
 
 /* Fixes text color problem on some terminals.
