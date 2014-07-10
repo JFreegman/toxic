@@ -69,7 +69,8 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* _SUPPORT_AUDIO */
 };
 
-void kill_prompt_window(ToxWindow *self) {
+void kill_prompt_window(ToxWindow *self) 
+{
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 

@@ -321,7 +321,7 @@ int init_connection(Tox *m)
     return 4;
 }
 
-#define TRY_CONNECT 10
+#define TRY_CONNECT 10   /* Seconds between connection attempts when DHT is not connected */
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
