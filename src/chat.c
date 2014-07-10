@@ -902,7 +902,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     line_info_init(ctx->hst);
 
     if (friends[self->num].logging_on)
-        log_enable(self->name, friends[self->num].pub_key, ctx->log);
+        log_enable(nick, friends[self->num].pub_key, ctx->log);
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
