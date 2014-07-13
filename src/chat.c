@@ -692,8 +692,10 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 } else {
                     wmove(self->window, y, x + diff);
                 }
-            } else beep();
-        } else beep();
+            } else 
+                beep();
+        } else
+            beep();
 
     } else if (key == '\n') {
         rm_trailing_spaces_buf(ctx);
@@ -726,8 +728,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
 
             if (!statusbar->is_online || tox_send_message(m, self->num, (uint8_t *) line, strlen(line)) == 0) {
-                char *errmsg = " * Failed to send message.";
-                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+                line_info_add(self, NULL, NULL, NULL, " * Failed to send message.", SYS_MSG, 0, RED);
             } else {
                 write_to_log(line, selfname, ctx->log, false);
             }

@@ -57,13 +57,13 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     }
 
     if (tox_invite_friend(m, self->num, groupnum) == -1) {
-        errmsg = "Failed to invite friend.";
+        errmsg = "Failed to invite contact to group.";
         line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
         return;
     }
 
     char msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "Invited friend to Room #%d.", groupnum);
+    snprintf(msg, sizeof(msg), "Invited contact to Group %d.", groupnum);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
 }
 

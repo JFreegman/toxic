@@ -377,7 +377,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Enter ");
     wattroff(self->window, A_BOLD);
-    wprintw(self->window, "key. Delete a friend with the");
+    wprintw(self->window, "key. Delete a contact with the");
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Delete ");
     wattroff(self->window, A_BOLD);
@@ -614,6 +614,6 @@ ToxWindow new_friendlist(void)
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _SUPPORT_AUDIO */
 
-    strcpy(ret.name, "friends");
+    strcpy(ret.name, "contacts");
     return ret;
 }

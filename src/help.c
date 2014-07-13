@@ -131,7 +131,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "Global Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /add <id> <msg>            : Add friend with optional message\n");
+    wprintw(win, "  /add <id> <msg>            : Add contact with optional message\n");
     wprintw(win, "  /accept <n>                : Accept friend request\n");
     wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
@@ -169,7 +169,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "Chat Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /invite <n>                : Invite friend to a group chat\n");
+    wprintw(win, "  /invite <n>                : Invite contact to a group chat\n");
     wprintw(win, "  /join                      : Join a pending group chat\n");
     wprintw(win, "  /sendfile <path>           : Send a file\n");
     wprintw(win, "  /savefile <n>              : Receive a file\n");
