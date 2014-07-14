@@ -20,6 +20,10 @@
  *
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE    /* needed for wcswidth() */
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
@@ -275,7 +279,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     (void) x;
 
-    int new_x = ctx->start ? x2 - 1 : ctx->pos;
+    int new_x = ctx->start ? x2 - 1 : wcswidth(ctx->line, ctx->pos);
     wmove(self->window, y + 1, new_x);
 
     wrefresh(self->window);

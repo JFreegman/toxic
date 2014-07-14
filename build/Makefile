@@ -1,4 +1,4 @@
-TOXIC_VERSION = 0.4.4
+TOXIC_VERSION = 0.4.5
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
@@ -15,7 +15,7 @@ MANFILES = toxic.1 toxic.conf.5
 
 LIBS = libtoxcore ncursesw
 
-CFLAGS = -std=gnu99 -pthread -Wall
+CFLAGS = -std=gnu99 -pthread -Wall -g
 CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
 CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)

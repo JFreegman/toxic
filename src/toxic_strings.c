@@ -29,59 +29,98 @@
 #include "misc_tools.h"
 #include "toxic_strings.h"
 
-/* Adds char to line at pos */
-void add_char_to_buf(ChatContext *ctx, wint_t ch)
+/* Adds char to line at pos. Return 0 on success, -1 if line buffer is full */
+int add_char_to_buf(ChatContext *ctx, wint_t ch)
 {
-    if (ctx->len >= MAX_STR_SIZE)
-        return;
+    if (ctx->len >= MAX_STR_SIZE - 1)
+        return -1;
 
     wmemmove(&ctx->line[ctx->pos + 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     ctx->line[ctx->pos++] = ch;
     ctx->line[++ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the character before pos */
-void del_char_buf_bck(ChatContext *ctx)
+/* Deletes the character before pos. Return 0 on success, -1 if nothing to delete */
+int del_char_buf_bck(ChatContext *ctx)
 {
-    if (ctx->pos == 0)
-        return;
+    if (ctx->pos <= 0)
+        return -1;
 
     wmemmove(&ctx->line[ctx->pos - 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     --ctx->pos;
     ctx->line[--ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the character at pos */
-void del_char_buf_frnt(ChatContext *ctx)
+/* Deletes the character at pos. Return 0 on success, -1 if nothing to delete. */
+int del_char_buf_frnt(ChatContext *ctx)
 {
     if (ctx->pos >= ctx->len)
-        return;
+        return -1;
 
     wmemmove(&ctx->line[ctx->pos], &ctx->line[ctx->pos + 1], ctx->len - ctx->pos - 1);
     ctx->line[--ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the line from beginning to pos */
-void discard_buf(ChatContext *ctx)
+/* Deletes the line from beginning to pos and puts discarded portion in yank buffer.
+   Return 0 on success, -1 if noting to discard. */
+int discard_buf(ChatContext *ctx)
 {
     if (ctx->pos <= 0)
-        return;
+        return -1;
+
+    ctx->yank_len = ctx->pos;
+    wmemcpy(ctx->yank, ctx->line, ctx->yank_len);
+    ctx->yank[ctx->yank_len] = L'\0';
 
     wmemmove(ctx->line, &ctx->line[ctx->pos], ctx->len - ctx->pos);
     ctx->len -= ctx->pos;
     ctx->pos = 0;
     ctx->start = 0;
     ctx->line[ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the line from pos to len */
-void kill_buf(ChatContext *ctx)
+/* Deletes the line from pos to len and puts killed portion in yank buffer.
+   Return 0 on success, -1 if nothing to kill. */
+int kill_buf(ChatContext *ctx)
 {
-    if (ctx->len == ctx->pos)
-        return;
+    if (ctx->len <= ctx->pos)
+        return -1;
+
+    ctx->yank_len = ctx->len - ctx->pos;
+    wmemcpy(ctx->yank, &ctx->line[ctx->pos], ctx->yank_len);
+    ctx->yank[ctx->yank_len] = L'\0';
 
     ctx->line[ctx->pos] = L'\0';
     ctx->len = ctx->pos;
+
+    return 0;
+}
+
+/* Inserts string in ctx->yank into line at pos.
+   Return 0 on success, -1 if yank buffer is empty or too long */
+int yank_buf(ChatContext *ctx)
+{
+    if (!ctx->yank[0])
+        return -1;
+
+    if (ctx->yank_len + ctx->len >= MAX_STR_SIZE - 1)
+        return -1;
+
+    wmemmove(&ctx->line[ctx->pos + ctx->yank_len], &ctx->line[ctx->pos], ctx->len - ctx->pos);
+    wmemcpy(&ctx->line[ctx->pos], ctx->yank, ctx->yank_len);
+
+    ctx->pos += ctx->yank_len;
+    ctx->len += ctx->yank_len;
+    ctx->line[ctx->len] = L'\0';
+    return 0;
 }
 
 /* nulls line and sets pos, len and start to 0 */

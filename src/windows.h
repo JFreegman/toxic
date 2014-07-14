@@ -183,6 +183,9 @@ struct ChatContext {
     int hst_pos;
     int hst_tot;
 
+    wchar_t yank[MAX_STR_SIZE];    /* contains last killed/discarded line */
+    int yank_len;
+
     struct history *hst;
     struct chatlog *log;
 

@@ -62,6 +62,7 @@
 #define T_KEY_C_V        0x16     /* ctrl-v */
 #define T_KEY_C_F        0x06     /* ctrl-f */
 #define T_KEY_C_H        0x08     /* ctrl-h */
+#define T_KEY_C_Y        0x19     /* ctrl-y */
 
 typedef enum _FATAL_ERRS {
     FATALERR_MEMORY = -1,           /* malloc() or calloc() failed */
