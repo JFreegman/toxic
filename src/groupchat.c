@@ -177,7 +177,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     uint16_t n_len = tox_get_self_name(m, (uint8_t *) selfnick);
     selfnick[n_len] = '\0';
 
-    bool nick_match = strcasestr(action, selfnick);
+    const char *nick_match = strcasestr(action, selfnick);
 
     if (nick_match) {
         alert_type = WINDOW_ALERT_0;

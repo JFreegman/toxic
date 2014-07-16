@@ -234,18 +234,23 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     char tmp[MAX_STR_SIZE];
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[ctx->pos] = '\0';
-    char *sub = strrchr(tmp, ' ');
+    const char *s = strrchr(tmp, ' ');
+    char *sub = malloc(strlen(ubuf) + 1);
     int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */
 
-    if (!sub++) {
-        sub = tmp;
+    if (!s) {
+        strcpy(sub, tmp);
 
         if (sub[0] != '/')    /* make sure it's not a command */
             n_endchrs = 2;
+    } else {
+        strcpy(sub, &s[1]);
     }
 
-    if (string_is_empty(sub))
+    if (string_is_empty(sub)) {
+        free(sub);
         return -1;
+    }
 
     int s_len = strlen(sub);
     const char *match;
@@ -259,6 +264,8 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
         if ((is_match = strncasecmp(match, sub, s_len) == 0))
             break;
     }
+
+    free(sub);
 
     if (!is_match)
         return -1;
