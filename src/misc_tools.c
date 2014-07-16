@@ -108,7 +108,7 @@ char *hex_string_to_bin(const char *hex_string)
 }
 
 /* Returns 1 if the string is empty, 0 otherwise */
-int string_is_empty(char *string)
+int string_is_empty(const char *string)
 {
     return string[0] == '\0';
 }
@@ -197,23 +197,23 @@ int valid_nick(char *nick)
 void get_file_name(char *namebuf, int bufsize, const char *pathname)
 {
     int idx = strlen(pathname) - 1;
-
-    char tmpname[MAX_STR_SIZE];
-    snprintf(tmpname, sizeof(tmpname), "%s", pathname);
+    char *path = strdup(pathname);
 
     while (idx >= 0 && pathname[idx] == '/')
-        tmpname[idx--] = '\0';
+        path[idx--] = '\0';
 
-    char *filename = strrchr(tmpname, '/');
+    char *finalname = strdup(path);
+    const char *basenm = strrchr(path, '/');
 
-    if (filename != NULL) {
-        if (!strlen(++filename))
-            filename = tmpname;
-    } else {
-        filename = tmpname;
+    if (basenm != NULL) {
+        if (basenm[1])
+            strcpy(finalname, &basenm[1]);
     }
 
-    snprintf(namebuf, bufsize, "%s", filename);
+    snprintf(namebuf, bufsize, "%s", finalname);
+
+    free(finalname);
+    free(path);
 }
 
 /* converts str to all lowercase */
@@ -233,4 +233,18 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum)
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     return len;
+}
+
+/* returns index of the first instance of ch in s starting at idx.
+   returns length of s if char not found */
+int char_find(int idx, const char *s, char ch)
+{
+    int i = 0;
+
+    for (i = idx; s[i]; ++i) {
+        if (s[i] == ch)
+            break;
+    }
+
+    return i;
 }

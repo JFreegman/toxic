@@ -185,7 +185,8 @@ static void input_history(ToxWindow *self, wint_t key, int mx_x)
     ChatContext *ctx = self->chatwin;
 
     fetch_hist_item(ctx, key);
-    ctx->start = mx_x * (ctx->len / mx_x);
+    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+    ctx->start = wlen < mx_x ? 0 : wlen - mx_x + 1;
 }
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.

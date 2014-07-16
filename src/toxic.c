@@ -641,7 +641,7 @@ int main(int argc, char *argv[])
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
 
-    uint64_t last_save = get_unix_time();
+    uint64_t last_save = (uint64_t) time(NULL);
 
     while (true) {
         update_unix_time();
