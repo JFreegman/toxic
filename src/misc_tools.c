@@ -199,10 +199,17 @@ void get_file_name(char *namebuf, int bufsize, const char *pathname)
     int idx = strlen(pathname) - 1;
     char *path = strdup(pathname);
 
+    if (path == NULL)
+        exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+
     while (idx >= 0 && pathname[idx] == '/')
         path[idx--] = '\0';
 
     char *finalname = strdup(path);
+
+    if (finalname == NULL)
+        exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+
     const char *basenm = strrchr(path, '/');
 
     if (basenm != NULL) {
@@ -211,7 +218,6 @@ void get_file_name(char *namebuf, int bufsize, const char *pathname)
     }
 
     snprintf(namebuf, bufsize, "%s", finalname);
-
     free(finalname);
     free(path);
 }

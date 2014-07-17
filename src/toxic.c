@@ -369,7 +369,7 @@ static void load_friendlist(Tox *m)
 
 /*
  * Store Messenger to given location
- * Return 0 stored successfully
+ * Return 0 stored successfully or ignoring data file
  * Return 1 file path is NULL
  * Return 2 malloc failed
  * Return 3 opening path failed
@@ -383,19 +383,15 @@ int store_data(Tox *m, char *path)
     if (path == NULL)
         return 1;
 
-    FILE *fd;
-    int len;
-    char *buf;
-
-    len = tox_size(m);
-    buf = malloc(len);
+    int len = tox_size(m);
+    char *buf = malloc(len);
 
     if (buf == NULL)
         return 2;
 
     tox_save(m, (uint8_t *) buf);
 
-    fd = fopen(path, "wb");
+    FILE *fd = fopen(path, "wb");
 
     if (fd == NULL) {
         free(buf);
@@ -419,15 +415,13 @@ static void load_data(Tox *m, char *path)
         return;
 
     FILE *fd;
-    int len;
-    char *buf;
 
     if ((fd = fopen(path, "rb")) != NULL) {
         fseek(fd, 0, SEEK_END);
-        len = ftell(fd);
+        int len = ftell(fd);
         fseek(fd, 0, SEEK_SET);
 
-        buf = malloc(len);
+        char *buf = malloc(len);
 
         if (buf == NULL) {
             fclose(fd);
@@ -526,6 +520,10 @@ static void parse_args(int argc, char *argv[])
         switch (opt) {
             case 'f':
                 DATA_FILE = strdup(optarg);
+
+                if (DATA_FILE == NULL)
+                    exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+
                 break;
 
             case 'x':
@@ -573,6 +571,9 @@ int main(int argc, char *argv[])
     if (DATA_FILE == NULL ) {
         if (config_err) {
             DATA_FILE = strdup("data");
+
+            if (DATA_FILE == NULL)
+                exit_toxic_err("failed in main", FATALERR_MEMORY);
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
 

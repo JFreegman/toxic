@@ -235,8 +235,12 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[ctx->pos] = '\0';
     const char *s = strrchr(tmp, ' ');
-    char *sub = malloc(strlen(ubuf) + 1);
     int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */
+
+    char *sub = malloc(strlen(ubuf) + 1);
+
+    if (sub == NULL)
+        exit_toxic_err("failed in complete_line", FATALERR_MEMORY);
 
     if (!s) {
         strcpy(sub, tmp);
