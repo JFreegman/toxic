@@ -239,9 +239,9 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum)
    returns length of s if char not found */
 int char_find(int idx, const char *s, char ch)
 {
-    int i = 0;
+    int i = idx;
 
-    for (i = idx; s[i]; ++i) {
+    for ( ; s[i]; ++i) {
         if (s[i] == ch)
             break;
     }

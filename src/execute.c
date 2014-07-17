@@ -84,14 +84,14 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
     char *cmd = strdup(input);
     int num_args = 0;
     int i = 0;    /* index of last char in an argument */
+    bool cmd_end = false;
 
     /* characters wrapped in double quotes count as one arg */
-    while (cmd[i] && num_args < MAX_NUM_ARGS) {
+    while (!cmd_end && num_args < MAX_NUM_ARGS) {
         int qt_ofst = 0;    /* set to 1 to offset index for quote char at end of arg */
 
         if (*cmd == '\"') {
             qt_ofst = 1;
-
             i = char_find(1, cmd, '\"');
 
             if (cmd[i] == '\0') {
@@ -107,8 +107,10 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
         memcpy(args[num_args], cmd, i + qt_ofst);
         args[num_args++][i + qt_ofst] = '\0';
 
-        if (cmd[i] != '\0')
+        if (cmd[i])
             strcpy(cmd, &cmd[i + 1]);
+        else
+            cmd_end = true;
     }
 
     free(cmd);
