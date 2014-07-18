@@ -52,16 +52,6 @@ int yank_buf(ChatContext *ctx);
 /* Removes trailing spaces from line. */
 void rm_trailing_spaces_buf(ChatContext *ctx);
 
-/* looks for the first instance in list that begins with the last entered word in line according to pos,
-   then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john".
-
-   list is a pointer to the list of strings being compared, n_items is the number of items
-   in the list, and size is the size of each item in the list.
-
-   Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ChatContext *ctx, const void *list, int n_items, int size);
-
 /* adds a line to the ln_history buffer at hst_pos and sets hst_pos to last history item. */
 void add_line_to_hist(ChatContext *ctx);
 

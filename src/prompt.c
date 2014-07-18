@@ -39,6 +39,7 @@
 #include "settings.h"
 #include "input.h"
 #include "help.h"
+#include "autocomplete.h"
 
 char pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint16_t num_frnd_requests = 0;

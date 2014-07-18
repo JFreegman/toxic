@@ -41,6 +41,7 @@
 #include "settings.h"
 #include "input.h"
 #include "help.h"
+#include "autocomplete.h"
 
 extern char *DATA_FILE;
 

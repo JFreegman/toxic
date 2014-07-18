@@ -41,6 +41,7 @@
 #include "settings.h"
 #include "input.h"
 #include "help.h"
+#include "autocomplete.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -685,21 +686,22 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     input_handle(self, key, x, y, x2, y2);
 
-    if (key == '\t') {    /* TAB key: auto-completes command */
-        if (ctx->len > 1 && ctx->line[0] == '/') {
-            int diff = complete_line(ctx, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
+    if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
+        int diff = -1;
+        int sf_len = 11;
 
-            if (diff != -1) {
-                if (x + diff > x2 - 1) {
-                    wmove(self->window, y, x + diff);
-                    ctx->start += diff;
-                } else {
-                    wmove(self->window, y, x + diff);
-                }
-            } else 
-                beep();
-        } else
+        if (wcsncmp(ctx->line, L"/sendfile \"", sf_len) == 0) {
+            diff = dir_match(self, m, &ctx->line[sf_len]);
+        } else {
+            diff = complete_line(ctx, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
+        }
+
+        if (diff != -1) {
+            if (x + diff > x2 - 1)
+                ctx->start += diff;
+        } else {
             beep();
+        }
 
     } else if (key == '\n') {
         rm_trailing_spaces_buf(ctx);

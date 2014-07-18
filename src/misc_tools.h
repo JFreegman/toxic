@@ -93,4 +93,8 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum);
    returns length of s if char not found */
 int char_find(int idx, const char *s, char ch);
 
+/* returns index of the last instance of ch in s
+   returns 0 if char not found */
+int char_rfind(const char *s, char ch, int len);
+
 #endif /* #define _misc_tools_h */

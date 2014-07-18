@@ -25,6 +25,7 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
+#include <dirent.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -247,7 +248,21 @@ int char_find(int idx, const char *s, char ch)
 {
     int i = idx;
 
-    for ( ; s[i]; ++i) {
+    for (i = idx; s[i]; ++i) {
+        if (s[i] == ch)
+            break;
+    }
+
+    return i;
+}
+
+/* returns index of the last instance of ch in s starting at len
+   returns 0 if char not found (skips 0th index) */
+int char_rfind(const char *s, char ch, int len)
+{
+    int i = 0;
+
+    for (i = len; i > 0; --i) {
         if (s[i] == ch)
             break;
     }
