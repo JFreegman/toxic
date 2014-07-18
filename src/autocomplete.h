@@ -23,21 +23,21 @@
 #ifndef _autocomplete_h
 #define _autocomplete_h
 
-/* looks for the first instance in list that begins with the last entered word in line according to pos,
+/* looks for all instances in list that begin with the last entered word in line according to pos,
    then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john". Works slightly differently for directory paths with the same results.
+   with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
 
    list is a pointer to the list of strings being compared, n_items is the number of items
    in the list, and size is the size of each item in the list.
 
    Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ChatContext *ctx, const void *list, int n_items, int size);
+int complete_line(ToxWindow *self, const void *list, int n_items, int size);
 
 /* matches /sendfile "<incomplete-dir>" line to matching directories.
 
-   if only one match, auto-complete line and return diff between old len and new len.
-   return 0 if > 1 match and print out all the matches
-   return -1 if no matches  */
+   if only one match, auto-complete line.
+   return diff between old len and new len of ctx->line, or -1 if no matches 
+*/
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line);
 
 #endif  /* #define _autocomplete_h */

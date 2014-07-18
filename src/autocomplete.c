@@ -36,9 +36,23 @@
 #include "line_info.h"
 #include "execute.h"
 
+static void print_matches(ToxWindow *self, Tox *m, const void *list, int n_items, int size)
+{
+    if (m)
+        execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
+
+    const char *L = (char *) list;
+    int i;
+
+    for (i = 0; i < n_items; ++i)
+        line_info_add(self, NULL, NULL, NULL, &L[i * size], SYS_MSG, 0, 0);
+
+    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);   /* formatting */
+}
+
 /* puts match in match buffer. if more than one match, add first n chars that are identical.
    e.g. if matches contains: [foo, foobar, foe] we put fo in matches. */
-static void get_str_match(char *match, char (*matches)[MAX_STR_SIZE], int n)
+static void get_str_match(ToxWindow *self, char *match, char (*matches)[MAX_STR_SIZE], int n)
 {
     if (n == 1) {
         strcpy(match, matches[0]);
@@ -46,16 +60,8 @@ static void get_str_match(char *match, char (*matches)[MAX_STR_SIZE], int n)
     }
 
     int i;
-    int shortest = MAX_STR_SIZE;
 
-    for (i = 0; i < n; ++i) {
-        int m_len = strlen(matches[i]);
-
-        if (m_len < shortest)
-            shortest = m_len;
-    }
-
-    for (i = 0; i < shortest; ++i) {
+    for (i = 0; i < MAX_STR_SIZE; ++i) {
         char ch = matches[0][i];
         int j;
 
@@ -71,21 +77,22 @@ static void get_str_match(char *match, char (*matches)[MAX_STR_SIZE], int n)
     strcpy(match, matches[0]);
 }
 
-/* looks for the first instance in list that begins with the last entered word in line according to pos,
+/* looks for all instances in list that begin with the last entered word in line according to pos,
    then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john". Works slightly differently for directory paths with the same results.
+   with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
 
    list is a pointer to the list of strings being compared, n_items is the number of items
    in the list, and size is the size of each item in the list.
 
    Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
+int complete_line(ToxWindow *self, const void *list, int n_items, int size)
 {
+    ChatContext *ctx = self->chatwin;
+
     if (ctx->pos <= 0 || ctx->len <= 0 || ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE)
         return -1;
 
     const char *L = (char *) list;
-
     const char *endchrs = " ";
     char ubuf[MAX_STR_SIZE];
 
@@ -147,8 +154,11 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     if (!n_matches)
         return -1;
 
-    char match[size];
-    get_str_match(match, matches, n_matches);
+    if (!dir_search && n_matches > 1)
+        print_matches(self, NULL, matches, n_matches, MAX_STR_SIZE);
+
+    char match[MAX_STR_SIZE];
+    get_str_match(self, match, matches, n_matches);
 
     if (dir_search) {
         if (n_matches == 1)
@@ -191,7 +201,6 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
 /* matches /sendfile "<incomplete-dir>" line to matching directories.
 
    if only one match, auto-complete line.
-   if > 1 match, print out all the matches and partially complete line
    return diff between old len and new len of ctx->line, or -1 if no matches 
 */
 #define MAX_DIRS 256
@@ -237,14 +246,8 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line)
     if (dircount == 0)
         return -1;
 
-    if (dircount > 1) {
-        execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
+    if (dircount > 1)
+        print_matches(self, m, dirnames, dircount, NAME_MAX);
 
-        int i;
-
-        for (i = 0; i < dircount; ++i)
-            line_info_add(self, NULL, NULL, NULL, dirnames[i], SYS_MSG, 0, 0);
-    }
-
-    return complete_line(self->chatwin, dirnames, dircount, NAME_MAX);
+    return complete_line(self, dirnames, dircount, NAME_MAX);
 }

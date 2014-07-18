@@ -366,17 +366,15 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             int diff;
 
             if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
-                diff = complete_line(ctx, groupchats[self->num].peer_names,
+                diff = complete_line(self, groupchats[self->num].peer_names,
                                          groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
             else
-                diff = complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+                diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
-                    wmove(self->window, y, x + diff);
-                    ctx->start += diff;
-                } else {
-                    wmove(self->window, y, x + diff);
+                    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+                    ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
                 beep();
