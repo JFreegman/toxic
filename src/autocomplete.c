@@ -188,10 +188,10 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
 
 /* matches /sendfile "<incomplete-dir>" line to matching directories.
 
-   if only one match, auto-complete line and return diff between old len and new len.
-   return 0 if > 1 match and print out all the matches
-   return -1 if no matches  */
-
+   if only one match, auto-complete line.
+   if > 1 match, print out all the matches and partially complete line
+   return diff between old len and new len of ctx->line, or -1 if no matches 
+*/
 #define MAX_DIRS 256
 
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line)
@@ -242,9 +242,6 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line)
 
         for (i = 0; i < dircount; ++i)
             line_info_add(self, NULL, NULL, NULL, dirnames[i], SYS_MSG, 0, 0);
-
-        complete_line(self->chatwin, dirnames, dircount, NAME_MAX);
-        return 0;
     }
 
     return complete_line(self->chatwin, dirnames, dircount, NAME_MAX);
