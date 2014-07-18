@@ -86,7 +86,6 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
 
     const char *L = (char *) list;
 
-    bool dir_search = false;
     const char *endchrs = " ";
     char ubuf[MAX_STR_SIZE];
 
@@ -94,30 +93,33 @@ int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
     if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1)
         return -1;
 
+    bool dir_search = strncmp(ubuf, "/sendfile", strlen("/sendfile")) == 0;
+
     /* isolate substring from space behind pos to pos */
     char tmp[MAX_STR_SIZE];
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[ctx->pos] = '\0';
 
-    const char *s = strrchr(tmp, ' ');
+    const char *s = dir_search ? strchr(tmp, '\"') : strrchr(tmp, ' ');
     char *sub = malloc(strlen(ubuf) + 1);
 
     if (sub == NULL)
         exit_toxic_err("failed in complete_line", FATALERR_MEMORY);
 
-    if (!s) {
+    if (!s && !dir_search) {
         strcpy(sub, tmp);
 
         if (sub[0] != '/')
             endchrs = ": ";
-    } else {
+    } else if (s) {
         strcpy(sub, &s[1]);
 
-        if (strncmp(ubuf, "/sendfile", strlen("/sendfile")) == 0) {
-            dir_search = true;
+        if (dir_search) {
             int sub_len = strlen(sub);
             int si = char_rfind(sub, '/', sub_len);
-            memmove(sub, &sub[si + 1], sub_len - si);
+
+            if (si || *sub == '/')
+                memmove(sub, &sub[si + 1], sub_len - si);
         }
     }
 
