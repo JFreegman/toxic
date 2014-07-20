@@ -31,6 +31,7 @@
 #include "global_commands.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "notify.h"
 
 struct cmd_func {
     const char *name;
@@ -158,5 +159,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode)
     if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Invalid command.", SYS_MSG, 0, 0);
+    /* Just play sound instead */
+    /*line_info_add(self, NULL, NULL, NULL, "Invalid command.", SYS_MSG, 0, 0);*/
+    notify(self, error, 0);
 }

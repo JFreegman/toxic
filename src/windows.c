@@ -366,23 +366,11 @@ void on_window_resize(void)
 
 static void draw_window_tab(ToxWindow toxwin)
 {
-    /* alert0 takes priority */
-    if (toxwin.alert0)
-        attron(COLOR_PAIR(GREEN));
-    else if (toxwin.alert1)
-        attron(COLOR_PAIR(RED));
-    else if (toxwin.alert2)
-        attron(COLOR_PAIR(MAGENTA));
-
+    if (toxwin.alert) attron(COLOR_PAIR(toxwin.alert));
     clrtoeol();
     printw(" [%s]", toxwin.name);
 
-    if (toxwin.alert0)
-        attroff(COLOR_PAIR(GREEN));
-    else if (toxwin.alert1)
-        attroff(COLOR_PAIR(RED));
-    else if (toxwin.alert2)
-        attroff(COLOR_PAIR(MAGENTA));
+    if (toxwin.alert) attroff(COLOR_PAIR(toxwin.alert));
 }
 
 static void draw_bar(void)
@@ -430,9 +418,7 @@ static void draw_bar(void)
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = active_window;
-    a->alert0 = false;
-    a->alert1 = false;
-    a->alert2 = false;
+    a->alert = WINDOW_ALERT_NONE;
 
     wint_t ch = 0;
 

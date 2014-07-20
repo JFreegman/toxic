@@ -37,6 +37,7 @@
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
+#include "notify.h"
 #endif
 
 extern char *DATA_FILE;
@@ -47,7 +48,7 @@ static int num_selected = 0;
 static int num_friends = 0;
 
 extern struct _Winthread Winthread;
-extern struct user_settings *user_settings;
+extern struct user_settings *user_settings_;
 
 ToxicFriend friends[MAX_FRIENDS_NUM];
 static int friendlist_index[MAX_FRIENDS_NUM] = {0};
@@ -91,7 +92,7 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
     friends[num].last_online.tm = *localtime((const time_t*)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
-    const char *t = user_settings->time == TIME_12 ? "%I:%M %p" : "%H:%M";
+    const char *t = user_settings_->time == TIME_12 ? "%I:%M %p" : "%H:%M";
     strftime(friends[num].last_online.hour_min_str, TIME_STR_SIZE, t,
              &friends[num].last_online.tm);
 }
@@ -104,6 +105,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
+            notify(self, generic_message, NT_NOFOCUS);
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
@@ -115,7 +117,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
 
             char *msg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
-            alert_window(prompt, WINDOW_ALERT_1, true);
+            notify(prompt, error, NT_WNDALERT_1);
         }
     }
 }
@@ -126,6 +128,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, 
         return;
 
     friends[num].online = status;
+    notify(self, status==1 ? user_log_in : user_log_out, NT_RESTOL | NT_NOTIFWND );
     update_friend_last_online(num, get_unix_time());
     store_data(m, DATA_FILE);
     sort_friendlist_index();
@@ -176,7 +179,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
             friends[i].chatwin = -1;
             friends[i].online = false;
             friends[i].status = TOX_USERSTATUS_NONE;
-            friends[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
+            friends[i].logging_on = (bool) user_settings_->autolog == AUTOLOG_ON;
             tox_get_client_id(m, num, (uint8_t *) friends[i].pub_key);
             update_friend_last_online(i, tox_get_last_online(m, i));
 
@@ -213,6 +216,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
+            notify(self, transfer_pending, NT_NOFOCUS);
         } else {
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
 
@@ -222,8 +226,8 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* File transfer from %s failed: too many windows are open.", nick);
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
-
-            alert_window(prompt, WINDOW_ALERT_1, true);
+            
+            notify(prompt, error, NT_WNDALERT_1);
         }
     }
 }
@@ -236,6 +240,8 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
+            notify(self, generic_message, NT_NOFOCUS);
+            
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
@@ -243,8 +249,8 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "* Group chat invite from %s failed: too many windows are open.", nick);
             line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
-
-            alert_window(prompt, WINDOW_ALERT_1, true);
+            
+            notify(prompt, error, NT_WNDALERT_1);
         }
     }
 }
@@ -348,7 +354,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 char *msg = "* Warning: Too many windows are open.";
                 line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
 
-                alert_window(prompt, WINDOW_ALERT_1, true);
+                notify(prompt, error, NT_WNDALERT_1);
             }
         } else if (key == KEY_DC) {
             del_friend_activate(self, m, f);
@@ -558,8 +564,9 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 
     if (friends[id].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            if (toxav_get_call_state(av, call_index) == av_CallStarting) /* Only open windows when call is incoming */
+            if (toxav_get_call_state(av, call_index) == av_CallStarting) { /* Only open windows when call is incoming */
                 friends[id].chatwin = add_window(m, new_chat(m, friends[id].num));
+            }            
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, friends[id].num);
@@ -570,8 +577,8 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 
             char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
-
-            alert_window(prompt, WINDOW_ALERT_0, true);
+            
+            notify(prompt, error, NT_WNDALERT_1);
         }
     }
 }
@@ -614,6 +621,8 @@ ToxWindow new_friendlist(void)
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _SUPPORT_AUDIO */
 
+    ret.active_sound = -1;
+    
     strcpy(ret.name, "friends");
     return ret;
 }

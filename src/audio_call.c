@@ -27,6 +27,7 @@
 #include "chat_commands.h"
 #include "global_commands.h"
 #include "line_info.h"
+#include "notify.h"
 
 #include <curses.h>
 #include <string.h>
@@ -82,17 +83,17 @@ struct _ASettings {
     Call calls[MAX_CALLS];
 } ASettins;
 
-void callback_recv_invite   ( int32_t call_index, void *arg );
-void callback_recv_ringing  ( int32_t call_index, void *arg );
-void callback_recv_starting ( int32_t call_index, void *arg );
-void callback_recv_ending   ( int32_t call_index, void *arg );
-void callback_recv_error    ( int32_t call_index, void *arg );
-void callback_call_started  ( int32_t call_index, void *arg );
-void callback_call_canceled ( int32_t call_index, void *arg );
-void callback_call_rejected ( int32_t call_index, void *arg );
-void callback_call_ended    ( int32_t call_index, void *arg );
-void callback_requ_timeout  ( int32_t call_index, void *arg );
-void callback_peer_timeout  ( int32_t call_index, void *arg );
+void callback_recv_invite   ( void* av, int32_t call_index, void *arg );
+void callback_recv_ringing  ( void* av, int32_t call_index, void *arg );
+void callback_recv_starting ( void* av, int32_t call_index, void *arg );
+void callback_recv_ending   ( void* av, int32_t call_index, void *arg );
+void callback_call_started  ( void* av, int32_t call_index, void *arg );
+void callback_call_canceled ( void* av, int32_t call_index, void *arg );
+void callback_call_rejected ( void* av, int32_t call_index, void *arg );
+void callback_call_ended    ( void* av, int32_t call_index, void *arg );
+void callback_requ_timeout  ( void* av, int32_t call_index, void *arg );
+void callback_peer_timeout  ( void* av, int32_t call_index, void *arg );
+void callback_media_change  ( void* av, int32_t call_index, void *arg );
 
 int stop_transmission(int call_index);
 void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size);
@@ -127,19 +128,19 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
         return ASettins.av = NULL;
     }
 
-    toxav_register_callstate_callback(callback_call_started, av_OnStart, self);
-    toxav_register_callstate_callback(callback_call_canceled, av_OnCancel, self);
-    toxav_register_callstate_callback(callback_call_rejected, av_OnReject, self);
-    toxav_register_callstate_callback(callback_call_ended, av_OnEnd, self);
-    toxav_register_callstate_callback(callback_recv_invite, av_OnInvite, self);
+    toxav_register_callstate_callback(ASettins.av, callback_call_started, av_OnStart, self);
+    toxav_register_callstate_callback(ASettins.av, callback_call_canceled, av_OnCancel, self);
+    toxav_register_callstate_callback(ASettins.av, callback_call_rejected, av_OnReject, self);
+    toxav_register_callstate_callback(ASettins.av, callback_call_ended, av_OnEnd, self);
+    toxav_register_callstate_callback(ASettins.av, callback_recv_invite, av_OnInvite, self);
 
-    toxav_register_callstate_callback(callback_recv_ringing, av_OnRinging, self);
-    toxav_register_callstate_callback(callback_recv_starting, av_OnStarting, self);
-    toxav_register_callstate_callback(callback_recv_ending, av_OnEnding, self);
+    toxav_register_callstate_callback(ASettins.av, callback_recv_ringing, av_OnRinging, self);
+    toxav_register_callstate_callback(ASettins.av, callback_recv_starting, av_OnStarting, self);
+    toxav_register_callstate_callback(ASettins.av, callback_recv_ending, av_OnEnding, self);
 
-    toxav_register_callstate_callback(callback_recv_error, av_OnError, self);
-    toxav_register_callstate_callback(callback_requ_timeout, av_OnRequestTimeout, self);
-    toxav_register_callstate_callback(callback_peer_timeout, av_OnPeerTimeout, self);
+    toxav_register_callstate_callback(ASettins.av, callback_requ_timeout, av_OnRequestTimeout, self);
+    toxav_register_callstate_callback(ASettins.av, callback_peer_timeout, av_OnPeerTimeout, self);
+    toxav_register_callstate_callback(ASettins.av, callback_media_change, av_OnMediaChange, self);
     
     toxav_register_audio_recv_callback(ASettins.av, write_device_callback);
 
@@ -240,15 +241,15 @@ int stop_transmission(int call_index)
 #define CB_BODY(call_idx, Arg, onFunc) do { ToxWindow* windows = (Arg); int i;\
 for (i = 0; i < MAX_WINDOWS_NUM; ++i) if (windows[i].onFunc != NULL) windows[i].onFunc(&windows[i], ASettins.av, call_idx); } while (0)
 
-void callback_recv_invite ( int32_t call_index, void* arg )
+void callback_recv_invite ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onInvite);
 }
-void callback_recv_ringing ( int32_t call_index, void* arg )
+void callback_recv_ringing ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onRinging);
 }
-void callback_recv_starting ( int32_t call_index, void* arg )
+void callback_recv_starting ( void* av, int32_t call_index, void* arg )
 {
     ToxWindow* windows = arg; 
     int i;
@@ -261,17 +262,13 @@ void callback_recv_starting ( int32_t call_index, void* arg )
             return;
         }
 }
-void callback_recv_ending ( int32_t call_index, void* arg )
+void callback_recv_ending ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnding);
     stop_transmission(call_index);
 }
-void callback_recv_error ( int32_t call_index, void* arg )
-{
-    CB_BODY(call_index, arg, onError);
-    stop_transmission(call_index);
-}
-void callback_call_started ( int32_t call_index, void* arg )
+
+void callback_call_started ( void* av, int32_t call_index, void* arg )
 {    
     ToxWindow* windows = arg; 
     int i;
@@ -284,28 +281,28 @@ void callback_call_started ( int32_t call_index, void* arg )
             }
         }
 }
-void callback_call_canceled ( int32_t call_index, void* arg )
+void callback_call_canceled ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onCancel);
 
     /* In case call is active */
     stop_transmission(call_index);
 }
-void callback_call_rejected ( int32_t call_index, void* arg )
+void callback_call_rejected ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onReject);
 }
-void callback_call_ended ( int32_t call_index, void* arg )
+void callback_call_ended ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnd);
     stop_transmission(call_index);
 }
 
-void callback_requ_timeout ( int32_t call_index, void* arg )
+void callback_requ_timeout ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onRequestTimeout);
 }
-void callback_peer_timeout ( int32_t call_index, void* arg )
+void callback_peer_timeout ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onPeerTimeout);
     stop_transmission(call_index);
@@ -313,6 +310,10 @@ void callback_peer_timeout ( int32_t call_index, void* arg )
      * actions that one can possibly take on timeout
      */
     toxav_stop_call(ASettins.av, call_index);
+}
+void callback_media_change(void* av, int32_t call_index, void* arg)
+{
+  /*... TODO cance all media change requests */
 }
 /*
  * End of Callbacks
@@ -476,6 +477,9 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto on_error;
     }
 
+    stop_sound(self->active_sound);
+    self->active_sound = -1;
+    
     /* Callback will print status... */
 
     return;

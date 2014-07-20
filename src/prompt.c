@@ -35,13 +35,14 @@
 #include "settings.h"
 #include "input.h"
 #include "help.h"
+#include "notify.h"
 
 char pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint16_t num_frnd_requests = 0;
 extern ToxWindow *prompt;
 struct _Winthread Winthread;
 
-extern struct user_settings *user_settings;
+extern struct user_settings *user_settings_;
 
 /* Array of global command names used for tab completion. */
 const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -304,11 +305,13 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
         msg = "has come online";
         line_info_add(self, timefrmt, nick, NULL, msg, CONNECTION, 0, GREEN);
         write_to_log(msg, nick, ctx->log, true);
-        alert_window(self, WINDOW_ALERT_2, false);
+        notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
+        
     } else {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, msg, CONNECTION, 0, RED);
         write_to_log(msg, nick, ctx->log, true);
+        notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
     }
 }
 
@@ -336,7 +339,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
 
     snprintf(msg, sizeof(msg), "Type \"/accept %d\" to accept it.", n);
     line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    alert_window(self, WINDOW_ALERT_1, true);
+    notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND);
 }
 
 void prompt_init_statusbar(ToxWindow *self, Tox *m)
@@ -415,7 +418,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings->autolog == AUTOLOG_ON) {
+    if (user_settings_->autolog == AUTOLOG_ON) {
         char myid[TOX_FRIEND_ADDRESS_SIZE];
         tox_get_address(m, (uint8_t *) myid);
         log_enable(self->name, myid, ctx->log);

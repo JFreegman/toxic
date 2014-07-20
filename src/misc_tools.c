@@ -32,7 +32,7 @@
 #include "settings.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings;
+extern struct user_settings *user_settings_;
 
 static uint64_t current_unix_time;
 
@@ -64,12 +64,12 @@ struct tm *get_time(void)
 /*Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(char *buf, int bufsize)
 {
-    if (user_settings->timestamps == TIMESTAMPS_OFF) {
+    if (user_settings_->timestamps == TIMESTAMPS_OFF) {
         buf[0] = '\0';
         return;
     }
 
-    const char *t = user_settings->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
+    const char *t = user_settings_->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
     strftime(buf, bufsize, t, get_time());
 }
 
@@ -139,29 +139,6 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
         return -1;
 
     return len;
-}
-
-/* Colours the window tab according to type. Beeps if is_beep is true */
-void alert_window(ToxWindow *self, int type, bool is_beep)
-{
-    switch (type) {
-        case WINDOW_ALERT_0:
-            self->alert0 = true;
-            break;
-
-        case WINDOW_ALERT_1:
-            self->alert1 = true;
-            break;
-
-        case WINDOW_ALERT_2:
-            self->alert2 = true;
-            break;
-    }
-
-    StatusBar *stb = prompt->stb;
-
-    if (is_beep && stb->status != TOX_USERSTATUS_BUSY && user_settings->alerts == ALERTS_ENABLED)
-        beep();
 }
 
 /* case-insensitive string compare function for use with qsort */

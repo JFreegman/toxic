@@ -22,10 +22,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <libconfig.h>
 
 #include "toxic.h"
 #include "windows.h"
 #include "configdir.h"
+#include "notify.h"
 
 #ifdef _SUPPORT_AUDIO
     #include "device.h"
@@ -34,195 +36,180 @@
 #include "settings.h"
 #include "line_info.h"
 
-static void uset_autolog(struct user_settings *s, const char *val);
-static void uset_time(struct user_settings *s, const char *val);
-static void uset_timestamps(struct user_settings *s, const char *val);
-static void uset_alerts(struct user_settings *s, const char *val);
-static void uset_colours(struct user_settings *s, const char *val);
-static void uset_hst_size(struct user_settings *s, const char *val);
-static void uset_dwnld_path(struct user_settings *s, const char *val);
+const struct _ui_strings {
+    const char* self;
+    const char* timestamps;
+    const char* alerts;
+    const char* native_colors;
+    const char* autolog;
+    const char* time_format;
+    const char* history_size;
+} ui_strings = {
+    "ui",
+    "timestamps",
+    "alerts",
+    "native_colors",
+    "autolog",
+    "time_format",
+    "history_size"
+};
+static void ui_defaults(struct user_settings* settings) 
+{
+    settings->timestamps = TIMESTAMPS_ON;
+    settings->time = TIME_24;
+    settings->autolog = AUTOLOG_OFF;
+    settings->alerts = ALERTS_ENABLED;
+    settings->colour_theme = DFLT_COLS;
+    settings->history_size = 700;
+}
 
-#ifdef _SUPPORT_AUDIO
-static void uset_ain_dev(struct user_settings *s, const char *val);
-static void uset_aout_dev(struct user_settings *s, const char *val);
-#endif
-
-struct {
-    const char *key;
-    void (*func)(struct user_settings *s, const char *val);
-} user_settings_list[] = {
-    { "autolog",        uset_autolog    },
-    { "time",           uset_time       },
-    { "timestamps",     uset_timestamps },
-    { "alerts",         uset_alerts     },
-    { "colour_theme",   uset_colours    },
-    { "history_size",   uset_hst_size   },
-    { "download_path",  uset_dwnld_path },
-
-#ifdef _SUPPORT_AUDIO
-    { "audio_in_dev",   uset_ain_dev    },
-    { "audio_out_dev",  uset_aout_dev   },
-#endif
+const struct _tox_strings {
+    const char* self;
+    const char* download_path;
+} tox_strings = {
+    "tox",
+    "download_path",
 };
 
-static void uset_autolog(struct user_settings *s, const char *val)
+static void tox_defaults(struct user_settings* settings)
 {
-    int n = atoi(val);
-
-    /* default off if invalid value */
-    s->autolog = n == AUTOLOG_ON ? AUTOLOG_ON : AUTOLOG_OFF;
-}
-
-static void uset_time(struct user_settings *s, const char *val)
-{
-    int n = atoi(val);
-
-    /* default to 24 hour time if invalid value */
-    s->time = n == TIME_12 ? TIME_12 : TIME_24;
-}
-
-static void uset_timestamps(struct user_settings *s, const char *val)
-{
-    int n = atoi(val);
-
-    /* default on if invalid value */
-    s->timestamps = n == TIMESTAMPS_OFF ? TIMESTAMPS_OFF : TIMESTAMPS_ON;
-}
-
-static void uset_alerts(struct user_settings *s, const char *val)
-{
-    int n = atoi(val);
-
-    /* alerts default on if invalid value */
-    s->alerts = n == ALERTS_DISABLED ? ALERTS_DISABLED : ALERTS_ENABLED;
-}
-
-static void uset_colours(struct user_settings *s, const char *val)
-{
-    int n = atoi(val);
-
-    /* use default toxic colours if invalid value */
-    s->colour_theme = n == NATIVE_COLS ? NATIVE_COLS : DFLT_COLS;
+    /*settings->download_path;*/ /* TODO: Set this? */
 }
 
 #ifdef _SUPPORT_AUDIO
-
-static void uset_ain_dev(struct user_settings *s, const char *val)
+const struct _audio_strings {
+    const char* self;
+    const char* input_device;
+    const char* output_device;
+    const char* VAD_treshold;
+} audio_strings = {
+    "audio",
+    "input_device",
+    "output_device",
+    "VAD_treshold",
+};
+static void audio_defaults(struct user_settings* settings)
 {
-    int n = atoi(val);
-
-    if (n < 0 || n > MAX_DEVICES)
-        n = (long int) 0;
-
-    s->audio_in_dev = (long int) n;
+    settings->audio_in_dev = 0;
+    settings->audio_out_dev = 0;
+    settings->VAD_treshold = 40.0;
 }
-
-static void uset_aout_dev(struct user_settings *s, const char *val)
-{
-    int n = atoi(val);
-
-    if (n < 0 || n > MAX_DEVICES)
-        n = (long int) 0;
-
-    s->audio_out_dev = (long int) n;
-}
-
-#endif /* _SUPPORT_AUDIO */
-
-static void uset_hst_size(struct user_settings *s, const char *val)
-{
-    int n = atoi(val);
-
-    /* if val is out of range use default history size */
-    s->history_size = (n > MAX_HISTORY || n < MIN_HISTORY) ? DFLT_HST_SIZE : n;
-}
-
-static void uset_dwnld_path(struct user_settings *s, const char *val)
-{
-    memset(s->download_path, 0, sizeof(s->download_path));
-
-    if (val == NULL)
-        return;
-
-    int len = strlen(val);
-
-    if (len >= sizeof(s->download_path) - 2)  /* leave room for null and '/' */
-        return;
-
-    FILE *fp = fopen(val, "r");
-
-    if (fp == NULL)
-        return;
-
-    strcpy(s->download_path, val);
-
-    if (val[len - 1] != '/')
-        strcat(s->download_path, "/");
-}
-
-static void set_default_settings(struct user_settings *s)
-{
-    /* see settings_values enum in settings.h for defaults */
-    uset_autolog(s, "0");
-    uset_time(s, "24");
-    uset_timestamps(s, "1");
-    uset_alerts(s, "1");
-    uset_colours(s, "0");
-    uset_hst_size(s, "700");
-    uset_dwnld_path(s, NULL);
-
-#ifdef _SUPPORT_AUDIO
-    uset_ain_dev(s, "0");
-    uset_aout_dev(s, "0");
 #endif
-}
+
+#ifdef _ENABLE_SOUND_NOTIFY
+const struct _sound_strings {
+    const char* self;
+    const char* error;
+    const char* self_log_in;
+    const char* self_log_out;
+    const char* user_log_in;
+    const char* user_log_out;
+    const char* call_incoming;
+    const char* call_outgoing;
+    const char* generic_message;
+    const char* transfer_pending;
+    const char* transfer_completed;
+} sound_strings = {
+    "sounds",
+    "error",
+    "self_log_in",
+    "self_log_out",
+    "user_log_in",
+    "user_log_out",
+    "call_incoming",
+    "call_outgoing",
+    "generic_message",
+    "transfer_pending",
+    "transfer_completed",
+};
+#endif
 
 int settings_load(struct user_settings *s, char *path)
 {
-    char *user_config_dir = get_user_config_dir();
-    FILE *fp = NULL;
-    char dflt_path[MAX_STR_SIZE];
-
-    if (path) {
-        fp = fopen(path, "r");
-    } else {
-        snprintf(dflt_path, sizeof(dflt_path), "%s%stoxic.conf", user_config_dir, CONFIGDIR);
-        fp = fopen(dflt_path, "r");
-    }
-
-    free(user_config_dir);
-
-    set_default_settings(s);
-
-    if (fp == NULL && !path) {
-        if ((fp = fopen(dflt_path, "w")) == NULL)
-            return -1;
-    } else if (fp == NULL && path) {
+    config_t cfg[1];
+    config_setting_t *setting;
+    const char *str;
+    
+    /* Load default settings */
+    ui_defaults(s);
+    tox_defaults(s);
+#ifdef _SUPPORT_AUDIO
+    audio_defaults(s);
+#endif
+    
+    config_init(cfg);
+    
+    if(!config_read_file(cfg, path))
+    {
+        config_destroy(cfg);
         return -1;
     }
-
-    char line[MAX_STR_SIZE];
-
-    while (fgets(line, sizeof(line), fp)) {
-        if (line[0] == '#' || !line[0])
-            continue;
-
-        const char *key = strtok(line, ":");
-        const char *val = strtok(NULL, ";");
-
-        if (key == NULL || val == NULL)
-            continue;
-
-        int i;
-
-        for (i = 0; i < NUM_SETTINGS; ++i) {
-            if (strcmp(user_settings_list[i].key, key) == 0) {
-                (user_settings_list[i].func)(s, val);
-                break;
-            }
+    
+    /* ui */
+    if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
+        config_setting_lookup_bool(setting, ui_strings.timestamps, &s->timestamps);
+        config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
+        config_setting_lookup_bool(setting, ui_strings.autolog, &s->autolog);
+        config_setting_lookup_bool(setting, ui_strings.native_colors, &s->colour_theme);
+        
+        config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
+        config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
+        s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
+    }
+    
+    if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
+        if ( config_setting_lookup_string(setting, tox_strings.download_path, &str) ) {
+            s->download_path = calloc(1, strlen(str) + 1);
+            strcpy(s->download_path, str);
         }
     }
+    
+#ifdef _SUPPORT_AUDIO
+    if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
+        config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
+        s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
+        
+        config_setting_lookup_int(setting, audio_strings.output_device, &s->audio_out_dev);
+        s->audio_out_dev = s->audio_out_dev < 0 || s->audio_out_dev > MAX_DEVICES ? 0 : s->audio_out_dev;
+        
+        config_setting_lookup_float(setting, audio_strings.VAD_treshold, &s->VAD_treshold);
+    }    
+#endif
 
-    fclose(fp);
+#ifdef _ENABLE_SOUND_NOTIFY
+    if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
+        if ( config_setting_lookup_string(setting, sound_strings.error, &str) == CONFIG_TRUE ) 
+            set_sound(error, str);
+                
+        if ( config_setting_lookup_string(setting, sound_strings.user_log_in, &str) ) 
+            set_sound(user_log_in, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.self_log_in, &str) ) 
+            set_sound(self_log_in, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.user_log_out, &str) ) 
+            set_sound(user_log_out, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.self_log_out, &str) ) 
+            set_sound(self_log_out, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.call_incoming, &str) ) 
+            set_sound(call_incoming, str);        
+        
+        if ( config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ) 
+            set_sound(call_outgoing, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.generic_message, &str) ) 
+            set_sound(generic_message, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.transfer_pending, &str) ) 
+            set_sound(transfer_pending, str);
+        
+        if ( config_setting_lookup_string(setting, sound_strings.transfer_completed, &str) ) 
+            set_sound(transfer_completed, str);
+    }
+#endif
+
+    config_destroy(cfg);
     return 0;
 }

@@ -50,6 +50,7 @@
 #include "line_info.h"
 #include "settings.h"
 #include "log.h"
+#include "notify.h"
 
 #ifdef _SUPPORT_AUDIO
 #include "audio_call.h"
@@ -78,7 +79,7 @@ struct arg_opts {
 } arg_opts;
 
 struct _Winthread Winthread;
-struct user_settings *user_settings = NULL;
+struct user_settings *user_settings_ = NULL;
 
 static void catch_SIGINT(int sig)
 {
@@ -97,8 +98,10 @@ void exit_toxic_success(Tox *m)
     kill_all_windows();
 
     free(DATA_FILE);
-    free(user_settings);
+    free(user_settings_);
 
+    notify(NULL, self_log_out, NT_ALWAYS);
+    terminate_notify();
 #ifdef _SUPPORT_AUDIO
     terminate_audio();
 #endif /* _SUPPORT_AUDIO */
@@ -141,7 +144,7 @@ static void init_term(void)
         short bg_color = COLOR_BLACK;
         start_color();
 
-        if (user_settings->colour_theme == NATIVE_COLS) {
+        if (user_settings_->colour_theme == NATIVE_COLS) {
             if (assume_default_colors(-1, -1) == OK)
                 bg_color = -1;
         }
@@ -568,7 +571,7 @@ int main(int argc, char *argv[])
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-    signal(SIGINT, catch_SIGINT);
+//     signal(SIGINT, catch_SIGINT);
 
     config_err = create_user_config_dir(user_config_dir);
 
@@ -590,15 +593,13 @@ int main(int argc, char *argv[])
     free(user_config_dir);
 
     /* init user_settings struct and load settings from conf file */
-    user_settings = malloc(sizeof(struct user_settings));
+    user_settings_ = calloc(1, sizeof(struct user_settings));
 
-    if (user_settings == NULL)
+    if (user_settings_ == NULL)
         exit_toxic_err("failed in main", FATALERR_MEMORY);
 
-    memset(user_settings, 0, sizeof(struct user_settings));
-
     char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
-    int settings_err = settings_load(user_settings, p);
+    int settings_err = settings_load(user_settings_, p);
 
     Tox *m = init_tox(arg_opts.use_ipv4);
     init_term();
@@ -625,11 +626,14 @@ int main(int argc, char *argv[])
     av = init_audio(prompt, m);
     
     
-    set_primary_device(input, user_settings->audio_in_dev);
-    set_primary_device(output, user_settings->audio_out_dev);
+    set_primary_device(input, user_settings_->audio_in_dev);
+    set_primary_device(output, user_settings_->audio_out_dev);
     
 #endif /* _SUPPORT_AUDIO */
-
+    
+    init_notify(60);
+    notify(prompt, self_log_in, 0);
+    
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);

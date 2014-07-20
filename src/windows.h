@@ -53,10 +53,11 @@ enum {
 } C_COLOURS;
 
 /* tab alert types: lower types take priority */
-enum {
-    WINDOW_ALERT_0,
-    WINDOW_ALERT_1,
-    WINDOW_ALERT_2,
+typedef enum {
+    WINDOW_ALERT_NONE = 0,
+    WINDOW_ALERT_0 = GREEN,
+    WINDOW_ALERT_1 = RED,
+    WINDOW_ALERT_2 = MAGENTA,
 } WINDOW_ALERTS;
 
 /* Fixes text color problem on some terminals.
@@ -117,6 +118,10 @@ struct ToxWindow {
 
 #endif /* _SUPPORT_AUDIO */
 
+#ifdef _ENABLE_SOUND_NOTIFY
+    int active_sound;
+#endif
+
     char name[TOXIC_MAX_NAME_LENGTH];
     int32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;
@@ -127,9 +132,7 @@ struct ToxWindow {
     bool is_prompt;
     bool is_friendlist;
 
-    bool alert0;
-    bool alert1;
-    bool alert2;
+    WINDOW_ALERTS alert;
 
     ChatContext *chatwin;
     StatusBar *stb;
