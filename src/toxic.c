@@ -51,18 +51,19 @@
 #include "settings.h"
 #include "log.h"
 #include "notify.h"
+#include "device.h"
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 #include "audio_call.h"
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
 #endif
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 ToxAv *av;
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
@@ -102,9 +103,9 @@ void exit_toxic_success(Tox *m)
 
     notify(NULL, self_log_out, NT_ALWAYS);
     terminate_notify();
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     terminate_audio();
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
@@ -324,7 +325,7 @@ int init_connection(Tox *m)
     return 4;
 }
 
-#define TRY_CONNECT 10
+#define TRY_CONNECT 10   /* Seconds between connection attempts when DHT is not connected */
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
@@ -372,7 +373,7 @@ static void load_friendlist(Tox *m)
 
 /*
  * Store Messenger to given location
- * Return 0 stored successfully
+ * Return 0 stored successfully or ignoring data file
  * Return 1 file path is NULL
  * Return 2 malloc failed
  * Return 3 opening path failed
@@ -386,19 +387,15 @@ int store_data(Tox *m, char *path)
     if (path == NULL)
         return 1;
 
-    FILE *fd;
-    int len;
-    char *buf;
-
-    len = tox_size(m);
-    buf = malloc(len);
+    int len = tox_size(m);
+    char *buf = malloc(len);
 
     if (buf == NULL)
         return 2;
 
     tox_save(m, (uint8_t *) buf);
 
-    fd = fopen(path, "wb");
+    FILE *fd = fopen(path, "wb");
 
     if (fd == NULL) {
         free(buf);
@@ -422,15 +419,13 @@ static void load_data(Tox *m, char *path)
         return;
 
     FILE *fd;
-    int len;
-    char *buf;
 
     if ((fd = fopen(path, "rb")) != NULL) {
         fseek(fd, 0, SEEK_END);
-        len = ftell(fd);
+        int len = ftell(fd);
         fseek(fd, 0, SEEK_SET);
 
-        buf = malloc(len);
+        char *buf = malloc(len);
 
         if (buf == NULL) {
             fclose(fd);
@@ -449,9 +444,7 @@ static void load_data(Tox *m, char *path)
         free(buf);
         fclose(fd);
     } else {
-        int st;
-
-        if ((st = store_data(m, path)) != 0)
+        if (store_data(m, path) != 0)
             exit_toxic_err("failed in load_data", FATALERR_STORE_DATA);
     }
 }
@@ -531,6 +524,10 @@ static void parse_args(int argc, char *argv[])
         switch (opt) {
             case 'f':
                 DATA_FILE = strdup(optarg);
+
+                if (DATA_FILE == NULL)
+                    exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+
                 break;
 
             case 'x':
@@ -578,6 +575,9 @@ int main(int argc, char *argv[])
     if (DATA_FILE == NULL ) {
         if (config_err) {
             DATA_FILE = strdup("data");
+
+            if (DATA_FILE == NULL)
+                exit_toxic_err("failed in main", FATALERR_MEMORY);
         } else {
             DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
 
@@ -621,15 +621,17 @@ int main(int argc, char *argv[])
 
     char *msg;
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 
     av = init_audio(prompt, m);
     
     
     set_primary_device(input, user_settings_->audio_in_dev);
     set_primary_device(output, user_settings_->audio_out_dev);
-    
-#endif /* _SUPPORT_AUDIO */
+#elif _SOUND_NOTIFY
+    if ( init_devices() == de_InternalError )
+        line_info_add(prompt, NULL, NULL, NULL, "Failed to init devices", SYS_MSG, 0, 0);
+#endif /* _AUDIO */
     
     init_notify(60);
     notify(prompt, self_log_in, 0);
@@ -647,7 +649,7 @@ int main(int argc, char *argv[])
     sort_friendlist_index();
     prompt_init_statusbar(prompt, m);
 
-    uint64_t last_save = get_unix_time();
+    uint64_t last_save = (uint64_t) time(NULL);
 
     while (true) {
         update_unix_time();

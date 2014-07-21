@@ -29,59 +29,98 @@
 #include "misc_tools.h"
 #include "toxic_strings.h"
 
-/* Adds char to line at pos */
-void add_char_to_buf(ChatContext *ctx, wint_t ch)
+/* Adds char to line at pos. Return 0 on success, -1 if line buffer is full */
+int add_char_to_buf(ChatContext *ctx, wint_t ch)
 {
-    if (ctx->len >= MAX_STR_SIZE)
-        return;
+    if (ctx->len >= MAX_STR_SIZE - 1)
+        return -1;
 
     wmemmove(&ctx->line[ctx->pos + 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     ctx->line[ctx->pos++] = ch;
     ctx->line[++ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the character before pos */
-void del_char_buf_bck(ChatContext *ctx)
+/* Deletes the character before pos. Return 0 on success, -1 if nothing to delete */
+int del_char_buf_bck(ChatContext *ctx)
 {
-    if (ctx->pos == 0)
-        return;
+    if (ctx->pos <= 0)
+        return -1;
 
     wmemmove(&ctx->line[ctx->pos - 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     --ctx->pos;
     ctx->line[--ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the character at pos */
-void del_char_buf_frnt(ChatContext *ctx)
+/* Deletes the character at pos. Return 0 on success, -1 if nothing to delete. */
+int del_char_buf_frnt(ChatContext *ctx)
 {
     if (ctx->pos >= ctx->len)
-        return;
+        return -1;
 
     wmemmove(&ctx->line[ctx->pos], &ctx->line[ctx->pos + 1], ctx->len - ctx->pos - 1);
     ctx->line[--ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the line from beginning to pos */
-void discard_buf(ChatContext *ctx)
+/* Deletes the line from beginning to pos and puts discarded portion in yank buffer.
+   Return 0 on success, -1 if noting to discard. */
+int discard_buf(ChatContext *ctx)
 {
     if (ctx->pos <= 0)
-        return;
+        return -1;
+
+    ctx->yank_len = ctx->pos;
+    wmemcpy(ctx->yank, ctx->line, ctx->yank_len);
+    ctx->yank[ctx->yank_len] = L'\0';
 
     wmemmove(ctx->line, &ctx->line[ctx->pos], ctx->len - ctx->pos);
     ctx->len -= ctx->pos;
     ctx->pos = 0;
     ctx->start = 0;
     ctx->line[ctx->len] = L'\0';
+
+    return 0;
 }
 
-/* Deletes the line from pos to len */
-void kill_buf(ChatContext *ctx)
+/* Deletes the line from pos to len and puts killed portion in yank buffer.
+   Return 0 on success, -1 if nothing to kill. */
+int kill_buf(ChatContext *ctx)
 {
-    if (ctx->len == ctx->pos)
-        return;
+    if (ctx->len <= ctx->pos)
+        return -1;
+
+    ctx->yank_len = ctx->len - ctx->pos;
+    wmemcpy(ctx->yank, &ctx->line[ctx->pos], ctx->yank_len);
+    ctx->yank[ctx->yank_len] = L'\0';
 
     ctx->line[ctx->pos] = L'\0';
     ctx->len = ctx->pos;
+
+    return 0;
+}
+
+/* Inserts string in ctx->yank into line at pos.
+   Return 0 on success, -1 if yank buffer is empty or too long */
+int yank_buf(ChatContext *ctx)
+{
+    if (!ctx->yank[0])
+        return -1;
+
+    if (ctx->yank_len + ctx->len >= MAX_STR_SIZE - 1)
+        return -1;
+
+    wmemmove(&ctx->line[ctx->pos + ctx->yank_len], &ctx->line[ctx->pos], ctx->len - ctx->pos);
+    wmemcpy(&ctx->line[ctx->pos], ctx->yank, ctx->yank_len);
+
+    ctx->pos += ctx->yank_len;
+    ctx->len += ctx->yank_len;
+    ctx->line[ctx->len] = L'\0';
+    return 0;
 }
 
 /* nulls line and sets pos, len and start to 0 */
@@ -168,87 +207,4 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     wmemcpy(ctx->line, hst_line, h_len + 1);
     ctx->pos = h_len;
     ctx->len = h_len;
-}
-
-/* looks for the first instance in list that begins with the last entered word in line according to pos,
-   then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john".
-
-   list is a pointer to the list of strings being compared, n_items is the number of items
-   in the list, and size is the size of each item in the list.
-
-   Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ChatContext *ctx, const void *list, int n_items, int size)
-{
-    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->len >= MAX_STR_SIZE)
-        return -1;
-
-    const char *L = (char *) list;
-
-    char ubuf[MAX_STR_SIZE];
-
-    /* work with multibyte string copy of buf for simplicity */
-    if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1)
-        return -1;
-
-    /* isolate substring from space behind pos to pos */
-    char tmp[MAX_STR_SIZE];
-    snprintf(tmp, sizeof(tmp), "%s", ubuf);
-    tmp[ctx->pos] = '\0';
-    char *sub = strrchr(tmp, ' ');
-    int n_endchrs = 1;    /* 1 = append space to end of match, 2 = append ": " */
-
-    if (!sub++) {
-        sub = tmp;
-
-        if (sub[0] != '/')    /* make sure it's not a command */
-            n_endchrs = 2;
-    }
-
-    if (string_is_empty(sub))
-        return -1;
-
-    int s_len = strlen(sub);
-    const char *match;
-    bool is_match = false;
-    int i;
-
-    /* look for a match in list */
-    for (i = 0; i < n_items; ++i) {
-        match = &L[i * size];
-
-        if ((is_match = strncasecmp(match, sub, s_len) == 0))
-            break;
-    }
-
-    if (!is_match)
-        return -1;
-
-    /* put match in correct spot in buf and append endchars (space or ": ") */
-    const char *endchrs = n_endchrs == 1 ? " " : ": ";
-    int m_len = strlen(match);
-    int strt = ctx->pos - s_len;
-    int diff = m_len - s_len + n_endchrs;
-
-    if (ctx->len + diff > MAX_STR_SIZE)
-        return -1;
-
-    char tmpend[MAX_STR_SIZE];
-    strcpy(tmpend, &ubuf[ctx->pos]);
-    strcpy(&ubuf[strt], match);
-    strcpy(&ubuf[strt + m_len], endchrs);
-    strcpy(&ubuf[strt + m_len + n_endchrs], tmpend);
-
-    /* convert to widechar and copy back to original buf */
-    wchar_t newbuf[MAX_STR_SIZE];
-
-    if (mbs_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
-        return -1;
-
-    wcscpy(ctx->line, newbuf);
-
-    ctx->len += diff;
-    ctx->pos += diff;
-
-    return diff;
 }

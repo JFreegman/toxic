@@ -21,7 +21,7 @@
  */
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE    /* needed for strcasestr() */
+#define _GNU_SOURCE    /* needed for strcasestr() and wcswidth() */
 #endif
 
 #include <stdlib.h>
@@ -42,6 +42,7 @@
 #include "input.h"
 #include "help.h"
 #include "notify.h"
+#include "autocomplete.h"
 
 extern char *DATA_FILE;
 
@@ -146,7 +147,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
         notify(self, generic_message, NT_WNDALERT_0);
         nick_clr = RED;
     }
-    else notify(self, unknown, NT_WNDALERT_1);
+    else notify(self, silent, NT_WNDALERT_1);
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -170,7 +171,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     if (strcasestr(action, selfnick)) {
         notify(self, generic_message, NT_WNDALERT_0);
     }
-    else notify(self, unknown, NT_WNDALERT_1);
+    else notify(self, silent, NT_WNDALERT_1);
 
     char nick[TOX_MAX_NAME_LENGTH];
     n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
@@ -303,7 +304,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
             break;
     }
 
-    notify(self, unknown, NT_WNDALERT_2);
+    notify(self, silent, NT_WNDALERT_2);
 }
 
 static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
@@ -351,17 +352,15 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             int diff;
 
             if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
-                diff = complete_line(ctx, groupchats[self->num].peer_names,
+                diff = complete_line(self, groupchats[self->num].peer_names,
                                          groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
             else
-                diff = complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+                diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
-                    wmove(self->window, y, x + diff);
-                    ctx->start += diff;
-                } else {
-                    wmove(self->window, y, x + diff);
+                    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+                    ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
                 beep();
@@ -460,7 +459,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int y, x;
     getyx(self->window, y, x);
     (void) x;
-    int new_x = ctx->start ? x2 - 1 : ctx->pos;
+    int new_x = ctx->start ? x2 - 1 : wcswidth(ctx->line, ctx->pos);
     wmove(self->window, y + 1, new_x);
 
     wrefresh(self->window);

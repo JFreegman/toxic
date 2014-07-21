@@ -26,9 +26,9 @@
 #include <resolv.h>
 
 #ifdef __APPLE__
-#include <arpa/nameser_compat.h>
+    #include <arpa/nameser_compat.h>
 #else
-#include <arpa/nameser.h>
+    #include <arpa/nameser.h>
 #endif  /* ifdef __APPLE__ */
 
 #include <tox/toxdns.h>
@@ -79,6 +79,7 @@ static struct _thread_data {
 
 static struct _dns_thread {
     pthread_t tid;
+    pthread_attr_t attr;
 } dns_thread;
 
 
@@ -100,7 +101,8 @@ static void kill_dns_thread(void *dns_obj)
         tox_dns3_kill(dns_obj);
 
     memset(&t_data, 0, sizeof(struct _thread_data));
-    pthread_exit(0);
+    pthread_attr_destroy(&dns_thread.attr);
+    pthread_exit(NULL);
 }
 
 /* puts TXT from dns response in buf. Returns length of TXT on success, -1 on fail.*/
@@ -303,10 +305,12 @@ void dns3_lookup(ToxWindow *self, Tox *m, char *id_bin, char *addr, char *msg)
     t_data.m = m;
     t_data.busy = 1;
 
-    pthread_mutex_unlock(&Winthread.lock);
+    if (pthread_attr_init(&dns_thread.attr) != 0)
+        exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_ATTR);
 
-    if (pthread_create(&dns_thread.tid, NULL, dns3_lookup_thread, NULL) != 0)
+    if (pthread_attr_setdetachstate(&dns_thread.attr, PTHREAD_CREATE_DETACHED) != 0)
+        exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_ATTR);
+
+    if (pthread_create(&dns_thread.tid, &dns_thread.attr, dns3_lookup_thread, NULL) != 0)
         exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_CREATE);
-
-    pthread_mutex_lock(&Winthread.lock);
 }

@@ -33,7 +33,7 @@ struct user_settings {
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     char* download_path;
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     int audio_in_dev;
     int audio_out_dev;
     double VAD_treshold;

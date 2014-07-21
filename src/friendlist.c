@@ -34,11 +34,12 @@
 #include "misc_tools.h"
 #include "line_info.h"
 #include "settings.h"
-
-#ifdef _SUPPORT_AUDIO
-#include "audio_call.h"
 #include "notify.h"
+
+#ifdef _AUDIO
+#include "audio_call.h"
 #endif
+
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -383,7 +384,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Enter ");
     wattroff(self->window, A_BOLD);
-    wprintw(self->window, "key. Delete a friend with the");
+    wprintw(self->window, "key. Delete a contact with the");
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Delete ");
     wattroff(self->window, A_BOLD);
@@ -551,7 +552,7 @@ void disable_chatwin(int32_t f_num)
     friends[f_num].chatwin = -1;
 }
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 {
     int id = toxav_get_peer_id(av, call_index, 0);
@@ -582,7 +583,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
         }
     }
 }
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 ToxWindow new_friendlist(void)
 {
@@ -604,7 +605,7 @@ ToxWindow new_friendlist(void)
     ret.onFileSendRequest = &friendlist_onFileSendRequest;
     ret.onGroupInvite = &friendlist_onGroupInvite;
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     ret.onInvite = &friendlist_onAv;
     ret.onRinging = &friendlist_onAv;
     ret.onStarting = &friendlist_onAv;
@@ -619,10 +620,12 @@ ToxWindow new_friendlist(void)
     
     ret.call_idx = -1;
     ret.device_selection[0] = ret.device_selection[1] = -1;
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
+#ifdef _SOUND_NOTIFY
     ret.active_sound = -1;
+#endif /* _SOUND_NOTIFY */
     
-    strcpy(ret.name, "friends");
+    strcpy(ret.name, "contacts");
     return ret;
 }

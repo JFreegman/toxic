@@ -29,9 +29,9 @@
 #include "configdir.h"
 #include "notify.h"
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     #include "device.h"
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 #include "settings.h"
 #include "line_info.h"
@@ -76,7 +76,7 @@ static void tox_defaults(struct user_settings* settings)
     /*settings->download_path;*/ /* TODO: Set this? */
 }
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 const struct _audio_strings {
     const char* self;
     const char* input_device;
@@ -96,7 +96,7 @@ static void audio_defaults(struct user_settings* settings)
 }
 #endif
 
-#ifdef _ENABLE_SOUND_NOTIFY
+#ifdef _SOUND_NOTIFY
 const struct _sound_strings {
     const char* self;
     const char* error;
@@ -133,7 +133,7 @@ int settings_load(struct user_settings *s, char *path)
     /* Load default settings */
     ui_defaults(s);
     tox_defaults(s);
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     audio_defaults(s);
 #endif
     
@@ -164,7 +164,7 @@ int settings_load(struct user_settings *s, char *path)
         }
     }
     
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
         s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
@@ -176,7 +176,7 @@ int settings_load(struct user_settings *s, char *path)
     }    
 #endif
 
-#ifdef _ENABLE_SOUND_NOTIFY
+#ifdef _SOUND_NOTIFY
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
         if ( config_setting_lookup_string(setting, sound_strings.error, &str) == CONFIG_TRUE ) 
             set_sound(error, str);

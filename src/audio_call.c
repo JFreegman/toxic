@@ -313,7 +313,7 @@ void callback_peer_timeout ( void* av, int32_t call_index, void* arg )
 }
 void callback_media_change(void* av, int32_t call_index, void* arg)
 {
-  /*... TODO cance all media change requests */
+  /*... TODO cancel all media change requests */
 }
 /*
  * End of Callbacks
@@ -477,9 +477,10 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto on_error;
     }
 
+#ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
     self->active_sound = -1;
-    
+#endif /* _SOUND_NOTIFY */
     /* Callback will print status... */
 
     return;

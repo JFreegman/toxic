@@ -326,11 +326,11 @@ void on_window_resize(void)
 
         ToxWindow *w = &windows[i];
 
-        delwin(w->window);
-        w->window = newwin(y2, x2, 0, 0);
-
-        if (windows[i].is_friendlist) 
+        if (windows[i].is_friendlist)  {
+            delwin(w->window);
+            w->window = newwin(y2, x2, 0, 0);
             continue;
+        }
 
         if (w->help->active)
             wclear(w->help->win);
@@ -342,7 +342,9 @@ void on_window_resize(void)
 
         delwin(w->chatwin->linewin);
         delwin(w->chatwin->history);
+        delwin(w->window);
 
+        w->window = newwin(y2, x2, 0, 0);
         w->chatwin->linewin = subwin(w->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
         if (w->is_groupchat) {
@@ -353,12 +355,12 @@ void on_window_resize(void)
             w->stb->topline = subwin(w->window, 2, x2, 0, 0);
         }
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
         if (w->chatwin->infobox.active) {
             delwin(w->chatwin->infobox.win);
             w->chatwin->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
         }
-#endif /* _SUPPORT_AUDIO */
+#endif   /* _AUDIO */
 
         scrollok(w->chatwin->history, 0);
     }

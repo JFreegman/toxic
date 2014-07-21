@@ -29,9 +29,9 @@
 
 #include <tox/tox.h>
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 #include <tox/toxav.h>
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 #include "toxic.h"
 
@@ -98,7 +98,7 @@ struct ToxWindow {
     void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
     void(*onTypingChange)(ToxWindow *, Tox *, int32_t, uint8_t);
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 
     void(*onInvite)(ToxWindow *, ToxAv *, int);
     void(*onRinging)(ToxWindow *, ToxAv *, int);
@@ -116,9 +116,9 @@ struct ToxWindow {
                    * Don't modify outside av callbacks. */
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
 
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
-#ifdef _ENABLE_SOUND_NOTIFY
+#ifdef _SOUND_NOTIFY
     int active_sound;
 #endif
 
@@ -152,7 +152,7 @@ struct StatusBar {
     bool is_online;
 };
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 
 
 #define INFOBOX_HEIGHT 7
@@ -171,7 +171,7 @@ struct infobox {
 
     WINDOW *win;
 };
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 #define MAX_LINE_HIST 128
 
@@ -186,10 +186,13 @@ struct ChatContext {
     int hst_pos;
     int hst_tot;
 
+    wchar_t yank[MAX_STR_SIZE];    /* contains last killed/discarded line */
+    int yank_len;
+
     struct history *hst;
     struct chatlog *log;
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     struct infobox infobox;
 #endif
 

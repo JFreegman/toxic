@@ -25,36 +25,32 @@
 
 #include "windows.h"
 
-/* Adds char to line at pos */
-void add_char_to_buf(ChatContext *ctx, wint_t ch);
+/* Adds char to line at pos. Return 0 on success, -1 if line buffer is full */
+int add_char_to_buf(ChatContext *ctx, wint_t ch);
 
-/* Deletes the character before pos */
-void del_char_buf_bck(ChatContext *ctx);
+/* Deletes the character before pos. Return 0 on success, -1 if nothing to delete */
+int del_char_buf_bck(ChatContext *ctx);
 
-/* Deletes the character at pos */
-void del_char_buf_frnt(ChatContext *ctx);
+/* Deletes the character at pos. Return 0 on success, -1 if nothing to delete. */
+int del_char_buf_frnt(ChatContext *ctx);
 
-/* Deletes the line from beginning to pos */
-void discard_buf(ChatContext *ctx);
+/* Deletes the line from beginning to pos and puts discarded portion in yank buffer.
+   Return 0 on success, -1 if noting to discard */
+int discard_buf(ChatContext *ctx);
 
-/* Deletes the line from pos to len */
-void kill_buf(ChatContext *ctx);
+/* Deletes the line from pos to len and puts killed portion in yank buffer.
+   Return 0 on success, -1 if nothing to kill. */
+int kill_buf(ChatContext *ctx);
 
 /* nulls line and sets pos, len and start to 0 */
 void reset_buf(ChatContext *ctx);
 
+/* Inserts string in ctx->yank into line at pos.
+   Return 0 on success, -1 if yank buffer is empty or too long */
+int yank_buf(ChatContext *ctx);
+
 /* Removes trailing spaces from line. */
 void rm_trailing_spaces_buf(ChatContext *ctx);
-
-/* looks for the first instance in list that begins with the last entered word in line according to pos,
-   then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john".
-
-   list is a pointer to the list of strings being compared, n_items is the number of items
-   in the list, and size is the size of each item in the list.
-
-   Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ChatContext *ctx, const void *list, int n_items, int size);
 
 /* adds a line to the ln_history buffer at hst_pos and sets hst_pos to last history item. */
 void add_line_to_hist(ChatContext *ctx);

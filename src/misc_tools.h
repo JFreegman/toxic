@@ -52,7 +52,7 @@ struct tm *get_time(void);
 void update_unix_time(void);
 
 /* Returns 1 if the string is empty, 0 otherwise */
-int string_is_empty(char *string);
+int string_is_empty(const char *string);
 
 /* convert a multibyte string to a wide character string (must provide buffer) */
 int char_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
@@ -88,5 +88,13 @@ void str_to_lower(char *str);
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
    Returns nick len on success, -1 on failure */
 int get_nick_truncate(Tox *m, char *buf, int friendnum);
+
+/* returns index of the first instance of ch in s starting at idx.
+   returns length of s if char not found */
+int char_find(int idx, const char *s, char ch);
+
+/* returns index of the last instance of ch in s
+   returns 0 if char not found */
+int char_rfind(const char *s, char ch, int len);
 
 #endif /* #define _misc_tools_h */

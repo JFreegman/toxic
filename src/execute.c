@@ -54,10 +54,10 @@ static struct cmd_func global_commands[] = {
     { "/quit",      cmd_quit          },
     { "/status",    cmd_status        },
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     { "/lsdev",     cmd_list_devices  },
     { "/sdev",      cmd_change_device },
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 };
 
 static struct cmd_func chat_commands[] = {
@@ -66,7 +66,7 @@ static struct cmd_func chat_commands[] = {
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     { "/call",      cmd_call        },
     { "/cancel",    cmd_cancel      },
     { "/answer",    cmd_answer      },
@@ -75,42 +75,49 @@ static struct cmd_func chat_commands[] = {
     { "/sdev",      cmd_ccur_device },
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 };
 
 /* Parses input command and puts args into arg array.
    Returns number of arguments on success, -1 on failure. */
-static int parse_command(WINDOW *w, ToxWindow *self, char *cmd, char (*args)[MAX_STR_SIZE])
+static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
+    char *cmd = strdup(input);
+
+    if (cmd == NULL)
+        exit_toxic_err("failed in parse_command", FATALERR_MEMORY);
+
     int num_args = 0;
-    bool cmd_end = false;    /* flags when we get to the end of cmd */
-    char *end;               /* points to the end of the current arg */
+    int i = 0;    /* index of last char in an argument */
 
     /* characters wrapped in double quotes count as one arg */
-    while (!cmd_end && num_args < MAX_NUM_ARGS) {
-        if (*cmd == '\"') {
-            end = strchr(cmd + 1, '\"');
+    while (num_args < MAX_NUM_ARGS) {
+        int qt_ofst = 0;    /* set to 1 to offset index for quote char at end of arg */
 
-            if (end++ == NULL) {    /* Increment past the end quote */
+        if (*cmd == '\"') {
+            qt_ofst = 1;
+            i = char_find(1, cmd, '\"');
+
+            if (cmd[i] == '\0') {
                 char *errmsg = "Invalid argument. Did you forget a closing \"?";
                 line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+                free(cmd);
                 return -1;
             }
-
-            cmd_end = *end == '\0';
         } else {
-            end = strchr(cmd, ' ');
-            cmd_end = end == NULL;
+            i = char_find(0, cmd, ' ');
         }
 
-        if (!cmd_end)
-            *end++ = '\0';    /* mark end of current argument */
+        memcpy(args[num_args], cmd, i + qt_ofst);
+        args[num_args++][i + qt_ofst] = '\0';
 
-        /* Copy from start of current arg to where we just inserted the null byte */
-        strcpy(args[num_args++], cmd);
-        cmd = end;
+        if (cmd[i] == '\0')    /* no more args */
+            break;
+
+        strcpy(cmd, &cmd[i + 1]);
     }
 
+    free(cmd);
     return num_args;
 }
 
@@ -130,13 +137,13 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, int num_
     return 1;
 }
 
-void execute(WINDOW *w, ToxWindow *self, Tox *m, char *cmd, int mode)
+void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
 {
-    if (string_is_empty(cmd))
+    if (string_is_empty(input))
         return;
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE];
-    int num_args = parse_command(w, self, cmd, args);
+    int num_args = parse_command(w, self, input, args);
 
     if (num_args == -1)
         return;

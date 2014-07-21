@@ -37,99 +37,87 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->len >= MAX_STR_SIZE - 1) {
+    int cur_len = wcwidth(key);
+
+    /* this is the only place we need to do this check */
+    if (cur_len == -1) {
         beep();
         return;
     }
 
-    int cur_len = wcwidth(key);
-
-    /* this is the only place we need to do this check */
-    if (cur_len == -1)
+    if (add_char_to_buf(ctx, key) == -1) {
+        beep();
         return;
-
-    add_char_to_buf(ctx, key);
+    }
 
     if (x + cur_len >= mx_x) {
         int s_len = wcwidth(ctx->line[ctx->start]);
-        int cdiff = cur_len - s_len;
-        ctx->start += 1 + MAX(0, cdiff);
-        wmove(self->window, y, wcswidth(&ctx->line[ctx->start], mx_x));
-    } else {
-        wmove(self->window, y, x + cur_len);
+        ctx->start += 1 + MAX(0, cur_len - s_len);
     }
 }
 
 /* delete a char via backspace key from input field and buffer */
-static void input_backspace(ToxWindow *self, int x, int y, int mx_x, int mx_y)
+static void input_backspace(ToxWindow *self, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0) {
+    if (del_char_buf_bck(ctx) == -1) {
         beep();
         return;
     }
 
     int cur_len = wcwidth(ctx->line[ctx->pos - 1]);
-
-    del_char_buf_bck(ctx);
-
     int s_len = wcwidth(ctx->line[ctx->start - 1]);
-    int cdiff = s_len - cur_len;
 
-    if (ctx->start && (x >= mx_x - cur_len)) {
-        ctx->start = MAX(0, ctx->start - 1 + cdiff);
-        wmove(self->window, y, wcswidth(&ctx->line[ctx->start], mx_x));
-    } else if (ctx->start && (ctx->pos == ctx->len)) {
+    if (ctx->start && (x >= mx_x - cur_len))
+        ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
+    else if (ctx->start && (ctx->pos == ctx->len))
         ctx->start = MAX(0, ctx->start - cur_len);
-        wmove(self->window, y, wcswidth(&ctx->line[ctx->start], mx_x));
-    } else if (ctx->start) {
+    else if (ctx->start)
         ctx->start = MAX(0, ctx->start - cur_len);
-    } else {
-        wmove(self->window, y, x - cur_len);
-    }
 }
 
 /* delete a char via delete key from input field and buffer */
 static void input_delete(ToxWindow *self)
 {
-    ChatContext *ctx = self->chatwin;
-
-    if (ctx->pos >= ctx->len) {
+    if (del_char_buf_frnt(self->chatwin) == -1)
         beep();
-        return;
-    }
-
-    del_char_buf_frnt(ctx);
 }
 
 /* deletes entire line before cursor from input field and buffer */
-static void input_discard(ToxWindow *self, int mx_y)
+static void input_discard(ToxWindow *self)
 {
-    ChatContext *ctx = self->chatwin;
-
-    if (ctx->pos <= 0) {
+    if (discard_buf(self->chatwin) == -1)
         beep();
-        return;
-    }
-
-    discard_buf(ctx);
-    wmove(self->window, mx_y - CURS_Y_OFFSET, 0);
 }
 
 /* deletes entire line after cursor from input field and buffer */
 static void input_kill(ChatContext *ctx)
 {
-    if (ctx->pos != ctx->len) {
-        kill_buf(ctx);
+    if (kill_buf(ctx) == -1)
+        beep();
+}
+
+static void input_yank(ToxWindow *self, int x, int mx_x)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (yank_buf(ctx) == -1) {
+        beep();
         return;
     }
 
-    beep();
+    int yank_cols = MAX(0, wcswidth(ctx->yank, ctx->yank_len));
+
+    if (x + yank_cols >= mx_x) {
+        int rmdr = MAX(0, (x + yank_cols) - mx_x);
+        int s_len = wcswidth(&ctx->line[ctx->start], rmdr);
+        ctx->start += s_len + 1;
+    }
 }
 
 /* moves cursor/line position to end of line in input field and buffer */
-static void input_mv_end(ToxWindow *self, int x, int y, int mx_x, int mx_y)
+static void input_mv_end(ToxWindow *self, int y, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -137,90 +125,68 @@ static void input_mv_end(ToxWindow *self, int x, int y, int mx_x, int mx_y)
 
     int wlen = wcswidth(ctx->line, sizeof(ctx->line));
     ctx->start = MAX(0, 1 + (mx_x * (wlen / mx_x) - mx_x) + (wlen % mx_x));
-
-    int llen = wcswidth(&ctx->line[ctx->start], mx_x);
-    int new_x = wlen >= mx_x ? mx_x - 1 : llen;
-
-    wmove(self->window, y, new_x);
 }
 
 /* moves cursor/line position to start of line in input field and buffer */
-static void input_mv_home(ToxWindow *self, int mx_y)
+static void input_mv_home(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0) {
-        beep();
+    if (ctx->pos <= 0)
         return;
-    }
 
     ctx->pos = 0;
     ctx->start = 0;
-    wmove(self->window, mx_y - CURS_Y_OFFSET, 0);
 }
 
 /* moves cursor/line position left in input field and buffer */
-static void input_mv_left(ToxWindow *self, int x, int y, int mx_x, int mx_y)
+static void input_mv_left(ToxWindow *self, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0) {
-        beep();
+    if (ctx->pos <= 0)
         return;
-    }
 
     int cur_len = wcwidth(ctx->line[ctx->pos - 1]);
 
     --ctx->pos;
 
     int s_len = wcwidth(ctx->line[ctx->start - 1]);
-    int cdiff = s_len - cur_len;
 
-    if (ctx->start && (x >= mx_x - cur_len)) {
-        ctx->start = MAX(0, ctx->start - 1 + cdiff);
-        wmove(self->window, y, wcswidth(&ctx->line[ctx->start], mx_x));
-    } else if (ctx->start && (ctx->pos == ctx->len)) {
+    if (ctx->start && (x >= mx_x - cur_len))
+        ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
+    else if (ctx->start && (ctx->pos == ctx->len))
         ctx->start = MAX(0, ctx->start - cur_len);
-        wmove(self->window, y, wcswidth(&ctx->line[ctx->start], mx_x));
-    } else if (ctx->start) {
+    else if (ctx->start)
         ctx->start = MAX(0, ctx->start - cur_len);
-    } else {
-        wmove(self->window, y, x - cur_len);
-    }
 }
 
 /* moves cursor/line position right in input field and buffer */
-static void input_mv_right(ToxWindow *self, int x, int y, int mx_x, int mx_y)
+static void input_mv_right(ToxWindow *self, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos >= ctx->len) {
-        beep();
+    if (ctx->pos >= ctx->len)
         return;
-    }
 
     ++ctx->pos;
 
-    int cur_len = MAX(1, wcwidth(ctx->line[ctx->pos - 1]));
+    int cur_len = wcwidth(ctx->line[ctx->pos - 1]);
 
     if (x + cur_len >= mx_x) {
         int s_len = wcwidth(ctx->line[ctx->start]);
-        int cdiff = cur_len - s_len;
-        ctx->start += 1 + MAX(0, cdiff);
-        wmove(self->window, y, wcswidth(&ctx->line[ctx->start], mx_x));
-    } else {
-        wmove(self->window, y, x + cur_len);
+        ctx->start += 1 + MAX(0, cur_len - s_len);
     }
 }
 
 /* puts a line history item in input field and buffer */
-static void input_history(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
+static void input_history(ToxWindow *self, wint_t key, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
     fetch_hist_item(ctx, key);
-    ctx->start = mx_x * (ctx->len / mx_x);
-    input_mv_end(self, x, y, mx_x, mx_y);
+    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+    ctx->start = wlen < mx_x ? 0 : wlen - mx_x + 1;
 }
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
@@ -232,7 +198,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
     switch (key) {
         case 0x7f:
         case KEY_BACKSPACE:
-            input_backspace(self, x, y, mx_x, mx_y);
+            input_backspace(self, x, mx_x);
             break;
 
         case KEY_DC:
@@ -240,34 +206,38 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
             break;
 
         case T_KEY_DISCARD:
-            input_discard(self, mx_y);
+            input_discard(self);
             break;
 
         case T_KEY_KILL:
             input_kill(self->chatwin);
             break;
 
+        case T_KEY_C_Y:
+            input_yank(self, x, mx_x);
+            break;
+
         case KEY_HOME:
         case T_KEY_C_A:
-            input_mv_home(self, mx_y);
+            input_mv_home(self);
             break;
 
         case KEY_END:
         case T_KEY_C_E:
-            input_mv_end(self, x, y, mx_x, mx_y);
+            input_mv_end(self, y, mx_x);
             break;
 
         case KEY_LEFT:
-            input_mv_left(self, x, y, mx_x, mx_y);
+            input_mv_left(self, x, mx_x);
             break;
 
         case KEY_RIGHT:
-            input_mv_right(self, x, y, mx_x, mx_y);
+            input_mv_right(self, x, mx_x);
             break;
 
         case KEY_UP:
         case KEY_DOWN:
-            input_history(self, key, x, y, mx_x, mx_y);
+            input_history(self, key, mx_x);
             break;
 
         default:

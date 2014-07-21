@@ -20,6 +20,10 @@
  *
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE    /* needed for wcswidth() */
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
@@ -36,6 +40,7 @@
 #include "input.h"
 #include "help.h"
 #include "notify.h"
+#include "autocomplete.h"
 
 char pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
 uint16_t num_frnd_requests = 0;
@@ -62,15 +67,16 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/quit"       },
     { "/status"     },
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 
     { "/lsdev"       },
     { "/sdev"        },
 
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 };
 
-void kill_prompt_window(ToxWindow *self) {
+void kill_prompt_window(ToxWindow *self) 
+{
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
@@ -172,14 +178,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t') {    /* TAB key: auto-completes command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
-            int diff = complete_line(ctx, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+            int diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
-                    wmove(self->window, y, x + diff);
-                    ctx->start += diff;
-                } else {
-                    wmove(self->window, y, x + diff);
+                    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+                    ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
                 beep();
@@ -275,7 +279,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     (void) x;
 
-    int new_x = ctx->start ? x2 - 1 : ctx->pos;
+    int new_x = ctx->start ? x2 - 1 : wcswidth(ctx->line, ctx->pos);
     wmove(self->window, y + 1, new_x);
 
     wrefresh(self->window);
@@ -444,7 +448,7 @@ ToxWindow new_prompt(void)
     ret.onConnectionChange = &prompt_onConnectionChange;
     ret.onFriendRequest = &prompt_onFriendRequest;
 
-    strcpy(ret.name, "prompt");
+    strcpy(ret.name, "home");
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
