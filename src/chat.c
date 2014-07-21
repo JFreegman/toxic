@@ -611,6 +611,7 @@ void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
 #endif /* _SOUND_NOTIFY */
 }
 
+#ifdef _AUDIO
 static void init_infobox(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
@@ -623,10 +624,11 @@ static void init_infobox(ToxWindow *self)
 
     ctx->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
     ctx->infobox.starttime = get_unix_time();
-    ctx->infobox.vad_lvl = VAD_THRESHOLD_DEFAULT;
+    ctx->infobox.vad_lvl = user_settings_->VAD_treshold;
     ctx->infobox.active = true;
     strcpy(ctx->infobox.timestr, "00");
 }
+#endif
 
 static void kill_infobox(ToxWindow *self)
 {
