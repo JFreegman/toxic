@@ -59,7 +59,6 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/exit"       },
     { "/groupchat"  },
     { "/help"       },
-    { "/join"       },
     { "/log"        },
     { "/myid"       },
     { "/nick"       },

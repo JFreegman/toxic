@@ -31,51 +31,53 @@
 
 #include "configdir.h"
 
-/**
- * @brief Get the users config directory.
- *
- * This is without a trailing slash.
- *
- * @return The users config dir or NULL on error.
- */
-char *get_user_config_dir(void)
+/* get the user's home directory */
+void get_home_dir(char *home, int size)
 {
-    char *user_config_dir;
-
-#ifndef NSS_BUFLEN_PASSWD
-#define NSS_BUFLEN_PASSWD 4096
-#endif /* NSS_BUFLEN_PASSWD */
-
     struct passwd pwd;
     struct passwd *pwdbuf;
-    const char *home;
+    const char *hmstr;
     char buf[NSS_BUFLEN_PASSWD];
-    size_t len;
     int rc;
 
     rc = getpwuid_r(getuid(), &pwd, buf, NSS_BUFLEN_PASSWD, &pwdbuf);
 
     if (rc == 0) {
-        home = pwd.pw_dir;
+        hmstr = pwd.pw_dir;
     } else {
-        home = getenv("HOME");
+        hmstr = getenv("HOME");
 
-        if (home == NULL) {
-            return NULL;
-        }
+        if (hmstr == NULL)
+            return;
 
-        /* env variables can be tainted */
-        snprintf(buf, sizeof(buf), "%s", home);
-        home = buf;
+        snprintf(buf, sizeof(buf), "%s", hmstr);
+        hmstr = buf;
     }
+
+    snprintf(home, size, "%s", hmstr);
+}
+
+/**
+ * @brief Get the user's config directory.
+ *
+ * This is without a trailing slash. Resulting string must be freed.
+ *
+ * @return The users config dir or NULL on error.
+ */
+char *get_user_config_dir(void)
+{
+    char home[NSS_BUFLEN_PASSWD];
+    get_home_dir(home, sizeof(home));
+
+    char *user_config_dir;
+    size_t len;
 
 # if defined(__APPLE__)
     len = strlen(home) + strlen("/Library/Application Support") + 1;
     user_config_dir = malloc(len);
 
-    if (user_config_dir == NULL) {
+    if (user_config_dir == NULL)
         return NULL;
-    }
 
     snprintf(user_config_dir, len, "%s/Library/Application Support", home);
 # else /* __APPLE__ */
@@ -86,9 +88,8 @@ char *get_user_config_dir(void)
         len = strlen(home) + strlen("/.config") + 1;
         user_config_dir = malloc(len);
 
-        if (user_config_dir == NULL) {
+        if (user_config_dir == NULL)
             return NULL;
-        }
 
         snprintf(user_config_dir, len, "%s/.config", home);
     } else {
@@ -98,7 +99,6 @@ char *get_user_config_dir(void)
 # endif /* __APPLE__ */
 
     return user_config_dir;
-#undef NSS_BUFLEN_PASSWD
 }
 
 /*

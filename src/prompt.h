@@ -27,9 +27,9 @@
 #include "windows.h"
 
 #ifdef _AUDIO
-#define AC_NUM_GLOB_COMMANDS 17
+#define AC_NUM_GLOB_COMMANDS 16
 #else
-#define AC_NUM_GLOB_COMMANDS 15
+#define AC_NUM_GLOB_COMMANDS 14
 #endif /* _AUDIO */
 
 ToxWindow new_prompt(void);

@@ -35,6 +35,7 @@
 #include "misc_tools.h"
 #include "line_info.h"
 #include "execute.h"
+#include "configdir.h"
 
 static void print_matches(ToxWindow *self, Tox *m, const void *list, int n_items, int size)
 {
@@ -62,11 +63,13 @@ static void get_str_match(ToxWindow *self, char *match, char (*matches)[MAX_STR_
     int i;
 
     for (i = 0; i < MAX_STR_SIZE; ++i) {
-        char ch = matches[0][i];
+        char ch1 = matches[0][i];
         int j;
 
         for (j = 0; j < n; ++j) {
-            if (matches[j][i] != ch) {
+            char ch2 = matches[j][i];
+
+            if (ch1 != ch2 || !ch1) {
                 strcpy(match, matches[0]);
                 match[i] = '\0';
                 return;
@@ -198,25 +201,58 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     return diff;
 }
 
-/* matches /sendfile "<incomplete-dir>" line to matching directories.
+/* transforms a sendfile tab complete contaning the shorthand "~/" into the full home directory.*/
+static void complt_home_dir(ToxWindow *self, char *path)
+{
+    ChatContext *ctx = self->chatwin;
 
-   if only one match, auto-complete line.
-   return diff between old len and new len of ctx->line, or -1 if no matches 
+    char homedir[MAX_STR_SIZE];
+    get_home_dir(homedir, sizeof(homedir));
+
+    char newline[MAX_STR_SIZE];
+    const char *isqt = !strchr(path, '\"') ? "\"" : "";
+    snprintf(newline, sizeof(newline), "/sendfile %s%s/", isqt, homedir);
+
+    wchar_t wline[MAX_STR_SIZE];
+
+    if (mbs_to_wcs_buf(wline, newline, sizeof(wline)) == -1)
+        return;
+
+    int newlen = wcslen(wline);
+
+    if (ctx->len + newlen > MAX_STR_SIZE)
+        return;
+
+    wmemcpy(ctx->line, wline, newlen + 1);
+    ctx->pos = newlen;
+    ctx->len = ctx->pos;
+}
+
+/*  attempts to match /sendfile "<incomplete-dir>" line to matching directories.
+
+    if only one match, auto-complete line.
+    return diff between old len and new len of ctx->line, -1 if no matches 
 */
 #define MAX_DIRS 256
 
-int dir_match(ToxWindow *self, Tox *m, const wchar_t *line)
+int dir_match(ToxWindow *self, Tox *m, wchar_t *line)
 {
     char b_path[MAX_STR_SIZE];
     char b_name[MAX_STR_SIZE];
 
     if (wcs_to_mbs_buf(b_path, line, sizeof(b_path)) == -1)
+        return -1; 
+
+    if (!strncmp(b_path, "\"~/", 3) || !strncmp(b_path, "~/", 2)) {
+        complt_home_dir(self, b_path);
         return -1;
+    }
 
     int si = char_rfind(b_path, '/', strlen(b_path));
 
     if (!b_path[0]) {    /* list everything in pwd */
-        strcpy(b_path, ".");  
+        b_path[0] = '.';
+        b_path[1] = '\0'; 
     } else if (!si && b_path[0] != '/') {    /* look for matches in pwd */
         char tmp[MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), ".%s", b_path);

@@ -568,7 +568,7 @@ int main(int argc, char *argv[])
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-//     signal(SIGINT, catch_SIGINT);
+    signal(SIGINT, catch_SIGINT);
 
     config_err = create_user_config_dir(user_config_dir);
 
