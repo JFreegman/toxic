@@ -74,7 +74,7 @@ struct _ActiveSounds {
     uint32_t buffer;
     _Bool active;
     _Bool looping;
-} actives[ACTIVE_SOUNDS_MAX] = {0};
+} actives[ACTIVE_SOUNDS_MAX] = {{0}};
 #endif
 /**********************************************************************************/
 /**********************************************************************************/
@@ -154,6 +154,7 @@ void* do_playing(void* _p)
         pthread_mutex_unlock(Control.poll_mutex);
         usleep(10000);
     }
+    pthread_exit(NULL);
 }
 
 
@@ -190,7 +191,7 @@ int play_source(uint32_t source, uint32_t buffer, _Bool looping)
 int init_notify(int login_cooldown)
 {
 #ifdef _SOUND_NOTIFY
-    if (open_primary_device(output, &Control.device_idx) != de_None)
+    if (open_primary_device(output, &Control.device_idx, 48000, 20) != de_None)
         return -1;
         
     pthread_mutex_init(Control.poll_mutex, NULL);
@@ -248,7 +249,7 @@ int play_sound_internal(Notification what, _Bool loop)
     uint32_t source;
     uint32_t buffer;
     
-    alutLoadWAVFile(Control.sounds[what], &format, (void**)&data, &buffer_size, &clockrate, &loop_);
+    alutLoadWAVFile((signed char*)Control.sounds[what], &format, (void**)&data, &buffer_size, &clockrate, &loop_);
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
     alBufferData(buffer, format, data, buffer_size, clockrate);

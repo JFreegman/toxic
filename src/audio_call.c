@@ -192,7 +192,8 @@ int start_transmission(ToxWindow *self)
     
     set_call(&ASettins.calls[self->call_idx], _True);
         
-    if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx) != de_None ) 
+    if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx, 
+            av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) != de_None ) 
         line_info_add(self, NULL, NULL, NULL, "Failed to open input device!", SYS_MSG, 0, 0);
     
     if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
@@ -200,7 +201,8 @@ int start_transmission(ToxWindow *self)
         /* Set VAD as true for all; TODO: Make it more dynamic */
         line_info_add(self, NULL, NULL, NULL, "Failed to register input handler!", SYS_MSG, 0, 0);
     
-    if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx) != de_None ) {
+    if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx, 
+            av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) != de_None ) {
         line_info_add(self, NULL, NULL, NULL, "Failed to open output device!", SYS_MSG, 0, 0);
         ASettins.calls[self->call_idx].has_output = 0;
     }
@@ -617,14 +619,16 @@ void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (
             if (type == output) {
                 pthread_mutex_lock(&this_call->mutex);
                 close_device(output, this_call->out_idx);
-                this_call->has_output = open_device(output, selection, &this_call->out_idx) 
+                this_call->has_output = open_device(output, selection, &this_call->out_idx, 
+                        av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) 
                     == de_None ? 1 : 0;
                 pthread_mutex_unlock(&this_call->mutex);
             }
             else {
                 /* TODO: check for failure */
                 close_device(input, this_call->in_idx);
-                open_device(input, selection, &this_call->in_idx);
+                open_device(input, selection, &this_call->in_idx, 
+                    av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration);
                 /* Set VAD as true for all; TODO: Make it more dynamic */
                 register_device_callback(self->call_idx, this_call->in_idx, read_device_callback, &self->call_idx, _True);
             }

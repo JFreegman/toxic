@@ -27,8 +27,6 @@
 
 #include "device.h"
 
-#define VAD_THRESHOLD_DEFAULT 40.0
-
 typedef enum _AudioError {
     ae_None = 0,
     ae_StartingCaptureDevice = 1 << 0,

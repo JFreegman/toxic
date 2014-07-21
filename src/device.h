@@ -71,12 +71,14 @@ void* get_device_callback_data(uint32_t device_idx);
 /* toggle device mute */
 DeviceError device_mute(DeviceType type, uint32_t device_idx);
 
+#ifdef _AUDIO
 DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
+#endif
 
 DeviceError set_primary_device(DeviceType type, int32_t selection);
-DeviceError open_primary_device(DeviceType type, uint32_t* device_idx);
+DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration);
 /* Start device */
-DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx);
+DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration);
 /* Stop device */
 DeviceError close_device(DeviceType type, uint32_t device_idx);
 
