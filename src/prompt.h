@@ -26,11 +26,11 @@
 #include "toxic.h"
 #include "windows.h"
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
 #define AC_NUM_GLOB_COMMANDS 17
 #else
 #define AC_NUM_GLOB_COMMANDS 15
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);

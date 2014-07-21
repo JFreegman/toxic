@@ -41,6 +41,7 @@
 #include "settings.h"
 #include "input.h"
 #include "help.h"
+#include "notify.h"
 #include "autocomplete.h"
 
 extern char *DATA_FILE;
@@ -48,7 +49,7 @@ extern char *DATA_FILE;
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
 
-extern struct user_settings *user_settings;
+extern struct user_settings *user_settings_;
 
 /* temporary until group chats have unique commands */
 extern const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
@@ -135,25 +136,18 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);  /* enforce client max name length */
     nick[n_len] = '\0';
 
-    /* check if message contains own name and alert appropriately */
-    int alert_type = WINDOW_ALERT_1;
-    bool beep = false;
-
     char selfnick[TOX_MAX_NAME_LENGTH];
     uint16_t sn_len = tox_get_self_name(m, (uint8_t *) selfnick);
     selfnick[sn_len] = '\0';
 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
-    bool nick_match = strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1);
-
-    if (nick_match) {
-        alert_type = WINDOW_ALERT_0;
-        beep = true;
+    /* Only play sound if mentioned */
+    if (strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1)) {
+        notify(self, generic_message, NT_WNDALERT_0);
         nick_clr = RED;
     }
-
-    alert_window(self, alert_type, beep);
+    else notify(self, silent, NT_WNDALERT_1);
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -170,22 +164,14 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
 
     ChatContext *ctx = self->chatwin;
 
-    /* check if message contains own name and alert appropriately */
-    int alert_type = WINDOW_ALERT_1;
-    bool beep = false;
-
     char selfnick[TOX_MAX_NAME_LENGTH];
     uint16_t n_len = tox_get_self_name(m, (uint8_t *) selfnick);
     selfnick[n_len] = '\0';
 
-    const char *nick_match = strcasestr(action, selfnick);
-
-    if (nick_match) {
-        alert_type = WINDOW_ALERT_0;
-        beep = true;
+    if (strcasestr(action, selfnick)) {
+        notify(self, generic_message, NT_WNDALERT_0);
     }
-
-    alert_window(self, alert_type, beep);
+    else notify(self, silent, NT_WNDALERT_1);
 
     char nick[TOX_MAX_NAME_LENGTH];
     n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
@@ -318,7 +304,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
             break;
     }
 
-    alert_window(self, WINDOW_ALERT_2, false);
+    notify(self, silent, NT_WNDALERT_2);
 }
 
 static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
@@ -501,7 +487,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings->autolog == AUTOLOG_ON)
+    if (user_settings_->autolog == AUTOLOG_ON)
         log_enable(self->name, NULL, ctx->log);
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);

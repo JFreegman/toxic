@@ -30,6 +30,7 @@
 #include "file_senders.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "notify.h"
 
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
@@ -48,10 +49,9 @@ static void set_max_file_senders_index(void)
 
 static void close_file_sender(ToxWindow *self, Tox *m, int i, char *msg, int CTRL, int filenum, int32_t friendnum)
 {
-    if (self->chatwin != NULL) {
+    if (self->chatwin != NULL) 
         line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-        alert_window(file_senders[i].toxwin, WINDOW_ALERT_2, true);
-    }
+    
 
     tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);
     fclose(file_senders[i].file);
@@ -94,6 +94,7 @@ void do_file_senders(Tox *m)
         if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)) {
             snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", pathname);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
+            notify(self, error, NT_NOFOCUS | NT_WNDALERT_2);
             continue;
         }
 
@@ -122,6 +123,7 @@ void do_file_senders(Tox *m)
             if (file_senders[i].piecelen == 0) {
                 snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
                 close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
+                notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2);
                 break;
             }
         }

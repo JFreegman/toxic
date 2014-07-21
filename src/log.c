@@ -31,7 +31,7 @@
 #include "log.h"
 #include "settings.h"
 
-extern struct user_settings *user_settings;
+extern struct user_settings *user_settings_;
 
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
 void init_logging_session(char *name, char *key, struct chatlog *log)
@@ -99,7 +99,7 @@ void write_to_log(const char *msg, char *name, struct chatlog *log, bool event)
     else
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
-    const char *t = user_settings->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
+    const char *t = user_settings_->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
     char s[MAX_STR_SIZE];
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);

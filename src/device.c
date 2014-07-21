@@ -66,7 +66,9 @@ static int size[2];                        /* Size of above containers */
 Device *running[2][MAX_DEVICES];     /* Running devices */
 uint32_t primary_device[2];          /* Primary device */
 
+#ifdef _AUDIO
 static ToxAv* av = NULL;
+#endif /* _AUDIO */
 
 /* q_mutex */
 #define lock pthread_mutex_lock(&mutex)
@@ -79,7 +81,11 @@ _Bool thread_running = _True,
 
 void* thread_poll(void*);
 /* Meet devices */
+#ifdef _AUDIO
 DeviceError init_devices(ToxAv* av_)
+#else
+DeviceError init_devices()
+#endif /* _AUDIO */
 {
     const char *stringed_device_list;
     
@@ -115,7 +121,9 @@ DeviceError init_devices(ToxAv* av_)
     if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0) 
         return de_InternalError;    
     
+#ifdef _AUDIO
     av = av_;
+#endif /* _AUDIO */
     
     return (DeviceError) ae_None;
 }
@@ -391,8 +399,11 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
                     int16_t frame[4096];
                     alcCaptureSamples(device->dhndl, frame, f_size);
                     
-                    if ( device->muted || 
-                        (device->enable_VAD && !toxav_has_activity(av, device->call_idx, frame, f_size, device->VAD_treshold)))
+                    if ( device->muted 
+                    #ifdef _AUDIO
+                        || (device->enable_VAD && !toxav_has_activity(av, device->call_idx, frame, f_size, device->VAD_treshold))
+                    #endif /* _AUDIO */
+                        )
                         { unlock; continue; } /* Skip if no voice activity */
                     
                     if ( device->cb ) device->cb(frame, f_size, device->cb_data);

@@ -30,7 +30,7 @@
 #include "groupchat.h"
 #include "settings.h"
 
-extern struct user_settings *user_settings;
+extern struct user_settings *user_settings_;
 
 void line_info_init(struct history *hst)
 {
@@ -207,7 +207,7 @@ static void line_info_check_queue(ToxWindow *self)
     if (line == NULL)
         return;
 
-    if (hst->start_id > user_settings->history_size)
+    if (hst->start_id > user_settings_->history_size)
         line_info_root_fwd(hst);
 
     line->id = hst->line_end->id + 1;

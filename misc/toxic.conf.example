@@ -1,26 +1,51 @@
-# 24 or 12 hour time
-time:24;
+// SAMPLE TOXIC CONFIGURATION
+// USES LIBCONFIG-ACCEPTED SYNTAX
 
-# 1 to enable timestamps, 0 to disable
-timestamps:1;
+ui = {
+  // true to enable timestamps, false to disable
+  timestamps:true;
 
-# 1 to enable autologging, 0 to disable
-autolog:0;
+  // true to disabale terminal alerts on messages, false to enable
+  alerts:true;
 
-# 1 to disbale terminal alerts on messages, 0 to enable
-alerts:1;
+  // true to use native terminal colours, false to use toxic default colour theme
+  native_colors:true;
 
-# maximum lines for chat window history
-history_size:700;
+  // true to enable autologging, false to disable
+  autolog:false;
+  
+  // 24 or 12 hour time
+  time_format=24;
 
-# 1 to use native terminal colours, 0 to use toxic default colour theme
-colour_theme:0;
+  // maximum lines for chat window history
+  history_size=700;
+};
 
-# preferred audio input device; numbers correspond to /lsdev in
-audio_in_dev:0;
+audio = {
+  // preferred audio input device; numbers correspond to /lsdev in
+  input_device=2;
 
-# preferred audio output device; numbers correspond to /lsdev out
-audio_out_dev:0;
+  // preferred audio output device; numbers correspond to /lsdev out
+  output_device=0;
+  
+  // default VAD treshold; float (recommended values are around 40)
+  VAD_treshold=40.0;
+};
 
-# preferred path for downloads
-download_path:/home/USERNAME/Downloads/;
+tox = {
+  // where to store received files
+  download_path="/home/USERNAME/Downloads/";
+};
+
+sounds = {
+  error="/usr/local/toxic/sounds/Error.wav";
+  self_log_in="/usr/local/toxic/sounds/Log In.wav";
+  self_log_out="/usr/local/toxic/sounds/Log Out.wav";
+  user_log_in="/usr/local/toxic/sounds/Contact Logs In.wav";
+  user_log_out="/usr/local/toxic/sounds/Contact Logs Out.wav";
+  call_incoming="/usr/local/toxic/sounds/Incoming Call.wav";
+  call_outgoing="/usr/local/toxic/sounds/Outgoing Call.wav";
+  generic_message="/usr/local/toxic/sounds/New Message.wav";
+  transfer_pending="/usr/local/toxic/sounds/Transfer Pending.wav";
+  transfer_completed="/usr/local/toxic/sounds/Transfer Complete.wav";
+};

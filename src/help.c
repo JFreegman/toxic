@@ -144,14 +144,14 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /close                     : Close the current chat window\n");
     wprintw(win, "  /quit or /exit             : Exit Toxic\n");
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     wattron(win, A_BOLD);
     wprintw(win, "\n Audio:\n");
     wattroff(win, A_BOLD);
 
     wprintw(win, "  /lsdev <type>              : List devices where type: in|out\n");
     wprintw(win, "  /sdev <type> <id>          : Set active device\n");
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
     help_draw_bottom_menu(win);
 
@@ -174,7 +174,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /sendfile <path>           : Send a file\n");
     wprintw(win, "  /savefile <n>              : Receive a file\n");
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     wattron(win, A_BOLD);
     wprintw(win, "\n Audio:\n");
     wattroff(win, A_BOLD);
@@ -187,7 +187,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /sdev <type> <id>          : Change active device\n");
     wprintw(win, "  /mute <type>               : Mute active device if in call\n");
     wprintw(win, "  /sense <n>                 : VAD sensitivity treshold\n");
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 
     help_draw_bottom_menu(win);
 
@@ -226,7 +226,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'c':
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
             help_init_window(self, 19, 80);
 #else
             help_init_window(self, 9, 80);
@@ -235,7 +235,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'g':
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
             help_init_window(self, 21, 80);
 #else
             help_init_window(self, 17, 80);

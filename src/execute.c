@@ -31,6 +31,7 @@
 #include "global_commands.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "notify.h"
 
 struct cmd_func {
     const char *name;
@@ -53,10 +54,10 @@ static struct cmd_func global_commands[] = {
     { "/quit",      cmd_quit          },
     { "/status",    cmd_status        },
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     { "/lsdev",     cmd_list_devices  },
     { "/sdev",      cmd_change_device },
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 };
 
 static struct cmd_func chat_commands[] = {
@@ -65,7 +66,7 @@ static struct cmd_func chat_commands[] = {
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
 
-#ifdef _SUPPORT_AUDIO
+#ifdef _AUDIO
     { "/call",      cmd_call        },
     { "/cancel",    cmd_cancel      },
     { "/answer",    cmd_answer      },
@@ -74,7 +75,7 @@ static struct cmd_func chat_commands[] = {
     { "/sdev",      cmd_ccur_device },
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
-#endif /* _SUPPORT_AUDIO */
+#endif /* _AUDIO */
 };
 
 /* Parses input command and puts args into arg array.
@@ -165,5 +166,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
     if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Invalid command.", SYS_MSG, 0, 0);
+    /* Just play sound instead */
+    /*line_info_add(self, NULL, NULL, NULL, "Invalid command.", SYS_MSG, 0, 0);*/
+    notify(self, error, 0);
 }

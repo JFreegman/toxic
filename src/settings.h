@@ -23,14 +23,6 @@
 #ifndef _settings_h
 #define _settings_h
 
-#include "toxic.h"
-
-#ifdef _SUPPORT_AUDIO
-    #define NUM_SETTINGS 9
-#else
-    #define NUM_SETTINGS 7
-#endif /* _SUPPORT_AUDIO */
-
 /* holds user setting values */
 struct user_settings {
     int autolog;           /* boolean */
@@ -39,11 +31,12 @@ struct user_settings {
     int timestamps;        /* boolean */
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
-    char download_path[MAX_STR_SIZE];
+    char* download_path;
 
-#ifdef _SUPPORT_AUDIO
-    long int audio_in_dev;
-    long int audio_out_dev;
+#ifdef _AUDIO
+    int audio_in_dev;
+    int audio_out_dev;
+    double VAD_treshold;
 #endif
 };
 

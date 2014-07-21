@@ -56,7 +56,12 @@ typedef enum DeviceError {
 typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
 
 
+#ifdef _AUDIO
 DeviceError init_devices(ToxAv* av);
+#else
+DeviceError init_devices();
+#endif /* _AUDIO */
+
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
