@@ -6,14 +6,18 @@ CFG_DIR = ../cfg
 SRC_DIR = ../src
 MISC_DIR = ../misc
 DOC_DIR = ../doc
+SND_DIR = ../sounds
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/man
 DATAFILES = DHTnodes toxic.conf.example
 MANFILES = toxic.1 toxic.conf.5
+SNDFILES = ContactLogsIn.wav ContactLogsOut.wav Error.wav IncomingCall.wav
+SNDFILES += LogIn.wav LogOut.wav NewMessage.wav OutgoingCall.wav
+SNDFILES += TransferComplete.wav TransferPending.wav
 
-LIBS = libtoxcore ncursesw
+LIBS = libtoxcore ncursesw libconfig
 
 CFLAGS = -std=gnu99 -pthread -Wall -g
 CFLAGS += -DTOXICVER="\"$(VERSION)\"" -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED
@@ -21,14 +25,19 @@ CFLAGS += -DPACKAGE_DATADIR="\"$(abspath $(DATADIR))\""
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
 
-OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o
+OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o notify.o
 OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o help.o autocomplete.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
 # Variables for audio support
 AUDIO_LIBS = libtoxav openal
-AUDIO_CFLAGS = -D_SUPPORT_AUDIO
+AUDIO_CFLAGS = -D_AUDIO
 AUDIO_OBJ = device.o audio_call.o
+
+# Variables for sound notify support
+SND_NOTIFY_LIBS = openal freealut
+SND_NOTIFY_CFLAGS = -D_SOUND_NOTIFY
+SND_NOTIFY_OBJ = device.o
 
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)
@@ -57,6 +66,13 @@ ifneq ($(filter arm%, $(UNAME_M)),)
 	-include $(CFG_DIR)/arm.mk
 endif
 
+# Check if we can use X11
+CHECK_X11_LIBS = $(shell pkg-config x11 || echo -n "error")
+ifneq ($(CHECK_X11_LIBS), error)
+	LIBS += x11
+	CFLAGS += -D_X11
+endif
+
 # Check if we want/can build audio
 ifneq ($(DISABLE_AV), 1)
 CHECK_AUDIO_LIBS = $(shell pkg-config $(AUDIO_LIBS) || echo -n "error")
@@ -70,6 +86,23 @@ MISSING_AUDIO_LIBS = $(shell for lib in $(AUDIO_LIBS) ; do if ! pkg-config $$lib
 $(warning WARNING -- Toxic will be compiled without audio support)
 $(warning WARNING -- You need these libraries for audio support)
 $(warning WARNING -- $(MISSING_AUDIO_LIBS))
+endif
+endif
+endif
+
+# Check if we want/can build sound notify support
+ifneq ($(DISABLE_NOTIFY), 1)
+CHECK_NOTIFY_LIBS = $(shell pkg-config $(SND_NOTIFY_LIBS) || echo -n "error")
+ifneq ($(CHECK_NOTIFY_LIBS), error)
+	LIBS += $(SND_NOTIFY_LIBS)
+	CFLAGS += $(SND_NOTIFY_CFLAGS)
+	OBJ += $(SND_NOTIFY_OBJ)
+else
+ifneq ($(MAKECMDGOALS), clean)
+MISSING_NOTIFY_LIBS = $(shell for lib in $(SND_NOTIFY_LIBS) ; do if ! pkg-config $$lib ; then echo $$lib ; fi ; done)
+$(warning WARNING -- Toxic will be compiled without sound notify support)
+$(warning WARNING -- You need these libraries for sound notify support)
+$(warning WARNING -- $(MISSING_NOTIFY_LIBS))
 endif
 endif
 endif
@@ -99,12 +132,18 @@ toxic: $(OBJ)
 install: toxic
 	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
 	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))
+	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))/sounds
 	mkdir -p $(abspath $(DESTDIR)/$(MANDIR))
 	@echo "Installing toxic executable"
 	@install -m 0755 toxic $(abspath $(DESTDIR)/$(BINDIR))
 	@echo "Installing data files"
 	@for f in $(DATAFILES) ; do \
 		install -m 0644 $(MISC_DIR)/$$f $(abspath $(DESTDIR)/$(DATADIR)) ;\
+		file=$(abspath $(DESTDIR)/$(DATADIR))/$$f ;\
+		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
+	done
+	@for f in $(SNDFILES) ; do \
+		install -m 0644 $(SND_DIR)/$$f $(abspath $(DESTDIR)/$(DATADIR))/sounds ;\
 	done
 	@echo "Installing man pages"
 	@for f in $(MANFILES) ; do \

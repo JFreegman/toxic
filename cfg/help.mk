@@ -8,10 +8,11 @@ help:
 	@echo "  help:    This help"
 	@echo
 	@echo "-- Variables --"
-	@echo "  DISABLE_AV:   Set to \"1\" to force building without audio call support"
-	@echo "  USER_CFLAGS:  Add custom flags to default CFLAGS"
-	@echo "  USER_LDFLAGS: Add custom flags to default LDFLAGS"
-	@echo "  PREFIX:       Specify a prefix directory for binaries, data files,... (default is \"$(abspath $(PREFIX))\")"
-	@echo "  DESTDIR:      Specify a directory where to store installed files (mainly for packaging purpose)"
+	@echo "  DISABLE_AV:     Set to \"1\" to force building without audio call support"
+	@echo "  DISABLE_NOTIFY: Set to \"1\" to force building without sound notify support"
+	@echo "  USER_CFLAGS:    Add custom flags to default CFLAGS"
+	@echo "  USER_LDFLAGS:   Add custom flags to default LDFLAGS"
+	@echo "  PREFIX:         Specify a prefix directory for binaries, data files,... (default is \"$(abspath $(PREFIX))\")"
+	@echo "  DESTDIR:        Specify a directory where to store installed files (mainly for packaging purpose)"
 
 .PHONY: help
