@@ -5,11 +5,11 @@ ui = {
   // true to enable timestamps, false to disable
   timestamps:true;
 
-  // true to disabale terminal alerts on messages, false to enable
+  // true to enable terminal alerts on messages, false to disable
   alerts:true;
 
   // true to use native terminal colours, false to use toxic default colour theme
-  native_colors:true;
+  native_colors:false;
 
   // true to enable autologging, false to disable
   autolog:false;
@@ -34,7 +34,7 @@ audio = {
 
 tox = {
   // where to store received files
-  download_path="/home/USERNAME/Downloads/";
+  // download_path="/home/USERNAME/Downloads/";
 };
 
 sounds = {

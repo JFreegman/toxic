@@ -33,11 +33,12 @@ OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 AUDIO_LIBS = libtoxav openal
 AUDIO_CFLAGS = -D_AUDIO
 AUDIO_OBJ = device.o audio_call.o
+AV_LOADED = 0
 
 # Variables for sound notify support
 SND_NOTIFY_LIBS = openal freealut
 SND_NOTIFY_CFLAGS = -D_SOUND_NOTIFY
-SND_NOTIFY_OBJ = device.o
+SND_NOTIFY_OBJ =
 
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)
@@ -80,6 +81,7 @@ ifneq ($(CHECK_AUDIO_LIBS), error)
 	LIBS += $(AUDIO_LIBS)
 	CFLAGS += $(AUDIO_CFLAGS)
 	OBJ += $(AUDIO_OBJ)
+	AV_LOADED = 1
 else
 ifneq ($(MAKECMDGOALS), clean)
 MISSING_AUDIO_LIBS = $(shell for lib in $(AUDIO_LIBS) ; do if ! pkg-config $$lib ; then echo $$lib ; fi ; done)
@@ -96,7 +98,13 @@ CHECK_NOTIFY_LIBS = $(shell pkg-config $(SND_NOTIFY_LIBS) || echo -n "error")
 ifneq ($(CHECK_NOTIFY_LIBS), error)
 	LIBS += $(SND_NOTIFY_LIBS)
 	CFLAGS += $(SND_NOTIFY_CFLAGS)
+
+# device.o is needed for both audio calls and notifications but should only be loaded once
+ifneq ($(AV_LOADED), 1)
+	SND_NOTIFY_OBJ += device.o
+endif
 	OBJ += $(SND_NOTIFY_OBJ)
+
 else
 ifneq ($(MAKECMDGOALS), clean)
 MISSING_NOTIFY_LIBS = $(shell for lib in $(SND_NOTIFY_LIBS) ; do if ! pkg-config $$lib ; then echo $$lib ; fi ; done)

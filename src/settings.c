@@ -73,7 +73,7 @@ const struct _tox_strings {
 
 static void tox_defaults(struct user_settings* settings)
 {
-    /*settings->download_path;*/ /* TODO: Set this? */
+    strcpy(settings->download_path, "");    /* explicitly set default to pwd */
 }
 
 #ifdef _AUDIO
@@ -124,7 +124,7 @@ const struct _sound_strings {
 };
 #endif
 
-int settings_load(struct user_settings *s, char *path)
+int settings_load(struct user_settings *s, const char *patharg)
 {
     config_t cfg[1];
     config_setting_t *setting;
@@ -138,9 +138,29 @@ int settings_load(struct user_settings *s, char *path)
 #endif
     
     config_init(cfg);
+
+    char path[MAX_STR_SIZE];
+
+    /* use default config file path */
+    if (patharg == NULL) {
+        char *user_config_dir = get_user_config_dir();
+        snprintf(path, sizeof(path), "%s%stoxic.conf", user_config_dir, CONFIGDIR);
+        free(user_config_dir);
+
+        /* make sure path exists or is created on first time running */
+        FILE *fp = fopen(path, "r");
+
+        if (fp == NULL) {
+            if ((fp = fopen(path, "w")) == NULL)
+                return -1;
+        }
+
+        fclose(fp);
+    } else {
+        snprintf(path, sizeof(path), "%s", patharg);
+    }
     
-    if(!config_read_file(cfg, path))
-    {
+    if (!config_read_file(cfg, path)) {
         config_destroy(cfg);
         return -1;
     }
@@ -159,7 +179,6 @@ int settings_load(struct user_settings *s, char *path)
     
     if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
         if ( config_setting_lookup_string(setting, tox_strings.download_path, &str) ) {
-            s->download_path = calloc(1, strlen(str) + 1);
             strcpy(s->download_path, str);
         }
     }

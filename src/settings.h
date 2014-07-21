@@ -31,7 +31,7 @@ struct user_settings {
     int timestamps;        /* boolean */
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
-    char* download_path;
+    char download_path[MAX_STR_SIZE];
 
 #ifdef _AUDIO
     int audio_in_dev;
@@ -59,6 +59,6 @@ enum {
     DFLT_HST_SIZE = 700,
 } settings_values;
 
-int settings_load(struct user_settings *s, char *path);
+int settings_load(struct user_settings *s, const char *patharg);
 
 #endif /* #define _settings_h */
