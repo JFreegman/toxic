@@ -9,10 +9,15 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 ##### Base
 * [libtoxcore](https://github.com/irungentoo/toxcore)
 * [ncurses](https://www.gnu.org/software/ncurses) (for Debian based systems, 'libncursesw5-dev')
+* [libconfig](http://www.hyperrealm.com/libconfig) (for Debian based systems, 'libconfig-dev')
 
 ##### Audio
 * libtoxav (libtoxcore compiled with audio support)
 * [openal](http://openal.org)
+
+##### Sound notifications
+* [openal](http://openal.org)
+* [openalut](http://openal.org)
 
 ### Compiling
 1. `cd build/`
@@ -24,6 +29,8 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 * You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
 * Audio call support is automatically enabled if all dependencies are found
 * If you want to build toxic without audio call support, you can use `make DISABLE_AV=1`
+* Sound notifications support is automatically enabled if all dependencies are found
+* If you want to build toxic without sound notifications support, you can use `make DISABLE_NOTIFY=1`
 
 ### Packaging
 * For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
