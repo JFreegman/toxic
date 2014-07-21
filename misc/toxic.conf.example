@@ -38,14 +38,14 @@ tox = {
 };
 
 sounds = {
-  error="/usr/local/toxic/sounds/Error.wav";
-  self_log_in="/usr/local/toxic/sounds/Log In.wav";
-  self_log_out="/usr/local/toxic/sounds/Log Out.wav";
-  user_log_in="/usr/local/toxic/sounds/Contact Logs In.wav";
-  user_log_out="/usr/local/toxic/sounds/Contact Logs Out.wav";
-  call_incoming="/usr/local/toxic/sounds/Incoming Call.wav";
-  call_outgoing="/usr/local/toxic/sounds/Outgoing Call.wav";
-  generic_message="/usr/local/toxic/sounds/New Message.wav";
-  transfer_pending="/usr/local/toxic/sounds/Transfer Pending.wav";
-  transfer_completed="/usr/local/toxic/sounds/Transfer Complete.wav";
+  error="__DATADIR__/sounds/Error.wav";
+  self_log_in="__DATADIR__/sounds/LogIn.wav";
+  self_log_out="__DATADIR__/sounds/LogOut.wav";
+  user_log_in="__DATADIR__/sounds/ContactLogsIn.wav";
+  user_log_out="__DATADIR__/sounds/ContactLogsOut.wav";
+  call_incoming="__DATADIR__/sounds/IncomingCall.wav";
+  call_outgoing="__DATADIR__/sounds/OutgoingCall.wav";
+  generic_message="__DATADIR__/sounds/NewMessage.wav";
+  transfer_pending="__DATADIR__/sounds/TransferPending.wav";
+  transfer_completed="__DATADIR__/sounds/TransferComplete.wav";
 };
