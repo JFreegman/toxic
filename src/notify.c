@@ -191,6 +191,7 @@ int play_source(uint32_t source, uint32_t buffer, _Bool looping)
 int init_notify(int login_cooldown)
 {
 #ifdef _SOUND_NOTIFY
+    alutInitWithoutContext(NULL, NULL);
     if (open_primary_device(output, &Control.device_idx, 48000, 20) != de_None)
         return -1;
         
@@ -226,6 +227,7 @@ void terminate_notify()
     
     graceful_clear();
     close_device(output, Control.device_idx);
+    alutExit();
 #endif /* _SOUND_NOTIFY */    
 }
 
@@ -241,22 +243,11 @@ void set_sound(Notification sound, const char* value)
 
 int play_sound_internal(Notification what, _Bool loop)
 {        
-    /*char*    data;
-    int      format;
-    int      clockrate;
-    int      buffer_size;
-    char     loop_;*/
     uint32_t source;
     uint32_t buffer;
     
-    //alutLoadWAVFile((signed char*)Control.sounds[what], &format, (void**)&data, &buffer_size, &clockrate, &loop_);
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
-    /*alBufferData(buffer, format, data, buffer_size, clockrate);
-    alSourcei(source, AL_BUFFER, buffer);
-    alSourcei(source, AL_LOOPING, loop);
-    alutUnloadWAV(format, data, buffer_size, clockrate);*/
-    alutInitWithoutContext(NULL, NULL);
     buffer = alutCreateBufferFromFile((const char*)Control.sounds[what]);
     alSourcei(source, AL_BUFFER, buffer);
     alSourcei(source, AL_LOOPING, loop);
@@ -266,7 +257,6 @@ int play_sound_internal(Notification what, _Bool loop)
         alSourceStop(source);
         alDeleteSources(1, &source);
         alDeleteBuffers(1,&buffer);
-	alutExit();
         return -1;
     }
     
