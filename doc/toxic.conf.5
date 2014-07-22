@@ -8,38 +8,62 @@ file is the main configuration file for
 .BR toxic (1)
 client.
 .SH SYNTAX
-.IB <KEY> : <VALUE> ;
+.I <SECTION>
+.B = {
 .PP
-Lines starting with "#" are comments and will be ignored.
+.IB <KEY1> : <BOOL_VALUE> ;
+.br
+.IB <KEY2> = <NOT_BOOL_VALUE> ;
+.br
+ ...
+.PP
+.B };
+.PP
+Uses syntax accepted by libconfig.
+.br
+Lines starting with "//" are comments and will be ignored.
+.PP
+Sections:
+.PP
+.B ui
+.RS
+Configurations related to user interface.
 .PP
 Keys:
-.PP
-.B time
-.RS
-Select between 24 and 12 hour time.
 .br
-Values: 24, 12
-.RE
-.PP
 .B timestamps
 .RS
 Enable or disable timestamps.
 .br
-Values: 1 to enable, 0 to disable
-.RE
-.PP
-.B autolog
-.RS
-Enable or disable autologging.
-.br
-Values: 1 to enable, 0 to disable
+Values: 'true' to enable, 'false' to disable
 .RE
 .PP
 .B alerts
 .RS
 Enable or disable terminal alerts on events.
 .br
-Values: 1 to enable, 0 to disable
+Values: 'true' to enable, 'false' to disable
+.RE
+.PP
+.B native_colors
+.RS
+Select between native terminal colors and toxic color theme.
+.br
+Values: 'true' for terminal colours, 'false' for toxic colours
+.RE
+.PP
+.B autolog
+.RS
+Enable or disable autologging.
+.br
+Values: 'true' to enable, 'false' to disable
+.RE
+.PP
+.B time_format
+.RS
+Select between 24 and 12 hour time.
+.br
+Values: 24, 12
 .RE
 .PP
 .B history_size
@@ -48,54 +72,209 @@ Maximum lines for chat window history.
 .br
 Values: <INTEGER> (for example: 700)
 .RE
-.PP
-.B colour_theme
-.RS
-Select between toxic colour theme and native terminal colours.
-.br
-Values: 0 for toxic colours, 1 for terminal colours
 .RE
 .PP
-.B audio_in_dev
+.B audio
+.RS
+Configurations related to audio devices.
+.PP
+Keys:
+.br
+.B input_device
 .RS
 Audio input device.
 .br
 Values: <INTEGER> (number correspond to "/lsdev in")
 .RE
 .PP
-.B audio_out_dev
+.B output_device
 .RS
 Audio output device.
 .br
 Values: <INTEGER> (number correspond to "/lsdev out")
 .RE
 .PP
+.B VAD_treshold
+.RS
+Voice Activity Detection treshold.
+.br
+Values: <FLOAT> (recommended values are around 40.0)
+.RE
+.RE
+.PP
+.B tox
+.RS
+Configurations related to file transfer.
+.PP
+Keys:
+.br
 .B download_path
 .RS
 Default path for downloads.
 .br
 Values: <STRING> (absolute path where to store downloaded files)
 .RE
+.RE
+.PP
+.B sounds
+.RS
+Configurations related to notification sounds.
+.PP
+Keys:
+.br
+.B error
+.RS
+Sound to play when an error occurs.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B self_log_in
+.RS
+Sound to play when you log in.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B self_log_out
+.RS
+Sound to play when you log out.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B user_log_in
+.RS
+Sound to play when a contact become online.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B user_log_out
+.RS
+Sound to play when a contact become offline.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B call_incoming
+.RS
+Sound to play when you receive an incoming call.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B call_outgoing
+.RS
+Sound to play when you start a call.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B generic_message
+.RS
+Sound to play when an event occurs.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B transfer_pending
+.RS
+Sound to play when you receive a file transfer request.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.PP
+.B transfer_completed
+.RS
+Sound to play when a file transfer is completed.
+.br
+Values: <STRING> (sound file absolute path)
+.RE
+.RE
 .SH EXAMPLES
 Default settings from __DATADIR__/toxic.conf.exmaple:
 .PP
-time:24;
+// SAMPLE TOXIC CONFIGURATION
 .br
-timestamps:1;
+// USES LIBCONFIG-ACCEPTED SYNTAX
 .br
-autolog:0;
+ui = {
 .br
-alerts:1;
+  // true to enable timestamps, false to disable
 .br
-history_size:700;
+  timestamps:true;
 .br
-colour_theme:0;
 .br
-audio_in_dev:0;
+  // true to enable terminal alerts on messages, false to disable
 .br
-audio_out_dev:0;
+  alerts:true;
 .br
-download_path:/home/USERNAME/Downloads/;
+  // true to use native terminal colours, false to use toxic default colour theme
+.br
+  native_colors:false;
+.br
+  // true to enable autologging, false to disable
+.br
+  autolog:false;
+.br
+  // 24 or 12 hour time
+.br
+  time_format=24;
+.br
+  // maximum lines for chat window history
+.br
+  history_size=700;
+.br
+};
+.br
+audio = {
+.br
+  // preferred audio input device; numbers correspond to /lsdev in
+.br
+  input_device=2;
+.br
+  // preferred audio output device; numbers correspond to /lsdev out
+.br
+  output_device=0;
+.br
+  // default VAD treshold; float (recommended values are around 40)
+.br
+  VAD_treshold=40.0;
+.br
+};
+.br
+tox = {
+.br
+  // where to store received files
+.br
+  // download_path="/home/USERNAME/Downloads/";
+.br
+};
+.br
+sounds = {
+.br
+  error="__DATADIR__/sounds/Error.wav";
+.br
+  self_log_in="__DATADIR__/sounds/LogIn.wav";
+.br
+  self_log_out="__DATADIR__/sounds/LogOut.wav";
+.br
+  user_log_in="__DATADIR__/sounds/ContactLogsIn.wav";
+.br
+  user_log_out="__DATADIR__/sounds/ContactLogsOut.wav";
+.br
+  call_incoming="__DATADIR__/sounds/IncomingCall.wav";
+.br
+  call_outgoing="__DATADIR__/sounds/OutgoingCall.wav";
+.br
+  generic_message="__DATADIR__/sounds/NewMessage.wav";
+.br
+  transfer_pending="__DATADIR__/sounds/TransferPending.wav";
+.br
+  transfer_completed="__DATADIR__/sounds/TransferComplete.wav";
+.br
+};
 .SH FILES
 .IP ~/.config/tox/toxic.conf
 Main configuration file.
