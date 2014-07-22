@@ -241,27 +241,32 @@ void set_sound(Notification sound, const char* value)
 
 int play_sound_internal(Notification what, _Bool loop)
 {        
-    char*    data;
+    /*char*    data;
     int      format;
     int      clockrate;
     int      buffer_size;
-    char     loop_;
+    char     loop_;*/
     uint32_t source;
     uint32_t buffer;
     
-    alutLoadWAVFile((signed char*)Control.sounds[what], &format, (void**)&data, &buffer_size, &clockrate, &loop_);
+    //alutLoadWAVFile((signed char*)Control.sounds[what], &format, (void**)&data, &buffer_size, &clockrate, &loop_);
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
-    alBufferData(buffer, format, data, buffer_size, clockrate);
+    /*alBufferData(buffer, format, data, buffer_size, clockrate);
     alSourcei(source, AL_BUFFER, buffer);
     alSourcei(source, AL_LOOPING, loop);
-    alutUnloadWAV(format, data, buffer_size, clockrate);
+    alutUnloadWAV(format, data, buffer_size, clockrate);*/
+    alutInitWithoutContext(NULL, NULL);
+    buffer = alutCreateBufferFromFile((const char*)Control.sounds[what]);
+    alSourcei(source, AL_BUFFER, buffer);
+    alSourcei(source, AL_LOOPING, loop);
     
     int rc = play_source(source, buffer, loop);
     if (rc < 0) {
         alSourceStop(source);
         alDeleteSources(1, &source);
         alDeleteBuffers(1,&buffer);
+	alutExit();
         return -1;
     }
     

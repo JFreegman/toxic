@@ -29,16 +29,14 @@ OBJ = chat.o chat_commands.o configdir.o dns.o execute.o file_senders.o notify.o
 OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o help.o autocomplete.o
 OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o
 
-# Variables for audio support
+# Variables for audio call support
 AUDIO_LIBS = libtoxav openal
 AUDIO_CFLAGS = -D_AUDIO
-AUDIO_OBJ = device.o audio_call.o
-AV_LOADED = 0
+AUDIO_OBJ = audio_call.o
 
 # Variables for sound notify support
 SND_NOTIFY_LIBS = openal freealut
 SND_NOTIFY_CFLAGS = -D_SOUND_NOTIFY
-SND_NOTIFY_OBJ =
 
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)
@@ -81,7 +79,7 @@ ifneq ($(CHECK_AUDIO_LIBS), error)
 	LIBS += $(AUDIO_LIBS)
 	CFLAGS += $(AUDIO_CFLAGS)
 	OBJ += $(AUDIO_OBJ)
-	AV_LOADED = 1
+	NEED_AV = 1
 else
 ifneq ($(MAKECMDGOALS), clean)
 MISSING_AUDIO_LIBS = $(shell for lib in $(AUDIO_LIBS) ; do if ! pkg-config $$lib ; then echo $$lib ; fi ; done)
@@ -98,12 +96,7 @@ CHECK_NOTIFY_LIBS = $(shell pkg-config $(SND_NOTIFY_LIBS) || echo -n "error")
 ifneq ($(CHECK_NOTIFY_LIBS), error)
 	LIBS += $(SND_NOTIFY_LIBS)
 	CFLAGS += $(SND_NOTIFY_CFLAGS)
-
-# device.o is needed for both audio calls and notifications but should only be loaded once
-ifneq ($(AV_LOADED), 1)
-	SND_NOTIFY_OBJ += device.o
-endif
-	OBJ += $(SND_NOTIFY_OBJ)
+	NEED_AV = 1
 
 else
 ifneq ($(MAKECMDGOALS), clean)
@@ -113,6 +106,11 @@ $(warning WARNING -- You need these libraries for sound notify support)
 $(warning WARNING -- $(MISSING_NOTIFY_LIBS))
 endif
 endif
+endif
+
+# device.o is needed for both audio calls and notifications but should only be loaded once
+ifeq ($(NEED_AV), 1)
+	OBJ += device.o
 endif
 
 # Check if we can build Toxic
