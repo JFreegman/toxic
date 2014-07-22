@@ -308,13 +308,22 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
         msg = "has come online";
         line_info_add(self, timefrmt, nick, NULL, msg, CONNECTION, 0, GREEN);
         write_to_log(msg, nick, ctx->log, true);
+
+#ifdef _SOUND_NOTIFY
         notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
-        
+#else
+        notify(self, silent, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
+#endif /* _SOUND_NOTIFY */
     } else {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, msg, CONNECTION, 0, RED);
         write_to_log(msg, nick, ctx->log, true);
+
+#ifdef _SOUND_NOTIFY
         notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
+#else
+        notify(self, silent, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
+#endif /* _SOUND_NOTIFY */
     }
 }
 

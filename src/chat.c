@@ -766,7 +766,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
             }
         } else {
-            notify(self, error, 0);
+            beep();
         }
 
     } else if (key == '\n') {

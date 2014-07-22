@@ -300,8 +300,10 @@ static int m_play_sound(Notification notif, uint64_t flags)
 {
 #ifdef _SOUND_NOTIFY
     return play_notify_sound(notif, flags);
-    #else
-    beep();
+#else
+    if (notif != silent)
+        beep();
+
     return -1;
 #endif /* _SOUND_NOTIFY */
     

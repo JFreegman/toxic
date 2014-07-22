@@ -129,7 +129,6 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, 
         return;
 
     friends[num].online = status;
-    notify(self, status==1 ? user_log_in : user_log_out, NT_RESTOL | NT_NOTIFWND );
     update_friend_last_online(num, get_unix_time());
     store_data(m, DATA_FILE);
     sort_friendlist_index();

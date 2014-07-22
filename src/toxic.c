@@ -101,7 +101,9 @@ void exit_toxic_success(Tox *m)
     free(DATA_FILE);
     free(user_settings_);
 
+#ifdef _SOUND_NOTIFY
     notify(NULL, self_log_out, NT_ALWAYS);
+#endif /* _SOUND_NOTIFY */
     terminate_notify();
 #ifdef _AUDIO
     terminate_audio();
@@ -619,8 +621,6 @@ int main(int argc, char *argv[])
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
-    char *msg;
-
 #ifdef _AUDIO
 
     av = init_audio(prompt, m);
@@ -631,11 +631,17 @@ int main(int argc, char *argv[])
 #elif _SOUND_NOTIFY
     if ( init_devices() == de_InternalError )
         line_info_add(prompt, NULL, NULL, NULL, "Failed to init devices", SYS_MSG, 0, 0);
+
 #endif /* _AUDIO */
     
     init_notify(60);
+
+#ifdef _SOUND_NOTIFY
     notify(prompt, self_log_in, 0);
-    
+#endif /* _SOUND_NOTIFY */
+
+    char *msg;
+
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
         line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
