@@ -66,7 +66,7 @@ void terminate_notify();
 int notify(ToxWindow* self, Notification notif, uint64_t flags);
 
 #ifdef _SOUND_NOTIFY
-void set_sound(Notification sound, const char* value);
+int set_sound(Notification sound, const char* value);
 void stop_sound(int sound);
 #endif /* _SOUND_NOTIFY */
 
