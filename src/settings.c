@@ -40,6 +40,8 @@
     #define PACKAGE_DATADIR "."
 #endif
 
+#define NO_SOUND "silent"
+
 const struct _ui_strings {
     const char* self;
     const char* timestamps;
@@ -202,44 +204,64 @@ int settings_load(struct user_settings *s, const char *patharg)
 #ifdef _SOUND_NOTIFY
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
         if ( (config_setting_lookup_string(setting, sound_strings.error, &str) != CONFIG_TRUE) ||
-                !set_sound(error, str) )
-            set_sound(error, PACKAGE_DATADIR "/sounds/Error.wav");
+                !set_sound(error, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(error, PACKAGE_DATADIR "/sounds/Error.wav");
+        }
         
         if ( !config_setting_lookup_string(setting, sound_strings.user_log_in, &str) ||
-                !set_sound(user_log_in, str) )
-            set_sound(user_log_in, PACKAGE_DATADIR "/sounds/ContactLogsIn.wav");
+                !set_sound(user_log_in, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(user_log_in, PACKAGE_DATADIR "/sounds/ContactLogsIn.wav");
+        }
         
         if ( !config_setting_lookup_string(setting, sound_strings.self_log_in, &str) ||
-                !set_sound(self_log_in, str) )
-             set_sound(self_log_in, PACKAGE_DATADIR "/sounds/LogIn.wav");
-        
+                !set_sound(self_log_in, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(self_log_in, PACKAGE_DATADIR "/sounds/LogIn.wav");
+        }
+
         if ( !config_setting_lookup_string(setting, sound_strings.user_log_out, &str) ||
-                !set_sound(user_log_out, str) )
-            set_sound(user_log_out, PACKAGE_DATADIR "/sounds/ContactLogsOut.wav");
-        
+                !set_sound(user_log_out, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(user_log_out, PACKAGE_DATADIR "/sounds/ContactLogsOut.wav");
+        }
+
         if ( !config_setting_lookup_string(setting, sound_strings.self_log_out, &str) ||
-                !set_sound(self_log_out, str) )
-            set_sound(self_log_out, PACKAGE_DATADIR "/sounds/LogOut.wav");
+                !set_sound(self_log_out, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(self_log_out, PACKAGE_DATADIR "/sounds/LogOut.wav");
+        }
         
         if ( !config_setting_lookup_string(setting, sound_strings.call_incoming, &str) ||
-                !set_sound(call_incoming, str) )
-            set_sound(call_incoming, PACKAGE_DATADIR "/sounds/IncomingCall.wav");
+                !set_sound(call_incoming, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(call_incoming, PACKAGE_DATADIR "/sounds/IncomingCall.wav");
+        }
         
         if ( !config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ||
-                !set_sound(call_outgoing, str) )
-            set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/OutgoingCall.wav");
+                !set_sound(call_outgoing, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/OutgoingCall.wav");
+        }
         
         if ( config_setting_lookup_string(setting, sound_strings.generic_message, &str) ||
-                !set_sound(generic_message, str) )
-            set_sound(generic_message, PACKAGE_DATADIR "/sounds/NewMessage.wav");
+                !set_sound(generic_message, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(generic_message, PACKAGE_DATADIR "/sounds/NewMessage.wav");
+        }
         
         if ( !config_setting_lookup_string(setting, sound_strings.transfer_pending, &str) ||
-                !set_sound(transfer_pending, str) )
-            set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/TransferPending.wav");
+                !set_sound(transfer_pending, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/TransferPending.wav");
+        }
         
         if ( !config_setting_lookup_string(setting, sound_strings.transfer_completed, &str) ||
-                !set_sound(transfer_completed, str) )
-            set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/TransferComplete.wav");
+                !set_sound(transfer_completed, str) ) {
+            if (strcasecmp(str, NO_SOUND))
+                set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/TransferComplete.wav");
+        }
     }
     else {
         set_sound(error, PACKAGE_DATADIR "/sounds/Error.wav");

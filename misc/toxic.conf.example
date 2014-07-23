@@ -37,6 +37,7 @@ tox = {
   // download_path="/home/USERNAME/Downloads/";
 };
 
+// To disable a sound set the path to "silent"
 sounds = {
   error="__DATADIR__/sounds/Error.wav";
   self_log_in="__DATADIR__/sounds/LogIn.wav";
