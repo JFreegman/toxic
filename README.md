@@ -1,7 +1,7 @@
 # Toxic [![Build Status](https://travis-ci.org/Tox/toxic.png?branch=master)](https://travis-ci.org/Tox/toxic)
 Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
 
-![Toxic Screenshot](https://i.imgur.com/YOZ5NIB.png "Main Screen").
+![Toxic Screenshot](https://i.imgur.com/ueK1Tdj.png "Home Screen").
 
 ## Installation
 
@@ -13,11 +13,11 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 
 ##### Audio
 * libtoxav (libtoxcore compiled with audio support)
-* [openal](http://openal.org)
+* [openal](http://openal.org) (for Debian based systems, 'libopenal-dev')
 
 ##### Sound notifications
 * [openal](http://openal.org)
-* [openalut](http://openal.org)
+* [openalut](http://openal.org) (for Debian based systems, 'libalut-dev')
 
 ### Compiling
 1. `cd build/`

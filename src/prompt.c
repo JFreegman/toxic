@@ -382,7 +382,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     strcpy(ver, TOXICVER);
     const char *toxic_ver = strtok(ver, "_");
 
-    if ( (!strcmp("Online", statusmsg) || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
+    if ( (!statusmsg[0] || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
         snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
