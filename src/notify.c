@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #ifdef __APPLE__
     #include <OpenAL/al.h>
@@ -232,13 +233,16 @@ void terminate_notify()
 }
 
 #ifdef _SOUND_NOTIFY
-void set_sound(Notification sound, const char* value)
+int set_sound(Notification sound, const char* value)
 {
     free(Control.sounds[sound]);
 
     size_t len = strlen(value) + 1;
     Control.sounds[sound] = calloc(1, len);
     memcpy(Control.sounds[sound], value, len);
+
+    struct stat buf;
+    return stat(value, &buf) == 0;
 }
 
 int play_sound_internal(Notification what, _Bool loop)
