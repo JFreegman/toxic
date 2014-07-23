@@ -143,9 +143,9 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
 }
 
 /* case-insensitive string compare function for use with qsort */
-int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2)
+int qsort_strcasecmp_hlpr(const void *str1, const void *str2)
 {
-    return strcasecmp((const char *) nick1, (const char *) nick2);
+    return strcasecmp((const char *) str1, (const char *) str2);
 }
 
 /* Returns 1 if nick is valid, 0 if not. A valid toxic nick:

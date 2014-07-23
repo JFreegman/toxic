@@ -273,7 +273,8 @@ int dir_match(ToxWindow *self, Tox *m, wchar_t *line)
     int dircount = 0;
 
     while ((entry = readdir(dp)) && dircount < MAX_DIRS) {
-        if (strncmp(entry->d_name, b_name, b_name_len) == 0) {
+        if (strncmp(entry->d_name, b_name, b_name_len) == 0 
+                                && strcmp(".", entry->d_name) && strcmp("..", entry->d_name)) {
             snprintf(dirnames[dircount], sizeof(dirnames[dircount]), "%s", entry->d_name);
             ++dircount;
         }
@@ -282,8 +283,10 @@ int dir_match(ToxWindow *self, Tox *m, wchar_t *line)
     if (dircount == 0)
         return -1;
 
-    if (dircount > 1)
+    if (dircount > 1) {
+        qsort(dirnames, dircount, NAME_MAX, qsort_strcasecmp_hlpr);
         print_matches(self, m, dirnames, dircount, NAME_MAX);
+    }
 
     return complete_line(self, dirnames, dircount, NAME_MAX);
 }

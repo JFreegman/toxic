@@ -70,7 +70,7 @@ int timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
 void alert_window(ToxWindow *self, int type, bool is_beep);
 
 /* case-insensitive string compare function for use with qsort */
-int qsort_strcasecmp_hlpr(const void *nick1, const void *nick2);
+int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
 
 /* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
       - cannot be empty
