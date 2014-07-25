@@ -613,6 +613,7 @@ int main(int argc, char *argv[])
         load_data(m, DATA_FILE);
 
     prompt = init_windows(m);
+    prompt_init_statusbar(prompt, m);
 
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
@@ -624,8 +625,8 @@ int main(int argc, char *argv[])
 #ifdef _AUDIO
 
     av = init_audio(prompt, m);
-    
-    
+
+
     set_primary_device(input, user_settings_->audio_in_dev);
     set_primary_device(output, user_settings_->audio_out_dev);
 #elif _SOUND_NOTIFY
@@ -640,7 +641,7 @@ int main(int argc, char *argv[])
     notify(prompt, self_log_in, 0);
 #endif /* _SOUND_NOTIFY */
 
-    char *msg;
+    const char *msg;
 
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
@@ -653,7 +654,6 @@ int main(int argc, char *argv[])
     }
 
     sort_friendlist_index();
-    prompt_init_statusbar(prompt, m);
 
     uint64_t last_save = (uint64_t) time(NULL);
 
