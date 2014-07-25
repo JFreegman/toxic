@@ -66,8 +66,8 @@ static void input_backspace(ToxWindow *self, int x, int mx_x)
         return;
     }
 
-    int cur_len = wcwidth(ctx->line[ctx->pos - 1]);
-    int s_len = wcwidth(ctx->line[ctx->start - 1]);
+    int cur_len = wcwidth(ctx->line[ctx->pos]);
+    int s_len = wcwidth(ctx->line[ctx->start]);
 
     if (ctx->start && (x >= mx_x - cur_len))
         ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
