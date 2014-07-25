@@ -106,7 +106,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-            notify(self, generic_message, NT_NOFOCUS);
+            notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS);
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
@@ -239,7 +239,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-            notify(self, generic_message, NT_NOFOCUS);
+            notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS);
             
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
