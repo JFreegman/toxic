@@ -178,7 +178,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     int strt = ctx->pos - s_len;
     int diff = m_len - s_len + n_endchrs;
 
-    if (ctx->len + diff > MAX_STR_SIZE)
+    if (ctx->len + diff >= MAX_STR_SIZE)
         return -1;
 
     char tmpend[MAX_STR_SIZE];
@@ -220,7 +220,7 @@ static void complt_home_dir(ToxWindow *self, char *path)
 
     int newlen = wcslen(wline);
 
-    if (ctx->len + newlen > MAX_STR_SIZE)
+    if (ctx->len + newlen >= MAX_STR_SIZE)
         return;
 
     wmemcpy(ctx->line, wline, newlen + 1);

@@ -172,7 +172,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     int path_len = strlen(path) - 1;
     path[path_len] = '\0';
 
-    if (path_len > MAX_STR_SIZE) {
+    if (path_len >= MAX_STR_SIZE) {
         errmsg = "File path exceeds character limit.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
@@ -190,7 +190,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint64_t filesize = ftell(file_to_send);
     fseek(file_to_send, 0, SEEK_SET);
 
-    char filename[MAX_STR_SIZE];
+    char filename[MAX_STR_SIZE] = {0};
     get_file_name(filename, sizeof(filename), path);
     int filenum = tox_new_file_sender(m, self->num, filesize, (const uint8_t *) filename, strlen(filename));
 

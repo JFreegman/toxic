@@ -59,7 +59,7 @@ void init_logging_session(char *name, char *key, struct chatlog *log)
         path_len += strlen(ident) + 1;
     }
 
-    if (path_len > MAX_STR_SIZE) {
+    if (path_len >= MAX_STR_SIZE) {
         log->log_on = false;
         free(user_config_dir);
         return;

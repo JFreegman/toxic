@@ -170,7 +170,7 @@ static void shift_hist_back(ChatContext *ctx)
 /* adds a line to the ln_history buffer at hst_pos and sets hst_pos to end of history. */
 void add_line_to_hist(ChatContext *ctx)
 {
-    if (ctx->len > MAX_STR_SIZE)
+    if (ctx->len >= MAX_STR_SIZE)
         return;
 
     if (ctx->hst_tot >= MAX_LINE_HIST)

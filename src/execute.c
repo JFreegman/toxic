@@ -114,7 +114,9 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
         if (cmd[i] == '\0')    /* no more args */
             break;
 
-        strcpy(cmd, &cmd[i + 1]);
+        char tmp[MAX_STR_SIZE];
+        snprintf(tmp, sizeof(tmp), "%s", &cmd[i + 1]);
+        strcpy(cmd, tmp);
     }
 
     free(cmd);

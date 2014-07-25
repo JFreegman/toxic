@@ -145,16 +145,13 @@ static void input_mv_left(ToxWindow *self, int x, int mx_x)
     if (ctx->pos <= 0)
         return;
 
-    int cur_len = wcwidth(ctx->line[ctx->pos - 1]);
+    int cur_len = ctx->pos > 0 ? wcwidth(ctx->line[ctx->pos - 1]) : 0;
+    int s_len = ctx->start > 0 ? wcwidth(ctx->line[ctx->start - 1]) : 0;
 
     --ctx->pos;
 
-    int s_len = wcwidth(ctx->line[ctx->start - 1]);
-
     if (ctx->start && (x >= mx_x - cur_len))
         ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
-    else if (ctx->start && (ctx->pos == ctx->len))
-        ctx->start = MAX(0, ctx->start - cur_len);
     else if (ctx->start)
         ctx->start = MAX(0, ctx->start - cur_len);
 }
