@@ -235,10 +235,12 @@ void terminate_notify()
 #ifdef _SOUND_NOTIFY
 int set_sound(Notification sound, const char* value)
 {
+    if (sound == silent) return 0;
+    
     free(Control.sounds[sound]);
 
     size_t len = strlen(value) + 1;
-    Control.sounds[sound] = calloc(1, len);
+    Control.sounds[sound] = calloc(len, 1);
     memcpy(Control.sounds[sound], value, len);
 
     struct stat buf;
@@ -252,7 +254,7 @@ int play_sound_internal(Notification what, _Bool loop)
     
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
-    buffer = alutCreateBufferFromFile((const char*)Control.sounds[what]);
+    buffer = alutCreateBufferFromFile(Control.sounds[what]);
     alSourcei(source, AL_BUFFER, buffer);
     alSourcei(source, AL_LOOPING, loop);
     
@@ -310,6 +312,13 @@ static int m_play_sound(Notification notif, uint64_t flags)
 
 int notify(ToxWindow* self, Notification notif, uint64_t flags)
 {
+    /* Consider colored notify as primary */
+    if (self && self->alert == WINDOW_ALERT_NONE) {
+        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
+        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
+        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
+    }
+    
     if (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id())
         return -1;
     
@@ -323,12 +332,6 @@ int notify(ToxWindow* self, Notification notif, uint64_t flags)
     
     if (flags & NT_NOTIFWND) {
     /* TODO: pop notify window */
-    }
-    
-    if (self && self->alert == WINDOW_ALERT_NONE) {
-        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
-        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
     }
     
     return rc;
