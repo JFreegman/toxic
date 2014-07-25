@@ -152,7 +152,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, msg, IN_MSG, 0, nick_clr);
+    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, msg);
     write_to_log(msg, nick, ctx->log, false);
 }
 
@@ -181,7 +181,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, action, ACTION, 0, 0);
+    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, action);
     write_to_log(action, nick, ctx->log, true);
 }
 
@@ -280,13 +280,13 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     switch (change) {
         case TOX_CHAT_CHANGE_PEER_ADD:
             event = "has joined the room";
-            line_info_add(self, timefrmt, (char *) peername, NULL, event, CONNECTION, 0, GREEN);
+            line_info_add(self, timefrmt, (char *) peername, NULL, CONNECTION, 0, GREEN, event);
             write_to_log(event, (char *) peername, ctx->log, true);
             break;
 
         case TOX_CHAT_CHANGE_PEER_DEL:
             event = "has left the room";
-            line_info_add(self, timefrmt, (char *) oldpeername, NULL, event, CONNECTION, 0, 0);
+            line_info_add(self, timefrmt, (char *) oldpeername, NULL, CONNECTION, 0, 0, event);
 
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
@@ -296,7 +296,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
         case TOX_CHAT_CHANGE_PEER_NAME:
             event = " is now known as ";
-            line_info_add(self, timefrmt, (char *) oldpeername, (char *) peername, event, NAME_CHANGE, 0, 0);
+            line_info_add(self, timefrmt, (char *) oldpeername, (char *) peername, NAME_CHANGE, 0, 0, event);
 
             char tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
             snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (char *) peername);
@@ -316,7 +316,7 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *a
 
     if (tox_group_action_send(m, self->num, (uint8_t *) action, strlen(action)) == -1) {
         char *errmsg = " * Failed to send action.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
     }
 }
 
@@ -399,7 +399,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         } else if (!string_is_empty(line)) {
             if (tox_group_message_send(m, self->num, (uint8_t *) line, strlen(line)) == -1) {
                 char *errmsg = " * Failed to send message.";
-                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
             }
         }
 

@@ -361,7 +361,7 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     }
 
     if (msg[0])
-        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 static void load_friendlist(Tox *m)
@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
     set_primary_device(output, user_settings_->audio_out_dev);
 #elif _SOUND_NOTIFY
     if ( init_devices() == de_InternalError )
-        line_info_add(prompt, NULL, NULL, NULL, "Failed to init devices", SYS_MSG, 0, 0);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
 
 #endif /* _AUDIO */
     
@@ -644,12 +644,12 @@ int main(int argc, char *argv[])
 
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
-        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
     }
 
     if (settings_err == -1) {
         msg = "Failed to load user settings";
-        line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
     }
 
     sort_friendlist_index();

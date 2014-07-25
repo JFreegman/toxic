@@ -66,9 +66,7 @@ void init_logging_session(char *name, char *key, struct chatlog *log)
     }
 
     char log_path[MAX_STR_SIZE];
-
-    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log",
-             user_config_dir, CONFIGDIR, name, ident);
+    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", user_config_dir, CONFIGDIR, name, ident);
 
     free(user_config_dir);
 

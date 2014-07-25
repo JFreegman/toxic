@@ -201,7 +201,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (!string_is_empty(line))
             add_line_to_hist(ctx);
 
-        line_info_add(self, NULL, NULL, NULL, line, PROMPT, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, line);
         execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
 
         wclear(ctx->linewin);
@@ -306,7 +306,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 
     if (status == 1) {
         msg = "has come online";
-        line_info_add(self, timefrmt, nick, NULL, msg, CONNECTION, 0, GREEN);
+        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
 
 #ifdef _SOUND_NOTIFY
@@ -316,7 +316,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 #endif /* _SOUND_NOTIFY */
     } else {
         msg = "has gone offline";
-        line_info_add(self, timefrmt, nick, NULL, msg, CONNECTION, 0, RED);
+        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
 
 #ifdef _SOUND_NOTIFY
@@ -335,22 +335,21 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    char msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "Friend request with the message '%s'", data);
-    line_info_add(self, timefrmt, NULL, NULL, msg, SYS_MSG, 0, 0);
+    const char *msg = "Friend request with the message '%s'";
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, msg, data);
     write_to_log(msg, "", ctx->log, true);
 
     int n = add_friend_request(key);
 
     if (n == -1) {
         char *errmsg = "Friend request queue is full. Discarding request.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         write_to_log(errmsg, "", ctx->log, true);
         return;
     }
 
-    snprintf(msg, sizeof(msg), "Type \"/accept %d\" to accept it.", n);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    msg = "Type \"/accept %d\" to accept it.";
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, n);
     notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND);
 }
 
@@ -398,18 +397,18 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 
 static void print_welcome_msg(ToxWindow *self)
 {
-    line_info_add(self, NULL, NULL, NULL, "    _____ _____  _____ ____ ", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "   |_   _/ _ \\ \\/ /_ _/ ___|", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "     | || | | \\  / | | |    ", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "     | || |_| /  \\ | | |___ ", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "     |_| \\___/_/\\_\\___\\____|", SYS_MSG, 1, BLUE);
-    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "    _____ _____  _____ ____ ");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "   |_   _/ _ \\ \\/ /_ _/ ___|");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____|");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 
     char *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
     msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 1, CYAN);
-    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
 static void prompt_onInit(ToxWindow *self, Tox *m)

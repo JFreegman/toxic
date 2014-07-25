@@ -100,7 +100,7 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
 
             if (cmd[i] == '\0') {
                 char *errmsg = "Invalid argument. Did you forget a closing \"?";
-                line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
                 free(cmd);
                 return -1;
             }

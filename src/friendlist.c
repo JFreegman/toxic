@@ -114,10 +114,10 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
             char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
 
-            line_info_add(prompt, timefrmt, nick, NULL, str, IN_MSG, 0, 0);
+            line_info_add(prompt, timefrmt, nick, NULL, IN_MSG, 0, 0, str);
 
-            char *msg = "* Warning: Too many windows are open.";
-            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+            const char *msg = "* Warning: Too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
             notify(prompt, error, NT_WNDALERT_1);
         }
     }
@@ -223,9 +223,8 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
 
-            char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "* File transfer from %s failed: too many windows are open.", nick);
-            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+            const char *msg = "* File transfer from %s failed: too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg, nick);
             
             notify(prompt, error, NT_WNDALERT_1);
         }
@@ -246,9 +245,8 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
 
-            char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "* Group chat invite from %s failed: too many windows are open.", nick);
-            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+            const char *msg = "* Group chat invite from %s failed: too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg, nick);
             
             notify(prompt, error, NT_WNDALERT_1);
         }
@@ -351,8 +349,8 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 friends[f].chatwin = add_window(m, new_chat(m, friends[f].num));
                 set_active_window(friends[f].chatwin);
             } else {
-                char *msg = "* Warning: Too many windows are open.";
-                line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, RED);
+                const char *msg = "* Warning: Too many windows are open.";
+                line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
 
                 notify(prompt, error, NT_WNDALERT_1);
             }
@@ -571,12 +569,11 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, friends[id].num);
 
-            char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "Audio action from: %s!", nick);
-            line_info_add(prompt, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+            const char *msg = "Audio action from: %s!";
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, nick);
 
-            char *errmsg = "* Warning: Too many windows are open.";
-            line_info_add(prompt, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+            const char *errmsg = "* Warning: Too many windows are open.";
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
             
             notify(prompt, error, NT_WNDALERT_1);
         }

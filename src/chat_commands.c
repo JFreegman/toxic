@@ -40,11 +40,11 @@ extern uint8_t max_file_senders_index;
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (argc < 1) {
         errmsg = "Invalid syntax";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -52,36 +52,35 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     if (groupnum == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
         errmsg = "Invalid syntax.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
     if (tox_invite_friend(m, self->num, groupnum) == -1) {
         errmsg = "Failed to invite contact to group.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    char msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "Invited contact to Group %d.", groupnum);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    const char *msg = "Invited contact to Group %d.";
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, groupnum);
 }
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         errmsg = " * Warning: Too many windows are open.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
         return;
     }
 
-    char *groupkey = friends[self->num].groupchat_key;
+    const char *groupkey = friends[self->num].groupchat_key;
 
     if (!friends[self->num].groupchat_pending) {
         errmsg = "No pending group chat invite.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -89,13 +88,13 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
     if (groupnum == -1) {
         errmsg = "Group chat instance failed to initialize.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
     if (init_groupchat_win(prompt, m, groupnum) == -1) {
         errmsg = "Group chat window failed to initialize.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         tox_del_groupchat(m, groupnum);
         return;
     }
@@ -103,11 +102,11 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (argc != 1) {
         errmsg = "Invalid syntax.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -115,32 +114,31 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if ((filenum == 0 && strcmp(argv[1], "0")) || filenum >= MAX_FILES) {
         errmsg = "No pending file transfers with that number.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
     if (!friends[self->num].file_receiver.pending[filenum]) {
         errmsg = "No pending file transfers with that number.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    char *filename = friends[self->num].file_receiver.filenames[filenum];
+    const char *filename = friends[self->num].file_receiver.filenames[filenum];
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        char msg[MAX_STR_SIZE];
-        snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1f%%)", filename, 0.0);
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        const char *msg = "Saving file as: '%s' (%.1f%%)";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename, 0.0);
         friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 1;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
             errmsg = "* Error writing to file.";
-            line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, RED);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
             tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
         }
     } else {
         errmsg = "File transfer failed.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
     }
 
     friends[self->num].file_receiver.pending[filenum] = false;
@@ -148,17 +146,17 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (max_file_senders_index >= (MAX_FILES - 1)) {
         errmsg = "Please wait for some of your outgoing file transfers to complete.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
     if (argc < 1) {
         errmsg = "Invalid syntax.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -166,7 +164,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if (path[0] != '\"') {
         errmsg = "File path must be enclosed in quotes.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -176,7 +174,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if (path_len > MAX_STR_SIZE) {
         errmsg = "File path exceeds character limit.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -184,7 +182,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if (file_to_send == NULL) {
         errmsg = "File not found.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -198,7 +196,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if (filenum == -1) {
         errmsg = "Error sending file.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -217,9 +215,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 
-            char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "Sending file: '%s'", path);
-            line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+            const char *msg = "Sending file: '%s'";
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, path);
 
             if (i == max_file_senders_index)
                 ++max_file_senders_index;

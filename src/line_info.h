@@ -68,8 +68,8 @@ struct history {
 };
 
 /* creates new line_info line and puts it in the queue */
-void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, const char *msg,
-                   uint8_t type, uint8_t bold, uint8_t colour);
+void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
+                   uint8_t colour, const char *msg, ...);
 
 /* Prints a section of history starting at line_start */
 void line_info_print(ToxWindow *self);

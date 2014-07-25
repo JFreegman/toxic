@@ -160,7 +160,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, msg, IN_MSG, 0, 0);
+    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, 0, msg);
     write_to_log(msg, nick, ctx->log, false);
     
     notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS);
@@ -205,7 +205,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *acti
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, action, ACTION, 0, 0);
+    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, action);
     write_to_log(action, nick, ctx->log, true);
     notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS);
 }
@@ -255,8 +255,8 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     if (self->num != num)
         return;
 
-    char msg[MAX_STR_SIZE * 2];
-    char *errmsg;
+    const char *msg;
+    const char *errmsg;
 
     /* holds the filename appended to the user specified path */
     char filename_path[MAX_STR_SIZE] = {0};
@@ -266,13 +266,12 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     get_file_name(filename_nopath, sizeof(filename_nopath), pathname);
     int len = strlen(filename_nopath);
 
-    snprintf(msg, sizeof(msg), "File transfer request for '%s' (%llu bytes).", filename_nopath,
-             (long long unsigned int)filesize);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    msg = "File transfer request for '%s' (%llu bytes).";
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename_nopath, (long long unsigned int) filesize);
 
     if (filenum >= MAX_FILES) {
         errmsg = "Too many pending file requests; discarding.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -284,7 +283,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 
     if (len >= sizeof(friends[num].file_receiver.filenames[filenum])) {
         errmsg = "File name too long; discarding.";
-        line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
@@ -315,13 +314,13 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 
         if (count > 999) {
             errmsg = "Error saving file to disk.";
-            line_info_add(self, NULL, NULL, NULL, errmsg, SYS_MSG, 0, 0);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
             return;
         }
     }
 
-    snprintf(msg, sizeof(msg), "Type '/savefile %d' to accept the file transfer.", filenum);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    msg = "Type '/savefile %d' to accept the file transfer.";
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filenum);
 
     friends[num].file_receiver.pending[filenum] = true;
     friends[num].file_receiver.size[filenum] = filesize;
@@ -390,7 +389,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             break;
     }
 
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, const char *data,
@@ -403,7 +402,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
 
     if (fp) {
         if (fwrite(data, length, 1, fp) != 1) {
-            line_info_add(self, NULL, NULL, NULL, " * Error writing to file.", SYS_MSG, 0, RED);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Error writing to file.");
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
             chat_close_file_receiver(num, filenum);
         }
@@ -430,14 +429,14 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     if (self->num != friendnumber)
         return;
 
-    char msg[MAX_STR_SIZE + TOX_MAX_NAME_LENGTH];
+    const char *msg;
 
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
 
-    snprintf(msg, sizeof(msg), "%s has invited you to a group chat.", name);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    line_info_add(self, NULL, NULL, NULL, "Type \"/join\" to join the chat.", SYS_MSG, 0, 0);
+    msg = "%s has invited you to a group chat.";
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, name);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 
     memcpy(friends[friendnumber].groupchat_key, group_pub_key, 
            sizeof(friends[friendnumber].groupchat_key));
@@ -458,7 +457,7 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
     /* call_index is set here and reset on call end */
     
     self->call_idx = call_index;
-    line_info_add(self, NULL, NULL, NULL, "Incoming audio call! Type: \"/answer\" or \"/reject\"", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Incoming audio call! Type: \"/answer\" or \"/reject\"");
     
 #ifdef _SOUND_NOTIFY
     if (self->active_sound == -1)
@@ -471,7 +470,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
     if ( !self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, "Ringing...\"cancel\" ?", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ringing...\"cancel\" ?");
     
 #ifdef _SOUND_NOTIFY
     if (self->active_sound == -1)
@@ -486,7 +485,7 @@ void chat_onStarting (ToxWindow *self, ToxAv *av, int call_index)
 
     init_infobox(self);
 
-    line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call started! Type: \"/hangup\" to end it.");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -501,7 +500,7 @@ void chat_onEnding (ToxWindow *self, ToxAv *av, int call_index)
 
     kill_infobox(self);
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call ended!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -515,7 +514,7 @@ void chat_onError (ToxWindow *self, ToxAv *av, int call_index)
         return;
 
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "Error!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -530,7 +529,7 @@ void chat_onStart (ToxWindow *self, ToxAv *av, int call_index)
 
     init_infobox(self);
 
-    line_info_add(self, NULL, NULL, NULL, "Call started! Type: \"/hangup\" to end it.", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call started! Type: \"/hangup\" to end it.");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -545,7 +544,7 @@ void chat_onCancel (ToxWindow *self, ToxAv *av, int call_index)
 
     kill_infobox(self);
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "Call canceled!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call canceled!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -559,7 +558,7 @@ void chat_onReject (ToxWindow *self, ToxAv *av, int call_index)
         return;
 
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "Rejected!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Rejected!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -574,7 +573,7 @@ void chat_onEnd (ToxWindow *self, ToxAv *av, int call_index)
 
     kill_infobox(self);
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "Call ended!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call ended!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -588,7 +587,7 @@ void chat_onRequestTimeout (ToxWindow *self, ToxAv *av, int call_index)
         return;
 
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "No answer!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No answer!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -603,7 +602,7 @@ void chat_onPeerTimeout (ToxWindow *self, ToxAv *av, int call_index)
 
     kill_infobox(self);
     self->call_idx = -1;
-    line_info_add(self, NULL, NULL, NULL, "Peer disconnected; call ended!", SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer disconnected; call ended!");
     
 #ifdef _SOUND_NOTIFY
     stop_sound(self->active_sound);
@@ -709,11 +708,11 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, action, ACTION, 0, 0);
+    line_info_add(self, timefrmt, selfname, NULL, ACTION, 0, 0, action);
 
     if (tox_send_action(m, self->num, (uint8_t *) action, strlen(action)) == 0) {
-        char *errmsg = " * Failed to send action.";
-        line_info_add(self, NULL, selfname, NULL, errmsg, SYS_MSG, 0, RED);
+        const char *errmsg = " * Failed to send action.";
+        line_info_add(self, NULL, selfname, NULL, SYS_MSG, 0, RED, errmsg);
     } else {
         write_to_log(action, selfname, ctx->log, true);
     }
@@ -797,10 +796,10 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
 
-            line_info_add(self, timefrmt, selfname, NULL, line, OUT_MSG, 0, 0);
+            line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, line);
 
             if (!statusbar->is_online || tox_send_message(m, self->num, (uint8_t *) line, strlen(line)) == 0) {
-                line_info_add(self, NULL, NULL, NULL, " * Failed to send message.", SYS_MSG, 0, RED);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message.");
             } else {
                 write_to_log(line, selfname, ctx->log, false);
             }

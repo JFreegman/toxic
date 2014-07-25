@@ -98,9 +98,9 @@ void callback_media_change  ( void* av, int32_t call_index, void *arg );
 int stop_transmission(int call_index);
 void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size);
 
-static void print_err (ToxWindow *self, char *error_str)
+static void print_err (ToxWindow *self, const char *error_str)
 {
-    line_info_add(self, NULL, NULL, NULL, error_str, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
 }
 
 ToxAv *init_audio(ToxWindow *self, Tox *tox)
@@ -123,7 +123,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     }
     
     if ( init_devices(ASettins.av) == de_InternalError ) {
-        line_info_add(self, NULL, NULL, NULL, "Failed to init devices", SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
         toxav_kill(ASettins.av);
         return ASettins.av = NULL;
     }
@@ -183,7 +183,7 @@ int start_transmission(ToxWindow *self)
     
     /* Don't provide support for video */
     if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, &ASettins.cs, 0) ) {
-        line_info_add(self, NULL, NULL, NULL, "Could not prepare transmission", SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
     }
     
     if ( !toxav_capability_supported(ASettins.av, self->call_idx, AudioDecoding) ||
@@ -194,16 +194,16 @@ int start_transmission(ToxWindow *self)
         
     if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx, 
             av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) != de_None ) 
-        line_info_add(self, NULL, NULL, NULL, "Failed to open input device!", SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
     
     if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
          read_device_callback, &self->call_idx, _True) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */
-        line_info_add(self, NULL, NULL, NULL, "Failed to register input handler!", SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
     
     if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx, 
             av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) != de_None ) {
-        line_info_add(self, NULL, NULL, NULL, "Failed to open output device!", SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
         ASettins.calls[self->call_idx].has_output = 0;
     }
     
@@ -259,7 +259,7 @@ void callback_recv_starting ( void* av, int32_t call_index, void* arg )
         if (windows[i].onStarting != NULL && windows[i].call_idx == call_index) { 
             windows[i].onStarting(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i]) ) {/* YEAH! */
-                line_info_add(&windows[i], NULL, NULL, NULL, "Error starting transmission!", SYS_MSG, 0, 0);
+                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , "Error starting transmission!");
             }
             return;
         }
@@ -278,7 +278,7 @@ void callback_call_started ( void* av, int32_t call_index, void* arg )
         if (windows[i].onStart != NULL && windows[i].call_idx == call_index) { 
             windows[i].onStart(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i]) ) {/* YEAH! */
-                line_info_add(&windows[i], NULL, NULL, NULL, "Error starting transmission!", SYS_MSG, 0, 0);
+                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                 return;
             }
         }
@@ -327,8 +327,8 @@ void callback_media_change(void* av, int32_t call_index, void* arg)
  */
 void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char msg[MAX_STR_SIZE];
-    char *error_str;
+    const char *msg;
+    const char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -354,18 +354,17 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         goto on_error;
     }
 
-    snprintf(msg, sizeof(msg), "Calling... idx: %d", self->call_idx);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    msg = "Calling... idx: %d";
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, self->call_idx);
 
     return;
 on_error:
-    snprintf(msg, sizeof(msg), "%s", error_str);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    print_err(self, error_str);
 }
 
 void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *error_str;
+    const char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -396,7 +395,7 @@ on_error:
 
 void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *error_str;
+    const char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -427,7 +426,7 @@ on_error:
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *error_str;
+    const char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -456,7 +455,7 @@ on_error:
 
 void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *error_str;
+    const char *error_str;
 
     if (argc != 0) {
         error_str = "Invalid syntax!";
@@ -493,8 +492,8 @@ on_error:
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char msg[MAX_STR_SIZE];
-    char *error_str;
+    const char *msg;
+    const char *error_str;
 
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -512,8 +511,8 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         type = output;
 
     else {
-        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        msg = "Invalid type: %s";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
         return;
     }
 
@@ -527,8 +526,8 @@ on_error:
 /* This changes primary device only */
 void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char msg[MAX_STR_SIZE];
-    char *error_str;
+    const char *msg;
+    const char *error_str;
 
     if ( argc != 2 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -547,8 +546,8 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         type = output;
 
     else {
-        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        msg = "Invalid type: %s";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
         return;
     }
 
@@ -573,8 +572,8 @@ on_error:
 
 void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
-    char msg[MAX_STR_SIZE];
-    char *error_str;
+    const char *msg;
+    const char *error_str;
     
     if ( argc != 2 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -593,8 +592,8 @@ void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (
         type = output;
     
     else {
-        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        msg = "Invalid type: %s";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
         return;
     }
     
@@ -644,8 +643,8 @@ void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (
 
 void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
-    char msg[MAX_STR_SIZE];
-    char *error_str;
+    const char *msg;
+    const char *error_str;
     
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
@@ -663,8 +662,8 @@ void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[
         type = output;
     
     else {
-        snprintf(msg, sizeof(msg), "Invalid type: %s", argv[1]);
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+        msg = "Invalid type: %s";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
         return;
     }
     
@@ -692,7 +691,7 @@ void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[
 
 void cmd_sense(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *error_str;
+    const char *error_str;
     
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Must have value!";

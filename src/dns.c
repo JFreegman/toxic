@@ -49,7 +49,7 @@ extern struct _Winthread Winthread;
 
 /* TODO: process keys from key file instead of hard-coding like a noob */
 static struct dns3_server {
-    char *name;
+    const char *name;
     char key[DNS3_KEY_SZ];
 } dns3_servers[] = {
     {
@@ -83,13 +83,12 @@ static struct _dns_thread {
 } dns_thread;
 
 
-static int dns_error(ToxWindow *self, char *errmsg)
+static int dns_error(ToxWindow *self, const char *errmsg)
 {
-    char msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "User lookup failed: %s", errmsg);
+    const char *msg = "User lookup failed: %s";
 
     pthread_mutex_lock(&Winthread.lock);
-    line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, errmsg);
     pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
@@ -174,7 +173,7 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
    and the domain in dombuf.
 
    return length of username on success, -1 on failure */
-static int parse_addr(char *addr, char *namebuf, char *dombuf)
+static int parse_addr(const char *addr, char *namebuf, char *dombuf)
 {
     char tmpaddr[MAX_STR_SIZE];
     char *tmpname, *tmpdom;
@@ -209,8 +208,8 @@ void *dns3_lookup_thread(void *data)
     }
 
     /* get domain name/pub key */
-    char *DNS_pubkey = NULL;
-    char *domname = NULL;
+    const char *DNS_pubkey = NULL;
+    const char *domname = NULL;
     int i;
 
     for (i = 0; i < NUM_DNS3_SERVERS; ++i) {
@@ -293,8 +292,8 @@ void *dns3_lookup_thread(void *data)
 void dns3_lookup(ToxWindow *self, Tox *m, char *id_bin, char *addr, char *msg)
 {
     if (t_data.busy) {
-        char *err = "Please wait for previous user lookup to finish.";
-        line_info_add(self, NULL, NULL, NULL, err, SYS_MSG, 0, 0);
+        const char *err = "Please wait for previous user lookup to finish.";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, err);
         return;
     }
 

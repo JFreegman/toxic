@@ -439,12 +439,9 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
 void print_devices(ToxWindow* self, DeviceType type)
 {
     int i = 0;
-    for ( ; i < size[type]; i ++) {
-        char msg[MAX_STR_SIZE];
-        snprintf(msg, sizeof(msg), "%d: %s", i, devices_names[type][i]);
-        line_info_add(self, NULL, NULL, NULL, msg, SYS_MSG, 0, 0);
-    }
-    
+    for ( ; i < size[type]; i ++)
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, devices_names[type][i]);
+
     return;
 }
 

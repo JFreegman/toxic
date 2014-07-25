@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -133,14 +134,21 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 }
 
 /* creates new line_info line and puts it in the queue */
-void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, const char *msg, uint8_t type, 
-                   uint8_t bold, uint8_t colour)
+void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
+                   uint8_t colour, const char *msg, ...)
 {
     struct history *hst = self->chatwin->hst;
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
     if (new_line == NULL)
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
+
+    char frmt_msg[MAX_STR_SIZE] = {0};
+    va_list args;
+
+    va_start(args, msg);
+    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
+    va_end(args);
 
     int len = 1;     /* there will always be a newline */
 
@@ -163,14 +171,14 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, cons
             break;
     }
 
-    if (msg) {
-        snprintf(new_line->msg, sizeof(new_line->msg), "%s", msg);
+    if (frmt_msg[0]) {
+        snprintf(new_line->msg, sizeof(new_line->msg), "%s", frmt_msg);
         len += strlen(new_line->msg);
 
         int i;
 
-        for (i = 0; msg[i]; ++i) {
-            if (msg[i] == '\n')
+        for (i = 0; frmt_msg[i]; ++i) {
+            if (frmt_msg[i] == '\n')
                 ++new_line->newlines;
         }
     }

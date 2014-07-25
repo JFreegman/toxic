@@ -46,9 +46,9 @@ static void print_matches(ToxWindow *self, Tox *m, const void *list, int n_items
     int i;
 
     for (i = 0; i < n_items; ++i)
-        line_info_add(self, NULL, NULL, NULL, &L[i * size], SYS_MSG, 0, 0);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, &L[i * size]);
 
-    line_info_add(self, NULL, NULL, NULL, "", SYS_MSG, 0, 0);   /* formatting */
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");   /* formatting */
 }
 
 /* puts match in match buffer. if more than one match, add first n chars that are identical.
