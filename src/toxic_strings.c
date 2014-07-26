@@ -112,7 +112,7 @@ int yank_buf(ChatContext *ctx)
     if (!ctx->yank[0])
         return -1;
 
-    if (ctx->yank_len + ctx->len >= MAX_STR_SIZE - 1)
+    if (ctx->yank_len + ctx->len >= MAX_STR_SIZE)
         return -1;
 
     wmemmove(&ctx->line[ctx->pos + ctx->yank_len], &ctx->line[ctx->pos], ctx->len - ctx->pos);
