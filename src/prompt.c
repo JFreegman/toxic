@@ -302,7 +302,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
-    char *msg;
+    const char *msg;
 
     if (status == 1) {
         msg = "has come online";

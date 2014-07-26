@@ -858,7 +858,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         }
 
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, " O");
+        wprintw(statusbar->topline, " %s", ONLINE_CHAR);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
         if (friends[self->num].is_typing)
@@ -871,7 +871,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         if (friends[self->num].is_typing)
             wattroff(statusbar->topline, COLOR_PAIR(YELLOW));
     } else {
-        wprintw(statusbar->topline, " o");
+        wprintw(statusbar->topline, " %s", OFFLINE_CHAR);
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
