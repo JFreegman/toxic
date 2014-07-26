@@ -28,6 +28,7 @@
 #include "windows.h"
 #include "misc_tools.h"
 #include "toxic_strings.h"
+#include "notify.h"
 
 /* Adds char to line at pos. Return 0 on success, -1 if line buffer is full */
 int add_char_to_buf(ChatContext *ctx, wint_t ch)
@@ -191,7 +192,7 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     if (key_dir == KEY_UP) {
         if (--ctx->hst_pos < 0) {
             ctx->hst_pos = 0;
-            beep();
+            notify(NULL, error, NT_ALWAYS);
         }
     } else {
         if (++ctx->hst_pos >= ctx->hst_tot) {

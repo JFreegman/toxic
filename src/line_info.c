@@ -30,6 +30,7 @@
 #include "line_info.h"
 #include "groupchat.h"
 #include "settings.h"
+#include "notify.h"
 
 extern struct user_settings *user_settings_;
 
@@ -414,14 +415,14 @@ static void line_info_scroll_up(struct history *hst)
 {
     if (hst->line_start->prev)
         hst->line_start = hst->line_start->prev;
-    else beep();
+    else notify(NULL, error, NT_ALWAYS);
 }
 
 static void line_info_scroll_down(struct history *hst)
 {
     if (hst->line_start->next)
         hst->line_start = hst->line_start->next;
-    else beep();
+    else notify(NULL, error, NT_ALWAYS);
 }
 
 static void line_info_page_up(ToxWindow *self, struct history *hst)

@@ -78,7 +78,7 @@ struct _ASettings {
 
     ToxAv *av;
     
-    ToxAvCodecSettings cs;
+    ToxAvCSettings cs;
     
     Call calls[MAX_CALLS];
 } ASettins;
@@ -107,6 +107,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
 {    
     ASettins.cs = av_DefaultSettings;
     ASettins.cs.max_video_height = ASettins.cs.max_video_width = 0;
+    ASettins.cs.audio_channels = 1;
     
     ASettins.errors = ae_None;
     
@@ -173,8 +174,11 @@ void read_device_callback (const int16_t* captured, uint32_t size, void* data)
 
 void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size)
 {
-    if (ASettins.calls[call_index].ttas)
-        write_out(ASettins.calls[call_index].out_idx, data, size, 1);
+    if (call_index >= 0 && ASettins.calls[call_index].ttas) {
+        ToxAvCSettings csettings = ASettins.cs;
+        toxav_get_peer_csettings(av, call_index, 0, &csettings);
+        write_out(ASettins.calls[call_index].out_idx, data, size, csettings.audio_channels);
+    }
 }
 
 int start_transmission(ToxWindow *self)
@@ -182,7 +186,7 @@ int start_transmission(ToxWindow *self)
     if ( !ASettins.av || self->call_idx == -1 ) return -1;
     
     /* Don't provide support for video */
-    if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, &ASettins.cs, 0) ) {
+    if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, av_jbufdc, av_VADd, 0) ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
     }
     
@@ -192,8 +196,11 @@ int start_transmission(ToxWindow *self)
     
     set_call(&ASettins.calls[self->call_idx], _True);
         
-    if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx, 
-            av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) != de_None ) 
+    ToxAvCSettings csettings;
+    toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
+    
+    if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx,
+            csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
     
     if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
@@ -202,7 +209,7 @@ int start_transmission(ToxWindow *self)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
     
     if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx, 
-            av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) != de_None ) {
+            csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
         ASettins.calls[self->call_idx].has_output = 0;
     }
@@ -345,7 +352,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         goto on_error;
     }
 
-    ToxAvError error = toxav_call(ASettins.av, &self->call_idx, self->num, TypeAudio, 30);
+    ToxAvError error = toxav_call(ASettins.av, &self->call_idx, self->num, &ASettins.cs, 30);
 
     if ( error != ErrorNone ) {
         if ( error == ErrorAlreadyInCall ) error_str = "Already in a call!";
@@ -376,7 +383,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto on_error;
     }
 
-    ToxAvError error = toxav_answer(ASettins.av, self->call_idx, TypeAudio);
+    ToxAvError error = toxav_answer(ASettins.av, self->call_idx, &ASettins.cs);
 
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
@@ -615,19 +622,23 @@ void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (
     if ( self->call_idx > -1) {
         Call* this_call = &ASettins.calls[self->call_idx];
         if (this_call->ttas) {
+            
+            ToxAvCSettings csettings;
+            toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
+            
             if (type == output) {
                 pthread_mutex_lock(&this_call->mutex);
                 close_device(output, this_call->out_idx);
                 this_call->has_output = open_device(output, selection, &this_call->out_idx, 
-                        av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration) 
+                    csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) 
                     == de_None ? 1 : 0;
                 pthread_mutex_unlock(&this_call->mutex);
             }
             else {
                 /* TODO: check for failure */
                 close_device(input, this_call->in_idx);
-                open_device(input, selection, &this_call->in_idx, 
-                    av_DefaultSettings.audio_sample_rate, av_DefaultSettings.audio_frame_duration);
+                open_device(input, selection, &this_call->in_idx, csettings.audio_sample_rate, 
+                    csettings.audio_frame_duration, csettings.audio_channels);
                 /* Set VAD as true for all; TODO: Make it more dynamic */
                 register_device_callback(self->call_idx, this_call->in_idx, read_device_callback, &self->call_idx, _True);
             }

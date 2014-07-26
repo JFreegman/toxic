@@ -50,7 +50,8 @@ typedef enum DeviceError {
     de_AllDevicesBusy = -5,
     de_DeviceNotActive = -6,
     de_BufferError = -7,
-    de_AlError = -8,
+    de_UnsupportedMode = -8,
+    de_AlError = -9,
 } DeviceError;
 
 typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
@@ -76,9 +77,9 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
 #endif
 
 DeviceError set_primary_device(DeviceType type, int32_t selection);
-DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration);
+DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
 /* Start device */
-DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration);
+DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
 /* Stop device */
 DeviceError close_device(DeviceType type, uint32_t device_idx);
 

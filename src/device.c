@@ -63,6 +63,7 @@ typedef struct _Device {
     pthread_mutex_t mutex[1];
     uint32_t sample_rate; 
     uint32_t frame_duration;
+    int32_t sound_mode;
 #ifdef _AUDIO
     float VAD_treshold;                    /* 40 is usually recommended value */
 #endif
@@ -194,19 +195,21 @@ DeviceError set_primary_device(DeviceType type, int32_t selection)
     return de_None;
 }
 
-DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration)
+DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
 {
-    return open_device(type, primary_device[type], device_idx, sample_rate, frame_duration);
+    return open_device(type, primary_device[type], device_idx, sample_rate, frame_duration, channels);
 }
 
 
 // TODO: generate buffers separately
-DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration)
+DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
 {
     if (size[type] <= selection || selection < 0) return de_InvalidSelection;
+
+    if (channels != 1 && channels != 2) return de_UnsupportedMode;
     
     lock;
-    
+
     const uint32_t frame_size = (sample_rate * frame_duration / 1000);
     
     uint32_t i;
@@ -220,6 +223,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     
     device->sample_rate = sample_rate;
     device->frame_duration = frame_duration;
+    device->sound_mode = channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
     
     for (i = 0; i < *device_idx; i ++) { /* Check if any previous has the same selection */
         if ( running[type][i]->selection == selection ) {
@@ -238,7 +242,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     
     if (type == input) {
         device->dhndl = alcCaptureOpenDevice(devices_names[type][selection], 
-                                             sample_rate, AL_FORMAT_MONO16, frame_size * 2);
+                                             sample_rate, device->sound_mode, frame_size * 2);
     #ifdef _AUDIO
         device->VAD_treshold = user_settings_->VAD_treshold;
     #endif
@@ -263,7 +267,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
         memset(zeros, 0, frame_size*2);
         
         for ( i =0; i < OPENAL_BUFS; ++i) {
-            alBufferData(device->buffers[i], AL_FORMAT_MONO16, zeros, frame_size*2, sample_rate);
+            alBufferData(device->buffers[i], device->sound_mode, zeros, frame_size*2, sample_rate);
         }
         
         alSourceQueueBuffers(device->source, OPENAL_BUFS, device->buffers);
@@ -372,7 +376,7 @@ inline__ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t leng
     }
     
     
-    alBufferData(bufid, AL_FORMAT_MONO16, data, lenght * 2 * channels, device->sample_rate);
+    alBufferData(bufid, device->sound_mode, data, lenght * 2 * channels, device->sample_rate);
     alSourceQueueBuffers(device->source, 1, &bufid);
     
     ALint state;
@@ -415,7 +419,7 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
                     }
                     Device* device = running[input][i];
                     
-                    int16_t frame[4096];
+                    int16_t frame[16000];
                     alcCaptureSamples(device->dhndl, frame, f_size);
                     
                     if ( device->muted 

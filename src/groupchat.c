@@ -363,10 +363,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                beep();
+                notify(self, error, 0);
             }
         } else {
-            beep();
+            notify(self, error, 0);
         }
     } else if (key == T_KEY_C_RB) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
