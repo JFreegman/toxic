@@ -107,7 +107,6 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
 {    
     ASettins.cs = av_DefaultSettings;
     ASettins.cs.max_video_height = ASettins.cs.max_video_width = 0;
-    ASettins.cs.audio_channels = 1;
     
     ASettins.errors = ae_None;
     
@@ -186,7 +185,7 @@ int start_transmission(ToxWindow *self)
     if ( !ASettins.av || self->call_idx == -1 ) return -1;
     
     /* Don't provide support for video */
-    if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, av_jbufdc, av_VADd, 0) ) {
+    if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, av_jbufdc * 2, av_VADd, 0) ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
     }
     

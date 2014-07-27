@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <time.h>
+#include <assert.h>
 #include <sys/stat.h>
 
 #ifdef _AUDIO
@@ -87,6 +88,10 @@ struct _ActiveNotifications {
     
 #ifdef _BOX_NOTIFY
     NotifyNotification* box;
+    char messages[128][128];
+    char title[24];
+    size_t size;
+    time_t timeout;
 #endif
 } actives[ACTIVE_NOTIFS_MAX] = {{0}};
 /**********************************************************************************/
@@ -126,6 +131,13 @@ void graceful_clear()
     while (1) {
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
             if (actives[i].active) {
+            #ifdef _BOX_NOTIFY
+                if (actives[i].box) {
+                    notify_notification_close(actives[i].box, NULL);
+                    memset(&actives[i], 0, sizeof(struct _ActiveNotifications));                    
+                }
+            #endif
+            
                 if ( actives[i].looping ) {
                     stop_sound(i); 
                 } else {
@@ -166,7 +178,22 @@ void* do_playing(void* _p)
                     alDeleteBuffers(1,&actives[i].buffer);
                     memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
                 }
+            } 
+        #ifdef _BOX_NOTIFY
+            else if (actives[i].box && !actives[i].looping &&
+                time(NULL) >= actives[i].timeout && !is_playing(actives[i].source)) 
+            {
+                alSourceStop(actives[i].source);
+                alDeleteSources(1, &actives[i].source);
+                alDeleteBuffers(1,&actives[i].buffer);
+                memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+                
+                GError* ignore;
+                notify_notification_close(actives[i].box, &ignore);
+                memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+                assert(0);
             }
+        #endif
         }
         pthread_mutex_unlock(Control.poll_mutex);
         usleep(10000);
@@ -363,8 +390,9 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, char* title,
 #ifdef _BOX_NOTIFY
     int id = notify(self, notif, flags);
     
-    if (id == -1) { /* Could not play */
-        pthread_mutex_lock(Control.poll_mutex);
+    pthread_mutex_lock(Control.poll_mutex);
+    
+    if (id == -1 && !(flags & NT_NOFOCUS && Control.this_window == get_focused_window_id())) { /* Could not play */
         
         for (id = 0; id < ACTIVE_NOTIFS_MAX && actives[id].active; id ++);
         if ( id == ACTIVE_NOTIFS_MAX ) {
@@ -372,33 +400,79 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, char* title,
             return -1; /* Full */
         }
         
-        pthread_mutex_unlock(Control.poll_mutex);
+        actives[id].active = 1;
     }
-    
-    char title_compact [24] = {'\0'};
-    strncpy(title_compact, title, 24);
-    if (strlen(title) > 23) strcpy(title_compact + 20, "...");
+        
+    strncpy(actives[id].title, title, 24);
+    if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
 
-    char msg_compact [128] = {'\0'};
-    va_list __ARGS__;
-    va_start (__ARGS__, format);
-    snprintf (msg_compact, 127, format, __ARGS__);
+    va_list __ARGS__; va_start (__ARGS__, format);
+    snprintf (actives[id].messages[0], 127, format, __ARGS__);
     va_end (__ARGS__);
     
-    if (strlen(msg_compact) > 124) strcpy(msg_compact + 124, "...");
+    if (strlen(actives[id].messages[0]) > 124) 
+        strcpy(actives[id].messages[0] + 124, "...");
     
-    actives[id].active = 1;
-    actives[id].box = notify_notification_new(title_compact, msg_compact, NULL);
+    actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
+    actives[id].size ++;
+    actives[id].timeout = time(NULL) + Control.notif_timeout;
+    
     notify_notification_set_timeout(actives[id].box, Control.notif_timeout);
     notify_notification_show(actives[id].box, NULL);
     
+    pthread_mutex_unlock(Control.poll_mutex);
     return id;
 #else
     return notify(self, notif, flags);
 #endif
 }
 
-int box_notify_append(int id, char* format, ...)
+int box_notify_append(ToxWindow* self, Notification notif, uint64_t flags, int id, char* format, ...)
 {
-    return 0;
+#ifdef _BOX_NOTIFY
+    if (id < 0 || id >= ACTIVE_NOTIFS_MAX || !actives[id].box || actives[id].size >= 128 ) return -1;
+    
+    /* Consider colored notify as primary */
+    if (self && self->alert == WINDOW_ALERT_NONE) {
+        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
+        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
+        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
+    }
+    if (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id())
+        return -1;
+    
+    pthread_mutex_lock(Control.poll_mutex);
+    
+    /* Play the sound again */
+    alSourcePlay(actives[id].source);
+    
+    va_list __ARGS__; va_start (__ARGS__, format);
+    snprintf (actives[id].messages[actives[id].size], 127, format, __ARGS__);
+    va_end (__ARGS__);
+    
+    if (strlen(actives[id].messages[actives[id].size]) > 124) 
+        strcpy(actives[id].messages[actives[id].size] + 124, "...");
+    
+    actives[id].size ++;
+    actives[id].timeout = time(NULL) + Control.notif_timeout;
+    
+    char formated[128 * 129] = {'\0'};
+    
+    int i = 0;
+    for (; i <actives[id].size; i ++) {
+        strcat(formated, actives[id].messages[i]);
+        strcat(formated, "\n");
+    }
+    
+    formated[strlen(formated) - 1] = '\0';
+    
+    notify_notification_update(actives[id].box, actives[id].title, formated, NULL);
+    notify_notification_show(actives[id].box, NULL);
+    
+    pthread_mutex_unlock(Control.poll_mutex);
+    
+    return id;
+#else
+    return notify(self, notif, flags);
+#endif
 }
