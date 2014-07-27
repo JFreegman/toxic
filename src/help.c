@@ -181,7 +181,7 @@ static void help_draw_chat(ToxWindow *self)
 
     wprintw(win, "  /call                      : Audio call\n");
     wprintw(win, "  /cancel                    : Cancel call\n");
-    wprintw(win, "  /answer                    : Answer incomming call\n");
+    wprintw(win, "  /answer                    : Answer incoming call\n");
     wprintw(win, "  /reject                    : Reject incoming call\n");
     wprintw(win, "  /hangup                    : Hangup active call\n");
     wprintw(win, "  /sdev <type> <id>          : Change active device\n");

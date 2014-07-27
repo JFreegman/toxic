@@ -34,6 +34,7 @@ struct FileReceiver {
     FILE *files[MAX_FILES];
     bool pending[MAX_FILES];
     uint64_t size[MAX_FILES];
+    double bps[MAX_FILES];
     uint64_t last_progress[MAX_FILES];
     uint32_t line_id[MAX_FILES];
 };

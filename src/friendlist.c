@@ -447,7 +447,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 }
 
                 wattron(self->window, COLOR_PAIR(colour) | A_BOLD);
-                wprintw(self->window, "O ");
+                wprintw(self->window, "%s ", ONLINE_CHAR);
                 wattroff(self->window, COLOR_PAIR(colour) | A_BOLD);
 
                 if (f_selected)
@@ -487,7 +487,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                 wprintw(self->window, "\n");
             } else {
-                wprintw(self->window, "o ");
+                wprintw(self->window, "%s ", OFFLINE_CHAR);
 
                 if (f_selected)
                     wattron(self->window, COLOR_PAIR(BLUE));

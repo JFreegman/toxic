@@ -27,6 +27,7 @@
 
 #include "toxic.h"
 #include "windows.h"
+#include "friendlist.h"
 #include "file_senders.h"
 #include "line_info.h"
 #include "misc_tools.h"
@@ -34,6 +35,75 @@
 
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
+extern ToxicFriend friends[MAX_FRIENDS_NUM];
+
+#define KiB 1024
+#define MiB 1048576       /* 1024 ^ 2 */
+#define GiB 1073741824    /* 1024 ^ 3 */
+
+/* creates initial progress line that will be updated during file transfer. */
+void prep_prog_line(char *progline)
+{
+    strcpy(progline, "0.0 B/s [");
+    int i;
+
+    for (i = 0; i < NUM_PROG_MARKS; ++i)
+        strcat(progline, " ");
+
+    strcat(progline, "] 0%%");
+}
+
+/* prints a progress bar for file transfers. 
+   if friendnum is -1 we're sending the file, otherwise we're receiving.  */
+void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_remain)
+{
+    double bps;
+    uint32_t line_id;
+
+    if (friendnum < 0) {
+        bps = file_senders[idx].bps;
+        line_id = file_senders[idx].line_id;
+    } else {
+        bps = friends[friendnum].file_receiver.bps[idx];
+        line_id = friends[friendnum].file_receiver.line_id[idx];
+    }
+
+    const char *unit;
+
+    if (bps < KiB) {
+        unit = "B/s";
+    } else if (bps < MiB) {
+        unit = "KiB/s";
+        bps /= (double) KiB;
+    } else if (bps < GiB) {
+        unit = "MiB/s";
+        bps /= (double) MiB;
+    } else {
+        unit = "GiB/s";
+        bps /= (double) GiB;
+    }
+
+    char msg[MAX_STR_SIZE];
+    snprintf(msg, sizeof(msg), "%.1f %s [", bps, unit);
+    int n = pct_remain / (100 / NUM_PROG_MARKS);
+    int i;
+
+    for (i = 0; i < n; ++i)
+        strcat(msg, "#");
+
+    int j;
+
+    for (j = i; j < NUM_PROG_MARKS; ++j)
+        strcat(msg, " ");
+
+    strcat(msg, "] ");
+
+    char pctstr[16];
+    snprintf(pctstr, sizeof(pctstr), "%.2f%%", pct_remain);
+    strcat(msg, pctstr);
+
+    line_info_set(self, line_id, msg);
+}
 
 static void set_max_file_senders_index(void)
 {
@@ -105,19 +175,18 @@ void do_file_senders(Tox *m)
 
             uint64_t curtime = get_unix_time();
             file_senders[i].timestamp = curtime;
+            file_senders[i].bps += file_senders[i].piecelen;            
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, friendnum), fp);
 
-            long double remain = (long double) tox_file_data_remaining(m, friendnum, filenum, 0);
+            double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
 
-            /* refresh line with percentage complete */
+            /* refresh line with percentage complete and transfer speed (must be called once per second) */
             if ((self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1)) || !remain) {
                 file_senders[i].last_progress = curtime;
-                uint64_t size = file_senders[i].size;
-                long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
-
-                snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1Lf%%)", pathname, pct_remain);
-                line_info_set(self, file_senders[i].line_id, msg);
+                double pct_remain = remain ? (1 - (remain / file_senders[i].size)) * 100 : 100;
+                print_progress_bar(self, i, -1, pct_remain);
+                file_senders[i].bps = 0;
             }
 
             if (file_senders[i].piecelen == 0) {

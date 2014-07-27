@@ -302,7 +302,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
-    char *msg;
+    const char *msg;
 
     if (status == 1) {
         msg = "has come online";
@@ -367,11 +367,9 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     char nick[TOX_MAX_NAME_LENGTH];
     char statusmsg[MAX_STR_SIZE];
 
-    pthread_mutex_lock(&Winthread.lock);
     uint16_t n_len = tox_get_self_name(m, (uint8_t *) nick);
     uint16_t s_len = tox_get_self_status_message(m, (uint8_t *) statusmsg, MAX_STR_SIZE);
     uint8_t status = tox_get_self_user_status(m);
-    pthread_mutex_unlock(&Winthread.lock);
 
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';

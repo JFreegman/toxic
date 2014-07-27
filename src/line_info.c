@@ -133,7 +133,8 @@ static struct line_info *line_info_ret_queue(struct history *hst)
     return ret;
 }
 
-/* creates new line_info line and puts it in the queue */
+/* creates new line_info line and puts it in the queue. 
+   SYS_MSG lines may contain an arbitrary number of arguments for string formatting */
 void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
                    uint8_t colour, const char *msg, ...)
 {
@@ -144,11 +145,16 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
 
     char frmt_msg[MAX_STR_SIZE] = {0};
-    va_list args;
 
-    va_start(args, msg);
-    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
-    va_end(args);
+    /* WARNING: SYS_MSG lines must not contain untrusted input */
+    if (type == SYS_MSG) {
+        va_list args;
+        va_start(args, msg);
+        vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
+        va_end(args);
+    } else {
+        snprintf(frmt_msg, sizeof(frmt_msg), "%s", msg);
+    }
 
     int len = 1;     /* there will always be a newline */
 
