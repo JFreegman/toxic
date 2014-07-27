@@ -363,8 +363,14 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
             if (receive_send == 1) {
-                snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
-                file_senders[i].line_id = self->chatwin->hst->line_end->id + 1;
+                const char *r_msg =  "File transfer for '%s' accepted.";
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, r_msg, filename);
+
+                /* prep progress bar line */
+                char progline[MAX_STR_SIZE];
+                prep_prog_line(progline);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, progline);
+                file_senders[i].line_id = self->chatwin->hst->line_end->id + 2;
                 notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2);
             }
 
@@ -389,7 +395,8 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             break;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    if (msg[0])
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, const char *data,
@@ -408,19 +415,17 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
         }
     }
 
-    long double remain = (long double) tox_file_data_remaining(m, num, filenum, 1);
+    friends[num].file_receiver.bps[filenum] += length;
+    double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
     uint64_t curtime = get_unix_time();
 
-    /* refresh line with percentage complete */
+    /* refresh line with percentage complete and transfer speed (must be called once per second) */
     if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
         friends[num].file_receiver.last_progress[filenum] = curtime;
         uint64_t size = friends[num].file_receiver.size[filenum];
-        long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
-
-        char msg[MAX_STR_SIZE];
-        const char *name = friends[num].file_receiver.filenames[filenum];
-        snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
-        line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
+        double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
+        print_progress_bar(self, filenum, num, pct_remain);
+        friends[num].file_receiver.bps[filenum] = 0;
     }
 }
 

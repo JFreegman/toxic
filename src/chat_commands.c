@@ -127,9 +127,14 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     const char *filename = friends[self->num].file_receiver.filenames[filenum];
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        const char *msg = "Saving file as: '%s' (%.1f%%)";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename, 0.0);
-        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 1;
+        const char *msg = "Saving file as: '%s'";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename);
+
+        /* prep progress bar line */
+        char progline[MAX_STR_SIZE];
+        prep_prog_line(progline);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, progline);
+        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 2;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
             errmsg = "* Error writing to file.";
