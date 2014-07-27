@@ -368,12 +368,12 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         } else {
             beep();
         }
-    } else if (key == T_KEY_C_RB) {    /* Scroll peerlist up and down one position */
+    } else if (key == user_settings_->key_peer_list_down) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
         if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
             ++groupchats[self->num].side_pos;
-    } else if (key == T_KEY_C_LB) {
+    } else if (key == user_settings_->key_peer_list_up) {
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
     } else if (key == '\n') {

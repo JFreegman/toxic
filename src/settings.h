@@ -33,6 +33,15 @@ struct user_settings {
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     char download_path[MAX_STR_SIZE];
 
+	int key_next_tab;			/* character code */
+	int key_prev_tab;			/* character code */
+	int key_scroll_line_up;
+	int key_scroll_line_down;
+	int key_half_page_up;
+	int key_half_page_down;
+	int key_page_bottom;
+	int key_peer_list_up;
+	int key_peer_list_down;
 #ifdef _AUDIO
     int audio_in_dev;
     int audio_out_dev;

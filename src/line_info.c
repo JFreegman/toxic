@@ -453,36 +453,24 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
     struct history *hst = self->chatwin->hst;
     bool match = true;
 
-    switch (key) {
-        /* TODO: Find good key bindings for all this stuff */
-        case T_KEY_C_F:
-            line_info_page_up(self, hst);
-            break;
-
-        case T_KEY_C_V:
-            line_info_page_down(self, hst);
-            break; 
-
-        case KEY_PPAGE:
-            line_info_scroll_up(hst);
-            break;
-
-        case KEY_NPAGE:
-            line_info_scroll_down(hst);
-            break;
-
-        /* case ?:
-            line_info_goto_root(hst);
-            break; */
-
-        case T_KEY_C_H:
-            line_info_reset_start(self, hst);
-            break; 
-
-        default:
-            match = false;
-            break;
-    }
+	if (key == user_settings_->key_half_page_up) {
+		line_info_page_up(self, hst);
+	}
+	else if(key == user_settings_->key_half_page_down) {
+		line_info_page_down(self, hst);
+	}
+	else if(key == user_settings_->key_scroll_line_up) {
+		line_info_scroll_up(hst);
+	}
+	else if(key == user_settings_->key_scroll_line_down) {
+		line_info_scroll_down(hst);
+	}
+	else if(key == user_settings_->key_page_bottom) {
+		line_info_reset_start(self, hst);
+	}
+	else {
+		match = false;
+	}
 
     return match;
 }
