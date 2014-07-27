@@ -770,7 +770,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
             }
         } else {
-            beep();
+            notify(self, error, 0);
         }
 
     } else if (key == '\n') {
