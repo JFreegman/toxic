@@ -67,7 +67,8 @@ struct history {
     int queue_sz;
 };
 
-/* creates new line_info line and puts it in the queue */
+/* creates new line_info line and puts it in the queue. 
+   SYS_MSG lines may contain an arbitrary number of arguments for string formatting */
 void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
                    uint8_t colour, const char *msg, ...);
 
