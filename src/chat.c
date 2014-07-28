@@ -756,10 +756,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         int diff = -1;
-        int sf_len = 11;
 
-        if (wcsncmp(ctx->line, L"/sendfile \"", sf_len) == 0) {
-            diff = dir_match(self, m, &ctx->line[sf_len]);
+        if (wcsncmp(ctx->line, L"/sendfile \"", wcslen(L"/sendfile \"")) == 0) {
+            diff = dir_match(self, m, ctx->line);
         } else {
             diff = complete_line(self, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
         }
