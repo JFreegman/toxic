@@ -1,0 +1,29 @@
+
+ui = {
+  // true to enable timestamps, false to disable
+  timestamps:true;
+
+  // true to enable terminal alerts on messages, false to disable
+  alerts:true;
+
+  // true to use native terminal colours, false to use toxic default colour theme
+  native_colors:false;
+time_format=24;
+autolog:false;
+};
+
+//Only Ctrl modified keys and Tab supported right now
+//All printable keys register as input anyway
+keys = {
+	next_tab="Ctrl+P";
+	//next_tab="Tab";
+	prev_tab="Ctrl+O";
+	scroll_line_up="PAGEUP";
+	scroll_line_down="PAGEDOWN";
+	half_page_up="Ctrl+F";
+	half_page_down="Ctrl+V";
+	page_bottom="Ctrl+H";
+	peer_list_up="Ctrl+[";
+	peer_list_down="Ctrl+]";
+};
+
