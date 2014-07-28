@@ -201,8 +201,6 @@ int settings_load(struct user_settings *s, const char *patharg)
     }
     
     if (!config_read_file(cfg, path)) {
-		char* chk = config_error_text(cfg);
-		int lin = config_error_line(cfg);
         config_destroy(cfg);
         return -1;
     }
@@ -226,15 +224,16 @@ int settings_load(struct user_settings *s, const char *patharg)
     }
 	/* keys */
 	if((setting = config_lookup(cfg, key_strings.self)) != NULL) {
-	   config_setting_lookup_int(setting, key_strings.next_tab, &s->key_next_tab);
-	   config_setting_lookup_int(setting, key_strings.prev_tab, &s->key_prev_tab);
-	   config_setting_lookup_int(setting, key_strings.scroll_line_up, &s->key_scroll_line_up);
-	   config_setting_lookup_int(setting, key_strings.scroll_line_down, &s->key_scroll_line_down);
-	   config_setting_lookup_int(setting, key_strings.half_page_up, &s->key_half_page_up);
-	   config_setting_lookup_int(setting, key_strings.half_page_down, &s->key_half_page_down);
-	   config_setting_lookup_int(setting, key_strings.page_bottom, &s->key_page_bottom);
-	   config_setting_lookup_int(setting, key_strings.peer_list_up, &s->key_peer_list_up);
-	   config_setting_lookup_int(setting, key_strings.peer_list_down, &s->key_peer_list_down);
+	   const char* tmp = NULL;
+	   if(config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) s->key_next_tab = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) s->key_prev_tab = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) s->key_scroll_line_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) s->key_scroll_line_down= key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) s->key_half_page_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) s->key_half_page_down = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
 	}	   
     
 #ifdef _AUDIO
@@ -327,4 +326,15 @@ int settings_load(struct user_settings *s, const char *patharg)
 
     config_destroy(cfg);
     return 0;
+}
+int key_parse(const char** bind){
+	if(strlen(*bind) > 5){
+		if(strncmp(*bind,"Ctrl+", 5)==0) return bind[0][5]-'A'+1;
+	}
+	if(strncmp(*bind,"Tab",3)==0) return 9;
+	if(strncmp(*bind,"PAGE",4==0)) {
+		if(strlen(*bind) == 6) return 0523;
+		return 0522;
+	}
+	return -1;
 }
