@@ -50,7 +50,7 @@ void prep_prog_line(char *progline)
     int i;
 
     for (i = 0; i < NUM_PROG_MARKS; ++i)
-        strcat(progline, " ");
+        strcat(progline, "-");
 
     strcat(progline, "] 0%%");
 }
@@ -96,7 +96,7 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_rema
     int j;
 
     for (j = i; j < NUM_PROG_MARKS; ++j)
-        strcat(msg, " ");
+        strcat(msg, "-");
 
     strcat(msg, "] ");
 
@@ -150,7 +150,6 @@ void close_all_file_senders(Tox *m)
 
 static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, int filenum, const char *pathname)
 {
-    char msg[MAX_STR_SIZE];
     FILE *fp = file_senders[i].file;
 
     while (true) {
@@ -175,6 +174,7 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
         }
 
         if (file_senders[i].piecelen == 0) {
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
             notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2);
@@ -185,7 +185,6 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
 
 void do_file_senders(Tox *m)
 {
-    char msg[MAX_STR_SIZE];
     int i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
@@ -204,6 +203,7 @@ void do_file_senders(Tox *m)
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)) {
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", pathname);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
             notify(self, error, NT_NOFOCUS | NT_WNDALERT_2);

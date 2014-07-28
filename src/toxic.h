@@ -68,7 +68,7 @@
 #define OFFLINE_CHAR "o"
 
 typedef enum _FATAL_ERRS {
-    FATALERR_MEMORY = -1,           /* malloc() or calloc() failed */
+    FATALERR_MEMORY = -1,           /* heap memory allocation failed */
     FATALERR_FREAD = -2,            /* fread() failed on critical read */
     FATALERR_THREAD_CREATE = -3,    /* thread creation failed */
     FATALERR_MUTEX_INIT = -4,       /* mutex init failed */
