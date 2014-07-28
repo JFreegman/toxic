@@ -332,7 +332,7 @@ int key_parse(const char** bind){
 		if(strncmp(*bind,"Ctrl+", 5)==0) return bind[0][5]-'A'+1;
 	}
 	if(strncmp(*bind,"Tab",3)==0) return 9;
-	if(strncmp(*bind,"PAGE",4==0)) {
+	if(strncmp(*bind,"PAGE",4)==0) {
 		if(strlen(*bind) == 6) return 0523;
 		return 0522;
 	}
