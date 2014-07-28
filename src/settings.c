@@ -69,7 +69,6 @@ static void ui_defaults(struct user_settings* settings)
 }
 const struct _keys_strings {
 	const char* self;
-	const char* keys;
 	const char* next_tab;
 	const char* prev_tab;
 	const char* scroll_line_up;
@@ -235,7 +234,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 	   config_setting_lookup_int(setting, key_strings.half_page_down, &s->key_half_page_down);
 	   config_setting_lookup_int(setting, key_strings.page_bottom, &s->key_page_bottom);
 	   config_setting_lookup_int(setting, key_strings.peer_list_up, &s->key_peer_list_up);
-	   //config_setting_lookup_int(setting, key_strings.peer_list_down, &s->key_peer_list_down);
+	   config_setting_lookup_int(setting, key_strings.peer_list_down, &s->key_peer_list_down);
 	}	   
     
 #ifdef _AUDIO
