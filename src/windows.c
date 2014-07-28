@@ -33,15 +33,16 @@
 #include "chat.h"
 #include "line_info.h"
 
+#include "settings.h"
 extern char *DATA_FILE;
 extern struct _Winthread Winthread;
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
 
 extern ToxWindow *prompt;
+extern struct user_settings *user_settings_;
 
 static int num_active_windows;
-
 /* CALLBACKS START */
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata)
 {
@@ -267,7 +268,7 @@ void set_next_window(int ch)
     ToxWindow *inf = active_window;
 
     while (true) {
-        if (ch == T_KEY_NEXT) {
+        if (ch == user_settings_->key_next_tab) {
             if (++active_window > end)
                 active_window = windows;
         } else if (--active_window < windows)
@@ -452,7 +453,7 @@ void draw_active_window(Tox *m)
     ltr = isprint(ch);
 #endif /* HAVE_WIDECHAR */
 
-    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV)) {
+    if (!ltr && (ch == user_settings_->key_next_tab || ch == user_settings_->key_prev_tab)) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);
