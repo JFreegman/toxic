@@ -185,10 +185,10 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                beep();
+                notify(self, error, 0);
             }
         } else {
-            beep();
+            notify(self, error, 0);
         }
     } else if (key == '\n') {
         rm_trailing_spaces_buf(ctx);
@@ -309,21 +309,13 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
 
-#ifdef _SOUND_NOTIFY
         notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
-#else
-        notify(self, silent, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
-#endif /* _SOUND_NOTIFY */
     } else {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
 
-#ifdef _SOUND_NOTIFY
         notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
-#else
-        notify(self, silent, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
-#endif /* _SOUND_NOTIFY */
     }
 }
 

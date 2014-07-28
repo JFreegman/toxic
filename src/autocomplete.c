@@ -202,7 +202,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
 }
 
 /* transforms a sendfile tab complete contaning the shorthand "~/" into the full home directory.*/
-static void complt_home_dir(ToxWindow *self, char *path)
+static void complt_home_dir(ToxWindow *self, char *path, int pathsize)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -210,8 +210,8 @@ static void complt_home_dir(ToxWindow *self, char *path)
     get_home_dir(homedir, sizeof(homedir));
 
     char newline[MAX_STR_SIZE];
-    const char *isqt = !strchr(path, '\"') ? "\"" : "";
-    snprintf(newline, sizeof(newline), "/sendfile %s%s/", isqt, homedir);
+    snprintf(newline, sizeof(newline), "/sendfile \"%s%s", homedir, path + 1);
+    snprintf(path, pathsize, "%s", &newline[11]);
 
     wchar_t wline[MAX_STR_SIZE];
 
@@ -231,22 +231,20 @@ static void complt_home_dir(ToxWindow *self, char *path)
 /*  attempts to match /sendfile "<incomplete-dir>" line to matching directories.
 
     if only one match, auto-complete line.
-    return diff between old len and new len of ctx->line, -1 if no matches 
-*/
-#define MAX_DIRS 256
+    return diff between old len and new len of ctx->line, -1 if no matches or > 1 match */
+#define MAX_DIRS 512
 
-int dir_match(ToxWindow *self, Tox *m, wchar_t *line)
+int dir_match(ToxWindow *self, Tox *m, const wchar_t *line)
 {
     char b_path[MAX_STR_SIZE];
     char b_name[MAX_STR_SIZE];
+    const wchar_t *tmpline = &line[11];   /* start after "/sendfile \"" */
 
-    if (wcs_to_mbs_buf(b_path, line, sizeof(b_path)) == -1)
+    if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1)
         return -1; 
 
-    if (!strncmp(b_path, "\"~/", 3) || !strncmp(b_path, "~/", 2)) {
-        complt_home_dir(self, b_path);
-        return -1;
-    }
+    if (!strncmp(b_path, "~/", 2))
+        complt_home_dir(self, b_path, sizeof(b_path));
 
     int si = char_rfind(b_path, '/', strlen(b_path));
 

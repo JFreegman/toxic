@@ -60,10 +60,13 @@ typedef enum _Flags {
     NT_ALWAYS = 1 << 8,     /* Force sound to play */
 } Flags;
 
-int init_notify(int login_cooldown);
+int init_notify(int login_cooldown, int notification_timeout);
 void terminate_notify();
 
 int notify(ToxWindow* self, Notification notif, uint64_t flags);
+
+int box_notify(ToxWindow* self, Notification notif, uint64_t flags, char* title, char* format, ...);
+int box_notify_append(ToxWindow* self, Notification notif, uint64_t flags, int id, char* format, ...);
 
 #ifdef _SOUND_NOTIFY
 int set_sound(Notification sound, const char* value);

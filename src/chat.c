@@ -423,7 +423,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
         friends[num].file_receiver.last_progress[filenum] = curtime;
         uint64_t size = friends[num].file_receiver.size[filenum];
-        double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
+        double pct_remain = remain > 0 ? (1 - (remain / size)) * 100 : 100;
         print_progress_bar(self, filenum, num, pct_remain);
         friends[num].file_receiver.bps[filenum] = 0;
     }
@@ -756,10 +756,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         int diff = -1;
-        int sf_len = 11;
 
-        if (wcsncmp(ctx->line, L"/sendfile \"", sf_len) == 0) {
-            diff = dir_match(self, m, &ctx->line[sf_len]);
+        if (wcsncmp(ctx->line, L"/sendfile \"", wcslen(L"/sendfile \"")) == 0) {
+            diff = dir_match(self, m, ctx->line);
         } else {
             diff = complete_line(self, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
         }
@@ -770,7 +769,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
             }
         } else {
-            beep();
+            notify(self, error, 0);
         }
 
     } else if (key == '\n') {

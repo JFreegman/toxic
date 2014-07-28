@@ -37,6 +37,7 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
 extern FileSender file_senders[MAX_FILES];
 extern uint8_t max_file_senders_index;
+extern uint8_t num_active_file_senders;
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -209,6 +210,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     for (i = 0; i < MAX_FILES; ++i) {
         if (!file_senders[i].active) {
+            file_senders[i].queue_pos = num_active_file_senders;
             memcpy(file_senders[i].pathname, path, path_len + 1);
             file_senders[i].active = true;
             file_senders[i].toxwin = self;
@@ -222,6 +224,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
             const char *msg = "Sending file: '%s'";
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, path);
+
+            ++num_active_file_senders;
 
             if (i == max_file_senders_index)
                 ++max_file_senders_index;

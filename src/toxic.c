@@ -635,12 +635,12 @@ int main(int argc, char *argv[])
 
 #endif /* _AUDIO */
     
-    init_notify(60);
+    init_notify(60, 3000);
 
 #ifdef _SOUND_NOTIFY
     notify(prompt, self_log_in, 0);
 #endif /* _SOUND_NOTIFY */
-
+    
     const char *msg;
 
     if (config_err) {
