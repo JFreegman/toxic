@@ -35,13 +35,15 @@
 
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
+uint8_t num_active_file_senders;
 extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
 #define KiB 1024
 #define MiB 1048576       /* 1024 ^ 2 */
 #define GiB 1073741824    /* 1024 ^ 3 */
 
-/* creates initial progress line that will be updated during file transfer. */
+/* creates initial progress line that will be updated during file transfer.
+   Assumes progline is of size MAX_STR_SIZE */
 void prep_prog_line(char *progline)
 {
     strcpy(progline, "0.0 B/s [");
@@ -127,6 +129,7 @@ static void close_file_sender(ToxWindow *self, Tox *m, int i, char *msg, int CTR
     fclose(file_senders[i].file);
     memset(&file_senders[i], 0, sizeof(FileSender));
     set_max_file_senders_index();
+    --num_active_file_senders;
 }
 
 void close_all_file_senders(Tox *m)
@@ -145,6 +148,41 @@ void close_all_file_senders(Tox *m)
     }
 }
 
+static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, int filenum, const char *pathname)
+{
+    char msg[MAX_STR_SIZE];
+    FILE *fp = file_senders[i].file;
+
+    while (true) {
+        if (tox_file_send_data(m, friendnum, filenum, (uint8_t *) file_senders[i].nextpiece,
+                               file_senders[i].piecelen) == -1)
+            return;
+
+        uint64_t curtime = get_unix_time();
+        file_senders[i].timestamp = curtime;
+        file_senders[i].bps += file_senders[i].piecelen;            
+        file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
+                                         tox_file_data_size(m, friendnum), fp);
+
+        double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
+
+        /* refresh line with percentage complete and transfer speed (must be called once per second) */
+        if ((self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1)) || !remain) {
+            file_senders[i].last_progress = curtime;
+            double pct_remain = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
+            print_progress_bar(self, i, -1, pct_remain);
+            file_senders[i].bps = 0;
+        }
+
+        if (file_senders[i].piecelen == 0) {
+            snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
+            close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
+            notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2);
+            return;
+        }
+    }
+}
+
 void do_file_senders(Tox *m)
 {
     char msg[MAX_STR_SIZE];
@@ -154,11 +192,15 @@ void do_file_senders(Tox *m)
         if (!file_senders[i].active)
             continue;
 
+        if (file_senders[i].queue_pos > 0) {
+            --file_senders[i].queue_pos;
+            continue;
+        }
+
         ToxWindow *self = file_senders[i].toxwin;
         char *pathname = file_senders[i].pathname;
         int filenum = file_senders[i].filenum;
         int32_t friendnum = file_senders[i].friendnum;
-        FILE *fp = file_senders[i].file;
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)) {
@@ -168,33 +210,7 @@ void do_file_senders(Tox *m)
             continue;
         }
 
-        while (true) {
-            if (tox_file_send_data(m, friendnum, filenum, (uint8_t *) file_senders[i].nextpiece,
-                                   file_senders[i].piecelen) == -1)
-                break;
-
-            uint64_t curtime = get_unix_time();
-            file_senders[i].timestamp = curtime;
-            file_senders[i].bps += file_senders[i].piecelen;            
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
-                                             tox_file_data_size(m, friendnum), fp);
-
-            double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
-
-            /* refresh line with percentage complete and transfer speed (must be called once per second) */
-            if ((self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1)) || !remain) {
-                file_senders[i].last_progress = curtime;
-                double pct_remain = remain ? (1 - (remain / file_senders[i].size)) * 100 : 100;
-                print_progress_bar(self, i, -1, pct_remain);
-                file_senders[i].bps = 0;
-            }
-
-            if (file_senders[i].piecelen == 0) {
-                snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
-                close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
-                notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2);
-                break;
-            }
-        }
+        file_senders[i].queue_pos = num_active_file_senders - 1;
+        send_file_data(self, m, i, friendnum, filenum, pathname);
     }
 }

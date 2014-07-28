@@ -423,7 +423,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
         friends[num].file_receiver.last_progress[filenum] = curtime;
         uint64_t size = friends[num].file_receiver.size[filenum];
-        double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
+        double pct_remain = remain > 0 ? (1 - (remain / size)) * 100 : 100;
         print_progress_bar(self, filenum, num, pct_remain);
         friends[num].file_receiver.bps[filenum] = 0;
     }

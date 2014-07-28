@@ -45,9 +45,11 @@ typedef struct {
     double bps;
     uint64_t size;
     uint32_t line_id;
+    uint8_t queue_pos;
 } FileSender;
 
-/* creates progress line that will be updated during file transfer. */
+/* creates initial progress line that will be updated during file transfer.
+   Assumes progline is of size MAX_STR_SIZE */
 void prep_prog_line(char *progline);
 
 /* prints a progress bar for file transfers. 
