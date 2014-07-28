@@ -65,7 +65,7 @@
 #define T_KEY_C_Y        0x19     /* ctrl-y */
 
 #define ONLINE_CHAR "*"
-#define OFFLINE_CHAR "*"
+#define OFFLINE_CHAR "o"
 
 typedef enum _FATAL_ERRS {
     FATALERR_MEMORY = -1,           /* malloc() or calloc() failed */
