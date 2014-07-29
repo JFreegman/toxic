@@ -1,3 +1,5 @@
+// SAMPLE TOXIC CONFIGURATION
+// USES LIBCONFIG-ACCEPTED SYNTAX
 
 ui = {
   // true to enable timestamps, false to disable
@@ -8,8 +10,45 @@ ui = {
 
   // true to use native terminal colours, false to use toxic default colour theme
   native_colors:false;
-time_format=24;
-autolog:false;
+
+  // true to enable autologging, false to disable
+  autolog:false;
+  
+  // 24 or 12 hour time
+  time_format=24;
+
+  // maximum lines for chat window history
+  history_size=700;
+};
+
+audio = {
+  // preferred audio input device; numbers correspond to /lsdev in
+  input_device=2;
+
+  // preferred audio output device; numbers correspond to /lsdev out
+  output_device=0;
+  
+  // default VAD treshold; float (recommended values are around 40)
+  VAD_treshold=40.0;
+};
+
+tox = {
+  // where to store received files
+  // download_path="/home/USERNAME/Downloads/";
+};
+
+// To disable a sound set the path to "silent"
+sounds = {
+  error="__DATADIR__/sounds/Error.wav";
+  self_log_in="__DATADIR__/sounds/LogIn.wav";
+  self_log_out="__DATADIR__/sounds/LogOut.wav";
+  user_log_in="__DATADIR__/sounds/ContactLogsIn.wav";
+  user_log_out="__DATADIR__/sounds/ContactLogsOut.wav";
+  call_incoming="__DATADIR__/sounds/IncomingCall.wav";
+  call_outgoing="__DATADIR__/sounds/OutgoingCall.wav";
+  generic_message="__DATADIR__/sounds/NewMessage.wav";
+  transfer_pending="__DATADIR__/sounds/TransferPending.wav";
+  transfer_completed="__DATADIR__/sounds/TransferComplete.wav";
 };
 
 //Only Ctrl modified keys and Tab supported right now
