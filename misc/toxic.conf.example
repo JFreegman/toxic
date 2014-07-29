@@ -34,7 +34,7 @@ audio = {
 
 tox = {
   // where to store received files
-  // download_path="/home/USERNAME/Downloads/";
+  //download_path="/home/USERNAME/Downloads/";
 };
 
 // To disable a sound set the path to "silent"
