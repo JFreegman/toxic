@@ -273,7 +273,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     ChatContext *ctx = self->chatwin;
 
-    char *event;
+    const char *event;
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
@@ -315,7 +315,7 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *a
     }
 
     if (tox_group_action_send(m, self->num, (uint8_t *) action, strlen(action)) == -1) {
-        char *errmsg = " * Failed to send action.";
+        const char *errmsg = " * Failed to send action.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
     }
 }
@@ -398,7 +398,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             }
         } else if (!string_is_empty(line)) {
             if (tox_group_message_send(m, self->num, (uint8_t *) line, strlen(line)) == -1) {
-                char *errmsg = " * Failed to send message.";
+                const char *errmsg = " * Failed to send message.";
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
             }
         }

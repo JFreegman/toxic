@@ -33,13 +33,13 @@ struct chatlog {
 };
 
 /* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
-void init_logging_session(char *name, char *key, struct chatlog *log);
+void init_logging_session(char *name, const char *key, struct chatlog *log);
 
 /* formats/writes line to log file */
-void write_to_log(const char *msg, char *name, struct chatlog *log, bool event);
+void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event);
 
 /* enables logging for specified log and creates/fetches file if necessary */
-void log_enable(char *name, char *key, struct chatlog *log);
+void log_enable(char *name, const char *key, struct chatlog *log);
 
 /* disables logging for specified log and closes file */
 void log_disable(struct chatlog *log);

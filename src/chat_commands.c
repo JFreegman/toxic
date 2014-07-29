@@ -166,15 +166,15 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    char *path = argv[1];
-
-    if (path[0] != '\"') {
+    if (argv[1][0] != '\"') {
         errmsg = "File path must be enclosed in quotes.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    ++path;
+    /* remove opening and closing quotes */
+    char path[MAX_STR_SIZE];
+    snprintf(path, sizeof(path), "%s", &argv[1][1]);
     int path_len = strlen(path) - 1;
     path[path_len] = '\0';
 
