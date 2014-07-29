@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libconfig.h>
-
 #include "toxic.h"
 #include "windows.h"
 #include "configdir.h"
@@ -68,7 +67,42 @@ static void ui_defaults(struct user_settings* settings)
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
 }
+const struct _keys_strings {
+	const char* self;
+	const char* next_tab;
+	const char* prev_tab;
+	const char* scroll_line_up;
+	const char* scroll_line_down;
+	const char* half_page_up;
+	const char* half_page_down;
+	const char* page_bottom;
+	const char* peer_list_up;
+	const char* peer_list_down;
+} key_strings = {
+	"keys",
+	"next_tab",
+	"prev_tab",
+	"scroll_line_up",
+	"scroll_line_down",
+	"half_page_up",
+	"half_page_down",
+	"page_bottom",
+	"peer_list_up",
+	"peer_list_down"
+};
+static void key_defaults(struct user_settings* settings)
+{
+	settings->key_next_tab = 0x10;
+	settings->key_prev_tab = 0x0F;
+	settings->key_scroll_line_up = 0523; /* value from libncurses:curses.h */
+	settings->key_scroll_line_down = 0522;
+	settings->key_half_page_up = 0x06;
+	settings->key_half_page_down = 0x16;
+	settings->key_page_bottom = 0x08;
+	settings->key_peer_list_up = 0x1B;
+	settings->key_peer_list_down = 0x1D;
 
+}
 const struct _tox_strings {
     const char* self;
     const char* download_path;
@@ -139,6 +173,7 @@ int settings_load(struct user_settings *s, const char *patharg)
     /* Load default settings */
     ui_defaults(s);
     tox_defaults(s);
+	key_defaults(s);
 #ifdef _AUDIO
     audio_defaults(s);
 #endif
@@ -155,7 +190,6 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         /* make sure path exists or is created on first time running */
         FILE *fp = fopen(path, "r");
-
         if (fp == NULL) {
             if ((fp = fopen(path, "w")) == NULL)
                 return -1;
@@ -188,6 +222,19 @@ int settings_load(struct user_settings *s, const char *patharg)
             strcpy(s->download_path, str);
         }
     }
+	/* keys */
+	if((setting = config_lookup(cfg, key_strings.self)) != NULL) {
+	   const char* tmp = NULL;
+	   if(config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) s->key_next_tab = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) s->key_prev_tab = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) s->key_scroll_line_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) s->key_scroll_line_down= key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) s->key_half_page_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) s->key_half_page_down = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
+	}	   
     
 #ifdef _AUDIO
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
@@ -279,4 +326,15 @@ int settings_load(struct user_settings *s, const char *patharg)
 
     config_destroy(cfg);
     return 0;
+}
+int key_parse(const char** bind){
+	if(strlen(*bind) > 5){
+		if(strncmp(*bind,"Ctrl+", 5)==0) return bind[0][5]-'A'+1;
+	}
+	if(strncmp(*bind,"Tab",3)==0) return 9;
+	if(strncmp(*bind,"PAGE",4)==0) {
+		if(strlen(*bind) == 6) return 0523;
+		return 0522;
+	}
+	return -1;
 }
