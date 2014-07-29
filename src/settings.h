@@ -69,5 +69,4 @@ enum {
 } settings_values;
 
 int settings_load(struct user_settings *s, const char *patharg);
-int key_parse(const char** bind);
 #endif /* #define _settings_h */

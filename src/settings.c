@@ -58,6 +58,7 @@ const struct _ui_strings {
     "time_format",
     "history_size"
 };
+
 static void ui_defaults(struct user_settings* settings) 
 {
     settings->timestamps = TIMESTAMPS_ON;
@@ -67,6 +68,7 @@ static void ui_defaults(struct user_settings* settings)
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
 }
+
 const struct _keys_strings {
 	const char* self;
 	const char* next_tab;
@@ -90,19 +92,21 @@ const struct _keys_strings {
 	"peer_list_up",
 	"peer_list_down"
 };
+
+/* defines from toxic.h */
 static void key_defaults(struct user_settings* settings)
 {
-	settings->key_next_tab = 0x10;
-	settings->key_prev_tab = 0x0F;
-	settings->key_scroll_line_up = 0523; /* value from libncurses:curses.h */
-	settings->key_scroll_line_down = 0522;
-	settings->key_half_page_up = 0x06;
-	settings->key_half_page_down = 0x16;
-	settings->key_page_bottom = 0x08;
-	settings->key_peer_list_up = 0x1B;
-	settings->key_peer_list_down = 0x1D;
-
+	settings->key_next_tab = T_KEY_NEXT;
+	settings->key_prev_tab = T_KEY_PREV;
+	settings->key_scroll_line_up = KEY_PPAGE;
+	settings->key_scroll_line_down = KEY_NPAGE;
+	settings->key_half_page_up = T_KEY_C_F;
+	settings->key_half_page_down = T_KEY_C_V;
+	settings->key_page_bottom = T_KEY_C_H;
+	settings->key_peer_list_up = T_KEY_C_LB;
+	settings->key_peer_list_down = T_KEY_C_RB;
 }
+
 const struct _tox_strings {
     const char* self;
     const char* download_path;
@@ -128,6 +132,7 @@ const struct _audio_strings {
     "output_device",
     "VAD_treshold",
 };
+
 static void audio_defaults(struct user_settings* settings)
 {
     settings->audio_in_dev = 0;
@@ -164,6 +169,23 @@ const struct _sound_strings {
 };
 #endif
 
+static int key_parse(const char** bind){
+    int len = strlen(*bind);
+
+    if (len > 5) {
+        if(strncasecmp(*bind, "ctrl+", 5) == 0) 
+            return bind[0][5] - 'A' + 1;
+    }
+
+    if (strncasecmp(*bind, "tab", 3) == 0) 
+        return T_KEY_TAB;
+
+    if (strncasecmp(*bind, "page", 4) == 0)
+        return len == 6 ? KEY_PPAGE : KEY_NPAGE;
+
+    return -1;
+}
+
 int settings_load(struct user_settings *s, const char *patharg)
 {
     config_t cfg[1];
@@ -173,11 +195,11 @@ int settings_load(struct user_settings *s, const char *patharg)
     /* Load default settings */
     ui_defaults(s);
     tox_defaults(s);
-	key_defaults(s);
+    key_defaults(s);
 #ifdef _AUDIO
     audio_defaults(s);
 #endif
-    
+
     config_init(cfg);
 
     char path[MAX_STR_SIZE];
@@ -199,12 +221,12 @@ int settings_load(struct user_settings *s, const char *patharg)
     } else {
         snprintf(path, sizeof(path), "%s", patharg);
     }
-    
+
     if (!config_read_file(cfg, path)) {
         config_destroy(cfg);
         return -1;
     }
-    
+
     /* ui */
     if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
         config_setting_lookup_bool(setting, ui_strings.timestamps, &s->timestamps);
@@ -216,7 +238,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
         s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
     }
-    
+
     if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
         if ( config_setting_lookup_string(setting, tox_strings.download_path, &str) ) {
             strcpy(s->download_path, str);
@@ -235,7 +257,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 	   if(config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
 	   if(config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
 	}	   
-    
+
 #ifdef _AUDIO
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
@@ -326,15 +348,4 @@ int settings_load(struct user_settings *s, const char *patharg)
 
     config_destroy(cfg);
     return 0;
-}
-int key_parse(const char** bind){
-	if(strlen(*bind) > 5){
-		if(strncmp(*bind,"Ctrl+", 5)==0) return bind[0][5]-'A'+1;
-	}
-	if(strncmp(*bind,"Tab",3)==0) return 9;
-	if(strncmp(*bind,"PAGE",4)==0) {
-		if(strlen(*bind) == 6) return 0523;
-		return 0522;
-	}
-	return -1;
 }

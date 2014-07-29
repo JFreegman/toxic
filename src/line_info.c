@@ -463,16 +463,16 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
 	if (key == user_settings_->key_half_page_up) {
 		line_info_page_up(self, hst);
 	}
-	else if(key == user_settings_->key_half_page_down) {
+	else if (key == user_settings_->key_half_page_down) {
 		line_info_page_down(self, hst);
 	}
-	else if(key == user_settings_->key_scroll_line_up) {
+	else if (key == user_settings_->key_scroll_line_up) {
 		line_info_scroll_up(hst);
 	}
-	else if(key == user_settings_->key_scroll_line_down) {
+	else if (key == user_settings_->key_scroll_line_down) {
 		line_info_scroll_down(hst);
 	}
-	else if(key == user_settings_->key_page_bottom) {
+	else if (key == user_settings_->key_page_bottom) {
 		line_info_reset_start(self, hst);
 	}
 	else {

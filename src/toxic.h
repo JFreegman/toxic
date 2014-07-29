@@ -50,7 +50,7 @@
 #define TIME_STR_SIZE 16
 
 /* ASCII key codes */
-#define T_KEY_ESC        0X1B     /* esc key */
+#define T_KEY_ESC        0x1B     /* ESC key */
 #define T_KEY_KILL       0x0B     /* ctrl-k */
 #define T_KEY_DISCARD    0x15     /* ctrl-u */
 #define T_KEY_NEXT       0x10     /* ctrl-p */
@@ -63,6 +63,7 @@
 #define T_KEY_C_F        0x06     /* ctrl-f */
 #define T_KEY_C_H        0x08     /* ctrl-h */
 #define T_KEY_C_Y        0x19     /* ctrl-y */
+#define T_KEY_TAB        0x09     /* TAB key */
 
 #define ONLINE_CHAR "*"
 #define OFFLINE_CHAR "o"
