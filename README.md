@@ -12,12 +12,15 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 * [libconfig](http://www.hyperrealm.com/libconfig) (for Debian based systems, 'libconfig-dev')
 
 ##### Audio
-* libtoxav (libtoxcore compiled with audio support)
+* libtoxav ([libtoxcore](https://github.com/irungentoo/toxcore) compiled with audio support)
 * [openal](http://openal.org) (for Debian based systems, 'libopenal-dev')
 
 ##### Sound notifications
-* [openal](http://openal.org)
+* [openal](http://openal.org) (for Debian based systems, 'libopenal-dev')
 * [openalut](http://openal.org) (for Debian based systems, 'libalut-dev')
+
+##### Desktop notifications
+* [libnotify](https://developer.gnome.org/libnotify) (for Debian based systems, 'libnotify-dev')
 
 ### Compiling
 1. `cd build/`
@@ -27,10 +30,10 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 ### Compilation Notes
 * You can add specific flags to the Makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
 * You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
-* Audio call support is automatically enabled if all dependencies are found
-* If you want to build toxic without audio call support, you can use `make DISABLE_AV=1`
-* Sound notifications support is automatically enabled if all dependencies are found
-* If you want to build toxic without sound notifications support, you can use `make DISABLE_NOTIFY=1`
+* Additional features are automatically enabled if all dependencies are found, but you can disable them by using special variables:
+  * `DISABLE_AV=1` → build toxic without audio call support
+  * `DISABLE_SOUND_NOTIFY=1` → build toxic without sound notifications support
+  * `DISABLE_DESKTOP_NOTIFY=1` → build toxic without desktop notifications support
 
 ### Packaging
 * For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
