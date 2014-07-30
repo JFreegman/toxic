@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libconfig.h>
+#include <ctype.h>
+
 #include "toxic.h"
 #include "windows.h"
 #include "configdir.h"
@@ -180,7 +182,7 @@ static int key_parse(const char** bind){
 
     if (len > 5) {
         if(strncasecmp(*bind, "ctrl+", 5) == 0) 
-            return bind[0][5] - 'A' + 1;
+            return toupper(bind[0][5]) - 'A' + 1;
     }
 
     if (strncasecmp(*bind, "tab", 3) == 0) 
