@@ -31,6 +31,9 @@ struct user_settings {
     int timestamps;        /* boolean */
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
+    int show_typing_self;  /* boolean */
+    int show_typing_other; /* boolean */
+
     char download_path[MAX_STR_SIZE];
 
 	int key_next_tab;			/* character code */
@@ -62,8 +65,11 @@ enum {
     ALERTS_DISABLED = 0,
     ALERTS_ENABLED = 1,
 
-    NATIVE_COLS = 1,
     DFLT_COLS = 0,
+    NATIVE_COLS = 1,
+
+    SHOW_TYPING_OFF = 0,
+    SHOW_TYPING_ON = 1,
 
     DFLT_HST_SIZE = 700,
 } settings_values;

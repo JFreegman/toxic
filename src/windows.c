@@ -43,6 +43,7 @@ extern ToxWindow *prompt;
 extern struct user_settings *user_settings_;
 
 static int num_active_windows;
+
 /* CALLBACKS START */
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata)
 {
@@ -66,6 +67,9 @@ void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *use
 
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata)
 {
+    if (user_settings_->show_typing_other == SHOW_TYPING_OFF)
+        return;
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {

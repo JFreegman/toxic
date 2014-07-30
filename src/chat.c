@@ -103,8 +103,11 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* _AUDIO */
 };
 
-static void set_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
+static void set_self_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
 {
+    if (user_settings_->show_typing_self == SHOW_TYPING_OFF)
+        return;
+
     ChatContext *ctx = self->chatwin;
 
     tox_set_user_is_typing(m, self->num, is_typing);
@@ -173,14 +176,18 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
 
     StatusBar *statusbar = self->stb;
 
-    if (status == 1) { /* Friend shows online */
+    if (status == 1) { /* Friend goes online */
         statusbar->is_online = true;
-        friends[num].is_typing = tox_get_is_typing(m, num);
+        friends[num].is_typing = user_settings_->show_typing_other == SHOW_TYPING_ON 
+                                 ? tox_get_is_typing(m, num) : 0;
         notify(self, user_log_in, NT_NOFOCUS);
     } else { /* Friend goes offline */
         statusbar->is_online = false;
         friends[num].is_typing = 0;
         notify(self, user_log_out, NT_NOFOCUS);
+
+        if (self->chatwin->self_is_typing)
+            set_self_typingstatus(self, m, 0);
     }
 }
 
@@ -743,8 +750,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (ltr) {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
 
-        if (ctx->line[0] != '/')
-            set_typingstatus(self, m, 1);
+        if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->is_online)
+            set_self_typingstatus(self, m, 1);
 
         return;
     }
@@ -815,7 +822,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing)
-        set_typingstatus(self, m, 0);
+        set_self_typingstatus(self, m, 0);
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)

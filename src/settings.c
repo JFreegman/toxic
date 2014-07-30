@@ -49,6 +49,8 @@ const struct _ui_strings {
     const char* autolog;
     const char* time_format;
     const char* history_size;
+    const char* show_typing_self;
+    const char* show_typing_other;
 } ui_strings = {
     "ui",
     "timestamps",
@@ -56,7 +58,9 @@ const struct _ui_strings {
     "native_colors",
     "autolog",
     "time_format",
-    "history_size"
+    "history_size",
+    "show_typing_self",
+    "show_typing_other",
 };
 
 static void ui_defaults(struct user_settings* settings) 
@@ -67,6 +71,8 @@ static void ui_defaults(struct user_settings* settings)
     settings->alerts = ALERTS_ENABLED;
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
+    settings->show_typing_self = SHOW_TYPING_ON;
+    settings->show_typing_other = SHOW_TYPING_ON;
 }
 
 const struct _keys_strings {
@@ -233,8 +239,9 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
         config_setting_lookup_bool(setting, ui_strings.autolog, &s->autolog);
         config_setting_lookup_bool(setting, ui_strings.native_colors, &s->colour_theme);
-        
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
+        config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
+        config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
         config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
         s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
     }
@@ -244,6 +251,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             strcpy(s->download_path, str);
         }
     }
+
 	/* keys */
 	if((setting = config_lookup(cfg, key_strings.self)) != NULL) {
 	   const char* tmp = NULL;
