@@ -64,9 +64,19 @@ typedef struct {
     struct FileReceiver file_receiver;
 } ToxicFriend;
 
+typedef struct {
+    char name[TOXIC_MAX_NAME_LENGTH];
+    int namelength;
+    char pub_key[TOX_CLIENT_ID_SIZE];
+    int32_t num;
+    bool active;
+    uint64_t last_on;
+} BlockedFriend;
+
 ToxWindow new_friendlist(void);
 void disable_chatwin(int32_t f_num);
 int get_friendnum(uint8_t *name);
+int load_blocklist(char *data);
 
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort);
 

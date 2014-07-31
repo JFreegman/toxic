@@ -67,19 +67,13 @@ ToxAv *av;
 
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
+char *BLOCK_FILE = NULL;
 ToxWindow *prompt = NULL;
 
 #define AUTOSAVE_FREQ 60
 
-struct arg_opts {
-    int ignore_data_file;
-    int use_ipv4;
-    int default_locale;
-    char config_path[MAX_STR_SIZE];
-    char nodes_path[MAX_STR_SIZE];
-} arg_opts;
-
 struct _Winthread Winthread;
+struct arg_opts arg_opts;
 struct user_settings *user_settings_ = NULL;
 
 static void catch_SIGINT(int sig)
@@ -371,15 +365,17 @@ static void load_friendlist(Tox *m)
 
     for (i = 0; i < numfriends; ++i)
         friendlist_onFriendAdded(NULL, m, i, false);
+
+    sort_friendlist_index();
 }
 
 /*
  * Store Messenger to given location
  * Return 0 stored successfully or ignoring data file
- * Return 1 file path is NULL
- * Return 2 malloc failed
- * Return 3 opening path failed
- * Return 4 fwrite failed
+ * Return -1 file path is NULL
+ * Return -2 malloc failed
+ * Return -3 opening path failed
+ * Return -4 fwrite failed
  */
 int store_data(Tox *m, char *path)
 {
@@ -387,13 +383,13 @@ int store_data(Tox *m, char *path)
         return 0;
 
     if (path == NULL)
-        return 1;
+        return -1;
 
     int len = tox_size(m);
     char *buf = malloc(len);
 
     if (buf == NULL)
-        return 2;
+        return -2;
 
     tox_save(m, (uint8_t *) buf);
 
@@ -401,13 +397,13 @@ int store_data(Tox *m, char *path)
 
     if (fd == NULL) {
         free(buf);
-        return 3;
+        return -3;
     }
 
     if (fwrite(buf, len, 1, fd) != 1) {
         free(buf);
         fclose(fd);
-        return 4;
+        return -4;
     }
 
     free(buf);
@@ -442,6 +438,7 @@ static void load_data(Tox *m, char *path)
 
         tox_load(m, (uint8_t *) buf, len);
         load_friendlist(m);
+        load_blocklist(BLOCK_FILE);
 
         free(buf);
         fclose(fd);
@@ -526,10 +523,12 @@ static void parse_args(int argc, char *argv[])
         switch (opt) {
             case 'f':
                 DATA_FILE = strdup(optarg);
+                BLOCK_FILE = strdup(optarg);
 
-                if (DATA_FILE == NULL)
+                if (DATA_FILE == NULL || BLOCK_FILE == NULL)
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
 
+                strcat(BLOCK_FILE, "-blocklist");
                 break;
 
             case 'x':
@@ -560,39 +559,48 @@ static void parse_args(int argc, char *argv[])
     }
 }
 
-int main(int argc, char *argv[])
+#define DATANAME "data"
+#define BLOCKNAME "data-blocklist"
+static int init_data_files(void)
 {
     char *user_config_dir = get_user_config_dir();
-    int config_err = 0;
-
-    parse_args(argc, argv);
-
-    /* Make sure all written files are read/writeable only by the current user. */
-    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-
-    signal(SIGINT, catch_SIGINT);
-
-    config_err = create_user_config_dir(user_config_dir);
+    int config_err = create_user_config_dir(user_config_dir);
 
     if (DATA_FILE == NULL ) {
         if (config_err) {
-            DATA_FILE = strdup("data");
+            DATA_FILE = strdup(DATANAME);
+            BLOCK_FILE = strdup(BLOCKNAME);
 
-            if (DATA_FILE == NULL)
-                exit_toxic_err("failed in main", FATALERR_MEMORY);
+            if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+                exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
         } else {
-            DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen("data") + 1);
+            DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
+            BLOCK_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
 
-            if (DATA_FILE == NULL)
-                exit_toxic_err("failed in main", FATALERR_MEMORY);
+            if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+                exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
 
             strcpy(DATA_FILE, user_config_dir);
             strcat(DATA_FILE, CONFIGDIR);
-            strcat(DATA_FILE, "data");
+            strcat(DATA_FILE, DATANAME);
+
+            strcpy(BLOCK_FILE, user_config_dir);
+            strcat(BLOCK_FILE, CONFIGDIR);
+            strcat(BLOCK_FILE, BLOCKNAME);
         }
     }
 
     free(user_config_dir);
+    return config_err;
+}
+
+int main(int argc, char *argv[])
+{
+    parse_args(argc, argv);
+    /* Make sure all written files are read/writeable only by the current user. */
+    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    signal(SIGINT, catch_SIGINT);
+    int config_err = init_data_files();
 
     /* init user_settings struct and load settings from conf file */
     user_settings_ = calloc(1, sizeof(struct user_settings));
@@ -644,7 +652,7 @@ int main(int argc, char *argv[])
     const char *msg;
 
     if (config_err) {
-        msg = "Unable to determine configuration directory. Defaulting to 'data' for a keyfile...";
+        msg = "Unable to determine configuration directory. Defaulting to 'data' for data file...";
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
     }
 
@@ -652,8 +660,6 @@ int main(int argc, char *argv[])
         msg = "Failed to load user settings";
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
     }
-
-    sort_friendlist_index();
 
     uint64_t last_save = (uint64_t) time(NULL);
 
