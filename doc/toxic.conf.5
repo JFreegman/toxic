@@ -11,9 +11,9 @@ client.
 .I <SECTION>
 .B = {
 .PP
-.IB <KEY1> : <BOOL_VALUE> ;
+.IB <KEY1> = <VALUE1> ;
 .br
-.IB <KEY2> = <NOT_BOOL_VALUE> ;
+.IB <KEY2> = <VALUE2> ;
 .br
  ...
 .PP
@@ -291,19 +291,19 @@ ui = {
 .RS
   // true to enable timestamps, false to disable
 .br
-  timestamps:true;
+  timestamps=true;
 .br
   // true to enable terminal alerts on messages, false to disable
 .br
-  alerts:true;
+  alerts=true;
 .br
   // true to use native terminal colours, false to use toxic default colour theme
 .br
-  native_colors:false;
+  native_colors=false;
 .br
   // true to enable autologging, false to disable
 .br
-  autolog:false;
+  autolog=false;
 .br
   // 24 or 12 hour time
 .br

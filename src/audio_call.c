@@ -42,6 +42,10 @@
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+/* compatibility with older versions of OpenAL */
+#ifndef ALC_ALL_DEVICES_SPECIFIER
+#include <AL/alext.h>
+#endif
 #endif
 
 #define _cbend pthread_exit(NULL)
