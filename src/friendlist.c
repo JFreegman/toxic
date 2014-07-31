@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #include <tox/tox.h>
 
@@ -95,7 +96,7 @@ static int save_blocklist(char *path)
         if (Blocked_Contacts.list[i].active) {
             BlockedFriend tmp;
             memset(&tmp, 0, sizeof(BlockedFriend));
-            tmp.namelength = Blocked_Contacts.list[i].namelength;
+            tmp.namelength = htons(Blocked_Contacts.list[i].namelength);
             memcpy(tmp.name, Blocked_Contacts.list[i].name, Blocked_Contacts.list[i].namelength + 1);
             memcpy(tmp.pub_key, Blocked_Contacts.list[i].pub_key, TOX_CLIENT_ID_SIZE);
 
@@ -169,8 +170,8 @@ int load_blocklist(char *path)
         memcpy(&tmp, data + i * sizeof(BlockedFriend), sizeof(BlockedFriend));
         Blocked_Contacts.list[i].active = true;
         Blocked_Contacts.list[i].num = i;
-        Blocked_Contacts.list[i].namelength = tmp.namelength;
-        memcpy(Blocked_Contacts.list[i].name, tmp.name, tmp.namelength + 1);
+        Blocked_Contacts.list[i].namelength = ntohs(tmp.namelength);
+        memcpy(Blocked_Contacts.list[i].name, tmp.name, Blocked_Contacts.list[i].namelength + 1);
         memcpy(Blocked_Contacts.list[i].pub_key, tmp.pub_key, TOX_CLIENT_ID_SIZE);
 
         uint8_t lastonline[sizeof(uint64_t)];
