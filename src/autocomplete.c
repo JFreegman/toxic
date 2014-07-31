@@ -26,6 +26,7 @@
 #ifdef __APPLE__
     #include <sys/types.h>
     #include <sys/dir.h>
+    #include <sys/syslimits.h>
 #else
     #include <dirent.h>
 #endif /* ifdef __APPLE__ */
