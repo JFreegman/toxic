@@ -35,6 +35,7 @@
 #include "line_info.h"
 #include "settings.h"
 #include "notify.h"
+#include "help.h"
 
 #ifdef _AUDIO
 #include "audio_call.h"
@@ -420,16 +421,16 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
 }
 
 /* move friendlist/blocklist cursor up and down */
-static void select_friend(ToxWindow *self, wint_t key, int *selected, int count)
+static void select_friend(ToxWindow *self, wint_t key, int *selected, int num)
 {
-    if (count <= 0)
+    if (num <= 0)
         return;
 
     if (key == KEY_UP) {
         if (--(*selected) < 0)
-            *selected = count - 1;
+            *selected = num - 1;
     } else if (key == KEY_DOWN) {
-        *selected = (*selected + 1) % count;
+        *selected = (*selected + 1) % num;
     }
 }
 
@@ -463,7 +464,7 @@ static void del_friend_activate(ToxWindow *self, Tox *m, int32_t f_num)
     pendingdelete.num = f_num;
 }
 
-static void remove_friend_blocked(int32_t bnum);
+static void delete_blocked_friend(int32_t bnum);
 
 /* deactivates delete friend popup and deletes friend if instructed */
 static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
@@ -473,7 +474,7 @@ static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
             delete_friend(m, pendingdelete.num);
             sort_friendlist_index();
         } else {
-            remove_friend_blocked(pendingdelete.num);
+            delete_blocked_friend(pendingdelete.num);
             sort_blocklist_index();
         }
     }
@@ -484,7 +485,7 @@ static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
     refresh();
 }
 
-static void draw_popup(void)
+static void draw_del_popup(void)
 {
     if (!pendingdelete.active)
         return;
@@ -508,7 +509,27 @@ static void draw_popup(void)
     wrefresh(pendingdelete.popup);
 }
 
-/* Deletes friend from friendlist, puts in blocklist */
+/* deletes contact from blocked list */
+static void delete_blocked_friend(int32_t bnum)
+{
+    memset(&Blocked_Contacts.list[bnum], 0, sizeof(BlockedFriend));
+
+    int i;
+
+    for (i = Blocked_Contacts.max_index; i >= 0; --i) {
+        if (Blocked_Contacts.list[i - 1].active)
+            break;
+    }
+
+    --Blocked_Contacts.num_blocked;
+    Blocked_Contacts.max_index = i;
+    save_blocklist(BLOCK_FILE);
+
+    if (Blocked_Contacts.num_blocked && Blocked_Contacts.num_selected == Blocked_Contacts.num_blocked)
+        --Blocked_Contacts.num_selected;
+}
+
+/* deletes contact from friendlist and puts in blocklist */
 void block_friend(Tox *m, int32_t fnum)
 {
     if (Blocked_Contacts.max_index >= MAX_FRIENDS_NUM || num_friends <= 0)
@@ -540,26 +561,6 @@ void block_friend(Tox *m, int32_t fnum)
     }
 }
 
-/* permanently deletes friend from blocked list */
-static void remove_friend_blocked(int32_t bnum)
-{
-    memset(&Blocked_Contacts.list[bnum], 0, sizeof(BlockedFriend));
-
-    int i;
-
-    for (i = Blocked_Contacts.max_index; i >= 0; --i) {
-        if (Blocked_Contacts.list[i - 1].active)
-            break;
-    }
-
-    --Blocked_Contacts.num_blocked;
-    Blocked_Contacts.max_index = i;
-    save_blocklist(BLOCK_FILE);
-
-    if (Blocked_Contacts.num_blocked && Blocked_Contacts.num_selected == Blocked_Contacts.num_blocked)
-        --Blocked_Contacts.num_selected;
-}
-
 /* removes friend from blocklist, puts back in friendlist */
 static void unblock_friend(Tox *m, int32_t bnum)
 {
@@ -574,13 +575,24 @@ static void unblock_friend(Tox *m, int32_t bnum)
     }
 
     friendlist_add_blocked(m, friendnum, bnum);
-    remove_friend_blocked(bnum);
+    delete_blocked_friend(bnum);
     sort_blocklist_index();
     sort_friendlist_index();
 }
 
 static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
+
+    if (self->help->active) {
+        help_onKey(self, key);
+        return;
+    }
+
+    if (key == 'h') {
+        help_init_menu(self);
+        return;
+    }
+
     if (!blocklist_view && !num_friends && (key != KEY_RIGHT && key != KEY_LEFT))
         return;
 
@@ -712,7 +724,10 @@ static void blocklist_onDraw(ToxWindow *self, Tox *m, int y2, int x2)
     }
 
     wrefresh(self->window);
-    draw_popup();
+    draw_del_popup();
+
+    if (self->help->active)
+        help_onDraw(self);
 }
 
 static void friendlist_onDraw(ToxWindow *self, Tox *m)
@@ -725,20 +740,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     bool fix_statuses = x2 != self->x;    /* true if window max x value has changed */
 
     wattron(self->window, COLOR_PAIR(CYAN));
-    wprintw(self->window, " Open a chat window with the");
+    wprintw(self->window, " Press the");
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " Enter ");
+    wprintw(self->window, " H ");
     wattroff(self->window, A_BOLD);
-    wprintw(self->window, "key. Delete a contact with the");
-    wattron(self->window, A_BOLD);
-    wprintw(self->window, " Delete ");
-    wattroff(self->window, A_BOLD);
-    wprintw(self->window, "key.\n");
-    wprintw(self->window, " Block a contact with the");
-    wattron(self->window, A_BOLD);
-    wprintw(self->window, " b ");
-    wattroff(self->window, A_BOLD);
-    wprintw(self->window, "key, toggle blocklist with the.");
+    wprintw(self->window, "key for help\n\n");
     wattroff(self->window, COLOR_PAIR(CYAN));
 
     if (blocklist_view == 1) {
@@ -902,7 +908,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     }
 
     wrefresh(self->window);
-    draw_popup();
+    draw_del_popup();
+
+    if (self->help->active)
+        help_onDraw(self);
 }
 
 void disable_chatwin(int32_t f_num)
@@ -982,7 +991,13 @@ ToxWindow new_friendlist(void)
 #ifdef _SOUND_NOTIFY
     ret.active_sound = -1;
 #endif /* _SOUND_NOTIFY */
+
+    Help *help = calloc(1, sizeof(Help));
+
+    if (help == NULL)
+        exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
     
+    ret.help = help;
     strcpy(ret.name, "contacts");
     return ret;
 }
