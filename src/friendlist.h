@@ -70,6 +70,7 @@ typedef struct {
     char pub_key[TOX_CLIENT_ID_SIZE];
     int32_t num;
     bool active;
+    uint64_t last_on;
 } BlockedFriend;
 
 ToxWindow new_friendlist(void);

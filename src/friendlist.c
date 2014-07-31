@@ -98,6 +98,12 @@ static int save_blocklist(char *path)
             tmp.namelength = Blocked_Contacts.list[i].namelength;
             memcpy(tmp.name, Blocked_Contacts.list[i].name, Blocked_Contacts.list[i].namelength + 1);
             memcpy(tmp.pub_key, Blocked_Contacts.list[i].pub_key, TOX_CLIENT_ID_SIZE);
+
+            uint8_t lastonline[sizeof(uint64_t)];
+            memcpy(lastonline, &Blocked_Contacts.list[i].last_on, sizeof(uint64_t));
+            host_to_net(lastonline, sizeof(uint64_t));
+            memcpy(&tmp.last_on, lastonline, sizeof(uint64_t));
+
             memcpy(data + count * sizeof(BlockedFriend), &tmp, sizeof(BlockedFriend));
             ++count;
         }
@@ -166,6 +172,12 @@ int load_blocklist(char *path)
         Blocked_Contacts.list[i].namelength = tmp.namelength;
         memcpy(Blocked_Contacts.list[i].name, tmp.name, tmp.namelength + 1);
         memcpy(Blocked_Contacts.list[i].pub_key, tmp.pub_key, TOX_CLIENT_ID_SIZE);
+
+        uint8_t lastonline[sizeof(uint64_t)];
+        memcpy(lastonline, &tmp.last_on, sizeof(uint64_t));
+        net_to_host(lastonline, sizeof(uint64_t));
+        memcpy(&Blocked_Contacts.list[i].last_on, lastonline, sizeof(uint64_t));
+
         ++Blocked_Contacts.num_blocked;
     }
 
@@ -360,6 +372,7 @@ static void friendlist_add_blocked(Tox *m, int32_t fnum, int32_t bnum)
         friends[i].status = TOX_USERSTATUS_NONE;
         friends[i].logging_on = (bool) user_settings_->autolog == AUTOLOG_ON;
         friends[i].namelength = Blocked_Contacts.list[bnum].namelength;
+        update_friend_last_online(i, Blocked_Contacts.list[bnum].last_on);
         memcpy(friends[i].name, Blocked_Contacts.list[bnum].name, friends[i].namelength + 1);
         memcpy(friends[i].pub_key, Blocked_Contacts.list[bnum].pub_key, TOX_CLIENT_ID_SIZE);
 
@@ -516,7 +529,7 @@ static void delete_blocked_friend(int32_t bnum)
 
     int i;
 
-    for (i = Blocked_Contacts.max_index; i >= 0; --i) {
+    for (i = Blocked_Contacts.max_index; i > 0; --i) {
         if (Blocked_Contacts.list[i - 1].active)
             break;
     }
@@ -544,6 +557,7 @@ void block_friend(Tox *m, int32_t fnum)
         Blocked_Contacts.list[i].active = true;
         Blocked_Contacts.list[i].num = i;
         Blocked_Contacts.list[i].namelength = friends[fnum].namelength;
+        Blocked_Contacts.list[i].last_on = friends[fnum].last_online.last_on;
         memcpy(Blocked_Contacts.list[i].pub_key, friends[fnum].pub_key, TOX_CLIENT_ID_SIZE);
         memcpy(Blocked_Contacts.list[i].name, friends[fnum].name, friends[fnum].namelength  + 1);
 
