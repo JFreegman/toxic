@@ -71,6 +71,14 @@ struct _Winthread {
     bool flag_resize;
 };
 
+struct arg_opts {
+    int ignore_data_file;
+    int use_ipv4;
+    int default_locale;
+    char config_path[MAX_STR_SIZE];
+    char nodes_path[MAX_STR_SIZE];
+};
+
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;

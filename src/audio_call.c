@@ -576,7 +576,7 @@ on_error:
     print_err (self, error_str);
 }
 
-void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
     const char *msg;
     const char *error_str;
@@ -651,7 +651,7 @@ void cmd_ccur_device(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (
     print_err (self, error_str);
 }
 
-void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {    
     const char *msg;
     const char *error_str;
@@ -699,7 +699,7 @@ void cmd_mute(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[
     print_err (self, error_str);
 }
 
-void cmd_sense(WINDOW * window, ToxWindow * self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
     
