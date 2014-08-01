@@ -105,8 +105,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
 
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-            notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS);
+            friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));            
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
@@ -118,7 +117,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
 
             const char *msg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
-            notify(prompt, error, NT_WNDALERT_1);
+            sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
 }
@@ -216,7 +215,14 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-            notify(self, transfer_pending, NT_NOFOCUS);
+            
+            if (self->active_box != -1)
+                box_notify2(self, transfer_pending, NT_NOFOCUS, self->active_box, 
+                            "Incoming file reaquest: %s", filename);
+            else
+                box_notify(self, transfer_pending, NT_NOFOCUS, &self->active_box, self->name, 
+                           "Incoming file reaquest: %s", filename);
+
         } else {
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
 
@@ -226,7 +232,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
             const char *msg = "* File transfer from %s failed: too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg, nick);
             
-            notify(prompt, error, NT_WNDALERT_1);
+            sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
 }
@@ -239,7 +245,13 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-            notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS);
+            
+            if (self->active_box != -1)
+                box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box, 
+                            "You are invited to join group" );
+            else
+                box_notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS, &self->active_box, self->name, 
+                           "You are invited to join group" );
             
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
@@ -248,7 +260,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
             const char *msg = "* Group chat invite from %s failed: too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg, nick);
             
-            notify(prompt, error, NT_WNDALERT_1);
+            sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
 }
@@ -352,7 +364,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 const char *msg = "* Warning: Too many windows are open.";
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
 
-                notify(prompt, error, NT_WNDALERT_1);
+                sound_notify(prompt, error, NT_WNDALERT_1, NULL);
             }
         } else if (key == KEY_DC) {
             del_friend_activate(self, m, f);
@@ -575,7 +587,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
             const char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
             
-            notify(prompt, error, NT_WNDALERT_1);
+            sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
 }
@@ -617,10 +629,8 @@ ToxWindow new_friendlist(void)
     ret.call_idx = -1;
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* _AUDIO */
-
-#ifdef _SOUND_NOTIFY
-    ret.active_sound = -1;
-#endif /* _SOUND_NOTIFY */
+    
+    ret.active_box = -1;
     
     strcpy(ret.name, "contacts");
     return ret;

@@ -63,14 +63,18 @@ typedef enum _Flags {
 int init_notify(int login_cooldown, int notification_timeout);
 void terminate_notify();
 
-int notify(ToxWindow* self, Notification notif, uint64_t flags);
+int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator);
+int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id);
 
-int box_notify(ToxWindow* self, Notification notif, uint64_t flags, char* title, char* format, ...);
-int box_notify_append(ToxWindow* self, Notification notif, uint64_t flags, int id, char* format, ...);
+void stop_sound(int id);
+
+int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, char* title, const char* format, ...);
+int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...);
+int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const char* title, const char* format, ...);
+int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* format, ...);
 
 #ifdef _SOUND_NOTIFY
 int set_sound(Notification sound, const char* value);
-void stop_sound(int sound);
 #endif /* _SOUND_NOTIFY */
 
 #endif /* _notify_h */

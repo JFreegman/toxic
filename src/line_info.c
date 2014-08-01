@@ -415,14 +415,14 @@ static void line_info_scroll_up(struct history *hst)
 {
     if (hst->line_start->prev)
         hst->line_start = hst->line_start->prev;
-    else notify(NULL, error, NT_ALWAYS);
+    else sound_notify(NULL, error, NT_ALWAYS, NULL);
 }
 
 static void line_info_scroll_down(struct history *hst)
 {
     if (hst->line_start->next)
         hst->line_start = hst->line_start->next;
-    else notify(NULL, error, NT_ALWAYS);
+    else sound_notify(NULL, error, NT_ALWAYS, NULL);
 }
 
 static void line_info_page_up(ToxWindow *self, struct history *hst)

@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <time.h>
 #include <wchar.h>
 
@@ -144,10 +145,16 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     /* Only play sound if mentioned */
     if (strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1)) {
-        notify(self, generic_message, NT_WNDALERT_0);
+        sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
+                
+        if (self->active_box != -1)
+            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+        else
+            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+
         nick_clr = RED;
     }
-    else notify(self, silent, NT_WNDALERT_1);
+    else sound_notify(self, silent, NT_WNDALERT_1, NULL);
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -169,9 +176,19 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     selfnick[n_len] = '\0';
 
     if (strcasestr(action, selfnick)) {
-        notify(self, generic_message, NT_WNDALERT_0);
+        sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
+        
+        char nick[TOX_MAX_NAME_LENGTH];
+        int n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
+        n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);  /* enforce client max name length */
+        nick[n_len] = '\0';
+        
+        if (self->active_box != -1)
+            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
+        else
+            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action);
     }
-    else notify(self, silent, NT_WNDALERT_1);
+    else sound_notify(self, silent, NT_WNDALERT_1, NULL);
 
     char nick[TOX_MAX_NAME_LENGTH];
     n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
@@ -304,7 +321,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
             break;
     }
 
-    notify(self, silent, NT_WNDALERT_2);
+    sound_notify(self, silent, NT_WNDALERT_2, NULL);
 }
 
 static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
@@ -363,10 +380,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                notify(self, error, 0);
+                sound_notify(self, error, 0, NULL);
             }
         } else {
-            notify(self, error, 0);
+            sound_notify(self, error, 0, NULL);
         }
     } else if (key == T_KEY_C_RB) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
@@ -523,6 +540,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     ret.help = help;
 
     ret.num = groupnum;
+    ret.active_box = -1;
 
     return ret;
 }

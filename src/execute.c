@@ -170,5 +170,5 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
 
     /* Just play sound instead */
     /*line_info_add(self, NULL, NULL, NULL, "Invalid command.", SYS_MSG, 0, 0);*/
-    notify(self, error, 0);
+    sound_notify(self, error, 0, NULL);
 }

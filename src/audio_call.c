@@ -485,8 +485,7 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
 #ifdef _SOUND_NOTIFY
-    stop_sound(self->active_sound);
-    self->active_sound = -1;
+    stop_sound(self->ringing_sound);
 #endif /* _SOUND_NOTIFY */
     /* Callback will print status... */
 
