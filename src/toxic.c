@@ -594,6 +594,25 @@ static int init_data_files(void)
     return config_err;
 }
 
+#define REC_TOX_DO_LOOPS_PER_SEC 25
+
+/* Adjusts usleep value so that tox_do runs close to the recommended number of times per second */
+useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, uint64_t cur_time, useconds_t msleepval)
+{
+    useconds_t new_sleep = msleepval;
+    ++(*loopcount);
+
+    if (*looptimer == cur_time || *loopcount == REC_TOX_DO_LOOPS_PER_SEC)
+        return new_sleep;
+
+    double d = (double) *loopcount / REC_TOX_DO_LOOPS_PER_SEC;
+    new_sleep *= d;
+
+    *looptimer = cur_time;
+    *loopcount = 0;
+    return new_sleep;
+}
+
 int main(int argc, char *argv[])
 {
     parse_args(argc, argv);
@@ -662,6 +681,9 @@ int main(int argc, char *argv[])
     }
 
     uint64_t last_save = (uint64_t) time(NULL);
+    uint64_t looptimer = last_save;
+    useconds_t msleepval = 40000;
+    uint64_t loopcount = 0;
 
     while (true) {
         update_unix_time();
@@ -676,7 +698,8 @@ int main(int argc, char *argv[])
             last_save = cur_time;
         }
 
-        usleep(40000);
+        msleepval = optimal_msleepval(&looptimer, &loopcount, cur_time, msleepval);
+        usleep(msleepval);
     }
 
     return 0;
