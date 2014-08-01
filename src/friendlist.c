@@ -450,10 +450,19 @@ static void select_friend(ToxWindow *self, wint_t key, int *selected, int num)
 
 static void delete_friend(Tox *m, int32_t f_num)
 {
+    int i;
+
+    if (friends[f_num].chatwin >= 0) {
+        ToxWindow *toxwin = get_window_ptr(friends[f_num].chatwin);
+
+        if (toxwin != NULL) {
+            kill_chat_window(toxwin);
+            set_active_window(1);   /* keep friendlist focused */
+        }
+    }
+
     tox_del_friend(m, f_num);
     memset(&friends[f_num], 0, sizeof(ToxicFriend));
-
-    int i;
 
     for (i = max_friends_index; i > 0; --i) {
         if (friends[i - 1].active)

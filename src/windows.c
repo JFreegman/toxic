@@ -480,6 +480,17 @@ void refresh_inactive_windows(void)
     }
 }
 
+/* returns a pointer to the ToxWindow in the ith index. Returns NULL if no ToxWindow exists */
+ToxWindow *get_window_ptr(int i)
+{
+    ToxWindow *toxwin = NULL;
+
+    if (windows[i].active)
+        toxwin = &windows[i];
+
+    return toxwin;
+}
+
 int get_num_active_windows(void)
 {
     return num_active_windows;
