@@ -124,12 +124,11 @@ struct ToxWindow {
                    * Don't modify outside av callbacks. */
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
 
+    int ringing_sound;
 #endif /* _AUDIO */
 
-#ifdef _SOUND_NOTIFY
-    int active_sound;
-#endif
-
+    int active_box; /* For box notify */
+    
     char name[TOXIC_MAX_NAME_LENGTH];
     int32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;

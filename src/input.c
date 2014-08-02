@@ -42,12 +42,12 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
 
     /* this is the only place we need to do this check */
     if (cur_len == -1) {
-        notify(self, error, 0);
+        sound_notify(self, error, 0, NULL);
         return;
     }
 
     if (add_char_to_buf(ctx, key) == -1) {
-        notify(self, error, 0);
+        sound_notify(self, error, 0, NULL);
         return;
     }
 
@@ -63,7 +63,7 @@ static void input_backspace(ToxWindow *self, int x, int mx_x)
     ChatContext *ctx = self->chatwin;
 
     if (del_char_buf_bck(ctx) == -1) {
-        notify(self, error, 0);
+        sound_notify(self, error, 0, NULL);
         return;
     }
 
@@ -80,21 +80,21 @@ static void input_backspace(ToxWindow *self, int x, int mx_x)
 static void input_delete(ToxWindow *self)
 {
     if (del_char_buf_frnt(self->chatwin) == -1)
-        notify(self, error, 0);
+        sound_notify(self, error, 0, NULL);
 }
 
 /* deletes entire line before cursor from input field and buffer */
 static void input_discard(ToxWindow *self)
 {
     if (discard_buf(self->chatwin) == -1)
-        notify(self, error, 0);
+        sound_notify(self, error, 0, NULL);
 }
 
 /* deletes entire line after cursor from input field and buffer */
 static void input_kill(ChatContext *ctx)
 {
     if (kill_buf(ctx) == -1)
-        notify(NULL, error, NT_ALWAYS);
+        sound_notify(NULL, error, NT_ALWAYS, NULL);
 }
 
 static void input_yank(ToxWindow *self, int x, int mx_x)
@@ -102,7 +102,7 @@ static void input_yank(ToxWindow *self, int x, int mx_x)
     ChatContext *ctx = self->chatwin;
 
     if (yank_buf(ctx) == -1) {
-        notify(self, error, 0);
+        sound_notify(self, error, 0, NULL);
         return;
     }
 

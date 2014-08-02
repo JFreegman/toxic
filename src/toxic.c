@@ -97,7 +97,7 @@ void exit_toxic_success(Tox *m)
     free(user_settings_);
 
 #ifdef _SOUND_NOTIFY
-    notify(NULL, self_log_out, NT_ALWAYS);
+//     sound_notify(NULL, self_log_out, NT_ALWAYS, NULL);
 #endif /* _SOUND_NOTIFY */
     terminate_notify();
 #ifdef _AUDIO
@@ -667,11 +667,11 @@ int main(int argc, char *argv[])
     init_notify(60, 3000);
 
 #ifdef _SOUND_NOTIFY
-    notify(prompt, self_log_in, 0);
+//     sound_notify(prompt, self_log_in, 0, NULL);
 #endif /* _SOUND_NOTIFY */
     
     const char *msg;
-
+    
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for data file...";
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
@@ -687,6 +687,12 @@ int main(int argc, char *argv[])
     useconds_t msleepval = 40000;
     uint64_t loopcount = 0;
 
+    
+    /* Redirect stdout to /dev/null 
+     * NOTE: Might not be best solution
+     */
+    freopen("/dev/null", "w", stderr);
+    
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);

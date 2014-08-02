@@ -100,7 +100,7 @@ void callback_peer_timeout  ( void* av, int32_t call_index, void *arg );
 void callback_media_change  ( void* av, int32_t call_index, void *arg );
 
 int stop_transmission(int call_index);
-void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size);
+void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size, void* userdata);
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -146,7 +146,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     toxav_register_callstate_callback(ASettins.av, callback_peer_timeout, av_OnPeerTimeout, self);
     toxav_register_callstate_callback(ASettins.av, callback_media_change, av_OnMediaChange, self);
     
-    toxav_register_audio_recv_callback(ASettins.av, write_device_callback);
+    toxav_register_audio_recv_callback(ASettins.av, write_device_callback, NULL);
 
     return ASettins.av;
 }
@@ -175,8 +175,9 @@ void read_device_callback (const int16_t* captured, uint32_t size, void* data)
 }
 
 
-void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size)
+void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size, void* userdata)
 {
+    (void)userdata;
     if (call_index >= 0 && ASettins.calls[call_index].ttas) {
         ToxAvCSettings csettings = ASettins.cs;
         toxav_get_peer_csettings(av, call_index, 0, &csettings);
@@ -489,8 +490,7 @@ void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
 #ifdef _SOUND_NOTIFY
-    stop_sound(self->active_sound);
-    self->active_sound = -1;
+    stop_sound(self->ringing_sound);
 #endif /* _SOUND_NOTIFY */
     /* Callback will print status... */
 

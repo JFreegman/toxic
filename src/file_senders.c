@@ -177,7 +177,13 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
-            notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2);
+            
+            if (self->active_box != -1)
+                box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, 
+                            self->active_box, "File '%s' successfuly sent!", pathname );
+            else
+                box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, 
+                            self->name, "File '%s' successfuly sent!", pathname );
             return;
         }
     }
@@ -206,7 +212,14 @@ void do_file_senders(Tox *m)
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", pathname);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
-            notify(self, error, NT_NOFOCUS | NT_WNDALERT_2);
+            sound_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, NULL);
+            
+            if (self->active_box != -1)
+                box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, 
+                            self->active_box, "File transfer for '%s' failed!", pathname );
+            else
+                box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
+                           self->name, "File transfer for '%s' failed!", pathname );
             continue;
         }
 

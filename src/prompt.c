@@ -185,10 +185,10 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                notify(self, error, 0);
+                sound_notify(self, error, 0, NULL);
             }
         } else {
-            notify(self, error, 0);
+            sound_notify(self, error, 0, NULL);
         }
     } else if (key == '\n') {
         rm_trailing_spaces_buf(ctx);
@@ -309,13 +309,23 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
 
-        notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
+        if (self->active_box != -1)
+            box_notify2(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box, 
+                        "%s has come online", nick );
+        else
+            box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
+                       "Toxic", "%s has come online", nick );
     } else {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
 
-        notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL);
+        if (self->active_box != -1)
+            box_notify2(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box, 
+                        "%s has gone offline", nick );
+        else
+            box_notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
+                       "Toxic", "%s has gone offline", nick );
     }
 }
 
@@ -342,7 +352,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
 
     msg = "Type \"/accept %d\" to accept it.";
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, n);
-    notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND);
+    sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
 void prompt_init_statusbar(ToxWindow *self, Tox *m)
@@ -458,5 +468,7 @@ ToxWindow new_prompt(void)
     ret.stb = stb;
     ret.help = help;
 
+    ret.active_box = -1;
+    
     return ret;
 }

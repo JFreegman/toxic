@@ -192,7 +192,7 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     if (key_dir == KEY_UP) {
         if (--ctx->hst_pos < 0) {
             ctx->hst_pos = 0;
-            notify(NULL, error, NT_ALWAYS);
+            sound_notify(NULL, error, NT_ALWAYS, NULL);
         }
     } else {
         if (++ctx->hst_pos >= ctx->hst_tot) {
