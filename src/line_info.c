@@ -147,15 +147,10 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
 
     char frmt_msg[MAX_STR_SIZE] = {0};
 
-    /* WARNING: SYS_MSG lines must not contain untrusted input */
-    if (type == SYS_MSG) {
-        va_list args;
-        va_start(args, msg);
-        vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
-        va_end(args);
-    } else {
-        snprintf(frmt_msg, sizeof(frmt_msg), "%s", msg);
-    }
+    va_list args;
+    va_start(args, msg);
+    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
+    va_end(args);
 
     int len = 1;     /* there will always be a newline */
 

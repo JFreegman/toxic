@@ -87,7 +87,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     num_frnd_requests = i;
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 }
 
 void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg)
@@ -254,8 +254,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    const char *msg = "Group chat created as %d.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, groupnum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat created as %d.", groupnum);
 }
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -320,7 +319,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         strcat(id, xx);
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, id);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", id);
 }
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

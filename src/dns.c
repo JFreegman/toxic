@@ -85,10 +85,8 @@ static struct _dns_thread {
 
 static int dns_error(ToxWindow *self, const char *errmsg)
 {
-    const char *msg = "User lookup failed: %s";
-
     pthread_mutex_lock(&Winthread.lock);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, errmsg);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "User lookup failed: %s", errmsg);
     pthread_mutex_unlock(&Winthread.lock);
 
     return -1;

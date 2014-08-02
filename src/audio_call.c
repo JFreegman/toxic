@@ -104,7 +104,7 @@ void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int siz
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
 ToxAv *init_audio(ToxWindow *self, Tox *tox)
@@ -338,7 +338,6 @@ void callback_media_change(void* av, int32_t call_index, void* arg)
  */
 void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char *msg;
     const char *error_str;
 
     if (argc != 0) {
@@ -365,8 +364,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         goto on_error;
     }
 
-    msg = "Calling... idx: %d";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, self->call_idx);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Calling... idx: %d", self->call_idx);
 
     return;
 on_error:
@@ -502,7 +500,6 @@ on_error:
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char *msg;
     const char *error_str;
 
     if ( argc != 1 ) {
@@ -521,8 +518,7 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         type = output;
 
     else {
-        msg = "Invalid type: %s";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -536,7 +532,6 @@ on_error:
 /* This changes primary device only */
 void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char *msg;
     const char *error_str;
 
     if ( argc != 2 ) {
@@ -556,8 +551,7 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         type = output;
 
     else {
-        msg = "Invalid type: %s";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -581,8 +575,7 @@ on_error:
 }
 
 void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{    
-    const char *msg;
+{
     const char *error_str;
     
     if ( argc != 2 ) {
@@ -602,8 +595,7 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         type = output;
     
     else {
-        msg = "Invalid type: %s";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
     
@@ -656,8 +648,7 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 }
 
 void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{    
-    const char *msg;
+{
     const char *error_str;
     
     if ( argc != 1 ) {
@@ -676,8 +667,7 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         type = output;
     
     else {
-        msg = "Invalid type: %s";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
     

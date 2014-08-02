@@ -47,7 +47,7 @@ static void print_matches(ToxWindow *self, Tox *m, const void *list, int n_items
     int i;
 
     for (i = 0; i < n_items; ++i)
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, &L[i * size]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", &L[i * size]);
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");   /* formatting */
 }

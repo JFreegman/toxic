@@ -26,7 +26,7 @@
 #include "windows.h"
 #include "toxic.h"
 
-#define MAX_HISTORY 10000
+#define MAX_HISTORY 100000
 #define MIN_HISTORY 40
 #define MAX_QUEUE 128
 

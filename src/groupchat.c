@@ -159,7 +159,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, msg);
+    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
 }
 
@@ -198,7 +198,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, action);
+    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, "%s", action);
     write_to_log(action, nick, ctx->log, true);
 }
 

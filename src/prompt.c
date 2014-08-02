@@ -201,7 +201,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (!string_is_empty(line))
             add_line_to_hist(ctx);
 
-        line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, line);
+        line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
         execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
 
         wclear(ctx->linewin);
@@ -337,9 +337,8 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    const char *msg = "Friend request with the message '%s'";
-    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, msg, data);
-    write_to_log(msg, "", ctx->log, true);
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
+    write_to_log("Friend request with the message '%s'", "", ctx->log, true);
 
     int n = add_friend_request(key);
 
@@ -350,8 +349,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
         return;
     }
 
-    msg = "Type \"/accept %d\" to accept it.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, n);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" to accept it.", n);
     sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 

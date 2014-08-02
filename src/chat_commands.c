@@ -63,8 +63,7 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    const char *msg = "Invited contact to Group %d.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, groupnum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %d.", groupnum);
 }
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -128,13 +127,12 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     const char *filename = friends[self->num].file_receiver.filenames[filenum];
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        const char *msg = "Saving file as: '%s'";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file as: '%s'", filename);
 
         /* prep progress bar line */
         char progline[MAX_STR_SIZE];
         prep_prog_line(progline);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, progline);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
         friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 2;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
@@ -222,8 +220,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 
-            const char *msg = "Sending file: '%s'";
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, path);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file: '%s'", path);
 
             ++num_active_file_senders;
 

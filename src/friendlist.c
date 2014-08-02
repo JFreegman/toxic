@@ -261,7 +261,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
             char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
 
-            line_info_add(prompt, timefrmt, nick, NULL, IN_MSG, 0, 0, str);
+            line_info_add(prompt, timefrmt, nick, NULL, IN_MSG, 0, 0, "%s", str);
 
             const char *msg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
@@ -410,8 +410,8 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
 
-            const char *msg = "* File transfer from %s failed: too many windows are open.";
-            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg, nick);
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
+                          "* File transfer from %s failed: too many windows are open.", nick);
             
             sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
@@ -437,10 +437,8 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
-
-            const char *msg = "* Group chat invite from %s failed: too many windows are open.";
-            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg, nick);
-            
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
+                         "* Group chat invite from %s failed: too many windows are open.", nick);
             sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
@@ -974,9 +972,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, friends[id].num);
-
-            const char *msg = "Audio action from: %s!";
-            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, nick);
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
 
             const char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);

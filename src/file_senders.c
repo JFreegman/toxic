@@ -119,10 +119,10 @@ static void set_max_file_senders_index(void)
     max_file_senders_index = j;
 }
 
-static void close_file_sender(ToxWindow *self, Tox *m, int i, char *msg, int CTRL, int filenum, int32_t friendnum)
+static void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, int32_t friendnum)
 {
     if (self->chatwin != NULL) 
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
     
 
     tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);

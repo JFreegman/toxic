@@ -163,7 +163,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, 0, msg);
+    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, 0, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
     
     if (self->active_box != -1) 
@@ -215,7 +215,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *acti
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, action);
+    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, "%s", action);
     write_to_log(action, nick, ctx->log, true);
     
     if (self->active_box != -1)
@@ -269,7 +269,6 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     if (self->num != num)
         return;
 
-    const char *msg;
     const char *errmsg;
 
     /* holds the filename appended to the user specified path */
@@ -279,9 +278,8 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     char filename_nopath[MAX_STR_SIZE];
     get_file_name(filename_nopath, sizeof(filename_nopath), pathname);
     int len = strlen(filename_nopath);
-
-    msg = "File transfer request for '%s' (%llu bytes).";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename_nopath, (long long unsigned int) filesize);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%llu bytes).",
+                                                   filename_nopath, (long long unsigned int) filesize);
 
     if (filenum >= MAX_FILES) {
         errmsg = "Too many pending file requests; discarding.";
@@ -333,8 +331,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         }
     }
 
-    msg = "Type '/savefile %d' to accept the file transfer.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filenum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", filenum);
 
     friends[num].file_receiver.pending[filenum] = true;
     friends[num].file_receiver.size[filenum] = filesize;
@@ -382,13 +379,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
             if (receive_send == 1) {
-                const char *r_msg =  "File transfer for '%s' accepted.";
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, r_msg, filename);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' accepted.", filename);
 
                 /* prep progress bar line */
                 char progline[MAX_STR_SIZE];
                 prep_prog_line(progline);
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, progline);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
                 file_senders[i].line_id = self->chatwin->hst->line_end->id + 2;
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
             }
@@ -427,7 +423,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     }
 
     if (msg[0])
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 }
 
 static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, const char *data,
@@ -465,13 +461,10 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     if (self->num != friendnumber)
         return;
 
-    const char *msg;
-
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
 
-    msg = "%s has invited you to a group chat.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, name);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 
     memcpy(friends[friendnumber].groupchat_key, group_pub_key, 
@@ -739,11 +732,10 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, ACTION, 0, 0, action);
+    line_info_add(self, timefrmt, selfname, NULL, ACTION, 0, 0, "%s", action);
 
     if (tox_send_action(m, self->num, (uint8_t *) action, strlen(action)) == 0) {
-        const char *errmsg = " * Failed to send action.";
-        line_info_add(self, NULL, selfname, NULL, SYS_MSG, 0, RED, errmsg);
+        line_info_add(self, NULL, selfname, NULL, SYS_MSG, 0, RED, " * Failed to send action.");
     } else {
         write_to_log(action, selfname, ctx->log, true);
     }
@@ -826,7 +818,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
 
-            line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, line);
+            line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
 
             if (!statusbar->is_online || tox_send_message(m, self->num, (uint8_t *) line, strlen(line)) == 0) {
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message.");
