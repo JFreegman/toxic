@@ -501,6 +501,7 @@ static void set_default_opts(void)
     arg_opts.use_ipv4 = 0;
     arg_opts.ignore_data_file = 0;
     arg_opts.default_locale = 0;
+    arg_opts.use_custom_data = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -523,6 +524,7 @@ static void parse_args(int argc, char *argv[])
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
         switch (opt) {
             case 'f':
+                arg_opts.use_custom_data = 1;
                 DATA_FILE = strdup(optarg);
                 BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
@@ -565,6 +567,9 @@ static void parse_args(int argc, char *argv[])
 #define BLOCKNAME "data-blocklist"
 static int init_data_files(void)
 {
+    if (arg_opts.use_custom_data)
+        return 0;
+
     char *user_config_dir = get_user_config_dir();
     int config_err = create_user_config_dir(user_config_dir);
 
