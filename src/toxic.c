@@ -93,6 +93,7 @@ void exit_toxic_success(Tox *m)
     kill_all_windows();
 
     free(DATA_FILE);
+    free(BLOCK_FILE);
     free(user_settings_);
 
 #ifdef _SOUND_NOTIFY
@@ -523,11 +524,12 @@ static void parse_args(int argc, char *argv[])
         switch (opt) {
             case 'f':
                 DATA_FILE = strdup(optarg);
-                BLOCK_FILE = strdup(optarg);
+                BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
                 if (DATA_FILE == NULL || BLOCK_FILE == NULL)
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
 
+                strcpy(BLOCK_FILE, optarg);
                 strcat(BLOCK_FILE, "-blocklist");
                 break;
 
