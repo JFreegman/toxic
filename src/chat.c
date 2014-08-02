@@ -103,8 +103,11 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* _AUDIO */
 };
 
-static void set_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
+static void set_self_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
 {
+    if (user_settings_->show_typing_self == SHOW_TYPING_OFF)
+        return;
+
     ChatContext *ctx = self->chatwin;
 
     tox_set_user_is_typing(m, self->num, is_typing);
@@ -176,14 +179,18 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
         return;
 
     StatusBar *statusbar = self->stb;
-    
-    if (status == 1) { /* Friend shows online */
+
+    if (status == 1) { /* Friend goes online */
         statusbar->is_online = true;
-        friends[num].is_typing = tox_get_is_typing(m, num); 
-        
+        friends[num].is_typing = user_settings_->show_typing_other == SHOW_TYPING_ON 
+                                 ? tox_get_is_typing(m, num) : 0;
+                                 
     } else { /* Friend goes offline */
         statusbar->is_online = false;
         friends[num].is_typing = 0;
+
+        if (self->chatwin->self_is_typing)
+            set_self_typingstatus(self, m, 0);
     }
 }
 
@@ -375,8 +382,14 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
             if (receive_send == 1) {
-                snprintf(msg, sizeof(msg), "File transfer for '%s' accepted (%.1f%%)", filename, 0.0);
-                file_senders[i].line_id = self->chatwin->hst->line_end->id + 1;
+                const char *r_msg =  "File transfer for '%s' accepted.";
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, r_msg, filename);
+
+                /* prep progress bar line */
+                char progline[MAX_STR_SIZE];
+                prep_prog_line(progline);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, progline);
+                file_senders[i].line_id = self->chatwin->hst->line_end->id + 2;
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
             }
 
@@ -413,7 +426,8 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             break;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    if (msg[0])
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, const char *data,
@@ -432,19 +446,17 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
         }
     }
 
-    long double remain = (long double) tox_file_data_remaining(m, num, filenum, 1);
+    friends[num].file_receiver.bps[filenum] += length;
+    double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
     uint64_t curtime = get_unix_time();
 
-    /* refresh line with percentage complete */
+    /* refresh line with percentage complete and transfer speed (must be called once per second) */
     if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
         friends[num].file_receiver.last_progress[filenum] = curtime;
         uint64_t size = friends[num].file_receiver.size[filenum];
-        long double pct_remain = remain ? (1 - (remain / size)) * 100 : 100;
-
-        char msg[MAX_STR_SIZE];
-        const char *name = friends[num].file_receiver.filenames[filenum];
-        snprintf(msg, sizeof(msg), "Saving file as: '%s' (%.1Lf%%)", name, pct_remain);
-        line_info_set(self, friends[num].file_receiver.line_id[filenum], msg);
+        double pct_remain = remain > 0 ? (1 - (remain / size)) * 100 : 100;
+        print_progress_bar(self, filenum, num, pct_remain);
+        friends[num].file_receiver.bps[filenum] = 0;
     }
 }
 
@@ -757,8 +769,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (ltr) {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
 
-        if (ctx->line[0] != '/')
-            set_typingstatus(self, m, 1);
+        if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->is_online)
+            set_self_typingstatus(self, m, 1);
 
         return;
     }
@@ -770,10 +782,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         int diff = -1;
-        int sf_len = 11;
 
-        if (wcsncmp(ctx->line, L"/sendfile \"", sf_len) == 0) {
-            diff = dir_match(self, m, &ctx->line[sf_len]);
+        if (wcsncmp(ctx->line, L"/sendfile \"", wcslen(L"/sendfile \"")) == 0) {
+            diff = dir_match(self, m, ctx->line);
         } else {
             diff = complete_line(self, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
         }
@@ -830,7 +841,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing)
-        set_typingstatus(self, m, 0);
+        set_self_typingstatus(self, m, 0);
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)

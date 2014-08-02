@@ -33,12 +33,14 @@
 #include "chat.h"
 #include "line_info.h"
 
+#include "settings.h"
 extern char *DATA_FILE;
 extern struct _Winthread Winthread;
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
 
 extern ToxWindow *prompt;
+extern struct user_settings *user_settings_;
 
 static int num_active_windows;
 
@@ -65,6 +67,9 @@ void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *use
 
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata)
 {
+    if (user_settings_->show_typing_other == SHOW_TYPING_OFF)
+        return;
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -267,7 +272,7 @@ void set_next_window(int ch)
     ToxWindow *inf = active_window;
 
     while (true) {
-        if (ch == T_KEY_NEXT) {
+        if (ch == user_settings_->key_next_tab) {
             if (++active_window > end)
                 active_window = windows;
         } else if (--active_window < windows)
@@ -452,7 +457,7 @@ void draw_active_window(Tox *m)
     ltr = isprint(ch);
 #endif /* HAVE_WIDECHAR */
 
-    if (!ltr && (ch == T_KEY_NEXT || ch == T_KEY_PREV)) {
+    if (!ltr && (ch == user_settings_->key_next_tab || ch == user_settings_->key_prev_tab)) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);
@@ -473,6 +478,17 @@ void refresh_inactive_windows(void)
         if (a->active && a != active_window && !a->is_friendlist)
             line_info_print(a);
     }
+}
+
+/* returns a pointer to the ToxWindow in the ith index. Returns NULL if no ToxWindow exists */
+ToxWindow *get_window_ptr(int i)
+{
+    ToxWindow *toxwin = NULL;
+
+    if (windows[i].active)
+        toxwin = &windows[i];
+
+    return toxwin;
 }
 
 int get_num_active_windows(void)

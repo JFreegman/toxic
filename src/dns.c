@@ -289,7 +289,7 @@ void *dns3_lookup_thread(void *data)
 }
 
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */
-void dns3_lookup(ToxWindow *self, Tox *m, char *id_bin, char *addr, char *msg)
+void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *msg)
 {
     if (t_data.busy) {
         const char *err = "Please wait for previous user lookup to finish.";

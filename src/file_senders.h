@@ -29,6 +29,7 @@
 #define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
 #define MAX_FILES 255
 #define TIMEOUT_FILESENDER 120
+#define NUM_PROG_MARKS 50    /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
 
 typedef struct {
     FILE *file;
@@ -41,9 +42,19 @@ typedef struct {
     char pathname[MAX_STR_SIZE];
     uint64_t timestamp;
     uint64_t last_progress;
+    double bps;
     uint64_t size;
     uint32_t line_id;
+    uint8_t queue_pos;
 } FileSender;
+
+/* creates initial progress line that will be updated during file transfer.
+   Assumes progline is of size MAX_STR_SIZE */
+void prep_prog_line(char *progline);
+
+/* prints a progress bar for file transfers. 
+   if friendnum is -1 we're sending the file, otherwise we're receiving.  */
+void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_remain);
 
 void close_all_file_senders(Tox *m);
 void do_file_senders(Tox *m);

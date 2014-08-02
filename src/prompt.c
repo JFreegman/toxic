@@ -96,7 +96,7 @@ void kill_prompt_window(ToxWindow *self)
 }
 
 /* Updates own nick in prompt statusbar */
-void prompt_update_nick(ToxWindow *prompt, char *nick)
+void prompt_update_nick(ToxWindow *prompt, const char *nick)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
@@ -104,7 +104,7 @@ void prompt_update_nick(ToxWindow *prompt, char *nick)
 }
 
 /* Updates own statusmessage in prompt statusbar */
-void prompt_update_statusmessage(ToxWindow *prompt, char *statusmsg)
+void prompt_update_statusmessage(ToxWindow *prompt, const char *statusmsg)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -344,7 +344,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     int n = add_friend_request(key);
 
     if (n == -1) {
-        char *errmsg = "Friend request queue is full. Discarding request.";
+        const char *errmsg = "Friend request queue is full. Discarding request.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         write_to_log(errmsg, "", ctx->log, true);
         return;
@@ -404,7 +404,7 @@ static void print_welcome_msg(ToxWindow *self)
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____|");
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 
-    char *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";
+    const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
     msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);

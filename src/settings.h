@@ -31,8 +31,20 @@ struct user_settings {
     int timestamps;        /* boolean */
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
+    int show_typing_self;  /* boolean */
+    int show_typing_other; /* boolean */
+
     char download_path[MAX_STR_SIZE];
 
+	int key_next_tab;			/* character code */
+	int key_prev_tab;			/* character code */
+	int key_scroll_line_up;
+	int key_scroll_line_down;
+	int key_half_page_up;
+	int key_half_page_down;
+	int key_page_bottom;
+	int key_peer_list_up;
+	int key_peer_list_down;
 #ifdef _AUDIO
     int audio_in_dev;
     int audio_out_dev;
@@ -53,12 +65,14 @@ enum {
     ALERTS_DISABLED = 0,
     ALERTS_ENABLED = 1,
 
-    NATIVE_COLS = 1,
     DFLT_COLS = 0,
+    NATIVE_COLS = 1,
+
+    SHOW_TYPING_OFF = 0,
+    SHOW_TYPING_ON = 1,
 
     DFLT_HST_SIZE = 700,
 } settings_values;
 
 int settings_load(struct user_settings *s, const char *patharg);
-
 #endif /* #define _settings_h */

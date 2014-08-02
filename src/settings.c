@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libconfig.h>
+#include <ctype.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -50,6 +51,8 @@ const struct _ui_strings {
     const char* autolog;
     const char* time_format;
     const char* history_size;
+    const char* show_typing_self;
+    const char* show_typing_other;
 } ui_strings = {
     "ui",
     "timestamps",
@@ -57,8 +60,11 @@ const struct _ui_strings {
     "native_colors",
     "autolog",
     "time_format",
-    "history_size"
+    "history_size",
+    "show_typing_self",
+    "show_typing_other",
 };
+
 static void ui_defaults(struct user_settings* settings) 
 {
     settings->timestamps = TIMESTAMPS_ON;
@@ -67,6 +73,46 @@ static void ui_defaults(struct user_settings* settings)
     settings->alerts = ALERTS_ENABLED;
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
+    settings->show_typing_self = SHOW_TYPING_ON;
+    settings->show_typing_other = SHOW_TYPING_ON;
+}
+
+const struct _keys_strings {
+	const char* self;
+	const char* next_tab;
+	const char* prev_tab;
+	const char* scroll_line_up;
+	const char* scroll_line_down;
+	const char* half_page_up;
+	const char* half_page_down;
+	const char* page_bottom;
+	const char* peer_list_up;
+	const char* peer_list_down;
+} key_strings = {
+	"keys",
+	"next_tab",
+	"prev_tab",
+	"scroll_line_up",
+	"scroll_line_down",
+	"half_page_up",
+	"half_page_down",
+	"page_bottom",
+	"peer_list_up",
+	"peer_list_down"
+};
+
+/* defines from toxic.h */
+static void key_defaults(struct user_settings* settings)
+{
+	settings->key_next_tab = T_KEY_NEXT;
+	settings->key_prev_tab = T_KEY_PREV;
+	settings->key_scroll_line_up = KEY_PPAGE;
+	settings->key_scroll_line_down = KEY_NPAGE;
+	settings->key_half_page_up = T_KEY_C_F;
+	settings->key_half_page_down = T_KEY_C_V;
+	settings->key_page_bottom = T_KEY_C_H;
+	settings->key_peer_list_up = T_KEY_C_LB;
+	settings->key_peer_list_down = T_KEY_C_RB;
 }
 
 const struct _tox_strings {
@@ -94,6 +140,7 @@ const struct _audio_strings {
     "output_device",
     "VAD_treshold",
 };
+
 static void audio_defaults(struct user_settings* settings)
 {
     settings->audio_in_dev = 0;
@@ -130,6 +177,23 @@ const struct _sound_strings {
 };
 #endif
 
+static int key_parse(const char** bind){
+    int len = strlen(*bind);
+
+    if (len > 5) {
+        if(strncasecmp(*bind, "ctrl+", 5) == 0) 
+            return toupper(bind[0][5]) - 'A' + 1;
+    }
+
+    if (strncasecmp(*bind, "tab", 3) == 0) 
+        return T_KEY_TAB;
+
+    if (strncasecmp(*bind, "page", 4) == 0)
+        return len == 6 ? KEY_PPAGE : KEY_NPAGE;
+
+    return -1;
+}
+
 int settings_load(struct user_settings *s, const char *patharg)
 {
     config_t cfg[1];
@@ -139,10 +203,11 @@ int settings_load(struct user_settings *s, const char *patharg)
     /* Load default settings */
     ui_defaults(s);
     tox_defaults(s);
+    key_defaults(s);
 #ifdef _AUDIO
     audio_defaults(s);
 #endif
-    
+
     config_init(cfg);
 
     char path[MAX_STR_SIZE];
@@ -155,7 +220,6 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         /* make sure path exists or is created on first time running */
         FILE *fp = fopen(path, "r");
-
         if (fp == NULL) {
             if ((fp = fopen(path, "w")) == NULL)
                 return -1;
@@ -165,30 +229,45 @@ int settings_load(struct user_settings *s, const char *patharg)
     } else {
         snprintf(path, sizeof(path), "%s", patharg);
     }
-    
+
     if (!config_read_file(cfg, path)) {
         config_destroy(cfg);
         return -1;
     }
-    
+
     /* ui */
     if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
         config_setting_lookup_bool(setting, ui_strings.timestamps, &s->timestamps);
         config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
         config_setting_lookup_bool(setting, ui_strings.autolog, &s->autolog);
         config_setting_lookup_bool(setting, ui_strings.native_colors, &s->colour_theme);
-        
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
+        config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
+        config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
         config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
         s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
     }
-    
+
     if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
         if ( config_setting_lookup_string(setting, tox_strings.download_path, &str) ) {
             strcpy(s->download_path, str);
         }
     }
-    
+
+	/* keys */
+	if((setting = config_lookup(cfg, key_strings.self)) != NULL) {
+	   const char* tmp = NULL;
+	   if(config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) s->key_next_tab = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) s->key_prev_tab = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) s->key_scroll_line_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) s->key_scroll_line_down= key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) s->key_half_page_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) s->key_half_page_down = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
+	   if(config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
+	}	   
+
 #ifdef _AUDIO
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);

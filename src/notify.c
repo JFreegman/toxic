@@ -38,15 +38,16 @@
     #ifdef __APPLE__
         #include <OpenAL/al.h>
         #include <OpenAL/alc.h>
-        #ifdef _SOUND_NOTIFY
-            #include <OpenAL/alut.h> /* Is this good? */
-        #endif
     #else
         #include <AL/al.h>
         #include <AL/alc.h>
-        #ifdef _SOUND_NOTIFY
-            #include <AL/alut.h> /* freealut packet */
+        /* compatibility with older versions of OpenAL */
+        #ifndef ALC_ALL_DEVICES_SPECIFIER
+            #include <AL/alext.h>
         #endif
+    #endif
+    #ifdef _SOUND_NOTIFY
+        #include <AL/alut.h> /* freealut packet */
     #endif
 #endif /* _AUDIO */
 

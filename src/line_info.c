@@ -134,7 +134,8 @@ static struct line_info *line_info_ret_queue(struct history *hst)
     return ret;
 }
 
-/* creates new line_info line and puts it in the queue */
+/* creates new line_info line and puts it in the queue. 
+   SYS_MSG lines may contain an arbitrary number of arguments for string formatting */
 void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
                    uint8_t colour, const char *msg, ...)
 {
@@ -145,11 +146,16 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
 
     char frmt_msg[MAX_STR_SIZE] = {0};
-    va_list args;
 
-    va_start(args, msg);
-    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
-    va_end(args);
+    /* WARNING: SYS_MSG lines must not contain untrusted input */
+    if (type == SYS_MSG) {
+        va_list args;
+        va_start(args, msg);
+        vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
+        va_end(args);
+    } else {
+        snprintf(frmt_msg, sizeof(frmt_msg), "%s", msg);
+    }
 
     int len = 1;     /* there will always be a newline */
 
@@ -454,36 +460,24 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
     struct history *hst = self->chatwin->hst;
     bool match = true;
 
-    switch (key) {
-        /* TODO: Find good key bindings for all this stuff */
-        case T_KEY_C_F:
-            line_info_page_up(self, hst);
-            break;
-
-        case T_KEY_C_V:
-            line_info_page_down(self, hst);
-            break; 
-
-        case KEY_PPAGE:
-            line_info_scroll_up(hst);
-            break;
-
-        case KEY_NPAGE:
-            line_info_scroll_down(hst);
-            break;
-
-        /* case ?:
-            line_info_goto_root(hst);
-            break; */
-
-        case T_KEY_C_H:
-            line_info_reset_start(self, hst);
-            break; 
-
-        default:
-            match = false;
-            break;
-    }
+	if (key == user_settings_->key_half_page_up) {
+		line_info_page_up(self, hst);
+	}
+	else if (key == user_settings_->key_half_page_down) {
+		line_info_page_down(self, hst);
+	}
+	else if (key == user_settings_->key_scroll_line_up) {
+		line_info_scroll_up(hst);
+	}
+	else if (key == user_settings_->key_scroll_line_down) {
+		line_info_scroll_down(hst);
+	}
+	else if (key == user_settings_->key_page_bottom) {
+		line_info_reset_start(self, hst);
+	}
+	else {
+		match = false;
+	}
 
     return match;
 }

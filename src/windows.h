@@ -71,6 +71,14 @@ struct _Winthread {
     bool flag_resize;
 };
 
+struct arg_opts {
+    int ignore_data_file;
+    int use_ipv4;
+    int default_locale;
+    char config_path[MAX_STR_SIZE];
+    char nodes_path[MAX_STR_SIZE];
+};
+
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;
@@ -216,6 +224,7 @@ void set_active_window(int ch);
 int get_num_active_windows(void);
 void kill_all_windows(void);    /* should only be called on shutdown */
 void on_window_resize(void);
+ToxWindow *get_window_ptr(int i);
 
 /* refresh inactive windows to prevent scrolling bugs. 
    call at least once per second */

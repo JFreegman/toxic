@@ -92,7 +92,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
 void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg)
 {
-    char *errmsg;
+    const char *errmsg;
     int32_t f_num = tox_add_friend(m, (uint8_t *) id_bin, (uint8_t *) msg, (uint16_t) strlen(msg));
 
     switch (f_num) {
@@ -135,7 +135,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg)
 
 void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (argc < 1) {
         errmsg = "Invalid syntax.";
@@ -143,21 +143,22 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         return;
     }
 
-    char *id = argv[1];
+    const char *id = argv[1];
     char msg[MAX_STR_SIZE];
 
     if (argc > 1) {
-        char *temp = argv[2];
-
-        if (temp[0] != '\"') {
+        if (argv[2][0] != '\"') {
             errmsg = "Message must be enclosed in quotes.";
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
             return;
         }
 
-        ++temp;
-        temp[strlen(temp) - 1] = '\0';
-        snprintf(msg, sizeof(msg), "%s", temp);
+        /* remove opening and closing quotes */
+        char tmp[MAX_STR_SIZE];
+        snprintf(tmp, sizeof(tmp), "%s", &argv[2][1]);
+        int len = strlen(tmp) - 1;
+        tmp[len] = '\0';
+        snprintf(msg, sizeof(msg), "%s", tmp);
     } else {
         char selfname[TOX_MAX_NAME_LENGTH];
         uint16_t n_len = tox_get_self_name(m, (uint8_t *) selfname);
@@ -204,7 +205,7 @@ void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     /* check arguments */
     if (argc != 3) {
@@ -230,7 +231,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         errmsg = " * Warning: Too many windows are open.";
@@ -259,7 +260,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *msg;
+    const char *msg;
     struct chatlog *log = self->chatwin->log;
 
     if (argc == 0) {
@@ -272,7 +273,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         return;
     }
 
-    char *swch = argv[1];
+    const char *swch = argv[1];
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
 
@@ -324,7 +325,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     /* check arguments */
     if (argc < 1) {
@@ -333,13 +334,16 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    char *nick = argv[1];
-    int len = strlen(nick);
+    char nick[MAX_STR_SIZE];
+    int len = 0;
 
-    if (nick[0] == '\"') {
-        ++nick;
-        len -= 2;
+    if (argv[1][0] == '\"') {    /* remove opening and closing quotes */
+        snprintf(nick, sizeof(nick), "%s", &argv[1][1]);
+        len = strlen(nick) - 1;
         nick[len] = '\0';
+    } else {
+        snprintf(nick, sizeof(nick), "%s", argv[1]);
+        len = strlen(nick);
     }
 
     if (!valid_nick(nick)) {
@@ -359,7 +363,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char *errmsg;
+    const char *errmsg;
 
     if (argc < 1) {
         errmsg = "Wrong number of arguments.";
@@ -367,17 +371,18 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    char *msg = argv[1];
-
-    if (msg[0] != '\"') {
+    if (argv[1][0] != '\"') {
         errmsg = "Note must be enclosed in quotes.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    ++msg;
+    /* remove opening and closing quotes */
+    char msg[MAX_STR_SIZE];
+    snprintf(msg, sizeof(msg), "%s", &argv[1][1]);
     int len = strlen(msg) - 1;
     msg[len] = '\0';
+
     tox_set_status_message(m, (uint8_t *) msg, (uint16_t) len);
     prompt_update_statusmessage(prompt, msg);
 }
@@ -393,25 +398,20 @@ void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 }
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    char *msg = NULL;
-    char *errmsg;
+{   
+    bool have_note = false;
+    const char *errmsg;
 
     if (argc >= 2) {
-        msg = argv[2];
-
-        if (msg[0] != '\"') {
-            errmsg = "Note must be enclosed in quotes.";
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
-            return;
-        }
+        have_note = true;
     } else if (argc != 1) {
         errmsg = "Wrong number of arguments.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    char *status = argv[1];
+    char status[MAX_STR_SIZE];
+    snprintf(status, sizeof(status), "%s", argv[1]);
     str_to_lower(status);
 
     TOX_USERSTATUS status_kind;
@@ -431,10 +431,19 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     tox_set_user_status(m, status_kind);
     prompt_update_status(prompt, status_kind);
 
-    if (msg != NULL) {
-        ++msg;
+    if (have_note) {
+        if (argv[2][0] != '\"') {
+            errmsg = "Note must be enclosed in quotes.";
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+            return;
+        }
+
+        /* remove opening and closing quotes */
+        char msg[MAX_STR_SIZE];
+        snprintf(msg, sizeof(msg), "%s", &argv[2][1]);
         int len = strlen(msg) - 1;
-        msg[len] = '\0';    /* remove opening and closing quotes */
+        msg[len] = '\0';
+
         tox_set_status_message(m, (uint8_t *) msg, (uint16_t) len);
         prompt_update_statusmessage(prompt, msg);
     }

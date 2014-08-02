@@ -32,6 +32,7 @@ typedef enum {
     HELP_CHAT,
     HELP_GROUP,
     HELP_KEYS,
+    HELP_CONTACTS,
 } HELP_TYPES;
 
 void help_onDraw(ToxWindow *self);

@@ -27,7 +27,7 @@
 #include "help.h"
 #include "misc_tools.h"
 
-#define HELP_MENU_HEIGHT 7
+#define HELP_MENU_HEIGHT 8
 #define HELP_MENU_WIDTH 26
 
 void help_init_menu(ToxWindow *self)
@@ -85,6 +85,11 @@ static void help_draw_menu(ToxWindow *self)
     wprintw(win, " C");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "hat commands\n");
+
+    wattron(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, " F");
+    wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, "riendlist controls\n");
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, " K");
@@ -209,7 +214,30 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
     wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
     wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
-    wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n");
+    wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n\n");
+    wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
+
+    help_draw_bottom_menu(win);
+
+    box(win, ACS_VLINE, ACS_HLINE);
+    wrefresh(win);
+}
+
+static void help_draw_contacts(ToxWindow *self)
+{
+    WINDOW *win = self->help->win;
+
+    wmove(win, 1, 1);
+
+    wattron(win, A_BOLD | COLOR_PAIR(RED));
+    wprintw(win, "Friendlist controls:\n");
+    wattroff(win, A_BOLD | COLOR_PAIR(RED));
+
+    wprintw(win, "  Up and Down arrows            : Scroll through list\n");
+    wprintw(win, "  Right and Left arrows         : Switch between friendlist and blocked list\n");
+    wprintw(win, "  Enter                         : Open a chat window with selected contact\n");
+    wprintw(win, "  Delete                        : Permanently delete a contact\n");
+    wprintw(win, "  B                             : Block or unblock a contact\n");
 
     help_draw_bottom_menu(win);
 
@@ -243,8 +271,13 @@ void help_onKey(ToxWindow *self, wint_t key)
             self->help->type = HELP_GLOBAL;
             break;
 
-        case 'k':
+        case 'f':
             help_init_window(self, 10, 80);
+            self->help->type = HELP_CONTACTS;
+            break;
+
+        case 'k':
+            help_init_window(self, 12, 80);
             self->help->type = HELP_KEYS;
             break;
 
@@ -274,6 +307,10 @@ void help_onDraw(ToxWindow *self)
 
         case HELP_KEYS:
             help_draw_keys(self);
+            break;
+
+        case HELP_CONTACTS:
+            help_draw_contacts(self);
             break;
 
         case HELP_GROUP:

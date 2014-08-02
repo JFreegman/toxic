@@ -37,6 +37,7 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 
 extern FileSender file_senders[MAX_FILES];
 extern uint8_t max_file_senders_index;
+extern uint8_t num_active_file_senders;
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -127,9 +128,14 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     const char *filename = friends[self->num].file_receiver.filenames[filenum];
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        const char *msg = "Saving file as: '%s' (%.1f%%)";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename, 0.0);
-        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 1;
+        const char *msg = "Saving file as: '%s'";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, filename);
+
+        /* prep progress bar line */
+        char progline[MAX_STR_SIZE];
+        prep_prog_line(progline);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, progline);
+        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 2;
 
         if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
             errmsg = "* Error writing to file.";
@@ -160,15 +166,15 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    char *path = argv[1];
-
-    if (path[0] != '\"') {
+    if (argv[1][0] != '\"') {
         errmsg = "File path must be enclosed in quotes.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    ++path;
+    /* remove opening and closing quotes */
+    char path[MAX_STR_SIZE];
+    snprintf(path, sizeof(path), "%s", &argv[1][1]);
     int path_len = strlen(path) - 1;
     path[path_len] = '\0';
 
@@ -204,6 +210,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     for (i = 0; i < MAX_FILES; ++i) {
         if (!file_senders[i].active) {
+            file_senders[i].queue_pos = num_active_file_senders;
             memcpy(file_senders[i].pathname, path, path_len + 1);
             file_senders[i].active = true;
             file_senders[i].toxwin = self;
@@ -217,6 +224,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
             const char *msg = "Sending file: '%s'";
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, path);
+
+            ++num_active_file_senders;
 
             if (i == max_file_senders_index)
                 ++max_file_senders_index;
