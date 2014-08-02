@@ -167,9 +167,9 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg
     write_to_log(msg, nick, ctx->log, false);
     
     if (self->active_box != -1) 
-        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, msg);    
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "%s", msg);    
     else 
-        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, nick, msg);
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, nick, "%s", msg);
     
 }
 
