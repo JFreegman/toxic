@@ -23,6 +23,8 @@
 #ifndef _settings_h
 #define _settings_h
 
+#define NO_SOUND "silent"
+
 /* holds user setting values */
 struct user_settings {
     int autolog;           /* boolean */

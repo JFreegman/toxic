@@ -705,12 +705,6 @@ int main(int argc, char *argv[])
     useconds_t msleepval = 40000;
     uint64_t loopcount = 0;
 
-    
-    /* Redirect stdout to /dev/null 
-     * NOTE: Might not be best solution
-     */
-    freopen("/dev/null", "w", stderr);
-    
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);

@@ -41,8 +41,6 @@
     #define PACKAGE_DATADIR "."
 #endif
 
-#define NO_SOUND "silent"
-
 const struct _ui_strings {
     const char* self;
     const char* timestamps;
