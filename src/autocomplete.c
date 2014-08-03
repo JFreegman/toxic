@@ -22,11 +22,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #ifdef __APPLE__
     #include <sys/types.h>
     #include <sys/dir.h>
-    #include <sys/syslimits.h>
 #else
     #include <dirent.h>
 #endif /* ifdef __APPLE__ */
