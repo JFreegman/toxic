@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
+#include "toxic.h"
 #include "configdir.h"
 
 /* get the user's home directory */
@@ -38,9 +39,8 @@ void get_home_dir(char *home, int size)
     struct passwd *pwdbuf;
     const char *hmstr;
     char buf[NSS_BUFLEN_PASSWD];
-    int rc;
 
-    rc = getpwuid_r(getuid(), &pwd, buf, NSS_BUFLEN_PASSWD, &pwdbuf);
+    int rc = getpwuid_r(getuid(), &pwd, buf, NSS_BUFLEN_PASSWD, &pwdbuf);
 
     if (rc == 0) {
         hmstr = pwd.pw_dir;
@@ -102,30 +102,45 @@ char *get_user_config_dir(void)
 }
 
 /*
- * Creates the config directory.
+ * Creates the config and chatlog directories.
  */
-int create_user_config_dir(char *path)
+int create_user_config_dirs(char *path)
 {
-    int mkdir_err;
-
-    mkdir_err = mkdir(path, 0700);
     struct stat buf;
+    int mkdir_err = mkdir(path, 0700);
 
-    if (mkdir_err && (errno != EEXIST || stat(path, &buf) || !S_ISDIR(buf.st_mode))) {
+    if (mkdir_err && (errno != EEXIST || stat(path, &buf) || !S_ISDIR(buf.st_mode)))
         return -1;
-    }
 
     char *fullpath = malloc(strlen(path) + strlen(CONFIGDIR) + 1);
+    char *logpath = malloc(strlen(path) + strlen(LOGDIR) + 1);
+
+    if (fullpath == NULL || logpath == NULL)
+        exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
+
     strcpy(fullpath, path);
     strcat(fullpath, CONFIGDIR);
+
+    strcpy(logpath, path);
+    strcat(logpath, LOGDIR);
 
     mkdir_err = mkdir(fullpath, 0700);
 
     if (mkdir_err && (errno != EEXIST || stat(fullpath, &buf) || !S_ISDIR(buf.st_mode))) {
         free(fullpath);
+        free(logpath);
         return -1;
     }
 
+    mkdir_err = mkdir(logpath, 0700);
+
+    if (mkdir_err && (errno != EEXIST || stat(logpath, &buf) || !S_ISDIR(buf.st_mode))) {
+        free(fullpath);
+        free(logpath);
+        return -1;
+    }
+
+    free(logpath);
     free(fullpath);
     return 0;
 }

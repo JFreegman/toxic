@@ -28,6 +28,7 @@
 #endif
 
 #define CONFIGDIR "/tox/"
+#define LOGDIR "/tox/chatlogs/"
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -35,6 +36,6 @@
 
 char *get_user_config_dir(void);
 void get_home_dir(char *home, int size);
-int create_user_config_dir(char *path);
+int create_user_config_dirs(char *path);
 
 #endif /* #define _configdir_h */

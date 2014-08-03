@@ -571,7 +571,7 @@ static int init_data_files(void)
         return 0;
 
     char *user_config_dir = get_user_config_dir();
-    int config_err = create_user_config_dir(user_config_dir);
+    int config_err = create_user_config_dirs(user_config_dir);
 
     if (DATA_FILE == NULL ) {
         if (config_err) {

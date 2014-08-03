@@ -43,7 +43,7 @@ void init_logging_session(char *name, const char *key, struct chatlog *log)
         name = UNKNOWN_NAME;
 
     char *user_config_dir = get_user_config_dir();
-    int path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(name);
+    int path_len = strlen(user_config_dir) + strlen(LOGDIR) + strlen(name);
 
     /* use first 4 digits of key as log ident. If no key use a timestamp */
     char ident[32];
@@ -66,7 +66,7 @@ void init_logging_session(char *name, const char *key, struct chatlog *log)
     }
 
     char log_path[MAX_STR_SIZE];
-    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", user_config_dir, CONFIGDIR, name, ident);
+    snprintf(log_path, MAX_STR_SIZE, "%s%s%s-%s.log", user_config_dir, LOGDIR, name, ident);
 
     free(user_config_dir);
 
