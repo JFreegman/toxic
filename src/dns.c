@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h> /* for u_char */
 #include <netinet/in.h>
 #include <resolv.h>
 
