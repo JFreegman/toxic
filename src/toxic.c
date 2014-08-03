@@ -83,6 +83,7 @@ static void catch_SIGINT(int sig)
 
 static void catch_SIGSEGV(int sig)
 {
+    freopen("/dev/tty", "w", stderr);
     endwin();
     fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
     exit(EXIT_FAILURE);
@@ -127,6 +128,7 @@ void exit_toxic_err(const char *errmsg, int errcode)
     if (errmsg == NULL)
         errmsg = "No error message";
 
+    freopen("/dev/tty", "w", stderr);
     endwin();
     fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
     exit(EXIT_FAILURE);
@@ -699,6 +701,10 @@ int main(int argc, char *argv[])
         msg = "Failed to load user settings";
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
     }
+
+   /* Redirect stderr to /dev/null
+      NOTE: Might not be best solution. Comment out for debugging. */
+    freopen("/dev/null", "w", stderr);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;
