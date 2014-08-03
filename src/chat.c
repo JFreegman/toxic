@@ -373,7 +373,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                 break;
         }
 
-        filename = file_senders[i].pathname;
+        filename = file_senders[i].filename;
     }
 
     switch (control_type) {

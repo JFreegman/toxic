@@ -148,7 +148,7 @@ void close_all_file_senders(Tox *m)
     }
 }
 
-static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, int filenum, const char *pathname)
+static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, int filenum, const char *filename)
 {
     FILE *fp = file_senders[i].file;
 
@@ -175,15 +175,15 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
 
         if (file_senders[i].piecelen == 0) {
             char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", pathname);
+            snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
             
             if (self->active_box != -1)
                 box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, 
-                            self->active_box, "File '%s' successfuly sent!", pathname );
+                            self->active_box, "File '%s' successfuly sent!", filename );
             else
                 box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, 
-                            self->name, "File '%s' successfuly sent!", pathname );
+                            self->name, "File '%s' successfuly sent!", filename );
             return;
         }
     }
@@ -203,27 +203,27 @@ void do_file_senders(Tox *m)
         }
 
         ToxWindow *self = file_senders[i].toxwin;
-        char *pathname = file_senders[i].pathname;
+        char *filename = file_senders[i].filename;
         int filenum = file_senders[i].filenum;
         int32_t friendnum = file_senders[i].friendnum;
 
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)) {
             char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", pathname);
+            snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", filename);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
             sound_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, NULL);
             
             if (self->active_box != -1)
                 box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, 
-                            self->active_box, "File transfer for '%s' failed!", pathname );
+                            self->active_box, "File transfer for '%s' failed!", filename );
             else
                 box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
-                           self->name, "File transfer for '%s' failed!", pathname );
+                           self->name, "File transfer for '%s' failed!", filename );
             continue;
         }
 
         file_senders[i].queue_pos = num_active_file_senders - 1;
-        send_file_data(self, m, i, friendnum, filenum, pathname);
+        send_file_data(self, m, i, friendnum, filenum, filename);
     }
 }

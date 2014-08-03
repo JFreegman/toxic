@@ -196,7 +196,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     char filename[MAX_STR_SIZE] = {0};
     get_file_name(filename, sizeof(filename), path);
-    int filenum = tox_new_file_sender(m, self->num, filesize, (const uint8_t *) filename, strlen(filename));
+    int namelen = strlen(filename);
+    int filenum = tox_new_file_sender(m, self->num, filesize, (const uint8_t *) filename, namelen);
 
     if (filenum == -1) {
         errmsg = "Error sending file.";
@@ -209,7 +210,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     for (i = 0; i < MAX_FILES; ++i) {
         if (!file_senders[i].active) {
             file_senders[i].queue_pos = num_active_file_senders;
-            memcpy(file_senders[i].pathname, path, path_len + 1);
+            memcpy(file_senders[i].filename, filename, namelen + 1);
             file_senders[i].active = true;
             file_senders[i].toxwin = self;
             file_senders[i].file = file_to_send;
@@ -220,7 +221,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file: '%s'", path);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file: '%s'", filename);
 
             ++num_active_file_senders;
 

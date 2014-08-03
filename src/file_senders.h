@@ -39,7 +39,7 @@ typedef struct {
     int filenum;
     char nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
-    char pathname[MAX_STR_SIZE];
+    char filename[MAX_STR_SIZE];
     uint64_t timestamp;
     uint64_t last_progress;
     double bps;
