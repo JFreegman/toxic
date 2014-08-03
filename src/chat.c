@@ -369,7 +369,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
         filename = friends[num].file_receiver.filenames[filenum];
     } else {
         for (i = 0; i < MAX_FILES; ++i) {
-            if (file_senders[i].filenum == filenum)
+            if (file_senders[i].active && file_senders[i].filenum == filenum)
                 break;
         }
 
