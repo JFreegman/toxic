@@ -81,9 +81,23 @@ static void catch_SIGINT(int sig)
     Winthread.sig_exit_toxic = true;
 }
 
+static void catch_SIGSEGV(int sig)
+{
+    endwin();
+    fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
+    exit(EXIT_FAILURE);
+}
+
 static void flag_window_resize(int sig)
 {
     Winthread.flag_resize = true;
+}
+
+static void init_signal_catchers(void)
+{
+    signal(SIGWINCH, flag_window_resize);
+    signal(SIGINT, catch_SIGINT);
+    signal(SIGSEGV, catch_SIGSEGV);
 }
 
 void exit_toxic_success(Tox *m)
@@ -120,8 +134,6 @@ void exit_toxic_err(const char *errmsg, int errcode)
 
 static void init_term(void)
 {
-    signal(SIGWINCH, flag_window_resize);
-
 #if HAVE_WIDECHAR
 
     if (!arg_opts.default_locale) {
@@ -622,10 +634,11 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
 
 int main(int argc, char *argv[])
 {
+    init_signal_catchers();
     parse_args(argc, argv);
+
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    signal(SIGINT, catch_SIGINT);
     int config_err = init_data_files();
 
     /* init user_settings struct and load settings from conf file */
