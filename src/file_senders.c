@@ -170,7 +170,8 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
         double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
 
         /* refresh line with percentage complete and transfer speed (must be called once per second) */
-        if ((self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1)) || !remain) {
+        if ( (self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1))
+             || (!remain && !file_senders[i].finished) ) {
             file_senders[i].last_progress = curtime;
             double pct_done = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
             print_progress_bar(self, i, -1, pct_done);
