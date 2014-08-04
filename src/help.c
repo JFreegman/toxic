@@ -136,15 +136,15 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "Global Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /add <id> <msg>            : Add contact with optional message\n");
-    wprintw(win, "  /accept <n>                : Accept friend request\n");
+    wprintw(win, "  /add <addr> <msg>          : Add contact with optional message\n");
+    wprintw(win, "  /accept <id>               : Accept friend request\n");
     wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /groupchat                 : Create a group chat\n");
-    wprintw(win, "  /myid                      : Print your ID\n");
+    wprintw(win, "  /myid                      : Print your Tox ID\n");
     wprintw(win, "  /clear                     : Clear window history\n");
     wprintw(win, "  /close                     : Close the current chat window\n");
     wprintw(win, "  /quit or /exit             : Exit Toxic\n");

@@ -52,7 +52,7 @@ void prep_prog_line(char *progline)
     for (i = 0; i < NUM_PROG_MARKS; ++i)
         strcat(progline, "-");
 
-    strcat(progline, "] 0%%");
+    strcat(progline, "] 0%");
 }
 
 /* prints a progress bar for file transfers. 

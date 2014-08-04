@@ -341,7 +341,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Invalid syntax!";
+        error_str = "Unknown arguments.";
         goto on_error;
     }
 
@@ -376,7 +376,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Invalid syntax!";
+        error_str = "Unknown arguments.";
         goto on_error;
     }
 
@@ -407,7 +407,7 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Invalid syntax!";
+        error_str = "Unknown arguments.";
         goto on_error;
     }
 
@@ -438,7 +438,7 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Invalid syntax!";
+        error_str = "Unknown arguments.";
         goto on_error;
     }
 
@@ -635,10 +635,10 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     
     DeviceType type;
     
-    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+    if ( strcasecmp(argv[1], "in") == 0 ) /* Input devices */
         type = input;
     
-    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+    else if ( strcasecmp(argv[1], "out") == 0 ) /* Output devices */
         type = output;
     
     else {
