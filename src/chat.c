@@ -345,15 +345,20 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
                     "Incoming file: %s", filename );
 }
 
-void chat_close_file_receiver(int num, int filenum)
+/* set CTRL to -1 if we don't want to send a control signal.
+   set msg to NULL if we don't want to display a message */
+void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL)
 {
-    friends[num].file_receiver.active[filenum] = false;
-    friends[num].file_receiver.pending[filenum] = false;
-    FILE *file = friends[num].file_receiver.files[filenum];
+    if (CTRL > 0)
+        tox_file_send_control(m, friendnum, 1, filenum, CTRL, 0, 0);
+
+    friends[friendnum].file_receiver.active[filenum] = false;
+    friends[friendnum].file_receiver.pending[filenum] = false;
+    FILE *file = friends[friendnum].file_receiver.files[filenum];
 
     if (file != NULL) {
         fclose(file);
-        friends[num].file_receiver.files[filenum] = NULL;
+        friends[friendnum].file_receiver.files[filenum] = NULL;
     }
 }
 
@@ -396,30 +401,37 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
         case TOX_FILECONTROL_KILL:
             snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
 
-            if (receive_send == 0)
-                chat_close_file_receiver(num, filenum);
-            
             if (self->active_box != -1)
                 box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, 
                             self->active_box, "File transfer for '%s' failed!", filename );
             else
                 box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
                            self->name, "File transfer for '%s' failed!", filename );
+
+            if (receive_send == 0)
+                chat_close_file_receiver(m, filenum, num, -1);
+            else
+                close_file_sender(self, m, i, NULL, -1, filenum, num);
+
             break;
 
         case TOX_FILECONTROL_FINISHED:
             if (receive_send == 0) {
                 snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
-                chat_close_file_receiver(num, filenum);
-                
-                if (self->active_box != -1)
-                    box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, 
-                                self->active_box, "File '%s' successfuly sent!", filename );
-                else
-                    box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
-                                                  self->name, "File '%s' successfuly sent!", filename );
-                        
+                chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_FINISHED);
+            } else {
+                char msg[MAX_STR_SIZE];
+                snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
+                close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, num);
+                return;
             }
+
+            if (self->active_box != -1)
+                box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, 
+                            self->active_box, "%s", msg);
+            else
+                box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, 
+                            self->name, "%s", msg);
 
             break;
     }
@@ -439,8 +451,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (fp) {
         if (fwrite(data, length, 1, fp) != 1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Error writing to file.");
-            tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
-            chat_close_file_receiver(num, filenum);
+            chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_KILL);
         }
     }
 

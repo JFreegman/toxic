@@ -26,7 +26,9 @@
 #include "windows.h"
 #include "toxic.h"
 
-void chat_close_file_receiver(int num, int filenum);
+/* set CTRL to -1 if we don't want to send a control signal.
+   set msg to NULL if we don't want to display a message */
+void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL);
 void kill_chat_window(ToxWindow *self);
 ToxWindow new_chat(Tox *m, int32_t friendnum);
 

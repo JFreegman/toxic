@@ -66,8 +66,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         char name[MAX_STR_SIZE];
         get_file_name(name, sizeof(name), filepath);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' canceled.", name);
-        tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
-        chat_close_file_receiver(self->num, filenum);
+        chat_close_file_receiver(m, filenum, self->num, TOX_FILECONTROL_KILL);
         return;
     } else if (strcasecmp(inoutstr, "out") == 0) {    /* cancel an outgoing file transfer */
         int i;

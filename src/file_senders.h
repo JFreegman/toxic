@@ -36,6 +36,7 @@ typedef struct {
     ToxWindow *toxwin;
     int32_t friendnum;
     bool active;
+    bool finished;
     int filenum;
     char nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
@@ -56,7 +57,10 @@ void prep_prog_line(char *progline);
    if friendnum is -1 we're sending the file, otherwise we're receiving.  */
 void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_remain);
 
+/* set CTRL to -1 if we don't want to send a control signal.
+   set msg to NULL if we don't want to display a message */
 void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, int32_t friendnum);
+
 void close_all_file_senders(Tox *m);
 void do_file_senders(Tox *m);
 

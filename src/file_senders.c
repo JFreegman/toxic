@@ -120,13 +120,16 @@ static void set_max_file_senders_index(void)
     max_file_senders_index = j;
 }
 
+/* set CTRL to -1 if we don't want to send a control signal.
+   set msg to NULL if we don't want to display a message */
 void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, int32_t friendnum)
 {
-    if (self->chatwin != NULL) 
+    if (msg != NULL) 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
     
+    if (CTRL > 0)
+        tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);
 
-    tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);
     fclose(file_senders[i].file);
     memset(&file_senders[i], 0, sizeof(FileSender));
     set_max_file_senders_index();
@@ -174,18 +177,10 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
             file_senders[i].bps = 0;
         }
 
-        if (file_senders[i].piecelen == 0) {
-            char msg[MAX_STR_SIZE];
-            snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
-            close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, friendnum);
-            
-            if (self->active_box != -1)
-                box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, 
-                            self->active_box, "File '%s' successfuly sent!", filename );
-            else
-                box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, 
-                            self->name, "File '%s' successfuly sent!", filename );
-            return;
+        /* file sender is closed in chat_onFileControl callback after receiving reply */
+        if (file_senders[i].piecelen == 0 && !file_senders[i].finished) {
+            tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
+            file_senders[i].finished = true;
         }
     }
 }
@@ -208,6 +203,12 @@ void do_file_senders(Tox *m)
         int filenum = file_senders[i].filenum;
         int32_t friendnum = file_senders[i].friendnum;
 
+        /* kill file transfer if chatwindow is closed */
+        if (self->chatwin == NULL) {
+            close_file_sender(self, m, i, NULL, TOX_FILECONTROL_KILL, filenum, friendnum);
+            continue;
+        }
+
         /* If file transfer has timed out kill transfer and send kill control */
         if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)) {
             char msg[MAX_STR_SIZE];
@@ -217,10 +218,10 @@ void do_file_senders(Tox *m)
             
             if (self->active_box != -1)
                 box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, 
-                            self->active_box, "File transfer for '%s' failed!", filename );
+                            self->active_box, "File transfer for '%s' timed out.", filename );
             else
                 box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
-                           self->name, "File transfer for '%s' failed!", filename );
+                           self->name, "File transfer for '%s' timed out.", filename );
             continue;
         }
 
