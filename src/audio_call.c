@@ -447,7 +447,18 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto on_error;
     }
 
-    ToxAvError error = toxav_hangup(ASettins.av, self->call_idx);
+    ToxAvError error;
+
+    if (toxav_get_call_state(ASettins.av, self->call_idx) == av_CallInviting) {
+        error = toxav_cancel(ASettins.av, self->call_idx, self->num,
+                                        "Only those who appreciate small things know the beauty that is life");
+#ifdef _SOUND_NOTIFY
+        stop_sound(self->ringing_sound);
+#endif
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call canceled!");
+    } else {
+        error = toxav_hangup(ASettins.av, self->call_idx);
+    }
 
     if ( error != ErrorNone ) {
         if ( error == ErrorInvalidState ) error_str = "Cannot hangup in invalid state!";
@@ -461,42 +472,6 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 on_error:
     print_err (self, error_str);
 }
-
-void cmd_cancel(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    const char *error_str;
-
-    if (argc != 0) {
-        error_str = "Invalid syntax!";
-        goto on_error;
-    }
-
-    if ( !ASettins.av ) {
-        error_str = "Audio not supported!";
-        goto on_error;
-    }
-
-    ToxAvError error = toxav_cancel(ASettins.av, self->call_idx, self->num,
-                                    "Only those who appreciate small things know the beauty that is life");
-
-    if ( error != ErrorNone ) {
-        if ( error == ErrorNoCall ) error_str = "No call!";
-        else if ( error == ErrorInvalidState ) error_str = "Cannot cancel in invalid state!";
-        else error_str = "Internal error!";
-
-        goto on_error;
-    }
-
-#ifdef _SOUND_NOTIFY
-    stop_sound(self->ringing_sound);
-#endif /* _SOUND_NOTIFY */
-    /* Callback will print status... */
-
-    return;
-on_error:
-    print_err (self, error_str);
-}
-
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {

@@ -57,7 +57,7 @@ void prep_prog_line(char *progline)
 
 /* prints a progress bar for file transfers. 
    if friendnum is -1 we're sending the file, otherwise we're receiving.  */
-void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_remain)
+void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done)
 {
     double bps;
     uint32_t line_id;
@@ -87,7 +87,7 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_rema
 
     char msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "%.1f %s [", bps, unit);
-    int n = pct_remain / (100 / NUM_PROG_MARKS);
+    int n = pct_done / (100 / NUM_PROG_MARKS);
     int i;
 
     for (i = 0; i < n; ++i)
@@ -101,7 +101,8 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_rema
     strcat(msg, "] ");
 
     char pctstr[16];
-    snprintf(pctstr, sizeof(pctstr), "%.2f%%", pct_remain);
+    const char *frmt = pct_done == 100 ? "%.f%%" : "%.1f%%";
+    snprintf(pctstr, sizeof(pctstr), frmt, pct_done);
     strcat(msg, pctstr);
 
     line_info_set(self, line_id, msg);
@@ -168,8 +169,8 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
         /* refresh line with percentage complete and transfer speed (must be called once per second) */
         if ((self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1)) || !remain) {
             file_senders[i].last_progress = curtime;
-            double pct_remain = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
-            print_progress_bar(self, i, -1, pct_remain);
+            double pct_done = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
+            print_progress_bar(self, i, -1, pct_done);
             file_senders[i].bps = 0;
         }
 

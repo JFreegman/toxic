@@ -63,7 +63,7 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* _AUDIO */
 
 #ifdef _AUDIO
-#define AC_NUM_CHAT_COMMANDS 26
+#define AC_NUM_CHAT_COMMANDS 25
 #else
 #define AC_NUM_CHAT_COMMANDS 18
 #endif /* _AUDIO */
@@ -92,7 +92,6 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
 #ifdef _AUDIO
 
     { "/call"       },
-    { "/cancel"     },
     { "/answer"     },
     { "/reject"     },
     { "/hangup"     },
@@ -450,8 +449,8 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
         friends[num].file_receiver.last_progress[filenum] = curtime;
         uint64_t size = friends[num].file_receiver.size[filenum];
-        double pct_remain = remain > 0 ? (1 - (remain / size)) * 100 : 100;
-        print_progress_bar(self, filenum, num, pct_remain);
+        double pct_done = remain > 0 ? (1 - (remain / size)) * 100 : 100;
+        print_progress_bar(self, filenum, num, pct_done);
         friends[num].file_receiver.bps[filenum] = 0;
     }
 }
@@ -505,7 +504,7 @@ void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
     if ( !self || self->call_idx != call_index || self->num != toxav_get_peer_id(av, call_index, 0))
         return;
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ringing...\"cancel\" ?");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ringing...type \"/hangup\" to cancel it.");
     
 #ifdef _SOUND_NOTIFY
     if (self->ringing_sound == -1)

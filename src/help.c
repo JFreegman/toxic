@@ -185,7 +185,6 @@ static void help_draw_chat(ToxWindow *self)
     wattroff(win, A_BOLD);
 
     wprintw(win, "  /call                      : Audio call\n");
-    wprintw(win, "  /cancel                    : Cancel call\n");
     wprintw(win, "  /answer                    : Answer incoming call\n");
     wprintw(win, "  /reject                    : Reject incoming call\n");
     wprintw(win, "  /hangup                    : Hangup active call\n");
