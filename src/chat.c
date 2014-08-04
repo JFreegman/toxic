@@ -505,12 +505,15 @@ void chat_onInvite (ToxWindow *self, ToxAv *av, int call_index)
     
     self->call_idx = call_index;
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Incoming audio call! Type: \"/answer\" or \"/reject\"");
-        
     
-    if (self->ringing_sound != -1)
-        box_notify2(self, call_incoming, NT_LOOP | NT_WNDALERT_0, self->ringing_sound, "Incoming audio call!");
+    if (self->ringing_sound == -1)
+        sound_notify(self, call_incoming, NT_LOOP, &self->ringing_sound);
+    
+    
+    if (self->active_box != -1)
+        box_silent_notify2(self, NT_NOFOCUS | NT_WNDALERT_0, self->active_box, "Incoming audio call!");
     else
-        box_notify(self, call_incoming, NT_LOOP | NT_WNDALERT_0, &self->ringing_sound, self->name, "Incoming audio call!");
+        box_silent_notify(self, NT_NOFOCUS | NT_WNDALERT_0, &self->active_box, self->name, "Incoming audio call!");
 }
 
 void chat_onRinging (ToxWindow *self, ToxAv *av, int call_index)
