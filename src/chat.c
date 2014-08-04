@@ -63,15 +63,16 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* _AUDIO */
 
 #ifdef _AUDIO
-#define AC_NUM_CHAT_COMMANDS 25
+#define AC_NUM_CHAT_COMMANDS 26
 #else
-#define AC_NUM_CHAT_COMMANDS 18
+#define AC_NUM_CHAT_COMMANDS 19
 #endif /* _AUDIO */
 
 /* Array of chat command names used for tab completion. */
 static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/accept"     },
     { "/add"        },
+    { "/cancel"     },
     { "/clear"      },
     { "/close"      },
     { "/connect"    },
@@ -341,11 +342,13 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
                     "Incoming file: %s", filename );
     else
         box_notify(self, transfer_pending, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, self->name, 
-                   "Incoming file: %s", filename );
+                    "Incoming file: %s", filename );
 }
 
-static void chat_close_file_receiver(int32_t num, uint8_t filenum)
+void chat_close_file_receiver(int num, int filenum)
 {
+    friends[num].file_receiver.active[filenum] = false;
+    friends[num].file_receiver.pending[filenum] = false;
     FILE *file = friends[num].file_receiver.files[filenum];
 
     if (file != NULL) {
@@ -378,8 +381,8 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
             if (receive_send == 1) {
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' accepted.", filename);
-
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
+                                                                      filenum, filename);
                 /* prep progress bar line */
                 char progline[MAX_STR_SIZE];
                 prep_prog_line(progline);

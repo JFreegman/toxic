@@ -177,7 +177,8 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /invite <n>                : Invite contact to a group chat\n");
     wprintw(win, "  /join                      : Join a pending group chat\n");
     wprintw(win, "  /sendfile <path>           : Send a file\n");
-    wprintw(win, "  /savefile <n>              : Receive a file\n");
+    wprintw(win, "  /savefile <id>             : Receive a file\n");
+    wprintw(win, "  /cancel <type> <id>        : Cancel file transfer where type: in|out\n");
 
 #ifdef _AUDIO
     wattron(win, A_BOLD);

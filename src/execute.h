@@ -30,10 +30,10 @@
 
 #ifdef _AUDIO
 #define GLOBAL_NUM_COMMANDS 16
-#define CHAT_NUM_COMMANDS 11
+#define CHAT_NUM_COMMANDS 12
 #else
 #define GLOBAL_NUM_COMMANDS 14
-#define CHAT_NUM_COMMANDS 4
+#define CHAT_NUM_COMMANDS 5
 #endif /* _AUDIO */
 
 enum {

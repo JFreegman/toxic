@@ -26,6 +26,7 @@
 #include "windows.h"
 #include "toxic.h"
 
+void chat_close_file_receiver(int num, int filenum);
 void kill_chat_window(ToxWindow *self);
 ToxWindow new_chat(Tox *m, int32_t friendnum);
 

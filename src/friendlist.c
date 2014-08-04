@@ -396,14 +396,6 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     if (friends[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             friends[num].chatwin = add_window(m, new_chat(m, friends[num].num));
-            
-            if (self->active_box != -1)
-                box_notify2(self, transfer_pending, NT_NOFOCUS, self->active_box, 
-                            "Incoming file reaquest: %s", filename);
-            else
-                box_notify(self, transfer_pending, NT_NOFOCUS, &self->active_box, self->name, 
-                           "Incoming file reaquest: %s", filename);
-
         } else {
             tox_file_send_control(m, num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
 

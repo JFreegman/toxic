@@ -30,6 +30,8 @@
 #include "execute.h"
 #include "line_info.h"
 #include "groupchat.h"
+#include "chat.h"
+#include "file_senders.h"
 
 extern ToxWindow *prompt;
 
@@ -38,6 +40,67 @@ extern ToxicFriend friends[MAX_FRIENDS_NUM];
 extern FileSender file_senders[MAX_FILES];
 extern uint8_t max_file_senders_index;
 extern uint8_t num_active_file_senders;
+
+void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 2) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid syntax.");
+        return;
+    }
+
+    const char *inoutstr = argv[1];
+    int filenum = atoi(argv[2]);
+
+    if (filenum > MAX_FILES || filenum < 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        return;
+    }
+
+    int inout;
+
+    if (strcasecmp(inoutstr, "in") == 0) {
+        inout = 1;
+    } else if (strcasecmp(inoutstr, "out") == 0) {
+        inout = 0;
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Type must be 'in' or 'out'.");
+        return;
+    }
+
+    if (inout == 1) {    /* cancel an incoming file transfer */
+        if (!friends[self->num].file_receiver.active[filenum]) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+            return;  
+        }
+
+        const char *filepath = friends[self->num].file_receiver.filenames[filenum];
+        char name[MAX_STR_SIZE];
+        get_file_name(name, sizeof(name), filepath);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' canceled.", name);
+        tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
+        chat_close_file_receiver(self->num, filenum);
+    } else {    /* cancel an outgoing file transfer */
+        int i;
+        bool match = false;
+
+        for (i = 0; i < MAX_FILES; ++i) {
+            if (file_senders[i].active && file_senders[i].filenum == filenum) {
+                match = true;
+                break;
+            }
+        }
+
+        if (!match) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+            return;  
+        }
+
+        const char *filename = file_senders[i].filename;
+        char msg[MAX_STR_SIZE];
+        snprintf(msg, sizeof(msg), "File transfer for '%s' canceled.", filename);
+        close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, self->num);
+    }
+}
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -127,7 +190,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     const char *filename = friends[self->num].file_receiver.filenames[filenum];
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file as: '%s'", filename);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file as [%d]: '%s'", filenum, filename);
 
         /* prep progress bar line */
         char progline[MAX_STR_SIZE];
@@ -146,6 +209,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     friends[self->num].file_receiver.pending[filenum] = false;
+    friends[self->num].file_receiver.active[filenum] = true;
 }
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -221,7 +285,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
 
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file: '%s'", filename);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s'", filenum, filename);
 
             ++num_active_file_senders;
 
