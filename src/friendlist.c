@@ -456,7 +456,7 @@ static void delete_friend(Tox *m, int32_t f_num)
         ToxWindow *toxwin = get_window_ptr(friends[f_num].chatwin);
 
         if (toxwin != NULL) {
-            kill_chat_window(toxwin);
+            kill_chat_window(toxwin, m);
             set_active_window(1);   /* keep friendlist focused */
         }
     }

@@ -66,8 +66,8 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done
         bps = file_senders[idx].bps;
         line_id = file_senders[idx].line_id;
     } else {
-        bps = friends[friendnum].file_receiver.bps[idx];
-        line_id = friends[friendnum].file_receiver.line_id[idx];
+        bps = friends[friendnum].file_receiver[idx].bps;
+        line_id = friends[friendnum].file_receiver[idx].line_id;
     }
 
     const char *unit;
@@ -120,6 +120,18 @@ static void set_max_file_senders_index(void)
     max_file_senders_index = j;
 }
 
+/* called whenever a file sender is opened or closed */
+void reset_file_sender_queue(void)
+{
+    int i;
+    int pos = 0;
+
+    for (i = 0; i < max_file_senders_index; ++i) {
+        if (file_senders[i].active)
+            file_senders[i].queue_pos = pos++;
+    }
+}
+
 /* set CTRL to -1 if we don't want to send a control signal.
    set msg to NULL if we don't want to display a message */
 void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, int32_t friendnum)
@@ -133,6 +145,7 @@ void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL
     fclose(file_senders[i].file);
     memset(&file_senders[i], 0, sizeof(FileSender));
     set_max_file_senders_index();
+    reset_file_sender_queue();
     --num_active_file_senders;
 }
 
@@ -170,8 +183,7 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
         double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
 
         /* refresh line with percentage complete and transfer speed (must be called once per second) */
-        if ( (self->chatwin != NULL && timed_out(file_senders[i].last_progress, curtime, 1))
-             || (!remain && !file_senders[i].finished) ) {
+        if (timed_out(file_senders[i].last_progress, curtime, 1) || (!remain && !file_senders[i].finished)) {
             file_senders[i].last_progress = curtime;
             double pct_done = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
             print_progress_bar(self, i, -1, pct_done);
@@ -218,15 +230,13 @@ void do_file_senders(Tox *m)
             sound_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, NULL);
             
             if (self->active_box != -1)
-                box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, 
-                            self->active_box, "File transfer for '%s' timed out.", filename );
+                box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
             else
-                box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
-                           self->name, "File transfer for '%s' timed out.", filename );
+                box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", msg);
             continue;
         }
 
-        file_senders[i].queue_pos = num_active_file_senders - 1;
         send_file_data(self, m, i, friendnum, filenum, filename);
+        file_senders[i].queue_pos = num_active_file_senders - 1;
     }
 }

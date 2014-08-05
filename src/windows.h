@@ -223,7 +223,7 @@ int add_window(Tox *m, ToxWindow w);
 void del_window(ToxWindow *w);
 void set_active_window(int ch);
 int get_num_active_windows(void);
-void kill_all_windows(void);    /* should only be called on shutdown */
+void kill_all_windows(Tox *m);    /* should only be called on shutdown */
 void on_window_resize(void);
 ToxWindow *get_window_ptr(int i);
 

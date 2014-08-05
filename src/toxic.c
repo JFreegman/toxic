@@ -105,7 +105,7 @@ void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
     close_all_file_senders(m);
-    kill_all_windows();
+    kill_all_windows(m);
 
     free(DATA_FILE);
     free(BLOCK_FILE);

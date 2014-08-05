@@ -61,6 +61,9 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_rema
    set msg to NULL if we don't want to display a message */
 void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, int32_t friendnum);
 
+/* called whenever a file sender is opened or closed */
+void reset_file_sender_queue(void);
+
 void close_all_file_senders(Tox *m);
 void do_file_senders(Tox *m);
 

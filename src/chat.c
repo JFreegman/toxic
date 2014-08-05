@@ -124,11 +124,14 @@ static void chat_set_window_name(ToxWindow *self, char *nick, int len)
     snprintf(self->name, sizeof(self->name), "%s", nick);
 }
 
-void kill_chat_window(ToxWindow *self)
+static void close_all_file_receivers(Tox *m, int friendnum);
+
+void kill_chat_window(ToxWindow *self, Tox *m)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
+    close_all_file_receivers(m, self->num);
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
 
@@ -293,7 +296,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         len += strlen(user_settings_->download_path);
     }
 
-    if (len >= sizeof(friends[num].file_receiver.filenames[filenum])) {
+    if (len >= sizeof(friends[num].file_receiver[filenum].filename)) {
         errmsg = "File name too long; discarding.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
@@ -333,9 +336,9 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", filenum);
 
-    friends[num].file_receiver.pending[filenum] = true;
-    friends[num].file_receiver.size[filenum] = filesize;
-    strcpy(friends[num].file_receiver.filenames[filenum], filename);
+    friends[num].file_receiver[filenum].pending = true;
+    friends[num].file_receiver[filenum].size = filesize;
+    strcpy(friends[num].file_receiver[filenum].filename, filename);
 
     if (self->active_box != -1)
         box_notify2(self, transfer_pending, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, 
@@ -352,13 +355,21 @@ void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL)
     if (CTRL > 0)
         tox_file_send_control(m, friendnum, 1, filenum, CTRL, 0, 0);
 
-    friends[friendnum].file_receiver.active[filenum] = false;
-    friends[friendnum].file_receiver.pending[filenum] = false;
-    FILE *file = friends[friendnum].file_receiver.files[filenum];
+    FILE *file = friends[friendnum].file_receiver[filenum].file;
 
-    if (file != NULL) {
+    if (file != NULL)
         fclose(file);
-        friends[friendnum].file_receiver.files[filenum] = NULL;
+
+    memset(&friends[friendnum].file_receiver[filenum], 0, sizeof(struct FileReceiver));
+}
+
+static void close_all_file_receivers(Tox *m, int friendnum)
+{
+    int i;
+
+    for (i = 0; i < MAX_FILES; ++i) {
+        if (friends[friendnum].file_receiver[i].active)
+            chat_close_file_receiver(m, i, friendnum, TOX_FILECONTROL_KILL);
     }
 }
 
@@ -373,7 +384,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     int i = 0;   /* file_sender index */
 
     if (receive_send == 0) {
-        filename = friends[num].file_receiver.filenames[filenum];
+        filename = friends[num].file_receiver[filenum].filename;
     } else {
         for (i = 0; i < MAX_FILES; ++i) {
             if (file_senders[i].active && file_senders[i].filenum == filenum)
@@ -446,7 +457,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (self->num != num)
         return;
 
-    FILE *fp = friends[num].file_receiver.files[filenum];
+    FILE *fp = friends[num].file_receiver[filenum].file;
 
     if (fp) {
         if (fwrite(data, length, 1, fp) != 1) {
@@ -455,17 +466,17 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
         }
     }
 
-    friends[num].file_receiver.bps[filenum] += length;
+    friends[num].file_receiver[filenum].bps += length;
     double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
     uint64_t curtime = get_unix_time();
 
     /* refresh line with percentage complete and transfer speed (must be called once per second) */
-    if (!remain || timed_out(friends[num].file_receiver.last_progress[filenum], curtime, 1)) {
-        friends[num].file_receiver.last_progress[filenum] = curtime;
-        uint64_t size = friends[num].file_receiver.size[filenum];
+    if (!remain || timed_out(friends[num].file_receiver[filenum].last_progress, curtime, 1)) {
+        friends[num].file_receiver[filenum].last_progress = curtime;
+        uint64_t size = friends[num].file_receiver[filenum].size;
         double pct_done = remain > 0 ? (1 - (remain / size)) * 100 : 100;
         print_progress_bar(self, filenum, num, pct_done);
-        friends[num].file_receiver.bps[filenum] = 0;
+        friends[num].file_receiver[filenum].bps = 0;
     }
 }
 
@@ -819,7 +830,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         if (line[0] == '/') {
             if (strcmp(line, "/close") == 0) {
-                kill_chat_window(self);
+                kill_chat_window(self, m);
                 return;
             } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_action(self, ctx, m, line + strlen("/me "));

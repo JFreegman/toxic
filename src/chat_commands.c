@@ -57,12 +57,12 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     }
 
     if (strcasecmp(inoutstr, "in") == 0) {    /* cancel an incoming file transfer */
-        if (!friends[self->num].file_receiver.active[filenum]) {
+        if (!friends[self->num].file_receiver[filenum].active) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
             return;  
         }
 
-        const char *filepath = friends[self->num].file_receiver.filenames[filenum];
+        const char *filepath = friends[self->num].file_receiver[filenum].filename;
         char name[MAX_STR_SIZE];
         get_file_name(name, sizeof(name), filepath);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' canceled.", name);
@@ -159,12 +159,12 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    if (!friends[self->num].file_receiver.pending[filenum]) {
+    if (!friends[self->num].file_receiver[filenum].pending) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
-    const char *filename = friends[self->num].file_receiver.filenames[filenum];
+    const char *filename = friends[self->num].file_receiver[filenum].filename;
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%d] as: '%s'", filenum, filename);
@@ -173,9 +173,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         char progline[MAX_STR_SIZE];
         prep_prog_line(progline);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-        friends[self->num].file_receiver.line_id[filenum] = self->chatwin->hst->line_end->id + 2;
+        friends[self->num].file_receiver[filenum].line_id = self->chatwin->hst->line_end->id + 2;
 
-        if ((friends[self->num].file_receiver.files[filenum] = fopen(filename, "a")) == NULL) {
+        if ((friends[self->num].file_receiver[filenum].file = fopen(filename, "a")) == NULL) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Error writing to file.");
             tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
         }
@@ -183,8 +183,8 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed.");
     }
 
-    friends[self->num].file_receiver.pending[filenum] = false;
-    friends[self->num].file_receiver.active[filenum] = true;
+    friends[self->num].file_receiver[filenum].pending = false;
+    friends[self->num].file_receiver[filenum].active = true;
 }
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -241,7 +241,6 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     for (i = 0; i < MAX_FILES; ++i) {
         if (!file_senders[i].active) {
-            file_senders[i].queue_pos = num_active_file_senders;
             memcpy(file_senders[i].filename, filename, namelen + 1);
             file_senders[i].active = true;
             file_senders[i].toxwin = self;
@@ -252,7 +251,6 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].size = filesize;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
-
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s'", filenum, filename);
 
             ++num_active_file_senders;
@@ -260,6 +258,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             if (i == max_file_senders_index)
                 ++max_file_senders_index;
 
+            reset_file_sender_queue();
             return;
         }
     }

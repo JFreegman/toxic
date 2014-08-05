@@ -30,15 +30,15 @@
 #include "file_senders.h"
 
 struct FileReceiver {
-    char filenames[MAX_FILES][MAX_STR_SIZE];
-    FILE *files[MAX_FILES];
-    bool pending[MAX_FILES];
-    bool active[MAX_FILES];
-    uint64_t size[MAX_FILES];
-    double bps[MAX_FILES];
-    uint64_t last_progress[MAX_FILES];
-    uint32_t line_id[MAX_FILES];
-    int filenums[MAX_FILES];
+    char filename[MAX_STR_SIZE];
+    int filenum;
+    FILE *file;
+    bool pending;
+    bool active;
+    uint64_t size;
+    double bps;
+    uint64_t last_progress;
+    uint32_t line_id;
 };
 
 struct LastOnline {
@@ -63,7 +63,7 @@ typedef struct {
     bool logging_on;    /* saves preference for friend irrespective of chat windows */
     uint8_t status;
     struct LastOnline last_online;
-    struct FileReceiver file_receiver;
+    struct FileReceiver file_receiver[MAX_FILES];
 } ToxicFriend;
 
 typedef struct {
