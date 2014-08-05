@@ -1,7 +1,7 @@
 language: c
 compiler:
   - gcc
-  - clang
+  # - clang  # Fix me
 
 before_script:
   # Installing yasm (needed for compiling vpx) and openal
@@ -32,16 +32,12 @@ before_script:
   - cd ..
   # Creating libraries links and updating cache
   - sudo ldconfig > /dev/null
-  #installing check, needed for unit tests
-  - sudo apt-get install check > /dev/null
   # Installing toxcore
   - git clone https://github.com/irungentoo/toxcore.git toxcore
   - cd toxcore
   - autoreconf -i
-  - CFLAGS="-Ofast -Wall -Wextra" ./configure --disable-daemon --disable-ntox
-  - make -j3
-  - make check
-  - make dist
+  - ./configure --disable-tests --disable-ntox --disable-daemon --enable-av
+  - make -j2 || make || exit 1
   - sudo make install
   - cd ..
 script:
