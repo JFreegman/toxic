@@ -26,6 +26,10 @@
 #include "toxic.h"
 #include "windows.h"
 
+#define KiB 1024
+#define MiB 1048576       /* 1024 ^ 2 */
+#define GiB 1073741824    /* 1024 ^ 3 */
+
 #define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
 #define MAX_FILES 32
 #define TIMEOUT_FILESENDER 120

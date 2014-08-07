@@ -77,7 +77,7 @@ typedef struct {
 
 typedef struct {
     int num_selected;
-    int max_idx;    /* 1 + the index of the last friend in friends array */
+    int max_idx;    /* 1 + the index of the last friend in list */
     int num_friends;
     int *index;
     ToxicFriend *list;

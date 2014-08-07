@@ -496,9 +496,6 @@ int get_num_active_windows(void)
 /* destroys all chat and groupchat windows (should only be called on shutdown) */
 void kill_all_windows(Tox *m)
 {
-    kill_prompt_window(prompt);
-    kill_friendlist();
-
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -507,4 +504,7 @@ void kill_all_windows(Tox *m)
         else if (windows[i].is_groupchat)
             kill_groupchat_window(&windows[i]);
     }
+
+    kill_prompt_window(prompt);
+    kill_friendlist();
 }

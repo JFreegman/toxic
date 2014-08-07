@@ -103,4 +103,7 @@ int char_find(int idx, const char *s, char ch);
    returns 0 if char not found */
 int char_rfind(const char *s, char ch, int len);
 
+/* Converts bytes to appropriate unit and puts in buf as a string */
+void bytes_convert_str(char *buf, int size, uint64_t bytes);
+
 #endif /* #define _misc_tools_h */

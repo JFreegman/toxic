@@ -38,10 +38,6 @@ uint8_t max_file_senders_index;
 uint8_t num_active_file_senders;
 extern _Friends Friends;
 
-#define KiB 1024
-#define MiB 1048576       /* 1024 ^ 2 */
-#define GiB 1073741824    /* 1024 ^ 3 */
-
 /* creates initial progress line that will be updated during file transfer.
    Assumes progline is of size MAX_STR_SIZE */
 void prep_prog_line(char *progline)
@@ -70,23 +66,10 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done
         line_id = Friends.list[friendnum].file_receiver[idx].line_id;
     }
 
-    const char *unit;
-
-    if (bps < KiB) {
-        unit = "B/s";
-    } else if (bps < MiB) {
-        unit = "KiB/s";
-        bps /= (double) KiB;
-    } else if (bps < GiB) {
-        unit = "MiB/s";
-        bps /= (double) MiB;
-    } else {
-        unit = "GiB/s";
-        bps /= (double) GiB;
-    }
-
     char msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "%.1f %s [", bps, unit);
+    bytes_convert_str(msg, sizeof(msg), bps);
+    strcat(msg, "/s [");
+
     int n = pct_done / (100 / NUM_PROG_MARKS);
     int i, j;
 

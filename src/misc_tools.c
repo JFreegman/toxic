@@ -31,6 +31,7 @@
 #include "windows.h"
 #include "misc_tools.h"
 #include "settings.h"
+#include "file_senders.h"
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings_;
@@ -260,4 +261,26 @@ int char_rfind(const char *s, char ch, int len)
     }
 
     return i;
+}
+
+/* Converts bytes to appropriate unit and puts in buf as a string */
+void bytes_convert_str(char *buf, int size, uint64_t bytes)
+{
+    double conv = bytes;
+    const char *unit;
+
+    if (conv < KiB) {
+        unit = "Bytes";
+    } else if (conv < MiB) {
+        unit = "KiB";
+        conv /= (double) KiB;
+    } else if (conv < GiB) {
+        unit = "MiB";
+        conv /= (double) MiB;
+    } else {
+        unit = "GiB";
+        conv /= (double) GiB;
+    }
+
+    snprintf(buf, size, "%.1f %s", conv, unit);
 }

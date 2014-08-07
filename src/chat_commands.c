@@ -250,7 +250,11 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             file_senders[i].size = filesize;
             file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                              tox_file_data_size(m, self->num), file_to_send);
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s'", filenum, filename);
+
+            char sizestr[32];
+            bytes_convert_str(sizestr, sizeof(sizestr), filesize);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, 
+                          "Sending file [%d]: '%s' (%s)", filenum, filename, sizestr);
 
             ++num_active_file_senders;
 

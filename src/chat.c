@@ -222,9 +222,9 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *acti
     write_to_log(action, nick, ctx->log, true);
     
     if (self->active_box != -1)
-        box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
     else
-        box_notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action );
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action );
 }
 
 static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *nick, uint16_t len)
@@ -280,9 +280,11 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     /* holds the lone filename */
     char filename_nopath[MAX_STR_SIZE];
     get_file_name(filename_nopath, sizeof(filename_nopath), pathname);
+    char sizestr[32];
+    bytes_convert_str(sizestr, sizeof(sizestr), filesize);
     int len = strlen(filename_nopath);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%llu bytes).",
-                                                   filename_nopath, (long long unsigned int) filesize);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)",
+                                                          filename_nopath, sizestr);
 
     if (filenum >= MAX_FILES) {
         errmsg = "Too many pending file requests; discarding.";
@@ -341,10 +343,10 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     strcpy(Friends.list[num].file_receiver[filenum].filename, filename);
 
     if (self->active_box != -1)
-        box_notify2(self, transfer_pending, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, 
+        box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box, 
                     "Incoming file: %s", filename );
     else
-        box_notify(self, transfer_pending, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, self->name, 
+        box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, &self->active_box, self->name, 
                     "Incoming file: %s", filename );
 }
 
