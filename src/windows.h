@@ -52,7 +52,7 @@ enum {
     BLACK,
 } C_COLOURS;
 
-/* tab alert types: lower types take priority */
+/* tab alert types: lower types take priority (this relies on the order of C_COLOURS) */
 typedef enum {
     WINDOW_ALERT_NONE = 0,
     WINDOW_ALERT_0 = GREEN,

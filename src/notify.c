@@ -443,10 +443,10 @@ void m_notify_action(NotifyNotification *box, char *action, void* data)
 int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator)
 {
     /* Consider colored notify as primary */
-    if (self && self->alert == WINDOW_ALERT_NONE) {
+    if (self) {
         if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
-        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
+        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
+        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
     if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
@@ -487,10 +487,10 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
 int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
 {
     /* Consider colored notify as primary */
-    if (self && self->alert == WINDOW_ALERT_NONE) {
+    if (self) {
         if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
-        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
+        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
+        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
     if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
@@ -636,10 +636,10 @@ int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, con
 int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const char* title, const char* format, ...)
 {
     /* Always do colored notify */
-    if (self && self->alert == WINDOW_ALERT_NONE) {
+    if (self) {
         if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
-        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
+        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
+        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
     if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
@@ -692,10 +692,10 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
 int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* format, ...)
 {
     /* Always do colored notify */
-    if (self && self->alert == WINDOW_ALERT_NONE) {
+    if (self) {
         if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if (flags & NT_WNDALERT_1) self->alert = WINDOW_ALERT_1;
-        else if (flags & NT_WNDALERT_2) self->alert = WINDOW_ALERT_2;
+        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
+        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
     if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||

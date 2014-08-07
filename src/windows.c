@@ -368,13 +368,12 @@ void on_window_resize(void)
     }
 }
 
-static void draw_window_tab(ToxWindow toxwin)
+static void draw_window_tab(ToxWindow *toxwin)
 {
-    if (toxwin.alert) attron(COLOR_PAIR(toxwin.alert));
+    if (toxwin->alert != WINDOW_ALERT_NONE) attron(COLOR_PAIR(toxwin->alert));
     clrtoeol();
-    printw(" [%s]", toxwin.name);
-
-    if (toxwin.alert) attroff(COLOR_PAIR(toxwin.alert));
+    printw(" [%s]", toxwin->name);
+    if (toxwin->alert != WINDOW_ALERT_NONE) attroff(COLOR_PAIR(toxwin->alert));
 }
 
 static void draw_bar(void)
@@ -404,7 +403,7 @@ static void draw_bar(void)
 
             attron(A_BOLD);
 
-        draw_window_tab(windows[i]);
+        draw_window_tab(&windows[i]);
 
         if (windows + i == active_window)
 
