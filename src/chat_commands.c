@@ -34,8 +34,7 @@
 #include "file_senders.h"
 
 extern ToxWindow *prompt;
-
-extern ToxicFriend friends[MAX_FRIENDS_NUM];
+extern _Friends Friends;
 
 extern FileSender file_senders[MAX_FILES];
 extern uint8_t max_file_senders_index;
@@ -57,12 +56,12 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     }
 
     if (strcasecmp(inoutstr, "in") == 0) {    /* cancel an incoming file transfer */
-        if (!friends[self->num].file_receiver[filenum].active) {
+        if (!Friends.list[self->num].file_receiver[filenum].active) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
             return;  
         }
 
-        const char *filepath = friends[self->num].file_receiver[filenum].filename;
+        const char *filepath = Friends.list[self->num].file_receiver[filenum].filename;
         char name[MAX_STR_SIZE];
         get_file_name(name, sizeof(name), filepath);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' canceled.", name);
@@ -124,9 +123,9 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    const char *groupkey = friends[self->num].groupchat_key;
+    const char *groupkey = Friends.list[self->num].groupchat_key;
 
-    if (!friends[self->num].groupchat_pending) {
+    if (!Friends.list[self->num].groupchat_pending) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending group chat invite.");
         return;
     }
@@ -159,12 +158,12 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    if (!friends[self->num].file_receiver[filenum].pending) {
+    if (!Friends.list[self->num].file_receiver[filenum].pending) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
-    const char *filename = friends[self->num].file_receiver[filenum].filename;
+    const char *filename = Friends.list[self->num].file_receiver[filenum].filename;
 
     if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%d] as: '%s'", filenum, filename);
@@ -173,9 +172,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         char progline[MAX_STR_SIZE];
         prep_prog_line(progline);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-        friends[self->num].file_receiver[filenum].line_id = self->chatwin->hst->line_end->id + 2;
+        Friends.list[self->num].file_receiver[filenum].line_id = self->chatwin->hst->line_end->id + 2;
 
-        if ((friends[self->num].file_receiver[filenum].file = fopen(filename, "a")) == NULL) {
+        if ((Friends.list[self->num].file_receiver[filenum].file = fopen(filename, "a")) == NULL) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Error writing to file.");
             tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
         }
@@ -183,8 +182,8 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed.");
     }
 
-    friends[self->num].file_receiver[filenum].pending = false;
-    friends[self->num].file_receiver[filenum].active = true;
+    Friends.list[self->num].file_receiver[filenum].pending = false;
+    Friends.list[self->num].file_receiver[filenum].active = true;
 }
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

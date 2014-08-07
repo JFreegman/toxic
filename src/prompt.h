@@ -32,6 +32,13 @@
 #define AC_NUM_GLOB_COMMANDS 14
 #endif /* _AUDIO */
 
+#define MAX_FRIEND_REQUESTS 32
+
+typedef struct {
+    int index;
+    uint8_t list[MAX_FRIEND_REQUESTS][TOX_CLIENT_ID_SIZE];
+} _FriendRequests;
+
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m);

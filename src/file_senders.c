@@ -36,7 +36,7 @@
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
 uint8_t num_active_file_senders;
-extern ToxicFriend friends[MAX_FRIENDS_NUM];
+extern _Friends Friends;
 
 #define KiB 1024
 #define MiB 1048576       /* 1024 ^ 2 */
@@ -66,8 +66,8 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done
         bps = file_senders[idx].bps;
         line_id = file_senders[idx].line_id;
     } else {
-        bps = friends[friendnum].file_receiver[idx].bps;
-        line_id = friends[friendnum].file_receiver[idx].line_id;
+        bps = Friends.list[friendnum].file_receiver[idx].bps;
+        line_id = Friends.list[friendnum].file_receiver[idx].line_id;
     }
 
     const char *unit;
@@ -88,12 +88,10 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done
     char msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "%.1f %s [", bps, unit);
     int n = pct_done / (100 / NUM_PROG_MARKS);
-    int i;
+    int i, j;
 
     for (i = 0; i < n; ++i)
         strcat(msg, "#");
-
-    int j;
 
     for (j = i; j < NUM_PROG_MARKS; ++j)
         strcat(msg, "-");

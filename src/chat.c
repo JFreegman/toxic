@@ -52,7 +52,7 @@
 extern char *DATA_FILE;
 
 extern FileSender file_senders[MAX_FILES];
-extern ToxicFriend friends[MAX_FRIENDS_NUM];
+extern _Friends Friends;
 
 extern struct _Winthread Winthread;
 extern struct user_settings *user_settings_;
@@ -185,12 +185,12 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
 
     if (status == 1) { /* Friend goes online */
         statusbar->is_online = true;
-        friends[num].is_typing = user_settings_->show_typing_other == SHOW_TYPING_ON 
+        Friends.list[num].is_typing = user_settings_->show_typing_other == SHOW_TYPING_ON 
                                  ? tox_get_is_typing(m, num) : 0;
                                  
     } else { /* Friend goes offline */
         statusbar->is_online = false;
-        friends[num].is_typing = 0;
+        Friends.list[num].is_typing = 0;
 
         if (self->chatwin->self_is_typing)
             set_self_typingstatus(self, m, 0);
@@ -202,7 +202,7 @@ static void chat_onTypingChange(ToxWindow *self, Tox *m, int32_t num, uint8_t is
     if (self->num != num)
         return;
 
-    friends[num].is_typing = is_typing;
+    Friends.list[num].is_typing = is_typing;
 }
 
 static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *action, uint16_t len)
@@ -296,7 +296,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         len += strlen(user_settings_->download_path);
     }
 
-    if (len >= sizeof(friends[num].file_receiver[filenum].filename)) {
+    if (len >= sizeof(Friends.list[num].file_receiver[filenum].filename)) {
         errmsg = "File name too long; discarding.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
@@ -336,9 +336,9 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", filenum);
 
-    friends[num].file_receiver[filenum].pending = true;
-    friends[num].file_receiver[filenum].size = filesize;
-    strcpy(friends[num].file_receiver[filenum].filename, filename);
+    Friends.list[num].file_receiver[filenum].pending = true;
+    Friends.list[num].file_receiver[filenum].size = filesize;
+    strcpy(Friends.list[num].file_receiver[filenum].filename, filename);
 
     if (self->active_box != -1)
         box_notify2(self, transfer_pending, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, 
@@ -355,12 +355,12 @@ void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL)
     if (CTRL > 0)
         tox_file_send_control(m, friendnum, 1, filenum, CTRL, 0, 0);
 
-    FILE *file = friends[friendnum].file_receiver[filenum].file;
+    FILE *file = Friends.list[friendnum].file_receiver[filenum].file;
 
     if (file != NULL)
         fclose(file);
 
-    memset(&friends[friendnum].file_receiver[filenum], 0, sizeof(struct FileReceiver));
+    memset(&Friends.list[friendnum].file_receiver[filenum], 0, sizeof(struct FileReceiver));
 }
 
 static void close_all_file_receivers(Tox *m, int friendnum)
@@ -368,7 +368,7 @@ static void close_all_file_receivers(Tox *m, int friendnum)
     int i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        if (friends[friendnum].file_receiver[i].active)
+        if (Friends.list[friendnum].file_receiver[i].active)
             chat_close_file_receiver(m, i, friendnum, TOX_FILECONTROL_KILL);
     }
 }
@@ -384,7 +384,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     int i = 0;   /* file_sender index */
 
     if (receive_send == 0) {
-        filename = friends[num].file_receiver[filenum].filename;
+        filename = Friends.list[num].file_receiver[filenum].filename;
     } else {
         for (i = 0; i < MAX_FILES; ++i) {
             if (file_senders[i].active && file_senders[i].filenum == filenum)
@@ -457,7 +457,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     if (self->num != num)
         return;
 
-    FILE *fp = friends[num].file_receiver[filenum].file;
+    FILE *fp = Friends.list[num].file_receiver[filenum].file;
 
     if (fp) {
         if (fwrite(data, length, 1, fp) != 1) {
@@ -466,17 +466,17 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
         }
     }
 
-    friends[num].file_receiver[filenum].bps += length;
+    Friends.list[num].file_receiver[filenum].bps += length;
     double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
     uint64_t curtime = get_unix_time();
 
     /* refresh line with percentage complete and transfer speed (must be called once per second) */
-    if (!remain || timed_out(friends[num].file_receiver[filenum].last_progress, curtime, 1)) {
-        friends[num].file_receiver[filenum].last_progress = curtime;
-        uint64_t size = friends[num].file_receiver[filenum].size;
+    if (!remain || timed_out(Friends.list[num].file_receiver[filenum].last_progress, curtime, 1)) {
+        Friends.list[num].file_receiver[filenum].last_progress = curtime;
+        uint64_t size = Friends.list[num].file_receiver[filenum].size;
         double pct_done = remain > 0 ? (1 - (remain / size)) * 100 : 100;
         print_progress_bar(self, filenum, num, pct_done);
-        friends[num].file_receiver[filenum].bps = 0;
+        Friends.list[num].file_receiver[filenum].bps = 0;
     }
 }
 
@@ -491,9 +491,9 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 
-    memcpy(friends[friendnumber].groupchat_key, group_pub_key, 
-           sizeof(friends[friendnumber].groupchat_key));
-    friends[friendnumber].groupchat_pending = true;
+    memcpy(Friends.list[friendnumber].groupchat_key, group_pub_key, 
+           sizeof(Friends.list[friendnumber].groupchat_key));
+    Friends.list[friendnumber].groupchat_pending = true;
 
     
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
@@ -910,14 +910,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, " %s", ONLINE_CHAR);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
-        if (friends[self->num].is_typing)
+        if (Friends.list[self->num].is_typing)
             wattron(statusbar->topline, COLOR_PAIR(YELLOW));
 
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s ", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
 
-        if (friends[self->num].is_typing)
+        if (Friends.list[self->num].is_typing)
             wattroff(statusbar->topline, COLOR_PAIR(YELLOW));
     } else {
         wprintw(statusbar->topline, " %s", OFFLINE_CHAR);
@@ -958,7 +958,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int i;
 
     for (i = 0; i < KEY_IDENT_DIGITS; ++i)
-        wprintw(statusbar->topline, "%02X", friends[self->num].pub_key[i] & 0xff);
+        wprintw(statusbar->topline, "%02X", Friends.list[self->num].pub_key[i] & 0xff);
 
     wprintw(statusbar->topline, "}\n");
 
@@ -1022,8 +1022,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (friends[self->num].logging_on)
-        log_enable(nick, friends[self->num].pub_key, ctx->log);
+    if (Friends.list[self->num].logging_on)
+        log_enable(nick, Friends.list[self->num].pub_key, ctx->log);
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 

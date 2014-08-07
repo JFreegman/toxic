@@ -100,9 +100,6 @@ void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t len
 
 void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
 {
-    if (friendnumber < 0 || friendnumber > MAX_FRIENDS_NUM)
-        return;
-
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -500,6 +497,7 @@ int get_num_active_windows(void)
 void kill_all_windows(Tox *m)
 {
     kill_prompt_window(prompt);
+    kill_friendlist();
 
     int i;
 

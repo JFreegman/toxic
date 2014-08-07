@@ -42,12 +42,10 @@
 #include "notify.h"
 #include "autocomplete.h"
 
-char pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
-uint16_t num_frnd_requests = 0;
 extern ToxWindow *prompt;
-struct _Winthread Winthread;
-
 extern struct user_settings *user_settings_;
+
+_FriendRequests FriendRequests;
 
 /* Array of global command names used for tab completion. */
 const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -126,20 +124,20 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 }
 
 /* Adds friend request to pending friend requests.
-   Returns request number on success, -1 if queue is full or other error. */
+   Returns request number on success, -1 if queue is full. */
 static int add_friend_request(const char *public_key)
 {
-    if (num_frnd_requests >= MAX_FRIENDS_NUM)
+    if (FriendRequests.index >= MAX_FRIEND_REQUESTS)
         return -1;
 
     int i;
 
-    for (i = 0; i <= num_frnd_requests; ++i) {
-        if (!strlen(pending_frnd_requests[i])) {
-            memcpy(pending_frnd_requests[i], public_key, TOX_CLIENT_ID_SIZE);
+    for (i = 0; i <= FriendRequests.index; ++i) {
+        if (FriendRequests.list[i][0] == '\0') {
+            memcpy(FriendRequests.list[i], public_key, TOX_CLIENT_ID_SIZE);
 
-            if (i == num_frnd_requests)
-                ++num_frnd_requests;
+            if (i == FriendRequests.index)
+                ++FriendRequests.index;
 
             return i;
         }
@@ -345,7 +343,6 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     if (n == -1) {
         const char *errmsg = "Friend request queue is full. Discarding request.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
-        write_to_log(errmsg, "", ctx->log, true);
         return;
     }
 

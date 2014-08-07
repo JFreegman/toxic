@@ -37,11 +37,8 @@
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
-
-extern ToxicFriend friends[MAX_FRIENDS_NUM];
-
-extern char pending_frnd_requests[MAX_FRIENDS_NUM][TOX_CLIENT_ID_SIZE];
-extern uint8_t num_frnd_requests;
+extern _Friends Friends;
+extern _FriendRequests FriendRequests;
 
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -53,18 +50,18 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     int req = atoi(argv[1]);
 
-    if ((req == 0 && strcmp(argv[1], "0")) || req >= MAX_FRIENDS_NUM) {
+    if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req >= MAX_FRIEND_REQUESTS) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
 
-    if (!strlen(pending_frnd_requests[req])) {
+    if (FriendRequests.list[req][0] == '\0') {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
 
     const char *msg;
-    int32_t friendnum = tox_add_friend_norequest(m, (uint8_t *) pending_frnd_requests[req]);
+    int32_t friendnum = tox_add_friend_norequest(m, FriendRequests.list[req]);
 
     if (friendnum == -1)
         msg = "Failed to add friend.";
@@ -73,16 +70,17 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         on_friendadded(m, friendnum, true);
     }
 
-    memset(&pending_frnd_requests[req], 0, TOX_CLIENT_ID_SIZE);
+    memset(&FriendRequests.list[req], 0, TOX_CLIENT_ID_SIZE);
 
     int i;
 
-    for (i = num_frnd_requests; i > 0; --i) {
-        if (!strlen(pending_frnd_requests[i - 1]))
+    for (i = FriendRequests.index; i > 0; --i) {
+        if (FriendRequests.list[i - 1][0] == '\0')
             break;
     }
 
-    num_frnd_requests = i;
+    FriendRequests.index = i;
+
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 }
 
@@ -258,8 +256,8 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
 
         if (self->is_chat) {
-            friends[self->num].logging_on = true;
-            log_enable(self->name, friends[self->num].pub_key, log);
+            Friends.list[self->num].logging_on = true;
+            log_enable(self->name, Friends.list[self->num].pub_key, log);
         } else if (self->is_prompt) {
             char myid[TOX_FRIEND_ADDRESS_SIZE];
             tox_get_address(m, (uint8_t *) myid);
@@ -273,7 +271,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
         if (self->is_chat)
-            friends[self->num].logging_on = false;
+            Friends.list[self->num].logging_on = false;
 
         log_disable(log);
 

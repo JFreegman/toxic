@@ -60,7 +60,7 @@ typedef struct {
     bool active;
     bool online;
     uint8_t is_typing;
-    bool logging_on;    /* saves preference for friend irrespective of chat windows */
+    bool logging_on;    /* saves preference for friend irrespective of global settings */
     uint8_t status;
     struct LastOnline last_online;
     struct FileReceiver file_receiver[MAX_FILES];
@@ -75,11 +75,19 @@ typedef struct {
     uint64_t last_on;
 } BlockedFriend;
 
+typedef struct {
+    int num_selected;
+    int max_idx;    /* 1 + the index of the last friend in friends array */
+    int num_friends;
+    int *index;
+    ToxicFriend *list;
+} _Friends;
+
 ToxWindow new_friendlist(void);
 void disable_chatwin(int32_t f_num);
 int get_friendnum(uint8_t *name);
 int load_blocklist(char *data);
-
+void kill_friendlist(void);
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort);
 
 /* sorts friendlist_index first by connection status then alphabetically */

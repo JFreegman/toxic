@@ -42,7 +42,6 @@
 
 #define UNKNOWN_NAME "Anonymous"
 
-#define MAX_FRIENDS_NUM 999
 #define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
