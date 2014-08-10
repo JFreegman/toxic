@@ -44,6 +44,7 @@
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings_;
+extern struct _Winthread Winthread;
 
 _FriendRequests FriendRequests;
 
@@ -267,6 +268,29 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wattroff(statusbar->topline, A_BOLD);
     }
 
+    /* Reset statusbar->statusmsg on window resize */
+    if (x2 != self->x) {
+        char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {0};
+
+        pthread_mutex_lock(&Winthread.lock);
+        tox_get_self_status_message(m, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        pthread_mutex_unlock(&Winthread.lock);
+
+        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+        statusbar->statusmsg_len = strlen(statusbar->statusmsg);
+    }
+
+    self->x = x2;
+
+    /* Truncate note if it doesn't fit in statusbar */
+    uint16_t maxlen = x2 - getcurx(statusbar->topline) - 3;
+
+    if (statusbar->statusmsg_len > maxlen) {
+        statusbar->statusmsg[maxlen - 3] = '\0';
+        strcat(statusbar->statusmsg, "...");
+        statusbar->statusmsg_len = maxlen;
+    }
+
     if (statusbar->statusmsg[0])
         wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
 
@@ -376,10 +400,11 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     strcpy(ver, TOXICVER);
     const char *toxic_ver = strtok(ver, "_");
 
-    if ( (!statusmsg[0] || !strncmp("Toxing on Toxic", statusmsg, 15)) && toxic_ver != NULL) {
-        snprintf(statusmsg, MAX_STR_SIZE, "Toxing on Toxic v.%s", toxic_ver);
+    if ( (s_len <= 0 || !strncmp("Toxing on Toxic", statusmsg, strlen("Toxing on Toxic"))) && toxic_ver != NULL) {
+        snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver);
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
+        tox_set_status_message(m, (uint8_t *) statusmsg, (uint64_t) s_len); 
     }
 
     prompt_update_statusmessage(prompt, statusmsg);
