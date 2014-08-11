@@ -124,7 +124,7 @@ char *hex_string_to_bin(const char *hex_string)
     return val;
 }
 
-int hex_string_to_bytes(char *buf, int size, const char *keystr, int strsize)
+int hex_string_to_bytes(char *buf, int size, const char *keystr)
 {
     if (size % 2 != 0)
         return -1;

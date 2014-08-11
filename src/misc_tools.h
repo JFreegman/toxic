@@ -43,12 +43,12 @@ void host_to_net(uint8_t *num, uint16_t numbytes);
 char *hex_string_to_bin(const char *hex_string);
 
 /* convert a hex string to bytes. returns 0 on success, -1 on failure */
-int hex_string_to_bytes(char *buf, int size, const char *keystr, int strsize);
+int hex_string_to_bytes(char *buf, int size, const char *keystr);
 
 /* get the current unix time */
 uint64_t get_unix_time(void);
 
-/*Puts the current time in buf in the format of [HH:mm:ss] */
+/* Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(char *buf, int bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */

@@ -43,7 +43,7 @@
 #include "configdir.h"
 
 #define DNS3_KEY_SIZE 32
-#define MAX_DNS_REQST_SIZE 256
+#define MAX_DNS_REQST_SIZE 255
 #define NUM_DNS3_BACKUP_SERVERS 2    /* must correspond to number of items in dns3_servers array */
 #define TOX_DNS3_TXT_PREFIX "v=tox3;id="
 
@@ -87,8 +87,8 @@ static struct _dns_thread {
 
 
 #define MAX_DNS_SERVERS 50
-#define MAX_DOMAIN_SIZE 128
-#define MAX_DNS_LINE MAX_DOMAIN_SIZE + DNS3_KEY_SIZE + 2
+#define MAX_DOMAIN_SIZE 32
+#define MAX_DNS_LINE MAX_DOMAIN_SIZE + (DNS3_KEY_SIZE * 2) + 3
 
 struct _dns3_servers {
     bool loaded;
@@ -108,7 +108,7 @@ static int load_dns_domainlist(void)
     char line[MAX_DNS_LINE];
 
     while (fgets(line, sizeof(line), fp) && dns3_servers.lines < MAX_DNS_SERVERS) {
-        if (strlen(line) < (2 * DNS3_KEY_SIZE) + 4)
+        if (strlen(line) < (DNS3_KEY_SIZE * 2) + 4)
             continue;
 
         const char *name = strtok(line, " ");
@@ -118,7 +118,7 @@ static int load_dns_domainlist(void)
             continue;
 
         snprintf(dns3_servers.names[dns3_servers.lines], sizeof(dns3_servers.names[dns3_servers.lines]), "%s", name);
-        int res = hex_string_to_bytes(dns3_servers.keys[dns3_servers.lines], DNS3_KEY_SIZE, keystr, strlen(keystr));
+        int res = hex_string_to_bytes(dns3_servers.keys[dns3_servers.lines], DNS3_KEY_SIZE, keystr);
 
         if (res == -1)
             continue;
@@ -210,6 +210,9 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
 
     if (!size || txt_len >= size || !txt_len)
         return dns_error(self, "No record found.");
+
+    if (txt_len > MAX_DNS_REQST_SIZE)
+        return dns_error(self, "Invalid DNS response.");
 
     ans_pt++;
     ans_pt[txt_len] = '\0';
@@ -307,7 +310,7 @@ void *dns3_lookup_thread(void *data)
         kill_dns_thread(NULL);
     }
 
-    char string[MAX_DNS_REQST_SIZE];
+    char string[MAX_DNS_REQST_SIZE + 1];
     uint32_t request_id;
 
     int str_len = tox_generate_dns3_string(dns_obj, (uint8_t *) string, sizeof(string), &request_id, 
@@ -321,7 +324,7 @@ void *dns3_lookup_thread(void *data)
     string[str_len] = '\0';
 
     u_char answer[PACKETSZ];
-    char d_string[MAX_DNS_REQST_SIZE];
+    char d_string[MAX_DOMAIN_SIZE + MAX_DNS_REQST_SIZE + 10];
 
     /* format string and create dns query */
     snprintf(d_string, sizeof(d_string), "_%s._tox.%s", string, domain);
@@ -332,13 +335,13 @@ void *dns3_lookup_thread(void *data)
         kill_dns_thread(dns_obj);
     }
 
-    char ans_id[MAX_DNS_REQST_SIZE];
+    char ans_id[MAX_DNS_REQST_SIZE + 1];
 
     /* extract TXT from DNS response */
     if (parse_dns_response(self, answer, ans_len, ans_id) == -1)
         kill_dns_thread(dns_obj);
 
-    char encrypted_id[MAX_DNS_REQST_SIZE];
+    char encrypted_id[MAX_DNS_REQST_SIZE + 1];
     int prfx_len = strlen(TOX_DNS3_TXT_PREFIX);
 
     /* extract the encrypted ID from TXT response */
