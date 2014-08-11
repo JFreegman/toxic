@@ -124,6 +124,25 @@ char *hex_string_to_bin(const char *hex_string)
     return val;
 }
 
+int hex_string_to_bytes(char *buf, int size, const char *keystr, int strsize)
+{
+    if (size % 2 != 0)
+        return -1;
+
+    int i, res;
+    const char *pos = keystr;
+
+    for (i = 0; i < size; ++i) {
+        res = sscanf(pos, "%2hhx", &buf[i]);
+        pos += 2;
+
+        if (res == EOF || res < 1)
+            return -1;
+    }
+
+    return 0;
+}
+
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string)
 {

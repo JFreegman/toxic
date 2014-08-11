@@ -1,7 +1,7 @@
 MISC_DIR = ../misc
 DOC_DIR = ../doc
 SND_DIR = ../sounds
-DATAFILES = DHTnodes toxic.conf.example
+DATAFILES = DHTnodes DNSservers toxic.conf.example
 MANFILES = toxic.1 toxic.conf.5
 SNDFILES = ContactLogsIn.wav ContactLogsOut.wav Error.wav IncomingCall.wav
 SNDFILES += LogIn.wav LogOut.wav NewMessage.wav OutgoingCall.wav

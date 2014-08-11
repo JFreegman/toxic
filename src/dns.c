@@ -40,19 +40,21 @@
 #include "dns.h"
 #include "global_commands.h"
 #include "misc_tools.h"
+#include "configdir.h"
 
+#define DNS3_KEY_SIZE 32
 #define MAX_DNS_REQST_SIZE 256
-#define NUM_DNS3_SERVERS 2    /* must correspond to number of items in dns3_servers array */
+#define NUM_DNS3_BACKUP_SERVERS 2    /* must correspond to number of items in dns3_servers array */
 #define TOX_DNS3_TXT_PREFIX "v=tox3;id="
-#define DNS3_KEY_SZ 32
 
 extern struct _Winthread Winthread;
+extern struct _dns3_servers dns3_servers;
 
-/* TODO: process keys from key file instead of hard-coding like a noob */
-static struct dns3_server {
+/* Hardcoded backup in case domain list is not loaded */
+static struct dns3_server_backup {
     const char *name;
-    char key[DNS3_KEY_SZ];
-} dns3_servers[] = {
+    char key[DNS3_KEY_SIZE];
+} dns3_servers_backup[] = {
     {
         "utox.org",
         {
@@ -83,6 +85,54 @@ static struct _dns_thread {
     pthread_attr_t attr;
 } dns_thread;
 
+
+#define MAX_DNS_SERVERS 50
+#define MAX_DOMAIN_SIZE 128
+#define MAX_DNS_LINE MAX_DOMAIN_SIZE + DNS3_KEY_SIZE + 2
+
+struct _dns3_servers {
+    bool loaded;
+    int lines;
+    char names[MAX_DNS_SERVERS][MAX_DOMAIN_SIZE];
+    char keys[MAX_DNS_SERVERS][DNS3_KEY_SIZE];
+} dns3_servers;
+
+static int load_dns_domainlist(void)
+{
+    const char *path = PACKAGE_DATADIR "/DNSservers";
+    FILE *fp = fopen(path, "r");
+
+    if (fp == NULL)
+        return -1;
+
+    char line[MAX_DNS_LINE];
+
+    while (fgets(line, sizeof(line), fp) && dns3_servers.lines < MAX_DNS_SERVERS) {
+        if (strlen(line) < (2 * DNS3_KEY_SIZE) + 4)
+            continue;
+
+        const char *name = strtok(line, " ");
+        const char *keystr = strtok(NULL, " ");
+
+        if (name == NULL || keystr == NULL)
+            continue;
+
+        snprintf(dns3_servers.names[dns3_servers.lines], sizeof(dns3_servers.names[dns3_servers.lines]), "%s", name);
+        int res = hex_string_to_bytes(dns3_servers.keys[dns3_servers.lines], DNS3_KEY_SIZE, keystr, strlen(keystr));
+
+        if (res == -1)
+            continue;
+
+        ++dns3_servers.lines;
+    }
+
+    fclose(fp);
+
+    if (dns3_servers.lines < 1)
+        return -2;
+
+    return 0;
+}
 
 static int dns_error(ToxWindow *self, const char *errmsg)
 {
@@ -191,35 +241,61 @@ static int parse_addr(const char *addr, char *namebuf, char *dombuf)
     return strlen(namebuf);
 }
 
+/* matches input domain name with domains in list and obtains key. Return 0 on success, -1 on failure */
+static int get_domain_match(char *pubkey, char *domain, const char *inputdomain)
+{
+    /* check server list first */
+    int i;
+    bool match = false;
+
+    for (i = 0; i < dns3_servers.lines; ++i) {
+        if (strcmp(dns3_servers.names[i], inputdomain) == 0) {
+            memcpy(pubkey, dns3_servers.keys[i], DNS3_KEY_SIZE);
+            snprintf(domain, MAX_DOMAIN_SIZE, "%s", dns3_servers.names[i]);
+            match = true;
+            break;
+        }
+    }
+
+    /* fall back to hard-coded domains on server list failure */
+    if (!match) {
+        for (i = 0; i < NUM_DNS3_BACKUP_SERVERS; ++i) {
+            if (strcmp(dns3_servers_backup[i].name, inputdomain) == 0) {
+                memcpy(pubkey, dns3_servers_backup[i].key, DNS3_KEY_SIZE);
+                snprintf(domain, MAX_DOMAIN_SIZE, "%s", dns3_servers_backup[i].name);
+                match = true;
+                break;
+            }
+        }
+
+        if (!match)
+            return -1;
+    }
+
+    return 0;
+}
+
 /* Does DNS lookup for addr and puts resulting tox id in id_bin. */
 void *dns3_lookup_thread(void *data)
 {
     ToxWindow *self = t_data.self;
 
-    char domain[MAX_STR_SIZE];
+    char inputdomain[MAX_STR_SIZE];
     char name[MAX_STR_SIZE];
 
-    int namelen = parse_addr(t_data.addr, name, domain);
+    int namelen = parse_addr(t_data.addr, name, inputdomain);
 
     if (namelen == -1) {
         dns_error(self, "Must be a Tox ID or an address in the form username@domain");
         kill_dns_thread(NULL);
     }
 
-    /* get domain name/pub key */
-    const char *DNS_pubkey = NULL;
-    const char *domname = NULL;
-    int i;
+    char DNS_pubkey[DNS3_KEY_SIZE];
+    char domain[MAX_DOMAIN_SIZE];
 
-    for (i = 0; i < NUM_DNS3_SERVERS; ++i) {
-        if (strcmp(dns3_servers[i].name, domain) == 0) {
-            DNS_pubkey = dns3_servers[i].key;
-            domname = dns3_servers[i].name;
-            break;
-        }
-    }
+    int match = get_domain_match(DNS_pubkey, domain, inputdomain);
 
-    if (domname == NULL) {
+    if (match == -1) {
         dns_error(self, "Domain not found.");
         kill_dns_thread(NULL);
     }
@@ -248,7 +324,7 @@ void *dns3_lookup_thread(void *data)
     char d_string[MAX_DNS_REQST_SIZE];
 
     /* format string and create dns query */
-    snprintf(d_string, sizeof(d_string), "_%s._tox.%s", string, domname);
+    snprintf(d_string, sizeof(d_string), "_%s._tox.%s", string, domain);
     int ans_len = res_query(d_string, C_IN, T_TXT, answer, sizeof(answer));
 
     if (ans_len <= 0) {
@@ -294,6 +370,16 @@ void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
         const char *err = "Please wait for previous user lookup to finish.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, err);
         return;
+    }
+
+    if (!dns3_servers.loaded) {
+        dns3_servers.loaded = true;
+        int ret = load_dns_domainlist();
+
+        if (ret < 0) {
+            const char *errmsg = "DNS server list failed to load with error code %d. Falling back to hard-coded list.";
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg, ret);
+        }
     }
 
     snprintf(t_data.id_bin, sizeof(t_data.id_bin), "%s", id_bin);

@@ -226,10 +226,10 @@ static Tox *init_tox(int ipv4)
     return m;
 }
 
-#define MINLINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
-#define MAXLINE  256 /* Approx max number of chars in a sever line (name + port + key) */
+#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
+#define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
-#define NODELEN (MAXLINE - TOX_CLIENT_ID_SIZE - 7)
+#define NODELEN (MAX_NODE_LINE - TOX_CLIENT_ID_SIZE - 7)
 
 static struct _toxNodes {
     int lines;
@@ -238,7 +238,7 @@ static struct _toxNodes {
     char keys[MAXNODES][TOX_CLIENT_ID_SIZE];
 } toxNodes;
 
-static int nodelist_load(const char *filename)
+static int load_nodelist(const char *filename)
 {
     if (!filename)
         return 1;
@@ -248,10 +248,10 @@ static int nodelist_load(const char *filename)
     if (fp == NULL)
         return 1;
 
-    char line[MAXLINE];
+    char line[MAX_NODE_LINE];
 
     while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
-        if (strlen(line) > MINLINE) {
+        if (strlen(line) > MIN_NODE_LINE) {
             const char *name = strtok(line, " ");
             const char *port = strtok(NULL, " ");
             const char *key_ascii = strtok(NULL, " ");
@@ -272,12 +272,11 @@ static int nodelist_load(const char *filename)
         }
     }
 
-    if (toxNodes.lines < 1) {
-        fclose(fp);
-        return 2;
-    }
-
     fclose(fp);
+
+    if (toxNodes.lines < 1)
+        return 1;
+
     return 0;
 }
 
@@ -313,11 +312,11 @@ int init_connection(Tox *m)
         int res;
 
         if (!arg_opts.nodes_path[0])
-            res = nodelist_load(PACKAGE_DATADIR "/DHTnodes");
+            res = load_nodelist(PACKAGE_DATADIR "/DHTnodes");
         else
-            res = nodelist_load(arg_opts.nodes_path);
+            res = load_nodelist(arg_opts.nodes_path);
 
-        if (toxNodes.lines < 1)
+        if (res != 0)
             return res;
 
         res = 3;

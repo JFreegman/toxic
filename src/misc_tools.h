@@ -42,6 +42,9 @@ void host_to_net(uint8_t *num, uint16_t numbytes);
 /* convert a hex string to binary */
 char *hex_string_to_bin(const char *hex_string);
 
+/* convert a hex string to bytes. returns 0 on success, -1 on failure */
+int hex_string_to_bytes(char *buf, int size, const char *keystr, int strsize);
+
 /* get the current unix time */
 uint64_t get_unix_time(void);
 
