@@ -339,6 +339,9 @@ int init_connection(Tox *m)
 
 static void do_connection(Tox *m, ToxWindow *prompt)
 {
+    if (arg_opts.no_connect == 1)
+        return;
+
     char msg[MAX_STR_SIZE] = {0};
 
     static int conn_err = 0;
@@ -500,13 +503,14 @@ void *thread_winref(void *data)
 static void print_usage(void)
 {
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
-    fprintf(stderr, "  -f, --file               Use specified data file\n");
-    fprintf(stderr, "  -x, --nodata             Ignore data file\n");
     fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
-    fprintf(stderr, "  -d, --default_locale     Use default locale\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
-    fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
+    fprintf(stderr, "  -d, --default_locale     Use default locale\n");
+    fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
+    fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
+    fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
+    fprintf(stderr, "  -x, --nodata             Ignore data file\n");
 }
 
 static void set_default_opts(void)
@@ -515,6 +519,7 @@ static void set_default_opts(void)
     arg_opts.ignore_data_file = 0;
     arg_opts.default_locale = 0;
     arg_opts.use_custom_data = 0;
+    arg_opts.no_connect = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -529,13 +534,26 @@ static void parse_args(int argc, char *argv[])
         {"config", required_argument, 0, 'c'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
+        {"noconnect", no_argument, 0, 'o'},
     };
 
-    const char *opts_str = "4xdf:c:n:h";
+    const char *opts_str = "o4xdf:c:n:h";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
         switch (opt) {
+            case '4':
+                arg_opts.use_ipv4 = 1;
+                break;
+
+            case 'c':
+                snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
+                break;
+
+            case 'd':
+                arg_opts.default_locale = 1;
+                break;
+
             case 'f':
                 arg_opts.use_custom_data = 1;
                 DATA_FILE = strdup(optarg);
@@ -548,24 +566,16 @@ static void parse_args(int argc, char *argv[])
                 strcat(BLOCK_FILE, "-blocklist");
                 break;
 
-            case 'x':
-                arg_opts.ignore_data_file = 1;
-                break;
-
-            case '4':
-                arg_opts.use_ipv4 = 1;
-                break;
-
-            case 'c':
-                snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
-                break;
-
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
                 break;
 
-            case 'd':
-                arg_opts.default_locale = 1;
+            case 'o':
+                arg_opts.no_connect = 1;
+                break;
+
+            case 'x':
+                arg_opts.ignore_data_file = 1;
                 break;
 
             case 'h':

@@ -76,6 +76,7 @@ struct arg_opts {
     int use_ipv4;
     int default_locale;
     int use_custom_data;
+    int no_connect;
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
 };
