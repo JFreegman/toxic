@@ -102,12 +102,14 @@ void prompt_update_nick(ToxWindow *prompt, const char *nick)
     statusbar->nick_len = strlen(statusbar->nick);
 }
 
-/* Updates own statusmessage in prompt statusbar */
-void prompt_update_statusmessage(ToxWindow *prompt, const char *statusmsg)
+/* Updates own statusmessage */
+void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusmsg)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = strlen(statusbar->statusmsg);
+    int len = strlen(statusbar->statusmsg);
+    statusbar->statusmsg_len = len;
+    tox_set_status_message(m, (uint8_t *) statusmsg, (uint64_t) len); 
 }
 
 /* Updates own status in prompt statusbar */
@@ -404,10 +406,9 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
         snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver);
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
-        tox_set_status_message(m, (uint8_t *) statusmsg, (uint64_t) s_len); 
     }
 
-    prompt_update_statusmessage(prompt, statusmsg);
+    prompt_update_statusmessage(prompt, m, statusmsg);
     prompt_update_status(prompt, status);
     prompt_update_nick(prompt, nick);
 

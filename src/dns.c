@@ -108,13 +108,21 @@ static int load_dns_domainlist(void)
     char line[MAX_DNS_LINE];
 
     while (fgets(line, sizeof(line), fp) && dns3_servers.lines < MAX_DNS_SERVERS) {
-        if (strlen(line) < (DNS3_KEY_SIZE * 2) + 4)
+        int linelen = strlen(line);
+
+        if (linelen < DNS3_KEY_SIZE * 2 + 5)
             continue;
+
+        if (line[linelen - 1] == '\n')
+            line[--linelen] = '\0';
 
         const char *name = strtok(line, " ");
         const char *keystr = strtok(NULL, " ");
 
         if (name == NULL || keystr == NULL)
+            continue;
+
+        if (strlen(keystr) != DNS3_KEY_SIZE * 2)
             continue;
 
         snprintf(dns3_servers.names[dns3_servers.lines], sizeof(dns3_servers.names[dns3_servers.lines]), "%s", name);

@@ -352,8 +352,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     int len = strlen(msg) - 1;
     msg[len] = '\0';
 
-    tox_set_status_message(m, (uint8_t *) msg, (uint16_t) len);
-    prompt_update_statusmessage(prompt, msg);
+    prompt_update_statusmessage(prompt, m, msg);
 }
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -412,7 +411,6 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         int len = strlen(msg) - 1;
         msg[len] = '\0';
 
-        tox_set_status_message(m, (uint8_t *) msg, (uint16_t) len);
-        prompt_update_statusmessage(prompt, msg);
+        prompt_update_statusmessage(prompt, m, msg);
     }
 }
