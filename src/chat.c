@@ -386,12 +386,18 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
     int i = 0;   /* file_sender index */
 
     if (receive_send == 0) {
+        if (!Friends.list[num].file_receiver[filenum].active)
+            return;
+
         filename = Friends.list[num].file_receiver[filenum].filename;
     } else {
         for (i = 0; i < MAX_FILES; ++i) {
             if (file_senders[i].active && file_senders[i].filenum == filenum)
                 break;
         }
+
+        if (!file_senders[i].active)
+            return;
 
         filename = file_senders[i].filename;
     }
