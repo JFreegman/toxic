@@ -49,6 +49,7 @@
 
 extern struct _Winthread Winthread;
 extern struct _dns3_servers dns3_servers;
+extern struct arg_opts arg_opts;
 
 /* Hardcoded backup in case domain list is not loaded */
 static struct dns3_server_backup {
@@ -97,9 +98,8 @@ struct _dns3_servers {
     char keys[MAX_DNS_SERVERS][DNS3_KEY_SIZE];
 } dns3_servers;
 
-static int load_dns_domainlist(void)
+static int load_dns_domainlist(const char *path)
 {
-    const char *path = PACKAGE_DATADIR "/DNSservers";
     FILE *fp = fopen(path, "r");
 
     if (fp == NULL)
@@ -384,8 +384,9 @@ void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
     }
 
     if (!dns3_servers.loaded) {
+        const char *path = arg_opts.dns_path[0] ? arg_opts.dns_path : PACKAGE_DATADIR "/DNSservers";
         dns3_servers.loaded = true;
-        int ret = load_dns_domainlist();
+        int ret = load_dns_domainlist(path);
 
         if (ret < 0) {
             const char *errmsg = "DNS server list failed to load with error code %d. Falling back to hard-coded list.";

@@ -470,7 +470,10 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     pthread_mutex_lock(&Winthread.lock);
     do_connection(m, prompt);
     do_file_senders(m);
-    tox_do(m);    /* main tox-core loop */
+
+    if (arg_opts.no_connect == 0)
+        tox_do(m);    /* main tox-core loop */
+
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -510,6 +513,7 @@ static void print_usage(void)
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
+    fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
     fprintf(stderr, "  -x, --nodata             Ignore data file\n");
 }
 
@@ -535,9 +539,10 @@ static void parse_args(int argc, char *argv[])
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
+        {"dnslist", required_argument, 0, 'r'},
     };
 
-    const char *opts_str = "o4xdf:c:n:h";
+    const char *opts_str = "4dhoxc:f:n:r:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -572,6 +577,10 @@ static void parse_args(int argc, char *argv[])
 
             case 'o':
                 arg_opts.no_connect = 1;
+                break;
+
+            case 'r':
+                snprintf(arg_opts.dns_path, sizeof(arg_opts.dns_path), "%s", optarg);
                 break;
 
             case 'x':
