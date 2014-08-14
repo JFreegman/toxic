@@ -175,23 +175,27 @@ static void init_term(void)
     refresh();
 }
 
-static Tox *init_tox(int ipv4)
+static Tox *init_tox(void)
 {
-    /* Init core */
-    int ipv6 = !ipv4;
-    Tox *m = tox_new(ipv6);
+    Tox_Options tox_opts;
+    tox_opts.ipv6enabled = !arg_opts.use_ipv4;
+    tox_opts.udp_disabled = arg_opts.force_tcp;
+    tox_opts.proxy_enabled = 0;
 
-    /*
-    * TOX_ENABLE_IPV6_DEFAULT is always 1.
-    * Checking it is redundant, this *should* be doing ipv4 fallback
-    */
-    if (ipv6 && m == NULL) {
-        fprintf(stderr, "IPv6 didn't initialize, trying IPv4\n");
-        m = tox_new(0);
+    /* Init core */
+    Tox *m = tox_new(&tox_opts);
+
+    if (tox_opts.ipv6enabled && m == NULL) {
+        fprintf(stderr, "IPv6 failed to initialize. Trying IPv4\n");
+        tox_opts.ipv6enabled = 0;
+        m = tox_new(&tox_opts);
     }
 
-    if (ipv4)
+    if (!tox_opts.ipv6enabled)
         fprintf(stderr, "Forcing IPv4 connection\n");
+
+    if (tox_opts.udp_disabled)
+        fprintf(stderr, "UDP disabled\n");
 
     if (m == NULL)
         return NULL;
@@ -508,12 +512,13 @@ static void print_usage(void)
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
     fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
-    fprintf(stderr, "  -d, --default_locale     Use default locale\n");
+    fprintf(stderr, "  -d, --default-locale     Use default locale\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
     fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
+    fprintf(stderr, "  -t, --force-tcp          Force the network to use TCP only\n");
     fprintf(stderr, "  -x, --nodata             Ignore data file\n");
 }
 
@@ -524,6 +529,7 @@ static void set_default_opts(void)
     arg_opts.default_locale = 0;
     arg_opts.use_custom_data = 0;
     arg_opts.no_connect = 0;
+    arg_opts.force_tcp = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -534,15 +540,16 @@ static void parse_args(int argc, char *argv[])
         {"file", required_argument, 0, 'f'},
         {"nodata", no_argument, 0, 'x'},
         {"ipv4", no_argument, 0, '4'},
-        {"default_locale", no_argument, 0, 'd'},
+        {"default-locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
         {"dnslist", required_argument, 0, 'r'},
+        {"force-tcp", no_argument, 0, 't'},
     };
 
-    const char *opts_str = "4dhoxc:f:n:r:";
+    const char *opts_str = "4dhotxc:f:n:r:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -581,6 +588,10 @@ static void parse_args(int argc, char *argv[])
 
             case 'r':
                 snprintf(arg_opts.dns_path, sizeof(arg_opts.dns_path), "%s", optarg);
+                break;
+
+            case 't':
+                arg_opts.force_tcp = 1;
                 break;
 
             case 'x':
@@ -670,7 +681,7 @@ int main(int argc, char *argv[])
     char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
     int settings_err = settings_load(user_settings_, p);
 
-    Tox *m = init_tox(arg_opts.use_ipv4);
+    Tox *m = init_tox();
     init_term();
 
     if (m == NULL)
