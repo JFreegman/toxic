@@ -819,7 +819,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wattron(self->window, COLOR_PAIR(CYAN));
     wprintw(self->window, " Press the");
     wattron(self->window, A_BOLD);
-    wprintw(self->window, " H ");
+    wprintw(self->window, " h ");
     wattroff(self->window, A_BOLD);
     wprintw(self->window, "key for help\n\n");
     wattroff(self->window, COLOR_PAIR(CYAN));

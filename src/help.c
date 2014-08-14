@@ -77,26 +77,26 @@ static void help_draw_menu(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, " G");
+    wprintw(win, " g");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "lobal commands\n");
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, " C");
+    wprintw(win, " c");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "hat commands\n");
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, " F");
+    wprintw(win, " f");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "riendlist controls\n");
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, " K");
+    wprintw(win, " k");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "ey bindings\n");
 
-    wprintw(win, " E");
+    wprintw(win, " e");
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "x");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
@@ -115,11 +115,11 @@ static void help_draw_bottom_menu(WINDOW *win)
     wmove(win, y2 - 2, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, " M");
+    wprintw(win, " m");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "ain menu |");
 
-    wprintw(win, " E");
+    wprintw(win, " e");
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "x");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
