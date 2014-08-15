@@ -518,6 +518,7 @@ static void print_usage(void)
 {
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
     fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
+    fprintf(stderr, "  -b  --debug              Enable debugging\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
     fprintf(stderr, "  -d, --default-locale     Use default locale\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
@@ -534,6 +535,7 @@ static void set_default_opts(void)
 {
     arg_opts.use_ipv4 = 0;
     arg_opts.ignore_data_file = 0;
+    arg_opts.debug = 0;
     arg_opts.default_locale = 0;
     arg_opts.use_custom_data = 0;
     arg_opts.no_connect = 0;
@@ -549,6 +551,7 @@ static void parse_args(int argc, char *argv[])
         {"file", required_argument, 0, 'f'},
         {"nodata", no_argument, 0, 'x'},
         {"ipv4", no_argument, 0, '4'},
+        {"debug", no_argument, 0, 'b'},
         {"default-locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
         {"nodes", required_argument, 0, 'n'},
@@ -559,13 +562,17 @@ static void parse_args(int argc, char *argv[])
         {"proxy", required_argument, 0, 'p'},
     };
 
-    const char *opts_str = "4dhotxc:f:n:r:p:";
+    const char *opts_str = "4bdhotxc:f:n:r:p:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
         switch (opt) {
             case '4':
                 arg_opts.use_ipv4 = 1;
+                break;
+
+            case 'b':
+                arg_opts.debug = 1;
                 break;
 
             case 'c':
@@ -704,9 +711,10 @@ int main(int argc, char *argv[])
     Tox *m = init_tox();
     init_term();
 
-   /* Redirect stderr to /dev/null
-      NOTE: Might not be best solution. Comment out for debugging. */
-    freopen("/dev/null", "w", stderr);
+    /* Enable debugging: This should be refactored to print error messages to
+       the command window */
+    if (!arg_opts.debug)
+        freopen("/dev/null", "w", stderr);
 
     if (m == NULL)
         exit_toxic_err("failed in main", FATALERR_NETWORKINIT);

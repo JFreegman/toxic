@@ -75,6 +75,7 @@ struct arg_opts {
     int ignore_data_file;
     int use_ipv4;
     int force_tcp;
+    int debug;
     int default_locale;
     int use_custom_data;
     int no_connect;
