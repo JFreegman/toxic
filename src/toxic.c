@@ -266,7 +266,7 @@ static int load_nodelist(const char *filename)
 
             snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
-            toxNodes.ports[toxNodes.lines] = htons(atoi(port));
+            toxNodes.ports[toxNodes.lines] = atoi(port);
 
             char *key_binary = hex_string_to_bin(key_ascii);
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);

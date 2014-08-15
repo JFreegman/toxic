@@ -209,7 +209,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     char *binary_string = hex_string_to_bin(key);
-    tox_bootstrap_from_address(m, ip, htons(atoi(port)), (uint8_t *) binary_string);
+    tox_bootstrap_from_address(m, ip, atoi(port), (uint8_t *) binary_string);
     free(binary_string);
 }
 
