@@ -274,7 +274,7 @@ static int load_nodelist(const char *filename)
 
             snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
-            toxNodes.ports[toxNodes.lines] = htons(atoi(port));
+            toxNodes.ports[toxNodes.lines] = atoi(port);
 
             char *key_binary = hex_string_to_bin(key_ascii);
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);
@@ -755,7 +755,7 @@ int main(int argc, char *argv[])
 
    /* Redirect stderr to /dev/null
       NOTE: Might not be best solution. Comment out for debugging. */
-    //freopen("/dev/null", "w", stderr);
+    freopen("/dev/null", "w", stderr);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;
