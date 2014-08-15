@@ -38,7 +38,7 @@ extern struct user_settings *user_settings_;
 
 static uint64_t current_unix_time;
 
-void host_to_net(uint8_t *num, uint16_t numbytes)
+void hst_to_net(uint8_t *num, uint16_t numbytes)
 {
 #ifndef WORDS_BIGENDIAN
     uint32_t i;

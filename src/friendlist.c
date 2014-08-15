@@ -145,7 +145,7 @@ static int save_blocklist(char *path)
 
             uint8_t lastonline[sizeof(uint64_t)];
             memcpy(lastonline, &Blocked.list[i].last_on, sizeof(uint64_t));
-            host_to_net(lastonline, sizeof(uint64_t));
+            hst_to_net(lastonline, sizeof(uint64_t));
             memcpy(&tmp.last_on, lastonline, sizeof(uint64_t));
 
             memcpy(data + count * sizeof(BlockedFriend), &tmp, sizeof(BlockedFriend));

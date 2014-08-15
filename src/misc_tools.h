@@ -34,10 +34,10 @@
 #endif
 
 #ifndef net_to_host
-#define net_to_host(x, y) host_to_net(x, y)
+#define net_to_host(x, y) hst_to_net(x, y)
 #endif
 
-void host_to_net(uint8_t *num, uint16_t numbytes);
+void hst_to_net(uint8_t *num, uint16_t numbytes);
 
 /* convert a hex string to binary */
 char *hex_string_to_bin(const char *hex_string);
