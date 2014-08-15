@@ -700,6 +700,10 @@ int main(int argc, char *argv[])
     Tox *m = init_tox();
     init_term();
 
+   /* Redirect stderr to /dev/null
+      NOTE: Might not be best solution. Comment out for debugging. */
+    freopen("/dev/null", "w", stderr);
+
     if (m == NULL)
         exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
 
@@ -751,10 +755,6 @@ int main(int argc, char *argv[])
         msg = "Use the -t option to disable UDP";
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
     }
-
-   /* Redirect stderr to /dev/null
-      NOTE: Might not be best solution. Comment out for debugging. */
-    freopen("/dev/null", "w", stderr);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;
