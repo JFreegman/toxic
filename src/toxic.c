@@ -203,7 +203,7 @@ static Tox *init_tox(void)
         fprintf(stderr, "UDP disabled\n");
 
     if (tox_opts.proxy_enabled && m == NULL)
-        exit_toxic_err("Proxy failed to connect", FATALERR_PROXY);
+        exit_toxic_err("Proxy error", FATALERR_PROXY);
 
     if (m == NULL)
         return NULL;
@@ -599,7 +599,11 @@ static void parse_args(int argc, char *argv[])
             case 'p':
                 arg_opts.use_proxy = 1;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
-                arg_opts.proxy_port = (uint16_t) atoi(argv[optind++]);
+
+                if (++optind > argc || argv[optind-1][0] == '-')
+                    exit_toxic_err("Proxy error", FATALERR_PROXY);
+
+                arg_opts.proxy_port = (uint16_t) atoi(argv[optind-1]);
                 break;
 
             case 'r':
@@ -750,10 +754,10 @@ int main(int argc, char *argv[])
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load user settings");
 
     if (arg_opts.use_proxy && !arg_opts.force_tcp) {
-        msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
-        msg = "Use the -t option to disable UDP";
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+        msg = "* WARNING: Using a proxy without disabling UDP may leak your real IP address.";
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", msg);
+        msg = "  Use the -t option to disable UDP.";
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", msg);
     }
 
     uint64_t last_save = (uint64_t) time(NULL);
