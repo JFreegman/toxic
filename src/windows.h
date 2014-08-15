@@ -78,9 +78,14 @@ struct arg_opts {
     int default_locale;
     int use_custom_data;
     int no_connect;
+
     char dns_path[MAX_STR_SIZE];
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
+
+    int use_proxy;
+    char proxy_address[256];
+    uint16_t proxy_port;
 };
 
 typedef struct ToxWindow ToxWindow;

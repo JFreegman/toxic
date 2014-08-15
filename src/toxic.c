@@ -180,7 +180,12 @@ static Tox *init_tox(void)
     Tox_Options tox_opts;
     tox_opts.ipv6enabled = !arg_opts.use_ipv4;
     tox_opts.udp_disabled = arg_opts.force_tcp;
-    tox_opts.proxy_enabled = 0;
+    tox_opts.proxy_enabled = arg_opts.use_proxy;
+
+    if (tox_opts.proxy_enabled) {
+        tox_opts.proxy_port = arg_opts.proxy_port;
+        snprintf(tox_opts.proxy_address, sizeof(tox_opts.proxy_address), "%s", arg_opts.proxy_address);
+    }
 
     /* Init core */
     Tox *m = tox_new(&tox_opts);
@@ -196,6 +201,9 @@ static Tox *init_tox(void)
 
     if (tox_opts.udp_disabled)
         fprintf(stderr, "UDP disabled\n");
+
+    if (tox_opts.proxy_enabled && m == NULL)
+        exit_toxic_err("Proxy failed to connect", FATALERR_PROXY);
 
     if (m == NULL)
         return NULL;
@@ -517,8 +525,9 @@ static void print_usage(void)
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
+    fprintf(stderr, "  -p, --proxy              Use proxy: Requires [IP] [port]\n");
     fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
-    fprintf(stderr, "  -t, --force-tcp          Force the network to use TCP only\n");
+    fprintf(stderr, "  -t, --force-tcp          Force TCP connection (use this with proxies)\n");
     fprintf(stderr, "  -x, --nodata             Ignore data file\n");
 }
 
@@ -530,6 +539,7 @@ static void set_default_opts(void)
     arg_opts.use_custom_data = 0;
     arg_opts.no_connect = 0;
     arg_opts.force_tcp = 0;
+    arg_opts.use_proxy = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -547,9 +557,10 @@ static void parse_args(int argc, char *argv[])
         {"noconnect", no_argument, 0, 'o'},
         {"dnslist", required_argument, 0, 'r'},
         {"force-tcp", no_argument, 0, 't'},
+        {"proxy", required_argument, 0, 'p'},
     };
 
-    const char *opts_str = "4dhotxc:f:n:r:";
+    const char *opts_str = "4dhotxc:f:n:r:p:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -584,6 +595,12 @@ static void parse_args(int argc, char *argv[])
 
             case 'o':
                 arg_opts.no_connect = 1;
+                break;
+
+            case 'p':
+                arg_opts.use_proxy = 1;
+                snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
+                arg_opts.proxy_port = (uint16_t) atoi(argv[optind++]);
                 break;
 
             case 'r':
@@ -726,14 +743,19 @@ int main(int argc, char *argv[])
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
     }
 
-    if (settings_err == -1) {
-        msg = "Failed to load user settings";
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    if (settings_err == -1)
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load user settings");
+
+    if (arg_opts.use_proxy && !arg_opts.force_tcp) {
+        msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+        msg = "Use the -t option to disable UDP";
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
     }
 
    /* Redirect stderr to /dev/null
       NOTE: Might not be best solution. Comment out for debugging. */
-    freopen("/dev/null", "w", stderr);
+    //freopen("/dev/null", "w", stderr);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;
