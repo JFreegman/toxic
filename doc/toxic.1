@@ -1,4 +1,4 @@
-.TH TOXIC 1 "June 2014" "Toxic v__VERSION__" "User Manual"
+.TH TOXIC 1 "August 2014" "Toxic v__VERSION__" "User Manual"
 .SH NAME
 Toxic \- CLI client for Tox
 .SH SYNOPSYS
@@ -14,32 +14,40 @@ Toxic is an ncurses-based instant messaging client for Tox which formerly
 resided in the Tox core repository, and is now available as a standalone
 application.
 .SH OPTIONS
-.IP "\-f, \-\-file data\-file"
-Use specified
-.I data\-file
-instead of
-.IR ~/.config/tox/data
-.IP "\-x, \-\-nodata"
-Ignore data file
 .IP "\-4, \-\-ipv4"
 Force IPv4 connection
 .IP "\-b, \-\-debug
 Enable debugging messages (prints to stderr). Redirect output to avoid breaking
 the curses interface and better capture messages.
-.IP "\-d, \-\-default_locale
-Use default locale
 .IP "\-c, \-\-config config\-file"
 Use specified
+.IP "\-d, \-\-default_locale
+Use default locale
 .I config\-file
 instead of
 .IR ~/.config/tox/toxic.conf
+.IP "\-f, \-\-file data\-file"
+Use specified
+.I data\-file
+instead of
+.IR ~/.config/tox/data
+.IP "\-h, \-\-help"
+Show help message
 .IP "\-n, \-\-nodes nodes\-file"
 Use specified
 .I nodes\-file
 for DHT bootstrap nodes, instead of
 .IR __DATADIR__/DHTnodes
-.IP "\-h, \-\-help"
-Show help message
+.IP "\-o, \-\-noconnect"
+Do not connect to the DHT network
+.IP "\-p, \-\-proxy"
+Use proxy: Requires [IP] [port]
+.IP "\-r, \-\-dnslist"
+Use specified DNSservers file
+.IP "\-t, \-\-force\-tcp"
+Force TCP connection (use this with proxies)
+.IP "\-x, \-\-nodata"
+Ignore data file
 .SH FILES
 .IP __DATADIR__/DHTnodes
 Default list of DHT bootstrap nodes.
