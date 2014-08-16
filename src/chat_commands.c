@@ -177,13 +177,15 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         if ((Friends.list[self->num].file_receiver[filenum].file = fopen(filename, "a")) == NULL) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Error writing to file.");
             tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
+        } else {
+            Friends.list[self->num].file_receiver[filenum].active = true;
+            ++Friends.list[self->num].active_file_receivers;
         }
     } else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed.");
     }
 
     Friends.list[self->num].file_receiver[filenum].pending = false;
-    Friends.list[self->num].file_receiver[filenum].active = true;
 }
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

@@ -44,12 +44,13 @@
 
 #define DNS3_KEY_SIZE 32
 #define MAX_DNS_REQST_SIZE 255
-#define NUM_DNS3_BACKUP_SERVERS 2    /* must correspond to number of items in dns3_servers array */
 #define TOX_DNS3_TXT_PREFIX "v=tox3;id="
 
 extern struct _Winthread Winthread;
 extern struct _dns3_servers dns3_servers;
 extern struct arg_opts arg_opts;
+
+#define NUM_DNS3_BACKUP_SERVERS 2
 
 /* Hardcoded backup in case domain list is not loaded */
 static struct dns3_server_backup {

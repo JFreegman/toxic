@@ -176,6 +176,9 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg
     
 }
 
+static void chat_resume_file_transfers(Tox *m, int fnum);
+static void chat_stop_file_senders(int fnum);
+
 static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
 {
     if (self->num != num)
@@ -187,13 +190,15 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
         statusbar->is_online = true;
         Friends.list[num].is_typing = user_settings_->show_typing_other == SHOW_TYPING_ON 
                                  ? tox_get_is_typing(m, num) : 0;
-                                 
+        chat_resume_file_transfers(m, num);             
     } else { /* Friend goes offline */
         statusbar->is_online = false;
         Friends.list[num].is_typing = 0;
 
         if (self->chatwin->self_is_typing)
             set_self_typingstatus(self, m, 0);
+
+        chat_stop_file_senders(num);
     }
 }
 
@@ -350,6 +355,36 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
                     "Incoming file: %s", filename );
 }
 
+/* Stops active file senders for this friend. Call when a friend goes offline */
+static void chat_stop_file_senders(int fnum)
+{
+    int i;
+
+    for (i = 0; i < MAX_FILES; ++i) {
+        if (file_senders[i].active && file_senders[i].friendnum == fnum)
+            file_senders[i].noconnection = true;
+    }
+}
+
+/* Tries to resume broken file transfers. Call when a friend comes online */
+static void chat_resume_file_transfers(Tox *m, int fnum)
+{
+    if (Friends.list[fnum].active_file_receivers == 0)
+        return;
+
+    int i;
+
+    for (i = 0; i < MAX_FILES; ++i) {
+        if (Friends.list[fnum].file_receiver[i].active && !Friends.list[fnum].file_receiver[i].paused) {
+            uint8_t bytes_recv[sizeof(uint64_t)];
+            memcpy(bytes_recv, &Friends.list[fnum].file_receiver[i].bytes_recv, sizeof(uint64_t));
+            net_to_host(bytes_recv, sizeof(uint64_t));
+            int filenum = Friends.list[fnum].file_receiver[i].filenum;
+            tox_file_send_control(m, fnum, 1, filenum, TOX_FILECONTROL_RESUME_BROKEN, bytes_recv, sizeof(uint64_t));
+        }
+    }
+}
+
 /* set CTRL to -1 if we don't want to send a control signal.
    set msg to NULL if we don't want to display a message */
 void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL)
@@ -363,6 +398,7 @@ void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL)
         fclose(file);
 
     memset(&Friends.list[friendnum].file_receiver[filenum], 0, sizeof(struct FileReceiver));
+    --Friends.list[friendnum].active_file_receivers;
 }
 
 static void close_all_file_receivers(Tox *m, int friendnum)
@@ -453,6 +489,26 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                             self->name, "%s", msg);
 
             break;
+
+        case TOX_FILECONTROL_RESUME_BROKEN:
+            if (receive_send == 0)
+                break;
+
+            FILE *fp = file_senders[i].file;
+
+            if (fp == NULL)
+                break;
+
+            uint8_t tmp[sizeof(uint64_t)];
+            memcpy(tmp, &data, sizeof(uint64_t));
+            net_to_host(tmp, sizeof(uint64_t));
+            uint64_t datapos;
+            memcpy(&datapos, tmp, sizeof(uint64_t));
+
+            fseek(fp, datapos, SEEK_SET);
+            tox_file_send_control(m, num, 0, filenum, TOX_FILECONTROL_ACCEPT, 0, 0);
+            file_senders[i].noconnection = false;
+            break;
     }
 
     if (msg[0])
@@ -475,6 +531,7 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     }
 
     Friends.list[num].file_receiver[filenum].bps += length;
+    Friends.list[num].file_receiver[filenum].bytes_recv += length;
     double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
     uint64_t curtime = get_unix_time();
 

@@ -40,6 +40,7 @@ typedef struct {
     ToxWindow *toxwin;
     int32_t friendnum;
     bool active;
+    bool noconnection;
     bool finished;
     int filenum;
     char nextpiece[FILE_PIECE_SIZE];

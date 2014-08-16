@@ -35,9 +35,11 @@ struct FileReceiver {
     FILE *file;
     bool pending;
     bool active;
+    bool paused;
     uint64_t size;
+    uint64_t bytes_recv;
     double bps;
-    uint64_t last_progress;
+    uint64_t last_progress;   /* unix-time when we last updated progress */
     uint32_t line_id;
 };
 
@@ -64,6 +66,7 @@ typedef struct {
     uint8_t status;
     struct LastOnline last_online;
     struct FileReceiver file_receiver[MAX_FILES];
+    uint8_t active_file_receivers;
 } ToxicFriend;
 
 typedef struct {

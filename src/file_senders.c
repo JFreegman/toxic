@@ -217,7 +217,9 @@ void do_file_senders(Tox *m)
             continue;
         }
 
-        send_file_data(self, m, i, friendnum, filenum, filename);
+        if (file_senders[i].noconnection == false)
+            send_file_data(self, m, i, friendnum, filenum, filename);
+
         file_senders[i].queue_pos = num_active_file_senders - 1;
     }
 }
