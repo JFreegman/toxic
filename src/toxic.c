@@ -518,7 +518,7 @@ static void print_usage(void)
 {
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
     fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
-    fprintf(stderr, "  -b  --debug              Enable debugging\n");
+    fprintf(stderr, "  -b  --debug              Enable stderr for debugging\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
     fprintf(stderr, "  -d, --default-locale     Use default locale\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
@@ -711,8 +711,7 @@ int main(int argc, char *argv[])
     Tox *m = init_tox();
     init_term();
 
-    /* Enable debugging: This should be refactored to print error messages to
-       the command window */
+    /* enable stderr for debugging */
     if (!arg_opts.debug)
         freopen("/dev/null", "w", stderr);
 
