@@ -218,11 +218,25 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
         file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                          tox_file_data_size(m, friendnum), fp);
 
-        /* file sender is closed in chat_onFileControl callback after receiving reply */
-        if (file_senders[i].piecelen == 0 && !file_senders[i].finished) {
-            print_progress_bar(self, i, -1, 100.0);
-            tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
-            file_senders[i].finished = true;
+        /* note: file sender is closed in chat_onFileControl callback after receiving reply */
+        if (file_senders[i].piecelen == 0) {
+            if (feof(fp) != 0) {   /* make sure we're really at eof */
+                print_progress_bar(self, i, -1, 100.0);
+                tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
+                file_senders[i].finished = true;
+            } else {
+                char msg[MAX_STR_SIZE];
+                snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Read error.", file_senders[i].filename);
+                close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
+                sound_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, NULL);
+                
+                if (self->active_box != -1)
+                    box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
+                else
+                    box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", msg);
+            }
+
+            return;
         }
     }
 }
@@ -265,7 +279,7 @@ void do_file_senders(Tox *m)
             continue;
         }
 
-        if (file_senders[i].noconnection == false)
+        if (!file_senders[i].noconnection && !file_senders[i].finished)
             send_file_data(self, m, i, friendnum, filenum, filename);
 
         file_senders[i].queue_pos = num_active_file_senders - 1;

@@ -477,15 +477,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                 snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
                 chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_FINISHED);
             } else {
-                char msg[MAX_STR_SIZE];
                 snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
-                close_file_sender(self, m, i, msg, TOX_FILECONTROL_FINISHED, filenum, num);
-                return;
+                close_file_sender(self, m, i, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
             }
 
             if (self->active_box != -1)
-                box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, 
-                            self->active_box, "%s", msg);
+                box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
             else
                 box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, 
                             self->name, "%s", msg);
