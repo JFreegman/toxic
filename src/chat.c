@@ -345,6 +345,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
 
     Friends.list[num].file_receiver[filenum].pending = true;
     Friends.list[num].file_receiver[filenum].size = filesize;
+    Friends.list[num].file_receiver[filenum].filenum = filenum;
     strcpy(Friends.list[num].file_receiver[filenum].filename, filename);
 
     if (self->active_box != -1)
@@ -375,7 +376,7 @@ static void chat_resume_file_transfers(Tox *m, int fnum)
     int i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        if (Friends.list[fnum].file_receiver[i].active && !Friends.list[fnum].file_receiver[i].paused) {
+        if (Friends.list[fnum].file_receiver[i].active) {
             uint8_t bytes_recv[sizeof(uint64_t)];
             memcpy(bytes_recv, &Friends.list[fnum].file_receiver[i].bytes_recv, sizeof(uint64_t));
             net_to_host(bytes_recv, sizeof(uint64_t));
@@ -472,6 +473,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
         case TOX_FILECONTROL_FINISHED:
             if (receive_send == 0) {
+                print_progress_bar(self, filenum, num, 100.0);
                 snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
                 chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_FINISHED);
             } else {
@@ -532,17 +534,6 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
 
     Friends.list[num].file_receiver[filenum].bps += length;
     Friends.list[num].file_receiver[filenum].bytes_recv += length;
-    double remain = (double) tox_file_data_remaining(m, num, filenum, 1);
-    uint64_t curtime = get_unix_time();
-
-    /* refresh line with percentage complete and transfer speed (must be called once per second) */
-    if (!remain || timed_out(Friends.list[num].file_receiver[filenum].last_progress, curtime, 1)) {
-        Friends.list[num].file_receiver[filenum].last_progress = curtime;
-        uint64_t size = Friends.list[num].file_receiver[filenum].size;
-        double pct_done = remain > 0 ? (1 - (remain / size)) * 100 : 100;
-        print_progress_bar(self, filenum, num, pct_done);
-        Friends.list[num].file_receiver[filenum].bps = 0;
-    }
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *group_pub_key)

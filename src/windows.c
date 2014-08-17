@@ -481,7 +481,7 @@ ToxWindow *get_window_ptr(int i)
 {
     ToxWindow *toxwin = NULL;
 
-    if (windows[i].active)
+    if (i >= 0 && i <= MAX_WINDOWS_NUM && windows[i].active)
         toxwin = &windows[i];
 
     return toxwin;

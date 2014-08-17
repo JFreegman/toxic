@@ -35,7 +35,6 @@ struct FileReceiver {
     FILE *file;
     bool pending;
     bool active;
-    bool paused;
     uint64_t size;
     uint64_t bytes_recv;
     double bps;

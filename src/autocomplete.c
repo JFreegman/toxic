@@ -244,7 +244,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line)
     if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1)
         return -1; 
 
-    if (!strncmp(b_path, "~/", 2))
+    if (b_path[0] == '~')
         complt_home_dir(self, b_path, sizeof(b_path));
 
     int si = char_rfind(b_path, '/', strlen(b_path));

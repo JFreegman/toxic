@@ -89,6 +89,64 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done
     line_info_set(self, line_id, msg);
 }
 
+/* refreshes active file receiver status bars */
+static void refresh_recv_prog(Tox *m)
+{
+    int i;
+
+    for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *toxwin = get_window_ptr(i);
+
+        if (toxwin == NULL || !toxwin->is_chat)
+            continue;
+
+        int fnum = toxwin->num;
+        int j;
+
+        for (j = 0; j < MAX_FILES; ++j) {
+            if (!Friends.list[fnum].file_receiver[j].active)
+                continue;
+
+            int filenum = Friends.list[fnum].file_receiver[j].filenum;
+            double remain = (double) tox_file_data_remaining(m, fnum, filenum, 1);
+            uint64_t curtime = get_unix_time();
+
+            /* must be called once per second */
+            if (!remain || timed_out(Friends.list[fnum].file_receiver[filenum].last_progress, curtime, 1)) {
+                Friends.list[fnum].file_receiver[filenum].last_progress = curtime;
+                uint64_t size = Friends.list[fnum].file_receiver[filenum].size;
+                double pct_done = remain > 0 ? (1 - (remain / size)) * 100 : 100;
+                print_progress_bar(toxwin, filenum, fnum, pct_done);
+                Friends.list[fnum].file_receiver[filenum].bps = 0;
+            }
+        }
+    }
+}
+
+/* refreshes active file sender status bars */
+static void refresh_sender_prog(Tox *m)
+{
+    int i;
+
+    for (i = 0; i < max_file_senders_index; ++i) {
+        if (!file_senders[i].active)
+            continue;
+
+        int filenum = file_senders[i].filenum;
+        int32_t friendnum = file_senders[i].friendnum;
+        double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
+
+        /* must be called once per second */
+        if (timed_out(file_senders[i].last_progress, file_senders[i].timestamp, 1)
+                      || (!remain && !file_senders[i].finished)) {
+            file_senders[i].last_progress = get_unix_time();
+            double pct_done = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
+            print_progress_bar(file_senders[i].toxwin, i, -1, pct_done);
+            file_senders[i].bps = 0;
+        }
+    }
+}
+
 static void set_max_file_senders_index(void)
 {
     int j;
@@ -161,18 +219,9 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
         file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                          tox_file_data_size(m, friendnum), fp);
 
-        double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
-
-        /* refresh line with percentage complete and transfer speed (must be called once per second) */
-        if (timed_out(file_senders[i].last_progress, curtime, 1) || (!remain && !file_senders[i].finished)) {
-            file_senders[i].last_progress = curtime;
-            double pct_done = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
-            print_progress_bar(self, i, -1, pct_done);
-            file_senders[i].bps = 0;
-        }
-
         /* file sender is closed in chat_onFileControl callback after receiving reply */
         if (file_senders[i].piecelen == 0 && !file_senders[i].finished) {
+            print_progress_bar(self, i, -1, 100.0);
             tox_file_send_control(m, friendnum, 0, filenum, TOX_FILECONTROL_FINISHED, 0, 0);
             file_senders[i].finished = true;
         }
@@ -222,4 +271,7 @@ void do_file_senders(Tox *m)
 
         file_senders[i].queue_pos = num_active_file_senders - 1;
     }
+
+    refresh_sender_prog(m);
+    refresh_recv_prog(m);
 }
