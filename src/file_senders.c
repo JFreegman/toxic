@@ -93,6 +93,7 @@ void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done
 static void refresh_recv_prog(Tox *m)
 {
     int i;
+    uint64_t curtime = get_unix_time();
 
     for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *toxwin = get_window_ptr(i);
@@ -109,10 +110,9 @@ static void refresh_recv_prog(Tox *m)
 
             int filenum = Friends.list[fnum].file_receiver[j].filenum;
             double remain = (double) tox_file_data_remaining(m, fnum, filenum, 1);
-            uint64_t curtime = get_unix_time();
 
             /* must be called once per second */
-            if (!remain || timed_out(Friends.list[fnum].file_receiver[filenum].last_progress, curtime, 1)) {
+            if (timed_out(Friends.list[fnum].file_receiver[filenum].last_progress, curtime, 1)) {
                 Friends.list[fnum].file_receiver[filenum].last_progress = curtime;
                 uint64_t size = Friends.list[fnum].file_receiver[filenum].size;
                 double pct_done = remain > 0 ? (1 - (remain / size)) * 100 : 100;
@@ -127,9 +127,10 @@ static void refresh_recv_prog(Tox *m)
 static void refresh_sender_prog(Tox *m)
 {
     int i;
+    uint64_t curtime = get_unix_time();
 
     for (i = 0; i < max_file_senders_index; ++i) {
-        if (!file_senders[i].active)
+        if (!file_senders[i].active || file_senders[i].finished)
             continue;
 
         int filenum = file_senders[i].filenum;
@@ -137,9 +138,8 @@ static void refresh_sender_prog(Tox *m)
         double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
 
         /* must be called once per second */
-        if (timed_out(file_senders[i].last_progress, file_senders[i].timestamp, 1)
-                      || (!remain && !file_senders[i].finished)) {
-            file_senders[i].last_progress = get_unix_time();
+        if (timed_out(file_senders[i].last_progress, curtime, 1)) {
+            file_senders[i].last_progress = curtime;
             double pct_done = remain > 0 ? (1 - (remain / file_senders[i].size)) * 100 : 100;
             print_progress_bar(file_senders[i].toxwin, i, -1, pct_done);
             file_senders[i].bps = 0;
@@ -213,8 +213,7 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
                                file_senders[i].piecelen) == -1)
             return;
 
-        uint64_t curtime = get_unix_time();
-        file_senders[i].timestamp = curtime;
+        file_senders[i].timestamp = get_unix_time();
         file_senders[i].bps += file_senders[i].piecelen;            
         file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                          tox_file_data_size(m, friendnum), fp);
