@@ -1,3 +1,5 @@
+CHECKS_DIR = $(CFG_DIR)/checks
+
 # Check if we can use X11
 CHECK_X11_LIBS = $(shell pkg-config x11 || echo -n "error")
 ifneq ($(CHECK_X11_LIBS), error)
@@ -8,19 +10,19 @@ endif
 # Check if we want build audio support
 AUDIO = $(shell if [ -z "$(DISABLE_AV)" ] || [ "$(DISABLE_AV)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(AUDIO), disabled)
-	-include $(CFG_DIR)/av.mk
+	-include $(CHECKS_DIR)/av.mk
 endif
 
 # Check if we want build sound notifications support
 SND_NOTIFY = $(shell if [ -z "$(DISABLE_SOUND_NOTIFY)" ] || [ "$(DISABLE_SOUND_NOTIFY)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(SND_NOTIFY), disabled)
-	-include $(CFG_DIR)/sound_notifications.mk
+	-include $(CHECKS_DIR)/sound_notifications.mk
 endif
 
 # Check if we want build desktop notifications support
 DESK_NOTIFY = $(shell if [ -z "$(DISABLE_DESKTOP_NOTIFY)" ] || [ "$(DISABLE_DESKTOP_NOTIFY)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(DESK_NOTIFY), disabled)
-	-include $(CFG_DIR)/desktop_notifications.mk
+	-include $(CHECKS_DIR)/desktop_notifications.mk
 endif
 
 # Check if we can build Toxic

@@ -2,8 +2,9 @@ TOXIC_VERSION = 0.4.7
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
-CFG_DIR = ../cfg
-SRC_DIR = ../src
+BASE_DIR = $(shell cd .. && pwd -P)
+CFG_DIR = $(BASE_DIR)/cfg
+SRC_DIR = $(BASE_DIR)/src
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
@@ -49,7 +50,7 @@ ifneq ($(filter arm%, $(UNAME_M)),)
 endif
 
 # Include all needed checks
--include $(CFG_DIR)/check_features.mk
+-include $(CFG_DIR)/checks/check_features.mk
 
 # Targets
 all: toxic
@@ -68,7 +69,6 @@ clean:
 
 -include $(OBJ:.o=.d)
 
--include $(CFG_DIR)/install.mk
--include $(CFG_DIR)/help.mk
+-include $(CFG_DIR)/targets/*.mk
 
 .PHONY: clean all
