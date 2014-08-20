@@ -60,14 +60,14 @@ sounds = {
 // Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN (case insensitive)
 // Note: All printable keys register as input
 keys = {
-	next_tab="Ctrl+P";
-	prev_tab="Ctrl+O";
-	scroll_line_up="PAGEUP";
-	scroll_line_down="PAGEDOWN";
-	half_page_up="Ctrl+F";
-	half_page_down="Ctrl+V";
-	page_bottom="Ctrl+H";
-	peer_list_up="Ctrl+[";
-	peer_list_down="Ctrl+]";
+  next_tab="Ctrl+P";
+  prev_tab="Ctrl+O";
+  scroll_line_up="PAGEUP";
+  scroll_line_down="PAGEDOWN";
+  half_page_up="Ctrl+F";
+  half_page_down="Ctrl+V";
+  page_bottom="Ctrl+H";
+  peer_list_up="Ctrl+[";
+  peer_list_down="Ctrl+]";
 };
 
