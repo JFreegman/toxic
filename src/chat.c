@@ -420,7 +420,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     const char *filename;
     char msg[MAX_STR_SIZE] = {0};
-    int i = 0;   /* file_sender index */
+    int send_idx = 0;   /* file sender index */
 
     if (receive_send == 0) {
         if (!Friends.list[num].file_receiver[filenum].active)
@@ -428,15 +428,19 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
         filename = Friends.list[num].file_receiver[filenum].filename;
     } else {
+        int i;
+
         for (i = 0; i < MAX_FILES; ++i) {
+            send_idx = i;
+
             if (file_senders[i].active && file_senders[i].filenum == filenum)
                 break;
         }
 
-        if (!file_senders[i].active)
+        if (!file_senders[send_idx].active)
             return;
 
-        filename = file_senders[i].filename;
+        filename = file_senders[send_idx].filename;
     }
 
     switch (control_type) {
@@ -448,7 +452,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                 char progline[MAX_STR_SIZE];
                 prep_prog_line(progline);
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-                file_senders[i].line_id = self->chatwin->hst->line_end->id + 2;
+                file_senders[send_idx].line_id = self->chatwin->hst->line_end->id + 2;
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
             }
 
@@ -467,7 +471,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             if (receive_send == 0)
                 chat_close_file_receiver(m, filenum, num, -1);
             else
-                close_file_sender(self, m, i, NULL, -1, filenum, num);
+                close_file_sender(self, m, send_idx, NULL, -1, filenum, num);
 
             break;
 
@@ -478,7 +482,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                 chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_FINISHED);
             } else {
                 snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
-                close_file_sender(self, m, i, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
+                close_file_sender(self, m, send_idx, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
             }
 
             if (self->active_box != -1)
@@ -493,7 +497,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             if (receive_send == 0)
                 break;
 
-            FILE *fp = file_senders[i].file;
+            FILE *fp = file_senders[send_idx].file;
 
             if (fp == NULL)
                 break;
@@ -506,7 +510,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
             fseek(fp, datapos, SEEK_SET);
             tox_file_send_control(m, num, 0, filenum, TOX_FILECONTROL_ACCEPT, 0, 0);
-            file_senders[i].noconnection = false;
+            file_senders[send_idx].noconnection = false;
             break;
     }
 
