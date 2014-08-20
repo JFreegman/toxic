@@ -37,6 +37,7 @@ void cmd_nick(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]
 void cmd_note(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_prompt_help(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_quit(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_requests(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_status(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 
 void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg);

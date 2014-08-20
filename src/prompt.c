@@ -63,6 +63,7 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/nick"       },
     { "/note"       },
     { "/quit"       },
+    { "/requests"   },
     { "/status"     },
 
 #ifdef _AUDIO
@@ -128,19 +129,23 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
 
 /* Adds friend request to pending friend requests.
    Returns request number on success, -1 if queue is full. */
-static int add_friend_request(const char *public_key)
+static int add_friend_request(const char *public_key, const char *data)
 {
-    if (FriendRequests.index >= MAX_FRIEND_REQUESTS)
+    if (FriendRequests.max_idx >= MAX_FRIEND_REQUESTS)
         return -1;
 
     int i;
 
-    for (i = 0; i <= FriendRequests.index; ++i) {
-        if (FriendRequests.list[i][0] == '\0') {
-            memcpy(FriendRequests.list[i], public_key, TOX_CLIENT_ID_SIZE);
+    for (i = 0; i <= FriendRequests.max_idx; ++i) {
+        if (!FriendRequests.request[i].active) {
+            FriendRequests.request[i].active = true;
+            memcpy(FriendRequests.request[i].key, public_key, TOX_CLIENT_ID_SIZE);
+            snprintf(FriendRequests.request[i].msg, sizeof(FriendRequests.request[i].msg), "%s", data);
 
-            if (i == FriendRequests.index)
-                ++FriendRequests.index;
+            if (i == FriendRequests.max_idx)
+                ++FriendRequests.max_idx;
+
+            ++FriendRequests.num_requests;
 
             return i;
         }
@@ -364,7 +369,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
     write_to_log("Friend request with the message '%s'", "", ctx->log, true);
 
-    int n = add_friend_request(key);
+    int n = add_friend_request(key, data);
 
     if (n == -1) {
         const char *errmsg = "Friend request queue is full. Discarding request.";

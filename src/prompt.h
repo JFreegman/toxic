@@ -27,16 +27,23 @@
 #include "windows.h"
 
 #ifdef _AUDIO
-#define AC_NUM_GLOB_COMMANDS 16
+#define AC_NUM_GLOB_COMMANDS 17
 #else
-#define AC_NUM_GLOB_COMMANDS 14
+#define AC_NUM_GLOB_COMMANDS 15
 #endif /* _AUDIO */
 
 #define MAX_FRIEND_REQUESTS 32
 
+struct _friend_request {
+    bool active;
+    char msg[MAX_STR_SIZE];
+    uint8_t key[TOX_CLIENT_ID_SIZE];
+};
+
 typedef struct {
-    int index;
-    uint8_t list[MAX_FRIEND_REQUESTS][TOX_CLIENT_ID_SIZE];
+    int max_idx;
+    int num_requests;
+    struct _friend_request request[MAX_FRIEND_REQUESTS];
 } _FriendRequests;
 
 ToxWindow new_prompt(void);

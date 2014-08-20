@@ -52,6 +52,7 @@ static struct cmd_func global_commands[] = {
     { "/note",      cmd_note          },
     { "/q",         cmd_quit          },
     { "/quit",      cmd_quit          },
+    { "/requests",  cmd_requests      },
     { "/status",    cmd_status        },
 
 #ifdef _AUDIO
