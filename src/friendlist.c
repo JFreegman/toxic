@@ -975,7 +975,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wmove(self->window, y2 - 1, 1);
 
         wattron(self->window, A_BOLD);
-        wprintw(self->window, "ID: ");
+        wprintw(self->window, "Key: ");
         wattroff(self->window, A_BOLD);
 
         int i;

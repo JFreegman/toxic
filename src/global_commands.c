@@ -372,7 +372,7 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    int i;
+    int i, j;
     int count = 0;
 
     for (i = 0; i < FriendRequests.max_idx; ++i) {
@@ -380,7 +380,6 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             continue;
 
         char id[TOX_CLIENT_ID_SIZE * 2 + 1] = {0};
-        size_t j;
 
         for (j = 0; j < TOX_CLIENT_ID_SIZE; ++j) {
             char d[3];
@@ -388,12 +387,11 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
             strcat(id, d);
         }
 
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "id: %d, Key: %s", i, id);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Message: %s", FriendRequests.request[i].msg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d : %s", i, id);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", FriendRequests.request[i].msg);
 
         if (++count < FriendRequests.num_requests)
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
-
     }
 }
 
