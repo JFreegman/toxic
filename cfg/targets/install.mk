@@ -29,7 +29,9 @@ install: toxic doc
 		section=$(abspath $(DESTDIR)/$(MANDIR))/man`echo $$f | rev | cut -d "." -f 1` ;\
 		file=$$section/$$f ;\
 		mkdir -p $$section ;\
-		install -m 0644 $$f $$file ;\
+		install -m 0644 $(DOC_DIR)/$$f $$file ;\
+		sed -i'' -e 's:__VERSION__:'$(VERSION)':g' $$file ;\
+		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
 		gzip -f -9 $$file ;\
 	done
 

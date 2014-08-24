@@ -67,14 +67,13 @@ toxic: $(OBJ)
 	@$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
 	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
-doc: $(MANFILES)
+doc: $(MANFILES:%=$(DOC_DIR)/%)
 
-%: $(DOC_DIR)/%.asc
-	@echo "  Generating man page $@"
+$(DOC_DIR)/%: $(DOC_DIR)/%.asc
+	@echo "  Generating man page $(@F)"
 	@a2x -f manpage -a revdate=$(shell git log -1 --date=short --format="%ad" $<) \
 	-a manmanual="toxic manual" -a mansource=toxic \
-	-a manversion=$(VERSION) -a datadir=$(DATADIR) $<
-	@mv $(DOC_DIR)/$@ .
+	-a manversion=__VERSION__ -a datadir=__DATADIR__ $<
 
 clean:
 	rm -rf *.d *.o toxic
@@ -84,4 +83,4 @@ clean:
 
 -include $(CFG_DIR)/targets/*.mk
 
-.PHONY: clean all
+.PHONY: clean all doc

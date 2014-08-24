@@ -23,7 +23,8 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 * [libnotify](https://developer.gnome.org/libnotify) (for Debian based systems, 'libnotify-dev')
 
 ##### Documentation
-* [Asciidoc](http://asciidoc.org/index.html) Only required for building manpages.
+* [Asciidoc](http://asciidoc.org/index.html) Only required for regenerating manpages.
+* Run `make doc` in the build directory after editing the asciidoc to regenerate the manpages.
 
 ### Compiling
 1. `cd build/`
