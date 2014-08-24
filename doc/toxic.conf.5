@@ -1,0 +1,266 @@
+'\" t
+.\"     Title: toxic.conf
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2014-08-21
+.\"    Manual: toxic manual
+.\"    Source: toxic __VERSION__
+.\"  Language: English
+.\"
+.TH "TOXIC\&.CONF" "5" "2014\-08\-21" "toxic __VERSION__" "toxic manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+toxic.conf \- Configuration file for toxic
+.SH "SYNOPSIS"
+.sp
+~/\&.config/tox/toxic\&.conf
+.SH "DESCRIPTION"
+.sp
+The \fItoxic\&.conf\fR file is the main configuration file for \fBtoxic\fR(1) client\&. It uses syntax accepted by \fBlibconfig\fR\&. Lines starting with "//" are comments and will be ignored\&.
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+// Configuration for interface
+ui = {
+    timestamps = true;
+    alerts = false;
+};
+
+// Configuration for audio
+audio = {
+    input_device = 1;
+};
+.fi
+.if n \{\
+.RE
+.\}
+.SH "OPTIONS"
+.PP
+\fBui\fR
+.RS 4
+Configuration related to interface elements\&.
+.PP
+\fBtimestamps\fR
+.RS 4
+Enable or disable timestamps\&. true or false
+.RE
+.PP
+\fBalerts\fR
+.RS 4
+Enable or disable terminal alerts on events\&. true or false
+.RE
+.PP
+\fBnative_colors\fR
+.RS 4
+Select between native terminal colors and toxic color theme\&. true or false
+.RE
+.PP
+\fBautolog\fR
+.RS 4
+Enable or disable autologging\&. true or false
+.RE
+.PP
+\fBtime_format\fR
+.RS 4
+Select between 24 and 12 hour time\&. Specify 24 or 12
+.RE
+.PP
+\fBshow_typing_other\fR
+.RS 4
+Show when others are typing in a 1\-on\-1 chat\&. true or false
+.RE
+.PP
+\fBshow_typing_self\fR
+.RS 4
+Show others when you\(cqre typing in a 1\-on\-1 chat\&. true or false
+.RE
+.PP
+\fBhistory_size\fR
+.RS 4
+Maximum lines for chat window history\&. Integer value\&. (for example: 700)
+.RE
+.RE
+.PP
+\fBaudio\fR
+.RS 4
+Configuration related to audio devices\&.
+.PP
+\fBinput_device\fR
+.RS 4
+Audio input device\&. Integer value\&. Number corresponds to
+/lsdev in
+.RE
+.PP
+\fBoutput_device\fR
+.RS 4
+Audio output device\&. Integer value\&. Number corresponds to
+/lsdev out
+.RE
+.PP
+\fBVAD_treshold\fR
+.RS 4
+Voice Activity Detection treshold\&. Float value\&. Recommended values are around 40\&.0
+.RE
+.RE
+.PP
+\fBtox\fR
+.RS 4
+Configuration related to file transfer\&.
+.PP
+\fBdownload_path\fR
+.RS 4
+Default path for downloads\&. String value\&. Absolute path where to store downloaded files
+.RE
+.RE
+.PP
+\fBsounds\fR
+.RS 4
+Configuration related to notification sounds\&. Special value "silent" can be used to disable a specific notification\&.
+
+Each value is a string which corresponds to the absolute path of a wav sound file\&.
+.PP
+\fBerror\fR
+.RS 4
+Sound to play when an error occurs\&.
+.RE
+.PP
+\fBself_log_in\fR
+.RS 4
+Sound to play when you log in\&.
+.RE
+.PP
+\fBself_log_out\fR
+.RS 4
+Sound to play when you log out\&.
+.RE
+.PP
+\fBuser_log_in\fR
+.RS 4
+Sound to play when a contact become online\&.
+.RE
+.PP
+\fBuser_log_out\fR
+.RS 4
+Sound to play when a contact become offline\&.
+.RE
+.PP
+\fBcall_incoming\fR
+.RS 4
+Sound to play when you receive an incoming call\&.
+.RE
+.PP
+\fBcall_outgoing\fR
+.RS 4
+Sound to play when you start a call\&.
+.RE
+.PP
+\fBgeneric_message\fR
+.RS 4
+Sound to play when an event occurs\&.
+.RE
+.PP
+\fBtransfer_pending\fR
+.RS 4
+Sound to play when you receive a file transfer request\&.
+.RE
+.PP
+\fBtransfer_completed\fR
+.RS 4
+Sound to play when a file transfer is completed\&.
+.RE
+.RE
+.PP
+\fBkeys\fR
+.RS 4
+Configuration related to user interface interaction\&. Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN\&.
+
+Each value is a string which corresponds to a key combination\&.
+.PP
+\fBnext_tab\fR
+.RS 4
+Key combination to switch next tab\&.
+.RE
+.PP
+\fBprev_tab\fR
+.RS 4
+Key combination to switch previous tab\&.
+.RE
+.PP
+\fBscroll_line_up\fR
+.RS 4
+Key combination to scroll one line up\&.
+.RE
+.PP
+\fBscroll_line_down\fR
+.RS 4
+Key combination to scroll one line down\&.
+.RE
+.PP
+\fBhalf_page_up\fR
+.RS 4
+Key combination to scroll half page up\&.
+.RE
+.PP
+\fBhalf_page_down\fR
+.RS 4
+Key combination to scroll half page down\&.
+.RE
+.PP
+\fBpage_bottom\fR
+.RS 4
+Key combination to scroll to page bottom\&.
+.RE
+.PP
+\fBpeer_list_up\fR
+.RS 4
+Key combination to scroll contacts list up\&.
+.RE
+.PP
+\fBpeer_list_down\fR
+.RS 4
+Key combination to scroll contacts list down\&.
+.RE
+.RE
+.SH "FILES"
+.PP
+~/\&.config/tox/toxic\&.conf
+.RS 4
+Main configuration file\&.
+.RE
+.PP
+__DATADIR__/toxic\&.conf\&.example
+.RS 4
+Configuration example\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBtoxic\fR(1)
+.SH "RESOURCES"
+.sp
+Project page: https://github\&.com/Tox/toxic
+.sp
+IRC channel: chat\&.freenode\&.net#tox
+.SH "AUTHORS"
+.sp
+JFreegman <JFreegman@gmail\&.com>

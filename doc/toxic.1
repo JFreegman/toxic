@@ -1,0 +1,143 @@
+'\" t
+.\"     Title: toxic
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2014-08-21
+.\"    Manual: toxic manual
+.\"    Source: toxic __VERSION__
+.\"  Language: English
+.\"
+.TH "TOXIC" "1" "2014\-08\-21" "toxic __VERSION__" "toxic manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+toxic \- CLI client for Tox
+.SH "SYNOPSIS"
+.sp
+\fBtoxic\fR [\-f \fIdata\-file\fR] [\-x] [\-4] [\-c \fIconfig\-file\fR] [\-n \fInodes\-file\fR] [\-h]
+.SH "DESCRIPTION"
+.sp
+toxic is an ncurses\-based instant messaging client for Tox which formerly resided in the Tox core repository, and is now available as a standalone application\&.
+.SH "OPTIONS"
+.PP
+\-4, \-\-ipv4
+.RS 4
+Force IPv4 connection
+.RE
+.PP
+\-b, \-\-debug
+.RS 4
+Enable stderr for debugging\&. Redirect output to avoid breaking the curses interface and better capture messages\&.
+.RE
+.PP
+\-c, \-\-config config\-file
+.RS 4
+Use specified
+\fIconfig\-file\fR
+instead of
+\fI~/\&.config/tox/toxic\&.conf\fR
+.RE
+.PP
+\-d, \-\-default_locale
+.RS 4
+Use default locale
+.RE
+.PP
+\-f, \-\-file data\-file
+.RS 4
+Use specified
+\fIdata\-file\fR
+instead of
+\fI~/\&.config/tox/data\fR
+.RE
+.PP
+\-h, \-\-help
+.RS 4
+Show help message
+.RE
+.PP
+\-n, \-\-nodes nodes\-file
+.RS 4
+Use specified
+\fInodes\-file\fR
+for DHT bootstrap nodes, instead of
+\fI__DATADIR__/DHTnodes\fR
+.RE
+.PP
+\-o, \-\-noconnect
+.RS 4
+Do not connect to the DHT network
+.RE
+.PP
+\-p, \-\-proxy
+.RS 4
+Use proxy: Requires [IP] [port]
+.RE
+.PP
+\-r, \-\-dnslist
+.RS 4
+Use specified DNSservers file
+.RE
+.PP
+\-t, \-\-force\-tcp
+.RS 4
+Force TCP connection (use this with proxies)
+.RE
+.PP
+\-x, \-\-nodata
+.RS 4
+Ignore data file
+.RE
+.SH "FILES"
+.PP
+__DATADIR__/DHTnodes
+.RS 4
+Default list of DHT bootstrap nodes\&.
+.RE
+.PP
+~/\&.config/tox/data
+.RS 4
+Savestate which contains your personal info (nickname, Tox ID, contacts, etc)
+.RE
+.PP
+~/\&.config/tox/toxic\&.conf
+.RS 4
+Configuration file\&. See
+\fBtoxic\&.conf\fR(5) for more details\&.
+.RE
+.PP
+__DATADIR__/toxic\&.conf\&.example
+.RS 4
+Configuration example\&.
+.RE
+.SH "BUGS"
+.sp
+Unicode characters with a width larger than 1 column may cause strange behaviour\&. Expect more bugs and bad behaviour: this software is in a pre\-alpha stage\&.
+.SH "AUTHORS"
+.sp
+JFreegman <JFreegman@gmail\&.com>
+.SH "SEE ALSO"
+.sp
+\fBtoxic\&.conf\fR(5)
+.SH "LINKS"
+.sp
+Project page: https://github\&.com/Tox/toxic
+.sp
+IRC channel: chat\&.freenode\&.net#tox
