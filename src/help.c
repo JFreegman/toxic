@@ -138,6 +138,7 @@ static void help_draw_global(ToxWindow *self)
 
     wprintw(win, "  /add <addr> <msg>          : Add contact with optional message\n");
     wprintw(win, "  /accept <id>               : Accept friend request\n");
+    wprintw(win, "  /decline <id>              : Decline friend request\n");
     wprintw(win, "  /requests                  : List pending friend requests\n");
     wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
@@ -265,9 +266,9 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'g':
 #ifdef _AUDIO
-            help_init_window(self, 22, 80);
+            help_init_window(self, 23, 80);
 #else
-            help_init_window(self, 18, 80);
+            help_init_window(self, 19, 80);
 #endif
             self->help->type = HELP_GLOBAL;
             break;

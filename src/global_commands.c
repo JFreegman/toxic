@@ -213,6 +213,38 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     free(binary_string);
 }
 
+void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
+        return;
+    }
+
+    int req = atoi(argv[1]);
+
+    if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req > MAX_FRIEND_REQUESTS) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
+        return;
+    }
+
+    if (!FriendRequests.request[req].active) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
+        return;
+    }
+
+    memset(&FriendRequests.request[req], 0, sizeof(struct _friend_request));
+
+    int i;
+
+    for (i = FriendRequests.max_idx; i > 0; --i) {
+        if (FriendRequests.request[i - 1].active)
+            break;
+    }
+
+    FriendRequests.max_idx = i;
+    --FriendRequests.num_requests;
+}
+
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {

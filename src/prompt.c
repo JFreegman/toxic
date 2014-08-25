@@ -55,6 +55,7 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/clear"      },
     { "/close"      },    /* rm /close when groupchats gets its own list */
     { "/connect"    },
+    { "/decline"    },
     { "/exit"       },
     { "/groupchat"  },
     { "/help"       },
@@ -377,7 +378,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" to accept it.", n);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
     sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 

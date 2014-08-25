@@ -27,9 +27,9 @@
 #include "windows.h"
 
 #ifdef _AUDIO
-#define AC_NUM_GLOB_COMMANDS 17
+#define AC_NUM_GLOB_COMMANDS 18
 #else
-#define AC_NUM_GLOB_COMMANDS 15
+#define AC_NUM_GLOB_COMMANDS 16
 #endif /* _AUDIO */
 
 #define MAX_FRIEND_REQUESTS 32
