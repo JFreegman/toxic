@@ -175,6 +175,56 @@ static void init_term(void)
     refresh();
 }
 
+static struct _init_messages {
+    char **msgs;
+    int num;
+} init_messages;
+
+/* queues messages during init until prompt window is initialized. */
+static void queue_init_message(const char *msg)
+{
+    int i = init_messages.num;
+    ++init_messages.num;
+
+    char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
+
+    if (new_msgs == NULL)
+        exit_toxic_err("Failed in init_messages_prep", FATALERR_PROXY);
+
+    new_msgs[i] = malloc(MAX_STR_SIZE);
+
+    if (new_msgs[i] == NULL)
+        exit_toxic_err("Failed in init_messages_prep", FATALERR_PROXY);
+
+    snprintf(new_msgs[i], MAX_STR_SIZE, "%s", msg);
+    init_messages.msgs = new_msgs;
+}
+
+/* call this after messages have been printed to console and are no longer needed */
+static void cleanup_init_messages(void)
+{
+    if (init_messages.num <= 0)
+        return;
+
+    int i;
+
+    for (i = 0; i < init_messages.num; ++i)
+        free(init_messages.msgs[i]);
+
+    free(init_messages.msgs);
+}
+
+/* prints all init_messages and frees them */
+static void print_init_messages(ToxWindow *toxwin)
+{
+    int i;
+
+    for (i = 0; i < init_messages.num; ++i)
+        line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
+
+    cleanup_init_messages();
+}
+
 static Tox *init_tox(void)
 {
     Tox_Options tox_opts;
@@ -185,22 +235,33 @@ static Tox *init_tox(void)
     if (tox_opts.proxy_enabled) {
         tox_opts.proxy_port = arg_opts.proxy_port;
         snprintf(tox_opts.proxy_address, sizeof(tox_opts.proxy_address), "%s", arg_opts.proxy_address);
+
+        char tmp[48];
+        snprintf(tmp, sizeof(tmp), "Using proxy %s : %d", 
+                 arg_opts.proxy_address, arg_opts.proxy_port);
+        queue_init_message(tmp);
+    }
+
+    if (tox_opts.udp_disabled) {
+        queue_init_message("UDP disabled");
+    } else if (tox_opts.proxy_enabled) {
+        const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
+        queue_init_message(msg);
+        msg = "Use the -t option to disable UDP.";
+        queue_init_message(msg);
     }
 
     /* Init core */
     Tox *m = tox_new(&tox_opts);
 
     if (tox_opts.ipv6enabled && m == NULL) {
-        fprintf(stderr, "IPv6 failed to initialize. Trying IPv4\n");
+        queue_init_message("IPv6 failed to initialize");
         tox_opts.ipv6enabled = 0;
         m = tox_new(&tox_opts);
     }
 
     if (!tox_opts.ipv6enabled)
-        fprintf(stderr, "Forcing IPv4 connection\n");
-
-    if (tox_opts.udp_disabled)
-        fprintf(stderr, "UDP disabled\n");
+        queue_init_message("Forcing IPv4 connection");
 
     if (tox_opts.proxy_enabled && m == NULL)
         exit_toxic_err("Proxy error", FATALERR_PROXY);
@@ -367,7 +428,7 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     if (!was_connected && is_connected) {
         was_connected = true;
         prompt_update_connectionstatus(prompt, was_connected);
-        snprintf(msg, sizeof(msg), "DHT connected.");
+        snprintf(msg, sizeof(msg), "DHT connected");
     } else if (was_connected && !is_connected) {
         was_connected = false;
         prompt_update_connectionstatus(prompt, was_connected);
@@ -738,9 +799,10 @@ int main(int argc, char *argv[])
 
     set_primary_device(input, user_settings_->audio_in_dev);
     set_primary_device(output, user_settings_->audio_out_dev);
+
 #elif _SOUND_NOTIFY
     if ( init_devices() == de_InternalError )
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
+        queue_init_message("Failed to init audio devices");
 
 #endif /* _AUDIO */
     
@@ -754,18 +816,13 @@ int main(int argc, char *argv[])
     
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for data file...";
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+        queue_init_message(msg);
     }
 
     if (settings_err == -1)
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load user settings");
+        queue_init_message("Failed to load user settings");
 
-    if (arg_opts.use_proxy && !arg_opts.force_tcp) {
-        msg = "* WARNING: Using a proxy without disabling UDP may leak your real IP address.";
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", msg);
-        msg = "  Use the -t option to disable UDP.";
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", msg);
-    }
+    print_init_messages(prompt);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;
