@@ -24,10 +24,8 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 
 ##### Documentation
 * [Asciidoc](http://asciidoc.org/index.html) (only required for regenerating manpages)
-
-Run `make doc` after editing the asciidoc files to regenerate the manpages.
-
-**NOTE FOR DEVELOPERS**: asciidoc files and generated manpages will need to be commited together.
+  * Run `make doc` after editing the asciidoc files to regenerate the manpages.
+  * **NOTE FOR DEVELOPERS**: asciidoc files and generated manpages will need to be commited together.
 
 ### Compiling
 1. `cd build/`
