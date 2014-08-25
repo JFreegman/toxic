@@ -189,12 +189,12 @@ static void queue_init_message(const char *msg)
     char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
 
     if (new_msgs == NULL)
-        exit_toxic_err("Failed in init_messages_prep", FATALERR_PROXY);
+        exit_toxic_err("Failed in init_messages_prep", FATALERR_MEMORY);
 
     new_msgs[i] = malloc(MAX_STR_SIZE);
 
     if (new_msgs[i] == NULL)
-        exit_toxic_err("Failed in init_messages_prep", FATALERR_PROXY);
+        exit_toxic_err("Failed in init_messages_prep", FATALERR_MEMORY);
 
     snprintf(new_msgs[i], MAX_STR_SIZE, "%s", msg);
     init_messages.msgs = new_msgs;
