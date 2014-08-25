@@ -4,11 +4,14 @@ VERSION = $(TOXIC_VERSION)_r$(REV)
 
 BASE_DIR = $(shell cd .. && pwd -P)
 CFG_DIR = $(BASE_DIR)/cfg
+DOC_DIR = $(BASE_DIR)/doc
 SRC_DIR = $(BASE_DIR)/src
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/share/man
+
+MANFILES = toxic.1 toxic.conf.5
 
 LIBS = libtoxcore ncursesw libconfig
 
@@ -53,7 +56,7 @@ endif
 -include $(CFG_DIR)/checks/check_features.mk
 
 # Targets
-all: toxic
+all: toxic doc
 
 toxic: $(OBJ)
 	@echo "  LD    $@"
@@ -64,11 +67,14 @@ toxic: $(OBJ)
 	@$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
 	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
+doc: $(MANFILES:%=$(DOC_DIR)/%)
+
 clean:
 	rm -rf *.d *.o toxic
+	rm -rf $(MANFILES)
 
 -include $(OBJ:.o=.d)
 
 -include $(CFG_DIR)/targets/*.mk
 
-.PHONY: clean all
+.PHONY: clean all doc
