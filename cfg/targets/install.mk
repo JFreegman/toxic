@@ -1,10 +1,4 @@
-MISC_DIR = $(BASE_DIR)/misc
-SND_DIR = $(BASE_DIR)/sounds
-DATAFILES = DHTnodes DNSservers toxic.conf.example
-SNDFILES = ContactLogsIn.wav ContactLogsOut.wav Error.wav IncomingCall.wav
-SNDFILES += LogIn.wav LogOut.wav NewMessage.wav OutgoingCall.wav
-SNDFILES += TransferComplete.wav TransferPending.wav
-
+# Install target
 install: toxic doc
 	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
 	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))

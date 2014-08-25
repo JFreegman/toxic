@@ -1,7 +1,7 @@
 # Help target
 help:
 	@echo "-- Targets --"
-	@echo "  all:     Build toxic [DEFAULT]"
+	@echo "  all:     Build toxic and documentation [DEFAULT]"
 	@echo "  toxic:   Build toxic"
 	@echo "  doc:     Build documentation"
 	@echo "  install: Build toxic and install it in PREFIX (default PREFIX is \"$(abspath $(PREFIX))\")"
