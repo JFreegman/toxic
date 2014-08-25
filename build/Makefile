@@ -1,17 +1,7 @@
-TOXIC_VERSION = 0.4.7
-REV = $(shell git rev-list HEAD --count)
-VERSION = $(TOXIC_VERSION)_r$(REV)
-
 BASE_DIR = $(shell cd .. && pwd -P)
 CFG_DIR = $(BASE_DIR)/cfg
-DOC_DIR = $(BASE_DIR)/doc
-SRC_DIR = $(BASE_DIR)/src
-PREFIX = /usr/local
-BINDIR = $(PREFIX)/bin
-DATADIR = $(PREFIX)/share/toxic
-MANDIR = $(PREFIX)/share/man
 
-MANFILES = toxic.1 toxic.conf.5
+-include $(CFG_DIR)/global_vars.mk
 
 LIBS = libtoxcore ncursesw libconfig
 
@@ -67,14 +57,11 @@ toxic: $(OBJ)
 	@$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
 	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
-doc: $(MANFILES:%=$(DOC_DIR)/%)
-
 clean:
 	rm -rf *.d *.o toxic
-	rm -rf $(MANFILES)
 
 -include $(OBJ:.o=.d)
 
 -include $(CFG_DIR)/targets/*.mk
 
-.PHONY: clean all doc
+.PHONY: clean all
