@@ -189,12 +189,12 @@ static void queue_init_message(const char *msg)
     char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
 
     if (new_msgs == NULL)
-        exit_toxic_err("Failed in init_messages_prep", FATALERR_MEMORY);
+        exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
 
     new_msgs[i] = malloc(MAX_STR_SIZE);
 
     if (new_msgs[i] == NULL)
-        exit_toxic_err("Failed in init_messages_prep", FATALERR_MEMORY);
+        exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
 
     snprintf(new_msgs[i], MAX_STR_SIZE, "%s", msg);
     init_messages.msgs = new_msgs;
@@ -581,7 +581,7 @@ static void print_usage(void)
     fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
     fprintf(stderr, "  -b  --debug              Enable stderr for debugging\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
-    fprintf(stderr, "  -d, --default-locale     Use default locale\n");
+    fprintf(stderr, "  -d, --default-locale     Use default POSIX locale\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
@@ -634,14 +634,23 @@ static void parse_args(int argc, char *argv[])
 
             case 'b':
                 arg_opts.debug = 1;
+                queue_init_message("stderr enabled");
                 break;
 
             case 'c':
                 snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
+                FILE *conf_fp = fopen(arg_opts.config_path, "r");
+
+                if (conf_fp == NULL)
+                    queue_init_message("Config file not found");
+                else
+                    fclose(conf_fp);
+                
                 break;
 
             case 'd':
                 arg_opts.default_locale = 1;
+                queue_init_message("Using default POSIX locale");
                 break;
 
             case 'f':
@@ -654,14 +663,26 @@ static void parse_args(int argc, char *argv[])
 
                 strcpy(BLOCK_FILE, optarg);
                 strcat(BLOCK_FILE, "-blocklist");
+
+                char tmp[48];
+                snprintf(tmp, sizeof(tmp), "Using '%s' data file", DATA_FILE);
+                queue_init_message(tmp);
                 break;
 
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
+                FILE *nodes_fp = fopen(arg_opts.nodes_path, "r");
+
+                if (nodes_fp == NULL)
+                    queue_init_message("DHTnodes file not found");
+                else
+                    fclose(nodes_fp);
+
                 break;
 
             case 'o':
                 arg_opts.no_connect = 1;
+                queue_init_message("DHT disabled");
                 break;
 
             case 'p':
@@ -676,6 +697,13 @@ static void parse_args(int argc, char *argv[])
 
             case 'r':
                 snprintf(arg_opts.dns_path, sizeof(arg_opts.dns_path), "%s", optarg);
+                FILE *dns_fp = fopen(arg_opts.dns_path, "r");
+
+                if (dns_fp == NULL)
+                    queue_init_message("DNSservers file not found");
+                else
+                    fclose(dns_fp);
+
                 break;
 
             case 't':
@@ -684,6 +712,7 @@ static void parse_args(int argc, char *argv[])
 
             case 'x':
                 arg_opts.ignore_data_file = 1;
+                queue_init_message("Ignoring data file");
                 break;
 
             case 'h':
