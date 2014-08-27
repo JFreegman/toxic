@@ -619,6 +619,7 @@ static void parse_args(int argc, char *argv[])
         {"dnslist", required_argument, 0, 'r'},
         {"force-tcp", no_argument, 0, 't'},
         {"proxy", required_argument, 0, 'p'},
+        {NULL, no_argument, NULL, 0},
     };
 
     const char *opts_str = "4bdhotxc:f:n:r:p:";

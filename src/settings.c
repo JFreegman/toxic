@@ -201,7 +201,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 {
     config_t cfg[1];
     config_setting_t *setting;
-    const char *str;
+    const char *str = NULL;
     
     /* Load default settings */
     ui_defaults(s);
