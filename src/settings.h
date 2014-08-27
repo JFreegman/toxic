@@ -23,7 +23,7 @@
 #ifndef _settings_h
 #define _settings_h
 
-#define NO_SOUND "silent"
+#include <limits.h>
 
 /* holds user setting values */
 struct user_settings {
@@ -36,7 +36,8 @@ struct user_settings {
     int show_typing_self;  /* boolean */
     int show_typing_other; /* boolean */
 
-    char download_path[MAX_STR_SIZE];
+    char download_path[PATH_MAX];
+    char chatlogs_path[PATH_MAX];
 
 	int key_next_tab;			/* character code */
 	int key_prev_tab;			/* character code */

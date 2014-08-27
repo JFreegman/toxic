@@ -41,7 +41,9 @@
     #define PACKAGE_DATADIR "."
 #endif
 
-const struct _ui_strings {
+#define NO_SOUND "silent"
+
+static struct _ui_strings {
     const char* self;
     const char* timestamps;
     const char* alerts;
@@ -75,7 +77,7 @@ static void ui_defaults(struct user_settings* settings)
     settings->show_typing_other = SHOW_TYPING_ON;
 }
 
-const struct _keys_strings {
+static const struct _keys_strings {
 	const char* self;
 	const char* next_tab;
 	const char* prev_tab;
@@ -113,21 +115,24 @@ static void key_defaults(struct user_settings* settings)
 	settings->key_peer_list_down = T_KEY_C_RB;
 }
 
-const struct _tox_strings {
+static const struct _tox_strings {
     const char* self;
     const char* download_path;
+    const char* chatlogs_path;
 } tox_strings = {
     "tox",
     "download_path",
+    "chatlogs_path",
 };
 
 static void tox_defaults(struct user_settings* settings)
 {
-    strcpy(settings->download_path, "");    /* explicitly set default to pwd */
+    strcpy(settings->download_path, "");
+    strcpy(settings->chatlogs_path, "");
 }
 
 #ifdef _AUDIO
-const struct _audio_strings {
+static const struct _audio_strings {
     const char* self;
     const char* input_device;
     const char* output_device;
@@ -148,7 +153,7 @@ static void audio_defaults(struct user_settings* settings)
 #endif
 
 #ifdef _SOUND_NOTIFY
-const struct _sound_strings {
+static const struct _sound_strings {
     const char* self;
     const char* error;
     const char* self_log_in;
@@ -246,24 +251,42 @@ int settings_load(struct user_settings *s, const char *patharg)
         s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
     }
 
+    /* paths */
     if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
         if ( config_setting_lookup_string(setting, tox_strings.download_path, &str) ) {
-            strcpy(s->download_path, str);
+            snprintf(s->download_path, sizeof(s->download_path), "%s", str);
+            int len = strlen(s->download_path);
+
+            /* make sure path ends with a '/' */
+            if (len >= sizeof(s->download_path) - 2)
+                s->download_path[0] = '\0';
+            else if (s->download_path[len - 1] != '/')
+                strcat(&s->download_path[len - 1], "/");
+        }
+
+        if ( config_setting_lookup_string(setting, tox_strings.chatlogs_path, &str) ) {
+            snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
+            int len = strlen(s->chatlogs_path);
+
+            if (len >= sizeof(s->chatlogs_path) - 2) 
+                s->chatlogs_path[0] = '\0';
+            else if (s->chatlogs_path[len - 1] != '/')
+                strcat(&s->chatlogs_path[len - 1], "/");
         }
     }
 
 	/* keys */
-	if((setting = config_lookup(cfg, key_strings.self)) != NULL) {
+	if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
 	   const char* tmp = NULL;
-	   if(config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) s->key_next_tab = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) s->key_prev_tab = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) s->key_scroll_line_up = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) s->key_scroll_line_down= key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) s->key_half_page_up = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) s->key_half_page_down = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
-	   if(config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) s->key_next_tab = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) s->key_prev_tab = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) s->key_scroll_line_up = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) s->key_scroll_line_down= key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) s->key_half_page_up = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) s->key_half_page_down = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
 	}	   
 
 #ifdef _AUDIO

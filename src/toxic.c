@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include <tox/tox.h>
 
@@ -180,7 +181,7 @@ static struct _init_messages {
     int num;
 } init_messages;
 
-/* queues messages during init until prompt window is initialized. */
+/* One-time queue for messages created during init. Do not use after program init. */
 static void queue_init_message(const char *msg)
 {
     int i = init_messages.num;
@@ -200,7 +201,7 @@ static void queue_init_message(const char *msg)
     init_messages.msgs = new_msgs;
 }
 
-/* call this after messages have been printed to console and are no longer needed */
+/* called after messages have been printed to console and are no longer needed */
 static void cleanup_init_messages(void)
 {
     if (init_messages.num <= 0)
@@ -214,15 +215,12 @@ static void cleanup_init_messages(void)
     free(init_messages.msgs);
 }
 
-/* prints all init_messages and frees them */
 static void print_init_messages(ToxWindow *toxwin)
 {
     int i;
 
     for (i = 0; i < init_messages.num; ++i)
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
-
-    cleanup_init_messages();
 }
 
 static Tox *init_tox(void)
@@ -645,7 +643,7 @@ static void parse_args(int argc, char *argv[])
                     queue_init_message("Config file not found");
                 else
                     fclose(conf_fp);
-                
+
                 break;
 
             case 'd':
@@ -664,7 +662,7 @@ static void parse_args(int argc, char *argv[])
                 strcpy(BLOCK_FILE, optarg);
                 strcat(BLOCK_FILE, "-blocklist");
 
-                char tmp[48];
+                char tmp[PATH_MAX];
                 snprintf(tmp, sizeof(tmp), "Using '%s' data file", DATA_FILE);
                 queue_init_message(tmp);
                 break;
@@ -852,6 +850,7 @@ int main(int argc, char *argv[])
         queue_init_message("Failed to load user settings");
 
     print_init_messages(prompt);
+    cleanup_init_messages();
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;

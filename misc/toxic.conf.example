@@ -39,8 +39,11 @@ audio = {
 };
 
 tox = {
-  // where to store received files
-  //download_path="/home/USERNAME/Downloads/";
+  // Path for downloaded files
+  // download_path="/home/USERNAME/Downloads/";
+
+  // Path for chatlogs
+  // chatlogs_path="/home/USERNAME/toxic_chatlogs/";
 };
 
 // To disable a sound set the path to "silent"
