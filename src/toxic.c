@@ -284,15 +284,7 @@ static Tox *init_tox(void)
     tox_callback_file_control(m, on_file_control, NULL);
     tox_callback_file_data(m, on_file_data, NULL);
 
-#ifdef __linux__
-    tox_set_name(m, (uint8_t *) "Cool dude", strlen("Cool dude"));
-#elif defined(__FreeBSD__)
-    tox_set_name(m, (uint8_t *) "Nerd", strlen("Nerd"));
-#elif defined(__APPLE__)
-    tox_set_name(m, (uint8_t *) "Hipster", strlen("Hipster")); /* This used to users of other Unixes are hipsters */
-#else
-    tox_set_name(m, (uint8_t *) "Registered Minix user #4", strlen("Registered Minix user #4"));
-#endif
+    tox_set_name(m, (uint8_t *) DEFAULT_NAME , strlen(DEFAULT_NOTE));
 
     return m;
 }
