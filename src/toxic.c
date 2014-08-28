@@ -638,12 +638,9 @@ static void parse_args(int argc, char *argv[])
 
             case 'c':
                 snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
-                FILE *conf_fp = fopen(arg_opts.config_path, "r");
 
-                if (conf_fp == NULL)
+                if (!file_exists(arg_opts.config_path))
                     queue_init_message("Config file not found");
-                else
-                    fclose(conf_fp);
 
                 break;
 
@@ -670,12 +667,9 @@ static void parse_args(int argc, char *argv[])
 
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
-                FILE *nodes_fp = fopen(arg_opts.nodes_path, "r");
 
-                if (nodes_fp == NULL)
+                if (!file_exists(arg_opts.nodes_path))
                     queue_init_message("DHTnodes file not found");
-                else
-                    fclose(nodes_fp);
 
                 break;
 
@@ -696,12 +690,9 @@ static void parse_args(int argc, char *argv[])
 
             case 'r':
                 snprintf(arg_opts.dns_path, sizeof(arg_opts.dns_path), "%s", optarg);
-                FILE *dns_fp = fopen(arg_opts.dns_path, "r");
 
-                if (dns_fp == NULL)
+                if (!file_exists(arg_opts.dns_path))
                     queue_init_message("DNSservers file not found");
-                else
-                    fclose(dns_fp);
 
                 break;
 

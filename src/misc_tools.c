@@ -26,6 +26,7 @@
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -302,4 +303,11 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes)
     }
 
     snprintf(buf, size, "%.1f %s", conv, unit);
+}
+
+/* checks if a file exists. Returns true or false */
+bool file_exists(const char *fp)
+{
+    struct stat s;
+    return stat(fp, &s) == 0;
 }

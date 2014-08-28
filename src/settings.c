@@ -29,6 +29,7 @@
 #include "windows.h"
 #include "configdir.h"
 #include "notify.h"
+#include "misc_tools.h"
 
 #ifdef _AUDIO
     #include "device.h"
@@ -222,13 +223,14 @@ int settings_load(struct user_settings *s, const char *patharg)
         free(user_config_dir);
 
         /* make sure path exists or is created on first time running */
-        FILE *fp = fopen(path, "r");
-        if (fp == NULL) {
-            if ((fp = fopen(path, "w")) == NULL)
-                return -1;
-        }
+        if (!file_exists(path)) {
+            FILE *fp = fopen(path, "w");
 
-        fclose(fp);
+            if (fp == NULL)
+                return -1;
+
+            fclose(fp);
+        }
     } else {
         snprintf(path, sizeof(path), "%s", patharg);
     }
