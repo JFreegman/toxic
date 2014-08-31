@@ -208,6 +208,7 @@ int settings_load(struct user_settings *s, const char *patharg)
     ui_defaults(s);
     tox_defaults(s);
     key_defaults(s);
+
 #ifdef _AUDIO
     audio_defaults(s);
 #endif

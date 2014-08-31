@@ -185,12 +185,24 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
         return;
 
     StatusBar *statusbar = self->stb;
+    ChatContext *ctx = self->chatwin;
+    const char *msg;
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    char nick[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, nick, num);
 
     if (status == 1) { /* Friend goes online */
         statusbar->is_online = true;
         Friends.list[num].is_typing = user_settings_->show_typing_other == SHOW_TYPING_ON 
                                  ? tox_get_is_typing(m, num) : 0;
-        chat_resume_file_transfers(m, num);             
+        chat_resume_file_transfers(m, num);
+
+        msg = "has come online";
+        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
+        write_to_log(msg, nick, ctx->log, true);
     } else { /* Friend goes offline */
         statusbar->is_online = false;
         Friends.list[num].is_typing = 0;
@@ -199,6 +211,10 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
             set_self_typingstatus(self, m, 0);
 
         chat_stop_file_senders(num);
+
+        msg = "has gone offline";
+        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, RED, msg);
+        write_to_log(msg, nick, ctx->log, true);
     }
 }
 
