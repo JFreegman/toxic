@@ -170,9 +170,5 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
     if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
         return;
 
-#ifdef _SOUND_NOTIFY
-        sound_notify(self, error, 0, NULL);
-#else
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");
-#endif
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");
 }
