@@ -55,11 +55,11 @@ static struct cmd_func global_commands[] = {
     { "/quit",      cmd_quit          },
     { "/requests",  cmd_requests      },
     { "/status",    cmd_status        },
-
 #ifdef _AUDIO
     { "/lsdev",     cmd_list_devices  },
     { "/sdev",      cmd_change_device },
 #endif /* _AUDIO */
+    { NULL,          NULL             },
 };
 
 static struct cmd_func chat_commands[] = {
@@ -68,7 +68,6 @@ static struct cmd_func chat_commands[] = {
     { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
-
 #ifdef _AUDIO
     { "/call",      cmd_call        },
     { "/answer",    cmd_answer      },
@@ -78,6 +77,7 @@ static struct cmd_func chat_commands[] = {
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
 #endif /* _AUDIO */
+    { NULL,          NULL           },
 };
 
 /* Parses input command and puts args into arg array.
@@ -126,12 +126,12 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
 }
 
 /* Matches command to respective function. Returns 0 on match, 1 on no match */
-static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, int num_cmds,
-                      struct cmd_func *commands, char (*args)[MAX_STR_SIZE])
+static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct cmd_func *commands,
+                      char (*args)[MAX_STR_SIZE])
 {
     int i;
 
-    for (i = 0; i < num_cmds; ++i) {
+    for (i = 0; commands[i].name != NULL; ++i) {
         if (strcmp(args[0], commands[i].name) == 0) {
             (commands[i].func)(w, self, m, num_args - 1, args);
             return 0;
@@ -158,7 +158,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
        Note: Global commands must come last in case of duplicate command names */
     switch (mode) {
         case CHAT_COMMAND_MODE:
-            if (do_command(w, self, m, num_args, CHAT_NUM_COMMANDS, chat_commands, args) == 0)
+            if (do_command(w, self, m, num_args, chat_commands, args) == 0)
                 return;
 
             break;
@@ -167,7 +167,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
             break;
     }
 
-    if (do_command(w, self, m, num_args, GLOBAL_NUM_COMMANDS, global_commands, args) == 0)
+    if (do_command(w, self, m, num_args, global_commands, args) == 0)
         return;
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");

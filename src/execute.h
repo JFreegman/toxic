@@ -28,14 +28,6 @@
 
 #define MAX_NUM_ARGS 4     /* Includes command */
 
-#ifdef _AUDIO
-#define GLOBAL_NUM_COMMANDS 18
-#define CHAT_NUM_COMMANDS 12
-#else
-#define GLOBAL_NUM_COMMANDS 16
-#define CHAT_NUM_COMMANDS 5
-#endif /* _AUDIO */
-
 enum {
     GLOBAL_COMMAND_MODE,
     CHAT_COMMAND_MODE,
