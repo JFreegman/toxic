@@ -1,10 +1,9 @@
 CHECKS_DIR = $(CFG_DIR)/checks
 
-# Check if we can use X11
-CHECK_X11_LIBS = $(shell pkg-config --exists x11 || echo -n "error")
-ifneq ($(CHECK_X11_LIBS), error)
-	LIBS += x11
-	CFLAGS += -D_X11
+# Check if we want build X11 support
+X11 = $(shell if [ -z "$(DISABLE_X11)" ] || [ "$(DISABLE_X11)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(X11), disabled)
+	-include $(CHECKS_DIR)/x11.mk
 endif
 
 # Check if we want build audio support
