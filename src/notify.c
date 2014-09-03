@@ -119,6 +119,12 @@ long unsigned int get_focused_window_id()
 #endif /* _X11 */
 }
 
+static _Bool notifications_are_disabled(const uint64_t flags)
+{
+    return ( (flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
+             (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) );
+}
+
 static void control_lock()
 {
 #if defined(_SOUND_NOTIFY) || defined(_BOX_NOTIFY)
@@ -449,8 +455,7 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
         else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
-    if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
-       ((flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) ))
+    if (notifications_are_disabled(flags))
         return -1;
     
     int id = -1;
@@ -493,8 +498,7 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
         else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
-    if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
-       ((flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) ))
+    if (notifications_are_disabled(flags))
         return -1;
     
     if (id < 0 || id >= ACTIVE_NOTIFS_MAX) return -1;
@@ -532,8 +536,7 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
 
 int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, char* title, const char* format, ...)
 {
-    if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
-       ((flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) ))
+    if (notifications_are_disabled(flags))
         return -1;
         
 #ifdef _BOX_NOTIFY
@@ -585,8 +588,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
 
 int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...)
 {
-    if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
-       ((flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) ))
+    if (notifications_are_disabled(flags))
         return -1;
         
 #ifdef _BOX_NOTIFY
@@ -642,8 +644,7 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
         else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
-    if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
-       ((flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) ))
+    if (notifications_are_disabled(flags))
         return -1;
         
 #ifdef _BOX_NOTIFY
@@ -698,8 +699,7 @@ int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* form
         else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
     }
     
-    if ((flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
-       ((flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) ))
+    if (notifications_are_disabled(flags))
         return -1;
         
 #ifdef _BOX_NOTIFY
