@@ -67,9 +67,9 @@ extern struct user_settings *user_settings_;
 struct _Control {
     time_t cooldown;
     time_t notif_timeout;
-    unsigned long this_window;
 #ifdef _X11
     Display *display;
+    unsigned long this_window;
 #endif /* _X11 */
     
 #if defined(_SOUND_NOTIFY) || defined(_BOX_NOTIFY)
@@ -105,24 +105,26 @@ struct _ActiveNotifications {
 /**********************************************************************************/
 /**********************************************************************************/
 
+#ifdef _X11
 long unsigned int get_focused_window_id()
 {
-#ifdef _X11
     if (!Control.display) return 0;
     
     Window focus;
     int revert;
     XGetInputFocus(Control.display, &focus, &revert);
     return focus;
-#else
-    return 0;
-#endif /* _X11 */
 }
+#endif /* _X11 */
 
 static _Bool notifications_are_disabled(const uint64_t flags)
 {
     return ( (flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
+#ifdef _X11
              (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) );
+#else
+             0 );
+#endif
 }
 
 static void control_lock()
@@ -323,8 +325,6 @@ int init_notify(int login_cooldown, int notification_timeout)
 #ifdef _X11
     Control.display = XOpenDisplay(NULL);
     Control.this_window = get_focused_window_id();
-#else
-    Control.this_window = 1;
 #endif /* _X11 */
     
     
