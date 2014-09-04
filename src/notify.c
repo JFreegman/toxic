@@ -597,8 +597,10 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
 
 int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...)
 {
-    if (notifications_are_disabled(flags))
+    if (notifications_are_disabled(flags)) {
+        tab_notify(self, flags);
         return -1;
+    }
 
 #ifdef _BOX_NOTIFY
 
