@@ -102,7 +102,7 @@ static void init_signal_catchers(void)
     signal(SIGSEGV, catch_SIGSEGV);
 }
 
-void exit_toxic_success(Tox *m)
+noreturn void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
     close_all_file_senders(m);
@@ -124,7 +124,7 @@ void exit_toxic_success(Tox *m)
     exit(EXIT_SUCCESS);
 }
 
-void exit_toxic_err(const char *errmsg, int errcode)
+noreturn void exit_toxic_err(const char *errmsg, int errcode)
 {
     if (errmsg == NULL)
         errmsg = "No error message";

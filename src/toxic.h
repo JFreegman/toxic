@@ -36,6 +36,7 @@
 #endif
 
 #include <stdbool.h>
+#include <stdnoreturn.h>
 #include <curses.h>
 
 #include <tox/tox.h>
@@ -85,8 +86,8 @@ typedef enum _FATAL_ERRS {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
-void exit_toxic_success(Tox *m);
-void exit_toxic_err(const char *errmsg, int errcode);
+noreturn void exit_toxic_success(Tox *m);
+noreturn void exit_toxic_err(const char *errmsg, int errcode);
 
 int store_data(Tox *m, char *path);
 
