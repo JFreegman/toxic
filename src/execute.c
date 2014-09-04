@@ -59,7 +59,7 @@ static struct cmd_func global_commands[] = {
     { "/lsdev",     cmd_list_devices  },
     { "/sdev",      cmd_change_device },
 #endif /* _AUDIO */
-    { NULL,          NULL             },
+    { NULL,         NULL              },
 };
 
 static struct cmd_func chat_commands[] = {
@@ -77,7 +77,7 @@ static struct cmd_func chat_commands[] = {
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
 #endif /* _AUDIO */
-    { NULL,          NULL           },
+    { NULL,         NULL            },
 };
 
 /* Parses input command and puts args into arg array.
@@ -101,7 +101,7 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
             i = char_find(1, cmd, '\"');
 
             if (cmd[i] == '\0') {
-                char *errmsg = "Invalid argument. Did you forget a closing \"?";
+                const char *errmsg = "Invalid argument. Did you forget a closing \"?";
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
                 free(cmd);
                 return -1;
@@ -118,7 +118,7 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
 
         char tmp[MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), "%s", &cmd[i + 1]);
-        strcpy(cmd, tmp);
+        strcpy(cmd, tmp);    /* tmp will always fit inside cmd */
     }
 
     free(cmd);

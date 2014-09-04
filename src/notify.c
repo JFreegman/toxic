@@ -24,10 +24,12 @@
 #include "device.h"
 #include "settings.h"
 #include "line_info.h"
+#include "misc_tools.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <time.h>
@@ -59,6 +61,7 @@
     #include <libnotify/notify.h>
 #endif
 
+#define MAX_BOX_MSG_LEN 127
 #define SOUNDS_SIZE 10
 #define ACTIVE_NOTIFS_MAX 50
 
@@ -74,7 +77,7 @@ struct _Control {
     
 #if defined(_SOUND_NOTIFY) || defined(_BOX_NOTIFY)
     pthread_mutex_t poll_mutex[1];
-    _Bool poll_active;
+    bool poll_active;
 #endif
     
 #ifdef _SOUND_NOTIFY
@@ -87,13 +90,13 @@ struct _ActiveNotifications {
 #ifdef _SOUND_NOTIFY
     uint32_t source;
     uint32_t buffer;
-    _Bool looping;
+    bool looping;
 #endif
-    _Bool active;
+    bool active;
     int *id_indicator;
 #ifdef _BOX_NOTIFY
     NotifyNotification* box;
-    char messages[128][128];
+    char messages[MAX_BOX_MSG_LEN + 1][MAX_BOX_MSG_LEN + 1];
     char title[24];
     size_t size;
     time_t n_timeout;
@@ -104,6 +107,20 @@ struct _ActiveNotifications {
 /**********************************************************************************/
 /**********************************************************************************/
 /**********************************************************************************/
+
+/* coloured tab notifications: primary notification type */
+static void tab_notify(ToxWindow *self, uint64_t flags)
+{
+    if (self == NULL)
+        return;
+
+    if (flags & NT_WNDALERT_0) 
+        self->alert = WINDOW_ALERT_0;
+    else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) 
+        self->alert = WINDOW_ALERT_1;
+    else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) 
+        self->alert = WINDOW_ALERT_2;
+}
 
 #ifdef _X11
 long unsigned int get_focused_window_id()
@@ -117,13 +134,13 @@ long unsigned int get_focused_window_id()
 }
 #endif /* _X11 */
 
-static _Bool notifications_are_disabled(const uint64_t flags)
+static bool notifications_are_disabled(uint64_t flags)
 {
-    return ( (flags & NT_RESTOL && Control.cooldown > time(NULL)) ||
+    bool res = flags & NT_RESTOL && Control.cooldown > get_unix_time();
 #ifdef _X11
-             (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id()) );
+    return res || (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id());
 #else
-             0 );
+    return res;
 #endif
 }
 
@@ -142,7 +159,7 @@ static void control_unlock()
 }
 
 #ifdef _SOUND_NOTIFY
-_Bool is_playing(int source)
+bool is_playing(int source)
 {
     int ready;
     alGetSourcei(source, AL_SOURCE_STATE, &ready);
@@ -232,7 +249,7 @@ void* do_playing(void* _p)
     pthread_exit(NULL);
 }
 
-int play_source(uint32_t source, uint32_t buffer, _Bool looping)
+int play_source(uint32_t source, uint32_t buffer, bool looping)
 {    
     int i = 0;
     for (; i < ACTIVE_NOTIFS_MAX && actives[i].active; i ++);
@@ -371,7 +388,7 @@ int set_sound(Notification sound, const char* value)
     return stat(value, &buf) == 0;
 }
 
-int play_sound_internal(Notification what, _Bool loop)
+int play_sound_internal(Notification what, bool loop)
 {        
     uint32_t source;
     uint32_t buffer;
@@ -448,13 +465,8 @@ void m_notify_action(NotifyNotification *box, char *action, void* data)
 
 int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator)
 {
-    /* Consider colored notify as primary */
-    if (self) {
-        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
-        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
-    }
-    
+    tab_notify(self, flags);
+
     if (notifications_are_disabled(flags))
         return -1;
     
@@ -491,12 +503,7 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
 
 int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
 {
-    /* Consider colored notify as primary */
-    if (self) {
-        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
-        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
-    }
+    tab_notify(self, flags);
     
     if (notifications_are_disabled(flags))
         return -1;
@@ -536,40 +543,42 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
 
 int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, char* title, const char* format, ...)
 {
-    if (notifications_are_disabled(flags))
+    if (notifications_are_disabled(flags)) {
+        tab_notify(self, flags);
         return -1;
-        
+    }
+
 #ifdef _BOX_NOTIFY
-    
+
     int id = sound_notify(self, notif, flags, id_indicator);
-    
+
     control_lock();
-    
+
 #ifdef _SOUND_NOTIFY
     if (id == -1) { /* Could not play */
-        
+
         for (id = 0; id < ACTIVE_NOTIFS_MAX && actives[id].active; id ++);
         if ( id == ACTIVE_NOTIFS_MAX ) {
             control_unlock();
             return -1; /* Full */
         }
-        
+
         actives[id].active = 1;    
         actives[id].id_indicator = id_indicator;
         if (id_indicator) *id_indicator = id;
     }
 #endif
-        
+
     strncpy(actives[id].title, title, 24);
     if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
 
     va_list __ARGS__; va_start (__ARGS__, format);
-    vsnprintf (actives[id].messages[0], 127, format, __ARGS__);
+    vsnprintf (actives[id].messages[0], MAX_BOX_MSG_LEN, format, __ARGS__);
     va_end (__ARGS__);
-    
-    if (strlen(actives[id].messages[0]) > 124) 
-        strcpy(actives[id].messages[0] + 124, "...");
-    
+
+    if (strlen(actives[id].messages[0]) > MAX_BOX_MSG_LEN - 3) 
+        strcpy(actives[id].messages[0] + MAX_BOX_MSG_LEN - 3, "...");
+
     actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
     actives[id].size ++;
     actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
@@ -578,7 +587,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
     notify_notification_set_app_name(actives[id].box, "toxic");
     /*notify_notification_add_action(actives[id].box, "lel", "default", m_notify_action, self, NULL);*/
     notify_notification_show(actives[id].box, NULL);
-    
+
     control_unlock();
     return id;
 #else
@@ -590,45 +599,44 @@ int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, con
 {
     if (notifications_are_disabled(flags))
         return -1;
-        
+
 #ifdef _BOX_NOTIFY
-    
+
     if (sound_notify2(self, notif, flags, id) == -1)
         return -1;
-    
+
     control_lock();
-    
-    if (!actives[id].box || actives[id].size >= 128 ) {
+
+    if (!actives[id].box || actives[id].size >= MAX_BOX_MSG_LEN + 1) {
         control_unlock();
         return -1;
     }
-    
-    
+
     va_list __ARGS__; va_start (__ARGS__, format);
-    vsnprintf (actives[id].messages[actives[id].size], 127, format, __ARGS__);
+    vsnprintf (actives[id].messages[actives[id].size], MAX_BOX_MSG_LEN, format, __ARGS__);
     va_end (__ARGS__);
-    
-    if (strlen(actives[id].messages[actives[id].size]) > 124)
-        strcpy(actives[id].messages[actives[id].size] + 124, "...");
-    
+
+    if (strlen(actives[id].messages[actives[id].size]) > MAX_BOX_MSG_LEN - 3)
+        strcpy(actives[id].messages[actives[id].size] + MAX_BOX_MSG_LEN - 3, "...");
+
     actives[id].size ++;
     actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
-    
+
     char formated[128 * 129] = {'\0'};
-    
+
     int i = 0;
     for (; i <actives[id].size; i ++) {
         strcat(formated, actives[id].messages[i]);
         strcat(formated, "\n");
     }
-    
+
     formated[strlen(formated) - 1] = '\0';
-    
+
     notify_notification_update(actives[id].box, actives[id].title, formated, NULL);
     notify_notification_show(actives[id].box, NULL);
-    
+
     control_unlock();
-    
+
     return id;
 #else
     return sound_notify2(self, notif, flags, id);
@@ -637,52 +645,47 @@ int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, con
 
 int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const char* title, const char* format, ...)
 {
-    /* Always do colored notify */
-    if (self) {
-        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
-        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
-    }
-    
+    tab_notify(self, flags);
+
     if (notifications_are_disabled(flags))
         return -1;
-        
+
 #ifdef _BOX_NOTIFY
-    
+
     control_lock();
-    
+
     int id;        
     for (id = 0; id < ACTIVE_NOTIFS_MAX && actives[id].active; id ++);
     if ( id == ACTIVE_NOTIFS_MAX ) {
         control_unlock();
         return -1; /* Full */
     }
-    
+
     if (id_indicator) {
         actives[id].id_indicator = id_indicator;
         *id_indicator = id;
     }
-    
+
     strncpy(actives[id].title, title, 24);
     if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
-    
+
     va_list __ARGS__; va_start (__ARGS__, format);
-    vsnprintf (actives[id].messages[0], 127, format, __ARGS__);
+    vsnprintf (actives[id].messages[0], MAX_BOX_MSG_LEN, format, __ARGS__);
     va_end (__ARGS__);
-    
-    if (strlen(actives[id].messages[0]) > 124) 
-        strcpy(actives[id].messages[0] + 124, "...");
-    
+
+    if (strlen(actives[id].messages[0]) > MAX_BOX_MSG_LEN - 3) 
+        strcpy(actives[id].messages[0] + MAX_BOX_MSG_LEN - 3, "...");
+
     actives[id].active = 1;
     actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
     actives[id].size ++;
     actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
-    
+
     notify_notification_set_timeout(actives[id].box, Control.notif_timeout);
     notify_notification_set_app_name(actives[id].box, "toxic");
     /*notify_notification_add_action(actives[id].box, "lel", "default", m_notify_action, self, NULL);*/
     notify_notification_show(actives[id].box, NULL);
-    
+
     control_unlock();
     return id;
 #else
@@ -692,50 +695,45 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
 
 int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* format, ...)
 {
-    /* Always do colored notify */
-    if (self) {
-        if (flags & NT_WNDALERT_0) self->alert = WINDOW_ALERT_0;
-        else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) self->alert = WINDOW_ALERT_1;
-        else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) self->alert = WINDOW_ALERT_2;
-    }
-    
+    tab_notify(self, flags);
+
     if (notifications_are_disabled(flags))
         return -1;
-        
+
 #ifdef _BOX_NOTIFY
     control_lock();
-    
-    if (id < 0 || id >= ACTIVE_NOTIFS_MAX || !actives[id].box || actives[id].size >= 128 ) {
+
+    if (id < 0 || id >= ACTIVE_NOTIFS_MAX || !actives[id].box || actives[id].size >= MAX_BOX_MSG_LEN + 1 ) {
         control_unlock();
         return -1;
     }
-        
-    
+
+
     va_list __ARGS__; va_start (__ARGS__, format);
-    vsnprintf (actives[id].messages[actives[id].size], 127, format, __ARGS__);
+    vsnprintf (actives[id].messages[actives[id].size], MAX_BOX_MSG_LEN, format, __ARGS__);
     va_end (__ARGS__);
-    
-    if (strlen(actives[id].messages[actives[id].size]) > 124)
-        strcpy(actives[id].messages[actives[id].size] + 124, "...");
-    
+
+    if (strlen(actives[id].messages[actives[id].size]) > MAX_BOX_MSG_LEN - 3)
+        strcpy(actives[id].messages[actives[id].size] + MAX_BOX_MSG_LEN - 3, "...");
+
     actives[id].size ++;
     actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
-    
+
     char formated[128 * 129] = {'\0'};
-    
+
     int i = 0;
     for (; i <actives[id].size; i ++) {
         strcat(formated, actives[id].messages[i]);
         strcat(formated, "\n");
     }
-    
+
     formated[strlen(formated) - 1] = '\0';
-    
+
     notify_notification_update(actives[id].box, actives[id].title, formated, NULL);
     notify_notification_show(actives[id].box, NULL);
-    
+
     control_unlock();
-    
+
     return id;
 #else
     return -1;
