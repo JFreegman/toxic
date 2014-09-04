@@ -9,6 +9,7 @@ help:
 	@echo "  help:    This help"
 	@echo
 	@echo "-- Variables --"
+	@echo "  DISABLE_X11:            Set to \"1\" to force building without X11 support"
 	@echo "  DISABLE_AV:             Set to \"1\" to force building without audio call support"
 	@echo "  DISABLE_SOUND_NOTIFY:   Set to \"1\" to force building without sound notification support"
 	@echo "  DISABLE_DESKTOP_NOTIFY: Set to \"1\" to force building without desktop notifications support"
