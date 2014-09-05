@@ -130,11 +130,12 @@ static int save_blocklist(char *path)
         exit_toxic_err("Failed in save_blocklist", FATALERR_MEMORY);
 
     int i;
+    int ret = -1;
     int count = 0;
 
     for (i = 0; i < Blocked.max_idx; ++i) {
         if (count > Blocked.num_blocked)
-            return -1;
+            goto on_error;
 
         if (Blocked.list[i].active) {
             BlockedFriend tmp;
@@ -155,17 +156,14 @@ static int save_blocklist(char *path)
 
     FILE *fp = fopen(path, "wb");
 
-    if (fp == NULL) {
-        free(data);
-        return -1;
-    }
+    if (fp == NULL)
+        goto on_error;
 
-    int ret = 0;
-
-    if (fwrite(data, len, 1, fp) != 1)
-        ret = -1;
+    if (fwrite(data, len, 1, fp) == 1)
+        ret = 0;
 
     fclose(fp);
+on_error:
     free(data);
     return ret;
 }
