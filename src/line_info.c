@@ -107,15 +107,6 @@ static void line_info_root_fwd(struct history *hst)
     hst->line_root = tmp;
 }
 
-/* adds a line_info line to queue */
-static void line_info_add_queue(struct history *hst, struct line_info *line)
-{
-    if (hst->queue_sz >= MAX_QUEUE)
-        return;
-
-    hst->queue[hst->queue_sz++] = line;
-}
-
 /* returns ptr to queue item 0 and removes it from queue */
 static struct line_info *line_info_ret_queue(struct history *hst)
 {
@@ -140,6 +131,10 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
                    uint8_t colour, const char *msg, ...)
 {
     struct history *hst = self->chatwin->hst;
+
+    if (hst->queue_sz >= MAX_QUEUE)
+        return;
+
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
     if (new_line == NULL)
@@ -205,7 +200,7 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
     new_line->bold = bold;
     new_line->colour = colour;
 
-    line_info_add_queue(hst, new_line);
+    hst->queue[hst->queue_sz++] = new_line;
 }
 
 /* adds a single queue item to hst if possible. only called once per call to line_info_print() */
