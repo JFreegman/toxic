@@ -43,6 +43,7 @@
 #include "help.h"
 #include "autocomplete.h"
 #include "notify.h"
+#include "message_queue.h"
 
 #ifdef _AUDIO
     #include "audio_call.h"
@@ -134,6 +135,7 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     close_all_file_receivers(m, self->num);
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
+    cqueue_cleanup(ctx->cqueue);
 
 #ifdef _AUDIO
     stop_current_call(self);
@@ -144,7 +146,6 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     delwin(statusbar->topline);
 
     free(ctx->log);
-    free(ctx->hst);
     free(ctx);
     free(self->help);
     free(statusbar);
@@ -293,8 +294,6 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     if (self->num != num)
         return;
 
-    const char *errmsg;
-
     /* holds the filename appended to the user specified path */
     char filename_path[MAX_STR_SIZE] = {0};
 
@@ -308,8 +307,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
                                                           filename_nopath, sizestr);
 
     if (filenum >= MAX_FILES) {
-        errmsg = "Too many pending file requests; discarding.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Too many pending file requests; discarding.");
         return;
     }
 
@@ -320,8 +318,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     }
 
     if (len >= sizeof(Friends.list[num].file_receiver[filenum].filename)) {
-        errmsg = "File name too long; discarding.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File name too long; discarding.");
         return;
     }
 
@@ -351,8 +348,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
         filename[len + d_len] = '\0';
 
         if (count > 999) {
-            errmsg = "Error saving file to disk.";
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error saving file to disk.");
             return;
         }
     }
@@ -494,7 +490,10 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
         case TOX_FILECONTROL_FINISHED:
             if (receive_send == 0) {
                 print_progress_bar(self, filenum, num, 100.0);
-                snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename);
+
+                char filename_nopath[MAX_STR_SIZE];
+                get_file_name(filename_nopath, sizeof(filename_nopath), filename);
+                snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename_nopath);
                 chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_FINISHED);
             } else {
                 snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
@@ -833,12 +832,8 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, selfname, NULL, ACTION, 0, 0, "%s", action);
-
-    if (tox_send_action(m, self->num, (uint8_t *) action, strlen(action)) == 0) {
-        line_info_add(self, NULL, selfname, NULL, SYS_MSG, 0, RED, " * Failed to send action.");
-    } else {
-        write_to_log(action, selfname, ctx->log, true);
-    }
+    write_to_log(action, selfname, ctx->log, true);
+    cqueue_add(ctx->cqueue, action, strlen(action), QACTION, ctx->hst->line_end->id);
 }
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
@@ -919,12 +914,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             get_time_str(timefrmt, sizeof(timefrmt));
 
             line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
-
-            if (!statusbar->is_online || tox_send_message(m, self->num, (uint8_t *) line, strlen(line)) == 0) {
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message.");
-            } else {
-                write_to_log(line, selfname, ctx->log, false);
-            }
+            write_to_log(line, selfname, ctx->log, false);
+            cqueue_add(ctx->cqueue, line, strlen(line), QMESSAGE, ctx->hst->line_end->id);
         }
 
         wclear(ctx->linewin);
@@ -1090,11 +1081,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     ctx->hst = calloc(1, sizeof(struct history));
     ctx->log = calloc(1, sizeof(struct chatlog));
+    ctx->cqueue = calloc(1, sizeof(struct chat_queue));
 
-    if (ctx->log == NULL || ctx->hst == NULL)
+    if (ctx->log == NULL || ctx->hst == NULL || ctx->cqueue == NULL)
         exit_toxic_err("failed in chat_onInit", FATALERR_MEMORY);
 
     line_info_init(ctx->hst);
+    ctx->cqueue->friendnum = self->num;
 
     if (Friends.list[self->num].logging_on)
         log_enable(nick, Friends.list[self->num].pub_key, ctx->log);

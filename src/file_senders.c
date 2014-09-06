@@ -276,6 +276,7 @@ void do_file_senders(Tox *m)
                 box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
             else
                 box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", msg);
+
             continue;
         }
 

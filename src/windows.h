@@ -71,6 +71,10 @@ struct _Winthread {
     bool flag_resize;
 };
 
+struct _cqueue_thread {
+    pthread_t tid;
+};
+
 struct arg_opts {
     int ignore_data_file;
     int use_ipv4;
@@ -208,6 +212,7 @@ struct ChatContext {
 
     struct history *hst;
     struct chatlog *log;
+    struct chat_queue *cqueue;
 
 #ifdef _AUDIO
     struct infobox infobox;

@@ -88,7 +88,6 @@ void kill_prompt_window(ToxWindow *self)
     delwin(statusbar->topline);
 
     free(ctx->log);
-    free(ctx->hst);
     free(ctx);
     free(self->help);
     free(statusbar);

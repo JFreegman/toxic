@@ -97,7 +97,6 @@ void kill_groupchat_window(ToxWindow *self)
     delwin(ctx->history);
     delwin(ctx->sidebar);
     free(ctx->log);
-    free(ctx->hst);
     free(ctx);
     free(self->help);
     del_window(self);

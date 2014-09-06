@@ -166,7 +166,7 @@ bool is_playing(int source)
     return ready == AL_PLAYING;
 }
 
-/* Terminate all sounds but wait them to finish first */
+/* Terminate all sounds but wait for them to finish first */
 void graceful_clear()
 {
     int i;
@@ -192,7 +192,6 @@ void graceful_clear()
                     else break;
                 }
             }
-            
         }
         
         if (i == ACTIVE_NOTIFS_MAX) {

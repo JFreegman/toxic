@@ -89,6 +89,8 @@ void line_info_cleanup(struct history *hst)
         if (hst->queue[i])
             free(hst->queue[i]);
     }
+
+    free(hst);
 }
 
 /* moves root forward and frees previous root */

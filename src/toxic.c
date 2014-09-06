@@ -53,6 +53,7 @@
 #include "log.h"
 #include "notify.h"
 #include "device.h"
+#include "message_queue.h"
 
 #ifdef _AUDIO
 #include "audio_call.h"
@@ -74,6 +75,7 @@ ToxWindow *prompt = NULL;
 #define AUTOSAVE_FREQ 60
 
 struct _Winthread Winthread;
+struct _cqueue_thread cqueue_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings_ = NULL;
 
@@ -573,6 +575,26 @@ void *thread_winref(void *data)
     }
 }
 
+void *thread_cqueue(void *data)
+{
+    Tox *m = (Tox *) data;
+
+    while (true) {
+        pthread_mutex_lock(&Winthread.lock);
+        int i;
+
+        for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+            ToxWindow *toxwin = get_window_ptr(i);
+
+            if (toxwin != NULL && toxwin->is_chat && tox_get_friend_connection_status(m, toxwin->num) == 1)
+                cqueue_try_send(m, toxwin->chatwin->cqueue);
+        }
+
+        pthread_mutex_unlock(&Winthread.lock);
+        usleep(100000);   /* 0.1 second */
+    }
+}
+
 static void print_usage(void)
 {
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
@@ -811,10 +833,13 @@ int main(int argc, char *argv[])
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
+    /* thread for message queue */
+    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+
 #ifdef _AUDIO
 
     av = init_audio(prompt, m);
-
 
     set_primary_device(input, user_settings_->audio_in_dev);
     set_primary_device(output, user_settings_->audio_out_dev);
