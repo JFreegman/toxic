@@ -31,6 +31,8 @@
 #include "groupchat.h"
 #include "settings.h"
 #include "notify.h"
+#include "message_queue.h"
+#include "misc_tools.h"
 
 extern struct user_settings *user_settings_;
 
@@ -129,7 +131,7 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 
 /* creates new line_info line and puts it in the queue. 
    SYS_MSG lines may contain an arbitrary number of arguments for string formatting */
-void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
+void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uint8_t type, uint8_t bold, 
                    uint8_t colour, const char *msg, ...)
 {
     struct history *hst = self->chatwin->hst;
@@ -153,9 +155,12 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
 
     /* for type-specific formatting in print function */
     switch (type) {
+        case GROUP_ACTION:
+            len += 3;
+            break;
+
         case OUT_ACTION:
         case IN_ACTION:
-        case GROUP_ACTION:
             len += 5;
             break;
 
@@ -191,9 +196,9 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
         }
     }
 
-    if (tmstmp) {
-        snprintf(new_line->timestamp, sizeof(new_line->timestamp), "%s", tmstmp);
-        len += strlen(new_line->timestamp);
+    if (timestr) {
+        snprintf(new_line->timestr, sizeof(new_line->timestr), "%s", timestr);
+        len += strlen(new_line->timestr);
     }
 
     if (name1) {
@@ -210,6 +215,7 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
     new_line->type = type;
     new_line->bold = bold;
     new_line->colour = colour;
+    new_line->timestamp = get_unix_time();
 
     hst->queue[hst->queue_sz++] = new_line;
 }
@@ -289,7 +295,7 @@ void line_info_print(ToxWindow *self)
             case OUT_MSG_READ:
             case IN_MSG:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestamp);
+                wprintw(win, "%s", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 int nameclr = GREEN;
@@ -311,7 +317,7 @@ void line_info_print(ToxWindow *self)
                 if (line->msg[0] == '>')
                     wattroff(win, COLOR_PAIR(GREEN));
 
-                if (type == OUT_MSG) {    /* sent message with no recieve receipt */
+                if (type == OUT_MSG && timed_out(line->timestamp, get_unix_time(), CQUEUE_TRY_SEND_INTERVAL)) {
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
@@ -325,14 +331,14 @@ void line_info_print(ToxWindow *self)
             case OUT_ACTION:
             case IN_ACTION:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestamp);
+                wprintw(win, "%s", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
                 wprintw(win, "* %s %s", line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
-                if (type == OUT_ACTION) {    /* sent action with no recieve receipt */
+                if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), CQUEUE_TRY_SEND_INTERVAL)) {
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
@@ -342,9 +348,9 @@ void line_info_print(ToxWindow *self)
                 break;
 
             case SYS_MSG:
-                if (line->timestamp[0]) {
+                if (line->timestr[0]) {
                     wattron(win, COLOR_PAIR(BLUE));
-                    wprintw(win, "%s", line->timestamp);
+                    wprintw(win, "%s", line->timestr);
                     wattroff(win, COLOR_PAIR(BLUE));
                 }
 
@@ -377,7 +383,7 @@ void line_info_print(ToxWindow *self)
 
             case CONNECTION:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestamp);
+                wprintw(win, "%s", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
@@ -391,7 +397,7 @@ void line_info_print(ToxWindow *self)
 
             case NAME_CHANGE:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestamp);
+                wprintw(win, "%s", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(MAGENTA));

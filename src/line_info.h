@@ -45,10 +45,11 @@ enum {
 } LINE_TYPE;
 
 struct line_info {
-    char timestamp[TIME_STR_SIZE];
+    char timestr[TIME_STR_SIZE];
     char name1[TOXIC_MAX_NAME_LENGTH];
     char name2[TOXIC_MAX_NAME_LENGTH];
     char msg[TOX_MAX_MESSAGE_LENGTH];
+    uint64_t timestamp;
     uint8_t type;
     uint8_t bold;
     uint8_t colour;
@@ -73,7 +74,7 @@ struct history {
 
 /* creates new line_info line and puts it in the queue. 
    SYS_MSG lines may contain an arbitrary number of arguments for string formatting */
-void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint8_t type, uint8_t bold, 
+void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uint8_t type, uint8_t bold, 
                    uint8_t colour, const char *msg, ...);
 
 /* Prints a section of history starting at line_start */

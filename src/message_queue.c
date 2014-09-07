@@ -53,13 +53,10 @@ void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, ui
     new_m->type = type;
     new_m->line_id = line_id;
 
-    if (q->root == NULL) {
-        new_m->prev = NULL;
+    if (q->root == NULL)
         q->root = new_m;
-    } else {
-        new_m->prev = q->end;
+    else
         q->end->next = new_m;
-    }
 
     q->end = new_m;
 }
@@ -80,38 +77,20 @@ static void cqueue_mark_read(ToxWindow *self, uint32_t id, uint8_t type)
     }
 }
 
-/* removes the message with the same receipt number from queue and updates line to show the message was received*/
+/* removes root from queue and updates line to show the message was received. 
+   receipt should always be equal to queue root's receipt */
 void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt)
 {
-    struct cqueue_msg *q_msg = q->root;
+    struct cqueue_msg *root = q->root;
 
-    while (q_msg) {
-        struct cqueue_msg *next = q_msg->next;
+    if (root->receipt != receipt)
+        return;
 
-        if (q_msg->receipt == receipt) {
-            uint32_t line_id = q_msg->line_id;
-            uint8_t type = q_msg->type;
-
-            if (q_msg->prev == NULL) {
-                if (next)
-                    next->prev = NULL;
-
-                free(q->root);
-                q->root = next;
-            } else {
-                q_msg->prev->next = next;
-                free(q_msg);
-            }
-
-            cqueue_mark_read(self, line_id, type);
-            return;
-        }
-
-        q_msg = next;
-    }
+    cqueue_mark_read(self, root->line_id, root->type);
+    struct cqueue_msg *next = root->next;
+    free(q->root);
+    q->root = next;
 }
-
-#define CQUEUE_TRY_SEND_INTERVAL 5
 
 /* Tries to send oldest message in queue. If fails, tries again in CQUEUE_TRY_SEND_INTERVAL seconds */
 void cqueue_try_send(ToxWindow *self, Tox *m)

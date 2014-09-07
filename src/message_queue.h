@@ -20,6 +20,8 @@
  *
  */
 
+#define CQUEUE_TRY_SEND_INTERVAL 5
+
 struct cqueue_msg {
     char message[MAX_STR_SIZE];
     int len;
@@ -27,7 +29,6 @@ struct cqueue_msg {
     uint8_t type;
     uint32_t receipt;
     uint64_t last_send_try;
-    struct cqueue_msg *prev;
     struct cqueue_msg *next;
 };
 
@@ -40,8 +41,9 @@ struct chat_queue {
 void cqueue_cleanup(struct chat_queue *q);
 void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, uint32_t line_id);
 
-/* Tries to send oldest message in queue once every CQUEUE_TRY_SEND_INTERVAL seconds */
+/* Tries to send oldest message in queue. If fails, tries again in CQUEUE_TRY_SEND_INTERVAL seconds */
 void cqueue_try_send(ToxWindow *self, Tox *m);
 
-/* removes the message with the same receipt number from queue and updates line to show the message was received*/
+/* removes root from queue and updates line to show the message was received. 
+   receipt should always be equal to queue root's receipt */
 void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt);
