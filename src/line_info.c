@@ -153,7 +153,16 @@ void line_info_add(ToxWindow *self, char *tmstmp, char *name1, char *name2, uint
 
     /* for type-specific formatting in print function */
     switch (type) {
-        case ACTION:
+        case OUT_ACTION:
+        case IN_ACTION:
+        case GROUP_ACTION:
+            len += 5;
+            break;
+
+        case OUT_MSG:
+            len += 4;
+            break;
+
         case CONNECTION:
             len += 3;
             break;
@@ -277,6 +286,7 @@ void line_info_print(ToxWindow *self)
 
         switch (type) {
             case OUT_MSG:
+            case OUT_MSG_READ:
             case IN_MSG:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s", line->timestamp);
@@ -296,22 +306,39 @@ void line_info_print(ToxWindow *self)
                 if (line->msg[0] == '>')
                     wattron(win, COLOR_PAIR(GREEN));
 
-                wprintw(win, "%s\n", line->msg);
+                wprintw(win, "%s", line->msg);
 
                 if (line->msg[0] == '>')
                     wattroff(win, COLOR_PAIR(GREEN));
 
+                if (type == OUT_MSG) {    /* sent message with no recieve receipt */
+                    wattron(win, COLOR_PAIR(RED));
+                    wprintw(win, " x", line->msg);
+                    wattroff(win, COLOR_PAIR(RED));
+                }
+
+                wprintw(win, "\n", line->msg);
                 break;
 
-            case ACTION:
+            case GROUP_ACTION:
+            case OUT_ACTION_READ:
+            case OUT_ACTION:
+            case IN_ACTION:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s", line->timestamp);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
-                wprintw(win, "* %s %s\n", line->name1, line->msg);
+                wprintw(win, "* %s %s", line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
+                if (type == OUT_ACTION) {    /* sent action with no recieve receipt */
+                    wattron(win, COLOR_PAIR(RED));
+                    wprintw(win, " x", line->msg);
+                    wattroff(win, COLOR_PAIR(RED));
+                }
+
+                wprintw(win, "\n", line->msg);
                 break;
 
             case SYS_MSG:
@@ -390,6 +417,7 @@ void line_info_print(ToxWindow *self)
         line_info_print(self);
 }
 
+/* puts msg in specified line_info msg buffer */
 void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 {
     struct line_info *line = self->chatwin->hst->line_end;

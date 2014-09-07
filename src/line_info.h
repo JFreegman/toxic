@@ -34,8 +34,12 @@ enum {
     SYS_MSG,
     IN_MSG,
     OUT_MSG,
+    OUT_MSG_READ,    /* for sent messages that have received a read reply. don't set this with line_info_add */
+    IN_ACTION,
+    OUT_ACTION,
+    OUT_ACTION_READ,     /* same as OUT_MSG_READ but for actions */
+    GROUP_ACTION,
     PROMPT,
-    ACTION,
     CONNECTION,
     NAME_CHANGE,
 } LINE_TYPE;
@@ -49,7 +53,7 @@ struct line_info {
     uint8_t bold;
     uint8_t colour;
     uint32_t id;
-    uint16_t len;   /* combined len of all strings */
+    uint16_t len;   /* combined len of entire line */
     uint8_t newlines;
 
     struct line_info *prev;

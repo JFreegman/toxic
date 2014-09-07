@@ -20,17 +20,14 @@
  *
  */
 
-enum {
-    QMESSAGE,
-    QACTION,
-} MESSAGE_TYPE;
-
 struct cqueue_msg {
     char message[MAX_STR_SIZE];
     int len;
     int line_id;
     uint8_t type;
     uint32_t receipt;
+    uint64_t last_send_try;
+    struct cqueue_msg *prev;
     struct cqueue_msg *next;
 };
 
@@ -42,5 +39,9 @@ struct chat_queue {
 
 void cqueue_cleanup(struct chat_queue *q);
 void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, uint32_t line_id);
-void cqueue_check(Tox *m);
-void cqueue_try_send(Tox *m, struct chat_queue *q);
+
+/* Tries to send oldest message in queue once every CQUEUE_TRY_SEND_INTERVAL seconds */
+void cqueue_try_send(ToxWindow *self, Tox *m);
+
+/* removes the message with the same receipt number from queue and updates line to show the message was received*/
+void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt);

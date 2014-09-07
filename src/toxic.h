@@ -108,5 +108,6 @@ void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t
                      const uint8_t *data, uint16_t length, void *userdata);
 void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_t *data, uint16_t length, void *userdata);
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
+void on_read_receipt(Tox *m, int32_t, uint32_t, void *userdata);
 
 #endif  /* #define _toxic_h */

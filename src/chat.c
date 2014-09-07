@@ -240,7 +240,7 @@ static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *acti
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, ACTION, 0, 0, "%s", action);
+    line_info_add(self, timefrmt, nick, NULL, IN_ACTION, 0, 0, "%s", action);
     write_to_log(action, nick, ctx->log, true);
     
     if (self->active_box != -1)
@@ -286,6 +286,12 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, const char 
 
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", status);
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
+}
+
+static void chat_onReadReceipt(ToxWindow *self, Tox *m, int32_t num, uint32_t receipt)
+{
+    struct chat_queue *q = self->chatwin->cqueue;
+    cqueue_remove(self, q, receipt);
 }
 
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
@@ -831,9 +837,9 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, ACTION, 0, 0, "%s", action);
+    line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION, 0, 0, "%s", action);
     write_to_log(action, selfname, ctx->log, true);
-    cqueue_add(ctx->cqueue, action, strlen(action), QACTION, ctx->hst->line_end->id);
+    cqueue_add(ctx->cqueue, action, strlen(action), OUT_ACTION, ctx->hst->line_end->id + 1);
 }
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
@@ -915,7 +921,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
             write_to_log(line, selfname, ctx->log, false);
-            cqueue_add(ctx->cqueue, line, strlen(line), QMESSAGE, ctx->hst->line_end->id);
+            cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, ctx->hst->line_end->id + 1);
         }
 
         wclear(ctx->linewin);
@@ -1120,6 +1126,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.onFileSendRequest = &chat_onFileSendRequest;
     ret.onFileControl = &chat_onFileControl;
     ret.onFileData = &chat_onFileData;
+    ret.onReadReceipt = &chat_onReadReceipt;
 
 #ifdef _AUDIO
     ret.onInvite = &chat_onInvite;

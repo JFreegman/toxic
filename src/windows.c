@@ -219,6 +219,15 @@ void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_
     }
 }
 
+void on_read_receipt(Tox *m, int32_t friendnumber, uint32_t receipt, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onReadReceipt != NULL)
+            windows[i].onReadReceipt(&windows[i], m, friendnumber, receipt);
+    }
+}
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow w)

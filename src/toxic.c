@@ -285,6 +285,7 @@ static Tox *init_tox(void)
     tox_callback_file_send_request(m, on_file_sendrequest, NULL);
     tox_callback_file_control(m, on_file_control, NULL);
     tox_callback_file_data(m, on_file_data, NULL);
+    tox_callback_read_receipt(m, on_read_receipt, NULL);
 
 #ifdef __linux__
     tox_set_name(m, (uint8_t *) "Cool dude", strlen("Cool dude"));
@@ -587,11 +588,11 @@ void *thread_cqueue(void *data)
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat && tox_get_friend_connection_status(m, toxwin->num) == 1)
-                cqueue_try_send(m, toxwin->chatwin->cqueue);
+                cqueue_try_send(toxwin, m);
         }
 
         pthread_mutex_unlock(&Winthread.lock);
-        usleep(100000);   /* 0.1 second */
+        usleep(50000);
     }
 }
 
