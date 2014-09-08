@@ -155,12 +155,11 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
 
     /* for type-specific formatting in print function */
     switch (type) {
-        case GROUP_ACTION:
+        case IN_ACTION:
             len += 3;
             break;
 
         case OUT_ACTION:
-        case IN_ACTION:
             len += 5;
             break;
 
@@ -326,7 +325,6 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "\n", line->msg);
                 break;
 
-            case GROUP_ACTION:
             case OUT_ACTION_READ:
             case OUT_ACTION:
             case IN_ACTION:

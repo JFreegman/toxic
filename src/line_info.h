@@ -38,7 +38,6 @@ enum {
     IN_ACTION,
     OUT_ACTION,
     OUT_ACTION_READ,     /* same as OUT_MSG_READ but for actions */
-    GROUP_ACTION,
     PROMPT,
     CONNECTION,
     NAME_CHANGE,
