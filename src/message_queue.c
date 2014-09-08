@@ -70,8 +70,10 @@ static void cqueue_mark_read(ToxWindow *self, uint32_t id, uint8_t type)
         if (line->id == id) {
             line->type = type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
 
-            if (timed_out(line->timestamp, get_unix_time(), CQUEUE_TRY_SEND_INTERVAL))
-                line->len -= 2;    /* removes " x" */
+            if (line->noread_flag == true) {
+                line->len -= 2;
+                line->noread_flag = false;
+            }
 
             return;
         }

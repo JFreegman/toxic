@@ -156,15 +156,13 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
     /* for type-specific formatting in print function */
     switch (type) {
         case IN_ACTION:
+        case OUT_ACTION:
             len += 3;
             break;
 
-        case OUT_ACTION:
-            len += 5;
-            break;
-
+        case IN_MSG:
         case OUT_MSG:
-            len += 4;
+            len += 2;
             break;
 
         case CONNECTION:
@@ -214,6 +212,7 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
     new_line->type = type;
     new_line->bold = bold;
     new_line->colour = colour;
+    new_line->noread_flag = false;
     new_line->timestamp = get_unix_time();
 
     hst->queue[hst->queue_sz++] = new_line;
@@ -320,6 +319,11 @@ void line_info_print(ToxWindow *self)
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
+
+                    if (line->noread_flag == false) {
+                        line->noread_flag = true;
+                        line->len += 2;
+                    }
                 }
 
                 wprintw(win, "\n", line->msg);
@@ -340,6 +344,11 @@ void line_info_print(ToxWindow *self)
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
+
+                    if (line->noread_flag == false) {
+                        line->noread_flag = true;
+                        line->len += 2;
+                    }
                 }
 
                 wprintw(win, "\n", line->msg);
