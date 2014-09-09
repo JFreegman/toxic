@@ -1093,7 +1093,6 @@ static void chat_onInit(ToxWindow *self, Tox *m)
         exit_toxic_err("failed in chat_onInit", FATALERR_MEMORY);
 
     line_info_init(ctx->hst);
-    ctx->cqueue->friendnum = self->num;
 
     if (Friends.list[self->num].logging_on)
         log_enable(nick, Friends.list[self->num].pub_key, ctx->log);

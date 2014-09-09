@@ -43,7 +43,7 @@ void cqueue_cleanup(struct chat_queue *q)
 
 void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, uint32_t line_id)
 {
-    struct cqueue_msg *new_m = calloc(1, sizeof(struct cqueue_msg));
+    struct cqueue_msg *new_m = malloc(sizeof(struct cqueue_msg));
 
     if (new_m == NULL)
         exit_toxic_err("failed in cqueue_message", FATALERR_MEMORY);
@@ -52,11 +52,17 @@ void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, ui
     new_m->len = len;
     new_m->type = type;
     new_m->line_id = line_id;
+    new_m->last_send_try = 0;
+    new_m->receipt = 0;
+    new_m->next = NULL;
 
-    if (q->root == NULL)
+    if (q->root == NULL) {
+        new_m->prev = NULL;
         q->root = new_m;
-    else
+    } else {
+        new_m->prev = q->end;
         q->end->next = new_m;
+    }
 
     q->end = new_m;
 }
@@ -82,44 +88,57 @@ static void cqueue_mark_read(ToxWindow *self, uint32_t id, uint8_t type)
     }
 }
 
-/* removes root from queue and updates line to show the message was received. 
-   receipt should always be equal to queue root's receipt */
+/* removes message with matching receipt from queue and updates line to show the message was received. */
 void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt)
 {
-    struct cqueue_msg *root = q->root;
+    struct cqueue_msg *msg = q->root;
 
-    if (root->receipt != receipt)
+    while (msg) {
+        if (msg->receipt != receipt) {
+            msg = msg->next;
+            continue;
+        }
+
+        cqueue_mark_read(self, msg->line_id, msg->type);
+        struct cqueue_msg *next = msg->next;
+
+        if (msg->prev == NULL) {    /* root */
+            if (next)
+                next->prev = NULL;
+
+            free(msg);
+            q->root = next;
+        } else {
+            msg->prev->next = next;
+            free(msg);
+        }
+
         return;
-
-    cqueue_mark_read(self, root->line_id, root->type);
-    struct cqueue_msg *next = root->next;
-    free(q->root);
-    q->root = next;
+    }
 }
 
-/* Tries to send oldest message in queue. If fails, tries again in CQUEUE_TRY_SEND_INTERVAL seconds */
-void cqueue_try_send(ToxWindow *self, Tox *m)
+/* Tries to send the oldest unsent message in queue. */
+void cqueue_try_send(ToxWindow *self, Tox *m, int32_t friendnum)
 {
     struct chat_queue *q = self->chatwin->cqueue;
-
-    if (q->root == NULL)
-        return;
-
-    struct cqueue_msg *q_msg = q->root;
+    struct cqueue_msg *msg = q->root;
     uint64_t curtime = get_unix_time();
 
-    /* allow some time for a laggy read receipt before resending
-       TODO: timeout should be removed when receipts are fixed in core) */
-    if (q_msg->receipt != 0 && !timed_out(q_msg->last_send_try, curtime, CQUEUE_TRY_SEND_INTERVAL))
+    while (msg) {
+        if (msg->receipt != 0 && !timed_out(msg->last_send_try, curtime, CQUEUE_TRY_SEND_INTERVAL)) {
+            msg = msg->next;
+            continue;
+        }
+
+        uint32_t receipt = 0;
+
+        if (msg->type == OUT_MSG)
+            receipt = tox_send_message(m, friendnum, (uint8_t *) msg->message, msg->len);
+        else
+            receipt = tox_send_action(m, friendnum, (uint8_t *) msg->message, msg->len);
+
+        msg->last_send_try = curtime;
+        msg->receipt = receipt;
         return;
-
-    uint32_t receipt = 0;
-
-    if (q_msg->type == OUT_MSG)
-        receipt = tox_send_message(m, q->friendnum, (uint8_t *) q_msg->message, q_msg->len);
-    else
-        receipt = tox_send_action(m, q->friendnum, (uint8_t *) q_msg->message, q_msg->len);
-
-    q->root->last_send_try = curtime;
-    q->root->receipt = receipt;
+    }
 }
