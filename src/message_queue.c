@@ -109,8 +109,9 @@ void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt)
             free(msg);
             q->root = next;
         } else {
-            msg->prev->next = next;
+            struct cqueue_msg *prev = msg->prev;
             free(msg);
+            prev->next = next;
         }
 
         return;
