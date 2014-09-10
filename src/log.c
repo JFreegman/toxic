@@ -86,6 +86,8 @@ void init_logging_session(char *name, const char *key, struct chatlog *log)
     fprintf(log->file, "\n*** NEW SESSION ***\n\n");
 }
 
+#define LOG_FLUSH_LIMIT 2  /* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
+
 void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event)
 {
     if (!log->log_on)

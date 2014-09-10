@@ -20,8 +20,6 @@
  *
  */
 
-#define CQUEUE_TRY_SEND_INTERVAL 5
-
 struct cqueue_msg {
     char message[MAX_STR_SIZE];
     int len;
@@ -42,7 +40,7 @@ void cqueue_cleanup(struct chat_queue *q);
 void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, uint32_t line_id);
 
 /* Tries to send the oldest unsent message in queue. */
-void cqueue_try_send(ToxWindow *self, Tox *m, int32_t friendnum);
+void cqueue_try_send(ToxWindow *self, Tox *m);
 
 /* removes message with matching receipt from queue and updates line to show the message was received. */
 void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt);

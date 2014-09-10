@@ -588,7 +588,7 @@ void *thread_cqueue(void *data)
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat && tox_get_friend_connection_status(m, toxwin->num) == 1)
-                cqueue_try_send(toxwin, m, toxwin->num);
+                cqueue_try_send(toxwin, m);
         }
 
         pthread_mutex_unlock(&Winthread.lock);

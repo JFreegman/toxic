@@ -23,8 +23,6 @@
 #ifndef _log_h
 #define _log_h
 
-#define LOG_FLUSH_LIMIT 2  /* limits calls to fflush(logfile) to a max of one per LOG_FLUSH_LIMIT seconds */
-
 struct chatlog {
     FILE *file;
     uint64_t lastwrite;

@@ -73,18 +73,19 @@ static void cqueue_mark_read(ToxWindow *self, uint32_t id, uint8_t type)
     struct line_info *line = self->chatwin->hst->line_end;
 
     while (line) {
-        if (line->id == id) {
-            line->type = type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
-
-            if (line->noread_flag == true) {
-                line->len -= 2;
-                line->noread_flag = false;
-            }
-
-            return;
+        if (line->id != id) {
+            line = line->prev;
+            continue;
         }
 
-        line = line->prev;
+        line->type = type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
+
+        if (line->noread_flag == true) {
+            line->len -= 2;
+            line->noread_flag = false;
+        }
+
+        return;
     }
 }
 
@@ -118,8 +119,10 @@ void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt)
     }
 }
 
+#define CQUEUE_TRY_SEND_INTERVAL 10
+
 /* Tries to send the oldest unsent message in queue. */
-void cqueue_try_send(ToxWindow *self, Tox *m, int32_t friendnum)
+void cqueue_try_send(ToxWindow *self, Tox *m)
 {
     struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
@@ -134,9 +137,9 @@ void cqueue_try_send(ToxWindow *self, Tox *m, int32_t friendnum)
         uint32_t receipt = 0;
 
         if (msg->type == OUT_MSG)
-            receipt = tox_send_message(m, friendnum, (uint8_t *) msg->message, msg->len);
+            receipt = tox_send_message(m, self->num, (uint8_t *) msg->message, msg->len);
         else
-            receipt = tox_send_action(m, friendnum, (uint8_t *) msg->message, msg->len);
+            receipt = tox_send_action(m, self->num, (uint8_t *) msg->message, msg->len);
 
         msg->last_send_try = curtime;
         msg->receipt = receipt;

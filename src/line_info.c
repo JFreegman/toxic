@@ -129,8 +129,7 @@ static struct line_info *line_info_ret_queue(struct history *hst)
     return ret;
 }
 
-/* creates new line_info line and puts it in the queue. 
-   SYS_MSG lines may contain an arbitrary number of arguments for string formatting */
+/* creates new line_info line and puts it in the queue. */
 void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uint8_t type, uint8_t bold, 
                    uint8_t colour, const char *msg, ...)
 {
@@ -257,6 +256,8 @@ static void line_info_check_queue(ToxWindow *self)
     }
 }
 
+#define NOREAD_FLAG_TIMEOUT 5    /* seconds before a sent message with no read receipt is flagged as unread */
+
 void line_info_print(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
@@ -315,7 +316,7 @@ void line_info_print(ToxWindow *self)
                 if (line->msg[0] == '>')
                     wattroff(win, COLOR_PAIR(GREEN));
 
-                if (type == OUT_MSG && timed_out(line->timestamp, get_unix_time(), CQUEUE_TRY_SEND_INTERVAL)) {
+                if (type == OUT_MSG && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
@@ -340,7 +341,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "* %s %s", line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
-                if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), CQUEUE_TRY_SEND_INTERVAL)) {
+                if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
