@@ -27,6 +27,7 @@
 #include "message_queue.h"
 #include "misc_tools.h"
 #include "line_info.h"
+#include "log.h"
 
 void cqueue_cleanup(struct chat_queue *q)
 {
@@ -68,17 +69,17 @@ void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, ui
 }
 
 /* update line to show receipt was received after queue removal */
-static void cqueue_mark_read(ToxWindow *self, uint32_t id, uint8_t type)
+static void cqueue_mark_read(ToxWindow *self, struct cqueue_msg *msg)
 {
     struct line_info *line = self->chatwin->hst->line_end;
 
     while (line) {
-        if (line->id != id) {
+        if (line->id != msg->line_id) {
             line = line->prev;
             continue;
         }
 
-        line->type = type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
+        line->type = msg->type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
 
         if (line->noread_flag == true) {
             line->len -= 2;
@@ -89,9 +90,10 @@ static void cqueue_mark_read(ToxWindow *self, uint32_t id, uint8_t type)
     }
 }
 
-/* removes message with matching receipt from queue and updates line to show the message was received. */
-void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt)
+/* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
+void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
 {
+    struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
 
     while (msg) {
@@ -100,7 +102,13 @@ void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt)
             continue;
         }
 
-        cqueue_mark_read(self, msg->line_id, msg->type);
+        char selfname[TOX_MAX_NAME_LENGTH];
+        uint16_t len = tox_get_self_name(m, (uint8_t *) selfname);
+        selfname[len] = '\0';
+
+        write_to_log(msg->message, selfname, self->chatwin->log, msg->type == OUT_ACTION);
+        cqueue_mark_read(self, msg);
+
         struct cqueue_msg *next = msg->next;
 
         if (msg->prev == NULL) {    /* root */

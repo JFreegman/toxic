@@ -290,8 +290,7 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, const char 
 
 static void chat_onReadReceipt(ToxWindow *self, Tox *m, int32_t num, uint32_t receipt)
 {
-    struct chat_queue *q = self->chatwin->cqueue;
-    cqueue_remove(self, q, receipt);
+    cqueue_remove(self, m, receipt);
 }
 
 static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
@@ -838,7 +837,6 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION, 0, 0, "%s", action);
-    write_to_log(action, selfname, ctx->log, true);
     cqueue_add(ctx->cqueue, action, strlen(action), OUT_ACTION, ctx->hst->line_end->id + 1);
 }
 
@@ -920,7 +918,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             get_time_str(timefrmt, sizeof(timefrmt));
 
             line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
-            write_to_log(line, selfname, ctx->log, false);
             cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, ctx->hst->line_end->id + 1);
         }
 

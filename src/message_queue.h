@@ -42,5 +42,5 @@ void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, ui
 /* Tries to send the oldest unsent message in queue. */
 void cqueue_try_send(ToxWindow *self, Tox *m);
 
-/* removes message with matching receipt from queue and updates line to show the message was received. */
-void cqueue_remove(ToxWindow *self, struct chat_queue *q, uint32_t receipt);
+/* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
+void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt);
