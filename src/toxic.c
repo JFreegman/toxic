@@ -508,7 +508,7 @@ static void first_time_running(void)
         system("clear");
         printf("Encrypt data file? Y/n \n");
 
-        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n"))
+        if (!strcmp(ch, "y\n") || !strcmp(ch, "n\n"))
             break;
 
     } while (fgets(ch, sizeof(ch), stdin));
@@ -901,9 +901,9 @@ int main(int argc, char *argv[])
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     int config_err = init_default_data_files();
-    bool first_run = !file_exists(DATA_FILE);
 
-    if (first_run)
+    /* if first time using given data file prompt for data encryption */
+    if (!file_exists(DATA_FILE))
         first_time_running();
 
     /* init user_settings struct and load settings from conf file */
