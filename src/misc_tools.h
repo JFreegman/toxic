@@ -110,6 +110,6 @@ int char_rfind(const char *s, char ch, int len);
 void bytes_convert_str(char *buf, int size, uint64_t bytes);
 
 /* checks if a file exists. Returns true or false */
-bool file_exists(const char *fp);
+bool file_exists(const char *path);
 
 #endif /* #define _misc_tools_h */

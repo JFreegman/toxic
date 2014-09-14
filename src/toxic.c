@@ -38,8 +38,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <limits.h>
+#include <termios.h>
 
 #include <tox/tox.h>
+#include <tox/toxencryptsave.h>
 
 #include "configdir.h"
 #include "toxic.h"
@@ -79,6 +81,15 @@ struct _cqueue_thread cqueue_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings_ = NULL;
 
+#define MIN_PASSWORD_LEN 6
+#define MAX_PASSWORD_LEN 256
+
+static struct _user_password {
+    bool data_is_encrypted;
+    char pass[MAX_STR_SIZE];
+    int len;
+} user_password;
+
 static void catch_SIGINT(int sig)
 {
     Winthread.sig_exit_toxic = true;
@@ -107,6 +118,7 @@ static void init_signal_catchers(void)
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
+    memset(&user_password, 0, sizeof(struct _user_password));
     close_all_file_senders(m);
     kill_all_windows(m);
 
@@ -459,6 +471,69 @@ static void load_friendlist(Tox *m)
     sort_friendlist_index();
 }
 
+/* return length of password on success, 0 on failure */
+static int password_prompt(char *buf, int size)
+{
+    printf("> ");
+
+    /* disable terminal echo */
+    struct termios oflags, nflags;
+    tcgetattr(fileno(stdin), &oflags);
+    nflags = oflags;
+    nflags.c_lflag &= ~ECHO;
+    nflags.c_lflag |= ECHONL;
+
+    if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0)
+        return 0;
+
+    fgets(buf, size, stdin);
+    int len = strlen(buf);
+
+    if (len > 0)
+        buf[--len] = '\0';    /* rm newline char */
+
+    /* re-enable terminal echo */
+    if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
+        return 0;
+
+    return len;
+}
+
+/* Ask user if they would like to encrypt the data file on first usage */
+static void first_time_running(void)
+{
+    char ch[3] = {0};
+
+    do {
+        system("clear");
+        printf("Encrypt data file? Y/n \n");
+
+        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n"))
+            break;
+
+    } while (fgets(ch, sizeof(ch), stdin));
+
+    const char *msg = NULL;
+    int len = 0;
+
+    if (ch[0] == 'y') {
+        do {
+            printf("Enter a new password (must be at least %d characters)\n", MIN_PASSWORD_LEN);
+            len = password_prompt(user_password.pass, sizeof(user_password.pass));
+            user_password.len = len;
+        } while (len < MIN_PASSWORD_LEN || len > MAX_PASSWORD_LEN);
+
+        user_password.data_is_encrypted = true;
+        msg = "Data file has been encrypted";
+    } else {
+        user_password.data_is_encrypted = false;
+        msg = "Data file has not been encrypted";
+    }
+
+    system("clear");
+    queue_init_message(msg);
+}
+
 /*
  * Store Messenger to given location
  * Return 0 stored successfully or ignoring data file
@@ -467,7 +542,7 @@ static void load_friendlist(Tox *m)
  * Return -3 opening path failed
  * Return -4 fwrite failed
  */
-int store_data(Tox *m, char *path)
+int store_data(Tox *m, const char *path)
 {
     if (arg_opts.ignore_data_file)
         return 0;
@@ -475,13 +550,17 @@ int store_data(Tox *m, char *path)
     if (path == NULL)
         return -1;
 
-    int len = tox_size(m);
+    int len = user_password.data_is_encrypted ? tox_encrypted_size(m) : tox_size(m);
     char *buf = malloc(len);
 
     if (buf == NULL)
         return -2;
 
-    tox_save(m, (uint8_t *) buf);
+    if (user_password.data_is_encrypted)
+        tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, 
+                           user_password.len);
+    else
+        tox_save(m, (uint8_t *) buf);
 
     FILE *fd = fopen(path, "wb");
 
@@ -526,7 +605,30 @@ static void load_data(Tox *m, char *path)
             exit_toxic_err("failed in load_data", FATALERR_FREAD);
         }
 
-        tox_load(m, (uint8_t *) buf, len);
+        user_password.data_is_encrypted = tox_is_data_encrypted((uint8_t *) buf);
+        int pwlen = 0;
+
+        if (user_password.data_is_encrypted) {
+            system("clear");
+            printf("Enter password\n");
+
+            do {
+                pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
+                user_password.len = pwlen;
+
+                if (-1 != tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen)) {
+                    break;
+                } else {
+                    sleep(2);
+                    printf("Invalid password. Try again.\n");
+                }
+            } while (true);
+
+            system("clear");
+        } else {
+            tox_load(m, (uint8_t *) buf, len);
+        }
+
         load_friendlist(m);
         load_blocklist(BLOCK_FILE);
 
@@ -738,7 +840,7 @@ static void parse_args(int argc, char *argv[])
 
 #define DATANAME "data"
 #define BLOCKNAME "data-blocklist"
-static int init_data_files(void)
+static int init_default_data_files(void)
 {
     if (arg_opts.use_custom_data)
         return 0;
@@ -746,28 +848,26 @@ static int init_data_files(void)
     char *user_config_dir = get_user_config_dir();
     int config_err = create_user_config_dirs(user_config_dir);
 
-    if (DATA_FILE == NULL ) {
-        if (config_err) {
-            DATA_FILE = strdup(DATANAME);
-            BLOCK_FILE = strdup(BLOCKNAME);
+    if (config_err) {
+        DATA_FILE = strdup(DATANAME);
+        BLOCK_FILE = strdup(BLOCKNAME);
 
-            if (DATA_FILE == NULL || BLOCK_FILE == NULL)
-                exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
-        } else {
-            DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
-            BLOCK_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
+        if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+            exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
+    } else {
+        DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
+        BLOCK_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
 
-            if (DATA_FILE == NULL || BLOCK_FILE == NULL)
-                exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
+        if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+            exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
 
-            strcpy(DATA_FILE, user_config_dir);
-            strcat(DATA_FILE, CONFIGDIR);
-            strcat(DATA_FILE, DATANAME);
+        strcpy(DATA_FILE, user_config_dir);
+        strcat(DATA_FILE, CONFIGDIR);
+        strcat(DATA_FILE, DATANAME);
 
-            strcpy(BLOCK_FILE, user_config_dir);
-            strcat(BLOCK_FILE, CONFIGDIR);
-            strcat(BLOCK_FILE, BLOCKNAME);
-        }
+        strcpy(BLOCK_FILE, user_config_dir);
+        strcat(BLOCK_FILE, CONFIGDIR);
+        strcat(BLOCK_FILE, BLOCKNAME);
     }
 
     free(user_config_dir);
@@ -800,7 +900,11 @@ int main(int argc, char *argv[])
 
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    int config_err = init_data_files();
+    int config_err = init_default_data_files();
+    bool first_run = !file_exists(DATA_FILE);
+
+    if (first_run)
+        first_time_running();
 
     /* init user_settings struct and load settings from conf file */
     user_settings_ = calloc(1, sizeof(struct user_settings));
@@ -808,11 +912,10 @@ int main(int argc, char *argv[])
     if (user_settings_ == NULL)
         exit_toxic_err("failed in main", FATALERR_MEMORY);
 
-    char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
+    const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
     int settings_err = settings_load(user_settings_, p);
 
     Tox *m = init_tox();
-    init_term();
 
     /* enable stderr for debugging */
     if (!arg_opts.debug)
@@ -824,6 +927,7 @@ int main(int argc, char *argv[])
     if (!arg_opts.ignore_data_file)
         load_data(m, DATA_FILE);
 
+    init_term();
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m);
 

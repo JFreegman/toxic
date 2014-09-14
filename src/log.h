@@ -26,7 +26,6 @@
 struct chatlog {
     FILE *file;
     uint64_t lastwrite;
-    int pos;
     bool log_on;    /* specific to current chat window */
 };
 

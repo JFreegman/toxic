@@ -306,8 +306,8 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes)
 }
 
 /* checks if a file exists. Returns true or false */
-bool file_exists(const char *fp)
+bool file_exists(const char *path)
 {
     struct stat s;
-    return stat(fp, &s) == 0;
+    return stat(path, &s) == 0;
 }

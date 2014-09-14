@@ -999,7 +999,6 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 {
     int id = toxav_get_peer_id(av, call_index, 0);
 
-    /*id++;*/
     if ( id != ErrorInternal && id >= Friends.max_idx)
         return;
 
