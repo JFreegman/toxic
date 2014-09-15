@@ -513,11 +513,11 @@ static int password_prompt(char *buf, int size)
 /* Ask user if they would like to encrypt the data file on first usage */
 static void first_time_encrypt(const char *msg)
 {
-    char ch[5] = {0};
+    char ch[256] = {0};
 
     do {
         system("clear");
-        printf("%s\n", msg);
+        printf("%s ", msg);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") 
             || !strcasecmp(ch, "yes\n") || !strcasecmp(ch, "no\n")
@@ -526,23 +526,46 @@ static void first_time_encrypt(const char *msg)
 
     } while (fgets(ch, sizeof(ch), stdin));
 
+    printf("\n");
+
     if (ch[0] == 'q' || ch[0] == 'Q')
         exit(0);
 
     if (ch[0] == 'y' || ch[0] == 'Y') {
         int len = 0;
-        printf("Enter a new password (must be at least %d characters)\n", MIN_PASSWORD_LEN);
+        bool valid_password = false;
+        char passconfirm[MAX_PASSWORD_LEN + 1] = {0};
+        printf("Enter a new password (must be at least %d characters) ", MIN_PASSWORD_LEN);
 
-        while (true) {
+        while (valid_password == false) {
             len = password_prompt(user_password.pass, sizeof(user_password.pass));
             user_password.len = len;
 
-            if (len >= MIN_PASSWORD_LEN && len <= MAX_PASSWORD_LEN)
-                break;
-            else
-                printf("Password must be between %d and %d characters long.\n", MIN_PASSWORD_LEN, MAX_PASSWORD_LEN);
+            if (strcasecmp(user_password.pass, "q") == 0)
+                exit(0);
+
+            if (string_is_empty(passconfirm) && (len < MIN_PASSWORD_LEN || len > MAX_PASSWORD_LEN)) {
+                printf("Password must be between %d and %d characters long. ", MIN_PASSWORD_LEN, MAX_PASSWORD_LEN);
+                continue;
+            }
+
+            if (string_is_empty(passconfirm)) {
+                printf("Enter password again ");
+                snprintf(passconfirm, sizeof(passconfirm), "%s", user_password.pass);
+                continue;
+            }
+
+            if (strcmp(user_password.pass, passconfirm) != 0) {
+                memset(passconfirm, 0, sizeof(passconfirm));
+                memset(user_password.pass, 0, sizeof(user_password.pass));
+                printf("Passwords don't match. Try again. ");
+                continue;
+            }
+
+            valid_password = true;
         }
 
+        memset(passconfirm, 0, sizeof(passconfirm));
         user_password.data_is_encrypted = true;
         queue_init_message("Data file has been encrypted");
     }
@@ -639,8 +662,12 @@ static void load_data(Tox *m, char *path)
                 if (strcasecmp(user_password.pass, "q") == 0)
                     exit(0);
 
-                if (pwlen < MIN_PASSWORD_LEN)
+                if (pwlen < MIN_PASSWORD_LEN) {
+                    system("clear");
+                    sleep(1);
+                    printf("Invalid password. Try again. ");
                     continue;
+                }
 
                 if (tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen) == 0) {
                     break;
