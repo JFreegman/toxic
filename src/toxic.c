@@ -474,6 +474,8 @@ static void load_friendlist(Tox *m)
 /* return length of password on success, 0 on failure */
 static int password_prompt(char *buf, int size)
 {
+    buf[0] = '\0';
+
     /* disable terminal echo */
     struct termios oflags, nflags;
     tcgetattr(fileno(stdin), &oflags);
@@ -484,16 +486,28 @@ static int password_prompt(char *buf, int size)
     if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0)
         return 0;
 
-    fgets(buf, size, stdin);
+    const char *p = fgets(buf, size, stdin);
     int len = strlen(buf);
 
-    if (len > 0)
-        buf[--len] = '\0';    /* rm newline char */
-
     /* re-enable terminal echo */
-    if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
+    tcsetattr(fileno(stdin), TCSANOW, &oflags);
+
+    if (p == NULL)
         return 0;
 
+    if (len <= 1)
+        return 0;
+
+    /* eat overflowed stdin and return error */
+    if (buf[--len] != '\n') {
+        int ch;
+        while ((ch = getchar()) != '\n' && ch > 0)
+            ;
+
+        return 0;
+    }
+
+    buf[len] = '\0';
     return len;
 }
 
@@ -613,7 +627,7 @@ static void load_data(Tox *m, char *path)
 
         if (user_password.data_is_encrypted) {
             system("clear");
-            printf("Enter password (q to quit)\n");
+            printf("Enter password (q to quit) ");
 
             while (true) {
                 pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
@@ -625,13 +639,11 @@ static void load_data(Tox *m, char *path)
                 if (tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen) == 0) {
                     break;
                 } else {
-                    sleep(2);
                     system("clear");
-                    printf("Invalid password. Try again.\n");
+                    sleep(1);
+                    printf("Invalid password. Try again. ");
                 }
             }
-
-            system("clear");
         } else {
             tox_load(m, (uint8_t *) buf, len);
         }
