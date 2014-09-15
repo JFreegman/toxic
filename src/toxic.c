@@ -503,7 +503,6 @@ static int password_prompt(char *buf, int size)
         int ch;
         while ((ch = getchar()) != '\n' && ch > 0)
             ;
-
         return 0;
     }
 
@@ -512,13 +511,13 @@ static int password_prompt(char *buf, int size)
 }
 
 /* Ask user if they would like to encrypt the data file on first usage */
-static void first_time_running(void)
+static void first_time_encrypt(const char *msg)
 {
     char ch[5] = {0};
 
     do {
         system("clear");
-        printf("Creating new data file. Would you like to encrypt it? Y/n (q to quit)\n");
+        printf("%s\n", msg);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") 
             || !strcasecmp(ch, "yes\n") || !strcasecmp(ch, "no\n")
@@ -574,8 +573,7 @@ int store_data(Tox *m, const char *path)
         return -2;
 
     if (user_password.data_is_encrypted)
-        tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, 
-                           user_password.len);
+        tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, user_password.len);
     else
         tox_save(m, (uint8_t *) buf);
 
@@ -622,10 +620,15 @@ static void load_data(Tox *m, char *path)
             exit_toxic_err("failed in load_data", FATALERR_FREAD);
         }
 
-        user_password.data_is_encrypted = tox_is_data_encrypted((uint8_t *) buf);
-        int pwlen = 0;
+        bool is_encrypted = tox_is_data_encrypted((uint8_t *) buf);
 
-        if (user_password.data_is_encrypted) {
+        /* attempt to encrypt an already encrypted data file */
+        if (arg_opts.encrypt_data && is_encrypted)
+            exit_toxic_err("failed in load_data", FATALERR_ENCRYPT);
+
+        if (is_encrypted) {
+            user_password.data_is_encrypted = true;
+            int pwlen = 0;
             system("clear");
             printf("Enter password (q to quit) ");
 
@@ -635,6 +638,9 @@ static void load_data(Tox *m, char *path)
 
                 if (strcasecmp(user_password.pass, "q") == 0)
                     exit(0);
+
+                if (pwlen < MIN_PASSWORD_LEN)
+                    continue;
 
                 if (tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen) == 0) {
                     break;
@@ -724,6 +730,7 @@ static void print_usage(void)
     fprintf(stderr, "  -b  --debug              Enable stderr for debugging\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
     fprintf(stderr, "  -d, --default-locale     Use default POSIX locale\n");
+    fprintf(stderr, "  -e, --encrypt-data       Encrypt an existing unencrypted data file\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
@@ -744,6 +751,7 @@ static void set_default_opts(void)
     arg_opts.no_connect = 0;
     arg_opts.force_tcp = 0;
     arg_opts.use_proxy = 0;
+    arg_opts.encrypt_data = 0;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -757,6 +765,7 @@ static void parse_args(int argc, char *argv[])
         {"debug", no_argument, 0, 'b'},
         {"default-locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
+        {"encrypt-data", no_argument, 0, 'e'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
@@ -766,7 +775,7 @@ static void parse_args(int argc, char *argv[])
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdhotxc:f:n:r:p:";
+    const char *opts_str = "4bdehotxc:f:n:r:p:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -791,6 +800,10 @@ static void parse_args(int argc, char *argv[])
             case 'd':
                 arg_opts.default_locale = 1;
                 queue_init_message("Using default POSIX locale");
+                break;
+
+            case 'e':
+                arg_opts.encrypt_data = 1;
                 break;
 
             case 'f':
@@ -917,13 +930,22 @@ int main(int argc, char *argv[])
     init_signal_catchers();
     parse_args(argc, argv);
 
+    /* Use the -b flag to enable stderr */
+    if (!arg_opts.debug)
+        freopen("/dev/null", "w", stderr);
+
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    int config_err = init_default_data_files();
 
-    /* if first time using given data file prompt for data encryption */
-    if (!file_exists(DATA_FILE))
-        first_time_running();
+    int config_err = init_default_data_files();
+    bool datafile_exists = file_exists(DATA_FILE);
+
+    if (!arg_opts.ignore_data_file) {
+        if (!datafile_exists)
+            first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
+        else if (arg_opts.encrypt_data)
+            first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
+    }
 
     /* init user_settings struct and load settings from conf file */
     user_settings_ = calloc(1, sizeof(struct user_settings));
@@ -936,15 +958,15 @@ int main(int argc, char *argv[])
 
     Tox *m = init_tox();
 
-    /* enable stderr for debugging */
-    if (!arg_opts.debug)
-        freopen("/dev/null", "w", stderr);
-
     if (m == NULL)
         exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
 
-    if (!arg_opts.ignore_data_file)
-        load_data(m, DATA_FILE);
+    if (!arg_opts.ignore_data_file) {
+        if (!arg_opts.encrypt_data || (arg_opts.encrypt_data && datafile_exists))
+            load_data(m, DATA_FILE);
+        else
+            exit_toxic_err("failed in main", FATALERR_ENCRYPT);
+    }
 
     init_term();
     prompt = init_windows(m);

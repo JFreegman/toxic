@@ -79,6 +79,7 @@ typedef enum _FATAL_ERRS {
     FATALERR_INFLOOP = -9,          /* infinite loop detected */
     FATALERR_WININIT = -10,         /* window init failed */
     FATALERR_PROXY = -11,           /* Tox network failed to init using a proxy */
+    FATALERR_ENCRYPT = -12,         /* Data file encryption failure */
 } FATAL_ERRS;
 
 /* Fixes text color problem on some terminals.

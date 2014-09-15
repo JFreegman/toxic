@@ -83,7 +83,7 @@ struct arg_opts {
     int default_locale;
     int use_custom_data;
     int no_connect;
-
+    int encrypt_data;
     char dns_path[MAX_STR_SIZE];
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
