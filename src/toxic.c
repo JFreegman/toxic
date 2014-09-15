@@ -82,11 +82,11 @@ struct arg_opts arg_opts;
 struct user_settings *user_settings_ = NULL;
 
 #define MIN_PASSWORD_LEN 6
-#define MAX_PASSWORD_LEN 256
+#define MAX_PASSWORD_LEN 64
 
 static struct _user_password {
     bool data_is_encrypted;
-    char pass[MAX_STR_SIZE];
+    char pass[MAX_PASSWORD_LEN + 1];
     int len;
 } user_password;
 
@@ -474,8 +474,6 @@ static void load_friendlist(Tox *m)
 /* return length of password on success, 0 on failure */
 static int password_prompt(char *buf, int size)
 {
-    printf("> ");
-
     /* disable terminal echo */
     struct termios oflags, nflags;
     tcgetattr(fileno(stdin), &oflags);
@@ -502,36 +500,41 @@ static int password_prompt(char *buf, int size)
 /* Ask user if they would like to encrypt the data file on first usage */
 static void first_time_running(void)
 {
-    char ch[3] = {0};
+    char ch[5] = {0};
 
     do {
         system("clear");
-        printf("Encrypt data file? Y/n \n");
+        printf("Creating new data file. Would you like to encrypt it? Y/n (q to quit)\n");
 
-        if (!strcmp(ch, "y\n") || !strcmp(ch, "n\n"))
+        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") 
+            || !strcasecmp(ch, "yes\n") || !strcasecmp(ch, "no\n")
+            || !strcasecmp(ch, "q\n"))
             break;
 
     } while (fgets(ch, sizeof(ch), stdin));
 
-    const char *msg = NULL;
-    int len = 0;
+    if (ch[0] == 'q' || ch[0] == 'Q')
+        exit(0);
 
-    if (ch[0] == 'y') {
-        do {
-            printf("Enter a new password (must be at least %d characters)\n", MIN_PASSWORD_LEN);
+    if (ch[0] == 'y' || ch[0] == 'Y') {
+        int len = 0;
+        printf("Enter a new password (must be at least %d characters)\n", MIN_PASSWORD_LEN);
+
+        while (true) {
             len = password_prompt(user_password.pass, sizeof(user_password.pass));
             user_password.len = len;
-        } while (len < MIN_PASSWORD_LEN || len > MAX_PASSWORD_LEN);
+
+            if (len >= MIN_PASSWORD_LEN && len <= MAX_PASSWORD_LEN)
+                break;
+            else
+                printf("Password must be between %d and %d characters long.\n", MIN_PASSWORD_LEN, MAX_PASSWORD_LEN);
+        }
 
         user_password.data_is_encrypted = true;
-        msg = "Data file has been encrypted";
-    } else {
-        user_password.data_is_encrypted = false;
-        msg = "Data file has not been encrypted";
+        queue_init_message("Data file has been encrypted");
     }
 
     system("clear");
-    queue_init_message(msg);
 }
 
 /*
@@ -610,19 +613,23 @@ static void load_data(Tox *m, char *path)
 
         if (user_password.data_is_encrypted) {
             system("clear");
-            printf("Enter password\n");
+            printf("Enter password (q to quit)\n");
 
-            do {
+            while (true) {
                 pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
                 user_password.len = pwlen;
 
-                if (-1 != tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen)) {
+                if (strcasecmp(user_password.pass, "q") == 0)
+                    exit(0);
+
+                if (tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen) == 0) {
                     break;
                 } else {
                     sleep(2);
+                    system("clear");
                     printf("Invalid password. Try again.\n");
                 }
-            } while (true);
+            }
 
             system("clear");
         } else {
