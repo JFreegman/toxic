@@ -754,7 +754,7 @@ static void print_usage(void)
 {
     fprintf(stderr, "usage: toxic [OPTION] [FILE ...]\n");
     fprintf(stderr, "  -4, --ipv4               Force IPv4 connection\n");
-    fprintf(stderr, "  -b  --debug              Enable stderr for debugging\n");
+    fprintf(stderr, "  -b, --debug              Enable stderr for debugging\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
     fprintf(stderr, "  -d, --default-locale     Use default POSIX locale\n");
     fprintf(stderr, "  -e, --encrypt-data       Encrypt an existing unencrypted data file\n");
