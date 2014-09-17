@@ -492,10 +492,7 @@ static int password_prompt(char *buf, int size)
     /* re-enable terminal echo */
     tcsetattr(fileno(stdin), TCSANOW, &oflags);
 
-    if (p == NULL)
-        return 0;
-
-    if (len <= 1)
+    if (p == NULL || len <= 1)
         return 0;
 
     /* eat overflowed stdin and return error */
@@ -510,7 +507,7 @@ static int password_prompt(char *buf, int size)
     return len;
 }
 
-/* Ask user if they would like to encrypt the data file on first usage */
+/* Ask user if they would like to encrypt the data file and set password */
 static void first_time_encrypt(const char *msg)
 {
     char ch[256] = {0};
@@ -519,9 +516,8 @@ static void first_time_encrypt(const char *msg)
         system("clear");
         printf("%s ", msg);
 
-        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") 
-            || !strcasecmp(ch, "yes\n") || !strcasecmp(ch, "no\n")
-            || !strcasecmp(ch, "q\n"))
+        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n") 
+            || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
             break;
 
     } while (fgets(ch, sizeof(ch), stdin));
