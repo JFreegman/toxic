@@ -196,8 +196,15 @@ static struct _init_messages {
 } init_messages;
 
 /* One-time queue for messages created during init. Do not use after program init. */
-static void queue_init_message(const char *msg)
+static void queue_init_message(const char *msg, ...)
 {
+    char frmt_msg[MAX_STR_SIZE] = {0};
+
+    va_list args;
+    va_start(args, msg);
+    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
+    va_end(args);
+
     int i = init_messages.num;
     ++init_messages.num;
 
@@ -211,7 +218,7 @@ static void queue_init_message(const char *msg)
     if (new_msgs[i] == NULL)
         exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
 
-    snprintf(new_msgs[i], MAX_STR_SIZE, "%s", msg);
+    snprintf(new_msgs[i], MAX_STR_SIZE, "%s", frmt_msg);
     init_messages.msgs = new_msgs;
 }
 
@@ -251,16 +258,16 @@ static Tox *init_tox(void)
         char tmp[48];
         snprintf(tmp, sizeof(tmp), "Using proxy %s : %d", 
                  arg_opts.proxy_address, arg_opts.proxy_port);
-        queue_init_message(tmp);
+        queue_init_message("%s", tmp);
     }
 
     if (tox_opts.udp_disabled) {
         queue_init_message("UDP disabled");
     } else if (tox_opts.proxy_enabled) {
         const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
-        queue_init_message(msg);
+        queue_init_message("%s", msg);
         msg = "Use the -t option to disable UDP.";
-        queue_init_message(msg);
+        queue_init_message("%s", msg);
     }
 
     /* Init core */
@@ -563,7 +570,6 @@ static void first_time_encrypt(const char *msg)
 
         memset(passconfirm, 0, sizeof(passconfirm));
         user_password.data_is_encrypted = true;
-        queue_init_message("Data file has been encrypted");
     }
 
     system("clear");
@@ -591,7 +597,7 @@ int store_data(Tox *m, const char *path)
     if (buf == NULL)
         return -2;
 
-    if (user_password.data_is_encrypted)
+    if (user_password.data_is_encrypted && !arg_opts.unencrypt_data)
         tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, user_password.len);
     else
         tox_save(m, (uint8_t *) buf);
@@ -644,9 +650,18 @@ static void load_data(Tox *m, char *path)
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted)
             exit_toxic_err("failed in load_data", FATALERR_ENCRYPT);
+        else if (arg_opts.encrypt_data)
+            queue_init_message("Data file '%s' has been encrypted", path);
+
+        if (arg_opts.unencrypt_data && is_encrypted)
+            queue_init_message("Data file '%s' has been unencrypted", path);
+        else if (arg_opts.unencrypt_data)
+            queue_init_message("Warning: passed --unencrypt-data option with unencrypted data file '%s'", path);
 
         if (is_encrypted) {
-            user_password.data_is_encrypted = true;
+            if (!arg_opts.unencrypt_data)
+                user_password.data_is_encrypted = true;
+
             int pwlen = 0;
             system("clear");
             printf("Enter password (q to quit) ");
@@ -734,7 +749,7 @@ void *thread_cqueue(void *data)
         pthread_mutex_lock(&Winthread.lock);
         int i;
 
-        for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat && tox_get_friend_connection_status(m, toxwin->num) == 1)
@@ -753,7 +768,7 @@ static void print_usage(void)
     fprintf(stderr, "  -b, --debug              Enable stderr for debugging\n");
     fprintf(stderr, "  -c, --config             Use specified config file\n");
     fprintf(stderr, "  -d, --default-locale     Use default POSIX locale\n");
-    fprintf(stderr, "  -e, --encrypt-data       Encrypt an existing unencrypted data file\n");
+    fprintf(stderr, "  -e, --encrypt-data       Encrypt an unencrypted data file\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
@@ -761,20 +776,15 @@ static void print_usage(void)
     fprintf(stderr, "  -p, --proxy              Use proxy: Requires [IP] [port]\n");
     fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
     fprintf(stderr, "  -t, --force-tcp          Force TCP connection (use this with proxies)\n");
+    fprintf(stderr, "  -u, --unencrypt-data     Unencrypt an encrypted data file\n");
     fprintf(stderr, "  -x, --nodata             Ignore data file\n");
 }
 
 static void set_default_opts(void)
 {
-    arg_opts.use_ipv4 = 0;
-    arg_opts.ignore_data_file = 0;
-    arg_opts.debug = 0;
-    arg_opts.default_locale = 0;
-    arg_opts.use_custom_data = 0;
-    arg_opts.no_connect = 0;
-    arg_opts.force_tcp = 0;
-    arg_opts.use_proxy = 0;
-    arg_opts.encrypt_data = 0;
+    memset(&arg_opts, 0, sizeof(struct arg_opts));
+
+    /* set any non-zero defaults here*/
 }
 
 static void parse_args(int argc, char *argv[])
@@ -795,10 +805,11 @@ static void parse_args(int argc, char *argv[])
         {"dnslist", required_argument, 0, 'r'},
         {"force-tcp", no_argument, 0, 't'},
         {"proxy", required_argument, 0, 'p'},
+        {"unencrypt-data", no_argument, 0, 'u'},
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotxc:f:n:r:p:";
+    const char *opts_str = "4bdehotuxc:f:n:r:p:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -840,9 +851,8 @@ static void parse_args(int argc, char *argv[])
                 strcpy(BLOCK_FILE, optarg);
                 strcat(BLOCK_FILE, "-blocklist");
 
-                char tmp[PATH_MAX];
-                snprintf(tmp, sizeof(tmp), "Using '%s' data file", DATA_FILE);
-                queue_init_message(tmp);
+                queue_init_message("Using '%s' data file", DATA_FILE);
+
                 break;
 
             case 'n':
@@ -878,6 +888,10 @@ static void parse_args(int argc, char *argv[])
 
             case 't':
                 arg_opts.force_tcp = 1;
+                break;
+
+            case 'u':
+                arg_opts.unencrypt_data = 1;
                 break;
 
             case 'x':
@@ -953,6 +967,9 @@ int main(int argc, char *argv[])
     init_signal_catchers();
     parse_args(argc, argv);
 
+    if (arg_opts.encrypt_data && arg_opts.unencrypt_data)
+        exit_toxic_err("failed in main", FATALERR_ENCRYPT);
+
     /* Use the -b flag to enable stderr */
     if (!arg_opts.debug)
         freopen("/dev/null", "w", stderr);
@@ -964,7 +981,7 @@ int main(int argc, char *argv[])
     bool datafile_exists = file_exists(DATA_FILE);
 
     if (!arg_opts.ignore_data_file) {
-        if (!datafile_exists)
+        if (!datafile_exists && !arg_opts.unencrypt_data)
             first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
         else if (arg_opts.encrypt_data)
             first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
@@ -985,10 +1002,10 @@ int main(int argc, char *argv[])
         exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
 
     if (!arg_opts.ignore_data_file) {
-        if (!arg_opts.encrypt_data || (arg_opts.encrypt_data && datafile_exists))
-            load_data(m, DATA_FILE);
-        else
+        if (arg_opts.encrypt_data && !datafile_exists)
             exit_toxic_err("failed in main", FATALERR_ENCRYPT);
+
+        load_data(m, DATA_FILE);
     }
 
     init_term();
@@ -1029,7 +1046,7 @@ int main(int argc, char *argv[])
     
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for data file...";
-        queue_init_message(msg);
+        queue_init_message("%s", msg);
     }
 
     if (settings_err == -1)

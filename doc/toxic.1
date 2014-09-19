@@ -2,12 +2,12 @@
 .\"     Title: toxic
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 2014-08-21
+.\"      Date: 2014-09-15
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC" "1" "2014\-08\-21" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC" "1" "2014\-09\-15" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -62,7 +62,7 @@ Use default locale
 .PP
 \-e, \-\-encrypt\-data
 .RS 4
-Encrypt an existing unencrypted data file\&. An error will occur if this option is used with a non\-existent or encrypted data file\&.
+Encrypt an unencrypted data file\&. An error will occur if this option is used with a non\-existent or encrypted data file\&.
 .RE
 .PP
 \-f, \-\-file data\-file
@@ -104,6 +104,11 @@ Use specified DNSservers file
 \-t, \-\-force\-tcp
 .RS 4
 Force TCP connection (use this with proxies)
+.RE
+.PP
+\-u, \-\-unencrypt\-data
+.RS 4
+Unencrypt a data file\&. A warning will appear if this option is used with a data file that is already unencrypted\&.
 .RE
 .PP
 \-x, \-\-nodata
