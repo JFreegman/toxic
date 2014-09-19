@@ -1,5 +1,5 @@
 # Version
-TOXIC_VERSION = 0.5.0
+TOXIC_VERSION = 0.5.1
 REV = $(shell git rev-list HEAD --count)
 VERSION = $(TOXIC_VERSION)_r$(REV)
 
