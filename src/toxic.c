@@ -568,6 +568,7 @@ static void first_time_encrypt(const char *msg)
             valid_password = true;
         }
 
+        queue_init_message("Data file '%s' has been encrypted", DATA_FILE);
         memset(passconfirm, 0, sizeof(passconfirm));
         user_password.data_is_encrypted = true;
     }
@@ -650,8 +651,6 @@ static void load_data(Tox *m, char *path)
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted)
             exit_toxic_err("failed in load_data", FATALERR_ENCRYPT);
-        else if (arg_opts.encrypt_data)
-            queue_init_message("Data file '%s' has been encrypted", path);
 
         if (arg_opts.unencrypt_data && is_encrypted)
             queue_init_message("Data file '%s' has been unencrypted", path);
@@ -967,8 +966,11 @@ int main(int argc, char *argv[])
     init_signal_catchers();
     parse_args(argc, argv);
 
-    if (arg_opts.encrypt_data && arg_opts.unencrypt_data)
-        exit_toxic_err("failed in main", FATALERR_ENCRYPT);
+    if (arg_opts.encrypt_data && arg_opts.unencrypt_data) {
+        arg_opts.encrypt_data = 0;
+        arg_opts.unencrypt_data = 0;
+        queue_init_message("Warning: Using --unencrypt-data and --encrypt-data simultaneously has no effect");
+    }
 
     /* Use the -b flag to enable stderr */
     if (!arg_opts.debug)
@@ -1003,9 +1005,10 @@ int main(int argc, char *argv[])
 
     if (!arg_opts.ignore_data_file) {
         if (arg_opts.encrypt_data && !datafile_exists)
-            exit_toxic_err("failed in main", FATALERR_ENCRYPT);
+            arg_opts.encrypt_data = 0;
 
         load_data(m, DATA_FILE);
+
     }
 
     init_term();
