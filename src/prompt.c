@@ -464,7 +464,8 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    print_welcome_msg(self);
+    if (user_settings_->show_welcome_msg == SHOW_WELCOME_MSG_ON)
+        print_welcome_msg(self);
 }
 
 ToxWindow new_prompt(void)

@@ -54,6 +54,7 @@ static struct _ui_strings {
     const char* history_size;
     const char* show_typing_self;
     const char* show_typing_other;
+    const char* show_welcome_msg;
 } ui_strings = {
     "ui",
     "timestamps",
@@ -64,6 +65,7 @@ static struct _ui_strings {
     "history_size",
     "show_typing_self",
     "show_typing_other",
+    "show_welcome_msg",
 };
 
 static void ui_defaults(struct user_settings* settings) 
@@ -76,6 +78,7 @@ static void ui_defaults(struct user_settings* settings)
     settings->history_size = 700;
     settings->show_typing_self = SHOW_TYPING_ON;
     settings->show_typing_other = SHOW_TYPING_ON;
+    settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
 }
 
 static const struct _keys_strings {
@@ -250,6 +253,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
         config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
         config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
+        config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
         config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
         s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
     }

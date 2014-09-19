@@ -35,6 +35,7 @@ struct user_settings {
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     int show_typing_self;  /* boolean */
     int show_typing_other; /* boolean */
+    int show_welcome_msg;  /* boolean */
 
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
@@ -73,6 +74,9 @@ enum {
 
     SHOW_TYPING_OFF = 0,
     SHOW_TYPING_ON = 1,
+
+    SHOW_WELCOME_MSG_OFF = 0,
+    SHOW_WELCOME_MSG_ON = 1,
 
     DFLT_HST_SIZE = 700,
 } settings_values;
