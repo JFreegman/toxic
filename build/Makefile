@@ -58,7 +58,7 @@ toxic: $(OBJ)
 	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
 
 clean:
-	rm -rf *.d *.o toxic
+	rm -f *.d *.o toxic
 
 -include $(OBJ:.o=.d)
 
