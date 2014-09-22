@@ -720,6 +720,7 @@ void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
     uint8_t draw_count = 0;
+    init_signal_catchers();
 
     while (true) {
         draw_active_window(m);
@@ -963,7 +964,6 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
 
 int main(int argc, char *argv[])
 {
-    init_signal_catchers();
     parse_args(argc, argv);
 
     if (arg_opts.encrypt_data && arg_opts.unencrypt_data) {
