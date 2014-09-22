@@ -51,21 +51,23 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
     int path_len = strlen(name) + strlen(".log") + strlen("-") + strlen(namedash);
     path_len += strlen(set_path) ? *set_path : strlen(user_config_dir) + strlen(LOGDIR);
 
-    /* first 4 digits of selfkey */
+    /* first 6 digits of selfkey */
     char self_id[32];
-    path_len += (KEY_IDENT_DIGITS * 2 + 5);
+    path_len += (KEY_IDENT_DIGITS * 3 + 5);
     sprintf(&self_id[0], "%02X", selfkey[0] & 0xff);
     sprintf(&self_id[2], "%02X", selfkey[1] & 0xff);
-    self_id[KEY_IDENT_DIGITS * 2 + 1] = '\0';
+    sprintf(&self_id[4], "%02X", selfkey[2] & 0xff);
+    self_id[KEY_IDENT_DIGITS * 3 + 1] = '\0';
 
     char other_id[32] = {0};
 
     switch (logtype) {
         case LOG_CHAT:
-            path_len += (KEY_IDENT_DIGITS * 2 + 5);
+            path_len += (KEY_IDENT_DIGITS * 3 + 5);
             sprintf(&other_id[0], "%02X", otherkey[0] & 0xff);
             sprintf(&other_id[2], "%02X", otherkey[1] & 0xff);
-            other_id[KEY_IDENT_DIGITS * 2 + 1] = '\0';
+            sprintf(&other_id[4], "%02X", otherkey[2] & 0xff);
+            other_id[KEY_IDENT_DIGITS * 3 + 1] = '\0';
             break;
 
         case LOG_GROUP:
