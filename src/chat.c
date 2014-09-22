@@ -1091,8 +1091,11 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (Friends.list[self->num].logging_on)
-        log_enable(nick, Friends.list[self->num].pub_key, ctx->log);
+    log_enable(nick, Friends.list[self->num].pub_key, ctx->log);
+    load_chat_history(self, ctx->log);
+
+    if (!Friends.list[self->num].logging_on)
+        log_disable(ctx->log);
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 

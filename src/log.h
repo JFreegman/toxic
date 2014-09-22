@@ -26,6 +26,7 @@
 struct chatlog {
     FILE *file;
     uint64_t lastwrite;
+    char path[MAX_STR_SIZE];
     bool log_on;    /* specific to current chat window */
 };
 
@@ -40,5 +41,8 @@ void log_enable(char *name, const char *key, struct chatlog *log);
 
 /* disables logging for specified log and closes file */
 void log_disable(struct chatlog *log);
+
+/* Loads previous history from chat log */
+void load_chat_history(ToxWindow *self, struct chatlog *log);
 
 #endif /* #define _log_h */

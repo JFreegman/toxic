@@ -28,7 +28,7 @@
 
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40
-#define MAX_QUEUE 128
+#define MAX_LINE_INFO_QUEUE 512
 
 enum {
     SYS_MSG,
@@ -68,7 +68,7 @@ struct history {
     struct line_info *line_end;
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
 
-    struct line_info *queue[MAX_QUEUE];
+    struct line_info *queue[MAX_LINE_INFO_QUEUE];
     int queue_sz;
 };
 

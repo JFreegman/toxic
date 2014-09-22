@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "configdir.h"
 #include "toxic.h"
@@ -30,6 +31,7 @@
 #include "misc_tools.h"
 #include "log.h"
 #include "settings.h"
+#include "line_info.h"
 
 extern struct user_settings *user_settings_;
 
@@ -76,14 +78,13 @@ void init_logging_session(char *name, const char *key, struct chatlog *log)
 
     free(user_config_dir);
 
-    log->file = fopen(log_path, "a");
+    log->file = fopen(log_path, "a+");
+    snprintf(log->path, sizeof(log->path), "%s", log_path);
 
     if (log->file == NULL) {
         log->log_on = false;
         return;
     }
-
-    fprintf(log->file, "\n*** NEW SESSION ***\n\n");
 }
 
 #define LOG_FLUSH_LIMIT 1  /* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
@@ -134,4 +135,61 @@ void log_disable(struct chatlog *log)
         fclose(log->file);
         log->file = NULL;
     }
+}
+
+/* Loads previous history from chat log */
+void load_chat_history(ToxWindow *self, struct chatlog *log)
+{
+    if (log->file == NULL)
+        return;
+
+    struct stat st;
+
+    if (stat(log->path, &st) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Failed to stat log file");
+        return;
+    }
+
+    int sz = st.st_size;
+
+    if (sz <= 0)
+        return;
+
+    char *hstbuf = malloc(sz);
+
+    if (hstbuf == NULL)
+        exit_toxic_err("failed in print_prev_chat_history", FATALERR_MEMORY);
+
+    if (fread(hstbuf, sz, 1, log->file) != 1) {
+        free(hstbuf);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Failed to read log file");
+        return;
+    }
+
+    /* Number of history lines to load: must not be larger than MAX_LINE_INFO_QUEUE - 2 */
+    int L = MIN(MAX_LINE_INFO_QUEUE - 2, user_settings_->history_size);
+    int start, count = 0;
+
+    /* start at end and backtrace L lines or to the beginning of buffer */
+    for (start = sz - 1; start >= 0 && count < L; --start) {
+        if (hstbuf[start] == '\n')
+            ++count;
+    }
+
+    char buf[MAX_STR_SIZE];
+    const char *line = strtok(&hstbuf[start + 1], "\n");
+
+    if (line == NULL) {
+        free(hstbuf);
+        return;
+    }
+
+    while (line != NULL) {
+        snprintf(buf, sizeof(buf), "%s", line);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", buf);
+        line = strtok(NULL, "\n");
+    }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+    free(hstbuf);
 }

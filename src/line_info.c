@@ -135,7 +135,7 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
 {
     struct history *hst = self->chatwin->hst;
 
-    if (hst->queue_sz >= MAX_QUEUE)
+    if (hst->queue_sz >= MAX_LINE_INFO_QUEUE)
         return;
 
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
