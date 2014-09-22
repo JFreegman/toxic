@@ -458,7 +458,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     if (user_settings_->autolog == AUTOLOG_ON) {
         char myid[TOX_FRIEND_ADDRESS_SIZE];
         tox_get_address(m, (uint8_t *) myid);
-        log_enable(self->name, myid, ctx->log);
+        log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT);
     }
 
     scrollok(ctx->history, 0);

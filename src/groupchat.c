@@ -503,8 +503,11 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings_->autolog == AUTOLOG_ON)
-        log_enable(self->name, NULL, ctx->log);
+    if (user_settings_->autolog == AUTOLOG_ON) {
+        char myid[TOX_FRIEND_ADDRESS_SIZE];
+        tox_get_address(m, (uint8_t *) myid);
+        log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP);
+    }
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 

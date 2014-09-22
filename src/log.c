@@ -35,56 +35,71 @@
 
 extern struct user_settings *user_settings_;
 
-/* Creates/fetches log file by appending to the config dir the name and a pseudo-unique identity */
-void init_logging_session(char *name, const char *key, struct chatlog *log)
+/* Opens log file or creates a new one */
+static int init_logging_session(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
 {
-    if (!log->log_on)
-        return;
+    if (selfkey == NULL || (logtype == LOG_CHAT && otherkey == NULL))
+        return -1;
 
     if (!valid_nick(name))
         name = UNKNOWN_NAME;
 
+    const char *namedash = "-";
     const char *set_path = user_settings_->chatlogs_path;
 
     char *user_config_dir = get_user_config_dir();
-    int path_len = strlen(set_path) + strlen(name) ? *set_path
-                   : strlen(user_config_dir) + strlen(LOGDIR) + strlen(name);
+    int path_len = strlen(name) + strlen(".log") + strlen("-") + strlen(namedash);
+    path_len += strlen(set_path) ? *set_path : strlen(user_config_dir) + strlen(LOGDIR);
 
-    /* use first 4 digits of key as log ident. If no key use a timestamp */
-    char ident[32];
+    /* first 4 digits of selfkey */
+    char self_id[32];
+    path_len += (KEY_IDENT_DIGITS * 2 + 5);
+    sprintf(&self_id[0], "%02X", selfkey[0] & 0xff);
+    sprintf(&self_id[2], "%02X", selfkey[1] & 0xff);
+    self_id[KEY_IDENT_DIGITS * 2 + 1] = '\0';
 
-    if (key != NULL) {
-        path_len += (KEY_IDENT_DIGITS * 2 + 5);
-        sprintf(&ident[0], "%02X", key[0] & 0xff);
-        sprintf(&ident[2], "%02X", key[1] & 0xff);
-        ident[KEY_IDENT_DIGITS * 2 + 1] = '\0';
-    } else {
-        strftime(ident, sizeof(ident), "%Y-%m-%d[%H:%M:%S]", get_time());
-        path_len += strlen(ident) + 1;
-    }
+    char other_id[32] = {0};
 
-    if (path_len >= MAX_STR_SIZE) {
-        log->log_on = false;
-        free(user_config_dir);
-        return;
+    switch (logtype) {
+        case LOG_CHAT:
+            path_len += (KEY_IDENT_DIGITS * 2 + 5);
+            sprintf(&other_id[0], "%02X", otherkey[0] & 0xff);
+            sprintf(&other_id[2], "%02X", otherkey[1] & 0xff);
+            other_id[KEY_IDENT_DIGITS * 2 + 1] = '\0';
+            break;
+
+        case LOG_GROUP:
+            strftime(other_id, sizeof(other_id), "%Y-%m-%d[%H:%M:%S]", get_time());
+            path_len += strlen(other_id);
+            break;
+
+        case LOG_PROMPT:
+            namedash = "";
+            --path_len;
+            break;
     }
 
     char log_path[MAX_STR_SIZE];
 
-    if (*set_path)
-        snprintf(log_path, sizeof(log_path), "%s%s-%s.log", set_path, name, ident);
+    if (path_len >= sizeof(log_path)) {
+        free(user_config_dir);
+        return -1;
+    }
+
+    if (!string_is_empty(set_path))
+        snprintf(log_path, sizeof(log_path), "%s%s-%s%s%s.log", set_path, self_id, name, namedash, other_id);
     else
-        snprintf(log_path, sizeof(log_path), "%s%s%s-%s.log", user_config_dir, LOGDIR, name, ident);
+        snprintf(log_path, sizeof(log_path), "%s%s%s-%s%s%s.log", user_config_dir, LOGDIR, self_id, name, namedash, other_id);
 
     free(user_config_dir);
 
     log->file = fopen(log_path, "a+");
     snprintf(log->path, sizeof(log->path), "%s", log_path);
 
-    if (log->file == NULL) {
-        log->log_on = false;
-        return;
-    }
+    if (log->file == NULL)
+        return -1;
+
+    return 0;
 }
 
 #define LOG_FLUSH_LIMIT 1  /* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
@@ -119,14 +134,6 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
     }
 }
 
-void log_enable(char *name, const char *key, struct chatlog *log)
-{
-    log->log_on = true;
-
-    if (log->file == NULL)
-        init_logging_session(name, key, log);
-}
-
 void log_disable(struct chatlog *log)
 {
     log->log_on = false;
@@ -134,6 +141,16 @@ void log_disable(struct chatlog *log)
     if (log->file != NULL) {
         fclose(log->file);
         log->file = NULL;
+    }
+}
+
+void log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
+{
+    log->log_on = true;
+
+    if (log->file == NULL) {
+        if (init_logging_session(name, selfkey, otherkey, log, logtype) == -1)
+            log_disable(log);
     }
 }
 

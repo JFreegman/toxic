@@ -286,16 +286,16 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     const char *swch = argv[1];
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
+        char myid[TOX_FRIEND_ADDRESS_SIZE];
+        tox_get_address(m, (uint8_t *) myid);
 
         if (self->is_chat) {
             Friends.list[self->num].logging_on = true;
-            log_enable(self->name, Friends.list[self->num].pub_key, log);
+            log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
         } else if (self->is_prompt) {
-            char myid[TOX_FRIEND_ADDRESS_SIZE];
-            tox_get_address(m, (uint8_t *) myid);
-            log_enable(self->name, myid, log);
+            log_enable(self->name, myid, NULL, log, LOG_PROMPT);
         } else if (self->is_groupchat) {
-            log_enable(self->name, NULL, log);
+            log_enable(self->name, myid, NULL, log, LOG_GROUP);
         }
 
         msg = "Logging enabled";
