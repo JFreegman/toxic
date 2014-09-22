@@ -44,7 +44,7 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
     if (!valid_nick(name))
         name = UNKNOWN_NAME;
 
-    const char *namedash = "-";
+    const char *namedash = logtype == LOG_PROMPT ? "" : "-";
     const char *set_path = user_settings_->chatlogs_path;
 
     char *user_config_dir = get_user_config_dir();
@@ -53,31 +53,26 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
 
     /* first 6 digits of selfkey */
     char self_id[32];
-    path_len += (KEY_IDENT_DIGITS * 3 + 5);
+    path_len += KEY_IDENT_DIGITS * 2;
     sprintf(&self_id[0], "%02X", selfkey[0] & 0xff);
     sprintf(&self_id[2], "%02X", selfkey[1] & 0xff);
     sprintf(&self_id[4], "%02X", selfkey[2] & 0xff);
-    self_id[KEY_IDENT_DIGITS * 3 + 1] = '\0';
+    self_id[KEY_IDENT_DIGITS * 2] = '\0';
 
     char other_id[32] = {0};
 
     switch (logtype) {
         case LOG_CHAT:
-            path_len += (KEY_IDENT_DIGITS * 3 + 5);
+            path_len += KEY_IDENT_DIGITS * 2;
             sprintf(&other_id[0], "%02X", otherkey[0] & 0xff);
             sprintf(&other_id[2], "%02X", otherkey[1] & 0xff);
             sprintf(&other_id[4], "%02X", otherkey[2] & 0xff);
-            other_id[KEY_IDENT_DIGITS * 3 + 1] = '\0';
+            other_id[KEY_IDENT_DIGITS * 2] = '\0';
             break;
 
         case LOG_GROUP:
             strftime(other_id, sizeof(other_id), "%Y-%m-%d[%H:%M:%S]", get_time());
             path_len += strlen(other_id);
-            break;
-
-        case LOG_PROMPT:
-            namedash = "";
-            --path_len;
             break;
     }
 
@@ -177,7 +172,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     char *hstbuf = malloc(sz);
 
     if (hstbuf == NULL)
-        exit_toxic_err("failed in print_prev_chat_history", FATALERR_MEMORY);
+        exit_toxic_err("failed in load_chat_history", FATALERR_MEMORY);
 
     if (fread(hstbuf, sz, 1, log->file) != 1) {
         free(hstbuf);

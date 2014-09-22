@@ -45,7 +45,7 @@
 #define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
-#define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
+#define KEY_IDENT_DIGITS 3    /* number of hex digits to display for the pub-key based identifier */
 #define TIME_STR_SIZE 16
 
 /* ASCII key codes */
