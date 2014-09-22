@@ -29,6 +29,7 @@
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40
 #define MAX_LINE_INFO_QUEUE 512
+#define MAX_LINE_INFO_MSG_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* needs extra room for log loading */
 
 enum {
     SYS_MSG,
@@ -47,7 +48,7 @@ struct line_info {
     char timestr[TIME_STR_SIZE];
     char name1[TOXIC_MAX_NAME_LENGTH];
     char name2[TOXIC_MAX_NAME_LENGTH];
-    char msg[TOX_MAX_MESSAGE_LENGTH];
+    char msg[MAX_LINE_INFO_MSG_SIZE];
     uint64_t timestamp;
     uint8_t type;
     uint8_t bold;

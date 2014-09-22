@@ -143,7 +143,7 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
     if (new_line == NULL)
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
 
-    char frmt_msg[MAX_STR_SIZE] = {0};
+    char frmt_msg[MAX_LINE_INFO_MSG_SIZE] = {0};
 
     va_list args;
     va_start(args, msg);

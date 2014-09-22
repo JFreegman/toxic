@@ -176,7 +176,6 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
             ++count;
     }
 
-    char buf[MAX_STR_SIZE];
     const char *line = strtok(&hstbuf[start + 1], "\n");
 
     if (line == NULL) {
@@ -185,8 +184,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     }
 
     while (line != NULL) {
-        snprintf(buf, sizeof(buf), "%s", line);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", buf);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", line);
         line = strtok(NULL, "\n");
     }
 
