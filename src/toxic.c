@@ -92,7 +92,7 @@ static struct _user_password {
 
 static void catch_SIGINT(int sig)
 {
-    Winthread.sig_exit_toxic = true;
+    Winthread.sig_exit_toxic = 1;
 }
 
 static void catch_SIGSEGV(int sig)
@@ -105,7 +105,7 @@ static void catch_SIGSEGV(int sig)
 
 static void flag_window_resize(int sig)
 {
-    Winthread.flag_resize = true;
+    Winthread.flag_resize = 1;
 }
 
 static void init_signal_catchers(void)
@@ -727,7 +727,7 @@ void *thread_winref(void *data)
 
         if (Winthread.flag_resize) {
             on_window_resize();
-            Winthread.flag_resize = false;
+            Winthread.flag_resize = 0;
         } else if (draw_count >= INACTIVE_WIN_REFRESH_RATE) {
             refresh_inactive_windows();
             draw_count = 0;

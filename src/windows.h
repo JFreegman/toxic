@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <wctype.h>
 #include <wchar.h>
+#include <signal.h>
 
 #include <tox/tox.h>
 
@@ -67,8 +68,8 @@ typedef enum {
 struct _Winthread {
     pthread_t tid;
     pthread_mutex_t lock;
-    bool sig_exit_toxic;
-    bool flag_resize;
+    volatile sig_atomic_t sig_exit_toxic;
+    volatile sig_atomic_t flag_resize;
 };
 
 struct _cqueue_thread {
