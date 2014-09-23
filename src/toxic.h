@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _toxic_h
-#define _toxic_h
+#ifndef TOXIC_H
+#define TOXIC_H
 
 #ifndef TOXICVER
 #define TOXICVER "NOVER_"    /* Use the -D flag to set this */
@@ -111,4 +111,4 @@ void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
 void on_read_receipt(Tox *m, int32_t, uint32_t, void *userdata);
 
-#endif  /* #define _toxic_h */
+#endif  /* #define TOXIC_H */

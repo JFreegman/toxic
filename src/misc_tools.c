@@ -35,7 +35,7 @@
 #include "file_senders.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 static uint64_t current_unix_time;
 
@@ -82,12 +82,12 @@ struct tm *get_time(void)
 /*Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(char *buf, int bufsize)
 {
-    if (user_settings_->timestamps == TIMESTAMPS_OFF) {
+    if (user_settings->timestamps == TIMESTAMPS_OFF) {
         buf[0] = '\0';
         return;
     }
 
-    const char *t = user_settings_->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
+    const char *t = user_settings->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
     strftime(buf, bufsize, t, get_time());
 }
 

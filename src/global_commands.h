@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _global_commands_h
-#define _global_commands_h
+#ifndef GLOBAL_COMMANDS_H
+#define GLOBAL_COMMANDS_H
 
 #include "windows.h"
 #include "toxic.h"
@@ -43,9 +43,9 @@ void cmd_status(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZ
 
 void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg);
 
-#ifdef _AUDIO
+#ifdef AUDIO
 void cmd_list_devices(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_change_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
-#endif /* #define _global_commands_h */
+#endif /* #define GLOBAL_COMMANDS_H */

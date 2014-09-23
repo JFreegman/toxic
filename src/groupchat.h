@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _groupchat_h
-#define _groupchat_h
+#ifndef GROUPCHAT_H
+#define GROUPCHAT_H
 
 #include "toxic.h"
 #include "windows.h"
@@ -45,4 +45,4 @@ void kill_groupchat_window(ToxWindow *self);
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
 ToxWindow new_group_chat(Tox *m, int groupnum);
 
-#endif /* #define _groupchat_h */
+#endif /* #define GROUPCHAT_H */

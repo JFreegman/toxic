@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _autocomplete_h
-#define _autocomplete_h
+#ifndef AUTOCOMPLETE_H
+#define AUTOCOMPLETE_H
 
 /* looks for all instances in list that begin with the last entered word in line according to pos,
    then fills line with the complete word. e.g. "Hello jo" would complete the line
@@ -39,4 +39,4 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size);
     return diff between old len and new len of ctx->line, -1 if no matches or > 1 match */
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line);
 
-#endif  /* #define _autocomplete_h */
+#endif  /* #define AUTOCOMPLETE_H */

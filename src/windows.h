@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _windows_h
-#define _windows_h
+#ifndef WINDOWS_H
+#define WINDOWS_H
 
 #include <pthread.h>
 #include <wctype.h>
@@ -30,9 +30,9 @@
 
 #include <tox/tox.h>
 
-#ifdef _AUDIO
+#ifdef AUDIO
 #include <tox/toxav.h>
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 #include "toxic.h"
 
@@ -65,14 +65,14 @@ typedef enum {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
-struct _Winthread {
+struct Winthread {
     pthread_t tid;
     pthread_mutex_t lock;
     volatile sig_atomic_t sig_exit_toxic;
     volatile sig_atomic_t flag_resize;
 };
 
-struct _cqueue_thread {
+struct cqueue_thread {
     pthread_t tid;
 };
 
@@ -123,7 +123,7 @@ struct ToxWindow {
     void(*onTypingChange)(ToxWindow *, Tox *, int32_t, uint8_t);
     void(*onReadReceipt)(ToxWindow *, Tox *, int32_t, uint32_t);
 
-#ifdef _AUDIO
+#ifdef AUDIO
 
     void(*onInvite)(ToxWindow *, ToxAv *, int);
     void(*onRinging)(ToxWindow *, ToxAv *, int);
@@ -142,7 +142,7 @@ struct ToxWindow {
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
 
     int ringing_sound;
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
     int active_box; /* For box notify */
     
@@ -176,7 +176,7 @@ struct StatusBar {
     bool is_online;
 };
 
-#ifdef _AUDIO
+#ifdef AUDIO
 
 
 #define INFOBOX_HEIGHT 7
@@ -195,7 +195,7 @@ struct infobox {
 
     WINDOW *win;
 };
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 #define MAX_LINE_HIST 128
 
@@ -217,7 +217,7 @@ struct ChatContext {
     struct chatlog *log;
     struct chat_queue *cqueue;
 
-#ifdef _AUDIO
+#ifdef AUDIO
     struct infobox infobox;
 #endif
 
@@ -248,4 +248,4 @@ ToxWindow *get_window_ptr(int i);
    call at least once per second */
 void refresh_inactive_windows(void);
 
-#endif  /* #define _windows_h */
+#endif  /* #define WINDOWS_H */

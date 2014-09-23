@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef FRIENDLIST_H_53I41IM
-#define FRIENDLIST_H_53I41IM
+#ifndef FRIENDLIST_H
+#define FRIENDLIST_H
 
 #include <time.h>
 
@@ -95,4 +95,4 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort);
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void);
 
-#endif /* end of include guard: FRIENDLIST_H_53I41IM */
+#endif /* end of include guard: FRIENDLIST_H */

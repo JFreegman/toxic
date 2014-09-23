@@ -19,8 +19,8 @@
  *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef _misc_tools_h
-#define _misc_tools_h
+#ifndef MISC_TOOLS_H
+#define MISC_TOOLS_H
 
 #include "windows.h"
 #include "toxic.h"
@@ -112,4 +112,4 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes);
 /* checks if a file exists. Returns true or false */
 bool file_exists(const char *path);
 
-#endif /* #define _misc_tools_h */
+#endif /* #define MISC_TOOLS_H */

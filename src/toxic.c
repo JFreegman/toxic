@@ -57,17 +57,17 @@
 #include "device.h"
 #include "message_queue.h"
 
-#ifdef _AUDIO
+#ifdef AUDIO
 #include "audio_call.h"
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
 #endif
 
-#ifdef _AUDIO
+#ifdef AUDIO
 ToxAv *av;
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
@@ -76,15 +76,15 @@ ToxWindow *prompt = NULL;
 
 #define AUTOSAVE_FREQ 60
 
-struct _Winthread Winthread;
-struct _cqueue_thread cqueue_thread;
+struct Winthread Winthread;
+struct cqueue_thread cqueue_thread;
 struct arg_opts arg_opts;
-struct user_settings *user_settings_ = NULL;
+struct user_settings *user_settings = NULL;
 
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
 
-static struct _user_password {
+static struct user_password {
     bool data_is_encrypted;
     char pass[MAX_PASSWORD_LEN + 1];
     int len;
@@ -118,21 +118,21 @@ static void init_signal_catchers(void)
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
-    memset(&user_password, 0, sizeof(struct _user_password));
+    memset(&user_password, 0, sizeof(struct user_password));
     close_all_file_senders(m);
     kill_all_windows(m);
 
     free(DATA_FILE);
     free(BLOCK_FILE);
-    free(user_settings_);
+    free(user_settings);
 
-#ifdef _SOUND_NOTIFY
+#ifdef SOUND_NOTIFY
 //     sound_notify(NULL, self_log_out, NT_ALWAYS, NULL);
-#endif /* _SOUND_NOTIFY */
+#endif /* SOUND_NOTIFY */
     terminate_notify();
-#ifdef _AUDIO
+#ifdef AUDIO
     terminate_audio();
-#endif /* _AUDIO */
+#endif /* AUDIO */
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
@@ -171,7 +171,7 @@ static void init_term(void)
         short bg_color = COLOR_BLACK;
         start_color();
 
-        if (user_settings_->colour_theme == NATIVE_COLS) {
+        if (user_settings->colour_theme == NATIVE_COLS) {
             if (assume_default_colors(-1, -1) == OK)
                 bg_color = -1;
         }
@@ -324,7 +324,7 @@ static Tox *init_tox(void)
 #define MAXNODES 50
 #define NODELEN (MAX_NODE_LINE - TOX_CLIENT_ID_SIZE - 7)
 
-static struct _toxNodes {
+static struct toxNodes {
     int lines;
     char nodes[MAXNODES][NODELEN];
     uint16_t ports[MAXNODES];
@@ -990,13 +990,13 @@ int main(int argc, char *argv[])
     }
 
     /* init user_settings struct and load settings from conf file */
-    user_settings_ = calloc(1, sizeof(struct user_settings));
+    user_settings = calloc(1, sizeof(struct user_settings));
 
-    if (user_settings_ == NULL)
+    if (user_settings == NULL)
         exit_toxic_err("failed in main", FATALERR_MEMORY);
 
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
-    int settings_err = settings_load(user_settings_, p);
+    int settings_err = settings_load(user_settings, p);
 
     Tox *m = init_tox();
 
@@ -1026,24 +1026,24 @@ int main(int argc, char *argv[])
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
-#ifdef _AUDIO
+#ifdef AUDIO
 
     av = init_audio(prompt, m);
 
-    set_primary_device(input, user_settings_->audio_in_dev);
-    set_primary_device(output, user_settings_->audio_out_dev);
+    set_primary_device(input, user_settings->audio_in_dev);
+    set_primary_device(output, user_settings->audio_out_dev);
 
-#elif _SOUND_NOTIFY
+#elif SOUND_NOTIFY
     if ( init_devices() == de_InternalError )
         queue_init_message("Failed to init audio devices");
 
-#endif /* _AUDIO */
+#endif /* AUDIO */
     
     init_notify(60, 3000);
 
-#ifdef _SOUND_NOTIFY
+#ifdef SOUND_NOTIFY
 //     sound_notify(prompt, self_log_in, 0, NULL);
-#endif /* _SOUND_NOTIFY */
+#endif /* SOUND_NOTIFY */
     
     const char *msg;
     

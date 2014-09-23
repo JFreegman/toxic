@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _line_info_h
-#define _line_info_h
+#ifndef LINE_INFO_H
+#define LINE_INFO_H
 
 #include "windows.h"
 #include "toxic.h"
@@ -92,4 +92,4 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg);
 void line_info_init(struct history *hst);
 bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */
 
-#endif /* #define _line_info_h */
+#endif /* #define LINE_INFO_H */

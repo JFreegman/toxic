@@ -38,7 +38,7 @@
 #include "notify.h"
 #include "help.h"
 
-#ifdef _AUDIO
+#ifdef AUDIO
 #include "audio_call.h"
 #endif
 
@@ -46,8 +46,8 @@
 extern char *DATA_FILE;
 extern char *BLOCK_FILE;
 extern ToxWindow *prompt;
-extern struct _Winthread Winthread;
-extern struct user_settings *user_settings_;
+extern struct Winthread Winthread;
+extern struct user_settings *user_settings;
 extern struct arg_opts arg_opts;
 
 static uint8_t blocklist_view = 0;   /* 0 if we're in friendlist view, 1 if we're in blocklist view */
@@ -285,7 +285,7 @@ static void update_friend_last_online(int32_t num, uint64_t timestamp)
     Friends.list[num].last_online.tm = *localtime((const time_t*)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
-    const char *t = user_settings_->time == TIME_12 ? "%I:%M %p" : "%H:%M";
+    const char *t = user_settings->time == TIME_12 ? "%I:%M %p" : "%H:%M";
     strftime(Friends.list[num].last_online.hour_min_str, TIME_STR_SIZE, t,
              &Friends.list[num].last_online.tm);
 }
@@ -377,7 +377,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
         Friends.list[i].chatwin = -1;
         Friends.list[i].online = false;
         Friends.list[i].status = TOX_USERSTATUS_NONE;
-        Friends.list[i].logging_on = (bool) user_settings_->autolog == AUTOLOG_ON;
+        Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
         tox_get_client_id(m, num, (uint8_t *) Friends.list[i].pub_key);
         update_friend_last_online(i, tox_get_last_online(m, i));
 
@@ -419,7 +419,7 @@ static void friendlist_add_blocked(Tox *m, int32_t fnum, int32_t bnum)
         Friends.list[i].active = true;
         Friends.list[i].chatwin = -1;
         Friends.list[i].status = TOX_USERSTATUS_NONE;
-        Friends.list[i].logging_on = (bool) user_settings_->autolog == AUTOLOG_ON;
+        Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
         Friends.list[i].namelength = Blocked.list[bnum].namelength;
         update_friend_last_online(i, Blocked.list[bnum].last_on);
         memcpy(Friends.list[i].name, Blocked.list[bnum].name, Friends.list[i].namelength + 1);
@@ -994,7 +994,7 @@ void disable_chatwin(int32_t f_num)
     Friends.list[f_num].chatwin = -1;
 }
 
-#ifdef _AUDIO
+#ifdef AUDIO
 static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 {
     int id = toxav_get_peer_id(av, call_index, 0);
@@ -1021,7 +1021,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
         }
     }
 }
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 ToxWindow new_friendlist(void)
 {
@@ -1043,7 +1043,7 @@ ToxWindow new_friendlist(void)
     ret.onFileSendRequest = &friendlist_onFileSendRequest;
     ret.onGroupInvite = &friendlist_onGroupInvite;
 
-#ifdef _AUDIO
+#ifdef AUDIO
     ret.onInvite = &friendlist_onAv;
     ret.onRinging = &friendlist_onAv;
     ret.onStarting = &friendlist_onAv;
@@ -1058,7 +1058,7 @@ ToxWindow new_friendlist(void)
     
     ret.call_idx = -1;
     ret.device_selection[0] = ret.device_selection[1] = -1;
-#endif /* _AUDIO */
+#endif /* AUDIO */
     
     ret.active_box = -1;
 

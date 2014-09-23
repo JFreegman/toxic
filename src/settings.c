@@ -31,9 +31,9 @@
 #include "notify.h"
 #include "misc_tools.h"
 
-#ifdef _AUDIO
+#ifdef AUDIO
     #include "device.h"
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 #include "settings.h"
 #include "line_info.h"
@@ -44,7 +44,7 @@
 
 #define NO_SOUND "silent"
 
-static struct _ui_strings {
+static struct ui_strings {
     const char* self;
     const char* timestamps;
     const char* alerts;
@@ -81,7 +81,7 @@ static void ui_defaults(struct user_settings* settings)
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
 }
 
-static const struct _keys_strings {
+static const struct keys_strings {
 	const char* self;
 	const char* next_tab;
 	const char* prev_tab;
@@ -119,7 +119,7 @@ static void key_defaults(struct user_settings* settings)
 	settings->key_peer_list_down = T_KEY_C_RB;
 }
 
-static const struct _tox_strings {
+static const struct tox_strings {
     const char* self;
     const char* download_path;
     const char* chatlogs_path;
@@ -135,8 +135,8 @@ static void tox_defaults(struct user_settings* settings)
     strcpy(settings->chatlogs_path, "");
 }
 
-#ifdef _AUDIO
-static const struct _audio_strings {
+#ifdef AUDIO
+static const struct audio_strings {
     const char* self;
     const char* input_device;
     const char* output_device;
@@ -156,8 +156,8 @@ static void audio_defaults(struct user_settings* settings)
 }
 #endif
 
-#ifdef _SOUND_NOTIFY
-static const struct _sound_strings {
+#ifdef SOUND_NOTIFY
+static const struct sound_strings {
     const char* self;
     const char* error;
     const char* self_log_in;
@@ -212,7 +212,7 @@ int settings_load(struct user_settings *s, const char *patharg)
     tox_defaults(s);
     key_defaults(s);
 
-#ifdef _AUDIO
+#ifdef AUDIO
     audio_defaults(s);
 #endif
 
@@ -296,7 +296,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 	   if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
 	}	   
 
-#ifdef _AUDIO
+#ifdef AUDIO
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
         s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
@@ -308,7 +308,7 @@ int settings_load(struct user_settings *s, const char *patharg)
     }    
 #endif
 
-#ifdef _SOUND_NOTIFY
+#ifdef SOUND_NOTIFY
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
         if ( (config_setting_lookup_string(setting, sound_strings.error, &str) != CONFIG_TRUE) ||
                 !set_sound(error, str) ) {

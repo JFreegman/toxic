@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _filesenders_h
-#define _filesenders_h
+#ifndef FILESENDERS_H
+#define FILESENDERS_H
 
 #include "toxic.h"
 #include "windows.h"
@@ -72,4 +72,4 @@ void reset_file_sender_queue(void);
 void close_all_file_senders(Tox *m);
 void do_file_senders(Tox *m);
 
-#endif  /* #define _filesenders_h */
+#endif  /* #define FILESENDERS_H */

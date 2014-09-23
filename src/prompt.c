@@ -43,8 +43,8 @@
 #include "autocomplete.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings_;
-extern struct _Winthread Winthread;
+extern struct user_settings *user_settings;
+extern struct Winthread Winthread;
 
 _FriendRequests FriendRequests;
 
@@ -67,12 +67,12 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/requests"   },
     { "/status"     },
 
-#ifdef _AUDIO
+#ifdef AUDIO
 
     { "/lsdev"       },
     { "/sdev"        },
 
-#endif /* _AUDIO */
+#endif /* AUDIO */
 };
 
 void kill_prompt_window(ToxWindow *self) 
@@ -455,7 +455,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings_->autolog == AUTOLOG_ON) {
+    if (user_settings->autolog == AUTOLOG_ON) {
         char myid[TOX_FRIEND_ADDRESS_SIZE];
         tox_get_address(m, (uint8_t *) myid);
         log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT);
@@ -464,7 +464,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    if (user_settings_->show_welcome_msg == SHOW_WELCOME_MSG_ON)
+    if (user_settings->show_welcome_msg == SHOW_WELCOME_MSG_ON)
         print_welcome_msg(self);
 }
 

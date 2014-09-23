@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _settings_h
-#define _settings_h
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #include <limits.h>
 
@@ -49,7 +49,7 @@ struct user_settings {
 	int key_page_bottom;
 	int key_peer_list_up;
 	int key_peer_list_down;
-#ifdef _AUDIO
+#ifdef AUDIO
     int audio_in_dev;
     int audio_out_dev;
     double VAD_treshold;
@@ -82,4 +82,4 @@ enum {
 } settings_values;
 
 int settings_load(struct user_settings *s, const char *patharg);
-#endif /* #define _settings_h */
+#endif /* #define SETTINGS_H */

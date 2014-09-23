@@ -34,7 +34,7 @@
 #include "message_queue.h"
 #include "misc_tools.h"
 
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 void line_info_init(struct history *hst)
 {
@@ -226,7 +226,7 @@ static void line_info_check_queue(ToxWindow *self)
     if (line == NULL)
         return;
 
-    if (hst->start_id > user_settings_->history_size)
+    if (hst->start_id > user_settings->history_size)
         line_info_root_fwd(hst);
 
     line->id = hst->line_end->id + 1;
@@ -494,19 +494,19 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
     struct history *hst = self->chatwin->hst;
     bool match = true;
 
-	if (key == user_settings_->key_half_page_up) {
+	if (key == user_settings->key_half_page_up) {
 		line_info_page_up(self, hst);
 	}
-	else if (key == user_settings_->key_half_page_down) {
+	else if (key == user_settings->key_half_page_down) {
 		line_info_page_down(self, hst);
 	}
-	else if (key == user_settings_->key_scroll_line_up) {
+	else if (key == user_settings->key_scroll_line_up) {
 		line_info_scroll_up(hst);
 	}
-	else if (key == user_settings_->key_scroll_line_down) {
+	else if (key == user_settings->key_scroll_line_down) {
 		line_info_scroll_down(hst);
 	}
-	else if (key == user_settings_->key_page_bottom) {
+	else if (key == user_settings->key_page_bottom) {
 		line_info_reset_start(self, hst);
 	}
 	else {

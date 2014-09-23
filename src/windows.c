@@ -35,12 +35,12 @@
 
 #include "settings.h"
 extern char *DATA_FILE;
-extern struct _Winthread Winthread;
+extern struct Winthread Winthread;
 static ToxWindow windows[MAX_WINDOWS_NUM];
 static ToxWindow *active_window;
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 static int num_active_windows;
 
@@ -67,7 +67,7 @@ void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *use
 
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata)
 {
-    if (user_settings_->show_typing_other == SHOW_TYPING_OFF)
+    if (user_settings->show_typing_other == SHOW_TYPING_OFF)
         return;
 
     int i;
@@ -278,7 +278,7 @@ void set_next_window(int ch)
     ToxWindow *inf = active_window;
 
     while (true) {
-        if (ch == user_settings_->key_next_tab) {
+        if (ch == user_settings->key_next_tab) {
             if (++active_window > end)
                 active_window = windows;
         } else if (--active_window < windows)
@@ -366,12 +366,12 @@ void on_window_resize(void)
             w->stb->topline = subwin(w->window, 2, x2, 0, 0);
         }
 
-#ifdef _AUDIO
+#ifdef AUDIO
         if (w->chatwin->infobox.active) {
             delwin(w->chatwin->infobox.win);
             w->chatwin->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
         }
-#endif   /* _AUDIO */
+#endif   /* AUDIO */
 
         scrollok(w->chatwin->history, 0);
     }
@@ -462,7 +462,7 @@ void draw_active_window(Tox *m)
     ltr = isprint(ch);
 #endif /* HAVE_WIDECHAR */
 
-    if (!ltr && (ch == user_settings_->key_next_tab || ch == user_settings_->key_prev_tab)) {
+    if (!ltr && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
         set_next_window((int) ch);
     } else {
         pthread_mutex_lock(&Winthread.lock);

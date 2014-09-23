@@ -22,7 +22,7 @@
 
 #include "device.h"
 
-#ifdef _AUDIO
+#ifdef AUDIO
 #include "audio_call.h"
 #endif
 
@@ -41,6 +41,7 @@
 #endif
 #endif
 
+#include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -50,9 +51,9 @@
 #define OPENAL_BUFS 5
 #define inline__ inline __attribute__((always_inline))
 
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
-typedef struct _Device {
+typedef struct Device {
     ALCdevice  *dhndl;                     /* Handle of device selected/opened */
     ALCcontext *ctx;                       /* Device context */
     DataHandleCallback cb;                 /* Use this to handle data from input device usually */
@@ -62,13 +63,13 @@ typedef struct _Device {
     uint32_t source, buffers[OPENAL_BUFS]; /* Playback source/buffers */
     size_t ref_count;
     int32_t selection;
-    _Bool enable_VAD;
-    _Bool muted;
+    bool enable_VAD;
+    bool muted;
     pthread_mutex_t mutex[1];
     uint32_t sample_rate; 
     uint32_t frame_duration;
     int32_t sound_mode;
-#ifdef _AUDIO
+#ifdef AUDIO
     float VAD_treshold;                    /* 40 is usually recommended value */
 #endif
 } Device;
@@ -79,9 +80,9 @@ static int size[2];                        /* Size of above containers */
 Device *running[2][MAX_DEVICES];     /* Running devices */
 uint32_t primary_device[2];          /* Primary device */
 
-#ifdef _AUDIO
+#ifdef AUDIO
 static ToxAv* av = NULL;
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 /* q_mutex */
 #define lock pthread_mutex_lock(&mutex)
@@ -89,16 +90,16 @@ static ToxAv* av = NULL;
 pthread_mutex_t mutex;
 
 
-_Bool thread_running = _True, 
-      thread_paused = _True;               /* Thread control */
+bool thread_running = true, 
+      thread_paused = true;               /* Thread control */
 
 void* thread_poll(void*);
 /* Meet devices */
-#ifdef _AUDIO
+#ifdef AUDIO
 DeviceError init_devices(ToxAv* av_)
 #else
 DeviceError init_devices()
-#endif /* _AUDIO */
+#endif /* AUDIO */
 {
     const char *stringed_device_list;
     
@@ -134,9 +135,9 @@ DeviceError init_devices()
     if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0) 
         return de_InternalError;    
     
-#ifdef _AUDIO
+#ifdef AUDIO
     av = av_;
-#endif /* _AUDIO */
+#endif /* AUDIO */
     
     return (DeviceError) de_None;
 }
@@ -170,7 +171,7 @@ DeviceError device_mute(DeviceType type, uint32_t device_idx)
     return de_None;
 }
 
-#ifdef _AUDIO
+#ifdef AUDIO
 DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
 {
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
@@ -247,8 +248,8 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     if (type == input) {
         device->dhndl = alcCaptureOpenDevice(devices_names[type][selection], 
                                              sample_rate, device->sound_mode, frame_size * 2);
-    #ifdef _AUDIO
-        device->VAD_treshold = user_settings_->VAD_treshold;
+    #ifdef AUDIO
+        device->VAD_treshold = user_settings->VAD_treshold;
     #endif
     }
     else { 
@@ -287,7 +288,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     
     if (type == input) {
         alcCaptureStart(device->dhndl);
-        thread_paused = _False;
+        thread_paused = false;
     }
     
     pthread_mutex_init(device->mutex, NULL);
@@ -336,7 +337,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     return de_None;
 }
 
-DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, _Bool enable_VAD)
+DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD)
 {
     if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) 
         return de_InvalidSelection;
@@ -427,9 +428,9 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
                     alcCaptureSamples(device->dhndl, frame, f_size);
                     
                     if ( device->muted 
-                    #ifdef _AUDIO
+                    #ifdef AUDIO
                         || (device->enable_VAD && !toxav_has_activity(av, device->call_idx, frame, f_size, device->VAD_treshold))
-                    #endif /* _AUDIO */
+                    #endif /* AUDIO */
                         )
                         { unlock; continue; } /* Skip if no voice activity */
                     

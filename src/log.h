@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _log_h
-#define _log_h
+#ifndef LOG_H
+#define LOG_H
 
 struct chatlog {
     FILE *file;
@@ -48,4 +48,4 @@ void log_disable(struct chatlog *log);
 /* Loads previous history from chat log */
 void load_chat_history(ToxWindow *self, struct chatlog *log);
 
-#endif /* #define _log_h */
+#endif /* #define LOG_H */

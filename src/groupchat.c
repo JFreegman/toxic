@@ -50,7 +50,7 @@ extern char *DATA_FILE;
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
 
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 /* temporary until group chats have unique commands */
 extern const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
@@ -384,12 +384,12 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         } else {
             sound_notify(self, error, 0, NULL);
         }
-    } else if (key == user_settings_->key_peer_list_down) {    /* Scroll peerlist up and down one position */
+    } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
         if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
             ++groupchats[self->num].side_pos;
-    } else if (key == user_settings_->key_peer_list_up) {
+    } else if (key == user_settings->key_peer_list_up) {
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
     } else if (key == '\n') {
@@ -503,7 +503,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings_->autolog == AUTOLOG_ON) {
+    if (user_settings->autolog == AUTOLOG_ON) {
         char myid[TOX_FRIEND_ADDRESS_SIZE];
         tox_get_address(m, (uint8_t *) myid);
         log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP);

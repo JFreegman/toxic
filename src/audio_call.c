@@ -29,6 +29,7 @@
 #include "line_info.h"
 #include "notify.h"
 
+#include <stdbool.h>
 #include <curses.h>
 #include <string.h>
 #include <pthread.h>
@@ -48,27 +49,27 @@
 #endif
 #endif
 
-#define _cbend pthread_exit(NULL)
+#define cbend pthread_exit(NULL)
 
 #define MAX_CALLS 10
 
 #define frame_size (av_DefaultSettings.audio_sample_rate * av_DefaultSettings.audio_frame_duration / 1000)
 
-typedef struct _Call {
+typedef struct Call {
     pthread_t ttid; /* Transmission thread id */
-    _Bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
+    bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
     uint32_t in_idx, out_idx;
     pthread_mutex_t mutex;
 } Call;
 
 
-void set_call(Call* call, _Bool start)
+void set_call(Call* call, bool start)
 {
     call->in_idx = -1;
     call->out_idx = -1;
     
     if ( start ) {
-        call->ttas = _True;
+        call->ttas = true;
         pthread_mutex_init(&call->mutex, NULL);
     }
     else {
@@ -77,7 +78,7 @@ void set_call(Call* call, _Bool start)
     }
 }
 
-struct _ASettings {
+struct ASettings {
     AudioError errors;
 
     ToxAv *av;
@@ -198,7 +199,7 @@ int start_transmission(ToxWindow *self)
          !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
         return -1;
     
-    set_call(&ASettins.calls[self->call_idx], _True);
+    set_call(&ASettins.calls[self->call_idx], true);
         
     ToxAvCSettings csettings;
     toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
@@ -208,7 +209,7 @@ int start_transmission(ToxWindow *self)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
     
     if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
-         read_device_callback, &self->call_idx, _True) != de_None) 
+         read_device_callback, &self->call_idx, true) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
     
@@ -225,7 +226,7 @@ int stop_transmission(int call_index)
 {    
     if ( ASettins.calls[call_index].ttas ) {
         toxav_kill_transmission(ASettins.av, call_index);
-        ASettins.calls[call_index].ttas = _False;
+        ASettins.calls[call_index].ttas = false;
         
         if ( ASettins.calls[call_index].in_idx != -1 )
             close_device(input, ASettins.calls[call_index].in_idx);
@@ -233,7 +234,7 @@ int stop_transmission(int call_index)
         if ( ASettins.calls[call_index].out_idx != -1 )
             close_device(output, ASettins.calls[call_index].out_idx);
         
-        set_call(&ASettins.calls[call_index], _False);
+        set_call(&ASettins.calls[call_index], false);
         return 0;
     }
     
@@ -452,7 +453,7 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     if (toxav_get_call_state(ASettins.av, self->call_idx) == av_CallInviting) {
         error = toxav_cancel(ASettins.av, self->call_idx, self->num,
                                         "Only those who appreciate small things know the beauty that is life");
-#ifdef _SOUND_NOTIFY
+#ifdef SOUND_NOTIFY
         stop_sound(self->ringing_sound);
 #endif
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call canceled!");
@@ -610,7 +611,7 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
                 open_device(input, selection, &this_call->in_idx, csettings.audio_sample_rate, 
                     csettings.audio_frame_duration, csettings.audio_channels);
                 /* Set VAD as true for all; TODO: Make it more dynamic */
-                register_device_callback(self->call_idx, this_call->in_idx, read_device_callback, &self->call_idx, _True);
+                register_device_callback(self->call_idx, this_call->in_idx, read_device_callback, &self->call_idx, true);
             }
         }
     }

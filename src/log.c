@@ -33,7 +33,7 @@
 #include "settings.h"
 #include "line_info.h"
 
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 /* Opens log file or creates a new one */
 static int init_logging_session(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
@@ -45,7 +45,7 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
         name = UNKNOWN_NAME;
 
     const char *namedash = logtype == LOG_PROMPT ? "" : "-";
-    const char *set_path = user_settings_->chatlogs_path;
+    const char *set_path = user_settings->chatlogs_path;
 
     char *user_config_dir = get_user_config_dir();
     int path_len = strlen(name) + strlen(".log") + strlen("-") + strlen(namedash);
@@ -118,7 +118,7 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
     else
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
 
-    const char *t = user_settings_->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
+    const char *t = user_settings->time == TIME_12 ? "%Y/%m/%d [%I:%M:%S %p]" : "%Y/%m/%d [%H:%M:%S]";
     char s[MAX_STR_SIZE];
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
@@ -181,7 +181,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     }
 
     /* Number of history lines to load: must not be larger than MAX_LINE_INFO_QUEUE - 2 */
-    int L = MIN(MAX_LINE_INFO_QUEUE - 2, user_settings_->history_size);
+    int L = MIN(MAX_LINE_INFO_QUEUE - 2, user_settings->history_size);
     int start, count = 0;
 
     /* start at end and backtrace L lines or to the beginning of buffer */
