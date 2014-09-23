@@ -1,6 +1,6 @@
 # Variables for desktop notifications support
 DESK_NOTIFY_LIBS = libnotify
-DESK_NOTIFY_CFLAGS = -D_BOX_NOTIFY
+DESK_NOTIFY_CFLAGS = -DBOX_NOTIFY
 
 # Check if we can build desktop notifications support
 CHECK_DESK_NOTIFY_LIBS = $(shell pkg-config --exists $(DESK_NOTIFY_LIBS) || echo -n "error")
