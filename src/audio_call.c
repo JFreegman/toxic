@@ -63,19 +63,23 @@ typedef struct Call {
 } Call;
 
 
-void set_call(Call* call, bool start)
+static int set_call(Call* call, bool start)
 {
     call->in_idx = -1;
     call->out_idx = -1;
     
     if ( start ) {
         call->ttas = true;
-        pthread_mutex_init(&call->mutex, NULL);
+        if (pthread_mutex_init(&call->mutex, NULL) != 0)
+            return -1;
     }
     else {
         call->ttid = 0;
-        pthread_mutex_destroy(&call->mutex);
+        if (pthread_mutex_destroy(&call->mutex) != 0)
+            return -1;
     }
+
+    return 0;
 }
 
 struct ASettings {
@@ -199,7 +203,8 @@ int start_transmission(ToxWindow *self)
          !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
         return -1;
     
-    set_call(&ASettins.calls[self->call_idx], true);
+    if (set_call(&ASettins.calls[self->call_idx], true) == -1)
+        return -1;
         
     ToxAvCSettings csettings;
     toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
@@ -234,7 +239,9 @@ int stop_transmission(int call_index)
         if ( ASettins.calls[call_index].out_idx != -1 )
             close_device(output, ASettins.calls[call_index].out_idx);
         
-        set_call(&ASettins.calls[call_index], false);
+        if (set_call(&ASettins.calls[call_index], false) == -1)
+            return -1;
+
         return 0;
     }
     

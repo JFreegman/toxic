@@ -67,10 +67,15 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
+
             groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             groupchats[i].oldpeer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             groupchats[i].peer_name_lengths = malloc(sizeof(uint16_t));
             groupchats[i].oldpeer_name_lengths = malloc(sizeof(uint16_t));
+
+            if (groupchats[i].peer_names == NULL || groupchats[i].oldpeer_names == NULL
+                || groupchats[i].peer_name_lengths == NULL || groupchats[i].oldpeer_name_lengths == NULL)
+                exit_toxic_err("failed in init_groupchat_win", FATALERR_MEMORY);
 
             memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
             groupchats[i].oldpeer_name_lengths[0] = (uint16_t) strlen(UNKNOWN_NAME);

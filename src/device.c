@@ -129,7 +129,8 @@ DeviceError init_devices()
     
     // Start poll thread
     
-    pthread_mutex_init(&mutex, NULL);
+    if (pthread_mutex_init(&mutex, NULL) != 0)
+        return de_InternalError;
     
     pthread_t thread_id;
     if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0) 
@@ -148,7 +149,8 @@ DeviceError terminate_devices()
     thread_running = false;
     usleep(20000);
     
-    pthread_mutex_destroy(&mutex);
+    if (pthread_mutex_destroy(&mutex) != 0)
+        return (DeviceError) de_InternalError;
     
     return (DeviceError) de_None;
 }
@@ -239,7 +241,10 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
                 device->source = running[type][i]->source;
             }
             device->ref_count++;
-            pthread_mutex_init(device->mutex, NULL);
+
+            if (pthread_mutex_init(device->mutex, NULL) != 0)
+                return de_InternalError;
+
             unlock;
             return de_None;
         }
@@ -291,7 +296,9 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
         thread_paused = false;
     }
     
-    pthread_mutex_init(device->mutex, NULL);
+    if (pthread_mutex_init(device->mutex, NULL) != 0)
+        return de_InternalError;
+
     unlock;
     return de_None;
 }

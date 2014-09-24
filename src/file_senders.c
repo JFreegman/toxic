@@ -229,7 +229,7 @@ static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, in
                 snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Read error.", file_senders[i].filename);
                 close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
                 sound_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, NULL);
-                
+
                 if (self->active_box != -1)
                     box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
                 else

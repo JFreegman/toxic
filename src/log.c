@@ -90,7 +90,6 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
 
     free(user_config_dir);
     log->file = fopen(log_path, "a+");
-
     snprintf(log->path, sizeof(log->path), "%s", log_path);
 
     if (log->file == NULL)

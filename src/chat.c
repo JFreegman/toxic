@@ -528,7 +528,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             uint64_t datapos;
             memcpy(&datapos, tmp, sizeof(uint64_t));
 
-            fseek(fp, datapos, SEEK_SET);
+            if (fseek(fp, datapos, SEEK_SET) == -1) {
+                snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
+                close_file_sender(self, m, send_idx, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
+                break;
+            }
+
             tox_file_send_control(m, num, 0, filenum, TOX_FILECONTROL_ACCEPT, 0, 0);
             file_senders[send_idx].noconnection = false;
             break;

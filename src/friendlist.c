@@ -163,6 +163,7 @@ static int save_blocklist(char *path)
         ret = 0;
 
     fclose(fp);
+
 on_error:
     free(data);
     return ret;
@@ -180,9 +181,22 @@ int load_blocklist(char *path)
     if (fp == NULL)
         return -1;
 
-    fseek(fp, 0, SEEK_END);
+    if (fseek(fp, 0L, SEEK_END) == -1) {
+        fclose(fp);
+        return -1;
+    }
+
     int len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+
+    if (len == -1) {
+        fclose(fp);
+        return -1;
+    }
+
+    if (fseek(fp, 0L, SEEK_SET) == -1) {
+        fclose(fp);
+        return -1;
+    }
 
     char *data = malloc(len);
 

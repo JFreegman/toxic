@@ -328,8 +328,11 @@ int init_notify(int login_cooldown, int notification_timeout)
 #endif /* SOUND_NOTIFY */
         
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
-    pthread_mutex_init(Control.poll_mutex, NULL);
+    if (pthread_mutex_init(Control.poll_mutex, NULL) != 0)
+        return -1;
+
     pthread_t thread;
+
     if (pthread_create(&thread, NULL, do_playing, NULL) != 0 || pthread_detach(thread) != 0 ) {
         pthread_mutex_destroy(Control.poll_mutex);
         return -1;
