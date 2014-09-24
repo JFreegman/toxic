@@ -158,7 +158,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
 
     off_t sz = file_size(log->path);
 
-    if (sz == 0)
+    if (sz <= 0)
         return;
 
     char *hstbuf = malloc(sz);
@@ -195,7 +195,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
         return;
     }
 
-    while (line != NULL) {
+    while (line != NULL && count--) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", line);
         line = strtok(NULL, "\n");
     }

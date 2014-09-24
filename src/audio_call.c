@@ -70,6 +70,7 @@ static int set_call(Call* call, bool start)
     
     if ( start ) {
         call->ttas = true;
+
         if (pthread_mutex_init(&call->mutex, NULL) != 0)
             return -1;
     }
