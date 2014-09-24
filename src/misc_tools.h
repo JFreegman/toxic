@@ -112,4 +112,7 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes);
 /* checks if a file exists. Returns true or false */
 bool file_exists(const char *path);
 
+/* returns file size or -1 on error */
+uint64_t file_size(const char *path);
+
 #endif /* #define MISC_TOOLS_H */

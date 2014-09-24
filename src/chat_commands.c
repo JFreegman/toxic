@@ -224,21 +224,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    if (fseek(file_to_send, 0, SEEK_END) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File corrupt.");
-        fclose(file_to_send);
-        return;
-    }
-
-    uint64_t filesize = ftell(file_to_send);
+    uint64_t filesize = file_size(path);
 
     if (filesize == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File corrupt.");
-        fclose(file_to_send);
-        return;
-    }
-
-    if (fseek(file_to_send, 0, SEEK_SET) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File corrupt.");
         fclose(file_to_send);
         return;

@@ -629,19 +629,9 @@ static void load_data(Tox *m, char *path)
     FILE *fd;
 
     if ((fd = fopen(path, "rb")) != NULL) {
-        if (fseek(fd, 0L, SEEK_END) == -1) {
-            fclose(fd);
-            exit_toxic_err("failed in load_data", FATALERR_FILEOP);
-        }
-
-        int len = ftell(fd);
+        uint64_t len = file_size(path);
 
         if (len == -1) {
-            fclose(fd);
-            exit_toxic_err("failed in load_data", FATALERR_FILEOP);
-        }
-
-        if (fseek(fd, 0L, SEEK_SET)) {
             fclose(fd);
             exit_toxic_err("failed in load_data", FATALERR_FILEOP);
         }

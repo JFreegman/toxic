@@ -181,19 +181,9 @@ int load_blocklist(char *path)
     if (fp == NULL)
         return -1;
 
-    if (fseek(fp, 0L, SEEK_END) == -1) {
-        fclose(fp);
-        return -1;
-    }
-
-    int len = ftell(fp);
+    uint64_t len = file_size(path);
 
     if (len == -1) {
-        fclose(fp);
-        return -1;
-    }
-
-    if (fseek(fp, 0L, SEEK_SET) == -1) {
         fclose(fp);
         return -1;
     }

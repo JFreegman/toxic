@@ -311,3 +311,14 @@ bool file_exists(const char *path)
     struct stat s;
     return stat(path, &s) == 0;
 }
+
+/* returns file size or -1 on error */
+uint64_t file_size(const char *path)
+{
+    struct stat st;
+
+    if (stat(path, &st) == -1)
+        return -1;
+
+    return (uint64_t) st.st_size;
+}

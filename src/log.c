@@ -156,14 +156,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     if (log->file == NULL)
         return;
 
-    struct stat st;
-
-    if (stat(log->path, &st) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to stat log file");
-        return;
-    }
-
-    int sz = st.st_size;
+    uint64_t sz = file_size(log->path);
 
     if (sz <= 0)
         return;
