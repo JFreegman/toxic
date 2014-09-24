@@ -629,7 +629,7 @@ static void load_data(Tox *m, char *path)
     FILE *fd;
 
     if ((fd = fopen(path, "rb")) != NULL) {
-        uint64_t len = file_size(path);
+        off_t len = file_size(path);
 
         if (len == -1) {
             fclose(fd);

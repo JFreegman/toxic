@@ -224,7 +224,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    uint64_t filesize = file_size(path);
+    off_t filesize = file_size(path);
 
     if (filesize == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File corrupt.");

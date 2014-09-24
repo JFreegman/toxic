@@ -181,7 +181,7 @@ int load_blocklist(char *path)
     if (fp == NULL)
         return -1;
 
-    uint64_t len = file_size(path);
+    off_t len = file_size(path);
 
     if (len == -1) {
         fclose(fp);
