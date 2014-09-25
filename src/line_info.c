@@ -165,10 +165,14 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
             break;
 
         case CONNECTION:
-            len += 3;
+            len += 5;
             break;
 
         case SYS_MSG:
+            break;
+
+        case NAME_CHANGE:
+            len += 4;
             break;
 
         case PROMPT:
@@ -395,9 +399,12 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
+                wprintw(win, "%s ", line->colour == RED ? "<--" : "-->");
+
                 wattron(win, A_BOLD);
-                wprintw(win, "* %s ", line->name1);
+                wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
+
                 wprintw(win, "%s\n", line->msg);
                 wattroff(win, COLOR_PAIR(line->colour));
 
@@ -409,8 +416,9 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(MAGENTA));
+                wprintw(win, "-!- ");
                 wattron(win, A_BOLD);
-                wprintw(win, "* %s", line->name1);
+                wprintw(win, "%s", line->name1);
                 wattroff(win, A_BOLD);
 
                 wprintw(win, "%s", line->msg);

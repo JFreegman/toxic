@@ -272,7 +272,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     } else {
         wprintw(statusbar->topline, " [Offline]");
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", statusbar->nick);
+        wprintw(statusbar->topline, " %s", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
     }
 
@@ -300,7 +300,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 
     if (statusbar->statusmsg[0])
-        wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
+        wprintw(statusbar->topline, " : %s", statusbar->statusmsg);
 
     mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
 

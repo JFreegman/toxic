@@ -1023,7 +1023,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     if (statusbar->statusmsg[0])
-        wprintw(statusbar->topline, "- %s ", statusbar->statusmsg);
+        wprintw(statusbar->topline, ": %s ", statusbar->statusmsg);
 
     wclrtoeol(statusbar->topline);
     wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
