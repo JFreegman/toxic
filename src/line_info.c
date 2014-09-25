@@ -156,12 +156,12 @@ void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uin
     switch (type) {
         case IN_ACTION:
         case OUT_ACTION:
-            len += 3;
+            len += 5;
             break;
 
         case IN_MSG:
         case OUT_MSG:
-            len += 2;
+            len += 6;
             break;
 
         case CONNECTION:
@@ -309,7 +309,7 @@ void line_info_print(ToxWindow *self)
                     nameclr = CYAN;
 
                 wattron(win, COLOR_PAIR(nameclr));
-                wprintw(win, "%s: ", line->name1);
+                wprintw(win, "--- %s: ", line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
                 if (line->msg[0] == '>')
@@ -342,7 +342,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
-                wprintw(win, "* %s %s", line->name1, line->msg);
+                wprintw(win, "-*- %s %s", line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
                 if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
