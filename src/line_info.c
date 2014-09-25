@@ -48,8 +48,8 @@ void line_info_init(struct history *hst)
     hst->queue_sz = 0;
 }
 
-/* resets line_start (page end) */
-static void line_info_reset_start(ToxWindow *self, struct history *hst)
+/* resets line_start (moves to end of chat history) */
+void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
     struct line_info *line = hst->line_end;
 
@@ -111,13 +111,13 @@ static void line_info_root_fwd(struct history *hst)
     hst->line_root = tmp;
 }
 
-/* returns ptr to queue item 0 and removes it from queue */
+/* returns ptr to queue item 0 and removes it from queue. Returns NULL if queue is empty. */
 static struct line_info *line_info_ret_queue(struct history *hst)
 {
     if (hst->queue_sz <= 0)
         return NULL;
 
-    struct line_info *ret = hst->queue[0];
+    struct line_info *line = hst->queue[0];
 
     int i;
 
@@ -126,7 +126,7 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 
     --hst->queue_sz;
 
-    return ret;
+    return line;
 }
 
 /* creates new line_info line and puts it in the queue. */

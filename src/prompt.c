@@ -212,6 +212,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        line_info_reset_start(self, ctx->hst);
         reset_buf(ctx);
     }
 }

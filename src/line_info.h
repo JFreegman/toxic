@@ -28,7 +28,7 @@
 
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40
-#define MAX_LINE_INFO_QUEUE 512
+#define MAX_LINE_INFO_QUEUE 1024
 #define MAX_LINE_INFO_MSG_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* needs extra room for log loading */
 
 enum {
@@ -88,6 +88,9 @@ void line_info_clear(struct history *hst);
 
 /* puts msg in specified line_info msg buffer */
 void line_info_set(ToxWindow *self, uint32_t id, char *msg);
+
+/* resets line_start (moves to end of chat history) */
+void line_info_reset_start(ToxWindow *self, struct history *hst);
 
 void line_info_init(struct history *hst);
 bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */

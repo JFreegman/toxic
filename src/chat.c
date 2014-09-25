@@ -928,6 +928,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        line_info_reset_start(self, ctx->hst);
         reset_buf(ctx);
     }
 
@@ -1013,7 +1014,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 3;
+    uint16_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 6;
 
     if (statusbar->statusmsg_len > maxlen) {
         statusbar->statusmsg[maxlen - 3] = '\0';
