@@ -24,6 +24,7 @@
 #define _GNU_SOURCE    /* needed for wcwidth() */
 #endif
 
+#include <stdlib.h>
 #include <wchar.h>
 
 #include "toxic.h"
