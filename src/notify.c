@@ -166,6 +166,32 @@ bool is_playing(int source)
     return ready == AL_PLAYING;
 }
 
+/* TODO maybe find better way to do this */
+/* cooldown is in seconds */
+#define DEVICE_COOLDOWN 5 /* TODO perhaps load this from config? */
+static bool device_opened = false;
+time_t last_opened_update = 0;
+
+bool m_open_device()
+{    
+    last_opened_update = time(NULL);
+    
+    if (device_opened) return true;
+    
+    /* Blah error check */
+    open_primary_device(output, &Control.device_idx, 48000, 20, 1);
+    return (device_opened = true);
+}
+
+bool m_close_device()
+{
+    if (!device_opened) return true;
+    
+    close_device(output, Control.device_idx);
+    
+    return !(device_opened = false);
+}
+
 /* Terminate all sounds but wait for them to finish first */
 void graceful_clear()
 {
@@ -195,6 +221,7 @@ void graceful_clear()
         }
         
         if (i == ACTIVE_NOTIFS_MAX) {
+            m_close_device(); /* In case it's opened */
             control_unlock();
             return;
         }
@@ -207,9 +234,17 @@ void* do_playing(void* _p)
 {
     (void)_p;
     int i;
+    
+    bool has_looping = false;
+    
     while(Control.poll_active) {
         control_lock();
+        
+        
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
+            
+            if (actives[i].looping) has_looping = true;
+            
             if (actives[i].active && !actives[i].looping
                 #ifdef _BOX_NOTIFY
                     && !actives[i].box
@@ -242,6 +277,14 @@ void* do_playing(void* _p)
             }
         #endif
         }
+        
+        /* device is opened and no activity in under DEVICE_COOLDOWN time, close device*/
+        if (device_opened && !has_looping && 
+           (time(NULL) - last_opened_update) > DEVICE_COOLDOWN) {
+            m_close_device();
+        }
+        has_looping = false;
+        
         control_unlock();
         usleep(10000);
     }
@@ -323,8 +366,6 @@ int init_notify(int login_cooldown, int notification_timeout)
 {
 #ifdef _SOUND_NOTIFY
     alutInitWithoutContext(NULL, NULL);
-    if (open_primary_device(output, &Control.device_idx, 48000, 20, 1) != de_None)
-        return -1;
 #endif /* _SOUND_NOTIFY */
         
 #if defined(_SOUND_NOTIFY) || defined(_BOX_NOTIFY)
@@ -363,7 +404,6 @@ void terminate_notify()
 #ifdef _SOUND_NOTIFY
     int i = 0;
     for (; i < SOUNDS_SIZE; i ++) free(Control.sounds[i]);
-    close_device(output, Control.device_idx);
     alutExit();
 #endif /* _SOUND_NOTIFY */
     
@@ -391,6 +431,8 @@ int play_sound_internal(Notification what, bool loop)
 {        
     uint32_t source;
     uint32_t buffer;
+    
+    m_open_device();
     
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
@@ -515,6 +557,8 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
         control_unlock();
         return -1;
     }
+    
+    m_open_device();
     
     alSourceStop(actives[id].source);
     alDeleteSources(1, &actives[id].source);
