@@ -20,12 +20,6 @@
  *
  */
 
-#include "notify.h"
-#include "device.h"
-#include "settings.h"
-#include "line_info.h"
-#include "misc_tools.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -35,6 +29,12 @@
 #include <time.h>
 #include <assert.h>
 #include <sys/stat.h>
+
+#include "notify.h"
+#include "device.h"
+#include "settings.h"
+#include "line_info.h"
+#include "misc_tools.h"
 
 #if defined(AUDIO) || defined(SOUND_NOTIFY)
     #ifdef __APPLE__
