@@ -35,7 +35,7 @@
 #include "file_senders.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 static uint64_t current_unix_time;
 
@@ -82,12 +82,12 @@ struct tm *get_time(void)
 /*Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(char *buf, int bufsize)
 {
-    if (user_settings_->timestamps == TIMESTAMPS_OFF) {
+    if (user_settings->timestamps == TIMESTAMPS_OFF) {
         buf[0] = '\0';
         return;
     }
 
-    const char *t = user_settings_->time == TIME_12 ? "[%-I:%M:%S] " : "[%H:%M:%S] ";
+    const char *t = user_settings->time == TIME_12 ? "%I:%M:%S " : "%H:%M:%S ";
     strftime(buf, bufsize, t, get_time());
 }
 
@@ -310,4 +310,34 @@ bool file_exists(const char *path)
 {
     struct stat s;
     return stat(path, &s) == 0;
+}
+
+/* returns file size or -1 on error */
+off_t file_size(const char *path)
+{
+    struct stat st;
+
+    if (stat(path, &st) == -1)
+        return -1;
+
+    return st.st_size;
+}
+
+/* compares the first size bytes of fp to signature. 
+   Returns 0 if they are the same, 1 if they differ, and -1 on error.
+
+   On success this function will seek back to the beginning of fp */
+int check_file_signature(const char *signature, size_t size, FILE *fp)
+{
+    char buf[size];
+
+    if (fread(buf, size, 1, fp) == -1)
+        return -1;
+
+    int ret = memcmp(signature, buf, size);
+
+    if (fseek(fp, 0L, SEEK_SET) == -1)
+        return -1;
+
+    return ret == 0 ? 0 : 1;
 }

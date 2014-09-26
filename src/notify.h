@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _notify_h
-#define _notify_h
+#ifndef NOTIFY_H
+#define NOTIFY_H
 
 #include <inttypes.h>
 #include "windows.h"
@@ -73,8 +73,8 @@ int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, con
 int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const char* title, const char* format, ...);
 int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* format, ...);
 
-#ifdef _SOUND_NOTIFY
+#ifdef SOUND_NOTIFY
 int set_sound(Notification sound, const char* value);
-#endif /* _SOUND_NOTIFY */
+#endif /* SOUND_NOTIFY */
 
-#endif /* _notify_h */
+#endif /* NOTIFY_H */

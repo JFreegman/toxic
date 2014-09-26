@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _help_h
-#define _help_h
+#ifndef HELP_H
+#define HELP_H
 
 #include "toxic.h"
 #include "windows.h"
@@ -39,4 +39,4 @@ void help_onDraw(ToxWindow *self);
 void help_init_menu(ToxWindow *self);
 void help_onKey(ToxWindow *self, wint_t key);
 
-#endif /* #define _help_h */
+#endif /* #define HELP_H */

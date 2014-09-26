@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _configdir_h
-#define _configdir_h
+#ifndef CONFIGDIR_H
+#define CONFIGDIR_H
 
 #ifndef NSS_BUFLEN_PASSWD
 #define NSS_BUFLEN_PASSWD 4096
@@ -38,4 +38,4 @@ char *get_user_config_dir(void);
 void get_home_dir(char *home, int size);
 int create_user_config_dirs(char *path);
 
-#endif /* #define _configdir_h */
+#endif /* #define CONFIGDIR_H */

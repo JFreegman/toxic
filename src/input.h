@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _input_h
-#define _input_h
+#ifndef INPUT_H
+#define INPUT_H
 
 /* add a char to input field and buffer for given chatcontext */
 void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y);
@@ -30,4 +30,4 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
    return true if key matches a function, false otherwise */
 bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y);
 
-#endif /* #define _input_h */
+#endif /* #define INPUT_H */

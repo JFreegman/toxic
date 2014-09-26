@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _toxic_h
-#define _toxic_h
+#ifndef TOXIC_H
+#define TOXIC_H
 
 #ifndef TOXICVER
 #define TOXICVER "NOVER_"    /* Use the -D flag to set this */
@@ -45,7 +45,7 @@
 #define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
-#define KEY_IDENT_DIGITS 2    /* number of hex digits to display for the pub-key based identifier */
+#define KEY_IDENT_DIGITS 3    /* number of hex digits to display for the pub-key based identifier */
 #define TIME_STR_SIZE 16
 
 /* ASCII key codes */
@@ -69,9 +69,9 @@
 
 typedef enum _FATAL_ERRS {
     FATALERR_MEMORY = -1,           /* heap memory allocation failed */
-    FATALERR_FREAD = -2,            /* fread() failed on critical read */
-    FATALERR_THREAD_CREATE = -3,    /* thread creation failed */
-    FATALERR_MUTEX_INIT = -4,       /* mutex init failed */
+    FATALERR_FILEOP = -2,           /* critical file operation failed */
+    FATALERR_THREAD_CREATE = -3,    /* thread creation failed for critical thread */
+    FATALERR_MUTEX_INIT = -4,       /* mutex init for critical thread failed */
     FATALERR_THREAD_ATTR = -5,      /* thread attr object init failed */
     FATALERR_LOCALE_SET = -6,       /* system locale not set */
     FATALERR_STORE_DATA = -7,       /* store_data failed in critical section */
@@ -111,4 +111,4 @@ void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
 void on_read_receipt(Tox *m, int32_t, uint32_t, void *userdata);
 
-#endif  /* #define _toxic_h */
+#endif  /* #define TOXIC_H */

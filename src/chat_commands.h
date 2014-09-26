@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _chat_commands_h
-#define _chat_commands_h
+#ifndef CHAT_COMMANDS_H
+#define CHAT_COMMANDS_H
 
 #include "windows.h"
 #include "toxic.h"
@@ -32,7 +32,7 @@ void cmd_join_group(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR
 void cmd_savefile(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_sendfile(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 
-#ifdef _AUDIO
+#ifdef AUDIO
 void cmd_call(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_answer(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_reject(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
@@ -41,6 +41,6 @@ void cmd_cancel(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZ
 void cmd_ccur_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_mute(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_sense(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
-#endif /* #define _chat_commands_h */
+#endif /* #define CHAT_COMMANDS_H */

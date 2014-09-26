@@ -19,8 +19,8 @@
  *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef _misc_tools_h
-#define _misc_tools_h
+#ifndef MISC_TOOLS_H
+#define MISC_TOOLS_H
 
 #include "windows.h"
 #include "toxic.h"
@@ -112,4 +112,13 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes);
 /* checks if a file exists. Returns true or false */
 bool file_exists(const char *path);
 
-#endif /* #define _misc_tools_h */
+/* returns file size or -1 on error */
+off_t file_size(const char *path);
+
+/* compares the first size bytes of fp and signature. 
+   Returns 0 if they are the same, 1 if they differ, and -1 on error.
+
+   On success this function will seek back to the beginning of fp */
+int check_file_signature(const char *signature, size_t size, FILE *fp);
+
+#endif /* #define MISC_TOOLS_H */

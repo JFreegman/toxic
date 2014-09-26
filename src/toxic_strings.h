@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _toxic_strings_h
-#define _toxic_strings_h
+#ifndef TOXIC_STRINGS_H
+#define TOXIC_STRINGS_H
 
 #include "windows.h"
 
@@ -61,4 +61,4 @@ void add_line_to_hist(ChatContext *ctx);
    resets line if at end of history */
 void fetch_hist_item(ChatContext *ctx, int key_dir);
 
-#endif /* #define _toxic_strings_h */
+#endif /* #define TOXIC_STRINGS_H */

@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _audio_h
-#define _audio_h
+#ifndef AUDIO_H
+#define AUDIO_H
 
 #include <tox/toxav.h>
 
@@ -42,4 +42,4 @@ void terminate_audio();
 
 void stop_current_call(ToxWindow *self);
 
-#endif /* _audio_h */
+#endif /* AUDIO_H */

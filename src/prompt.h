@@ -20,21 +20,21 @@
  *
  */
 
-#ifndef PROMPT_H_UZYGWFFL
-#define PROMPT_H_UZYGWFFL
+#ifndef PROMPT_H
+#define PROMPT_H
 
 #include "toxic.h"
 #include "windows.h"
 
-#ifdef _AUDIO
-#define AC_NUM_GLOB_COMMANDS 18
+#ifdef AUDIO
+#define AC_NUM_GLOB_COMMANDS 19
 #else
-#define AC_NUM_GLOB_COMMANDS 16
-#endif /* _AUDIO */
+#define AC_NUM_GLOB_COMMANDS 17
+#endif /* AUDIO */
 
 #define MAX_FRIEND_REQUESTS 32
 
-struct _friend_request {
+struct friend_request {
     bool active;
     char msg[MAX_STR_SIZE];
     uint8_t key[TOX_CLIENT_ID_SIZE];
@@ -43,7 +43,7 @@ struct _friend_request {
 typedef struct {
     int max_idx;
     int num_requests;
-    struct _friend_request request[MAX_FRIEND_REQUESTS];
+    struct friend_request request[MAX_FRIEND_REQUESTS];
 } _FriendRequests;
 
 ToxWindow new_prompt(void);
@@ -55,4 +55,4 @@ void prompt_update_status(ToxWindow *prompt, uint8_t status);
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
 void kill_prompt_window(ToxWindow *self);
 
-#endif /* end of include guard: PROMPT_H_UZYGWFFL */
+#endif /* end of include guard: PROMPT_H */

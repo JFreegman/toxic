@@ -43,8 +43,8 @@
 #include "autocomplete.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings_;
-extern struct _Winthread Winthread;
+extern struct user_settings *user_settings;
+extern struct Winthread Winthread;
 
 _FriendRequests FriendRequests;
 
@@ -52,6 +52,7 @@ _FriendRequests FriendRequests;
 const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/accept"     },
     { "/add"        },
+    { "/avatar"     },
     { "/clear"      },
     { "/close"      },    /* rm /close when groupchats gets its own list */
     { "/connect"    },
@@ -67,12 +68,12 @@ const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/requests"   },
     { "/status"     },
 
-#ifdef _AUDIO
+#ifdef AUDIO
 
     { "/lsdev"       },
     { "/sdev"        },
 
-#endif /* _AUDIO */
+#endif /* AUDIO */
 };
 
 void kill_prompt_window(ToxWindow *self) 
@@ -183,7 +184,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t') {    /* TAB key: auto-completes command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
-            int diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+            int diff = -1;
+
+            if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0)
+                diff = dir_match(self, m, ctx->line, L"/avatar");
+            else
+                diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
@@ -212,6 +218,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        line_info_reset_start(self, ctx->hst);
         reset_buf(ctx);
     }
 }
@@ -271,7 +278,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     } else {
         wprintw(statusbar->topline, " [Offline]");
         wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", statusbar->nick);
+        wprintw(statusbar->topline, " %s", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
     }
 
@@ -299,7 +306,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 
     if (statusbar->statusmsg[0])
-        wprintw(statusbar->topline, " - %s", statusbar->statusmsg);
+        wprintw(statusbar->topline, " : %s", statusbar->statusmsg);
 
     mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
 
@@ -455,16 +462,16 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings_->autolog == AUTOLOG_ON) {
+    if (user_settings->autolog == AUTOLOG_ON) {
         char myid[TOX_FRIEND_ADDRESS_SIZE];
         tox_get_address(m, (uint8_t *) myid);
-        log_enable(self->name, myid, ctx->log);
+        log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT);
     }
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    if (user_settings_->show_welcome_msg == SHOW_WELCOME_MSG_ON)
+    if (user_settings->show_welcome_msg == SHOW_WELCOME_MSG_ON)
         print_welcome_msg(self);
 }
 

@@ -50,7 +50,7 @@ extern char *DATA_FILE;
 static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 static int max_groupchat_index = 0;
 
-extern struct user_settings *user_settings_;
+extern struct user_settings *user_settings;
 
 /* temporary until group chats have unique commands */
 extern const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
@@ -67,10 +67,15 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
+
             groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             groupchats[i].oldpeer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
             groupchats[i].peer_name_lengths = malloc(sizeof(uint16_t));
             groupchats[i].oldpeer_name_lengths = malloc(sizeof(uint16_t));
+
+            if (groupchats[i].peer_names == NULL || groupchats[i].oldpeer_names == NULL
+                || groupchats[i].peer_name_lengths == NULL || groupchats[i].oldpeer_name_lengths == NULL)
+                exit_toxic_err("failed in init_groupchat_win", FATALERR_MEMORY);
 
             memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
             groupchats[i].oldpeer_name_lengths[0] = (uint16_t) strlen(UNKNOWN_NAME);
@@ -302,7 +307,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
         case TOX_CHAT_CHANGE_PEER_DEL:
             event = "has left the room";
-            line_info_add(self, timefrmt, (char *) oldpeername, NULL, CONNECTION, 0, 0, event);
+            line_info_add(self, timefrmt, (char *) oldpeername, NULL, CONNECTION, 0, RED, event);
 
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
@@ -367,11 +372,15 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (ctx->len > 0) {
             int diff;
 
-            if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
-                diff = complete_line(self, groupchats[self->num].peer_names,
-                                         groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
-            else
+            /* TODO: make this not suck */
+            if (ctx->line[0] != L'/' || wcscmp(ctx->line, L"/me") == 0) {
+                diff = complete_line(self, groupchats[self->num].peer_names, groupchats[self->num].num_peers, 
+                                     TOX_MAX_NAME_LENGTH);
+            } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+                diff = dir_match(self, m, ctx->line, L"/avatar");
+            } else {
                 diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+            }
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
@@ -384,12 +393,12 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         } else {
             sound_notify(self, error, 0, NULL);
         }
-    } else if (key == user_settings_->key_peer_list_down) {    /* Scroll peerlist up and down one position */
+    } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
         if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
             ++groupchats[self->num].side_pos;
-    } else if (key == user_settings_->key_peer_list_up) {
+    } else if (key == user_settings->key_peer_list_up) {
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
     } else if (key == '\n') {
@@ -421,6 +430,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        line_info_reset_start(self, ctx->hst);
         reset_buf(ctx);
     }
 }
@@ -503,8 +513,11 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings_->autolog == AUTOLOG_ON)
-        log_enable(self->name, NULL, ctx->log);
+    if (user_settings->autolog == AUTOLOG_ON) {
+        char myid[TOX_FRIEND_ADDRESS_SIZE];
+        tox_get_address(m, (uint8_t *) myid);
+        log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP);
+    }
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
