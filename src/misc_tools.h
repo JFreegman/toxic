@@ -118,7 +118,7 @@ off_t file_size(const char *path);
 /* compares the first size bytes of fp and signature. 
    Returns 0 if they are the same, 1 if they differ, and -1 on error.
 
-   On success this function will seek back to the beginning of fp and will not close fp */
+   On success this function will seek back to the beginning of fp */
 int check_file_signature(const char *signature, size_t size, FILE *fp);
 
 #endif /* #define MISC_TOOLS_H */

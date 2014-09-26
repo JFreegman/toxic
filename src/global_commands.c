@@ -191,11 +191,11 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    if (string_is_empty(argv[1]))
+    if (strlen(argv[1]) < 3)
         return;
 
     if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
         return;
     }
 
@@ -237,7 +237,7 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     if (avatar == NULL)
         exit_toxic_err("Failed in set_avatar", FATALERR_MEMORY);
 
-    if (fread(avatar, sz, 1, fp) == -1) {
+    if (fread(avatar, sz, 1, fp) != 1) {
         fclose(fp);
         free(avatar);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Read fail.");
