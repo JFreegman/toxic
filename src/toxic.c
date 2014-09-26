@@ -56,6 +56,7 @@
 #include "notify.h"
 #include "device.h"
 #include "message_queue.h"
+#include "execute.h"
 
 #ifdef AUDIO
 #include "audio_call.h"
@@ -1004,7 +1005,7 @@ int main(int argc, char *argv[])
     Tox *m = init_tox();
 
     if (m == NULL)
-        exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
+        exit_toxic_err("failed in main", FATALERR_NETWORKINIT); 
 
     if (!arg_opts.ignore_data_file) {
         if (arg_opts.encrypt_data && !datafile_exists)
@@ -1060,6 +1061,10 @@ int main(int argc, char *argv[])
 
     print_init_messages(prompt);
     cleanup_init_messages();
+
+    char avatarstr[MAX_STR_SIZE];
+    snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
+    execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;

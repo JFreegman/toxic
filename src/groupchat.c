@@ -372,11 +372,15 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (ctx->len > 0) {
             int diff;
 
-            if ((ctx->line[0] != '/') || (ctx->line[1] == 'm' && ctx->line[2] == 'e'))
-                diff = complete_line(self, groupchats[self->num].peer_names,
-                                         groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
-            else
+            /* TODO: make this not suck */
+            if (ctx->line[0] != L'/' || wcscmp(ctx->line, L"/me") == 0) {
+                diff = complete_line(self, groupchats[self->num].peer_names, groupchats[self->num].num_peers, 
+                                     TOX_MAX_NAME_LENGTH);
+            } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+                diff = dir_match(self, m, ctx->line, L"/avatar");
+            } else {
                 diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+            }
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {

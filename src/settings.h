@@ -39,9 +39,10 @@ struct user_settings {
 
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
+    char avatar_path[PATH_MAX];
 
-	int key_next_tab;			/* character code */
-	int key_prev_tab;			/* character code */
+	int key_next_tab;
+	int key_prev_tab;
 	int key_scroll_line_up;
 	int key_scroll_line_down;
 	int key_half_page_up;
@@ -49,6 +50,7 @@ struct user_settings {
 	int key_page_bottom;
 	int key_peer_list_up;
 	int key_peer_list_down;
+
 #ifdef AUDIO
     int audio_in_dev;
     int audio_out_dev;

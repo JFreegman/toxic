@@ -184,6 +184,73 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 }
 
+void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 2) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: No file path supplied.");
+        return;
+    }
+
+    if (string_is_empty(argv[1]))
+        return;
+
+    if (argv[1][0] != '\"') {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
+        return;
+    }
+
+    /* remove opening and closing quotes */
+    char path[MAX_STR_SIZE];
+    snprintf(path, sizeof(path), "%s", &argv[1][1]);
+    int len = strlen(path) - 1;
+    path[len] = '\0';
+
+    off_t sz = file_size(path);
+
+    if (sz <= 8) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Invalid file.");
+        return;
+    }
+
+    if (sz > TOX_AVATAR_MAX_DATA_LENGTH) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: File is too large.");
+        return;
+    }
+
+    FILE *fp = fopen(path, "rb");
+
+    if (fp == NULL) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Could not open file.");
+        return;
+    }
+
+    char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+
+    if (check_file_signature(PNG_signature, sizeof(PNG_signature), fp) != 0) {
+        fclose(fp);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: File type not supported.");
+        return;
+    }
+
+    char *avatar = malloc(sz);
+
+    if (avatar == NULL)
+        exit_toxic_err("Failed in set_avatar", FATALERR_MEMORY);
+
+    if (fread(avatar, sz, 1, fp) == -1) {
+        fclose(fp);
+        free(avatar);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Read fail.");
+        return;
+    }
+
+    if (tox_set_avatar(m, TOX_AVATAR_FORMAT_PNG, (const uint8_t *) avatar, (uint32_t) sz) == -1)
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Core error.");
+
+    fclose(fp);
+    free(avatar);
+}
+
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     line_info_clear(self->chatwin->hst);

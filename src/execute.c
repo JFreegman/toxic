@@ -41,6 +41,7 @@ struct cmd_func {
 static struct cmd_func global_commands[] = {
     { "/accept",    cmd_accept        },
     { "/add",       cmd_add           },
+    { "/avatar",    cmd_avatar        },
     { "/clear",     cmd_clear         },
     { "/connect",   cmd_connect       },
     { "/decline",   cmd_decline       },

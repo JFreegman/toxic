@@ -52,6 +52,7 @@ _FriendRequests FriendRequests;
 const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/accept"     },
     { "/add"        },
+    { "/avatar"     },
     { "/clear"      },
     { "/close"      },    /* rm /close when groupchats gets its own list */
     { "/connect"    },
@@ -183,7 +184,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t') {    /* TAB key: auto-completes command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
-            int diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+            int diff = -1;
+
+            if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0)
+                diff = dir_match(self, m, ctx->line, L"/avatar");
+            else
+                diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {

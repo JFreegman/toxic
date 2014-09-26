@@ -322,3 +322,22 @@ off_t file_size(const char *path)
 
     return st.st_size;
 }
+
+/* compares the first size bytes of fp to signature. 
+   Returns 0 if they are the same, 1 if they differ, and -1 on error.
+
+   On success this function will seek back to the beginning of fp */
+int check_file_signature(const char *signature, size_t size, FILE *fp)
+{
+    char buf[size];
+
+    if (fread(buf, size, 1, fp) == -1)
+        return -1;
+
+    int ret = memcmp(signature, buf, size);
+
+    if (fseek(fp, 0L, SEEK_SET) == -1)
+        return -1;
+
+    return ret == 0 ? 0 : 1;
+}

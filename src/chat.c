@@ -64,15 +64,16 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 26
+#define AC_NUM_CHAT_COMMANDS 27
 #else
-#define AC_NUM_CHAT_COMMANDS 19
+#define AC_NUM_CHAT_COMMANDS 20
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
 static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/accept"     },
     { "/add"        },
+    { "/avatar"     },
     { "/cancel"     },
     { "/clear"      },
     { "/close"      },
@@ -879,8 +880,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         int diff = -1;
 
+        /* TODO: make this not suck */
         if (wcsncmp(ctx->line, L"/sendfile \"", wcslen(L"/sendfile \"")) == 0) {
-            diff = dir_match(self, m, ctx->line);
+            diff = dir_match(self, m, ctx->line, L"/sendfile");
+        } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+            diff = dir_match(self, m, ctx->line, L"/avatar");
         } else {
             diff = complete_line(self, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
         }

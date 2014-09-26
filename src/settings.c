@@ -123,16 +123,19 @@ static const struct tox_strings {
     const char* self;
     const char* download_path;
     const char* chatlogs_path;
+    const char* avatar_path;
 } tox_strings = {
     "tox",
     "download_path",
     "chatlogs_path",
+    "avatar_path",
 };
 
 static void tox_defaults(struct user_settings* settings)
 {
     strcpy(settings->download_path, "");
     strcpy(settings->chatlogs_path, "");
+    strcpy(settings->avatar_path, "");
 }
 
 #ifdef AUDIO
@@ -279,6 +282,14 @@ int settings_load(struct user_settings *s, const char *patharg)
                 s->chatlogs_path[0] = '\0';
             else if (s->chatlogs_path[len - 1] != '/')
                 strcat(&s->chatlogs_path[len - 1], "/");
+        }
+
+        if ( config_setting_lookup_string(setting, tox_strings.avatar_path, &str) ) {
+            snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
+            int len = strlen(s->avatar_path);
+
+            if (len >= sizeof(s->avatar_path)) 
+                s->avatar_path[0] = '\0';
         }
     }
 
