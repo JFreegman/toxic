@@ -26,15 +26,12 @@
  * Read from running input device(s) via select()/callback combo.
  */
 
-#ifndef _device_h
-#define _device_h
+#ifndef DEVICE_H
+#define DEVICE_H
 
 #define MAX_DEVICES 32
 #include <inttypes.h>
 #include "windows.h"
-
-#define _True 1
-#define _False 0
 
 typedef enum DeviceType {
     input,
@@ -57,22 +54,22 @@ typedef enum DeviceError {
 typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
 
 
-#ifdef _AUDIO
+#ifdef AUDIO
 DeviceError init_devices(ToxAv* av);
 #else
 DeviceError init_devices();
-#endif /* _AUDIO */
+#endif /* AUDIO */
 
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
-DeviceError register_device_callback(int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, _Bool enable_VAD);
+DeviceError register_device_callback(int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD);
 void* get_device_callback_data(uint32_t device_idx);
 
 /* toggle device mute */
 DeviceError device_mute(DeviceType type, uint32_t device_idx);
 
-#ifdef _AUDIO
+#ifdef AUDIO
 DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
 #endif
 
@@ -89,4 +86,4 @@ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t lenght, uint8
 void print_devices(ToxWindow* self, DeviceType type);
 
 DeviceError selection_valid(DeviceType type, int32_t selection);
-#endif /* _device_h */
+#endif /* DEVICE_H */

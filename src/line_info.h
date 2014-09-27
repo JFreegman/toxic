@@ -20,15 +20,16 @@
  *
  */
 
-#ifndef _line_info_h
-#define _line_info_h
+#ifndef LINE_INFO_H
+#define LINE_INFO_H
 
 #include "windows.h"
 #include "toxic.h"
 
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40
-#define MAX_QUEUE 128
+#define MAX_LINE_INFO_QUEUE 1024
+#define MAX_LINE_INFO_MSG_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* needs extra room for log loading */
 
 enum {
     SYS_MSG,
@@ -47,7 +48,7 @@ struct line_info {
     char timestr[TIME_STR_SIZE];
     char name1[TOXIC_MAX_NAME_LENGTH];
     char name2[TOXIC_MAX_NAME_LENGTH];
-    char msg[TOX_MAX_MESSAGE_LENGTH];
+    char msg[MAX_LINE_INFO_MSG_SIZE];
     uint64_t timestamp;
     uint8_t type;
     uint8_t bold;
@@ -68,7 +69,7 @@ struct history {
     struct line_info *line_end;
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
 
-    struct line_info *queue[MAX_QUEUE];
+    struct line_info *queue[MAX_LINE_INFO_QUEUE];
     int queue_sz;
 };
 
@@ -88,7 +89,10 @@ void line_info_clear(struct history *hst);
 /* puts msg in specified line_info msg buffer */
 void line_info_set(ToxWindow *self, uint32_t id, char *msg);
 
+/* resets line_start (moves to end of chat history) */
+void line_info_reset_start(ToxWindow *self, struct history *hst);
+
 void line_info_init(struct history *hst);
 bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */
 
-#endif /* #define _line_info_h */
+#endif /* #define LINE_INFO_H */

@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef CHAT_H_6489PZ13
-#define CHAT_H_6489PZ13
+#ifndef CHAT_H
+#define CHAT_H
 
 #include "windows.h"
 #include "toxic.h"
@@ -32,4 +32,4 @@ void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL);
 void kill_chat_window(ToxWindow *self, Tox *m);
 ToxWindow new_chat(Tox *m, int32_t friendnum);
 
-#endif /* end of include guard: CHAT_H_6489PZ13 */
+#endif /* end of include guard: CHAT_H */

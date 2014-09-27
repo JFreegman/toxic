@@ -45,6 +45,9 @@ tox = {
   // Path for downloaded files
   // download_path="/home/USERNAME/Downloads/";
 
+  // Path for your avatar (file must be a .png and cannot exceed 16.3 KiB)
+  // avatar_path="/home/USERNAME/Pictures/youravatar.png";
+
   // Path for chatlogs
   // chatlogs_path="/home/USERNAME/toxic_chatlogs/";
 };

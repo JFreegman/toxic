@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef _execute_h
-#define _execute_h
+#ifndef EXECUTE_H
+#define EXECUTE_H
 
 #include "toxic.h"
 #include "windows.h"
@@ -36,4 +36,4 @@ enum {
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode);
 
-#endif /* #define _execute_h */
+#endif /* #define EXECUTE_H */

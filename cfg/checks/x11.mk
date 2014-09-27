@@ -1,6 +1,6 @@
 # Variables for X11 support
 X11_LIBS = x11
-X11_CFLAGS = -D_X11
+X11_CFLAGS = -DX11
 
 # Check if we can build X11 support
 CHECK_X11_LIBS = $(shell pkg-config --exists $(X11_LIBS) || echo -n "error")
