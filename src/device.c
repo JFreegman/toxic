@@ -122,7 +122,7 @@ DeviceError init_devices()
             stringed_device_list += strlen( stringed_device_list ) + 1;
         }
     }
-    
+
     // Start poll thread
     if (pthread_mutex_init(&mutex, NULL) != 0)
         return de_InternalError;

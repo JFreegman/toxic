@@ -191,8 +191,11 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    if (strlen(argv[1]) < 3)
+    /* turns the avatar off */
+    if (strlen(argv[1]) < 3) {
+        tox_set_avatar(m, TOX_AVATAR_FORMAT_NONE, (const uint8_t *) NULL, 0);
         return;
+    }
 
     if (argv[1][0] != '\"') {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");

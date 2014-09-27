@@ -22,6 +22,8 @@
 #ifndef MISC_TOOLS_H
 #define MISC_TOOLS_H
 
+#include <sys/stat.h>
+
 #include "windows.h"
 #include "toxic.h"
 
