@@ -314,8 +314,9 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
         return de_DeviceNotActive;
     }
     
+    running[type][device_idx] = NULL;
+    
     if ( !(device->ref_count--) ) {
-        running[type][device_idx] = NULL;
         unlock;
         
         DeviceError rc = de_None;
@@ -471,4 +472,4 @@ void* get_device_callback_data(uint32_t device_idx)
         return NULL;
         
     return running[input][device_idx]->cb_data;
-}       
+}
