@@ -314,8 +314,9 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
         return de_DeviceNotActive;
     }
     
+    running[type][device_idx] = NULL;
+    
     if ( !(device->ref_count--) ) {
-        running[type][device_idx] = NULL;
         unlock;
         
         DeviceError rc = de_None;
