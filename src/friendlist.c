@@ -37,6 +37,7 @@
 #include "settings.h"
 #include "notify.h"
 #include "help.h"
+#include "log.h"
 
 #ifdef AUDIO
 #include "audio_call.h"
@@ -334,12 +335,27 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, int32_t num, const 
     if (len > TOX_MAX_NAME_LENGTH || num >= Friends.max_idx)
         return;
 
+    /* save old name for log renaming */
+    char oldname[TOXIC_MAX_NAME_LENGTH];
+    snprintf(oldname, sizeof(oldname), "%s", Friends.list[num].name);
+
+    /* update name */
     char tempname[TOX_MAX_NAME_LENGTH];
     strcpy(tempname, nick);
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     tempname[len] = '\0';
     snprintf(Friends.list[num].name, sizeof(Friends.list[num].name), "%s", tempname);
     Friends.list[num].namelength = len;
+
+    /* get data for chatlog renaming */
+    char newnamecpy[TOXIC_MAX_NAME_LENGTH];
+    char myid[TOX_FRIEND_ADDRESS_SIZE];
+    strcpy(newnamecpy, tempname);
+    tox_get_address(m, (uint8_t *) myid);
+
+    if (strcmp(oldname, newnamecpy) != 0)
+        rename_logfile(oldname, newnamecpy, myid, Friends.list[num].pub_key, Friends.list[num].chatwin);
+
     sort_friendlist_index();
 }
 

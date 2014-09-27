@@ -48,4 +48,8 @@ void log_disable(struct chatlog *log);
 /* Loads previous history from chat log */
 void load_chat_history(ToxWindow *self, struct chatlog *log);
 
+/* renames chatlog file replacing src with dest.
+   Returns 0 on success or if no log exists, -1 on failure. */
+int rename_logfile(char *src, char *dest, const char *selfkey, const char *otherkey, int winnum);
+
 #endif /* #define LOG_H */

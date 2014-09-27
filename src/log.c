@@ -35,12 +35,16 @@
 
 extern struct user_settings *user_settings;
 
-/* Opens log file or creates a new one */
-static int init_logging_session(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
-{
-    if (selfkey == NULL || (logtype == LOG_CHAT && otherkey == NULL))
-        return -1;
+/* There are three types of logs: chat logs, groupchat logs, and prompt logs (see LOG_TYPE in log.h)
+   A prompt log is in the format: LOGDIR/selfkey-home.log
+   A chat log is in the format: LOGDIR/selfkey-friendname-otherkey.log
+   A groupchat log is in the format: LOGDIR/selfkey-groupname-date[time].log
 
+   Only the first (KEY_IDENT_DIGITS * 2) numbers of the key are used.
+
+   Returns 0 on success, -1 if the path is too long */
+static int get_log_path(char *dest, int destsize, char *name, const char *selfkey, const char *otherkey, int logtype)
+{
     if (!valid_nick(name))
         name = UNKNOWN_NAME;
 
@@ -76,19 +80,32 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
             break;
     }
 
-    char log_path[MAX_STR_SIZE];
-
-    if (path_len >= sizeof(log_path)) {
+    if (path_len >= destsize) {
         free(user_config_dir);
         return -1;
     }
 
     if (!string_is_empty(set_path))
-        snprintf(log_path, sizeof(log_path), "%s%s-%s%s%s.log", set_path, self_id, name, namedash, other_id);
+        snprintf(dest, destsize, "%s%s-%s%s%s.log", set_path, self_id, name, namedash, other_id);
     else
-        snprintf(log_path, sizeof(log_path), "%s%s%s-%s%s%s.log", user_config_dir, LOGDIR, self_id, name, namedash, other_id);
+        snprintf(dest, destsize, "%s%s%s-%s%s%s.log", user_config_dir, LOGDIR, self_id, name, namedash, other_id);
 
     free(user_config_dir);
+
+    return 0;
+}
+
+/* Opens log file or creates a new one */
+static int init_logging_session(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
+{
+    if (selfkey == NULL || (logtype == LOG_CHAT && otherkey == NULL))
+        return -1;
+
+    char log_path[MAX_STR_SIZE];
+
+    if (get_log_path(log_path, sizeof(log_path), name, selfkey, otherkey, logtype) == -1)
+        return -1;
+
     log->file = fopen(log_path, "a+");
     snprintf(log->path, sizeof(log->path), "%s", log_path);
 
@@ -132,22 +149,21 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
 
 void log_disable(struct chatlog *log)
 {
-    log->log_on = false;
-
-    if (log->file != NULL) {
+    if (log->file != NULL)
         fclose(log->file);
-        log->file = NULL;
-    }
+
+    memset(log, 0, sizeof(struct chatlog));
 }
 
 void log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
 {
     log->log_on = true;
 
-    if (log->file == NULL) {
-        if (init_logging_session(name, selfkey, otherkey, log, logtype) == -1)
-            log_disable(log);
-    }
+    if (log->file != NULL)
+        return;
+
+    if (init_logging_session(name, selfkey, otherkey, log, logtype) == -1)
+        log_disable(log);
 }
 
 /* Loads previous history from chat log */
@@ -202,4 +218,48 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
     free(hstbuf);
+}
+
+/* renames chatlog file replacing src with dest.
+   Returns 0 on success or if no log exists, -1 on failure. */
+int rename_logfile(char *src, char *dest, const char *selfkey, const char *otherkey, int winnum)
+{
+    ToxWindow *toxwin = get_window_ptr(winnum);
+    struct chatlog *log = NULL;
+    bool log_on = false;
+
+    /* disable log if necessary and save its state */
+    if (toxwin != NULL) {
+        log = toxwin->chatwin->log;
+        log_on = log->log_on;
+    }
+
+    if (log_on)
+        log_disable(log);
+
+    char newpath[MAX_STR_SIZE];
+    char oldpath[MAX_STR_SIZE];
+
+    if (get_log_path(oldpath, sizeof(oldpath), src, selfkey, otherkey, LOG_CHAT) == -1)
+        goto on_error;
+
+    if (!file_exists(oldpath))
+        return 0;
+
+    if (get_log_path(newpath, sizeof(newpath), dest, selfkey, otherkey, LOG_CHAT) == -1)
+        goto on_error;
+
+    if (rename(oldpath, newpath) != 0)
+        goto on_error;
+
+    if (log_on)
+        log_enable(dest, selfkey, otherkey, log, LOG_CHAT);
+
+    return 0;
+
+on_error:
+    if (log_on)
+        log_enable(dest, selfkey, otherkey, log, LOG_CHAT);
+
+    return -1;
 }
