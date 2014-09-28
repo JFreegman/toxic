@@ -41,6 +41,8 @@
 #include <tox/tox.h>
 
 #define UNKNOWN_NAME "Anonymous"
+#define DEFAULT_NAME "Cool dude"
+#define DEFAULT_NOTE "Cool status"
 
 #define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH
 #define MAX_CMDNAME_SIZE 64

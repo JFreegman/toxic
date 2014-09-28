@@ -393,10 +393,6 @@ static void draw_bar(void)
 
     move(LINES - 1, 0);
 
-    attron(COLOR_PAIR(BLUE) | A_BOLD);
-    printw(" TOXIC " TOXICVER " |");
-    attroff(COLOR_PAIR(BLUE) | A_BOLD);
-
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
