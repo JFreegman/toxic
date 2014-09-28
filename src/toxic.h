@@ -101,7 +101,7 @@ void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string,
 void on_friendadded(Tox *m, int32_t friendnumber, bool sort);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length, void *userdata);
 void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int32_t friendnumber, const uint8_t *group_pub_key, void *userdata);
+void on_groupinvite(Tox *m, int32_t friendnumber, const uint8_t *group_pub_key, uint16_t length, void *userdata);
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
 void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, const uint8_t *pathname,
                          uint16_t pathname_length, void *userdata);
