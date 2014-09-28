@@ -112,6 +112,13 @@ static void realloc_blocklist(int n)
 
 void kill_friendlist(void)
 {
+    int i;
+
+    for (i = 0; i <= Friends.max_idx; ++i) {
+        if (Friends.list[i].group_invite.key != NULL)
+            free(Friends.list[i].group_invite.key);
+    }
+
     realloc_blocklist(0);
     realloc_friends(0);
 }
@@ -478,7 +485,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     }
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const char *group_pub_key)
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const char *group_pub_key, uint16_t length)
 {
     if (num >= Friends.max_idx)
         return;
@@ -520,6 +527,9 @@ static void delete_friend(Tox *m, int32_t f_num)
             set_active_window(1);   /* keep friendlist focused */
         }
     }
+
+    if (Friends.list[f_num].group_invite.key != NULL)
+        free(Friends.list[f_num].group_invite.key);
 
     tox_del_friend(m, f_num);
     memset(&Friends.list[f_num], 0, sizeof(ToxicFriend));

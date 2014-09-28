@@ -48,13 +48,17 @@ struct LastOnline {
     char hour_min_str[TIME_STR_SIZE];    /* holds 12/24-hour time string e.g. "10:43 PM" */
 };
 
+struct GroupChatInvite {
+    char *key;
+    uint16_t length;
+    bool pending;
+};
+
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH];
     int namelength;
     char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH];
     uint16_t statusmsg_len;
-    char groupchat_key[TOX_CLIENT_ID_SIZE];
-    bool groupchat_pending;
     char pub_key[TOX_CLIENT_ID_SIZE];
     int32_t num;
     int chatwin;
@@ -65,6 +69,7 @@ typedef struct {
     uint8_t status;
     struct LastOnline last_online;
     struct FileReceiver file_receiver[MAX_FILES];
+    struct GroupChatInvite group_invite;
     uint8_t active_file_receivers;
 } ToxicFriend;
 

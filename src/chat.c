@@ -563,28 +563,36 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     Friends.list[num].file_receiver[filenum].bytes_recv += length;
 }
 
-static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *group_pub_key)
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *group_pub_key, uint16_t length)
 {
     if (self->num != friendnumber)
         return;
 
+    if (Friends.list[friendnumber].group_invite.key != NULL)
+        free(Friends.list[friendnumber].group_invite.key);
+
+    char *k = malloc(length);
+
+    if (k == NULL)
+        exit_toxic_err("Failed in chat_onGroupInvite", FATALERR_MEMORY);
+
+    memcpy(k, group_pub_key, length);
+    Friends.list[friendnumber].group_invite.key = k;
+    Friends.list[friendnumber].group_invite.pending = true;
+    Friends.list[friendnumber].group_invite.length = length;
+
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
-
-    memcpy(Friends.list[friendnumber].groupchat_key, group_pub_key, 
-           sizeof(Friends.list[friendnumber].groupchat_key));
-    Friends.list[friendnumber].groupchat_pending = true;
-
-    
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
-    
+
     if (self->active_box != -1)
         box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join group chat");
     else
         box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join group chat");
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 }
 
 /* Av Stuff */

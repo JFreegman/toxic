@@ -115,7 +115,7 @@ struct ToxWindow {
     void(*onAction)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupAction)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
-    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const char *);
+    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
     void(*onGroupNamelistChange)(ToxWindow *, Tox *, int, int, uint8_t);
     void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, const char *, uint16_t);
     void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, const char *, uint16_t);

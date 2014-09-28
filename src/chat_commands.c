@@ -123,14 +123,15 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    const char *groupkey = Friends.list[self->num].groupchat_key;
+    const char *groupkey = Friends.list[self->num].group_invite.key;
+    uint16_t length = Friends.list[self->num].group_invite.length;
 
-    if (!Friends.list[self->num].groupchat_pending) {
+    if (!Friends.list[self->num].group_invite.pending) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending group chat invite.");
         return;
     }
 
-    int groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey);
+    int groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
