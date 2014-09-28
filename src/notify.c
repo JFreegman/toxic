@@ -180,6 +180,7 @@ bool m_open_device()
     
     /* Blah error check */
     open_primary_device(output, &Control.device_idx, 48000, 20, 1);
+    
     return (device_opened = true);
 }
 

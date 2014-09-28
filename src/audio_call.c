@@ -213,7 +213,7 @@ int start_transmission(ToxWindow *self)
     if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx,
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
-    
+        
     if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
          read_device_callback, &self->call_idx, true) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */

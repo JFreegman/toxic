@@ -61,7 +61,7 @@ typedef struct Device {
     int32_t call_idx;                      /* ToxAv call index */
     
     uint32_t source, buffers[OPENAL_BUFS]; /* Playback source/buffers */
-    size_t *ref_count;
+    uint32_t ref_count;
     int32_t selection;
     bool enable_VAD;
     bool muted;
@@ -77,7 +77,7 @@ typedef struct Device {
 const char *ddevice_names[2];              /* Default device */
 const char *devices_names[2][MAX_DEVICES]; /* Container of available devices */
 static int size[2];                        /* Size of above containers */
-Device *running[2][MAX_DEVICES];     /* Running devices */
+Device *running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
 uint32_t primary_device[2];          /* Primary device */
 
 #ifdef AUDIO
@@ -220,6 +220,18 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     if (i == MAX_DEVICES) { unlock; return de_AllDevicesBusy; }
     else *device_idx = i;
     
+    for (i = 0; i < MAX_DEVICES; i ++) { /* Check if any device has the same selection */
+        if ( running[type][i] && running[type][i]->selection == selection ) {
+//             printf("a%d-%d:%p ", selection, i, running[type][i]->dhndl);
+            
+            running[type][*device_idx] = running[type][i];            
+            running[type][i]->ref_count ++;
+            
+            unlock;
+            return de_None;
+        }
+    }
+    
     Device* device = running[type][*device_idx] = calloc(1, sizeof(Device));
     device->selection = selection;
     
@@ -231,28 +243,6 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
         free(device);
         unlock;
         return de_InternalError;
-    }
-    
-    for (i = 0; i < *device_idx; i ++) { /* Check if any previous has the same selection */
-        if ( running[type][i]->selection == selection ) {
-            device->dhndl = running[type][i]->dhndl;
-            
-            if (type == output) {
-                device->ctx = running[type][i]->ctx;
-                memcpy(device->buffers, running[type][i]->buffers, sizeof(running[type][i]->buffers));
-                device->source = running[type][i]->source;
-            }
-            
-            if (running[type][i]->ref_count)
-                device->ref_count = running[type][i]->ref_count;
-            else 
-                device->ref_count = running[type][i]->ref_count = calloc(1, sizeof(size_t));
-            
-            *device->ref_count++;
-            
-            unlock;
-            return de_None;
-        }
     }
     
     if (type == input) {
@@ -320,10 +310,9 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     
     running[type][device_idx] = NULL;
     
-    /* Once copied device->ref_count will be set to 1; not 2
-     */
-    if ( !(device->ref_count) || *(device->ref_count) ) {
+    if ( !device->ref_count ) {
         
+//         printf("Closed device ");
         
         if (type == input) {
             if ( !alcCaptureCloseDevice(device->dhndl) ) rc = de_AlError;
@@ -338,18 +327,17 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
             alcMakeContextCurrent(NULL);
             if ( device->ctx ) alcDestroyContext(device->ctx);
         }
+        
+        free(device);
     }
-    else  if (device->ref_count) *(device->ref_count)--;
-    
-    /* Just pop the reference */
-    free(device);
+    else device->ref_count--;
     
     unlock;
     return rc;
 }
 
 DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD)
-{
+{    
     if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) 
         return de_InvalidSelection;
     
