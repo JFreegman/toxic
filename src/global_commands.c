@@ -37,8 +37,8 @@
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
-extern _Friends Friends;
-extern _FriendRequests FriendRequests;
+extern FriendsList Friends;
+extern FriendRequests FrndRequests;
 
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -55,13 +55,13 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    if (!FriendRequests.request[req].active) {
+    if (!FrndRequests.request[req].active) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
 
     const char *msg;
-    int32_t friendnum = tox_add_friend_norequest(m, FriendRequests.request[req].key);
+    int32_t friendnum = tox_add_friend_norequest(m, FrndRequests.request[req].key);
 
     if (friendnum == -1)
         msg = "Failed to add friend.";
@@ -70,17 +70,17 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         on_friendadded(m, friendnum, true);
     }
 
-    memset(&FriendRequests.request[req], 0, sizeof(struct friend_request));
+    memset(&FrndRequests.request[req], 0, sizeof(struct friend_request));
 
     int i;
 
-    for (i = FriendRequests.max_idx; i > 0; --i) {
-        if (FriendRequests.request[i - 1].active)
+    for (i = FrndRequests.max_idx; i > 0; --i) {
+        if (FrndRequests.request[i - 1].active)
             break;
     }
 
-    FriendRequests.max_idx = i;
-    --FriendRequests.num_requests;
+    FrndRequests.max_idx = i;
+    --FrndRequests.num_requests;
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 }
 
@@ -193,7 +193,8 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     /* turns the avatar off */
     if (strlen(argv[1]) < 3) {
-        tox_set_avatar(m, TOX_AVATAR_FORMAT_NONE, (const uint8_t *) NULL, 0);
+        tox_unset_avatar(m);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No avatar set.");
         return;
     }
 
@@ -250,6 +251,10 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     if (tox_set_avatar(m, TOX_AVATAR_FORMAT_PNG, (const uint8_t *) avatar, (uint32_t) sz) == -1)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Core error.");
 
+    char filename[MAX_STR_SIZE];
+    get_file_name(filename, sizeof(filename), path);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
+
     fclose(fp);
     free(avatar);
 }
@@ -297,22 +302,22 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    if (!FriendRequests.request[req].active) {
+    if (!FrndRequests.request[req].active) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
 
-    memset(&FriendRequests.request[req], 0, sizeof(struct friend_request));
+    memset(&FrndRequests.request[req], 0, sizeof(struct friend_request));
 
     int i;
 
-    for (i = FriendRequests.max_idx; i > 0; --i) {
-        if (FriendRequests.request[i - 1].active)
+    for (i = FrndRequests.max_idx; i > 0; --i) {
+        if (FrndRequests.request[i - 1].active)
             break;
     }
 
-    FriendRequests.max_idx = i;
-    --FriendRequests.num_requests;
+    FrndRequests.max_idx = i;
+    --FrndRequests.num_requests;
 }
 
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -469,7 +474,7 @@ void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (FriendRequests.num_requests == 0) {
+    if (FrndRequests.num_requests == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend requests.");
         return;
     }
@@ -477,22 +482,22 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     int i, j;
     int count = 0;
 
-    for (i = 0; i < FriendRequests.max_idx; ++i) {
-        if (!FriendRequests.request[i].active)
+    for (i = 0; i < FrndRequests.max_idx; ++i) {
+        if (!FrndRequests.request[i].active)
             continue;
 
         char id[TOX_CLIENT_ID_SIZE * 2 + 1] = {0};
 
         for (j = 0; j < TOX_CLIENT_ID_SIZE; ++j) {
             char d[3];
-            snprintf(d, sizeof(d), "%02X", FriendRequests.request[i].key[j] & 0xff);
+            snprintf(d, sizeof(d), "%02X", FrndRequests.request[i].key[j] & 0xff);
             strcat(id, d);
         }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d : %s", i, id);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", FriendRequests.request[i].msg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", FrndRequests.request[i].msg);
 
-        if (++count < FriendRequests.num_requests)
+        if (++count < FrndRequests.num_requests)
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
     }
 }

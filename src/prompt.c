@@ -46,7 +46,7 @@ extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
-_FriendRequests FriendRequests;
+FriendRequests FrndRequests;
 
 /* Array of global command names used for tab completion. */
 const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -132,21 +132,21 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
    Returns request number on success, -1 if queue is full. */
 static int add_friend_request(const char *public_key, const char *data)
 {
-    if (FriendRequests.max_idx >= MAX_FRIEND_REQUESTS)
+    if (FrndRequests.max_idx >= MAX_FRIEND_REQUESTS)
         return -1;
 
     int i;
 
-    for (i = 0; i <= FriendRequests.max_idx; ++i) {
-        if (!FriendRequests.request[i].active) {
-            FriendRequests.request[i].active = true;
-            memcpy(FriendRequests.request[i].key, public_key, TOX_CLIENT_ID_SIZE);
-            snprintf(FriendRequests.request[i].msg, sizeof(FriendRequests.request[i].msg), "%s", data);
+    for (i = 0; i <= FrndRequests.max_idx; ++i) {
+        if (!FrndRequests.request[i].active) {
+            FrndRequests.request[i].active = true;
+            memcpy(FrndRequests.request[i].key, public_key, TOX_CLIENT_ID_SIZE);
+            snprintf(FrndRequests.request[i].msg, sizeof(FrndRequests.request[i].msg), "%s", data);
 
-            if (i == FriendRequests.max_idx)
-                ++FriendRequests.max_idx;
+            if (i == FrndRequests.max_idx)
+                ++FrndRequests.max_idx;
 
-            ++FriendRequests.num_requests;
+            ++FrndRequests.num_requests;
 
             return i;
         }
@@ -218,7 +218,6 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        line_info_reset_start(self, ctx->hst);
         reset_buf(ctx);
     }
 }

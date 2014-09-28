@@ -44,7 +44,7 @@ typedef struct {
     int max_idx;
     int num_requests;
     struct friend_request request[MAX_FRIEND_REQUESTS];
-} _FriendRequests;
+} FriendRequests;
 
 ToxWindow new_prompt(void);
 void prep_prompt_win(void);

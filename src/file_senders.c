@@ -36,7 +36,7 @@
 FileSender file_senders[MAX_FILES];
 uint8_t max_file_senders_index;
 uint8_t num_active_file_senders;
-extern _Friends Friends;
+extern FriendsList Friends;
 
 /* creates initial progress line that will be updated during file transfer.
    Assumes progline is of size MAX_STR_SIZE */

@@ -53,7 +53,7 @@
 extern char *DATA_FILE;
 
 extern FileSender file_senders[MAX_FILES];
-extern _Friends Friends;
+extern FriendsList Friends;
 
 extern struct Winthread Winthread;
 extern struct user_settings *user_settings;
@@ -199,7 +199,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
     if (status == 1) { /* Friend goes online */
         statusbar->is_online = true;
         Friends.list[num].is_typing = user_settings->show_typing_other == SHOW_TYPING_ON 
-                                 ? tox_get_is_typing(m, num) : 0;
+                                      ? tox_get_is_typing(m, num) : 0;
         chat_resume_file_transfers(m, num);
 
         msg = "has come online";
@@ -940,7 +940,6 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        line_info_reset_start(self, ctx->hst);
         reset_buf(ctx);
     }
 

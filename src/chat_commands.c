@@ -34,7 +34,7 @@
 #include "file_senders.h"
 
 extern ToxWindow *prompt;
-extern _Friends Friends;
+extern FriendsList Friends;
 
 extern FileSender file_senders[MAX_FILES];
 extern uint8_t max_file_senders_index;

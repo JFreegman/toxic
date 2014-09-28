@@ -223,7 +223,7 @@ static void queue_init_message(const char *msg, ...)
     init_messages.msgs = new_msgs;
 }
 
-/* called after messages have been printed to console and are no longer needed */
+/* called after messages have been printed to prompt and are no longer needed */
 static void cleanup_init_messages(void)
 {
     if (init_messages.num <= 0)
@@ -1062,6 +1062,7 @@ int main(int argc, char *argv[])
     print_init_messages(prompt);
     cleanup_init_messages();
 
+    /* set user avatar from config file. if no valid path is supplied tox_unset_avatar is called */
     char avatarstr[MAX_STR_SIZE];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);

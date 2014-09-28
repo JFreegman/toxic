@@ -53,9 +53,9 @@ extern struct arg_opts arg_opts;
 
 static uint8_t blocklist_view = 0;   /* 0 if we're in friendlist view, 1 if we're in blocklist view */
 
-_Friends Friends;
+FriendsList Friends;
 
-static struct _Blocked {
+static struct Blocked {
     int num_selected;
     int max_idx;
     int num_blocked;
@@ -64,7 +64,7 @@ static struct _Blocked {
     BlockedFriend *list;
 } Blocked;
 
-static struct _pendingDel {
+static struct pendingDel {
     int num;
     bool active;
     WINDOW *popup;
@@ -115,7 +115,7 @@ void kill_friendlist(void)
     int i;
 
     for (i = 0; i <= Friends.max_idx; ++i) {
-        if (Friends.list[i].group_invite.key != NULL)
+        if (Friends.list[i].active && Friends.list[i].group_invite.key != NULL)
             free(Friends.list[i].group_invite.key);
     }
 
@@ -171,6 +171,7 @@ static int save_blocklist(char *path)
         ret = 0;
 
     fclose(fp);
+    return ret;
 
 on_error:
     free(data);
