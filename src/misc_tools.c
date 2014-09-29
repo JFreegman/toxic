@@ -331,7 +331,7 @@ int check_file_signature(const char *signature, size_t size, FILE *fp)
 {
     char buf[size];
 
-    if (fread(buf, size, 1, fp) == -1)
+    if (fread(buf, size, 1, fp) != 1)
         return -1;
 
     int ret = memcmp(signature, buf, size);
