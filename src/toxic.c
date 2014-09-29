@@ -1062,7 +1062,7 @@ int main(int argc, char *argv[])
     print_init_messages(prompt);
     cleanup_init_messages();
 
-    /* set user avatar from config file. if no valid path is supplied tox_unset_avatar is called */
+    /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[MAX_STR_SIZE];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);

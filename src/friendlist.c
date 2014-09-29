@@ -114,7 +114,7 @@ void kill_friendlist(void)
 {
     int i;
 
-    for (i = 0; i <= Friends.max_idx; ++i) {
+    for (i = 0; i < Friends.max_idx; ++i) {
         if (Friends.list[i].active && Friends.list[i].group_invite.key != NULL)
             free(Friends.list[i].group_invite.key);
     }
