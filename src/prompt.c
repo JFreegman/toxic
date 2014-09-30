@@ -408,13 +408,8 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';
 
-    /* load prev status message or show toxic version if it has never been set */
-    char ver[strlen(TOXICVER) + 1];
-    strcpy(ver, TOXICVER);
-    const char *toxic_ver = strtok(ver, "_");
-
-    if ( (s_len <= 0 || !strncmp("Toxing on Toxic", statusmsg, strlen("Toxing on Toxic"))) && toxic_ver != NULL) {
-        snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic v.%s", toxic_ver);
+    if (s_len == 0 || !strncmp(statusmsg, "Toxing on Toxic", strlen("Toxing on Toxic"))) {
+        snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic");
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
     }
