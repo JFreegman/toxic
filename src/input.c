@@ -236,6 +236,10 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
             input_history(self, key, mx_x);
             break;
 
+        case T_KEY_C_L:
+            force_refresh(self->chatwin->history);
+            break;
+
         default:
             match = false;
             break;

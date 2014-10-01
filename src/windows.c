@@ -496,6 +496,13 @@ ToxWindow *get_window_ptr(int i)
     return toxwin;
 }
 
+void force_refresh(WINDOW *w)
+{
+    wclear(w);
+    endwin();
+    refresh();
+}
+
 int get_num_active_windows(void)
 {
     return num_active_windows;
