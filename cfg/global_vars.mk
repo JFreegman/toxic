@@ -12,9 +12,9 @@ MISC_DIR = $(BASE_DIR)/misc
 # Project files
 MANFILES = toxic.1 toxic.conf.5
 DATAFILES = DHTnodes DNSservers toxic.conf.example
-SNDFILES = ContactLogsIn.wav ContactLogsOut.wav Error.wav IncomingCall.wav
-SNDFILES += LogIn.wav LogOut.wav NewMessage.wav OutgoingCall.wav
-SNDFILES += TransferComplete.wav TransferPending.wav
+SNDFILES = ToxicContactOnline.wav ToxicContactOffline.wav ToxicError.wav
+SNDFILES += ToxicRecvMessage.wav OutgoingCall.wav IncomingCall.wav
+SNDFILES += ToxicTransferComplete.wav ToxicTransferStart.wav
 
 # Install directories
 PREFIX = /usr/local

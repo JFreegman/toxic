@@ -54,16 +54,14 @@ tox = {
 
 // To disable a sound set the path to "silent"
 sounds = {
-  error="__DATADIR__/sounds/Error.wav";
-  self_log_in="__DATADIR__/sounds/LogIn.wav";
-  self_log_out="__DATADIR__/sounds/LogOut.wav";
-  user_log_in="__DATADIR__/sounds/ContactLogsIn.wav";
-  user_log_out="__DATADIR__/sounds/ContactLogsOut.wav";
+  error="__DATADIR__/sounds/ToxicError.wav";
+  user_log_in="__DATADIR__/sounds/ToxicContactOnline.wav";
+  user_log_out="__DATADIR__/sounds/ToxicContactOffline.wav";
   call_incoming="__DATADIR__/sounds/IncomingCall.wav";
   call_outgoing="__DATADIR__/sounds/OutgoingCall.wav";
-  generic_message="__DATADIR__/sounds/NewMessage.wav";
-  transfer_pending="__DATADIR__/sounds/TransferPending.wav";
-  transfer_completed="__DATADIR__/sounds/TransferComplete.wav";
+  generic_message="__DATADIR__/sounds/ToxicRecvMessage.wav";
+  transfer_pending="__DATADIR__/sounds/ToxicTransferStart.wav";
+  transfer_completed="__DATADIR__/sounds/ToxicTransferComplete.wav";
 };
 
 // Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN (case insensitive)
