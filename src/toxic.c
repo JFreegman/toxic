@@ -58,17 +58,18 @@
 #include "message_queue.h"
 #include "execute.h"
 
-#ifdef AUDIO
-#include "audio_call.h"
-#endif /* AUDIO */
-
-#ifndef PACKAGE_DATADIR
-#define PACKAGE_DATADIR "."
+#ifdef X11
+    #include "xtra.h"
 #endif
 
 #ifdef AUDIO
+#include "audio_call.h"
 ToxAv *av;
 #endif /* AUDIO */
+
+#ifndef PACKAGE_DATADIR
+    #define PACKAGE_DATADIR "."
+#endif
 
 /* Export for use in Callbacks */
 char *DATA_FILE = NULL;
@@ -1002,36 +1003,40 @@ int main(int argc, char *argv[])
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
     int settings_err = settings_load(user_settings, p);
 
+#ifdef X11
+    xtra_init();
+#endif
+    
     Tox *m = init_tox();
-
+    
     if (m == NULL)
         exit_toxic_err("failed in main", FATALERR_NETWORKINIT); 
-
+    
     if (!arg_opts.ignore_data_file) {
         if (arg_opts.encrypt_data && !datafile_exists)
             arg_opts.encrypt_data = 0;
-
+        
         load_data(m, DATA_FILE);
-
+        
     }
-
+    
     init_term();
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m);
-
+    
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
-
+    
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-
+    
     /* thread for message queue */
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-
-#ifdef AUDIO
-
+    
+    #ifdef AUDIO
+    
     av = init_audio(prompt, m);
 
     set_primary_device(input, user_settings->audio_in_dev);
