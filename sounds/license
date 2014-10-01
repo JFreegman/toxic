@@ -1,3 +1,2 @@
-ToxicContactOffline.wav, ToxicRecvMessage.wav, ToxicContactOnline.wav, ToxicTransferComplete.wav, ToxicError.wav and ToxicTransferStart.wav are licensed under the same license as Toxic.
-
-IncomingCall.wav and OutgoingCall.wav are licensed under the "Creative Commons Attribution 3.0 Unported", all credit attributed to Adam Reid.
+ToxicError.wav, ToxicRecvMessage.wav, ToxicContactOffline.wav, ToxicIncomingCall.wav, ToxicTransferComplete.wav, ToxicContactOnline.wav, ToxicOutgoingCall.wav and ToxicTransferStart.wav
+are licensed under the "Creative Commons Attribution 3.0 Unported". All credit attributed to Jfreegman.

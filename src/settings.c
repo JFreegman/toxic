@@ -342,13 +342,13 @@ int settings_load(struct user_settings *s, const char *patharg)
         if ( !config_setting_lookup_string(setting, sound_strings.call_incoming, &str) ||
                 !set_sound(call_incoming, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
-                set_sound(call_incoming, PACKAGE_DATADIR "/sounds/IncomingCall.wav");
+                set_sound(call_incoming, PACKAGE_DATADIR "/sounds/ToxicIncomingCall.wav");
         }
         
         if ( !config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ||
                 !set_sound(call_outgoing, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
-                set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/OutgoingCall.wav");
+                set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/ToxicOutgoingCall.wav");
         }
         
         if ( !config_setting_lookup_string(setting, sound_strings.generic_message, &str) ||
@@ -373,8 +373,8 @@ int settings_load(struct user_settings *s, const char *patharg)
         set_sound(error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
         set_sound(user_log_in, PACKAGE_DATADIR "/sounds/ToxicContactOnline.wav");
         set_sound(user_log_out, PACKAGE_DATADIR "/sounds/ToxicContactOffline.wav");
-        set_sound(call_incoming, PACKAGE_DATADIR "/sounds/IncomingCall.wav");
-        set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/OutgoingCall.wav");
+        set_sound(call_incoming, PACKAGE_DATADIR "/sounds/ToxicIncomingCall.wav");
+        set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/ToxicOutgoingCall.wav");
         set_sound(generic_message, PACKAGE_DATADIR "/sounds/ToxicRecvMessage.wav");
         set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/ToxicTransferStart.wav");
         set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/ToxicTransferComplete.wav");

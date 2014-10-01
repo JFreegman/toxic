@@ -13,7 +13,7 @@ MISC_DIR = $(BASE_DIR)/misc
 MANFILES = toxic.1 toxic.conf.5
 DATAFILES = DHTnodes DNSservers toxic.conf.example
 SNDFILES = ToxicContactOnline.wav ToxicContactOffline.wav ToxicError.wav
-SNDFILES += ToxicRecvMessage.wav OutgoingCall.wav IncomingCall.wav
+SNDFILES += ToxicRecvMessage.wav ToxicOutgoingCall.wav ToxicIncomingCall.wav
 SNDFILES += ToxicTransferComplete.wav ToxicTransferStart.wav
 
 # Install directories
