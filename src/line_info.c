@@ -258,10 +258,6 @@ static void line_info_check_queue(ToxWindow *self)
             ++hst->start_id;
         }
     }
-
-    /* force move to bottom of history when we print an outgoing message */
-    if (line->type == OUT_MSG)
-        line_info_reset_start(self, hst);
 }
 
 #define NOREAD_FLAG_TIMEOUT 5    /* seconds before a sent message with no read receipt is flagged as unread */
