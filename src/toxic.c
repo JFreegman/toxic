@@ -122,18 +122,16 @@ void exit_toxic_success(Tox *m)
     memset(&user_password, 0, sizeof(struct user_password));
     close_all_file_senders(m);
     kill_all_windows(m);
+    terminate_notify();
+
+#ifdef AUDIO
+    terminate_audio();
+#endif /* AUDIO */
 
     free(DATA_FILE);
     free(BLOCK_FILE);
     free(user_settings);
 
-#ifdef SOUND_NOTIFY
-//     sound_notify(NULL, self_log_out, NT_ALWAYS, NULL);
-#endif /* SOUND_NOTIFY */
-    terminate_notify();
-#ifdef AUDIO
-    terminate_audio();
-#endif /* AUDIO */
     tox_kill(m);
     endwin();
     exit(EXIT_SUCCESS);
@@ -579,11 +577,7 @@ static void first_time_encrypt(const char *msg)
 
 /*
  * Store Messenger to given location
- * Return 0 stored successfully or ignoring data file
- * Return -1 file path is NULL
- * Return -2 malloc failed
- * Return -3 opening path failed
- * Return -4 fwrite failed
+ * Return 0 if stored successfully or ignoring data file. Return -1 on error
  */
 int store_data(Tox *m, const char *path)
 {
@@ -597,24 +591,28 @@ int store_data(Tox *m, const char *path)
     char *buf = malloc(len);
 
     if (buf == NULL)
-        return -2;
+        exit_toxic_err("failed in store_data", FATALERR_MEMORY);
 
-    if (user_password.data_is_encrypted && !arg_opts.unencrypt_data)
-        tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, user_password.len);
-    else
+    if (user_password.data_is_encrypted && !arg_opts.unencrypt_data) {
+        if (tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, user_password.len) != 0) {
+            free(buf);
+            return -1;
+        }
+    } else {
         tox_save(m, (uint8_t *) buf);
+    }
 
     FILE *fd = fopen(path, "wb");
 
     if (fd == NULL) {
         free(buf);
-        return -3;
+        return -1;
     }
 
     if (fwrite(buf, len, 1, fd) != 1) {
         free(buf);
         fclose(fd);
-        return -4;
+        return -1;
     }
 
     free(buf);
@@ -627,9 +625,9 @@ static void load_data(Tox *m, char *path)
     if (arg_opts.ignore_data_file)
         return;
 
-    FILE *fd;
+    FILE *fd = fopen(path, "rb");
 
-    if ((fd = fopen(path, "rb")) != NULL) {
+    if (fd != NULL) {
         off_t len = file_size(path);
 
         if (len == -1) {
@@ -692,7 +690,11 @@ static void load_data(Tox *m, char *path)
                 }
             }
         } else {
-            tox_load(m, (uint8_t *) buf, len);
+            if (tox_load(m, (uint8_t *) buf, len) != 0) {
+                fclose(fd);
+                free(buf);
+                exit_toxic_err("failed in load_data", FATALERR_FILEOP);
+            }
         }
 
         load_friendlist(m);
@@ -701,6 +703,10 @@ static void load_data(Tox *m, char *path)
         free(buf);
         fclose(fd);
     } else {
+        /* if file exists then open() failing is fatal */
+        if (file_exists(path))
+            exit_toxic_err("failed in load_data", FATALERR_FILEOP);
+
         if (store_data(m, path) != 0)
             exit_toxic_err("failed in load_data", FATALERR_STORE_DATA);
     }
@@ -1045,10 +1051,6 @@ int main(int argc, char *argv[])
     
     init_notify(60, 3000);
 
-#ifdef SOUND_NOTIFY
-//     sound_notify(prompt, self_log_in, 0, NULL);
-#endif /* SOUND_NOTIFY */
-    
     const char *msg;
     
     if (config_err) {
@@ -1079,7 +1081,8 @@ int main(int argc, char *argv[])
 
         if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
-            store_data(m, DATA_FILE);
+            if (store_data(m, DATA_FILE) != 0)
+                line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
             pthread_mutex_unlock(&Winthread.lock);
 
             last_save = cur_time;
