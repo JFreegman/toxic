@@ -234,10 +234,11 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
     int i;
 
     for (i = 0; i < npeers; ++i) {
-         if (string_is_empty((char *) peerlist[i])) {
+         if (!lengths[i]) {
             memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, u_len);
             groupchats[gnum].peer_names[i * N + u_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = u_len;
+
         } else {
             uint16_t n_len = MIN(lengths[i], TOXIC_MAX_NAME_LENGTH - 1);
             memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], n_len);
@@ -278,7 +279,12 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     /* Update name/len lists */
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
     uint16_t tmp_peerlens[num_peers];
-    tox_group_get_names(m, groupnum, tmp_peerlist, tmp_peerlens, num_peers);
+
+    if (tox_group_get_names(m, groupnum, tmp_peerlist, tmp_peerlens, num_peers) != 0) {
+        memset(tmp_peerlist, 0, sizeof(tmp_peerlist));
+        memset(tmp_peerlens, 0, sizeof(tmp_peerlens));
+    }
+
     copy_peernames(groupnum, tmp_peerlist, tmp_peerlens, num_peers);
 
     /* get current peername then sort namelist */
@@ -476,7 +482,8 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         /* truncate nick to fit in side panel without modifying list */
         char tmpnck[TOX_MAX_NAME_LENGTH];
         memcpy(tmpnck, &groupchats[self->num].peer_names[peer * N], SIDEBAR_WIDTH - 2);
-        tmpnck[SIDEBAR_WIDTH - 2] = '\0';
+        int len = SIDEBAR_WIDTH - 2;
+        tmpnck[len] = '\0';
 
         wprintw(ctx->sidebar, "%s\n", tmpnck);
     }
