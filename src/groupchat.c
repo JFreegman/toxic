@@ -134,6 +134,11 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     if (self->num != groupnum)
         return;
 
+    char msg_cpy[MAX_LINE_INFO_MSG_SIZE];
+    len = MIN(len, MAX_LINE_INFO_MSG_SIZE - 1);
+    memcpy(&msg_cpy, msg, len);
+    msg_cpy[len] = '\0';
+
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH];
@@ -148,23 +153,25 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
     /* Only play sound if mentioned */
-    if (strcasestr(msg, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1)) {
+    if (strcasestr(msg_cpy, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1)) {
         sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
                 
         if (self->active_box != -1)
-            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg_cpy);
         else
-            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg_cpy);
 
         nick_clr = RED;
     }
-    else sound_notify(self, silent, NT_WNDALERT_1, NULL);
+    else {
+        sound_notify(self, silent, NT_WNDALERT_1, NULL);
+    }
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
-    write_to_log(msg, nick, ctx->log, false);
+    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg_cpy);
+    write_to_log(msg_cpy, nick, ctx->log, false);
 }
 
 static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, const char *action,
@@ -227,27 +234,29 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
         exit_toxic_err("failed in copy_peernames", FATALERR_MEMORY);
     }
 
-    uint16_t unknown_len = (uint16_t) strlen(UNKNOWN_NAME);
+    uint16_t u_len = strlen("NSA Agent");
     int i;
 
     for (i = 0; i < npeers; ++i) {
-        if (string_is_empty((char *) peerlist[i])) {
-            memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
-            groupchats[gnum].peer_name_lengths[i] = unknown_len;
+        /* this is only temporary */
+        memcpy(&groupchats[gnum].peer_names[i * N], "NSA Agent", u_len);
+        groupchats[gnum].peer_names[i * N + u_len] = '\0';
+        groupchats[gnum].peer_name_lengths[i] = u_len;
+
+        /* if (string_is_empty((char *) peerlist[i])) {
+            memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, u_len);
+            groupchats[gnum].peer_names[i * N + u_len] = '\0';
+            groupchats[gnum].peer_name_lengths[i] = u_len;
         } else {
-            memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], N);
-            uint16_t n_len = lengths[i];
-
-            n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);
-
+            uint16_t n_len = MIN(lengths[i], TOXIC_MAX_NAME_LENGTH - 1);
+            memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], n_len);
             groupchats[gnum].peer_names[i * N + n_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = n_len;
-        }
+        } */
     }
 
     memcpy(groupchats[gnum].oldpeer_names, groupchats[gnum].peer_names, N * npeers);
-    memcpy(groupchats[gnum].oldpeer_name_lengths, groupchats[gnum].peer_name_lengths,
-           sizeof(uint16_t) * npeers);
+    memcpy(groupchats[gnum].oldpeer_name_lengths, groupchats[gnum].peer_name_lengths, sizeof(uint16_t) * npeers);
 }
 
 static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum, int peernum,
