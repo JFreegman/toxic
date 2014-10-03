@@ -230,16 +230,11 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
         exit_toxic_err("failed in copy_peernames", FATALERR_MEMORY);
     }
 
-    uint16_t u_len = strlen("NSA Agent");
+    uint16_t u_len = strlen(UNKNOWN_NAME);
     int i;
 
     for (i = 0; i < npeers; ++i) {
-        /* this is only temporary */
-        memcpy(&groupchats[gnum].peer_names[i * N], "NSA Agent", u_len);
-        groupchats[gnum].peer_names[i * N + u_len] = '\0';
-        groupchats[gnum].peer_name_lengths[i] = u_len;
-
-        /* if (string_is_empty((char *) peerlist[i])) {
+         if (string_is_empty((char *) peerlist[i])) {
             memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, u_len);
             groupchats[gnum].peer_names[i * N + u_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = u_len;
@@ -248,7 +243,7 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
             memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], n_len);
             groupchats[gnum].peer_names[i * N + n_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = n_len;
-        } */
+        } 
     }
 
     memcpy(groupchats[gnum].oldpeer_names, groupchats[gnum].peer_names, N * npeers);
