@@ -250,7 +250,7 @@ void str_to_lower(char *str)
 int get_nick_truncate(Tox *m, char *buf, int friendnum)
 {
     int len = tox_get_name(m, friendnum, (uint8_t *) buf);
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     return len;
 }
