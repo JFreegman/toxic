@@ -32,6 +32,7 @@
 #include "groupchat.h"
 #include "chat.h"
 #include "line_info.h"
+#include "misc_tools.h"
 
 #include "settings.h"
 extern char *DATA_FILE;
@@ -47,11 +48,14 @@ static int num_active_windows;
 /* CALLBACKS START */
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata)
 {
+    char msg[MAX_STR_SIZE + 1];
+    length = copy_tox_str(msg, sizeof(msg), (const char *) data, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL)
-            windows[i].onFriendRequest(&windows[i], m, (const char *) public_key, (const char *) data, length);
+            windows[i].onFriendRequest(&windows[i], m, (const char *) public_key, msg, length);
     }
 }
 
@@ -80,16 +84,22 @@ void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *use
 
 void on_message(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
 {
+    char msg[MAX_STR_SIZE + 1];
+    length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onMessage != NULL)
-            windows[i].onMessage(&windows[i], m, friendnumber, (const char *) string, length);
+            windows[i].onMessage(&windows[i], m, friendnumber, msg, length);
     }
 }
 
 void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
 {
+    char msg[MAX_STR_SIZE + 1];
+    length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -100,11 +110,14 @@ void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t len
 
 void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
 {
+    char nick[TOXIC_MAX_NAME_LENGTH + 1];
+    length = copy_tox_str(nick, sizeof(nick), (const char *) string, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onNickChange != NULL)
-            windows[i].onNickChange(&windows[i], m, friendnumber, (const char *) string, length);
+            windows[i].onNickChange(&windows[i], m, friendnumber, nick, length);
     }
 
     store_data(m, DATA_FILE);
@@ -112,11 +125,14 @@ void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t
 
 void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
 {
+    char msg[TOX_MAX_STATUSMESSAGE_LENGTH + 1];
+    length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
-            windows[i].onStatusMessageChange(&windows[i], friendnumber, (const char *) string, length);
+            windows[i].onStatusMessageChange(&windows[i], friendnumber, msg, length);
     }
 }
 
@@ -145,22 +161,28 @@ void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,
                      void *userdata)
 {
+    char msg[MAX_STR_SIZE + 1];
+    length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, (const char *) message, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, msg, length);
     }
 }
 
 void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length,
                     void *userdata)
 {
+    char msg[MAX_STR_SIZE + 1];
+    length = copy_tox_str(msg, sizeof(msg), (const char *) action, length);
+
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupAction != NULL)
-            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, (const char *) action, length);
+            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, msg, length);
     }
 }
 

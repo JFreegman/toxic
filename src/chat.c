@@ -255,18 +255,13 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *
     if (self->num != num)
         return;
 
-    if (len > TOX_MAX_NAME_LENGTH)
-        return;
-
     StatusBar *statusbar = self->stb;
 
-    char tmpname[TOX_MAX_NAME_LENGTH];
-    strcpy(tmpname, nick);
-    int n_len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
-    tmpname[n_len] = '\0';
+    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+    len = strlen(statusbar->nick);
+    statusbar->nick_len = len;
 
-    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", tmpname);
-    chat_set_window_name(self, tmpname, n_len);
+    chat_set_window_name(self, statusbar->nick, len);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -581,7 +576,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     Friends.list[friendnumber].group_invite.pending = true;
     Friends.list[friendnumber].group_invite.length = length;
 
-    char name[TOX_MAX_NAME_LENGTH];
+    char name[TOX_MAX_NAME_LENGTH + 1];
     get_nick_truncate(m, name, friendnumber);
 
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
@@ -1087,7 +1082,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
     statusbar->statusmsg_len = s_len;
 
-    char nick[TOX_MAX_NAME_LENGTH];
+    char nick[TOX_MAX_NAME_LENGTH + 1];
     int n_len = get_nick_truncate(m, nick, self->num);
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
     statusbar->nick_len = n_len;

@@ -250,8 +250,18 @@ void str_to_lower(char *str)
 int get_nick_truncate(Tox *m, char *buf, int friendnum)
 {
     int len = tox_get_name(m, friendnum, (uint8_t *) buf);
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH);
     buf[len] = '\0';
+    return len;
+}
+
+/* copies data to msg buffer.
+   returns length of msg, which will be no larger than size-1 */
+uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length)
+{
+    int len = MIN(length, size - 1);
+    memcpy(msg, data, len);
+    msg[len] = '\0';
     return len;
 }
 

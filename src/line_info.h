@@ -46,8 +46,8 @@ enum {
 
 struct line_info {
     char timestr[TIME_STR_SIZE];
-    char name1[TOXIC_MAX_NAME_LENGTH];
-    char name2[TOXIC_MAX_NAME_LENGTH];
+    char name1[TOXIC_MAX_NAME_LENGTH + 1];
+    char name2[TOXIC_MAX_NAME_LENGTH + 1];
     char msg[MAX_LINE_INFO_MSG_SIZE];
     uint64_t timestamp;
     uint8_t type;

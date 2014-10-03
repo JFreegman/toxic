@@ -364,8 +364,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
     }
 }
 
-static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data,
-                                   uint16_t length)
+static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data, uint16_t length)
 {
     ChatContext *ctx = self->chatwin;
 

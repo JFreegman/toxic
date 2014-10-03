@@ -42,7 +42,7 @@
 
 #define UNKNOWN_NAME "Anonymous"
 
-#define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH
+#define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH    /* must be >= TOX_MAX_MESSAGE_LENGTH */
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define KEY_IDENT_DIGITS 3    /* number of hex digits to display for the pub-key based identifier */

@@ -100,6 +100,10 @@ void str_to_lower(char *str);
    Returns nick len on success, -1 on failure */
 int get_nick_truncate(Tox *m, char *buf, int friendnum);
 
+/* copies data to msg buffer.
+   returns length of msg, which will be no larger than size-1 */
+uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length);
+
 /* returns index of the first instance of ch in s starting at idx.
    returns length of s if char not found */
 int char_find(int idx, const char *s, char ch);

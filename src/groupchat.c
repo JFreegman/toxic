@@ -134,11 +134,6 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     if (self->num != groupnum)
         return;
 
-    char msg_cpy[MAX_LINE_INFO_MSG_SIZE];
-    len = MIN(len, MAX_LINE_INFO_MSG_SIZE - 1);
-    memcpy(&msg_cpy, msg, len);
-    msg_cpy[len] = '\0';
-
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH];
@@ -153,13 +148,13 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
     /* Only play sound if mentioned */
-    if (strcasestr(msg_cpy, selfnick) && strncmp(selfnick, nick, TOXIC_MAX_NAME_LENGTH - 1)) {
+    if (strcasestr(msg, selfnick)) {
         sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
                 
         if (self->active_box != -1)
-            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg_cpy);
+            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
         else
-            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg_cpy);
+            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
 
         nick_clr = RED;
     }
@@ -170,8 +165,8 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg_cpy);
-    write_to_log(msg_cpy, nick, ctx->log, false);
+    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
+    write_to_log(msg, nick, ctx->log, false);
 }
 
 static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int peernum, const char *action,
@@ -199,7 +194,8 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
         else
             box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action);
     }
-    else sound_notify(self, silent, NT_WNDALERT_1, NULL);
+    else 
+        sound_notify(self, silent, NT_WNDALERT_1, NULL);
 
     char nick[TOX_MAX_NAME_LENGTH];
     n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
