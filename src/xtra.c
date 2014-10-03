@@ -12,7 +12,6 @@ static Display *the_d = NULL;
 static Window self_window; /* We will assume that during initialization
                             * we have this window focused */
 
-/* For dnd protocol NOTE: copied from utox's code */
 Atom XdndAware, 
      XdndEnter, 
      XdndLeave, 
@@ -21,7 +20,10 @@ Atom XdndAware,
      XdndDrop, 
      XdndSelection, 
      XdndDATA, 
-     XdndActionCopy;
+     XdndActionCopy,
+     XdndActionAsk,
+     XdndTypeList;
+
 
 void *event_loop(void* p)
 {
@@ -36,7 +38,6 @@ void *event_loop(void* p)
         {
             case ClientMessage:
             {
-                
                 assert(0);
                 if(event.xclient.message_type == XdndEnter) {
                 } else if(event.xclient.message_type == XdndPosition) {
@@ -59,12 +60,13 @@ void *event_loop(void* p)
                     XConvertSelection(the_d, XdndSelection, XA_STRING, XdndDATA, self_window, CurrentTime);
                 } else if(event.xclient.message_type == XdndLeave) {
                 } else {
+                    goto exit;
                 }
                 
-                goto exit;
             } break;
             
             default:
+//                 XSendEvent(the_d, self_window, 0, 0, &event);
                 break;
         }
     }
@@ -83,10 +85,53 @@ void xtra_init()
     the_d = XOpenDisplay(NULL);
     self_window = xtra_focused_window_id();
     
-    XSelectInput(the_d, self_window, ExposureMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask |
-    PointerMotionMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask | FocusChangeMask |
-    PropertyChangeMask);
-
+    Window m_wndProxy;
+    
+    {
+        /* Create an invisible window which will act as proxy for the DnD
+         * operation. This window will be used for both the GH and HG
+         * direction.
+         */
+        XSetWindowAttributes attr  = {0};
+        attr.event_mask            = EnterWindowMask | 
+                                     LeaveWindowMask | 
+                                     ButtonMotionMask | 
+                                     ButtonPressMask | 
+                                     ButtonReleaseMask | 
+                                     ResizeRedirectMask;
+                                     
+        attr.do_not_propagate_mask = NoEventMask;
+        
+        Window root;
+        int x, y;
+        unsigned int wht, hht, b, d;
+        
+        /* Since we cannot capture resize events for parent window we will have to create
+         * this window to have maximum size as defined in root window 
+         */
+        XGetGeometry(the_d, XDefaultRootWindow(the_d), &root, &x, &y, &wht, &hht, &b, &d);
+        
+        m_wndProxy = XCreateWindow(the_d, self_window                 /* Parent */,
+                                0, 0,                                 /* Position */
+                                wht, hht,                                 /* Width + height */
+                                0,                                    /* Border width */
+                                CopyFromParent,                       /* Depth */
+                                InputOnly,                       /* Class */
+                                CopyFromParent,                       /* Visual */
+                                CWDontPropagate | CWEventMask | CWCursor, /* Value mask */
+                                &attr                                 /* Attributes for value mask */);
+        if (!m_wndProxy)
+        {
+            //TODO return status
+            assert(0);
+        }
+    }
+    
+    XMapWindow(the_d, m_wndProxy);
+    XLowerWindow(the_d, m_wndProxy); /* Don't interfere with parent lmao */
+    
+    self_window = m_wndProxy;
+    
     XdndAware = XInternAtom(the_d, "XdndAware", False);
     XdndEnter = XInternAtom(the_d, "XdndEnter", False);
     XdndLeave = XInternAtom(the_d, "XdndLeave", False);
@@ -96,10 +141,12 @@ void xtra_init()
     XdndSelection = XInternAtom(the_d, "XdndSelection", False);
     XdndDATA = XInternAtom(the_d, "XdndDATA", False);
     XdndActionCopy = XInternAtom(the_d, "XdndActionCopy", False);
+    XdndActionAsk = XInternAtom(the_d, "XdndActionAsk", False);
+    XdndTypeList = XInternAtom(the_d, "XdndTypeList", False);
     
     Atom Xdndversion = 3;
-    XChangeProperty(the_d, self_window, XdndAware, XA_ATOM, 32, 0, (unsigned char*)&Xdndversion, 1);
-    /*XSelectInput(the_d, self_window, ExposureMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask);*/
+    XChangeProperty(the_d, m_wndProxy, XdndAware, XA_ATOM, 32, PropModeReplace, (unsigned char*)&Xdndversion, 1);
+    
     pthread_t id;
     pthread_create(&id, NULL, event_loop, NULL);
     pthread_detach(id);
