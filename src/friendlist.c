@@ -138,7 +138,7 @@ static int save_blocklist(char *path)
         exit_toxic_err("Failed in save_blocklist", FATALERR_MEMORY);
 
     int i;
-    int ret = -1;
+
     int count = 0;
 
     for (i = 0; i < Blocked.max_idx; ++i) {
@@ -168,14 +168,14 @@ static int save_blocklist(char *path)
         goto on_error;
 
     if (fwrite(data, len, 1, fp) == 1)
-        ret = 0;
+        goto on_error;
 
     fclose(fp);
-    return ret;
+    return 0;
 
 on_error:
     free(data);
-    return ret;
+    return -1;
 }
 
 static void sort_blocklist_index(void);

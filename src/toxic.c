@@ -690,11 +690,8 @@ static void load_data(Tox *m, char *path)
                 }
             }
         } else {
-            if (tox_load(m, (uint8_t *) buf, len) != 0) {
-                fclose(fd);
-                free(buf);
-                exit_toxic_err("failed in load_data", FATALERR_FILEOP);
-            }
+            /* tox_load errors are to be ignored until toxcore is fixed */
+            tox_load(m, (uint8_t *) buf, len);
         }
 
         load_friendlist(m);
