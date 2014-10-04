@@ -147,8 +147,8 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
 
-    /* Only play sound if mentioned */
-    if (strcasestr(msg, selfnick)) {
+    /* Only play sound if mentioned by someone else */
+    if (strcasestr(msg, selfnick) && strcmp(selfnick, nick)) {
         sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
                 
         if (self->active_box != -1)

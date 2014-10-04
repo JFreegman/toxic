@@ -104,7 +104,7 @@ void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t len
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onAction != NULL)
-            windows[i].onAction(&windows[i], m, friendnumber, (const char *) string, length);
+            windows[i].onAction(&windows[i], m, friendnumber, msg, length);
     }
 }
 

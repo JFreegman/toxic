@@ -579,7 +579,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     Friends.list[friendnumber].group_invite.pending = true;
     Friends.list[friendnumber].group_invite.length = length;
 
-    char name[TOX_MAX_NAME_LENGTH + 1];
+    char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
 
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
