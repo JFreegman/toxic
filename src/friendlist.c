@@ -167,10 +167,11 @@ static int save_blocklist(char *path)
     if (fp == NULL)
         goto on_error;
 
-    if (fwrite(data, len, 1, fp) == 1)
+    if (fwrite(data, len, 1, fp) != 1)
         goto on_error;
 
     fclose(fp);
+    free(data);
     return 0;
 
 on_error:
