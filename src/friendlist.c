@@ -413,8 +413,8 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort)
             strcpy(Friends.list[i].name, UNKNOWN_NAME);
             Friends.list[i].namelength = strlen(UNKNOWN_NAME);
         } else {    /* Enforce toxic's maximum name length */
-            Friends.list[i].namelength = len;
             snprintf(Friends.list[i].name, sizeof(Friends.list[i].name), "%s", tempname);
+            Friends.list[i].namelength = strlen(Friends.list[i].name);
         }
 
         if (i == Friends.max_idx)
