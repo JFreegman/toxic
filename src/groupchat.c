@@ -194,8 +194,9 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
         else
             box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action);
     }
-    else 
+    else {
         sound_notify(self, silent, NT_WNDALERT_1, NULL);
+    }
 
     char nick[TOX_MAX_NAME_LENGTH];
     n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
@@ -280,7 +281,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
     uint16_t tmp_peerlens[num_peers];
 
-    if (tox_group_get_names(m, groupnum, tmp_peerlist, tmp_peerlens, num_peers) != 0) {
+    if (tox_group_get_names(m, groupnum, tmp_peerlist, tmp_peerlens, num_peers) == -1) {
         memset(tmp_peerlist, 0, sizeof(tmp_peerlist));
         memset(tmp_peerlens, 0, sizeof(tmp_peerlens));
     }
