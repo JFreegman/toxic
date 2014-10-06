@@ -189,7 +189,7 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2)
       - cannot start with a space
       - must not contain a forward slash (for logfile naming purposes)
       - must not contain contiguous spaces */
-int valid_nick(char *nick)
+int valid_nick(const char *nick)
 {
     if (!nick[0] || nick[0] == ' ')
         return 0;
@@ -205,6 +205,17 @@ int valid_nick(char *nick)
     }
 
     return 1;
+}
+
+/* Converts all newline chars to spaces (use for strings that should be contained to a single line) */
+void escape_newline_str(char *str, int len)
+{
+    int i;
+
+    for (i = 0; i < len; ++i) {
+        if (str[i] == '\n' || str[i] == '\r')
+            str[i] = ' ';
+    }
 }
 
 /* gets base file name from path or original file name if no path is supplied */

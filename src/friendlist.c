@@ -553,7 +553,7 @@ static void delete_friend(Tox *m, int32_t f_num)
 /* activates delete friend popup */
 static void del_friend_activate(ToxWindow *self, Tox *m, int32_t f_num)
 {
-    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH - 1, 8, 8);
+    pendingdelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
     pendingdelete.active = true;
     pendingdelete.num = f_num;
 }
