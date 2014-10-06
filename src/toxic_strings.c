@@ -121,6 +121,39 @@ int yank_buf(ChatContext *ctx)
     ctx->pos += ctx->yank_len;
     ctx->len += ctx->yank_len;
     ctx->line[ctx->len] = L'\0';
+
+    return 0;
+}
+
+/* Deletes all characters from line starting at pos and going backwards 
+   until we find a space or run out of characters.
+   Return 0 on success, -1 if nothing to delete */
+int del_word_buf(ChatContext *ctx)
+{
+    if (ctx->len == 0 || ctx->pos == 0)
+        return -1;
+
+    int i = ctx->pos, count = 0;
+
+    /* traverse past empty space */
+    while (i > 0 && ctx->line[i-1] == L' ') {
+        ++count;
+        --i;
+    }
+
+    /* traverse past last entered word */
+    while (i > 0 && ctx->line[i-1] != L' ') {
+        ++count;
+        --i;
+    }
+
+    wmemmove(&ctx->line[i], &ctx->line[ctx->pos], ctx->len - ctx->pos);
+
+    ctx->start = MAX(0, ctx->start - count);   /* TODO: take into account widechar */
+    ctx->len -= count;
+    ctx->pos -= count;
+    ctx->line[ctx->len] = L'\0';
+
     return 0;
 }
 

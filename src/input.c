@@ -83,6 +83,17 @@ static void input_delete(ToxWindow *self)
         sound_notify(self, error, 0, NULL);
 }
 
+/* delete last typed word */
+static void input_del_word(ToxWindow *self, int x, int mx_x)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (del_word_buf(ctx) == -1) {
+        sound_notify(self, error, 0, NULL);
+        return;
+    }
+}
+
 /* deletes entire line before cursor from input field and buffer */
 static void input_discard(ToxWindow *self)
 {
@@ -211,6 +222,10 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
 
         case T_KEY_C_Y:
             input_yank(self, x, mx_x);
+            break;
+
+        case T_KEY_C_W:
+            input_del_word(self, x, mx_x);
             break;
 
         case KEY_HOME:
