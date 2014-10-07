@@ -202,6 +202,7 @@ int valid_nick(const char *nick)
             || nick[i] == '/' 
             || nick[i] == '\n' 
             || nick[i] == '\t' 
+            || nick[i] == '\v'
             || nick[i] == '\r')
 
             return 0;
@@ -211,12 +212,12 @@ int valid_nick(const char *nick)
 }
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
-void escape_newline_str(char *str, int len)
+void filter_str(char *str, int len)
 {
     int i;
 
     for (i = 0; i < len; ++i) {
-        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t')
+        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v')
             str[i] = ' ';
     }
 }
@@ -266,6 +267,7 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum)
     int len = tox_get_name(m, friendnum, (uint8_t *) buf);
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
+    filter_str(buf, len);
     return len;
 }
 

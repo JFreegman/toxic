@@ -140,6 +140,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     int n_len = tox_group_peername(m, groupnum, peernum, (uint8_t *) nick);
     n_len = MIN(n_len, TOXIC_MAX_NAME_LENGTH - 1);  /* enforce client max name length */
     nick[n_len] = '\0';
+    filter_str(nick, n_len);
 
     char selfnick[TOX_MAX_NAME_LENGTH];
     uint16_t sn_len = tox_get_self_name(m, (uint8_t *) selfnick);
@@ -239,12 +240,12 @@ static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], ui
             memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, u_len);
             groupchats[gnum].peer_names[i * N + u_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = u_len;
-
         } else {
             uint16_t n_len = MIN(lengths[i], TOXIC_MAX_NAME_LENGTH - 1);
             memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], n_len);
             groupchats[gnum].peer_names[i * N + n_len] = '\0';
             groupchats[gnum].peer_name_lengths[i] = n_len;
+            filter_str((char *) &groupchats[gnum].peer_names[i * N], n_len);
         } 
     }
 

@@ -92,7 +92,7 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
 int valid_nick(const char *nick);
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
-void escape_newline_str(char *str, int len);
+void filter_str(char *str, int len);
 
 /* gets base file name from path or original file name if no path is supplied */
 void get_file_name(char *namebuf, int bufsize, const char *pathname);

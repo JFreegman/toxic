@@ -1013,9 +1013,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
 
         pthread_mutex_lock(&Winthread.lock);
-        tox_get_status_message(m, self->num, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        int s_len = tox_get_status_message(m, self->num, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
         pthread_mutex_unlock(&Winthread.lock);
 
+        filter_str(statusmsg, s_len);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
     }
@@ -1082,8 +1083,10 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
     uint16_t s_len = tox_get_status_message(m, self->num, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
     statusmsg[s_len] = '\0';
+
+    filter_str(statusmsg, s_len);
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    statusbar->statusmsg_len = s_len;
+    statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 
     char nick[TOX_MAX_NAME_LENGTH + 1];
     int n_len = get_nick_truncate(m, nick, self->num);
