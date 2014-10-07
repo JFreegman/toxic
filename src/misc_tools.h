@@ -87,10 +87,11 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
       - cannot be empty
       - cannot start with a space
       - must not contain a forward slash (for logfile naming purposes)
-      - must not contain contiguous spaces */
+      - must not contain contiguous spaces
+      - must not contain a newline or tab seqeunce */
 int valid_nick(const char *nick);
 
-/* Converts all newline chars to spaces (use for strings that should be contained to a single line) */
+/* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
 void escape_newline_str(char *str, int len);
 
 /* gets base file name from path or original file name if no path is supplied */
