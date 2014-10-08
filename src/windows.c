@@ -370,10 +370,12 @@ void on_window_resize(void)
         if (w->help->active)
             wclear(w->help->win);
 
-        if (w->is_groupchat)
+        if (w->is_groupchat) {
             delwin(w->chatwin->sidebar);
-        else
+            w->chatwin->sidebar = NULL;
+        } else {
             delwin(w->stb->topline);
+        }
 
         delwin(w->chatwin->linewin);
         delwin(w->chatwin->history);
@@ -382,12 +384,14 @@ void on_window_resize(void)
         w->window = newwin(y2, x2, 0, 0);
         w->chatwin->linewin = subwin(w->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
 
-        if (w->is_groupchat) {
+        if (w->show_peerlist) {
             w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2 - SIDEBAR_WIDTH - 1, 0, 0);
             w->chatwin->sidebar = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
         } else {
             w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
-            w->stb->topline = subwin(w->window, 2, x2, 0, 0);
+
+            if (w->is_chat)
+                w->stb->topline = subwin(w->window, 2, x2, 0, 0);
         }
 
 #ifdef AUDIO

@@ -82,28 +82,28 @@ static void ui_defaults(struct user_settings* settings)
 }
 
 static const struct keys_strings {
-	const char* self;
-	const char* next_tab;
-	const char* prev_tab;
-	const char* scroll_line_up;
-	const char* scroll_line_down;
-	const char* half_page_up;
-	const char* half_page_down;
-	const char* page_bottom;
-	const char* peer_list_up;
-	const char* peer_list_down;
+    const char* self;
+    const char* next_tab;
+    const char* prev_tab;
+    const char* scroll_line_up;
+    const char* scroll_line_down;
+    const char* half_page_up;
+    const char* half_page_down;
+    const char* page_bottom;
+    const char* peer_list_up;
+    const char* peer_list_down;
     const char* toggle_peerlist;
 } key_strings = {
-	"keys",
-	"next_tab",
-	"prev_tab",
-	"scroll_line_up",
-	"scroll_line_down",
-	"half_page_up",
-	"half_page_down",
-	"page_bottom",
-	"peer_list_up",
-	"peer_list_down",
+    "keys",
+    "next_tab",
+    "prev_tab",
+    "scroll_line_up",
+    "scroll_line_down",
+    "half_page_up",
+    "half_page_down",
+    "page_bottom",
+    "peer_list_up",
+    "peer_list_down",
     "toggle_peerlist",
 };
 
