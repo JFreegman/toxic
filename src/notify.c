@@ -174,7 +174,7 @@ time_t last_opened_update = 0;
 
 bool m_open_device()
 {    
-    last_opened_update = time(NULL);
+    last_opened_update = get_unix_time();
     
     if (device_opened) return true;
     
@@ -260,7 +260,7 @@ void* do_playing(void* _p)
                 }
             }
         #ifdef BOX_NOTIFY
-            else if (actives[i].box && time(NULL) >= actives[i].n_timeout)
+            else if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
             {
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -281,7 +281,7 @@ void* do_playing(void* _p)
         
         /* device is opened and no activity in under DEVICE_COOLDOWN time, close device*/
         if (device_opened && !has_looping && 
-           (time(NULL) - last_opened_update) > DEVICE_COOLDOWN) {
+           (get_unix_time() - last_opened_update) > DEVICE_COOLDOWN) {
             m_close_device();
         }
         has_looping = false;
@@ -318,7 +318,7 @@ void* do_playing(void* _p)
     while(Control.poll_active) {
         control_lock();
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
-            if (actives[i].box && time(NULL) >= actives[i].n_timeout)
+            if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
             {
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -382,7 +382,7 @@ int init_notify(int login_cooldown, int notification_timeout)
     Control.poll_active = 1;
 #endif
     
-    Control.cooldown = time(NULL) + login_cooldown;
+    Control.cooldown = get_unix_time() + login_cooldown;
 #ifdef X11
     Control.display = XOpenDisplay(NULL);
     Control.this_window = get_focused_window_id();
@@ -628,7 +628,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
 
     actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
     actives[id].size ++;
-    actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
+    actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
     
     notify_notification_set_timeout(actives[id].box, Control.notif_timeout);
     notify_notification_set_app_name(actives[id].box, "toxic");
@@ -669,7 +669,7 @@ int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, con
         strcpy(actives[id].messages[actives[id].size] + MAX_BOX_MSG_LEN - 3, "...");
 
     actives[id].size ++;
-    actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
+    actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
 
     char formated[128 * 129] = {'\0'};
 
@@ -728,7 +728,7 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
     actives[id].active = 1;
     actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
     actives[id].size ++;
-    actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
+    actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
 
     notify_notification_set_timeout(actives[id].box, Control.notif_timeout);
     notify_notification_set_app_name(actives[id].box, "toxic");
@@ -766,7 +766,7 @@ int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* form
         strcpy(actives[id].messages[actives[id].size] + MAX_BOX_MSG_LEN - 3, "...");
 
     actives[id].size ++;
-    actives[id].n_timeout = time(NULL) + Control.notif_timeout / 1000;
+    actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
 
     char formated[128 * 129] = {'\0'};
 

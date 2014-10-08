@@ -127,7 +127,7 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
     }
 }
 
-#define CQUEUE_TRY_SEND_INTERVAL 10
+#define CQUEUE_TRY_SEND_INTERVAL 60
 
 /* Tries to send the oldest unsent message in queue. */
 void cqueue_try_send(ToxWindow *self, Tox *m)
