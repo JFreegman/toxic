@@ -370,7 +370,7 @@ void on_window_resize(void)
         if (w->help->active)
             wclear(w->help->win);
 
-        if (w->is_groupchat) {
+        if (w->show_peerlist) {
             delwin(w->chatwin->sidebar);
             w->chatwin->sidebar = NULL;
         } else {
@@ -390,7 +390,7 @@ void on_window_resize(void)
         } else {
             w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
 
-            if (w->is_chat)
+            if (!w->is_groupchat)
                 w->stb->topline = subwin(w->window, 2, x2, 0, 0);
         }
 
