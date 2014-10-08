@@ -59,7 +59,7 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    int side_offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;
+    int side_offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;
     int top_offst = self->is_chat || self->is_prompt ? 2 : 0;
     int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
@@ -246,7 +246,7 @@ static void line_info_check_queue(ToxWindow *self)
     if (x2 <= SIDEBAR_WIDTH)
         return;
 
-    int offst = self->is_groupchat ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
+    int offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
     int lines = 1 + line->newlines + (line->len / (x2 - offst));
     int max_y = y2 - CHATBOX_HEIGHT;
 

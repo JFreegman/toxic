@@ -43,6 +43,10 @@ typedef struct {
 
 void kill_groupchat_window(ToxWindow *self);
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
+
+/* destroys and re-creates groupchat window with or without the peerlist */
+void redraw_groupchat_win(ToxWindow *self);
+
 ToxWindow new_group_chat(Tox *m, int groupnum);
 
 #endif /* #define GROUPCHAT_H */

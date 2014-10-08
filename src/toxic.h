@@ -24,7 +24,7 @@
 #define TOXIC_H
 
 #ifndef TOXICVER
-#define TOXICVER "NOVER_"    /* Use the -D flag to set this */
+#define TOXICVER "NOVERS"    /* Use the -D flag to set this */
 #endif
 
 #ifndef SIGWINCH
@@ -64,6 +64,7 @@
 #define T_KEY_C_Y        0x19     /* ctrl-y */
 #define T_KEY_C_L        0x0C     /* ctrl-l */
 #define T_KEY_C_W        0x17     /* ctrl-w */
+#define T_KEY_C_B        0x02     /* ctrl-b */
 #define T_KEY_TAB        0x09     /* TAB key */
 
 #define ONLINE_CHAR "*"

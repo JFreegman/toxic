@@ -32,6 +32,7 @@
 #include "toxic_strings.h"
 #include "line_info.h"
 #include "notify.h"
+#include "groupchat.h"
 
 /* add a char to input field and buffer */
 void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
@@ -253,6 +254,14 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
 
         case T_KEY_C_L:
             force_refresh(self->chatwin->history);
+            break;
+
+        case T_KEY_C_B:
+            if (self->is_groupchat) {
+                self->show_peerlist ^= 1;
+                redraw_groupchat_win(self);
+            }
+
             break;
 
         default:

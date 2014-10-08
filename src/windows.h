@@ -152,9 +152,10 @@ struct ToxWindow {
     int x;
 
     bool is_chat;
-    bool is_groupchat;
     bool is_prompt;
     bool is_friendlist;
+    bool is_groupchat;
+    int show_peerlist;    /* used to toggle groupchat peerlist */
 
     WINDOW_ALERTS alert;
 
