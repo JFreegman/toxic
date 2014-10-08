@@ -92,6 +92,7 @@ static const struct keys_strings {
 	const char* page_bottom;
 	const char* peer_list_up;
 	const char* peer_list_down;
+    const char* toggle_peerlist;
 } key_strings = {
 	"keys",
 	"next_tab",
@@ -102,7 +103,8 @@ static const struct keys_strings {
 	"half_page_down",
 	"page_bottom",
 	"peer_list_up",
-	"peer_list_down"
+	"peer_list_down",
+    "toggle_peerlist",
 };
 
 /* defines from toxic.h */
@@ -117,6 +119,7 @@ static void key_defaults(struct user_settings* settings)
 	settings->key_page_bottom = T_KEY_C_H;
 	settings->key_peer_list_up = T_KEY_C_LB;
 	settings->key_peer_list_down = T_KEY_C_RB;
+    settings->key_toggle_peerlist = T_KEY_C_B;
 }
 
 static const struct tox_strings {
@@ -305,6 +308,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 	   if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
 	   if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
 	   if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
+       if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp)) s->key_toggle_peerlist = key_parse(&tmp);
 	}	   
 
 #ifdef AUDIO

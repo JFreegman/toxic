@@ -50,6 +50,7 @@ struct user_settings {
 	int key_page_bottom;
 	int key_peer_list_up;
 	int key_peer_list_down;
+    int key_toggle_peerlist;
 
 #ifdef AUDIO
     int audio_in_dev;

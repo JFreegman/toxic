@@ -76,5 +76,6 @@ keys = {
   page_bottom="Ctrl+H";
   peer_list_up="Ctrl+[";
   peer_list_down="Ctrl+]";
+  toggle_peerlist="Ctrl+b";
 };
 
