@@ -342,7 +342,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
-                wprintw(win, "-*- %s %s", line->name1, line->msg);
+                wprintw(win, " *  %s %s", line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
                 if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
