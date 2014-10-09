@@ -271,6 +271,16 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum)
     return len;
 }
 
+/* same as get_nick_truncate but for groupchats */
+int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
+{
+    int len = tox_group_peername(m, groupnum, peernum, (uint8_t *) buf);
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    buf[len] = '\0';
+    filter_str(buf, len);
+    return len;
+}
+
 /* copies data to msg buffer.
    returns length of msg, which will be no larger than size-1 */
 uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length)

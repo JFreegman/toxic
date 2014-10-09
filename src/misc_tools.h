@@ -104,6 +104,9 @@ void str_to_lower(char *str);
    Returns nick len on success, -1 on failure */
 int get_nick_truncate(Tox *m, char *buf, int friendnum);
 
+/* same as get_nick_truncate but for groupchats */
+int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum);
+
 /* copies data to msg buffer.
    returns length of msg, which will be no larger than size-1 */
 uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length);
