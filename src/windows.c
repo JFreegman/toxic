@@ -370,7 +370,7 @@ void on_window_resize(void)
         if (w->help->active)
             wclear(w->help->win);
 
-        if (w->show_peerlist) {
+        if (w->is_groupchat) {
             delwin(w->chatwin->sidebar);
             w->chatwin->sidebar = NULL;
         } else {
