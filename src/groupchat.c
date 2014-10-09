@@ -396,14 +396,22 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
             thrd->self = self;
             thrd->timestamp = get_unix_time();
 
-            if (pthread_attr_init(&thrd->attr) != 0)
-                exit_toxic_err("failed in groupchat_onGroupNamelistChange", FATALERR_THREAD_ATTR);
+            if (pthread_attr_init(&thrd->attr) != 0) {
+                free(thrd);
+                return;
+            }
 
-            if (pthread_attr_setdetachstate(&thrd->attr, PTHREAD_CREATE_DETACHED) != 0)
-                exit_toxic_err("failed in groupchat_onGroupNamelistChange", FATALERR_THREAD_ATTR);
+            if (pthread_attr_setdetachstate(&thrd->attr, PTHREAD_CREATE_DETACHED) != 0) {
+                pthread_attr_destroy(&thrd->attr);
+                free(thrd);
+                return;
+            }
 
-            if (pthread_create(&thrd->tid, &thrd->attr, group_add_wait, (void *) thrd) != 0)
-                exit_toxic_err("failed in groupchat_onGroupNamelistChange", FATALERR_THREAD_CREATE);
+            if (pthread_create(&thrd->tid, &thrd->attr, group_add_wait, (void *) thrd) != 0) {
+                pthread_attr_destroy(&thrd->attr);
+                free(thrd);
+                return;
+            }
 
             break;
 

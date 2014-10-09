@@ -407,12 +407,23 @@ void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
     t_data.m = m;
     t_data.busy = 1;
 
-    if (pthread_attr_init(&dns_thread.attr) != 0)
-        exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_ATTR);
+    if (pthread_attr_init(&dns_thread.attr) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: DNS thread attr failed to init");
+        memset(&t_data, 0, sizeof(struct thread_data));
+        return;
+    }
 
-    if (pthread_attr_setdetachstate(&dns_thread.attr, PTHREAD_CREATE_DETACHED) != 0)
-        exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_ATTR);
+    if (pthread_attr_setdetachstate(&dns_thread.attr, PTHREAD_CREATE_DETACHED) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: DNS thread attr failed to set");
+        pthread_attr_destroy(&dns_thread.attr);
+        memset(&t_data, 0, sizeof(struct thread_data));
+        return;
+    }
 
-    if (pthread_create(&dns_thread.tid, &dns_thread.attr, dns3_lookup_thread, NULL) != 0)
-        exit_toxic_err("failed in dns3_lookup", FATALERR_THREAD_CREATE);
+    if (pthread_create(&dns_thread.tid, &dns_thread.attr, dns3_lookup_thread, NULL) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: DNS thread failed to init");
+        pthread_attr_destroy(&dns_thread.attr);
+        memset(&t_data, 0, sizeof(struct thread_data));
+        return;
+    }
 }
