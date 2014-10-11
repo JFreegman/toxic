@@ -967,6 +967,12 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
     return new_sleep;
 }
 
+void cb(const char* asdv, DropType dt)
+{
+    if (dt != DT_plain)
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
+}
+
 int main(int argc, char *argv[])
 {
     parse_args(argc, argv);
@@ -1004,7 +1010,7 @@ int main(int argc, char *argv[])
     int settings_err = settings_load(user_settings, p);
 
 #ifdef X11
-    xtra_init();
+    xtra_init(cb);
 #endif
     
     Tox *m = init_tox();

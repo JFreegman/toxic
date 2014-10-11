@@ -3,10 +3,17 @@
 
 /* NOTE: If no xlib present don't compile */
 
-void xtra_init();
-void xtra_terminate();
+typedef enum {
+    DT_plain,
+    DT_file_list
+} 
+DropType;
 
+typedef void (*drop_callback) (const char*, DropType);
+
+int               xtra_init(drop_callback d);
+void              xtra_terminate();
 long unsigned int xtra_focused_window_id();
-int xtra_is_this_focused(); /* returns bool */
+int               xtra_is_this_focused(); /* returns bool */
 
-#endif /* DND_H */
+#endif /* XTRA_H */
