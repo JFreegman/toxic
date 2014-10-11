@@ -648,7 +648,7 @@ static void load_data(Tox *m, char *path)
             exit_toxic_err("failed in load_data", FATALERR_FILEOP);
         }
 
-        bool is_encrypted = tox_is_data_encrypted((uint8_t *) buf);
+        bool is_encrypted = tox_is_save_encrypted((uint8_t *) buf);
 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted)
