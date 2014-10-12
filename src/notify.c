@@ -209,7 +209,8 @@ void graceful_clear()
                 }
             #endif
 
-                *actives[i].id_indicator = -1;    /* reset indicator value */
+                if(actives[i].id_indicator)
+                    *actives[i].id_indicator = -1;    /* reset indicator value */
 
                 if ( actives[i].looping ) {
                     stop_sound(i); 
@@ -251,6 +252,9 @@ void* do_playing(void* _p)
                     && !actives[i].box
                 #endif
             ) {
+                if(actives[i].id_indicator)
+                    *actives[i].id_indicator = -1;    /* reset indicator value */
+
                 if (!is_playing(actives[i].source)) {
                 /* Close */                    
                     alSourceStop(actives[i].source);
@@ -265,13 +269,14 @@ void* do_playing(void* _p)
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
                 actives[i].box = NULL;
-                *actives[i].id_indicator = -1;    /* reset indicator value */
+                if(actives[i].id_indicator)
+                    *actives[i].id_indicator = -1;    /* reset indicator value */
 
                 if (!actives[i].looping && !is_playing(actives[i].source)) {
                 /* stop source if not looping or playing, just terminate box */
                     alSourceStop(actives[i].source);
                     alDeleteSources(1, &actives[i].source);
-                    alDeleteBuffers(1,&actives[i].buffer);
+                    alDeleteBuffers(1, &actives[i].buffer);
                     memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
                 }
             }
@@ -322,7 +327,9 @@ void* do_playing(void* _p)
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
                 actives[i].box = NULL;
-                *actives[i].id_indicator = -1;    /* reset indicator value */
+                if(actives[i].id_indicator)
+                    *actives[i].id_indicator = -1;    /* reset indicator value */
+
                 memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
             }
         }
@@ -344,7 +351,9 @@ void graceful_clear()
             actives[i].box = NULL;
         }
         
-        *actives[i].id_indicator = -1;    /* reset indicator value */
+        if (actives[i].id_indicator)
+            *actives[i].id_indicator = -1;    /* reset indicator value */
+
         memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
     }   
     
@@ -377,6 +386,7 @@ int init_notify(int login_cooldown, int notification_timeout)
         pthread_mutex_destroy(Control.poll_mutex);
         return -1;
     }
+
     Control.poll_active = 1;
 #endif
     
@@ -388,7 +398,7 @@ int init_notify(int login_cooldown, int notification_timeout)
     
     
 #ifdef BOX_NOTIFY
-    notify_init("toxic");
+    notify_init("Toxic");
 #endif
     Control.notif_timeout = notification_timeout;
     return 1;
@@ -478,7 +488,8 @@ void stop_sound(int id)
             notify_notification_close(actives[id].box, &ignore);
         }
 #endif
-        *actives[id].id_indicator = -1;
+        if (actives[id].id_indicator) 
+            *actives[id].id_indicator = -1;
 //         alSourcei(actives[id].source, AL_LOOPING, false);
         alSourceStop(actives[id].source);
         alDeleteSources(1, &actives[id].source);
