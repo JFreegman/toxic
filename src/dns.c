@@ -384,8 +384,7 @@ void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
     }
 
     if (t_data.busy) {
-        const char *err = "Please wait for previous user lookup to finish.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, err);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please wait for previous user lookup to finish.");
         return;
     }
 

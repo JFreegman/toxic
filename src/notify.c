@@ -101,7 +101,7 @@ struct _ActiveNotifications {
     size_t size;
     time_t n_timeout;
 #endif
-} actives[ACTIVE_NOTIFS_MAX] = {{0}};
+} actives[ACTIVE_NOTIFS_MAX];
 /**********************************************************************************/
 /**********************************************************************************/
 /**********************************************************************************/
@@ -187,9 +187,9 @@ bool m_open_device()
 bool m_close_device()
 {
     if (!device_opened) return true;
-    
+
     close_device(output, Control.device_idx);
-    
+
     return !(device_opened = false);
 }
 
@@ -208,9 +208,9 @@ void graceful_clear()
                     actives[i].box = NULL;
                 }
             #endif
-            
-                if(actives[i].id_indicator) *actives[i].id_indicator = -1; // reset indicator value
-                
+
+                *actives[i].id_indicator = -1;    /* reset indicator value */
+
                 if ( actives[i].looping ) {
                     stop_sound(i); 
                 } else {
@@ -220,13 +220,13 @@ void graceful_clear()
                 }
             }
         }
-        
+
         if (i == ACTIVE_NOTIFS_MAX) {
             m_close_device(); /* In case it's opened */
             control_unlock();
             return;
         }
-            
+
         usleep(1000);
     }
 }
@@ -255,7 +255,7 @@ void* do_playing(void* _p)
                 /* Close */                    
                     alSourceStop(actives[i].source);
                     alDeleteSources(1, &actives[i].source);
-                    alDeleteBuffers(1,&actives[i].buffer);
+                    alDeleteBuffers(1, &actives[i].buffer);
                     memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
                 }
             }
@@ -265,8 +265,7 @@ void* do_playing(void* _p)
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
                 actives[i].box = NULL;
-                
-                if(actives[i].id_indicator) *actives[i].id_indicator = -1; // reset indicator value
+                *actives[i].id_indicator = -1;    /* reset indicator value */
 
                 if (!actives[i].looping && !is_playing(actives[i].source)) {
                 /* stop source if not looping or playing, just terminate box */
@@ -323,8 +322,7 @@ void* do_playing(void* _p)
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
                 actives[i].box = NULL;
-                
-                if(actives[i].id_indicator) *actives[i].id_indicator = -1; // reset indicator value
+                *actives[i].id_indicator = -1;    /* reset indicator value */
                 memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
             }
         }
@@ -346,7 +344,7 @@ void graceful_clear()
             actives[i].box = NULL;
         }
         
-        if(actives[i].id_indicator) *actives[i].id_indicator = -1; // reset indicator value
+        *actives[i].id_indicator = -1;    /* reset indicator value */
         memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
     }   
     
@@ -514,35 +512,34 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
 
     if (notifications_are_disabled(flags))
         return -1;
-    
+
     int id = -1;
     control_lock();
-    
+
     if (self && (!self->stb || self->stb->status != TOX_USERSTATUS_BUSY) && user_settings->alerts == ALERTS_ENABLED) 
         id = m_play_sound(notif, flags);
-    
     else if (flags & NT_ALWAYS)
         id = m_play_sound(notif, flags);
-    
+
 #if defined(BOX_NOTIFY) && !defined(SOUND_NOTIFY)
 
     if (id == -1) {
-        for (id = 0; id < ACTIVE_NOTIFS_MAX && actives[id].box; id ++);
+        for (id = 0; id < ACTIVE_NOTIFS_MAX && actives[id].box; id++);
         if ( id == ACTIVE_NOTIFS_MAX ) {
             control_unlock();
             return -1; /* Full */
         }
     }
-    
+
 #endif
-    
+
     if ( id_indicator && id != -1 ) { 
         actives[id].id_indicator = id_indicator;
         *id_indicator = id;
     }
-    
+
     control_unlock();
-    
+
     return id;
 }
 
@@ -627,7 +624,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
         strcpy(actives[id].messages[0] + MAX_BOX_MSG_LEN - 3, "...");
 
     actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
-    actives[id].size ++;
+    actives[id].size++;
     actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
     
     notify_notification_set_timeout(actives[id].box, Control.notif_timeout);
@@ -668,7 +665,7 @@ int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, con
     if (strlen(actives[id].messages[actives[id].size]) > MAX_BOX_MSG_LEN - 3)
         strcpy(actives[id].messages[actives[id].size] + MAX_BOX_MSG_LEN - 3, "...");
 
-    actives[id].size ++;
+    actives[id].size++;
     actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
 
     char formated[128 * 129] = {'\0'};
