@@ -35,6 +35,7 @@
 #include "settings.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "xtra.h"
 
 #if defined(AUDIO) || defined(SOUND_NOTIFY)
     #ifdef __APPLE__
@@ -53,10 +54,6 @@
     #endif
 #endif /* AUDIO */
 
-#ifdef X11
-    #include <X11/Xlib.h>
-#endif /* X11 */
-
 #ifdef BOX_NOTIFY
     #include <libnotify/notify.h>
 #endif
@@ -70,11 +67,7 @@ extern struct user_settings *user_settings;
 struct Control {
     time_t cooldown;
     time_t notif_timeout;
-#ifdef X11
-    Display *display;
-    unsigned long this_window;
-#endif /* X11 */
-    
+        
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
     pthread_mutex_t poll_mutex[1];
     bool poll_active;
@@ -122,23 +115,11 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
         self->alert = WINDOW_ALERT_2;
 }
 
-#ifdef X11
-long unsigned int get_focused_window_id()
-{
-    if (!Control.display) return 0;
-    
-    Window focus;
-    int revert;
-    XGetInputFocus(Control.display, &focus, &revert);
-    return focus;
-}
-#endif /* X11 */
-
 static bool notifications_are_disabled(uint64_t flags)
 {
     bool res = flags & NT_RESTOL && Control.cooldown > get_unix_time();
 #ifdef X11
-    return res || (flags & NT_NOFOCUS && Control.this_window == get_focused_window_id());
+    return res || (flags & NT_NOFOCUS && is_focused());
 #else
     return res;
 #endif
@@ -389,12 +370,7 @@ int init_notify(int login_cooldown, int notification_timeout)
 
     Control.poll_active = 1;
 #endif
-    
     Control.cooldown = get_unix_time() + login_cooldown;
-#ifdef X11
-    Control.display = XOpenDisplay(NULL);
-    Control.this_window = get_focused_window_id();
-#endif /* X11 */
     
     
 #ifdef BOX_NOTIFY
