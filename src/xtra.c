@@ -231,13 +231,13 @@ void *event_loop(void* p)
     
     /* Actual XTRA termination 
      * Please call xtra_terminate() at exit
-     * otherwise bad stuff happens
+     * otherwise HEWUSAGUDBOI happens
      */
     if (Xtra.display) XCloseDisplay(Xtra.display);
     return (Xtra.display = NULL);
 }
 
-int xtra_init(drop_callback d)
+int init_xtra(drop_callback d)
 {
     memset(&Xtra, 0, sizeof(Xtra));
     
@@ -247,7 +247,7 @@ int xtra_init(drop_callback d)
     XInitThreads();
     if ( !(Xtra.display = XOpenDisplay(NULL))) return -1;
     
-    Xtra.terminal_window = xtra_focused_window_id();
+    Xtra.terminal_window = focused_window_id();
     
     {
         /* Create an invisible window which will act as proxy for the DnD operation. */
@@ -317,7 +317,7 @@ int xtra_init(drop_callback d)
     return 0;
 }
 
-void xtra_terminate()
+void terminate_xtra()
 {
     if (!Xtra.display) return;
     
@@ -337,7 +337,7 @@ void xtra_terminate()
     while (Xtra.display); /* Wait for termination */
 }
 
-long unsigned int xtra_focused_window_id()
+long unsigned int focused_window_id()
 {
     if (!Xtra.display) return 0;
     
@@ -349,7 +349,7 @@ long unsigned int xtra_focused_window_id()
     return focus;
 }
 
-int xtra_is_this_focused()
+int is_focused()
 {
-    return Xtra.proxy_window == xtra_focused_window_id();
+    return Xtra.proxy_window == focused_window_id();
 }

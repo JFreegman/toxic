@@ -119,7 +119,7 @@ static bool notifications_are_disabled(uint64_t flags)
 {
     bool res = flags & NT_RESTOL && Control.cooldown > get_unix_time();
 #ifdef X11
-    return res || (flags & NT_NOFOCUS && xtra_is_this_focused());
+    return res || (flags & NT_NOFOCUS && is_focused());
 #else
     return res;
 #endif

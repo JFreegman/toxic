@@ -128,15 +128,20 @@ void exit_toxic_success(Tox *m)
     free(BLOCK_FILE);
     free(user_settings);
 
-#ifdef SOUND_NOTIFY
-//     sound_notify(NULL, self_log_out, NT_ALWAYS, NULL);
-#endif /* SOUND_NOTIFY */
     terminate_notify();
 #ifdef AUDIO
     terminate_audio();
 #endif /* AUDIO */
+    
     tox_kill(m);
     endwin();
+    
+#ifdef X11
+    /* We have to terminate xtra last coz reasons
+     * Please don't call this anywhere else coz trust me
+     */
+    terminate_xtra();
+#endif /* X11 */
     exit(EXIT_SUCCESS);
 }
 
@@ -1010,7 +1015,7 @@ int main(int argc, char *argv[])
     int settings_err = settings_load(user_settings, p);
 
 #ifdef X11
-    xtra_init(cb);
+    init_xtra(cb);
 #endif
     
     Tox *m = init_tox();
@@ -1041,7 +1046,7 @@ int main(int argc, char *argv[])
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     
-    #ifdef AUDIO
+#ifdef AUDIO
     
     av = init_audio(prompt, m);
 
@@ -1055,10 +1060,6 @@ int main(int argc, char *argv[])
 #endif /* AUDIO */
     
     init_notify(60, 3000);
-
-#ifdef SOUND_NOTIFY
-//     sound_notify(prompt, self_log_in, 0, NULL);
-#endif /* SOUND_NOTIFY */
     
     const char *msg;
     
