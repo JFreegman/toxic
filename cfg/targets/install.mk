@@ -1,5 +1,5 @@
 # Install target
-install: toxic doc
+install: toxic
 	mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
 	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))
 	mkdir -p $(abspath $(DESTDIR)/$(DATADIR))/sounds
