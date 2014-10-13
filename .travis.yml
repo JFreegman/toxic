@@ -5,7 +5,7 @@ compiler:
 
 before_script:
   # Installing yasm (needed for compiling vpx) and openal
-  - sudo apt-get -yq install yasm libopenal-dev libconfig-dev libalut-dev libnotify-dev asciidoc
+  - sudo apt-get -yq install yasm libopenal-dev libconfig-dev libalut-dev libnotify-dev
   # Installing libsodium, needed for toxcore
   - git clone https://github.com/jedisct1/libsodium.git libsodium
   - cd libsodium
