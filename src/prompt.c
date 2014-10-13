@@ -427,7 +427,7 @@ static void print_welcome_msg(ToxWindow *self)
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "   |_   _/ _ \\ \\/ /_ _/ ___|");
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____|");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 
     const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";

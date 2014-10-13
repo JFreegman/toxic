@@ -46,7 +46,7 @@ endif
 -include $(CFG_DIR)/checks/check_features.mk
 
 # Targets
-all: toxic doc
+all: toxic
 
 toxic: $(OBJ)
 	@echo "  LD    $@"
