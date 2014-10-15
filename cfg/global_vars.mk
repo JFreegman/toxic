@@ -1,7 +1,11 @@
 # Version
 TOXIC_VERSION = 0.5.2
-REV = $(shell git rev-list HEAD --count)
-VERSION = $(TOXIC_VERSION)_r$(REV)
+REV = $(shell if which git &>/dev/null ; then git rev-list HEAD --count 2>/dev/null || echo -n "error" ; else echo -n "error" ; fi)
+ifneq ($(REV), error)
+	VERSION = $(TOXIC_VERSION)_r$(REV)
+else
+	VERSION = $(TOXIC_VERSION)
+endif
 
 # Project directories
 DOC_DIR = $(BASE_DIR)/doc
