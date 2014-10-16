@@ -1092,7 +1092,7 @@ int main(int argc, char *argv[])
     useconds_t msleepval = 40000;
     uint64_t loopcount = 0;
 
-    mousemask(BUTTON1_PRESSED | REPORT_MOUSE_POSITION, NULL);
+    mousemask(BUTTON1_PRESSED, NULL);
     mouseinterval(0);
 
     while (true) {
