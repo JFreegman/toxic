@@ -413,6 +413,8 @@ static void draw_window_tab(ToxWindow *toxwin)
     if (toxwin->alert != WINDOW_ALERT_NONE) attroff(COLOR_PAIR(toxwin->alert));
 }
 
+#define TOXICVERSTR " TOXIC " TOXICVER " |"
+
 static void draw_bar(void)
 {
     attron(COLOR_PAIR(BLUE));
@@ -422,7 +424,7 @@ static void draw_bar(void)
     move(LINES - 1, 0);
 
     attron(COLOR_PAIR(BLUE) | A_BOLD);
-    printw(" TOXIC " TOXICVER " |");
+    printw(TOXICVERSTR);
     attroff(COLOR_PAIR(BLUE) | A_BOLD);
 
     int i;
@@ -453,6 +455,28 @@ static void draw_bar(void)
     }
 
     refresh();
+}
+
+void report_window_choice(int mouse_y, int mouse_x, int *p_choice)
+{
+    int choice, namelen, i = strlen(TOXICVERSTR);
+    
+    if (mouse_y == LINES - 1 && mouse_x > i) {
+        for (choice = 0; choice < MAX_WINDOWS_NUM; ++choice) {
+            if (!windows[choice].active)
+                continue;
+
+            // length of name, brackets, and whitespace
+            namelen = strlen(windows[choice].name) + 3;
+
+            if (mouse_x > i && mouse_x < i + namelen) {
+                *p_choice = choice;
+                return;
+            }
+
+            i += namelen;
+        }
+    }
 }
 
 void draw_active_window(Tox *m)
@@ -492,6 +516,14 @@ void draw_active_window(Tox *m)
 
     if (!ltr && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
         set_next_window((int) ch);
+    } else if (ch == KEY_MOUSE) {
+        MEVENT event;
+        if (getmouse(&event) == OK && event.bstate & BUTTON1_PRESSED) {
+            mouse_trafo(&event.y, &event.x, FALSE);
+            int choice = -1;
+            report_window_choice(event.y, event.x, &choice);
+            set_active_window(choice);
+        }
     } else {
         pthread_mutex_lock(&Winthread.lock);
         a->onKey(a, m, ch, ltr);

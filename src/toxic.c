@@ -1092,6 +1092,9 @@ int main(int argc, char *argv[])
     useconds_t msleepval = 40000;
     uint64_t loopcount = 0;
 
+    mousemask(BUTTON1_PRESSED | REPORT_MOUSE_POSITION, NULL);
+    mouseinterval(0);
+
     while (true) {
         update_unix_time();
         do_toxic(m, prompt);
