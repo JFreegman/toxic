@@ -351,5 +351,5 @@ long unsigned int focused_window_id()
 
 int is_focused()
 {
-    return Xtra.proxy_window == focused_window_id();
+    return Xtra.proxy_window == focused_window_id() || Xtra.terminal_window == focused_window_id();
 }
