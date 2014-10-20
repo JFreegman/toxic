@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Toxic
+Comment=A CLI based Tox client
+TryExec=toxic
+Exec=toxic
+Icon=utilities-terminal
+Categories=InstantMessaging;AudioVideo;Network;
+Terminal=true
+MimeType=x-scheme-handler/tox;
