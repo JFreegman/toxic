@@ -23,7 +23,7 @@ install: toxic
 	@echo "Installing man pages"
 	@mkdir -p $(abspath $(DESTDIR)/$(MANDIR))
 	@for f in $(MANFILES) ; do \
-		if [ ! -e "$$f" ]; then \
+		if [ ! -e "$(DOC_DIR)/$$f" ]; then \
 			continue ;\
 		fi ;\
 		section=$(abspath $(DESTDIR)/$(MANDIR))/man`echo $$f | rev | cut -d "." -f 1` ;\
