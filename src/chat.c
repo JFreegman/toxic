@@ -561,10 +561,20 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
     Friends.list[num].file_receiver[filenum].bytes_recv += length;
 }
 
-static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *group_pub_key, uint16_t length)
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t type, const char *group_pub_key,
+                               uint16_t length)
 {
     if (self->num != friendnumber)
         return;
+
+    char name[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, name, friendnumber);
+
+    /* Temporary until audio groups are implemented */
+    if (type == TOX_GROUPCHAT_TYPE_AV) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio group invite by %s failed: Feature is not available");
+        return;
+    }
 
     if (Friends.list[friendnumber].group_invite.key != NULL)
         free(Friends.list[friendnumber].group_invite.key);
@@ -578,9 +588,6 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, co
     Friends.list[friendnumber].group_invite.key = k;
     Friends.list[friendnumber].group_invite.pending = true;
     Friends.list[friendnumber].group_invite.length = length;
-
-    char name[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(m, name, friendnumber);
 
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
 

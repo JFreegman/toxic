@@ -188,13 +188,14 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *acti
     }
 }
 
-void on_groupinvite(Tox *m, int32_t friendnumber, const uint8_t *group_pub_key, uint16_t length, void *userdata)
+void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
+                    void *userdata)
 {
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupInvite != NULL)
-            windows[i].onGroupInvite(&windows[i], m, friendnumber, (const char *) group_pub_key, length);
+            windows[i].onGroupInvite(&windows[i], m, friendnumber, type, (char *) group_pub_key, length);
     }
 }
 

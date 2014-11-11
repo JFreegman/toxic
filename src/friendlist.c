@@ -483,7 +483,8 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     }
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const char *group_pub_key, uint16_t length)
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8_t type, const char *group_pub_key,
+                                     uint16_t length)
 {
     if (num >= Friends.max_idx)
         return;
