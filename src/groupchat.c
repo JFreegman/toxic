@@ -57,7 +57,7 @@ extern struct Winthread Winthread;
 /* temporary until group chats have unique commands */
 extern const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
+int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
 {
     if (groupnum > MAX_GROUPCHAT_NUM)
         return -1;
@@ -69,6 +69,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum)
             groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
+            groupchats[i].type = type;
             groupchats[i].start_time = get_unix_time();
 
             groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);

@@ -567,15 +567,6 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     if (self->num != friendnumber)
         return;
 
-    char name[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(m, name, friendnumber);
-
-    /* Temporary until audio groups are implemented */
-    if (type == TOX_GROUPCHAT_TYPE_AV) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio group invite by %s failed: Feature is not available");
-        return;
-    }
-
     if (Friends.list[friendnumber].group_invite.key != NULL)
         free(Friends.list[friendnumber].group_invite.key);
 
@@ -588,8 +579,12 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     Friends.list[friendnumber].group_invite.key = k;
     Friends.list[friendnumber].group_invite.pending = true;
     Friends.list[friendnumber].group_invite.length = length;
+    Friends.list[friendnumber].group_invite.type = type;
 
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
+
+    char name[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, name, friendnumber);
 
     if (self->active_box != -1)
         box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join group chat");

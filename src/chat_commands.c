@@ -125,24 +125,33 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
     const char *groupkey = Friends.list[self->num].group_invite.key;
     uint16_t length = Friends.list[self->num].group_invite.length;
+    uint8_t type = Friends.list[self->num].group_invite.type;
 
     if (!Friends.list[self->num].group_invite.pending) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending group chat invite.");
         return;
     }
 
-    int groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
+    int groupnum = -1;
+
+    if (type == TOX_GROUPCHAT_TYPE_TEXT)
+        groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
+#ifdef AUDIO
+    else
+        groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length, NULL, NULL);
+#endif
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_del_groupchat(m, groupnum);
         return;
     }
+
 }
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

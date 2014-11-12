@@ -325,14 +325,28 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    int groupnum = tox_add_groupchat(m);
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify group type: text | audio");
+        return;
+    }
+
+    uint8_t type = TOX_GROUPCHAT_TYPE_AV ? !strcasecmp(argv[1], "audio") : TOX_GROUPCHAT_TYPE_TEXT;
+
+    int groupnum = -1;
+
+    if (type == TOX_GROUPCHAT_TYPE_TEXT)
+        groupnum = tox_add_groupchat(m);
+#ifdef AUDIO
+    else
+        groupnum = toxav_add_av_groupchat(m, NULL, NULL);
+#endif
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_del_groupchat(m, groupnum);
         return;

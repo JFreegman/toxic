@@ -33,6 +33,7 @@
 typedef struct {
     int chatwin;
     bool active;
+    uint8_t type;
     int num_peers;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     uint64_t start_time;
@@ -43,7 +44,7 @@ typedef struct {
 } GroupChat;
 
 void kill_groupchat_window(ToxWindow *self);
-int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum);
+int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type);
 
 /* destroys and re-creates groupchat window with or without the peerlist */
 void redraw_groupchat_win(ToxWindow *self);

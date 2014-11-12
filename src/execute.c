@@ -46,7 +46,7 @@ static struct cmd_func global_commands[] = {
     { "/connect",   cmd_connect       },
     { "/decline",   cmd_decline       },
     { "/exit",      cmd_quit          },
-    { "/groupchat", cmd_groupchat     },
+    { "/group",     cmd_groupchat     },
     { "/help",      cmd_prompt_help   },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },

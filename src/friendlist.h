@@ -51,6 +51,7 @@ struct LastOnline {
 struct GroupChatInvite {
     char *key;
     uint16_t length;
+    uint8_t type;
     bool pending;
 };
 
