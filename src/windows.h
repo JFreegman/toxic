@@ -37,7 +37,7 @@
 #include "toxic.h"
 
 #define MAX_WINDOWS_NUM 32
-#define MAX_WINDOW_NAME_LENGTH 20
+#define MAX_WINDOW_NAME_LENGTH 22
 #define CURS_Y_OFFSET 1    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 2
 

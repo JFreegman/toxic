@@ -330,7 +330,16 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    uint8_t type = TOX_GROUPCHAT_TYPE_AV ? !strcasecmp(argv[1], "audio") : TOX_GROUPCHAT_TYPE_TEXT;
+    uint8_t type;
+
+    if (!strcasecmp(argv[1], "audio"))
+        type = TOX_GROUPCHAT_TYPE_AV;
+    else if (!strcasecmp(argv[1], "text"))
+        type = TOX_GROUPCHAT_TYPE_TEXT;
+    else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid group types are: text | audio");
+        return;
+    }
 
     int groupnum = -1;
 

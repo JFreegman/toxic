@@ -33,8 +33,15 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     char title[MAX_STR_SIZE];
 
     if (argc < 1) {
-        snprintf(title, sizeof(title), "Title is set to: %s", self->name);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, MAGENTA, title);
+        int tlen = tox_group_get_title(m, self->num, (uint8_t *) title);
+
+        if (tlen != -1) {
+            title[tlen] = '\0';
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
+        } else {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
+        }
+
         return;
     }
 

@@ -79,7 +79,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/close"      },
     { "/connect"    },
     { "/exit"       },
-    { "/groupchat"  },
+    { "/group"      },
     { "/help"       },
     { "/invite"     },
     { "/join"       },

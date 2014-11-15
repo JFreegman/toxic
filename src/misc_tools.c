@@ -384,7 +384,7 @@ void set_window_title(ToxWindow *self, const char *title, int len)
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
 
     if (self->is_groupchat)   /* keep groupnumber in title */
-        snprintf(cpy, sizeof(cpy), "%d-%s", self->num, title);
+        snprintf(cpy, sizeof(cpy), "%d %s", self->num, title);
     else
         snprintf(cpy, sizeof(cpy), "%s", title);
 
