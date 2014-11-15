@@ -27,7 +27,7 @@
 #include "help.h"
 #include "misc_tools.h"
 
-#define HELP_MENU_HEIGHT 8
+#define HELP_MENU_HEIGHT 9
 #define HELP_MENU_WIDTH 26
 
 void help_init_menu(ToxWindow *self)
@@ -85,6 +85,12 @@ static void help_draw_menu(ToxWindow *self)
     wprintw(win, " c");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "hat commands\n");
+
+    wprintw(win, " g");
+    wattron(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, "r");
+    wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, "oup commands\n");
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, " f");
@@ -194,7 +200,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /hangup                    : Hangup active call\n");
     wprintw(win, "  /sdev <type> <id>          : Change active device\n");
     wprintw(win, "  /mute <type>               : Mute active device if in call\n");
-    wprintw(win, "  /sense <n>                 : VAD sensitivity treshold\n");
+    wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n");
 #endif /* AUDIO */
 
     help_draw_bottom_menu(win);
@@ -220,6 +226,25 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n");
     wprintw(win, "  Ctrl+B                    : Toggle the groupchat peerlist\n\n");
     wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
+
+    help_draw_bottom_menu(win);
+
+    box(win, ACS_VLINE, ACS_HLINE);
+    wrefresh(win);
+}
+
+static void help_draw_group(ToxWindow *self)
+{
+    WINDOW *win = self->help->win;
+
+    wmove(win, 1, 1);
+
+    wattron(win, A_BOLD | COLOR_PAIR(RED));
+    wprintw(win, "Group audio commands:\n");
+    wattroff(win, A_BOLD | COLOR_PAIR(RED));
+
+    wprintw(win, "  /mute <type>               : Mute active device where type: in | out\n");
+    wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n\n");
 
     help_draw_bottom_menu(win);
 
@@ -275,6 +300,13 @@ void help_onKey(ToxWindow *self, wint_t key)
             self->help->type = HELP_GLOBAL;
             break;
 
+#ifdef AUDIO    /* remove if/when we add non-audio group commands */
+        case 'r':
+            help_init_window(self, 7, 80);
+            self->help->type = HELP_GROUP;
+            break;
+#endif
+
         case 'f':
             help_init_window(self, 10, 80);
             self->help->type = HELP_CONTACTS;
@@ -318,6 +350,7 @@ void help_onDraw(ToxWindow *self)
             break;
 
         case HELP_GROUP:
+            help_draw_group(self);
             break;
     }
 }

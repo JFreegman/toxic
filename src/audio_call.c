@@ -180,10 +180,10 @@ void read_device_callback (const int16_t* captured, uint32_t size, void* data)
     }
 }
 
-
 void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size, void* userdata)
 {
     (void)userdata;
+
     if (call_index >= 0 && ASettins.calls[call_index].ttas) {
         ToxAvCSettings csettings = ASettins.cs;
         toxav_get_peer_csettings(av, call_index, 0, &csettings);
@@ -194,37 +194,37 @@ void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int siz
 int start_transmission(ToxWindow *self)
 {
     if ( !ASettins.av || self->call_idx == -1 ) return -1;
-    
+
     /* Don't provide support for video */
     if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, av_jbufdc * 2, av_VADd, 0) ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
     }
-    
+
     if ( !toxav_capability_supported(ASettins.av, self->call_idx, AudioDecoding) ||
          !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
         return -1;
-    
+
     if (set_call(&ASettins.calls[self->call_idx], true) == -1)
         return -1;
-        
+
     ToxAvCSettings csettings;
     toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
-    
+
     if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx,
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
-        
+
     if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
          read_device_callback, &self->call_idx, true) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
-    
+
     if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx, 
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
         ASettins.calls[self->call_idx].has_output = 0;
     }
-    
+
     return 0;
 }
 
@@ -295,7 +295,7 @@ void callback_call_started ( void* av, int32_t call_index, void* arg )
     ToxWindow* windows = arg; 
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) 
-        if (windows[i].onStart != NULL && windows[i].call_idx == call_index) { 
+        if (windows[i].onStart != NULL && windows[i].call_idx == call_index) {
             windows[i].onStart(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i]) ) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");

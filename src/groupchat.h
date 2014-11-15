@@ -25,10 +25,15 @@
 
 #include "toxic.h"
 #include "windows.h"
+#include "audio_call.h"
 
 #define SIDEBAR_WIDTH 16
 #define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
+
+#ifdef AUDIO
+#define MAX_GROUP_PEERS 256    /* arbitrary limit, only used for audio */
+#endif
 
 typedef struct {
     int chatwin;

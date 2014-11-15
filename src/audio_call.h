@@ -34,9 +34,7 @@ typedef enum _AudioError {
     ae_StartingCoreAudio = 1 << 2
 } AudioError;
 
-/* You will have to pass pointer to first member of 'windows'
- * declared in windows.c otherwise undefined behaviour will
- */
+/* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAv *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio();
 

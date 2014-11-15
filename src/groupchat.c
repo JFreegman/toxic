@@ -54,8 +54,41 @@ static int max_groupchat_index = 0;
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
-/* temporary until group chats have unique commands */
-extern const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE];
+#ifdef AUDIO
+#define AC_NUM_GROUP_COMMANDS 21
+#else
+#define AC_NUM_GROUP_COMMANDS 17
+#endif /* AUDIO */
+
+/* Array of groupchat command names used for tab completion. */
+static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
+    { "/accept"     },
+    { "/add"        },
+    { "/avatar"     },
+    { "/clear"      },
+    { "/close"      },
+    { "/connect"    },
+    { "/decline"    },
+    { "/exit"       },
+    { "/group"      },
+    { "/help"       },
+    { "/log"        },
+    { "/myid"       },
+    { "/nick"       },
+    { "/note"       },
+    { "/quit"       },
+    { "/requests"   },
+    { "/status"     },
+
+#ifdef AUDIO
+
+    { "/lsdev"       },
+    { "/sdev"        },
+    { "/mute"        },
+    { "/sense"       },
+
+#endif /* AUDIO */
+};
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
 {
@@ -497,7 +530,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
             } else {
-                diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+                diff = complete_line(self, group_cmd_list, AC_NUM_GROUP_COMMANDS, MAX_CMDNAME_SIZE);
             }
 
             if (diff != -1) {
@@ -645,6 +678,22 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
+#ifdef AUDIO
+
+void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
+                             unsigned int samples, uint8_t channels, unsigned int sample_rate)
+{
+    // if (groupnum != self->num)
+    //     return;
+
+    // if (peernum < 0 || channels == 0 || channels > 2)
+    //     return;
+
+    // uint32_t length = samples * channels * sizeof(int16_t);
+}
+
+#endif  /* AUDIO */
+
 ToxWindow new_group_chat(Tox *m, int groupnum)
 {
     ToxWindow ret;
@@ -659,6 +708,11 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     ret.onGroupMessage = &groupchat_onGroupMessage;
     ret.onGroupNamelistChange = &groupchat_onGroupNamelistChange;
     ret.onGroupAction = &groupchat_onGroupAction;
+
+#ifdef AUDIO
+    ret.onWriteDevice = &groupchat_onWriteDevice;
+    ret.device_selection[0] = ret.device_selection[1] = -1;
+#endif
 
     snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);
 

@@ -48,13 +48,18 @@ extern struct Winthread Winthread;
 
 FriendRequests FrndRequests;
 
+#ifdef AUDIO
+#define AC_NUM_GLOB_COMMANDS 18
+#else
+#define AC_NUM_GLOB_COMMANDS 16
+#endif /* AUDIO */
+
 /* Array of global command names used for tab completion. */
-const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
+static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/accept"     },
     { "/add"        },
     { "/avatar"     },
     { "/clear"      },
-    { "/close"      },    /* rm /close when groupchats gets its own list */
     { "/connect"    },
     { "/decline"    },
     { "/exit"       },
