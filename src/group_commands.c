@@ -33,7 +33,7 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     char title[MAX_STR_SIZE];
 
     if (argc < 1) {
-        snprintf(title, sizeof(title), "Group title: %s", self->name);
+        snprintf(title, sizeof(title), "Title is set to: %s", self->name);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, MAGENTA, title);
         return;
     }
@@ -62,7 +62,7 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     uint16_t sn_len = tox_get_self_name(m, (uint8_t *) selfnick);
     selfnick[sn_len] = '\0';
 
-    line_info_add(self, timefrmt, selfnick, title, NAME_CHANGE, 0, 0, " changed the group title to ");
+    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group title to: %s", title);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
