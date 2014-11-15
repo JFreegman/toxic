@@ -55,9 +55,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 21
+#define AC_NUM_GROUP_COMMANDS 22
 #else
-#define AC_NUM_GROUP_COMMANDS 17
+#define AC_NUM_GROUP_COMMANDS 18
 #endif /* AUDIO */
 
 /* Array of groupchat command names used for tab completion. */
@@ -79,6 +79,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/quit"       },
     { "/requests"   },
     { "/status"     },
+    { "/title"      },
 
 #ifdef AUDIO
 
@@ -274,6 +275,36 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     write_to_log(action, nick, ctx->log, true);
 }
 
+static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, int groupnum, int peernum, const char *title,
+                                         uint8_t length)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (self->num != groupnum)
+        return;
+
+    set_window_title(self, title, length);
+
+    char event[MAX_STR_SIZE];
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    /* announce title when we join the room */
+    if (!timed_out(groupchats[self->num].start_time, get_unix_time(), GROUP_EVENT_WAIT)) {
+        snprintf(event, sizeof(event), "Title set to: %s", title);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, MAGENTA, event);
+        return;
+    }
+
+    char nick[TOX_MAX_NAME_LENGTH];
+    get_group_nick_truncate(m, nick, peernum, groupnum);
+    line_info_add(self, timefrmt, nick, title, NAME_CHANGE, 0, 0, (char *) "changed the group title to");
+
+    char tmp_event[MAX_STR_SIZE];
+    snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
+    write_to_log(tmp_event, nick, ctx->log, true);
+}
+
 /* Puts two copies of peerlist/lengths in chat instance */
 static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], uint16_t lengths[], int npeers)
 {
@@ -325,8 +356,6 @@ struct group_add_thrd {
     pthread_t tid;
     pthread_attr_t attr;
 };
-
-#define GROUP_EVENT_WAIT 2
 
 /* Waits GROUP_EVENT_WAIT seconds for a new peer to set their name before announcing them */
 void *group_add_wait(void *data)
@@ -708,6 +737,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
     ret.onGroupMessage = &groupchat_onGroupMessage;
     ret.onGroupNamelistChange = &groupchat_onGroupNamelistChange;
     ret.onGroupAction = &groupchat_onGroupAction;
+    ret.onGroupTitleChange = &groupchat_onGroupTitleChange;
 
 #ifdef AUDIO
     ret.onWriteDevice = &groupchat_onWriteDevice;

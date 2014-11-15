@@ -130,8 +130,8 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 }
 
 /* creates new line_info line and puts it in the queue. */
-void line_info_add(ToxWindow *self, char *timestr, char *name1, char *name2, uint8_t type, uint8_t bold, 
-                   uint8_t colour, const char *msg, ...)
+void line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
+                   uint8_t bold, uint8_t colour, const char *msg, ...)
 {
     struct history *hst = self->chatwin->hst;
 

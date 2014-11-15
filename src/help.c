@@ -240,8 +240,14 @@ static void help_draw_group(ToxWindow *self)
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Group audio commands:\n");
+    wprintw(win, "Group commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
+
+    wprintw(win, "  /title <msg>               : Set group title (show current title if no msg)\n\n");
+
+    wattron(win, A_BOLD);
+    wprintw(win, " Audio commands:\n");
+    wattroff(win, A_BOLD);
 
     wprintw(win, "  /mute <type>               : Mute active device where type: in | out\n");
     wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n\n");
@@ -302,7 +308,7 @@ void help_onKey(ToxWindow *self, wint_t key)
 
 #ifdef AUDIO    /* remove if/when we add non-audio group commands */
         case 'r':
-            help_init_window(self, 7, 80);
+            help_init_window(self, 10, 80);
             self->help->type = HELP_GROUP;
             break;
 #endif

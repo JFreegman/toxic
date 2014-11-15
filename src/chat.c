@@ -116,19 +116,6 @@ static void set_self_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
     ctx->self_is_typing = is_typing;
 }
 
-static void chat_set_window_name(ToxWindow *self, const char *nick, int len)
-{   
-    char nick_cpy[TOXIC_MAX_NAME_LENGTH + 1];
-    snprintf(nick_cpy, sizeof(nick_cpy), "%s", nick);
-
-    if (len > MAX_WINDOW_NAME_LENGTH) {
-        strcpy(&nick_cpy[MAX_WINDOW_NAME_LENGTH - 3], "...");
-        nick_cpy[MAX_WINDOW_NAME_LENGTH] = '\0';
-    }
-
-    snprintf(self->name, sizeof(self->name), "%s", nick_cpy);
-}
-
 static void close_all_file_receivers(Tox *m, int friendnum);
 
 void kill_chat_window(ToxWindow *self, Tox *m)
@@ -264,7 +251,7 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *
     len = strlen(statusbar->nick);
     statusbar->nick_len = len;
 
-    chat_set_window_name(self, statusbar->nick, len);
+    set_window_title(self, statusbar->nick, len);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
@@ -1172,7 +1159,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     
     char nick[TOX_MAX_NAME_LENGTH];
     int n_len = get_nick_truncate(m, nick, friendnum);
-    chat_set_window_name(&ret, nick, n_len);
+    set_window_title(&ret, nick, n_len);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));

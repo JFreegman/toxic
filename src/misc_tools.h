@@ -134,4 +134,7 @@ off_t file_size(const char *path);
    On success this function will seek back to the beginning of fp */
 int check_file_signature(const char *signature, size_t size, FILE *fp);
 
+/* sets window title in tab bar. */
+void set_window_title(ToxWindow *self, const char *title, int len);
+
 #endif /* #define MISC_TOOLS_H */

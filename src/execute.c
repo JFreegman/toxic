@@ -29,6 +29,7 @@
 #include "execute.h"
 #include "chat_commands.h"
 #include "global_commands.h"
+#include "group_commands.h"
 #include "line_info.h"
 #include "misc_tools.h"
 #include "notify.h"
@@ -81,6 +82,8 @@ static struct cmd_func chat_commands[] = {
 };
 
 static struct cmd_func group_commands[] = {
+    { "/title",     cmd_set_title   },
+
 #ifdef AUDIO
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },

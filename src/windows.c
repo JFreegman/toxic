@@ -209,6 +209,20 @@ void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t ch
     }
 }
 
+void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length,
+                          void *userdata)
+{
+    char data[MAX_STR_SIZE + 1];
+    length = copy_tox_str(data, sizeof(data), (const char *) title, length);
+
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupTitleChange != NULL)
+            windows[i].onGroupTitleChange(&windows[i], m, groupnumber, peernumber, data, length);
+    }
+}
+
 void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize,
                          const uint8_t *filename, uint16_t filename_length, void *userdata)
 {

@@ -377,3 +377,21 @@ int check_file_signature(const char *signature, size_t size, FILE *fp)
 
     return ret == 0 ? 0 : 1;
 }
+
+/* sets window title in tab bar. */
+void set_window_title(ToxWindow *self, const char *title, int len)
+{
+    char cpy[TOXIC_MAX_NAME_LENGTH + 1];
+
+    if (self->is_groupchat)   /* keep groupnumber in title */
+        snprintf(cpy, sizeof(cpy), "%d-%s", self->num, title);
+    else
+        snprintf(cpy, sizeof(cpy), "%s", title);
+
+    if (len > MAX_WINDOW_NAME_LENGTH) {
+        strcpy(&cpy[MAX_WINDOW_NAME_LENGTH - 3], "...");
+        cpy[MAX_WINDOW_NAME_LENGTH] = '\0';
+    }
+
+    snprintf(self->name, sizeof(self->name), "%s", cpy);
+}
