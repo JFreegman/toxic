@@ -261,10 +261,17 @@ void str_to_lower(char *str)
 }
 
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
-   Returns nick len on success, -1 on failure */
+   if toxcore API call fails, put UNKNOWN_NAME in buf
+   Returns nick len */
 int get_nick_truncate(Tox *m, char *buf, int friendnum)
 {
     int len = tox_get_name(m, friendnum, (uint8_t *) buf);
+
+    if (len == -1) {
+        strcpy(buf, UNKNOWN_NAME);
+        len = strlen(UNKNOWN_NAME);
+    }
+
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     filter_str(buf, len);
@@ -275,6 +282,12 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum)
 int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
 {
     int len = tox_group_peername(m, groupnum, peernum, (uint8_t *) buf);
+
+    if (len == -1) {
+        strcpy(buf, UNKNOWN_NAME);
+        len = strlen(UNKNOWN_NAME);
+    }
+
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     filter_str(buf, len);

@@ -288,11 +288,9 @@ static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, int groupnum, 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    /* announce title when we join the room */
-    if (!timed_out(groupchats[self->num].start_time, get_unix_time(), GROUP_EVENT_WAIT)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
+    /* don't announce title when we join the room */
+    if (!timed_out(groupchats[self->num].start_time, get_unix_time(), GROUP_EVENT_WAIT))
         return;
-    }
 
     char nick[TOX_MAX_NAME_LENGTH];
     get_group_nick_truncate(m, nick, peernum, groupnum);
