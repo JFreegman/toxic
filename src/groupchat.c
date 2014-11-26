@@ -399,8 +399,7 @@ void *group_add_wait(void *data)
     pthread_exit(NULL);
 }
 
-static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum, int peernum,
-                                            uint8_t change)
+static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum, int peernum, uint8_t change)
 {
     if (self->num != groupnum)
         return;
@@ -716,6 +715,8 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
                              unsigned int samples, uint8_t channels, unsigned int sample_rate)
 {
+    return;    /* TODO: remove this */
+
     if (groupnum != self->num)
         return;
 

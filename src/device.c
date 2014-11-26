@@ -215,7 +215,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
     const uint32_t frame_size = (sample_rate * frame_duration / 1000);
     
     uint32_t i;
-    for (i = 0; i < MAX_DEVICES && running[type][i] != NULL; i ++);
+    for (i = 0; i < MAX_DEVICES && running[type][i] != NULL; ++i);
     
     if (i == MAX_DEVICES) { unlock; return de_AllDevicesBusy; }
     else *device_idx = i;
@@ -384,10 +384,10 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
     
     alBufferData(bufid, device->sound_mode, data, length * 2 * channels, device->sample_rate);
     alSourceQueueBuffers(device->source, 1, &bufid);
-    
+
     ALint state;
     alGetSourcei(device->source, AL_SOURCE_STATE, &state);
-    
+
     if(state != AL_PLAYING) alSourcePlay(device->source);
 
 
