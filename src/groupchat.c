@@ -45,6 +45,7 @@
 #include "help.h"
 #include "notify.h"
 #include "autocomplete.h"
+#include "device.h"
 
 extern char *DATA_FILE;
 
@@ -96,11 +97,12 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
     if (groupnum > MAX_GROUPCHAT_NUM)
         return -1;
 
+    ToxWindow self = new_group_chat(m, groupnum);
     int i;
 
     for (i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
-            groupchats[i].chatwin = add_window(m, new_group_chat(m, groupnum));
+            groupchats[i].chatwin = add_window(m, self);
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
             groupchats[i].type = type;
@@ -118,6 +120,9 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
             memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
             groupchats[i].oldpeer_name_lengths[0] = (uint16_t) strlen(UNKNOWN_NAME);
 
+#ifdef AUDIO
+            start_transmission(&self, &groupchats[i].call);
+#endif
             set_active_window(groupchats[i].chatwin);
 
             if (i == max_groupchat_index)
@@ -147,6 +152,10 @@ void kill_groupchat_window(ToxWindow *self)
 
 static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 {
+#ifdef AUDIO
+    stop_transmission(&groupchats[groupnum].call, self->call_idx);
+#endif
+
     tox_del_groupchat(m, groupnum);
 
     free(groupchats[groupnum].peer_names);
@@ -704,19 +713,20 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 }
 
 #ifdef AUDIO
-
 void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
                              unsigned int samples, uint8_t channels, unsigned int sample_rate)
 {
-    // if (groupnum != self->num)
-    //     return;
+    if (groupnum != self->num)
+        return;
 
-    // if (peernum < 0 || channels == 0 || channels > 2)
-    //     return;
+    if (peernum < 0 || channels == 0 || channels > 2 || !pcm)
+        return;
 
-    // uint32_t length = samples * channels * sizeof(int16_t);
+    Call *call = &groupchats[groupnum].call;
+    uint32_t length = samples * channels * sizeof(int16_t);
+    int ret = write_out(call->out_idx, pcm, length, channels);
+    fprintf(stderr, "groupnum: %d, out_idx: %d, ret: %d\n", groupnum, call->out_idx, ret);
 }
-
 #endif  /* AUDIO */
 
 ToxWindow new_group_chat(Tox *m, int groupnum)
@@ -738,6 +748,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
 #ifdef AUDIO
     ret.onWriteDevice = &groupchat_onWriteDevice;
     ret.device_selection[0] = ret.device_selection[1] = -1;
+    ret.call_idx = -1;
 #endif
 
     snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);

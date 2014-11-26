@@ -50,6 +50,10 @@ typedef struct {
     uint8_t  *oldpeer_names;
     uint16_t *peer_name_lengths;
     uint16_t *oldpeer_name_lengths;
+
+#ifdef AUDIO
+    Call call;
+#endif
 } GroupChat;
 
 void kill_groupchat_window(ToxWindow *self);

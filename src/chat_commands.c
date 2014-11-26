@@ -33,6 +33,10 @@
 #include "chat.h"
 #include "file_senders.h"
 
+#ifdef AUDIO
+#include "audio_call.h"
+#endif
+
 extern ToxWindow *prompt;
 extern FriendsList Friends;
 
@@ -138,7 +142,8 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
 #ifdef AUDIO
     else
-        groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length, NULL, NULL);
+        groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
+                                           write_device_callback_group, self);
 #endif
 
     if (groupnum == -1) {

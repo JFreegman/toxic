@@ -356,12 +356,14 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
     
     Device* device = running[output][device_idx];
-    
+    if (!device)
+        fprintf(stderr, "DEVICE IS NULL SILLY\n");
+
     if (!device || device->muted) return de_DeviceNotActive;
-    
+
     pthread_mutex_lock(device->mutex);
-    
-    
+
+
     ALuint bufid;
     ALint processed, queued;
     alGetSourcei(device->source, AL_BUFFERS_PROCESSED, &processed);
@@ -387,8 +389,8 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
     alGetSourcei(device->source, AL_SOURCE_STATE, &state);
     
     if(state != AL_PLAYING) alSourcePlay(device->source);
-    
-    
+
+
     pthread_mutex_unlock(device->mutex);
     return de_None;
 }
@@ -408,7 +410,7 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
         if (thread_paused) usleep(10000); /* Wait for unpause. */
         else
         {
-            for (i = 0; i < size[input]; i ++) 
+            for (i = 0; i < size[input]; ++i) 
             {
                 lock;
                 if (running[input][i] != NULL) 

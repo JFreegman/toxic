@@ -268,21 +268,6 @@ void on_read_receipt(Tox *m, int32_t friendnumber, uint32_t receipt, void *userd
     }
 }
 
-#ifdef AUDIO
-
-void on_write_device(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
-                     uint8_t channels, unsigned int sample_rate, void *userdata)
-{
-    int i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onWriteDevice != NULL)
-            windows[i].onWriteDevice(&windows[i], m, groupnum, peernum, pcm, samples, channels, samples);
-    }
-}
-
-#endif /* AUDIO */
-
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow w)

@@ -34,10 +34,19 @@ typedef enum _AudioError {
     ae_StartingCoreAudio = 1 << 2
 } AudioError;
 
+typedef struct Call {
+    pthread_t ttid; /* Transmission thread id */
+    bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
+    uint32_t in_idx, out_idx;
+    pthread_mutex_t mutex;
+} Call;
+
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAv *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio();
-
+int start_transmission(ToxWindow *self, Call *call);
+int stop_transmission(Call *call, int call_index);
 void stop_current_call(ToxWindow *self);
-
+void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
+                                 uint8_t channels, unsigned int sample_rate, void *arg);
 #endif /* AUDIO_H */

@@ -55,14 +55,6 @@
 
 #define frame_size (av_DefaultSettings.audio_sample_rate * av_DefaultSettings.audio_frame_duration / 1000)
 
-typedef struct Call {
-    pthread_t ttid; /* Transmission thread id */
-    bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
-    uint32_t in_idx, out_idx;
-    pthread_mutex_t mutex;
-} Call;
-
-
 static int set_call(Call* call, bool start)
 {
     call->in_idx = -1;
@@ -105,8 +97,9 @@ void callback_requ_timeout  ( void* av, int32_t call_index, void *arg );
 void callback_peer_timeout  ( void* av, int32_t call_index, void *arg );
 void callback_media_change  ( void* av, int32_t call_index, void *arg );
 
-int stop_transmission(int call_index);
 void write_device_callback( void* agent, int32_t call_index, const int16_t* PCM, uint16_t size, void* arg );
+void write_device_callback_group( Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
+                                  uint8_t channels, unsigned int sample_rate, void *arg );
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -160,8 +153,8 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
 void terminate_audio()
 {
     int i;
-    for (i = 0; i < MAX_CALLS; i ++)
-        stop_transmission(i);
+    for (i = 0; i < MAX_CALLS; ++i)
+        stop_transmission(&ASettins.calls[i], i);
 
     if ( ASettins.av )
         toxav_kill(ASettins.av);
@@ -192,56 +185,60 @@ void write_device_callback(void *agent, int32_t call_index, const int16_t* PCM, 
     }
 }
 
-int start_transmission(ToxWindow *self)
+int start_transmission(ToxWindow *self, Call *call)
 {
-    if ( !ASettins.av || self->call_idx == -1 ) return -1;
+    if ( !self || !ASettins.av || self->call_idx == -1 ) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
+        return -1;
+    }
 
     /* Don't provide support for video */
     if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, 0) ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
+        return -1;
     }
 
     if ( !toxav_capability_supported(ASettins.av, self->call_idx, av_AudioDecoding) ||
          !toxav_capability_supported(ASettins.av, self->call_idx, av_AudioEncoding) )
         return -1;
 
-    if (set_call(&ASettins.calls[self->call_idx], true) == -1)
+    if (set_call(call, true) == -1)
         return -1;
 
     ToxAvCSettings csettings;
     toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
 
-    if ( open_primary_device(input, &ASettins.calls[self->call_idx].in_idx,
+    if ( open_primary_device(input, &call->in_idx,
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
 
-    if ( register_device_callback(self->call_idx, ASettins.calls[self->call_idx].in_idx, 
+    if ( register_device_callback(self->call_idx, call->in_idx, 
          read_device_callback, &self->call_idx, true) != de_None) 
         /* Set VAD as true for all; TODO: Make it more dynamic */
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
 
-    if ( open_primary_device(output, &ASettins.calls[self->call_idx].out_idx, 
+    if ( open_primary_device(output, &call->out_idx, 
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
-        ASettins.calls[self->call_idx].has_output = 0;
+        call->has_output = 0;
     }
 
     return 0;
 }
 
-int stop_transmission(int call_index)
+int stop_transmission(Call *call, int32_t call_index)
 {    
-    if ( ASettins.calls[call_index].ttas ) {
+    if ( call->ttas ) {
         toxav_kill_transmission(ASettins.av, call_index);
-        ASettins.calls[call_index].ttas = false;
+        call->ttas = false;
         
-        if ( ASettins.calls[call_index].in_idx != -1 )
-            close_device(input, ASettins.calls[call_index].in_idx);
+        if ( call->in_idx != -1 )
+            close_device(input, call->in_idx);
         
-        if ( ASettins.calls[call_index].out_idx != -1 )
-            close_device(output, ASettins.calls[call_index].out_idx);
+        if ( call->out_idx != -1 )
+            close_device(output, call->out_idx);
         
-        if (set_call(&ASettins.calls[call_index], false) == -1)
+        if (set_call(call, false) == -1)
             return -1;
 
         return 0;
@@ -279,7 +276,7 @@ void callback_recv_starting ( void* av, int32_t call_index, void* arg )
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) 
         if (windows[i].onStarting != NULL && windows[i].call_idx == call_index) { 
             windows[i].onStarting(&windows[i], ASettins.av, call_index);
-            if ( 0 != start_transmission(&windows[i]) ) {/* YEAH! */
+            if ( 0 != start_transmission(&windows[i], &ASettins.calls[call_index])) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , "Error starting transmission!");
             }
             return;
@@ -288,7 +285,7 @@ void callback_recv_starting ( void* av, int32_t call_index, void* arg )
 void callback_recv_ending ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnding);
-    stop_transmission(call_index);
+    stop_transmission(&ASettins.calls[call_index], call_index);
 }
 
 void callback_call_started ( void* av, int32_t call_index, void* arg )
@@ -298,7 +295,7 @@ void callback_call_started ( void* av, int32_t call_index, void* arg )
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) 
         if (windows[i].onStart != NULL && windows[i].call_idx == call_index) {
             windows[i].onStart(&windows[i], ASettins.av, call_index);
-            if ( 0 != start_transmission(&windows[i]) ) {/* YEAH! */
+            if ( 0 != start_transmission(&windows[i], &ASettins.calls[call_index]) ) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                 return;
             }
@@ -309,7 +306,7 @@ void callback_call_canceled ( void* av, int32_t call_index, void* arg )
     CB_BODY(call_index, arg, onCancel);
 
     /* In case call is active */
-    stop_transmission(call_index);
+    stop_transmission(&ASettins.calls[call_index], call_index);
 }
 void callback_call_rejected ( void* av, int32_t call_index, void* arg )
 {
@@ -318,7 +315,7 @@ void callback_call_rejected ( void* av, int32_t call_index, void* arg )
 void callback_call_ended ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onEnd);
-    stop_transmission(call_index);
+    stop_transmission(&ASettins.calls[call_index], call_index);
 }
 
 void callback_requ_timeout ( void* av, int32_t call_index, void* arg )
@@ -328,12 +325,24 @@ void callback_requ_timeout ( void* av, int32_t call_index, void* arg )
 void callback_peer_timeout ( void* av, int32_t call_index, void* arg )
 {
     CB_BODY(call_index, arg, onPeerTimeout);
-    stop_transmission(call_index);
+    stop_transmission(&ASettins.calls[call_index], call_index);
     /* Call is stopped manually since there might be some other
      * actions that one can possibly take on timeout
      */
     toxav_stop_call(ASettins.av, call_index);
 }
+void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
+                                 uint8_t channels, unsigned int sample_rate, void *arg)
+{
+    ToxWindow *windows = arg; 
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onWriteDevice != NULL)
+            windows[i].onWriteDevice(&windows[i], m, groupnum, peernum, pcm, samples, channels, samples);
+    }
+}
+
 // void callback_media_change(void* av, int32_t call_index, void* arg)
 // {
   /*... TODO cancel all media change requests */
