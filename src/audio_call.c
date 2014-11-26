@@ -106,7 +106,7 @@ void callback_peer_timeout  ( void* av, int32_t call_index, void *arg );
 void callback_media_change  ( void* av, int32_t call_index, void *arg );
 
 int stop_transmission(int call_index);
-void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size, void* userdata);
+void write_device_callback( void* agent, int32_t call_index, const int16_t* PCM, uint16_t size, void* arg );
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -120,7 +120,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     
     ASettins.errors = ae_None;
     
-    memset(ASettins.calls, 0, sizeof(Call) * 10);
+    memset(ASettins.calls, 0, sizeof(ASettins.calls));
 
     
     /* Streaming stuff from core */
@@ -145,14 +145,14 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     toxav_register_callstate_callback(ASettins.av, callback_recv_invite, av_OnInvite, self);
 
     toxav_register_callstate_callback(ASettins.av, callback_recv_ringing, av_OnRinging, self);
-    toxav_register_callstate_callback(ASettins.av, callback_recv_starting, av_OnStarting, self);
-    toxav_register_callstate_callback(ASettins.av, callback_recv_ending, av_OnEnding, self);
+    toxav_register_callstate_callback(ASettins.av, callback_recv_starting, av_OnStart, self);
+    toxav_register_callstate_callback(ASettins.av, callback_recv_ending, av_OnEnd, self);
 
     toxav_register_callstate_callback(ASettins.av, callback_requ_timeout, av_OnRequestTimeout, self);
     toxav_register_callstate_callback(ASettins.av, callback_peer_timeout, av_OnPeerTimeout, self);
-    toxav_register_callstate_callback(ASettins.av, callback_media_change, av_OnMediaChange, self);
+    //toxav_register_callstate_callback(ASettins.av, callback_media_change, av_OnMediaChange, self);
     
-    toxav_register_audio_recv_callback(ASettins.av, write_device_callback, NULL);
+    toxav_register_audio_callback(write_device_callback, NULL);
 
     return ASettins.av;
 }
@@ -180,14 +180,15 @@ void read_device_callback (const int16_t* captured, uint32_t size, void* data)
     }
 }
 
-void write_device_callback(ToxAv* av, int32_t call_index, int16_t* data, int size, void* userdata)
+void write_device_callback(void *agent, int32_t call_index, const int16_t* PCM, uint16_t size, void* arg)
 {
-    (void)userdata;
+    (void)arg;
+    (void)agent;
 
     if (call_index >= 0 && ASettins.calls[call_index].ttas) {
         ToxAvCSettings csettings = ASettins.cs;
-        toxav_get_peer_csettings(av, call_index, 0, &csettings);
-        write_out(ASettins.calls[call_index].out_idx, data, size, csettings.audio_channels);
+        toxav_get_peer_csettings(ASettins.av, call_index, 0, &csettings);
+        write_out(ASettins.calls[call_index].out_idx, PCM, size, csettings.audio_channels);
     }
 }
 
@@ -196,12 +197,12 @@ int start_transmission(ToxWindow *self)
     if ( !ASettins.av || self->call_idx == -1 ) return -1;
 
     /* Don't provide support for video */
-    if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, av_jbufdc * 2, av_VADd, 0) ) {
+    if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, 0) ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
     }
 
-    if ( !toxav_capability_supported(ASettins.av, self->call_idx, AudioDecoding) ||
-         !toxav_capability_supported(ASettins.av, self->call_idx, AudioEncoding) )
+    if ( !toxav_capability_supported(ASettins.av, self->call_idx, av_AudioDecoding) ||
+         !toxav_capability_supported(ASettins.av, self->call_idx, av_AudioEncoding) )
         return -1;
 
     if (set_call(&ASettins.calls[self->call_idx], true) == -1)
@@ -333,10 +334,11 @@ void callback_peer_timeout ( void* av, int32_t call_index, void* arg )
      */
     toxav_stop_call(ASettins.av, call_index);
 }
-void callback_media_change(void* av, int32_t call_index, void* arg)
-{
+// void callback_media_change(void* av, int32_t call_index, void* arg)
+// {
   /*... TODO cancel all media change requests */
-}
+// }
+
 /*
  * End of Callbacks
  */
@@ -366,8 +368,8 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     ToxAvError error = toxav_call(ASettins.av, &self->call_idx, self->num, &ASettins.cs, 30);
 
-    if ( error != ErrorNone ) {
-        if ( error == ErrorAlreadyInCall ) error_str = "Already in a call!";
+    if ( error != av_ErrorNone ) {
+        if ( error == av_ErrorAlreadyInCall ) error_str = "Already in a call!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -396,9 +398,9 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     ToxAvError error = toxav_answer(ASettins.av, self->call_idx, &ASettins.cs);
 
-    if ( error != ErrorNone ) {
-        if ( error == ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No incoming call!";
+    if ( error != av_ErrorNone ) {
+        if ( error == av_ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
+        else if ( error == av_ErrorNoCall ) error_str = "No incoming call!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -427,9 +429,9 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     ToxAvError error = toxav_reject(ASettins.av, self->call_idx, "Why not?");
 
-    if ( error != ErrorNone ) {
-        if ( error == ErrorInvalidState ) error_str = "Cannot reject in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No incoming call!";
+    if ( error != av_ErrorNone ) {
+        if ( error == av_ErrorInvalidState ) error_str = "Cannot reject in invalid state!";
+        else if ( error == av_ErrorNoCall ) error_str = "No incoming call!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -469,9 +471,9 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         error = toxav_hangup(ASettins.av, self->call_idx);
     }
 
-    if ( error != ErrorNone ) {
-        if ( error == ErrorInvalidState ) error_str = "Cannot hangup in invalid state!";
-        else if ( error == ErrorNoCall ) error_str = "No call!";
+    if ( error != av_ErrorNone ) {
+        if ( error == av_ErrorInvalidState ) error_str = "Cannot hangup in invalid state!";
+        else if ( error == av_ErrorNoCall ) error_str = "No call!";
         else error_str = "Internal error!";
 
         goto on_error;
@@ -495,10 +497,10 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
 
     DeviceType type;
 
-    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+    if ( strcasecmp(argv[1], "in") == 0 ) /* Input devices */
         type = input;
 
-    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+    else if ( strcasecmp(argv[1], "out") == 0 ) /* Output devices */
         type = output;
 
     else {
@@ -713,7 +715,7 @@ void stop_current_call(ToxWindow* self)
 {    
     ToxAvCallState callstate;
     if ( ASettins.av != NULL && self->call_idx != -1 && 
-       ( callstate = toxav_get_call_state(ASettins.av, self->call_idx) ) != av_CallNonExistant) {
+       ( callstate = toxav_get_call_state(ASettins.av, self->call_idx) ) != av_CallNonExistent) {
         switch (callstate)
         {
         case av_CallActive:

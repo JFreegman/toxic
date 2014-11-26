@@ -351,7 +351,7 @@ DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, Dat
     return de_None;
 }
 
-inline__ DeviceError write_out(uint32_t device_idx, int16_t* data, uint32_t length, uint8_t channels)
+inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels)
 {
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
     
@@ -446,8 +446,9 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
 
 void print_devices(ToxWindow* self, DeviceType type)
 {
-    int i = 0;
-    for ( ; i < size[type]; i ++)
+    int i;
+
+    for (i = 0; i < size[type]; ++i)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, devices_names[type][i]);
 
     return;

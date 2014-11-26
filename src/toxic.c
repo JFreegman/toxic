@@ -717,8 +717,13 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     do_connection(m, prompt);
     do_file_senders(m);
 
-    if (arg_opts.no_connect == 0)
+    if (arg_opts.no_connect == 0) {
         tox_do(m);    /* main tox-core loop */
+
+#ifdef AUDIO
+        toxav_do(av);    /* TODO: put in separate thread? */
+#endif
+    }
 
     pthread_mutex_unlock(&Winthread.lock);
 }
