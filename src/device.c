@@ -323,9 +323,9 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
             alDeleteSources(1, &device->source);
             alDeleteBuffers(OPENAL_BUFS, device->buffers);
             
-            if ( !alcCloseDevice(device->dhndl) ) rc = de_AlError;
             alcMakeContextCurrent(NULL);
             if ( device->ctx ) alcDestroyContext(device->ctx);
+            if ( !alcCloseDevice(device->dhndl) ) rc = de_AlError;
         }
         
         free(device);
