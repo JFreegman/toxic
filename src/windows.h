@@ -76,6 +76,10 @@ struct cqueue_thread {
     pthread_t tid;
 };
 
+struct audio_thread {
+    pthread_t tid;
+};
+
 struct arg_opts {
     int ignore_data_file;
     int use_ipv4;
