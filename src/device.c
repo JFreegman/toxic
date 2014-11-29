@@ -38,8 +38,8 @@
 /* compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
-#endif
-#endif
+#endif  /* ALC_ALL_DEVICES_SPECIFIER */
+#endif  /* __APPLE__ */
 
 #include <stdbool.h>
 #include <string.h>
@@ -48,7 +48,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define OPENAL_BUFS 5
 #define inline__ inline __attribute__((always_inline))
 
 extern struct user_settings *user_settings;
@@ -173,16 +172,16 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
 {
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
     lock;
-    
+
     Device* device = running[input][device_idx];
-    
+
     if (!device) { 
         unlock;
         return de_DeviceNotActive;
     }
-    
+
     device->VAD_treshold = value;
-    
+
     unlock;
     return de_None;
 }
@@ -202,6 +201,10 @@ DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t 
     return open_device(type, primary_device[type], device_idx, sample_rate, frame_duration, channels);
 }
 
+void get_primary_device_name(DeviceType type, char *buf, int size)
+{
+    memcpy(buf, ddevice_names[type], size);
+}
 
 // TODO: generate buffers separately
 DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
@@ -271,7 +274,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
         uint16_t zeros[frame_size];
         memset(zeros, 0, frame_size*2);
         
-        for ( i =0; i < OPENAL_BUFS; ++i) {
+        for ( i = 0; i < OPENAL_BUFS; ++i ) {
             alBufferData(device->buffers[i], device->sound_mode, zeros, frame_size*2, sample_rate);
         }
         

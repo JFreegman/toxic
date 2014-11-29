@@ -29,6 +29,7 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
+#define OPENAL_BUFS 5
 #define MAX_DEVICES 32
 #include <inttypes.h>
 #include "windows.h"
@@ -84,6 +85,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx);
 DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels);
 
 void print_devices(ToxWindow* self, DeviceType type);
+void get_primary_device_name(DeviceType type, char *buf, int size);
 
 DeviceError selection_valid(DeviceType type, int32_t selection);
 #endif /* DEVICE_H */

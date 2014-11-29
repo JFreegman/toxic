@@ -30,14 +30,35 @@
 #include "audio_call.h"
 #endif
 
+#ifdef AUDIO
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+/* compatibility with older versions of OpenAL */
+#ifndef ALC_ALL_DEVICES_SPECIFIER
+#include <AL/alext.h>
+#endif  /* ALC_ALL_DEVICES_SPECIFIER */
+#endif  /* __APPLE__ */
+#endif  /* AUDIO */
+
 #define SIDEBAR_WIDTH 16
 #define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
-#define GROUP_EVENT_WAIT 2
+#define GROUP_EVENT_WAIT 3
 
 #ifdef AUDIO
-#define MAX_GROUP_PEERS 256    /* arbitrary limit, only used for audio */
-#endif
+#define MAX_AUDIO_SOURCES 128    /* arbitrary limit */
+
+struct GAudio {
+    ALCdevice  *dvhandle;    /* Handle of device selected/opened */
+    ALCcontext *dvctx;
+    ALuint sources[MAX_AUDIO_SOURCES];    /* one audio source per peer */
+    uint8_t muted[MAX_AUDIO_SOURCES];
+};
+#endif  /* AUDIO */
 
 typedef struct {
     int chatwin;
@@ -52,7 +73,7 @@ typedef struct {
     uint16_t *oldpeer_name_lengths;
 
 #ifdef AUDIO
-    Call call;
+    struct GAudio audio;
 #endif
 } GroupChat;
 

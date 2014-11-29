@@ -31,6 +31,20 @@
 #include <wchar.h>
 #include <unistd.h>
 
+#ifdef AUDIO
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+/* compatibility with older versions of OpenAL */
+#ifndef ALC_ALL_DEVICES_SPECIFIER
+#include <AL/alext.h>
+#endif  /* ALC_ALL_DEVICES_SPECIFIER */
+#endif  /* __APPLE__ */
+#endif  /* AUDIO */
+
 #include "windows.h"
 #include "toxic.h"
 #include "execute.h"
@@ -92,6 +106,12 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* AUDIO */
 };
 
+#ifdef AUDIO
+static void group_audio_add_source(int groupnum, int peernum);
+static void group_audio_rm_source(int groupnum, int peernum);
+static int group_audio_open_out_device(int groupnum);
+#endif  /* AUDIO */
+
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
 {
     if (groupnum > MAX_GROUPCHAT_NUM)
@@ -121,8 +141,12 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
             groupchats[i].oldpeer_name_lengths[0] = (uint16_t) strlen(UNKNOWN_NAME);
 
 #ifdef AUDIO
-            start_transmission(&self, &groupchats[i].call);
-#endif
+            if (type == TOX_GROUPCHAT_TYPE_AV) {
+                if (group_audio_open_out_device(i) != 0)
+                    fprintf(stderr, "audio failed\n");
+            }
+#endif /* AUDIO */
+
             set_active_window(groupchats[i].chatwin);
 
             if (i == max_groupchat_index)
@@ -152,10 +176,6 @@ void kill_groupchat_window(ToxWindow *self)
 
 static void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 {
-#ifdef AUDIO
-    stop_transmission(&groupchats[groupnum].call, self->call_idx);
-#endif
-
     tox_del_groupchat(m, groupnum);
 
     free(groupchats[groupnum].peer_names);
@@ -453,7 +473,10 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     switch (change) {
         case TOX_CHAT_CHANGE_PEER_ADD:
-            if (!timed_out(groupchats[self->num].start_time, get_unix_time(), GROUP_EVENT_WAIT))
+            if (groupchats[groupnum].type == TOX_GROUPCHAT_TYPE_AV)
+                group_audio_add_source(groupnum, peernum);
+
+            if (!timed_out(groupchats[groupnum].start_time, get_unix_time(), GROUP_EVENT_WAIT))
                 break;
 
             struct group_add_thrd *thrd = malloc(sizeof(struct group_add_thrd));
@@ -483,6 +506,9 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
             break;
 
         case TOX_CHAT_CHANGE_PEER_DEL:
+            if (groupchats[groupnum].type == TOX_GROUPCHAT_TYPE_AV)
+                group_audio_rm_source(groupnum, peernum);
+
             event = "has left the room";
             line_info_add(self, timefrmt, (char *) oldpeername, NULL, CONNECTION, 0, RED, event);
 
@@ -711,22 +737,101 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
+
 #ifdef AUDIO
-void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
+static int group_audio_open_out_device(int groupnum) 
+{
+    char dname[MAX_STR_SIZE];
+    get_primary_device_name(output, dname, sizeof(dname));
+    dname[MAX_STR_SIZE] = '\0';
+
+    groupchats[groupnum].audio.dvhandle = alcOpenDevice(dname);
+
+    if (groupchats[groupnum].audio.dvhandle == NULL)
+        return -1;
+
+    groupchats[groupnum].audio.dvctx = alcCreateContext(groupchats[groupnum].audio.dvhandle, NULL);
+
+    if (!alcMakeContextCurrent(groupchats[groupnum].audio.dvctx))
+        return -1;
+
+    return 0;
+}
+
+static void group_audio_add_source(int groupnum, int peernum)
+{
+    alGenSources((uint32_t) 1, &groupchats[groupnum].audio.sources[peernum]);
+    alSourcei(groupchats[groupnum].audio.sources[peernum], AL_LOOPING, AL_FALSE);
+}
+
+static void group_audio_rm_source(int groupnum, int peernum)
+{
+    alDeleteSources((uint32_t) 1, &groupchats[groupnum].audio.sources[peernum]);
+}
+
+static int group_audio_write(int peernum, int groupnum, const int16_t *pcm, unsigned int samples, uint8_t channels,
+                             unsigned int sample_rate)
+{
+    if (!pcm)
+        return -1;
+
+    if (channels == 0 || channels > 2)
+        return -2;
+
+    ALuint source = groupchats[groupnum].audio.sources[peernum];
+    ALuint bufid;
+    ALint processed = 0;
+    ALint queued = 0;
+
+    alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
+    alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
+    fprintf(stderr, "%d, %d\n", source, processed);
+
+    if (processed) {
+        ALuint bufids[processed];
+        alSourceUnqueueBuffers(source, processed, bufids);
+        alDeleteBuffers(processed - 1, bufids + 1);
+        bufid = bufids[0];
+    } else if (queued < 16) {
+        alGenBuffers(1, &bufid);
+    } else {
+        return -3;
+    }
+
+    int length = samples * channels * sizeof(int16_t);
+
+    alBufferData(bufid, (channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, length, sample_rate);
+    alSourceQueueBuffers(source, 1, &bufid);
+
+    ALint state;
+    alGetSourcei(source, AL_SOURCE_STATE, &state);
+
+    if (state != AL_PLAYING) 
+        alSourcePlay(source);
+
+    return 0;
+}
+
+static void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
                              unsigned int samples, uint8_t channels, unsigned int sample_rate)
 {
-    return;    /* TODO: remove this */
-
     if (groupnum != self->num)
         return;
 
-    if (peernum < 0 || channels == 0 || channels > 2 || !pcm)
+    if (peernum < 0 || peernum >= MAX_AUDIO_SOURCES)
         return;
 
-    Call *call = &groupchats[groupnum].call;
-    uint32_t length = samples * channels * sizeof(int16_t);
-    int ret = write_out(call->out_idx, pcm, length, channels);
-    fprintf(stderr, "groupnum: %d, out_idx: %d, ret: %d\n", groupnum, call->out_idx, ret);
+    if (groupchats[groupnum].audio.muted[peernum])
+        return;
+
+    if (groupchats[groupnum].audio.dvhandle == NULL)
+        fprintf(stderr, "dvhandle is null)\n");
+
+    if (groupchats[groupnum].audio.dvctx == NULL)
+        fprintf(stderr, "ctx is null\n");
+
+    group_audio_write(peernum, groupnum, pcm, samples, channels, sample_rate);
+   // fprintf(stderr, "groupnum: %d, ret: %d\n", groupnum, ret);
 }
 #endif  /* AUDIO */
 
@@ -748,8 +853,6 @@ ToxWindow new_group_chat(Tox *m, int groupnum)
 
 #ifdef AUDIO
     ret.onWriteDevice = &groupchat_onWriteDevice;
-    ret.device_selection[0] = ret.device_selection[1] = -1;
-    ret.call_idx = -1;
 #endif
 
     snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);
