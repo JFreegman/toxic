@@ -80,6 +80,7 @@ ToxWindow *prompt = NULL;
 
 struct Winthread Winthread;
 struct cqueue_thread cqueue_thread;
+struct audio_thread audio_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
 
@@ -719,10 +720,6 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
 
     if (arg_opts.no_connect == 0) {
         tox_do(m);    /* main tox-core loop */
-
-#ifdef AUDIO
-        toxav_do(av);    /* TODO: put in separate thread? */
-#endif
     }
 
     pthread_mutex_unlock(&Winthread.lock);
@@ -774,6 +771,20 @@ void *thread_cqueue(void *data)
         usleep(7000);
     }
 }
+
+#ifdef AUDIO
+void *thread_audio(void *data)
+{
+    ToxAv *av = (ToxAv *) data;
+
+    while (true) {
+        pthread_mutex_lock(&Winthread.lock);
+        toxav_do(av);
+        pthread_mutex_unlock(&Winthread.lock);
+        usleep(toxav_do_interval(av) * 1000);
+    }
+}
+#endif  /* AUDIO */
 
 static void print_usage(void)
 {
@@ -957,6 +968,25 @@ static int init_default_data_files(void)
     return config_err;
 }
 
+#define REC_TOX_DO_LOOPS_PER_SEC 25
+
+/* Adjusts usleep value so that tox_do runs close to the recommended number of times per second */
+static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, uint64_t cur_time, useconds_t msleepval)
+{
+    useconds_t new_sleep = msleepval;
+    ++(*loopcount);
+
+    if (*looptimer == cur_time)
+        return new_sleep;
+
+    if (*loopcount != REC_TOX_DO_LOOPS_PER_SEC)
+        new_sleep *= (double) *loopcount / REC_TOX_DO_LOOPS_PER_SEC;
+
+    *looptimer = cur_time;
+    *loopcount = 0;
+    return new_sleep;
+}
+
 #ifdef X11
 void cb(const char* asdv, DropType dt)
 {
@@ -1037,6 +1067,10 @@ int main(int argc, char *argv[])
     
     av = init_audio(prompt, m);
 
+    /* audio thread */
+    if (pthread_create(&audio_thread.tid, NULL, thread_audio, (void *) av) != 0)
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+
     set_primary_device(input, user_settings->audio_in_dev);
     set_primary_device(output, user_settings->audio_out_dev);
 
@@ -1067,6 +1101,9 @@ int main(int argc, char *argv[])
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
     uint64_t last_save = (uint64_t) time(NULL);
+    uint64_t looptimer = last_save;
+    useconds_t msleepval = 40000;
+    uint64_t loopcount = 0;
 
     while (true) {
         update_unix_time();
@@ -1075,16 +1112,15 @@ int main(int argc, char *argv[])
 
         if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
-
             if (store_data(m, DATA_FILE) != 0)
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
-
             pthread_mutex_unlock(&Winthread.lock);
 
             last_save = cur_time;
         }
 
-        usleep((MIN(tox_do_interval(m), toxav_do_interval(av))));
+        msleepval = optimal_msleepval(&looptimer, &loopcount, cur_time, msleepval);
+        usleep(msleepval);
     }
 
     return 0;
