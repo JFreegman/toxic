@@ -436,8 +436,6 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     if (arg_opts.no_connect == 1)
         return;
 
-    char msg[MAX_STR_SIZE] = {0};
-
     static int conn_err = 0;
     static bool was_connected = false;
     static uint64_t last_conn_try = 0;
@@ -450,23 +448,18 @@ static void do_connection(Tox *m, ToxWindow *prompt)
     if (!was_connected && is_connected) {
         was_connected = true;
         prompt_update_connectionstatus(prompt, was_connected);
-        snprintf(msg, sizeof(msg), "DHT connected");
     } else if (was_connected && !is_connected) {
         was_connected = false;
         prompt_update_connectionstatus(prompt, was_connected);
-        snprintf(msg, sizeof(msg), "DHT disconnected. Attempting to reconnect.");
     } else if (!was_connected && !is_connected && timed_out(last_conn_try, curtime, TRY_CONNECT)) {
         /* if autoconnect has already failed there's no point in trying again */
         if (conn_err == 0) {
             last_conn_try = curtime;
 
             if ((conn_err = init_connection(m)) != 0)
-                snprintf(msg, sizeof(msg), "Auto-connect failed with error code %d", conn_err);
+                line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Auto-connect failed with error code %d", conn_err);
         }
     }
-
-    if (msg[0])
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 static void load_friendlist(Tox *m)
