@@ -145,7 +145,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     toxav_register_callstate_callback(ASettins.av, callback_peer_timeout, av_OnPeerTimeout, self);
     //toxav_register_callstate_callback(ASettins.av, callback_media_change, av_OnMediaChange, self);
     
-    toxav_register_audio_callback(write_device_callback, NULL);
+    toxav_register_audio_callback(ASettins.av, write_device_callback, NULL);
 
     return ASettins.av;
 }
@@ -378,7 +378,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     ToxAvError error = toxav_call(ASettins.av, &self->call_idx, self->num, &ASettins.cs, 30);
 
     if ( error != av_ErrorNone ) {
-        if ( error == av_ErrorAlreadyInCall ) error_str = "Already in a call!";
+        if ( error == av_ErrorAlreadyInCallWithPeer ) error_str = "Already in a call!";
         else error_str = "Internal error!";
 
         goto on_error;

@@ -431,12 +431,10 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
                     int16_t frame[16000];
                     alcCaptureSamples(device->dhndl, frame, f_size);
                     
-                    if ( device->muted 
-                    #ifdef AUDIO
-                        || (device->enable_VAD && !toxav_has_activity(av, device->call_idx, frame, f_size, device->VAD_treshold))
-                    #endif /* AUDIO */
-                        )
-                        { unlock; continue; } /* Skip if no voice activity */
+                    if (device->muted) { 
+                        unlock;
+                        continue;
+                    }
                     
                     if ( device->cb ) device->cb(frame, f_size, device->cb_data);
                 } 
