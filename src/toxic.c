@@ -761,7 +761,7 @@ void *thread_cqueue(void *data)
         }
 
         pthread_mutex_unlock(&Winthread.lock);
-        usleep(7000);
+        usleep(4000);
     }
 }
 

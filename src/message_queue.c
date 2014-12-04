@@ -134,23 +134,23 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
 {
     struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
+
+    if (!msg)
+        return;
+
     uint64_t curtime = get_unix_time();
 
-    while (msg) {
-        if (msg->receipt != 0 && !timed_out(msg->last_send_try, curtime, CQUEUE_TRY_SEND_INTERVAL)) {
-            msg = msg->next;
-            continue;
-        }
-
-        uint32_t receipt = 0;
-
-        if (msg->type == OUT_MSG)
-            receipt = tox_send_message(m, self->num, (uint8_t *) msg->message, msg->len);
-        else
-            receipt = tox_send_action(m, self->num, (uint8_t *) msg->message, msg->len);
-
-        msg->last_send_try = curtime;
-        msg->receipt = receipt;
+    if (msg->receipt != 0 && !timed_out(msg->last_send_try, curtime, CQUEUE_TRY_SEND_INTERVAL))
         return;
-    }
+
+    uint32_t receipt = 0;
+
+    if (msg->type == OUT_MSG)
+        receipt = tox_send_message(m, self->num, (uint8_t *) msg->message, msg->len);
+    else
+        receipt = tox_send_action(m, self->num, (uint8_t *) msg->message, msg->len);
+
+    msg->last_send_try = curtime;
+    msg->receipt = receipt;
+    return;
 }
