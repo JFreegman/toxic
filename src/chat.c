@@ -448,7 +448,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
-            if (receive_send == 1) {
+            if (receive_send == 1 && file_senders[send_idx].last_progress == 0) {
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
                                                                       filenum, filename);
                 /* prep progress bar line */
@@ -515,7 +515,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
             memcpy(&datapos, tmp, sizeof(uint64_t));
 
             if (fseek(fp, datapos, SEEK_SET) == -1) {
-                snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
+                snprintf(msg, sizeof(msg), "File transfer for '%s' failed to resume", filename);
                 close_file_sender(self, m, send_idx, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
                 break;
             }
