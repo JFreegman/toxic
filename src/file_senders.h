@@ -32,7 +32,7 @@
 
 #define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
 #define MAX_FILES 32
-#define TIMEOUT_FILESENDER 120
+#define TIMEOUT_FILESENDER 10
 #define NUM_PROG_MARKS 50    /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
 
 typedef struct {
@@ -40,14 +40,16 @@ typedef struct {
     ToxWindow *toxwin;
     int32_t friendnum;
     bool active;
-    bool noconnection;
-    bool finished;
+    bool noconnection;  /* set when the connection has been interrupted */
+    bool paused;        /* set when transfer has been explicitly paused */
+    bool finished;      /* set after entire file has been sent but no TOX_FILECONTROL_FINISHED receieved */
+    bool started;       /* set after TOX_FILECONTROL_ACCEPT received */
     int filenum;
     char nextpiece[FILE_PIECE_SIZE];
     uint16_t piecelen;
     char filename[MAX_STR_SIZE];
-    uint64_t timestamp;
-    uint64_t last_progress;
+    uint64_t timestamp;    /* marks the last time data was successfully transfered */
+    uint64_t last_progress;    /* marks the last time the progress bar was refreshed */
     double bps;
     uint64_t size;
     uint32_t line_id;

@@ -359,8 +359,6 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
     
     Device* device = running[output][device_idx];
-    if (!device)
-        fprintf(stderr, "DEVICE IS NULL SILLY\n");
 
     if (!device || device->muted) return de_DeviceNotActive;
 

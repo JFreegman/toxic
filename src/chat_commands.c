@@ -264,6 +264,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         if (!file_senders[i].active) {
             memcpy(file_senders[i].filename, filename, namelen + 1);
             file_senders[i].active = true;
+            file_senders[i].started = false;
             file_senders[i].toxwin = self;
             file_senders[i].file = file_to_send;
             file_senders[i].filenum = filenum;

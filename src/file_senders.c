@@ -266,7 +266,8 @@ void do_file_senders(Tox *m)
         }
 
         /* If file transfer has timed out kill transfer and send kill control */
-        if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)) {
+        if (timed_out(file_senders[i].timestamp, get_unix_time(), TIMEOUT_FILESENDER)
+            && (!file_senders[i].paused || (file_senders[i].paused && file_senders[i].noconnection))) {
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", filename);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
@@ -279,7 +280,7 @@ void do_file_senders(Tox *m)
             continue;
         }
 
-        if (!file_senders[i].noconnection && !file_senders[i].finished)
+        if ( !(file_senders[i].paused | file_senders[i].noconnection | file_senders[i].finished) )
             send_file_data(self, m, i, friendnum, filenum, filename);
 
         file_senders[i].queue_pos = num_active_file_senders - 1;

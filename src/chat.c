@@ -448,16 +448,28 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
 
     switch (control_type) {
         case TOX_FILECONTROL_ACCEPT:
-            if (receive_send == 1 && file_senders[send_idx].last_progress == 0) {
+            if (receive_send != 1)
+                break;
+
+            /* transfer is accepted */
+            if (!file_senders[send_idx].started) {
+                file_senders[send_idx].started = true;
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
                                                                       filenum, filename);
-                /* prep progress bar line */
                 char progline[MAX_STR_SIZE];
                 prep_prog_line(progline);
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
                 file_senders[send_idx].line_id = self->chatwin->hst->line_end->id + 2;
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
+            } else {   /* active transfer is paused by receiver */
+                file_senders[send_idx].paused = false;
             }
+
+            break;
+
+        case TOX_FILECONTROL_PAUSE:
+            if (receive_send == 1)
+                file_senders[send_idx].paused = true;
 
             break;
 

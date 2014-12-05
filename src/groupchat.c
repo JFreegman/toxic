@@ -815,6 +815,8 @@ static int group_audio_write(int peernum, int groupnum, const int16_t *pcm, unsi
 static void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
                              unsigned int samples, uint8_t channels, unsigned int sample_rate)
 {
+    return;  /* TODO: fix this stuff */
+
     if (groupnum != self->num)
         return;
 
@@ -831,7 +833,6 @@ static void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int p
         fprintf(stderr, "ctx is null\n");
 
     group_audio_write(peernum, groupnum, pcm, samples, channels, sample_rate);
-   // fprintf(stderr, "groupnum: %d, ret: %d\n", groupnum, ret);
 }
 #endif  /* AUDIO */
 
