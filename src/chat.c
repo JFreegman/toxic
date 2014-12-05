@@ -463,6 +463,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
             } else {   /* active transfer is paused by receiver */
                 file_senders[send_idx].paused = false;
+                file_senders[send_idx].timestamp = get_unix_time();
             }
 
             break;
