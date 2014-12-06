@@ -33,7 +33,6 @@
 #define FILE_PIECE_SIZE 2048    /* must be >= (MAX_CRYPTO_DATA_SIZE - 2) in toxcore/net_crypto.h */
 #define MAX_FILES 32
 #define TIMEOUT_FILESENDER 120
-#define NUM_PROG_MARKS 50    /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
 
 typedef struct {
     FILE *file;

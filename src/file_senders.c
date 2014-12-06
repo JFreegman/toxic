@@ -38,6 +38,8 @@ uint8_t max_file_senders_index;
 uint8_t num_active_file_senders;
 extern FriendsList Friends;
 
+#define NUM_PROG_MARKS 50    /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
+
 /* creates initial progress line that will be updated during file transfer.
    Assumes progline is of size MAX_STR_SIZE */
 void prep_prog_line(char *progline)

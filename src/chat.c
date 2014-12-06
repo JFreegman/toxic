@@ -461,7 +461,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t rec
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
                 file_senders[send_idx].line_id = self->chatwin->hst->line_end->id + 2;
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
-            } else {   /* active transfer is paused by receiver */
+            } else {   /* active transfer is unpaused by receiver */
                 file_senders[send_idx].paused = false;
                 file_senders[send_idx].timestamp = get_unix_time();
             }
