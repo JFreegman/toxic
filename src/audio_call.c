@@ -334,7 +334,9 @@ void callback_peer_timeout ( void* av, int32_t call_index, void* arg )
 void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
                                  uint8_t channels, unsigned int sample_rate, void *arg)
 {
-    ToxWindow *windows = arg; 
+    return;  /* TODO: fix this stuff */
+
+    ToxWindow *windows = arg;
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
