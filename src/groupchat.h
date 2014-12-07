@@ -77,7 +77,7 @@ typedef struct {
 #endif
 } GroupChat;
 
-void kill_groupchat_window(ToxWindow *self);
+void close_groupchat(ToxWindow *self, Tox *m, int groupnum);
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type);
 
 /* destroys and re-creates groupchat window with or without the peerlist */

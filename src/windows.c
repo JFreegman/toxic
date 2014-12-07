@@ -561,7 +561,7 @@ void kill_all_windows(Tox *m)
         if (windows[i].is_chat)
             kill_chat_window(&windows[i], m);
         else if (windows[i].is_groupchat)
-            kill_groupchat_window(&windows[i]);
+            close_groupchat(&windows[i], m, i);
     }
 
     kill_prompt_window(prompt);
