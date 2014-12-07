@@ -60,6 +60,7 @@ sudo ldconfig
 
 ## Precompiled binaries
 You can download precompiled binaries from [jenkins](https://jenkins.libtoxcore.so):
+* [Linux (packages)](https://wiki.tox.im/Binaries#Linux)
 * [Linux 32 bit](https://jenkins.libtoxcore.so/job/toxic_linux_i386/lastSuccessfulBuild/artifact/toxic_linux_i386.tar.xz)
 * [Linux 64 bit](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/lastSuccessfulBuild/artifact/toxic_linux_amd64.tar.xz)
 
