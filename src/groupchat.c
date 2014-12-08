@@ -757,7 +757,7 @@ static int group_audio_open_out_device(int groupnum)
 {
     char dname[MAX_STR_SIZE];
     get_primary_device_name(output, dname, sizeof(dname));
-    dname[MAX_STR_SIZE] = '\0';
+    dname[MAX_STR_SIZE - 1] = '\0';
 
     groupchats[groupnum].audio.dvhandle = alcOpenDevice(dname);
 
