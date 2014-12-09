@@ -773,6 +773,7 @@ static int group_audio_close_out_device(int groupnum)
         alcMakeContextCurrent(groupchats[groupnum].audio.dvctx);
 
     alDeleteSources((uint32_t) 1, &groupchats[groupnum].audio.source);
+    alDeleteBuffers(OPENAL_BUFS, groupchats[groupnum].audio.buffers);
 
     alcMakeContextCurrent(NULL);
     alcDestroyContext(groupchats[groupnum].audio.dvctx);
@@ -793,7 +794,7 @@ static int group_audio_write(int peernum, int groupnum, const int16_t *pcm, unsi
         return -2;
 
     ALuint bufid;
-    ALint processed = 0, queued = 16;
+    ALint processed = 0, queued = 0;
 
     alGetSourcei(groupchats[groupnum].audio.source, AL_BUFFERS_PROCESSED, &processed);
     alGetSourcei(groupchats[groupnum].audio.source, AL_BUFFERS_QUEUED, &queued);
