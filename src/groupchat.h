@@ -50,13 +50,11 @@
 #define GROUP_EVENT_WAIT 3
 
 #ifdef AUDIO
-#define MAX_AUDIO_SOURCES 128    /* arbitrary limit */
-
 struct GAudio {
     ALCdevice  *dvhandle;    /* Handle of device selected/opened */
     ALCcontext *dvctx;
-    ALuint sources[MAX_AUDIO_SOURCES];    /* one audio source per peer */
-    uint8_t muted[MAX_AUDIO_SOURCES];
+    ALuint source;
+    ALuint buffers[OPENAL_BUFS];
 };
 #endif  /* AUDIO */
 

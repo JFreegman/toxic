@@ -343,21 +343,21 @@ DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, Dat
 {    
     if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) 
         return de_InvalidSelection;
-    
+
     lock;
     running[input][device_idx]->cb = callback;
     running[input][device_idx]->cb_data = data;
     running[input][device_idx]->enable_VAD = enable_VAD;
     running[input][device_idx]->call_idx = call_idx;
     unlock;
-    
+
     return de_None;
 }
 
 inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels)
 {
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
-    
+
     Device* device = running[output][device_idx];
 
     if (!device || device->muted) return de_DeviceNotActive;
@@ -369,7 +369,7 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
     ALint processed, queued;
     alGetSourcei(device->source, AL_BUFFERS_PROCESSED, &processed);
     alGetSourcei(device->source, AL_BUFFERS_QUEUED, &queued);
-    
+
     if(processed) {
         ALuint bufids[processed];
         alSourceUnqueueBuffers(device->source, processed, bufids);
@@ -381,8 +381,8 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
         pthread_mutex_unlock(device->mutex);
         return de_Busy;
     }
-    
-    
+
+
     alBufferData(bufid, device->sound_mode, data, length * 2 * channels, device->sample_rate);
     alSourceQueueBuffers(device->source, 1, &bufid);
 

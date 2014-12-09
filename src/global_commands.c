@@ -35,10 +35,6 @@
 #include "prompt.h"
 #include "help.h"
 
-#ifdef AUDIO
-#include "audio_call.h"
-#endif
-
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
 extern FriendsList Friends;
@@ -351,7 +347,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         groupnum = tox_add_groupchat(m);
 #ifdef AUDIO
     else
-        groupnum = toxav_add_av_groupchat(m, write_device_callback_group, self);
+        groupnum = toxav_add_av_groupchat(m, write_device_callback_group, NULL);
 #endif
 
     if (groupnum == -1) {

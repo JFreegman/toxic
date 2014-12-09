@@ -98,8 +98,6 @@ void callback_peer_timeout  ( void* av, int32_t call_index, void *arg );
 void callback_media_change  ( void* av, int32_t call_index, void *arg );
 
 void write_device_callback( void* agent, int32_t call_index, const int16_t* PCM, uint16_t size, void* arg );
-void write_device_callback_group( Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
-                                  uint8_t channels, unsigned int sample_rate, void *arg );
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -330,19 +328,6 @@ void callback_peer_timeout ( void* av, int32_t call_index, void* arg )
      * actions that one can possibly take on timeout
      */
     toxav_stop_call(ASettins.av, call_index);
-}
-void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
-                                 uint8_t channels, unsigned int sample_rate, void *arg)
-{
-    return;  /* TODO: fix this stuff */
-
-    ToxWindow *windows = arg;
-    int i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onWriteDevice != NULL)
-            windows[i].onWriteDevice(&windows[i], m, groupnum, peernum, pcm, samples, channels, samples);
-    }
 }
 
 // void callback_media_change(void* av, int32_t call_index, void* arg)

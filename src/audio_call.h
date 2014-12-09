@@ -47,6 +47,5 @@ void terminate_audio();
 int start_transmission(ToxWindow *self, Call *call);
 int stop_transmission(Call *call, int call_index);
 void stop_current_call(ToxWindow *self);
-void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
-                                 uint8_t channels, unsigned int sample_rate, void *arg);
+
 #endif /* AUDIO_H */
