@@ -830,6 +830,8 @@ static int group_audio_write(int peernum, int groupnum, const int16_t *pcm, unsi
 static void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm, 
                                     unsigned int samples, uint8_t channels, unsigned int sample_rate)
 {
+    return;
+
     if (groupnum != self->num)
         return;
 
