@@ -299,16 +299,26 @@ int settings_load(struct user_settings *s, const char *patharg)
 	/* keys */
 	if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
 	   const char* tmp = NULL;
-	   if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) s->key_next_tab = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) s->key_prev_tab = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) s->key_scroll_line_up = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) s->key_scroll_line_down= key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) s->key_half_page_up = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) s->key_half_page_down = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) s->key_page_bottom = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) s->key_peer_list_up = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) s->key_peer_list_down = key_parse(&tmp);
-       if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp)) s->key_toggle_peerlist = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
+		   s->key_next_tab = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
+		   s->key_prev_tab = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
+		   s->key_scroll_line_up = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
+		   s->key_scroll_line_down= key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
+		   s->key_half_page_up = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
+		   s->key_half_page_down = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
+		   s->key_page_bottom = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
+		   s->key_peer_list_up = key_parse(&tmp);
+	   if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
+		   s->key_peer_list_down = key_parse(&tmp);
+       if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
+	       s->key_toggle_peerlist = key_parse(&tmp);
 	}	   
 
 #ifdef AUDIO
