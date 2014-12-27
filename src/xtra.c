@@ -202,7 +202,7 @@ static void handle_xdnd_selection(XSelectionEvent* e)
     if (Xtra.on_drop && p.read_num)
     {
         char *sptr;
-        char *str = strtok_r((char*)p.data, "\n\r", &sptr);
+        char *str = strtok_r((char *) p.data, "\n\r", &sptr);
         
         if (str) Xtra.on_drop(str, dt);
         while ((str = strtok_r(NULL, "\n\r", &sptr)))

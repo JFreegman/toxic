@@ -94,7 +94,7 @@ struct arg_opts {
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
 
-    int use_proxy;
+    uint8_t proxy_type;
     char proxy_address[256];
     uint16_t proxy_port;
 };

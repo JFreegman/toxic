@@ -378,7 +378,7 @@ void *dns3_lookup_thread(void *data)
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */
 void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *msg)
 {
-    if (arg_opts.use_proxy && arg_opts.force_tcp) {
+    if (arg_opts.proxy_type != TOX_PROXY_NONE && arg_opts.force_tcp) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "DNS lookups are disabled.");
         return;
     }

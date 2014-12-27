@@ -258,21 +258,21 @@ static Tox *init_tox(void)
     Tox_Options tox_opts;
     tox_opts.ipv6enabled = !arg_opts.use_ipv4;
     tox_opts.udp_disabled = arg_opts.force_tcp;
-    tox_opts.proxy_enabled = arg_opts.use_proxy;
+    tox_opts.proxy_type = arg_opts.proxy_type;
 
-    if (tox_opts.proxy_enabled) {
+    if (tox_opts.proxy_type != TOX_PROXY_NONE) {
         tox_opts.proxy_port = arg_opts.proxy_port;
         snprintf(tox_opts.proxy_address, sizeof(tox_opts.proxy_address), "%s", arg_opts.proxy_address);
+        const char *ps = tox_opts.proxy_type == TOX_PROXY_SOCKS5 ? "SOCKS5" : "HTTP";
 
         char tmp[48];
-        snprintf(tmp, sizeof(tmp), "Using proxy %s : %d", 
-                 arg_opts.proxy_address, arg_opts.proxy_port);
+        snprintf(tmp, sizeof(tmp), "Using %s proxy %s : %d", ps, arg_opts.proxy_address, arg_opts.proxy_port);
         queue_init_message("%s", tmp);
     }
 
     if (tox_opts.udp_disabled) {
         queue_init_message("UDP disabled");
-    } else if (tox_opts.proxy_enabled) {
+    } else if (tox_opts.proxy_type != TOX_PROXY_NONE) {
         const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
         queue_init_message("%s", msg);
         msg = "Use the -t option to disable UDP.";
@@ -291,7 +291,7 @@ static Tox *init_tox(void)
     if (!tox_opts.ipv6enabled)
         queue_init_message("Forcing IPv4 connection");
 
-    if (tox_opts.proxy_enabled && m == NULL)
+    if (tox_opts.proxy_type != TOX_PROXY_NONE && m == NULL)
         exit_toxic_err("Proxy error", FATALERR_PROXY);
 
     if (m == NULL)
@@ -791,7 +791,8 @@ static void print_usage(void)
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
-    fprintf(stderr, "  -p, --proxy              Use proxy: Requires [IP] [port]\n");
+    fprintf(stderr, "  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]\n");
+    fprintf(stderr, "  -P, --HTTP-proxy         Use HTTP proxy: Requires [IP] [port]\n");
     fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
     fprintf(stderr, "  -t, --force-tcp          Force TCP connection (use this with proxies)\n");
     fprintf(stderr, "  -u, --unencrypt-data     Unencrypt an encrypted data file\n");
@@ -803,6 +804,7 @@ static void set_default_opts(void)
     memset(&arg_opts, 0, sizeof(struct arg_opts));
 
     /* set any non-zero defaults here*/
+    arg_opts.proxy_type = TOX_PROXY_NONE;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -822,12 +824,13 @@ static void parse_args(int argc, char *argv[])
         {"noconnect", no_argument, 0, 'o'},
         {"dnslist", required_argument, 0, 'r'},
         {"force-tcp", no_argument, 0, 't'},
-        {"proxy", required_argument, 0, 'p'},
+        {"SOCKS5-proxy", required_argument, 0, 'p'},
+        {"HTTP-proxy", required_argument, 0, 'P'},
         {"unencrypt-data", no_argument, 0, 'u'},
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotuxc:f:n:r:p:";
+    const char *opts_str = "4bdehotuxc:f:n:r:p:P:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -887,7 +890,17 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'p':
-                arg_opts.use_proxy = 1;
+                arg_opts.proxy_type = TOX_PROXY_SOCKS5;
+                snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
+
+                if (++optind > argc || argv[optind-1][0] == '-')
+                    exit_toxic_err("Proxy error", FATALERR_PROXY);
+
+                arg_opts.proxy_port = (uint16_t) atoi(argv[optind-1]);
+                break;
+
+            case 'P':
+                arg_opts.proxy_type = TOX_PROXY_HTTP;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
                 if (++optind > argc || argv[optind-1][0] == '-')
@@ -981,10 +994,12 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
 }
 
 #ifdef X11
-void cb(const char* asdv, DropType dt)
+void DnD_callback(const char* asdv, DropType dt)
 {
     if (dt != DT_plain)
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
+        return;
+
+   line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
 }
 #endif /* X11 */
 
@@ -1025,7 +1040,8 @@ int main(int argc, char *argv[])
     int settings_err = settings_load(user_settings, p);
 
 #ifdef X11
-    init_xtra(cb);
+    if (init_xtra(DnD_callback) == -1)
+        queue_init_message("X failed to initialize");
 #endif
     
     Tox *m = init_tox();
