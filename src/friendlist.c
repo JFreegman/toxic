@@ -975,7 +975,10 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 uint64_t last_seen = Friends.list[f].last_online.last_on;
 
                 if (last_seen != 0) {
-                    int day_dist = (cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday) % 365;
+                    int day_dist = (
+                            cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
+                        + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
+                    ) % 365;
                     const char *hourmin = Friends.list[f].last_online.hour_min_str;
 
                     switch (day_dist) {
