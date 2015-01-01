@@ -200,7 +200,7 @@ int load_blocklist(char *path)
 
     char *data = malloc(len);
 
-    if (data == NULL) {            
+    if (data == NULL) {
         fclose(fp);
         exit_toxic_err("Failed in load_blocklist", FATALERR_MEMORY);
     }
@@ -311,7 +311,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, int32_t num, const cha
 
     if (Friends.list[num].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            Friends.list[num].chatwin = add_window(m, new_chat(m, Friends.list[num].num));            
+            Friends.list[num].chatwin = add_window(m, new_chat(m, Friends.list[num].num));
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, num);
@@ -477,7 +477,7 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
 
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
                           "* File transfer from %s failed: too many windows are open.", nick);
-            
+
             sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
@@ -631,7 +631,7 @@ void block_friend(Tox *m, int32_t fnum)
     if (Friends.num_friends <= 0)
         return;
 
-    realloc_blocklist(Blocked.max_idx + 1);    
+    realloc_blocklist(Blocked.max_idx + 1);
     memset(&Blocked.list[Blocked.max_idx], 0, sizeof(BlockedFriend));
 
     int i;
@@ -978,7 +978,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     int day_dist = (
                             cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
                         + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
-                    ) % 365;
+                    );
                     const char *hourmin = Friends.list[f].last_online.hour_min_str;
 
                     switch (day_dist) {
@@ -1042,7 +1042,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             if (toxav_get_call_state(av, call_index) == av_CallStarting) { /* Only open windows when call is incoming */
                 Friends.list[id].chatwin = add_window(m, new_chat(m, Friends.list[id].num));
-            }            
+            }
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, Friends.list[id].num);
@@ -1050,7 +1050,7 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
 
             const char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
-            
+
             sound_notify(prompt, error, NT_WNDALERT_1, NULL);
         }
     }
@@ -1089,18 +1089,18 @@ ToxWindow new_friendlist(void)
     ret.onEnd = &friendlist_onAv;
     ret.onRequestTimeout = &friendlist_onAv;
     ret.onPeerTimeout = &friendlist_onAv;
-    
+
     ret.call_idx = -1;
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* AUDIO */
-    
+
     ret.active_box = -1;
 
     Help *help = calloc(1, sizeof(Help));
 
     if (help == NULL)
         exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
-    
+
     ret.help = help;
     strcpy(ret.name, "contacts");
     return ret;
