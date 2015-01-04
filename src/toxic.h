@@ -103,11 +103,6 @@ void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t
 void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata);
 void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata);
 void on_friendadded(Tox *m, int32_t friendnumber, bool sort);
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length, void *userdata);
-void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length, void *userdata);
-void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length, void *userdata);
 void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize, const uint8_t *pathname,
                          uint16_t pathname_length, void *userdata);
 void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber, uint8_t control_type,
@@ -115,6 +110,18 @@ void on_file_control(Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t
 void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_t *data, uint16_t length, void *userdata);
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
 void on_read_receipt(Tox *m, int32_t, uint32_t, void *userdata);
+
+void on_group_message(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *message, uint16_t length, void *userdata);
+void on_group_action(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *action, uint16_t length, void *userdata);
+void on_group_private_message(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *message, uint16_t length, void *userdata);
+void on_group_namelistchange(Tox *m, int groupnumber, void *userdata);
+void on_group_peer_join(Tox *m, int groupnumber, uint32_t peernumber, void *userdata);
+void on_group_peer_exit(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *partmsg, uint16_t length, void *userdata);
+void on_group_topic_change(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *topic, uint16_t length, void *userdata);
+void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *newname, uint16_t length, void *userdata);
+void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint32_t tgt_peernum, uint8_t cert_type, void *userdata);
+void on_group_self_join(Tox *m, int groupnumber, void *userdata);
+void on_group_self_timeout(Tox *m, int groupnumber, void *userdata);
 
 #ifdef AUDIO
 void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,

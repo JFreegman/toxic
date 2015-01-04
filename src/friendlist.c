@@ -112,13 +112,6 @@ static void realloc_blocklist(int n)
 
 void kill_friendlist(void)
 {
-    int i;
-
-    for (i = 0; i < Friends.max_idx; ++i) {
-        if (Friends.list[i].active && Friends.list[i].group_invite.key != NULL)
-            free(Friends.list[i].group_invite.key);
-    }
-
     realloc_blocklist(0);
     realloc_friends(0);
 }
@@ -483,25 +476,6 @@ static void friendlist_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, u
     }
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8_t type, const char *group_pub_key,
-                                     uint16_t length)
-{
-    if (num >= Friends.max_idx)
-        return;
-
-    if (Friends.list[num].chatwin == -1) {
-        if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            Friends.list[num].chatwin = add_window(m, new_chat(m, Friends.list[num].num));
-        } else {
-            char nick[TOX_MAX_NAME_LENGTH];
-            get_nick_truncate(m, nick, num);
-            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
-                         "* Group chat invite from %s failed: too many windows are open.", nick);
-            sound_notify(prompt, error, NT_WNDALERT_1, NULL);
-        }
-    }
-}
-
 /* move friendlist/blocklist cursor up and down */
 static void select_friend(ToxWindow *self, wint_t key, int *selected, int num)
 {
@@ -526,9 +500,6 @@ static void delete_friend(Tox *m, int32_t f_num)
             set_active_window(1);   /* keep friendlist focused */
         }
     }
-
-    if (Friends.list[f_num].group_invite.key != NULL)
-        free(Friends.list[f_num].group_invite.key);
 
     tox_del_friend(m, f_num);
     memset(&Friends.list[f_num], 0, sizeof(ToxicFriend));
@@ -1075,7 +1046,6 @@ ToxWindow new_friendlist(void)
     ret.onStatusChange = &friendlist_onStatusChange;
     ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
     ret.onFileSendRequest = &friendlist_onFileSendRequest;
-    ret.onGroupInvite = &friendlist_onGroupInvite;
 
 #ifdef AUDIO
     ret.onInvite = &friendlist_onAv;

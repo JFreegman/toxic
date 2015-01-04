@@ -179,7 +179,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         }
 
         cmd_add_helper(self, m, id_bin, msg);
-    } else {    /* assume id is a username@domain address and do DNS lookup */
+    } else {    /* assume id is a username@domain address */
         dns3_lookup(self, m, id_bin, id, msg);
     }
 }
@@ -326,42 +326,90 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     }
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify group type: text | audio");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Please specify the group name.");
         return;
     }
 
-    uint8_t type;
+    const char *tmp_name = argv[1];
+    int len = strlen(tmp_name);
 
-    if (!strcasecmp(argv[1], "audio"))
-        type = TOX_GROUPCHAT_TYPE_AV;
-    else if (!strcasecmp(argv[1], "text"))
-        type = TOX_GROUPCHAT_TYPE_TEXT;
-    else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid group types are: text | audio");
+    if (len == 0 || len > TOX_MAX_GROUP_NAME_LENGTH) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Invalid group name.");
         return;
     }
 
-    int groupnum = -1;
+    char name[TOX_MAX_GROUP_NAME_LENGTH];
 
-    if (type == TOX_GROUPCHAT_TYPE_TEXT)
-        groupnum = tox_add_groupchat(m);
-#ifdef AUDIO
-    else
-        groupnum = toxav_add_av_groupchat(m, write_device_callback_group, NULL);
-#endif
+    if (argv[1][0] == '\"') {    /* remove opening and closing quotes */
+        snprintf(name, sizeof(name), "%s", &argv[1][1]);
+        len -= 2;
+        name[len] = '\0';
+    } else {
+        snprintf(name, sizeof(name), "%s", argv[1]);
+    }
+
+    int groupnum = tox_group_new(m, (uint8_t *) name, len);
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum, name, len) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_del_groupchat(m, groupnum);
+        tox_group_delete(m, groupnum, NULL, 0);
+        return;
+    }
+}
+
+void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat [%d] created.", groupnum);
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Group chat ID is required.");
+        return;
+    }
+
+    const char *chat_id = argv[1];
+
+    if (strlen(chat_id) != TOX_GROUP_CHAT_ID_SIZE * 2) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Invalid chat ID");
+        return;
+    }
+
+    char id_bin[TOX_GROUP_CHAT_ID_SIZE] = {0};
+
+    size_t i;
+    char xch[3];
+    uint32_t x;
+
+    for (i = 0; i < TOX_GROUP_CHAT_ID_SIZE; ++i) {
+        xch[0] = chat_id[2 * i];
+        xch[1] = chat_id[2 * i + 1];
+        xch[2] = '\0';
+
+        if (sscanf(xch, "%02x", &x) != 1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID.");
+            return;
+        }
+
+        id_bin[i] = x;
+    }
+
+    if (tox_group_new_join(m, (uint8_t *) id_bin) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
+        return;
+    }
+
+    if (init_groupchat_win(prompt, m, self->num, NULL, 0) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        tox_group_delete(m, self->num, NULL, 0);
+        return;
+    }
 }
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -524,7 +572,7 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 }
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{   
+{
     bool have_note = false;
     const char *errmsg;
 

@@ -35,7 +35,7 @@ enum {
     SYS_MSG,
     IN_MSG,
     OUT_MSG,
-    OUT_MSG_READ,    /* for sent messages that have received a read reply. don't set this with line_info_add */
+    OUT_MSG_READ,    /* for sent messages that have received a read reply. */
     IN_ACTION,
     OUT_ACTION,
     OUT_ACTION_READ,     /* same as OUT_MSG_READ but for actions */

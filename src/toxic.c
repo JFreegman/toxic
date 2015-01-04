@@ -136,14 +136,14 @@ void exit_toxic_success(Tox *m)
 
     tox_kill(m);
     endwin();
-    
+
 #ifdef X11
     /* We have to terminate xtra last coz reasons
      * Please don't call this anywhere else coz trust me
      */
     terminate_xtra();
 #endif /* X11 */
-    
+
     exit(EXIT_SUCCESS);
 }
 
@@ -306,15 +306,21 @@ static Tox *init_tox(void)
     tox_callback_user_status(m, on_statuschange, NULL);
     tox_callback_status_message(m, on_statusmessagechange, NULL);
     tox_callback_friend_action(m, on_action, NULL);
-    tox_callback_group_invite(m, on_groupinvite, NULL);
-    tox_callback_group_message(m, on_groupmessage, NULL);
-    tox_callback_group_action(m, on_groupaction, NULL);
-    tox_callback_group_namelist_change(m, on_group_namelistchange, NULL);
-    tox_callback_group_title(m, on_group_titlechange, NULL);
     tox_callback_file_send_request(m, on_file_sendrequest, NULL);
     tox_callback_file_control(m, on_file_control, NULL);
     tox_callback_file_data(m, on_file_data, NULL);
     tox_callback_read_receipt(m, on_read_receipt, NULL);
+    tox_callback_group_message(m, on_group_message, NULL);
+    tox_callback_group_action(m, on_group_action, NULL);
+    tox_callback_group_private_message(m, on_group_private_message, NULL);
+    tox_callback_group_op_certificate(m, on_group_op_certificate, NULL);
+    tox_callback_group_peerlist_update(m, on_group_namelistchange, NULL);
+    tox_callback_group_peer_join(m, on_group_peer_join, NULL);
+    tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
+    tox_callback_group_nick_change(m, on_group_nick_change, NULL);
+    tox_callback_group_topic_change(m, on_group_topic_change, NULL);
+    tox_callback_group_self_join(m, on_group_self_join, NULL);
+    tox_callback_group_self_timeout(m, on_group_self_timeout, NULL);
 
     tox_set_name(m, (uint8_t *) "Toxic User", strlen("Toxic User"));
 
@@ -518,7 +524,7 @@ static void first_time_encrypt(const char *msg)
         system("clear");
         printf("%s ", msg);
 
-        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n") 
+        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
             || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
             break;
 
@@ -1043,37 +1049,37 @@ int main(int argc, char *argv[])
     if (init_xtra(DnD_callback) == -1)
         queue_init_message("X failed to initialize");
 #endif
-    
+
     Tox *m = init_tox();
-    
+
     if (m == NULL)
-        exit_toxic_err("failed in main", FATALERR_NETWORKINIT); 
-    
+        exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
+
     if (!arg_opts.ignore_data_file) {
         if (arg_opts.encrypt_data && !datafile_exists)
             arg_opts.encrypt_data = 0;
-        
+
         load_data(m, DATA_FILE);
-        
+
     }
-    
+
     init_term();
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m);
-    
+
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
-    
+
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-    
+
     /* thread for message queue */
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-    
+
 #ifdef AUDIO
-    
+
     av = init_audio(prompt, m);
 
     /* audio thread */
@@ -1088,11 +1094,11 @@ int main(int argc, char *argv[])
         queue_init_message("Failed to init audio devices");
 
 #endif /* AUDIO */
-    
+
     init_notify(60, 3000);
 
     const char *msg;
-    
+
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for data file...";
         queue_init_message("%s", msg);

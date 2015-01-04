@@ -58,7 +58,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     if (strcasecmp(inoutstr, "in") == 0) {    /* cancel an incoming file transfer */
         if (!Friends.list[self->num].file_receiver[filenum].active) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
-            return;  
+            return;
         }
 
         const char *filepath = Friends.list[self->num].file_receiver[filenum].filename;
@@ -80,7 +80,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
         if (!match) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
-            return;  
+            return;
         }
 
         const char *filename = file_senders[i].filename;
@@ -92,67 +92,6 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
         return;
     }
-}
-
-void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
-        return;
-    }
-
-    int groupnum = atoi(argv[1]);
-
-    if (groupnum == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
-        return;
-    }
-
-    if (tox_invite_friend(m, self->num, groupnum) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group.");
-        return;
-    }
-
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %d.", groupnum);
-}
-
-void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
-
-    const char *groupkey = Friends.list[self->num].group_invite.key;
-    uint16_t length = Friends.list[self->num].group_invite.length;
-    uint8_t type = Friends.list[self->num].group_invite.type;
-
-    if (!Friends.list[self->num].group_invite.pending) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending group chat invite.");
-        return;
-    }
-
-    int groupnum = -1;
-
-    if (type == TOX_GROUPCHAT_TYPE_TEXT)
-        groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
-#ifdef AUDIO
-    else
-        groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
-                                           write_device_callback_group, NULL);
-#endif
-
-    if (groupnum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
-        return;
-    }
-
-    if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_del_groupchat(m, groupnum);
-        return;
-    }
-
 }
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -272,7 +211,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
             char sizestr[32];
             bytes_convert_str(sizestr, sizeof(sizestr), filesize);
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, 
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
                           "Sending file [%d]: '%s' (%s)", filenum, filename, sizestr);
 
             ++num_active_file_senders;

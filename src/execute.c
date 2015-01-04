@@ -49,6 +49,7 @@ static struct cmd_func global_commands[] = {
     { "/exit",      cmd_quit          },
     { "/group",     cmd_groupchat     },
     { "/help",      cmd_prompt_help   },
+    { "/join",      cmd_join          },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
     { "/nick",      cmd_nick          },
@@ -66,8 +67,6 @@ static struct cmd_func global_commands[] = {
 
 static struct cmd_func chat_commands[] = {
     { "/cancel",    cmd_cancelfile  },
-    { "/invite",    cmd_groupinvite },
-    { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
 #ifdef AUDIO
@@ -82,8 +81,8 @@ static struct cmd_func chat_commands[] = {
 };
 
 static struct cmd_func group_commands[] = {
-    { "/title",     cmd_set_title   },
-
+    { "/topic",     cmd_set_topic   },
+    { "/chatid",    cmd_chatid      },
 #ifdef AUDIO
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
@@ -177,6 +176,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
         case GROUPCHAT_COMMAND_MODE:
             if (do_command(w, self, m, num_args, group_commands, args) == 0)
                 return;
+
             break;
     }
 

@@ -199,9 +199,9 @@ int valid_nick(const char *nick)
 
     for (i = 0; nick[i]; ++i) {
         if ((nick[i] == ' ' && nick[i + 1] == ' ')
-            || nick[i] == '/' 
-            || nick[i] == '\n' 
-            || nick[i] == '\t' 
+            || nick[i] == '/'
+            || nick[i] == '\n'
+            || nick[i] == '\t'
             || nick[i] == '\v'
             || nick[i] == '\r')
 
@@ -281,7 +281,7 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum)
 /* same as get_nick_truncate but for groupchats */
 int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
 {
-    int len = tox_group_peername(m, groupnum, peernum, (uint8_t *) buf);
+    int len = tox_group_get_peer_name(m, groupnum, peernum, (uint8_t *) buf);
 
     if (len == -1) {
         strcpy(buf, UNKNOWN_NAME);
@@ -372,7 +372,7 @@ off_t file_size(const char *path)
     return st.st_size;
 }
 
-/* compares the first size bytes of fp to signature. 
+/* compares the first size bytes of fp to signature.
    Returns 0 if they are the same, 1 if they differ, and -1 on error.
 
    On success this function will seek back to the beginning of fp */
@@ -395,11 +395,7 @@ int check_file_signature(const char *signature, size_t size, FILE *fp)
 void set_window_title(ToxWindow *self, const char *title, int len)
 {
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
-
-    if (self->is_groupchat)   /* keep groupnumber in title */
-        snprintf(cpy, sizeof(cpy), "%d %s", self->num, title);
-    else
-        snprintf(cpy, sizeof(cpy), "%s", title);
+    snprintf(cpy, sizeof(cpy), "%s", title);
 
     if (len > MAX_WINDOW_NAME_LENGTH) {
         strcpy(&cpy[MAX_WINDOW_NAME_LENGTH - 3], "...");
