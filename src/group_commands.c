@@ -67,7 +67,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     int sn_len = tox_group_get_self_name(m, self->num, (uint8_t *) selfnick);
     selfnick[sn_len] = '\0';
 
-    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group topic to: %s", topic);
+    line_info_add(self, timefrmt, selfnick, NULL, SYS_MSG, 0, 0, " set the group topic to: %s", topic);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "set topic to %s", topic);

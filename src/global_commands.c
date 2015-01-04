@@ -400,12 +400,14 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         id_bin[i] = x;
     }
 
-    if (tox_group_new_join(m, (uint8_t *) id_bin) == -1) {
+    int groupnum = tox_group_new_join(m, (uint8_t *) id_bin);
+
+    if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
         return;
     }
 
-    if (init_groupchat_win(prompt, m, self->num, NULL, 0) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_delete(m, self->num, NULL, 0);
         return;
