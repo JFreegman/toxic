@@ -108,7 +108,8 @@ int get_nick_truncate(Tox *m, char *buf, int friendnum);
 int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum);
 
 /* copies data to msg buffer.
-   returns length of msg, which will be no larger than size-1 */
+   returns length of msg.
+   returns 0 and nulls msg if length is too big for buffer size */
 uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length);
 
 /* returns index of the first instance of ch in s starting at idx.
@@ -128,7 +129,7 @@ bool file_exists(const char *path);
 /* returns file size or -1 on error */
 off_t file_size(const char *path);
 
-/* compares the first size bytes of fp and signature. 
+/* compares the first size bytes of fp and signature.
    Returns 0 if they are the same, 1 if they differ, and -1 on error.
 
    On success this function will seek back to the beginning of fp */

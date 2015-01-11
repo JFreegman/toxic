@@ -326,7 +326,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     }
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Please specify the group name.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group name required");
         return;
     }
 
@@ -334,7 +334,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     int len = strlen(tmp_name);
 
     if (len == 0 || len > TOX_MAX_GROUP_NAME_LENGTH) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Invalid group name.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid group name.");
         return;
     }
 
@@ -370,14 +370,14 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Group chat ID is required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat ID is required.");
         return;
     }
 
     const char *chat_id = argv[1];
 
     if (strlen(chat_id) != TOX_GROUP_CHAT_ID_SIZE * 2) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error: Invalid chat ID");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID");
         return;
     }
 
@@ -506,8 +506,13 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     nick[len] = '\0';
 
-    tox_set_name(m, (uint8_t *) nick, (uint16_t) len);
+    if (tox_set_name(m, (uint8_t *) nick, (uint16_t) len) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Core error setting nick.");
+        return;
+    }
+
     prompt_update_nick(prompt, nick);
+    set_nick_all_groups(m, nick, len);
 
     store_data(m, DATA_FILE);
 }
@@ -604,7 +609,12 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    tox_set_user_status(m, status_kind);
+    if (tox_set_user_status(m, status_kind) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Core failed to set status\n");
+        return;
+    }
+
+    set_status_all_groups(m, status_kind);
     prompt_update_status(prompt, status_kind);
 
     if (have_note) {

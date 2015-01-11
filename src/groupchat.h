@@ -59,12 +59,13 @@ struct GAudio {
 #endif  /* AUDIO */
 
 typedef struct {
+    int groupnumber;
     int chatwin;
     bool active;
     int num_peers;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     uint8_t  *peer_names;
-    uint32_t *peer_name_lengths;
+    uint16_t *peer_name_lengths;
 #ifdef AUDIO
     struct GAudio audio;
 #endif
@@ -72,6 +73,8 @@ typedef struct {
 
 void close_groupchat(ToxWindow *self, Tox *m, int groupnum, const char *partmessage, int length);
 int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, const char *groupname, int length);
+void set_nick_all_groups(Tox *m, const char *nick, uint16_t length);
+void set_status_all_groups(Tox *m, uint8_t status);
 
 /* destroys and re-creates groupchat window with or without the peerlist */
 void redraw_groupchat_win(ToxWindow *self);

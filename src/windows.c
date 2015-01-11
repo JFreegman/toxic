@@ -229,7 +229,7 @@ void on_group_peer_exit(Tox *m, int groupnumber, uint32_t peernumber, const uint
     char msg[MAX_STR_SIZE + 1];
 
     if (length == 0 || !partmsg) {
-        strcpy(msg, "Quit.");
+        strcpy(msg, "Quit");
         length = 5;
     } else {
         length = copy_tox_str(msg, sizeof(msg), (const char *) partmsg, length);
@@ -260,10 +260,12 @@ void on_group_topic_change(Tox *m, int groupnumber, uint32_t peernumber, const u
 void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *newname, uint16_t length,
                           void *userdata)
 {
+    fprintf(stderr, "newname before: %s. len: %d\n", newname, length);
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(name, sizeof(name), (const char *) newname, length);
     filter_str(name, length);
 
+    fprintf(stderr, "newname before: %s. len: %d\n", name, length);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {

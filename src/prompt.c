@@ -49,9 +49,9 @@ extern struct Winthread Winthread;
 FriendRequests FrndRequests;
 
 #ifdef AUDIO
-#define AC_NUM_GLOB_COMMANDS 18
+#define AC_NUM_GLOB_COMMANDS 19
 #else
-#define AC_NUM_GLOB_COMMANDS 16
+#define AC_NUM_GLOB_COMMANDS 17
 #endif /* AUDIO */
 
 /* Array of global command names used for tab completion. */
@@ -65,6 +65,7 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/exit"       },
     { "/group"      },
     { "/help"       },
+    { "/join"       },
     { "/log"        },
     { "/myid"       },
     { "/nick"       },
@@ -81,7 +82,7 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* AUDIO */
 };
 
-void kill_prompt_window(ToxWindow *self) 
+void kill_prompt_window(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
@@ -116,7 +117,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
     int len = strlen(statusbar->statusmsg);
     statusbar->statusmsg_len = len;
-    tox_set_status_message(m, (uint8_t *) statusmsg, (uint64_t) len); 
+    tox_set_status_message(m, (uint8_t *) statusmsg, (uint64_t) len);
 }
 
 /* Updates own status in prompt statusbar */
@@ -350,7 +351,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1)
-            box_notify2(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box, 
+            box_notify2(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
                         "%s has come online", nick );
         else
             box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
@@ -361,7 +362,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1)
-            box_notify2(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box, 
+            box_notify2(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
                         "%s has gone offline", nick );
         else
             box_notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
@@ -501,6 +502,6 @@ ToxWindow new_prompt(void)
     ret.help = help;
 
     ret.active_box = -1;
-    
+
     return ret;
 }
