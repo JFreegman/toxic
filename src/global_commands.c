@@ -524,18 +524,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
-        return;
-    }
-
-    /* remove opening and closing quotes */
-    char msg[MAX_STR_SIZE];
-    snprintf(msg, sizeof(msg), "%s", &argv[1][1]);
-    int len = strlen(msg) - 1;
-    msg[len] = '\0';
-
-    prompt_update_statusmessage(prompt, m, msg);
+    prompt_update_statusmessage(prompt, m, argv[1]);
 }
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

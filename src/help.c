@@ -243,7 +243,9 @@ static void help_draw_group(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
     wprintw(win, "  /topic <msg>               : Set group topic (show current topic if no msg)\n");
-    wprintw(win, "  /chatid                    : Print the group chat id to share with others.\n\n");
+    wprintw(win, "  /chatid                    : Print the group chat id to share with others.\n");
+    wprintw(win, "  /ignore <nick>             : Ignore peer\n");
+    wprintw(win, "  /unignore <nick>           : Unignore peer \n\n");
 
 #ifdef AUDIO
     wattron(win, A_BOLD);
@@ -310,9 +312,9 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'r':
 #ifdef AUDIO
-            help_init_window(self, 11, 80);
+            help_init_window(self, 13, 80);
 #else
-            help_init_window(self, 7, 80);
+            help_init_window(self, 9, 80);
 #endif
             self->help->type = HELP_GROUP;
             break;

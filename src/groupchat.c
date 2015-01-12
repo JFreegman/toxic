@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 24
+#define AC_NUM_GROUP_COMMANDS 26
 #else
-#define AC_NUM_GROUP_COMMANDS 20
+#define AC_NUM_GROUP_COMMANDS 22
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -88,6 +88,8 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/exit"       },
     { "/group"      },
     { "/help"       },
+    { "/ignore"     },
+    { "/unignore"   },
     { "/join"       },
     { "/log"        },
     { "/myid"       },
@@ -216,6 +218,18 @@ void set_status_all_groups(Tox *m, uint8_t status)
         if (groupchats[i].active)
             tox_group_set_status(m, groupchats[i].groupnumber, status);
     }
+}
+
+int group_get_nick_peernumber(int groupnum, const char *nick)
+{
+    int i;
+
+    for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
+        if (strcasecmp(nick, (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH]) == 0)
+            return i;
+    }
+
+    return -1;
 }
 
 /* destroys and re-creates groupchat window with or without the peerlist */
@@ -359,7 +373,7 @@ static void groupchat_onGroupTopicChange(ToxWindow *self, Tox *m, int groupnum, 
 
     char nick[TOX_MAX_NAME_LENGTH];
     get_group_nick_truncate(m, nick, peernum, groupnum);
-    line_info_add(self, timefrmt, nick, NULL, NAME_CHANGE, 0, 0, " set the group topic to: %s", topic);
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- %s set the topic to: %s", nick, topic);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the group topic to %s", topic);
@@ -537,6 +551,9 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uin
         case TOX_GJ_INVITES_DISABLED:
             msg = "Invites for this group have been disabled.";
             break;
+        case TOX_GJ_INVITE_FAILED:
+            msg = "Invite failed. Please try again.\n";
+            break;
         default:
             return;
     }
@@ -677,7 +694,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             int diff;
 
             /* TODO: make this not suck */
-            if (ctx->line[0] != L'/' || wcscmp(ctx->line, L"/me") == 0) {
+            if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {
                 diff = complete_line(self, groupchats[self->num].peer_names, groupchats[self->num].num_peers,
                                      TOX_MAX_NAME_LENGTH);
             } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {

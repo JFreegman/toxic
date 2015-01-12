@@ -27,17 +27,17 @@
 #include "line_info.h"
 #include "misc_tools.h"
 #include "log.h"
+#include "groupchat.h"
 
 void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char topic[MAX_STR_SIZE];
-
     if (argc < 1) {
-        int tlen = tox_group_get_topic(m, self->num, (uint8_t *) topic);
+        char cur_topic[MAX_STR_SIZE];
+        int tlen = tox_group_get_topic(m, self->num, (uint8_t *) cur_topic);
 
         if (tlen > 0) {
-            topic[tlen] = '\0';
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is set to: %s", topic);
+            cur_topic[tlen] = '\0';
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is set to: %s", cur_topic);
         } else {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is not set");
         }
@@ -45,17 +45,9 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic must be enclosed in quotes.");
-        return;
-    }
+    const char *topic = argv[1];
 
-    /* remove opening and closing quotes */
-    snprintf(topic, sizeof(topic), "%s", &argv[1][1]);
-    int len = strlen(topic) - 1;
-    topic[len] = '\0';
-
-    if (tox_group_set_topic(m, self->num, (uint8_t *) topic, len) != 0) {
+    if (tox_group_set_topic(m, self->num, (uint8_t *) topic, strlen(topic)) != 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set topic.");
         return;
     }
@@ -67,7 +59,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     int sn_len = tox_group_get_self_name(m, self->num, (uint8_t *) selfnick);
     selfnick[sn_len] = '\0';
 
-    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group topic to: %s", topic);
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- You set the topic to: %s", topic);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "set topic to %s", topic);
@@ -89,4 +81,56 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", chatid);
+}
+
+void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Who do you want to ignore?");
+        return;
+    }
+
+    const char *nick = argv[1];
+    int peernum = group_get_nick_peernumber(self->num, nick);
+
+    if (peernum == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer '%s' does not exist", nick);
+        return;
+    }
+
+    if (tox_group_toggle_ignore(m, self->num, peernum, 1) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to ignore %s", nick);
+        return;
+    }
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
+}
+
+void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Who do you want to unignore?");
+        return;
+    }
+
+    const char *nick = argv[1];
+    int peernum = group_get_nick_peernumber(self->num, nick);
+
+    if (peernum == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer '%s' does not exist", nick);
+        return;
+    }
+
+    if (tox_group_toggle_ignore(m, self->num, peernum, 0) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to unignore %s", nick);
+        return;
+    }
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- You are no longer ignoring %s", nick);
 }

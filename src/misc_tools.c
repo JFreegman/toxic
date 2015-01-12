@@ -300,9 +300,8 @@ int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
 uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length)
 {
     if (length > size - 1) {
-        length = 0;
         msg[0] = '\0';
-        return length;
+        return 0;
     }
 
     memcpy(msg, data, length);
