@@ -321,6 +321,7 @@ static Tox *init_tox(void)
     tox_callback_group_topic_change(m, on_group_topic_change, NULL);
     tox_callback_group_self_join(m, on_group_self_join, NULL);
     tox_callback_group_self_timeout(m, on_group_self_timeout, NULL);
+    tox_callback_group_rejected(m, on_group_rejected, NULL);
 
     tox_set_name(m, (uint8_t *) "Toxic User", strlen("Toxic User"));
 

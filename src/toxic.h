@@ -122,6 +122,7 @@ void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const ui
 void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint32_t tgt_peernum, uint8_t cert_type, void *userdata);
 void on_group_self_join(Tox *m, int groupnumber, void *userdata);
 void on_group_self_timeout(Tox *m, int groupnumber, void *userdata);
+void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata);
 
 #ifdef AUDIO
 void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,

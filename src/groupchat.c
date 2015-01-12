@@ -196,8 +196,14 @@ void set_nick_all_groups(Tox *m, const char *nick, uint16_t length)
     for (i = 0; i < max_groupchat_index; ++i) {
         if (groupchats[i].active) {
             ToxWindow *self = get_window_ptr(groupchats[i].chatwin);
-            tox_group_set_name(m, groupchats[i].groupnumber, (uint8_t *) nick, length);
-            line_info_add(self, timefrmt, NULL, nick, NAME_CHANGE, 0, MAGENTA, "You are now known as ");
+            int ret = tox_group_set_name(m, groupchats[i].groupnumber, (uint8_t *) nick, length);
+
+            if (ret == -1 && groupchats[i].is_connected)
+                line_info_add(self, timefrmt, NULL, 0, SYS_MSG, 0, 0, "Invalid nick");
+            else if (ret == -2)
+                line_info_add(self, timefrmt, NULL, 0, SYS_MSG, 0, RED, "-!- That nick is already in use");
+            else
+                line_info_add(self, timefrmt, NULL, nick, NAME_CHANGE, 0, MAGENTA, "You are now known as ");
         }
     }
 }
@@ -482,6 +488,15 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, int groupnum)
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
+    int i;
+
+    for (i = 0; i < max_groupchat_index; ++i) {
+        if (groupchats[i].active && groupchats[i].groupnumber == groupnum) {
+            groupchats[i].is_connected = true;
+            break;
+        }
+    }
+
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, MAGENTA, "-!- Topic set to: %s", topic);
 }
 
@@ -490,7 +505,46 @@ static void groupchat_onGroupSelfTimeout(ToxWindow *self, Tox *m, int groupnum)
     if (groupnum != self->num)
         return;
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Disconnected from group. Attempting to reconnect...");
+    int i;
+
+    for (i = 0; i < max_groupchat_index; ++i) {
+        if (groupchats[i].active && groupchats[i].groupnumber == groupnum) {
+            groupchats[i].is_connected = false;
+            break;
+        }
+    }
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, RED, "-!- Disconnected from group");
+}
+
+static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uint8_t type)
+{
+    if (groupnum != self->num)
+        return;
+
+    const char *msg;
+
+    switch (type) {
+        case TOX_GJ_NICK_TAKEN:
+            msg = "That nick is already in use. Please change your nick with the '/nick' command.";
+            break;
+        case TOX_GJ_GROUP_FULL:
+            msg = "Group is full.";
+            break;
+        case TOX_GJ_INVITES_DISABLED:
+            msg = "Invites for this group have been disabled.";
+            break;
+        default:
+            return;
+    }
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, RED, "-!- %s", msg);
 }
 
 static void groupchat_onGroupOpCertificate(ToxWindow *self, Tox *m, int groupnum, uint32_t src_peernum,
@@ -929,6 +983,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length
     ret.onGroupNickChange = &groupchat_onGroupNickChange;
     ret.onGroupSelfJoin = &groupchat_onGroupSelfJoin;
     ret.onGroupSelfTimeout = &groupchat_onGroupSelfTimeout;
+    ret.onGroupRejected = &groupchat_onGroupRejected;
 
 #ifdef AUDIO
     ret.onWriteDevice = &groupchat_onWriteDevice;

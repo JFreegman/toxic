@@ -62,6 +62,7 @@ typedef struct {
     int groupnumber;
     int chatwin;
     bool active;
+    bool is_connected;
     int num_peers;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     uint8_t  *peer_names;

@@ -305,6 +305,16 @@ void on_group_self_timeout(Tox *m, int groupnumber, void *userdata)
     }
 }
 
+void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupRejected != NULL)
+            windows[i].onGroupRejected(&windows[i], m, groupnumber, type);
+    }
+}
+
 void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize,
                          const uint8_t *filename, uint16_t filename_length, void *userdata)
 {
