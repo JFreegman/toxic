@@ -149,7 +149,6 @@ struct ToxWindow {
     void(*onEnd)(ToxWindow *, ToxAv *, int);
     void(*onRequestTimeout)(ToxWindow *, ToxAv *, int);
     void(*onPeerTimeout)(ToxWindow *, ToxAv *, int);
-    void(*onWriteDevice)(ToxWindow *, Tox *, int, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
     int call_idx; /* If in a call will have this index set, otherwise it's -1.
                    * Don't modify outside av callbacks. */

@@ -124,9 +124,4 @@ void on_group_self_join(Tox *m, int groupnumber, void *userdata);
 void on_group_self_timeout(Tox *m, int groupnumber, void *userdata);
 void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata);
 
-#ifdef AUDIO
-void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
-                                 uint8_t channels, unsigned int sample_rate, void *arg);
-#endif  /* AUDIO */
-
 #endif  /* #define TOXIC_H */

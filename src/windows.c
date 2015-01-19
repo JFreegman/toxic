@@ -260,12 +260,10 @@ void on_group_topic_change(Tox *m, int groupnumber, uint32_t peernumber, const u
 void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *newname, uint16_t length,
                           void *userdata)
 {
-    fprintf(stderr, "newname before: %s. len: %d\n", newname, length);
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(name, sizeof(name), (const char *) newname, length);
     filter_str(name, length);
 
-    fprintf(stderr, "newname before: %s. len: %d\n", name, length);
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -359,19 +357,6 @@ void on_read_receipt(Tox *m, int32_t friendnumber, uint32_t receipt, void *userd
             windows[i].onReadReceipt(&windows[i], m, friendnumber, receipt);
     }
 }
-
-#ifdef AUDIO
-void write_device_callback_group(Tox *m, int groupnum, int peernumber, const int16_t *pcm, unsigned int samples,
-                                 uint8_t channels, unsigned int sample_rate, void *arg)
-{
-    int i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onWriteDevice != NULL)
-            windows[i].onWriteDevice(&windows[i], m, groupnum, peernumber, pcm, samples, channels, samples);
-    }
-}
-#endif  /* AUDIO */
 
 /* CALLBACKS END */
 
