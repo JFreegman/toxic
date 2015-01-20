@@ -612,7 +612,7 @@ static void send_group_message(ToxWindow *self, Tox *m, int groupnum, const char
 
     if (tox_group_message_send(m, self->num, (uint8_t *) msg, strlen(msg)) == -1) {
         const char *errmsg = " * Failed to send message.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", errmsg);
         return;
     }
 
@@ -623,7 +623,7 @@ static void send_group_message(ToxWindow *self, Tox *m, int groupnum, const char
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, OUT_MSG_READ, 0, 0, msg);
+    line_info_add(self, timefrmt, selfname, NULL, OUT_MSG_READ, 0, 0, "%s", msg);
     write_to_log(msg, selfname, ctx->log, false);
 }
 
@@ -638,7 +638,7 @@ static void send_group_action(ToxWindow *self, Tox *m, int groupnum, char *actio
 
     if (tox_group_action_send(m, groupnum, (uint8_t *) action, strlen(action)) == -1) {
         const char *errmsg = " * Failed to send action.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", errmsg);
         return;
     }
 
@@ -649,7 +649,7 @@ static void send_group_action(ToxWindow *self, Tox *m, int groupnum, char *actio
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION_READ, 0, 0, action);
+    line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION_READ, 0, 0, "%s", action);
     write_to_log(action, selfname, ctx->log, true);
 }
 
@@ -733,8 +733,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
                 close_groupchat(self, m, self->num, line + offset, ctx->len - offset);
                 return;
-            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                send_group_action(self, m, self->num, line + strlen("/me "));
+            } else if (strncmp(line, "/me ", 4) == 0) {
+                send_group_action(self, m, self->num, line + 4);
             } else {
                 execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
             }
