@@ -66,6 +66,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         get_file_name(name, sizeof(name), filepath);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' canceled.", name);
         chat_close_file_receiver(m, filenum, self->num, TOX_FILECONTROL_KILL);
+
         return;
     } else if (strcasecmp(inoutstr, "out") == 0) {    /* cancel an outgoing file transfer */
         int i;
@@ -92,6 +93,28 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
         return;
     }
+}
+
+void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
+        return;
+    }
+
+    int groupnum = atoi(argv[1]);
+
+    if (groupnum == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
+        return;
+    }
+
+    if (tox_group_invite_friend(m, groupnum, self->num) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group.");
+        return;
+    }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %d.", groupnum);
 }
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

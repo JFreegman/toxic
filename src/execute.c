@@ -67,6 +67,7 @@ static struct cmd_func global_commands[] = {
 
 static struct cmd_func chat_commands[] = {
     { "/cancel",    cmd_cancelfile  },
+    { "/invite",    cmd_groupinvite },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
 #ifdef AUDIO

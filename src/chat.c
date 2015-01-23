@@ -64,9 +64,9 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 26
+#define AC_NUM_CHAT_COMMANDS 27
 #else
-#define AC_NUM_CHAT_COMMANDS 19
+#define AC_NUM_CHAT_COMMANDS 20
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
@@ -81,6 +81,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/exit"       },
     { "/group"      },
     { "/help"       },
+    { "/invite"     },
     { "/join"       },
     { "/log"        },
     { "/myid"       },
@@ -558,6 +559,32 @@ static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenu
 
     Friends.list[num].file_receiver[filenum].bps += length;
     Friends.list[num].file_receiver[filenum].bytes_recv += length;
+}
+
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *invite_data,
+                               uint16_t length)
+{
+    if (self->num != friendnumber)
+        return;
+
+    if (length != TOX_GROUP_INVITE_DATA_SIZE)
+        return;
+
+    memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
+    Friends.list[friendnumber].group_invite.length = length;
+
+    sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
+
+    char name[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, name, friendnumber);
+
+    if (self->active_box != -1)
+        box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join group chat");
+    else
+        box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join group chat");
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 }
 
 /* Av Stuff */
@@ -1113,6 +1140,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.onFileControl = &chat_onFileControl;
     ret.onFileData = &chat_onFileData;
     ret.onReadReceipt = &chat_onReadReceipt;
+    ret.onGroupInvite = &chat_onGroupInvite;
 
 #ifdef AUDIO
     ret.onInvite = &chat_onInvite;

@@ -123,6 +123,7 @@ struct ToxWindow {
     void(*onTypingChange)(ToxWindow *, Tox *, int32_t, uint8_t);
     void(*onReadReceipt)(ToxWindow *, Tox *, int32_t, uint32_t);
 
+    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupAction)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupPrivateMessage)(ToxWindow *, Tox *, int, uint32_t, const char *, uint16_t);

@@ -310,6 +310,7 @@ static Tox *init_tox(void)
     tox_callback_file_control(m, on_file_control, NULL);
     tox_callback_file_data(m, on_file_data, NULL);
     tox_callback_read_receipt(m, on_read_receipt, NULL);
+    tox_callback_group_invite(m, on_group_invite, NULL);
     tox_callback_group_message(m, on_group_message, NULL);
     tox_callback_group_action(m, on_group_action, NULL);
     tox_callback_group_private_message(m, on_group_private_message, NULL);

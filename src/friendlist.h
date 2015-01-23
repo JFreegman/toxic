@@ -48,6 +48,11 @@ struct LastOnline {
     char hour_min_str[TIME_STR_SIZE];    /* holds 12/24-hour time string e.g. "10:43 PM" */
 };
 
+struct GroupInvite {
+    uint8_t data[TOX_GROUP_INVITE_DATA_SIZE];
+    uint16_t length;
+};
+
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     int namelength;
@@ -61,6 +66,7 @@ typedef struct {
     uint8_t is_typing;
     bool logging_on;    /* saves preference for friend irrespective of global settings */
     uint8_t status;
+    struct GroupInvite group_invite;
     struct LastOnline last_online;
     struct FileReceiver file_receiver[MAX_FILES];
     uint8_t active_file_receivers;

@@ -189,7 +189,7 @@ void set_nick_all_groups(Tox *m, const char *nick, uint16_t length)
     for (i = 0; i < max_groupchat_index; ++i) {
         if (groupchats[i].active) {
             ToxWindow *self = get_window_ptr(groupchats[i].chatwin);
-            int ret = tox_group_set_name(m, groupchats[i].groupnumber, (uint8_t *) nick, length);
+            int ret = tox_group_set_self_name(m, groupchats[i].groupnumber, (uint8_t *) nick, length);
 
             if (ret == -1 && groupchats[i].is_connected)
                 line_info_add(self, timefrmt, NULL, 0, SYS_MSG, 0, 0, "Invalid nick");
@@ -875,11 +875,6 @@ ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length
     ret.onGroupSelfTimeout = &groupchat_onGroupSelfTimeout;
     ret.onGroupRejected = &groupchat_onGroupRejected;
 
-    if (groupname && length)
-        set_window_title(&ret, groupname, length);
-    else
-        snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);
-
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     Help *help = calloc(1, sizeof(Help));
 
@@ -892,6 +887,11 @@ ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length
     ret.num = groupnum;
     ret.show_peerlist = true;
     ret.active_box = -1;
+
+    if (groupname && length)
+        set_window_title(&ret, groupname, length);
+    else
+        snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);
 
     return ret;
 }

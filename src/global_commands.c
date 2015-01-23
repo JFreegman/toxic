@@ -362,6 +362,23 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     }
 }
 
+static void join_invite(ToxWindow *self, Tox *m)
+{
+    int groupnumber = tox_group_accept_invite(m, Friends.list[self->num].group_invite.data,
+                                              Friends.list[self->num].group_invite.length);
+
+    if (groupnumber == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
+        return;
+    }
+
+    if (init_groupchat_win(prompt, m, groupnumber, NULL, 0) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        tox_group_delete(m, groupnumber, NULL, 0);
+        return;
+    }
+}
+
 void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
@@ -369,9 +386,15 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
+    /* If no input check for a group invite */
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat ID is required.");
-        return;
+        if (!self->is_chat || Friends.list[self->num].group_invite.length == 0) {
+            const char *msg = "You must either be invited to a group or input the group ID of the group you wish to join.";
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+            return;
+        }
+
+        return join_invite(self, m);
     }
 
     const char *chat_id = argv[1];
@@ -409,7 +432,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     if (init_groupchat_win(prompt, m, groupnum, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_group_delete(m, self->num, NULL, 0);
+        tox_group_delete(m, groupnum, NULL, 0);
         return;
     }
 }

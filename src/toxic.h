@@ -111,6 +111,7 @@ void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_
 void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata);
 void on_read_receipt(Tox *m, int32_t, uint32_t, void *userdata);
 
+void on_group_invite(Tox *m, int32_t friendnumber, const uint8_t *invite_data, uint16_t length, void *userdata);
 void on_group_message(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *message, uint16_t length, void *userdata);
 void on_group_action(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *action, uint16_t length, void *userdata);
 void on_group_private_message(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *message, uint16_t length, void *userdata);

@@ -161,6 +161,16 @@ void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
+void on_group_invite(Tox *m, int32_t friendnumber, const uint8_t *invite_data, uint16_t length, void *userdata)
+{
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupInvite != NULL)
+            windows[i].onGroupInvite(&windows[i], m, friendnumber, (char *) invite_data, length);
+    }
+}
+
 void on_group_message(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *message, uint16_t length,
                       void *userdata)
 {
