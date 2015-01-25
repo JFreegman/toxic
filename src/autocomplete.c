@@ -210,6 +210,7 @@ static void complt_home_dir(ToxWindow *self, char *path, int pathsize, const cha
     ChatContext *ctx = self->chatwin;
 
     char homedir[MAX_STR_SIZE];
+    homedir[0] = '\0';
     get_home_dir(homedir, sizeof(homedir));
 
     char newline[MAX_STR_SIZE];
