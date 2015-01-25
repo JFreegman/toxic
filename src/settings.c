@@ -289,7 +289,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         if ( config_setting_lookup_string(setting, tox_strings.avatar_path, &str) ) {
             snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
-            int len = strlen(s->avatar_path);
+            int len = strlen(str);
 
             if (len >= sizeof(s->avatar_path)) 
                 s->avatar_path[0] = '\0';
