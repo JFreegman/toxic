@@ -49,7 +49,7 @@ struct LastOnline {
 };
 
 struct GroupInvite {
-    uint8_t data[TOX_GROUP_INVITE_DATA_SIZE];
+    uint8_t *data;
     uint16_t length;
 };
 
