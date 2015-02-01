@@ -31,7 +31,7 @@
 struct friend_request {
     bool active;
     char msg[MAX_STR_SIZE];
-    uint8_t key[TOX_CLIENT_ID_SIZE];
+    uint8_t key[TOX_PUBLIC_KEY_SIZE];
 };
 
 typedef struct {

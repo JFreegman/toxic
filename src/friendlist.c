@@ -150,7 +150,7 @@ static int save_blocklist(char *path)
             memset(&tmp, 0, sizeof(BlockedFriend));
             tmp.namelength = htons(Blocked.list[i].namelength);
             memcpy(tmp.name, Blocked.list[i].name, Blocked.list[i].namelength + 1);
-            memcpy(tmp.pub_key, Blocked.list[i].pub_key, TOX_CLIENT_ID_SIZE);
+            memcpy(tmp.pub_key, Blocked.list[i].pub_key, TOX_PUBLIC_KEY_SIZE);
 
             uint8_t lastonline[sizeof(uint64_t)];
             memcpy(lastonline, &Blocked.list[i].last_on, sizeof(uint64_t));
@@ -232,7 +232,7 @@ int load_blocklist(char *path)
         Blocked.list[i].num = i;
         Blocked.list[i].namelength = ntohs(tmp.namelength);
         memcpy(Blocked.list[i].name, tmp.name, Blocked.list[i].namelength + 1);
-        memcpy(Blocked.list[i].pub_key, tmp.pub_key, TOX_CLIENT_ID_SIZE);
+        memcpy(Blocked.list[i].pub_key, tmp.pub_key, TOX_PUBLIC_KEY_SIZE);
 
         uint8_t lastonline[sizeof(uint64_t)];
         memcpy(lastonline, &tmp.last_on, sizeof(uint64_t));
@@ -448,7 +448,7 @@ static void friendlist_add_blocked(Tox *m, int32_t fnum, int32_t bnum)
         Friends.list[i].namelength = Blocked.list[bnum].namelength;
         update_friend_last_online(i, Blocked.list[bnum].last_on);
         memcpy(Friends.list[i].name, Blocked.list[bnum].name, Friends.list[i].namelength + 1);
-        memcpy(Friends.list[i].pub_key, Blocked.list[bnum].pub_key, TOX_CLIENT_ID_SIZE);
+        memcpy(Friends.list[i].pub_key, Blocked.list[bnum].pub_key, TOX_PUBLIC_KEY_SIZE);
 
         if (i == Friends.max_idx)
             ++Friends.max_idx;
@@ -644,7 +644,7 @@ void block_friend(Tox *m, int32_t fnum)
         Blocked.list[i].num = i;
         Blocked.list[i].namelength = Friends.list[fnum].namelength;
         Blocked.list[i].last_on = Friends.list[fnum].last_online.last_on;
-        memcpy(Blocked.list[i].pub_key, Friends.list[fnum].pub_key, TOX_CLIENT_ID_SIZE);
+        memcpy(Blocked.list[i].pub_key, Friends.list[fnum].pub_key, TOX_PUBLIC_KEY_SIZE);
         memcpy(Blocked.list[i].name, Friends.list[fnum].name, Friends.list[fnum].namelength  + 1);
 
         ++Blocked.num_blocked;
@@ -823,7 +823,7 @@ static void blocklist_onDraw(ToxWindow *self, Tox *m, int y2, int x2)
 
         int i;
 
-        for (i = 0; i < TOX_CLIENT_ID_SIZE; ++i)
+        for (i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i)
             wprintw(self->window, "%02X", Blocked.list[selected_num].pub_key[i] & 0xff);
     }
 
@@ -1012,7 +1012,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
         int i;
 
-        for (i = 0; i < TOX_CLIENT_ID_SIZE; ++i)
+        for (i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i)
             wprintw(self->window, "%02X", Friends.list[selected_num].pub_key[i] & 0xff);
     }
 

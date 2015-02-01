@@ -145,7 +145,7 @@ static int add_friend_request(const char *public_key, const char *data)
     for (i = 0; i <= FrndRequests.max_idx; ++i) {
         if (!FrndRequests.request[i].active) {
             FrndRequests.request[i].active = true;
-            memcpy(FrndRequests.request[i].key, public_key, TOX_CLIENT_ID_SIZE);
+            memcpy(FrndRequests.request[i].key, public_key, TOX_PUBLIC_KEY_SIZE);
             snprintf(FrndRequests.request[i].msg, sizeof(FrndRequests.request[i].msg), "%s", data);
 
             if (i == FrndRequests.max_idx)
