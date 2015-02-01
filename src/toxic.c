@@ -324,13 +324,13 @@ static Tox *init_tox(void)
 #define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
 #define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
-#define NODELEN (MAX_NODE_LINE - TOX_CLIENT_ID_SIZE - 7)
+#define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
 
 static struct toxNodes {
     int lines;
     char nodes[MAXNODES][NODELEN];
     uint16_t ports[MAXNODES];
-    char keys[MAXNODES][TOX_CLIENT_ID_SIZE];
+    char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
 } toxNodes;
 
 static int load_nodelist(const char *filename)
@@ -360,7 +360,7 @@ static int load_nodelist(const char *filename)
             toxNodes.ports[toxNodes.lines] = atoi(port);
 
             char *key_binary = hex_string_to_bin(key_ascii);
-            memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_CLIENT_ID_SIZE);
+            memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_PUBLIC_KEY_SIZE);
             free(key_binary);
 
             toxNodes.lines++;

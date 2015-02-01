@@ -507,9 +507,9 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         if (!FrndRequests.request[i].active)
             continue;
 
-        char id[TOX_CLIENT_ID_SIZE * 2 + 1] = {0};
+        char id[TOX_PUBLIC_KEY_SIZE * 2 + 1] = {0};
 
-        for (j = 0; j < TOX_CLIENT_ID_SIZE; ++j) {
+        for (j = 0; j < TOX_PUBLIC_KEY_SIZE; ++j) {
             char d[3];
             snprintf(d, sizeof(d), "%02X", FrndRequests.request[i].key[j] & 0xff);
             strcat(id, d);
