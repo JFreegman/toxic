@@ -1,4 +1,4 @@
-/*  main.c
+/*  toxic.c
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
