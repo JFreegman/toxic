@@ -357,7 +357,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
                        "Toxic", "%s has come online", nick );
     } else {
         msg = "has gone offline";
-        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, RED, msg);
+        line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1)

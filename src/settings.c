@@ -55,6 +55,11 @@ static struct ui_strings {
     const char* show_typing_self;
     const char* show_typing_other;
     const char* show_welcome_msg;
+
+    const char* line_join;
+    const char* line_quit;
+    const char* line_alert;
+    const char* line_normal;
 } ui_strings = {
     "ui",
     "timestamps",
@@ -66,6 +71,10 @@ static struct ui_strings {
     "show_typing_self",
     "show_typing_other",
     "show_welcome_msg",
+    "line_join",
+    "line_quit",
+    "line_alert",
+    "line_normal",
 };
 
 static void ui_defaults(struct user_settings* settings) 
@@ -79,6 +88,11 @@ static void ui_defaults(struct user_settings* settings)
     settings->show_typing_self = SHOW_TYPING_ON;
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
+
+    snprintf(settings->line_join, LINE_HINT_MAX + 1, "%s", LINE_JOIN);
+    snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
+    snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
+    snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
 }
 
 static const struct keys_strings {
@@ -262,6 +276,19 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
         config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
         s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
+
+        if ( config_setting_lookup_string(setting, ui_strings.line_join, &str) ) {
+            snprintf(s->line_join, sizeof(s->line_join), "%s", str);
+        }
+        if ( config_setting_lookup_string(setting, ui_strings.line_quit, &str) ) {
+            snprintf(s->line_quit, sizeof(s->line_quit), "%s", str);
+        }
+        if ( config_setting_lookup_string(setting, ui_strings.line_alert, &str) ) {
+            snprintf(s->line_alert, sizeof(s->line_alert), "%s", str);
+        }
+        if ( config_setting_lookup_string(setting, ui_strings.line_normal, &str) ) {
+            snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
+        }
     }
 
     /* paths */

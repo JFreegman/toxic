@@ -25,6 +25,9 @@
 
 #include <limits.h>
 
+/* Represents line_* hints max strlen */
+#define LINE_HINT_MAX 3
+
 /* holds user setting values */
 struct user_settings {
     int autolog;           /* boolean */
@@ -36,6 +39,11 @@ struct user_settings {
     int show_typing_self;  /* boolean */
     int show_typing_other; /* boolean */
     int show_welcome_msg;  /* boolean */
+
+    char line_join[LINE_HINT_MAX + 1];
+    char line_quit[LINE_HINT_MAX + 1];
+    char line_alert[LINE_HINT_MAX + 1];
+    char line_normal[LINE_HINT_MAX + 1];
 
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
@@ -83,6 +91,11 @@ enum {
 
     DFLT_HST_SIZE = 700,
 } settings_values;
+
+#define LINE_JOIN    "-->"
+#define LINE_QUIT    "<--"
+#define LINE_ALERT   "-!-"
+#define LINE_NORMAL  "---"
 
 int settings_load(struct user_settings *s, const char *patharg);
 #endif /* #define SETTINGS_H */
