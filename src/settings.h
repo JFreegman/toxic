@@ -41,15 +41,15 @@ struct user_settings {
     char chatlogs_path[PATH_MAX];
     char avatar_path[PATH_MAX];
 
-	int key_next_tab;
-	int key_prev_tab;
-	int key_scroll_line_up;
-	int key_scroll_line_down;
-	int key_half_page_up;
-	int key_half_page_down;
-	int key_page_bottom;
-	int key_peer_list_up;
-	int key_peer_list_down;
+    int key_next_tab;
+    int key_prev_tab;
+    int key_scroll_line_up;
+    int key_scroll_line_down;
+    int key_half_page_up;
+    int key_half_page_down;
+    int key_page_bottom;
+    int key_peer_list_up;
+    int key_peer_list_down;
     int key_toggle_peerlist;
 
 #ifdef AUDIO

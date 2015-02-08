@@ -110,15 +110,15 @@ static const struct keys_strings {
 /* defines from toxic.h */
 static void key_defaults(struct user_settings* settings)
 {
-	settings->key_next_tab = T_KEY_NEXT;
-	settings->key_prev_tab = T_KEY_PREV;
-	settings->key_scroll_line_up = KEY_PPAGE;
-	settings->key_scroll_line_down = KEY_NPAGE;
-	settings->key_half_page_up = T_KEY_C_F;
-	settings->key_half_page_down = T_KEY_C_V;
-	settings->key_page_bottom = T_KEY_C_H;
-	settings->key_peer_list_up = T_KEY_C_LB;
-	settings->key_peer_list_down = T_KEY_C_RB;
+    settings->key_next_tab = T_KEY_NEXT;
+    settings->key_prev_tab = T_KEY_PREV;
+    settings->key_scroll_line_up = KEY_PPAGE;
+    settings->key_scroll_line_down = KEY_NPAGE;
+    settings->key_half_page_up = T_KEY_C_F;
+    settings->key_half_page_down = T_KEY_C_V;
+    settings->key_page_bottom = T_KEY_C_H;
+    settings->key_peer_list_up = T_KEY_C_LB;
+    settings->key_peer_list_down = T_KEY_C_RB;
     settings->key_toggle_peerlist = T_KEY_C_B;
 }
 
@@ -212,7 +212,7 @@ int settings_load(struct user_settings *s, const char *patharg)
     config_t cfg[1];
     config_setting_t *setting;
     const char *str = NULL;
-    
+
     /* Load default settings */
     ui_defaults(s);
     tox_defaults(s);
@@ -296,41 +296,41 @@ int settings_load(struct user_settings *s, const char *patharg)
         }
     }
 
-	/* keys */
-	if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
-	   const char* tmp = NULL;
-	   if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
-		   s->key_next_tab = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
-		   s->key_prev_tab = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
-		   s->key_scroll_line_up = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
-		   s->key_scroll_line_down= key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
-		   s->key_half_page_up = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
-		   s->key_half_page_down = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
-		   s->key_page_bottom = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
-		   s->key_peer_list_up = key_parse(&tmp);
-	   if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
-		   s->key_peer_list_down = key_parse(&tmp);
-       if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
-	       s->key_toggle_peerlist = key_parse(&tmp);
-	}	   
+    /* keys */
+    if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
+        const char* tmp = NULL;
+        if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
+            s->key_next_tab = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
+            s->key_prev_tab = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
+            s->key_scroll_line_up = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
+            s->key_scroll_line_down= key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
+            s->key_half_page_up = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
+            s->key_half_page_down = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
+            s->key_page_bottom = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
+            s->key_peer_list_up = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
+            s->key_peer_list_down = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
+            s->key_toggle_peerlist = key_parse(&tmp);
+    }
 
 #ifdef AUDIO
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
         s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
-        
+
         config_setting_lookup_int(setting, audio_strings.output_device, &s->audio_out_dev);
         s->audio_out_dev = s->audio_out_dev < 0 || s->audio_out_dev > MAX_DEVICES ? 0 : s->audio_out_dev;
-        
+
         config_setting_lookup_float(setting, audio_strings.VAD_treshold, &s->VAD_treshold);
-    }    
+    }
 #endif
 
 #ifdef SOUND_NOTIFY
@@ -340,7 +340,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.user_log_in, &str) ||
                 !set_sound(user_log_in, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
