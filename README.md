@@ -41,6 +41,11 @@ Toxic is ~~secretly a nTox fork~~ a [Tox](https://tox.im)-based instant messengi
   * `DISABLE_SOUND_NOTIFY=1` → build toxic without sound notifications support
   * `DISABLE_DESKTOP_NOTIFY=1` → build toxic without desktop notifications support
 
+### OS X Compile
+Using [Homebrew](http://brew.sh): `brew install openal-soft freealut libconfig && brew install https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb && brew install https://raw.githubusercontent.com/Homebrew/homebrew-x11/master/libnotify.rb`.
+
+You can omit `libnotify` if you intend to build without desktop notifications enabled. 
+
 ### Packaging
 * For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
 * `DESTDIR=""` can be used in addition to `PREFIX=""`:
