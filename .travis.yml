@@ -9,7 +9,7 @@ before_script:
   # Installing libsodium, needed for toxcore
   - git clone https://github.com/jedisct1/libsodium.git libsodium
   - cd libsodium
-  - git checkout tags/1.0.0 > /dev/null
+  - git checkout tags/1.0.2 > /dev/null
   - ./autogen.sh > /dev/null
   - ./configure > /dev/null
   - make check -j2 || make check || exit 1 > /dev/null
