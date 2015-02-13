@@ -505,7 +505,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
         case TOX_CHAT_CHANGE_PEER_DEL:
             event = "has left the room";
-            line_info_add(self, timefrmt, (char *) oldpeername, NULL, CONNECTION, 0, RED, event);
+            line_info_add(self, timefrmt, (char *) oldpeername, NULL, DISCONNECTION, 0, RED, event);
 
             if (groupchats[self->num].side_pos > 0)
                 --groupchats[self->num].side_pos;
