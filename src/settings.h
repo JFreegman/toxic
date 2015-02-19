@@ -32,8 +32,11 @@
 struct user_settings {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
-    int time;              /* 12 or 24 */
+
     int timestamps;        /* boolean */
+    char timestamp_format[TIME_STR_SIZE];
+    char log_timestamp_format[TIME_STR_SIZE];
+
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     int show_typing_self;  /* boolean */
@@ -71,9 +74,6 @@ enum {
     AUTOLOG_OFF = 0,
     AUTOLOG_ON = 1,
 
-    TIME_24 = 24,
-    TIME_12 = 12,
-
     TIMESTAMPS_OFF = 0,
     TIMESTAMPS_ON = 1,
 
@@ -96,6 +96,8 @@ enum {
 #define LINE_QUIT    "<--"
 #define LINE_ALERT   "-!-"
 #define LINE_NORMAL  "---"
+#define TIMESTAMP_DEFAULT      "%H:%M:%S"
+#define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 
 int settings_load(struct user_settings *s, const char *patharg);
 #endif /* #define SETTINGS_H */

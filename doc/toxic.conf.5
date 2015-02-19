@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 2015-02-08
+.\"      Date: 2015-02-19
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2015\-02\-08" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2015\-02\-19" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -66,6 +66,23 @@ Configuration related to interface elements\&.
 Enable or disable timestamps\&. true or false
 .RE
 .PP
+\fBtime_format\fR
+.RS 4
+Select between 24 and 12 hour time\&. Specify 24 or 12\&. Setting timestamp_format and log_timestamp_format will override this setting\&.
+.RE
+.PP
+\fBtimestamp_format\fR
+.RS 4
+Time format string for the interface enclosed by double quotes\&. See
+\fBdate\fR(1)
+.RE
+.PP
+\fBlog_timestamp_format\fR
+.RS 4
+Time format string for logging enclosed by double quotes\&. See
+\fBdate\fR(1)
+.RE
+.PP
 \fBalerts\fR
 .RS 4
 Enable or disable terminal alerts on events\&. true or false
@@ -79,11 +96,6 @@ Select between native terminal colors and toxic color theme\&. true or false
 \fBautolog\fR
 .RS 4
 Enable or disable autologging\&. true or false
-.RE
-.PP
-\fBtime_format\fR
-.RS 4
-Select between 24 and 12 hour time\&. Specify 24 or 12
 .RE
 .PP
 \fBshow_typing_other\fR

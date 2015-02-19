@@ -202,7 +202,7 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
 
     if (timestr) {
         snprintf(new_line->timestr, sizeof(new_line->timestr), "%s", timestr);
-        len += strlen(new_line->timestr);
+        len += strlen(new_line->timestr) + 1;
     }
 
     if (name1) {
@@ -302,7 +302,7 @@ void line_info_print(ToxWindow *self)
             case OUT_MSG_READ:
             case IN_MSG:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestr);
+                wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 int nameclr = GREEN;
@@ -342,7 +342,7 @@ void line_info_print(ToxWindow *self)
             case OUT_ACTION:
             case IN_ACTION:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestr);
+                wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
@@ -366,7 +366,7 @@ void line_info_print(ToxWindow *self)
             case SYS_MSG:
                 if (line->timestr[0]) {
                     wattron(win, COLOR_PAIR(BLUE));
-                    wprintw(win, "%s", line->timestr);
+                    wprintw(win, "%s ", line->timestr);
                     wattroff(win, COLOR_PAIR(BLUE));
                 }
 
@@ -399,7 +399,7 @@ void line_info_print(ToxWindow *self)
 
             case CONNECTION:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestr);
+                wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
@@ -416,7 +416,7 @@ void line_info_print(ToxWindow *self)
 
             case DISCONNECTION:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestr);
+                wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
@@ -433,7 +433,7 @@ void line_info_print(ToxWindow *self)
 
             case NAME_CHANGE:
                 wattron(win, COLOR_PAIR(BLUE));
-                wprintw(win, "%s", line->timestr);
+                wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(MAGENTA));
