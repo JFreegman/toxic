@@ -112,6 +112,13 @@ static void realloc_blocklist(int n)
 
 void kill_friendlist(void)
 {
+    size_t i;
+
+    for (i = 0; i < Friends.max_idx; ++i) {
+        if (Friends.list[i].group_invite.data != NULL)
+            free(Friends.list[i].group_invite.data);
+    }
+
     realloc_blocklist(0);
     realloc_friends(0);
 }
