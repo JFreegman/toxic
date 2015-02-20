@@ -66,7 +66,7 @@ void get_home_dir(char *home, int size)
  */
 char *get_user_config_dir(void)
 {
-    char home[NSS_BUFLEN_PASSWD];
+    char home[NSS_BUFLEN_PASSWD] = {0};
     get_home_dir(home, sizeof(home));
 
     char *user_config_dir;

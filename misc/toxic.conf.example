@@ -28,6 +28,18 @@ ui = {
 
   // maximum lines for chat window history
   history_size=700;
+
+  // Indicator for display when someone connects or joins a group.
+  line_join="-->";
+
+  // Indicator for display when someone disconnects or leaves a group.
+  line_quit="<--";
+
+  // Indicator for alert messages.
+  line_alert="-!-";
+
+  // Indicator for normal messages.
+  line_normal="---";
 };
 
 audio = {

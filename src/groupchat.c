@@ -461,7 +461,7 @@ static void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, int groupnum, uin
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, name, NULL, CONNECTION, 0, RED, "has left the room (%s)", partmessage);
+    line_info_add(self, timefrmt, name, NULL, DISCONNECTION, 0, RED, "has left the room (%s)", partmessage);
 
     char log_str[TOXIC_MAX_NAME_LENGTH + MAX_STR_SIZE];
     snprintf(log_str, sizeof(log_str), "%s has left the room (%s)", name, partmessage);

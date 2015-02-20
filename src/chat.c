@@ -205,7 +205,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
         chat_stop_file_senders(num);
 
         msg = "has gone offline";
-        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, RED, msg);
+        line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
     }
 }

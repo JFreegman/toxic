@@ -1,15 +1,15 @@
 language: c
 compiler:
   - gcc
-  # - clang  # Fix me
+  - clang
 
 before_script:
   # Installing yasm (needed for compiling vpx) and openal
-  - sudo apt-get -yq install yasm libopenal-dev libconfig-dev libalut-dev libnotify-dev
+  - sudo apt-get -yq install yasm libopenal-dev libconfig-dev libalut-dev libnotify-dev clang llvm-dev
   # Installing libsodium, needed for toxcore
   - git clone https://github.com/jedisct1/libsodium.git libsodium
   - cd libsodium
-  - git checkout tags/0.7.0 > /dev/null
+  - git checkout tags/1.0.2 > /dev/null
   - ./autogen.sh > /dev/null
   - ./configure > /dev/null
   - make check -j2 || make check || exit 1 > /dev/null

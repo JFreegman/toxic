@@ -156,23 +156,27 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
     switch (type) {
         case IN_ACTION:
         case OUT_ACTION:
-            len += 5;
+            len += strlen(user_settings->line_normal) + 2;
             break;
 
         case IN_MSG:
         case OUT_MSG:
-            len += 6;
+            len += strlen(user_settings->line_normal) + 3;
             break;
 
         case CONNECTION:
-            len += 5;
+            len += strlen(user_settings->line_join) + 2;
+            break;
+
+        case DISCONNECTION:
+            len += strlen(user_settings->line_quit) + 2;
             break;
 
         case SYS_MSG:
             break;
 
         case NAME_CHANGE:
-            len += 4;
+            len += strlen(user_settings->line_alert) + 1;
             break;
 
         case PROMPT:
@@ -309,7 +313,7 @@ void line_info_print(ToxWindow *self)
                     nameclr = CYAN;
 
                 wattron(win, COLOR_PAIR(nameclr));
-                wprintw(win, "--- %s: ", line->name1);
+                wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
                 if (line->msg[0] == '>')
@@ -342,7 +346,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
-                wprintw(win, "--- %s %s", line->name1, line->msg);
+                wprintw(win, "%s %s %s", user_settings->line_normal, line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
                 if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
@@ -399,7 +403,24 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
-                wprintw(win, "%s ", line->colour == RED ? "<--" : "-->");
+                wprintw(win, "%s ", user_settings->line_join);
+
+                wattron(win, A_BOLD);
+                wprintw(win, "%s ", line->name1);
+                wattroff(win, A_BOLD);
+
+                wprintw(win, "%s\n", line->msg);
+                wattroff(win, COLOR_PAIR(line->colour));
+
+                break;
+
+            case DISCONNECTION:
+                wattron(win, COLOR_PAIR(BLUE));
+                wprintw(win, "%s", line->timestr);
+                wattroff(win, COLOR_PAIR(BLUE));
+
+                wattron(win, COLOR_PAIR(line->colour));
+                wprintw(win, "%s ", user_settings->line_quit);
 
                 wattron(win, A_BOLD);
                 wprintw(win, "%s ", line->name1);
@@ -416,7 +437,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(MAGENTA));
-                wprintw(win, "-!- ");
+                wprintw(win, "%s ", user_settings->line_alert);
                 wattron(win, A_BOLD);
                 wprintw(win, "%s", line->name1);
                 wattroff(win, A_BOLD);
@@ -502,24 +523,24 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
     struct history *hst = self->chatwin->hst;
     bool match = true;
 
-	if (key == user_settings->key_half_page_up) {
-		line_info_page_up(self, hst);
-	}
-	else if (key == user_settings->key_half_page_down) {
-		line_info_page_down(self, hst);
-	}
-	else if (key == user_settings->key_scroll_line_up) {
-		line_info_scroll_up(hst);
-	}
-	else if (key == user_settings->key_scroll_line_down) {
-		line_info_scroll_down(hst);
-	}
-	else if (key == user_settings->key_page_bottom) {
-		line_info_reset_start(self, hst);
-	}
-	else {
-		match = false;
-	}
+    if (key == user_settings->key_half_page_up) {
+        line_info_page_up(self, hst);
+    }
+    else if (key == user_settings->key_half_page_down) {
+        line_info_page_down(self, hst);
+    }
+    else if (key == user_settings->key_scroll_line_up) {
+        line_info_scroll_up(hst);
+    }
+    else if (key == user_settings->key_scroll_line_down) {
+        line_info_scroll_down(hst);
+    }
+    else if (key == user_settings->key_page_bottom) {
+        line_info_reset_start(self, hst);
+    }
+    else {
+        match = false;
+    }
 
     return match;
 }

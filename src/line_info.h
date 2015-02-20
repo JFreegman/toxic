@@ -41,6 +41,7 @@ enum {
     OUT_ACTION_READ,     /* same as OUT_MSG_READ but for actions */
     PROMPT,
     CONNECTION,
+    DISCONNECTION,
     NAME_CHANGE,
 } LINE_TYPE;
 
