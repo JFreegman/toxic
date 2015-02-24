@@ -17,6 +17,9 @@ ui = {
   // 24 or 12 hour time
   time_format=24;
 
+  // timestamp format string according to date/strftime format. Overrides time_format setting
+  timestamp_format="%H:%M:%S";
+
   // true to show you when others are typing a message in 1-on-1 chats
   show_typing_other=true;
 
