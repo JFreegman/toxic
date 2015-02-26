@@ -90,6 +90,9 @@ typedef enum _FATAL_ERRS {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
+void lock_status ();
+void unlock_status ();
+
 void exit_toxic_success(Tox *m);
 void exit_toxic_err(const char *errmsg, int errcode);
 

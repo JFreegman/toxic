@@ -57,6 +57,7 @@
 #include "device.h"
 #include "message_queue.h"
 #include "execute.h"
+#include "term_mplex.h"
 
 #ifdef X11
     #include "xtra.h"
@@ -83,6 +84,23 @@ struct cqueue_thread cqueue_thread;
 struct audio_thread audio_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
+
+/* mutex for access to status data, for sync between:
+   - user command /status from ncurses thread
+   - auto-away POSIX timer, which runs from a separate thread
+   after init, should be accessed only by cmd_status()
+ */
+static pthread_mutex_t status_lock;
+
+void lock_status ()
+{
+    pthread_mutex_lock (&status_lock);
+}
+
+void unlock_status ()
+{
+    pthread_mutex_unlock (&status_lock);
+}
 
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
@@ -1071,7 +1089,11 @@ int main(int argc, char *argv[])
     /* thread for message queue */
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-    
+
+    /* status access mutex */
+    if (pthread_mutex_init (&status_lock, NULL) != 0)
+        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
+
 #ifdef AUDIO
     
     av = init_audio(prompt, m);
@@ -1108,6 +1130,9 @@ int main(int argc, char *argv[])
     char avatarstr[MAX_STR_SIZE];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
+
+    /* screen/tmux auto-away timer */
+    init_mplex_away_timer (m);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;

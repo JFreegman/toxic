@@ -43,6 +43,12 @@ ui = {
 
   // Indicator for normal messages.
   line_normal="---";
+
+  // true to change status based on screen/tmux attach/detach, false to disable
+  mplex_away=true;
+
+  // Status message to use when status set to away due to screen/tmux detach
+  mplex_away_note="Away from keyboard, be back soon!"
 };
 
 audio = {
