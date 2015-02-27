@@ -70,7 +70,7 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 {
     char chatid[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
     char chat_public_key[TOX_GROUP_CHAT_ID_SIZE];
-    tox_group_get_invite_key(m, self->num, (uint8_t *) chat_public_key);
+    tox_group_get_chat_id(m, self->num, (uint8_t *) chat_public_key);
 
     size_t i;
 
