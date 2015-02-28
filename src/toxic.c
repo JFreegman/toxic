@@ -47,6 +47,7 @@
 #include "toxic.h"
 #include "windows.h"
 #include "friendlist.h"
+#include "groupchat.h"
 #include "prompt.h"
 #include "misc_tools.h"
 #include "file_senders.h"
@@ -479,6 +480,17 @@ static void load_friendlist(Tox *m)
         friendlist_onFriendAdded(NULL, m, i, false);
 
     sort_friendlist_index();
+}
+
+static void load_groups(Tox *m)
+{
+    uint32_t i;
+    uint32_t numgroups = tox_group_count_groups(m);
+
+    for (i = 0; i < numgroups; ++i) {
+        if (init_groupchat_win(m, i, NULL, 0) == -1)
+            tox_group_delete(m, i, NULL, 0);
+    }
 }
 
 /* return length of password on success, 0 on failure */
@@ -1109,6 +1121,7 @@ int main(int argc, char *argv[])
     if (settings_err == -1)
         queue_init_message("Failed to load user settings");
 
+    load_groups(m);
     print_init_messages(prompt);
     cleanup_init_messages();
 

@@ -355,7 +355,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, name, len) == -1) {
+    if (init_groupchat_win(m, groupnum, name, len) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_delete(m, groupnum, NULL, 0);
         return;
@@ -372,7 +372,7 @@ static void join_invite(ToxWindow *self, Tox *m)
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnumber, NULL, 0) == -1) {
+    if (init_groupchat_win(m, groupnumber, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_delete(m, groupnumber, NULL, 0);
         return;
@@ -430,7 +430,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, NULL, 0) == -1) {
+    if (init_groupchat_win(m, groupnum, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_delete(m, groupnum, NULL, 0);
         return;

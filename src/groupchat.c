@@ -112,7 +112,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 
 ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length);
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, const char *groupname, int length)
+int init_groupchat_win(Tox *m, int groupnum, const char *groupname, int length)
 {
     if (groupnum > MAX_GROUPCHAT_NUM)
         return -1;
@@ -137,6 +137,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, const char *grou
             if (i == max_groupchat_index)
                 ++max_groupchat_index;
 
+            store_data(m, DATA_FILE);
             return 0;
         }
     }
@@ -159,6 +160,9 @@ static void kill_groupchat_window(ToxWindow *self)
     del_window(self);
 }
 
+/* Closes groupchat window and cleans up.
+ * If delete_group is true the group will be permanently deleted.
+ */
 void close_groupchat(ToxWindow *self, Tox *m, int groupnum, const char *partmessage, int length)
 {
     tox_group_delete(m, groupnum, (const uint8_t *) partmessage, (uint16_t) length);
