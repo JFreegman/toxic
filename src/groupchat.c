@@ -160,12 +160,10 @@ static void kill_groupchat_window(ToxWindow *self)
     del_window(self);
 }
 
-/* Closes groupchat window and cleans up.
- * If delete_group is true the group will be permanently deleted.
- */
+/* Closes groupchat window and cleans up. */
 void close_groupchat(ToxWindow *self, Tox *m, int groupnum, const char *partmessage, int length)
 {
-    tox_group_delete(m, groupnum, (const uint8_t *) partmessage, (uint16_t) length);
+    tox_group_delete(m, groupnum, (uint8_t *) partmessage, (uint16_t) length);
 
     free(groupchats[groupnum].peer_names);
     free(groupchats[groupnum].peer_name_lengths);
