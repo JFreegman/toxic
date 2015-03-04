@@ -110,6 +110,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* AUDIO */
 };
 
+static void groupchat_set_group_name(ToxWindow *self, Tox *m, int groupnum);
 ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length);
 
 int init_groupchat_win(Tox *m, int groupnum, const char *groupname, int length)
@@ -118,6 +119,10 @@ int init_groupchat_win(Tox *m, int groupnum, const char *groupname, int length)
         return -1;
 
     ToxWindow self = new_group_chat(m, groupnum, groupname, length);
+
+    /* In case we're loading a saved group */
+    if (length <= 0)
+        groupchat_set_group_name(&self, m, groupnum);
 
     int i;
 
@@ -472,11 +477,8 @@ static void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, int groupnum, uin
     sound_notify(self, silent, NT_WNDALERT_2, NULL);
 }
 
-static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, int groupnum)
+static void groupchat_set_group_name(ToxWindow *self, Tox *m, int groupnum)
 {
-    if (groupnum != self->num)
-        return;
-
     char tmp_groupname[TOX_MAX_GROUP_NAME_LENGTH];
     int glen = tox_group_get_group_name(m, groupnum, (uint8_t *) tmp_groupname);
 
@@ -485,6 +487,14 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, int groupnum)
 
     if (glen > 0)
         set_window_title(self, groupname, glen);
+}
+
+static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, int groupnum)
+{
+    if (groupnum != self->num)
+        return;
+
+    groupchat_set_group_name(self, m, groupnum);
 
     char tmp_topic[TOX_MAX_GROUP_TOPIC_LENGTH];
     int tlen = tox_group_get_topic(m, groupnum, (uint8_t *) tmp_topic);
@@ -890,7 +900,7 @@ ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length
     ret.show_peerlist = true;
     ret.active_box = -1;
 
-    if (groupname && length)
+    if (groupname && length > 0)
         set_window_title(&ret, groupname, length);
     else
         snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);
