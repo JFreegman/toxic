@@ -29,48 +29,15 @@
 #include "log.h"
 #include "groupchat.h"
 
-void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    if (argc < 1) {
-        char cur_topic[MAX_STR_SIZE];
-        int tlen = tox_group_get_topic(m, self->num, (uint8_t *) cur_topic);
-
-        if (tlen > 0) {
-            cur_topic[tlen] = '\0';
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is set to: %s", cur_topic);
-        } else {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is not set");
-        }
-
-        return;
-    }
-
-    const char *topic = argv[1];
-
-    if (tox_group_set_topic(m, self->num, (uint8_t *) topic, strlen(topic)) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set topic.");
-        return;
-    }
-
-    char timefrmt[TIME_STR_SIZE];
-    char selfnick[TOX_MAX_NAME_LENGTH];
-
-    get_time_str(timefrmt, sizeof(timefrmt));
-    int sn_len = tox_group_get_self_name(m, self->num, (uint8_t *) selfnick);
-    selfnick[sn_len] = '\0';
-
-    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- You set the topic to: %s", topic);
-
-    char tmp_event[MAX_STR_SIZE];
-    snprintf(tmp_event, sizeof(tmp_event), "set topic to %s", topic);
-    write_to_log(tmp_event, selfnick, self->chatwin->log, true);
-}
-
 void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char chatid[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
     char chat_public_key[TOX_GROUP_CHAT_ID_SIZE];
-    tox_group_get_chat_id(m, self->num, (uint8_t *) chat_public_key);
+
+    if (tox_group_get_chat_id(m, self->num, (uint8_t *) chat_public_key) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error retreiving chat id.");
+        return;
+    }
 
     size_t i;
 
@@ -107,6 +74,51 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
+}
+
+void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (tox_group_reconnect(m, self->num) == -1)
+        return;
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Reconnecting to group...");
+}
+
+void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        char cur_topic[MAX_STR_SIZE];
+        int tlen = tox_group_get_topic(m, self->num, (uint8_t *) cur_topic);
+
+        if (tlen > 0) {
+            cur_topic[tlen] = '\0';
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is set to: %s", cur_topic);
+        } else {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic is not set");
+        }
+
+        return;
+    }
+
+    const char *topic = argv[1];
+
+    if (tox_group_set_topic(m, self->num, (uint8_t *) topic, strlen(topic)) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set topic.");
+        return;
+    }
+
+    char timefrmt[TIME_STR_SIZE];
+    char selfnick[TOX_MAX_NAME_LENGTH];
+
+    get_time_str(timefrmt, sizeof(timefrmt));
+    int sn_len = tox_group_get_self_name(m, self->num, (uint8_t *) selfnick);
+    selfnick[sn_len] = '\0';
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- You set the topic to: %s", topic);
+
+    char tmp_event[MAX_STR_SIZE];
+    snprintf(tmp_event, sizeof(tmp_event), "set topic to %s", topic);
+    write_to_log(tmp_event, selfnick, self->chatwin->log, true);
 }
 
 void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

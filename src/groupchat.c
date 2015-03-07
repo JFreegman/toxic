@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 26
+#define AC_NUM_GROUP_COMMANDS 27
 #else
-#define AC_NUM_GROUP_COMMANDS 22
+#define AC_NUM_GROUP_COMMANDS 23
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -89,16 +89,17 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/group"      },
     { "/help"       },
     { "/ignore"     },
-    { "/unignore"   },
     { "/join"       },
     { "/log"        },
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
     { "/quit"       },
+    { "/rejoin"     },
     { "/requests"   },
     { "/status"     },
     { "/topic"      },
+    { "/unignore"   },
 
 #ifdef AUDIO
 
@@ -546,16 +547,16 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uin
 
     switch (type) {
         case TOX_GJ_NICK_TAKEN:
-            msg = "That nick is already in use. Please change your nick with the '/nick' command.";
+            msg = "Nick already in use. Change your nick and use the 'rejoin' command.";
             break;
         case TOX_GJ_GROUP_FULL:
-            msg = "Group is full.";
+            msg = "Group is full. Try again with the 'rejoin' command.";
             break;
         case TOX_GJ_INVITES_DISABLED:
             msg = "Invites for this group have been disabled.";
             break;
         case TOX_GJ_INVITE_FAILED:
-            msg = "Invite failed.";
+            msg = "Invite failed. Try again with the 'rejoin' command.";
             break;
         default:
             return;
