@@ -58,6 +58,7 @@
 #include "device.h"
 #include "message_queue.h"
 #include "execute.h"
+#include "term_mplex.h"
 
 #ifdef X11
     #include "xtra.h"
@@ -1120,6 +1121,10 @@ int main(int argc, char *argv[])
 
     if (settings_err == -1)
         queue_init_message("Failed to load user settings");
+
+    /* screen/tmux auto-away timer */
+    if (init_mplex_away_timer (m) == -1)
+        queue_init_message("Failed to init mplex auto-away.");
 
     load_groups(m);
     print_init_messages(prompt);

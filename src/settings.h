@@ -25,6 +25,8 @@
 
 #include <limits.h>
 
+#include <tox/tox.h>
+
 /* Represents line_* hints max strlen */
 #define LINE_HINT_MAX 3
 
@@ -32,8 +34,11 @@
 struct user_settings {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
-    int time;              /* 12 or 24 */
+
     int timestamps;        /* boolean */
+    char timestamp_format[TIME_STR_SIZE];
+    char log_timestamp_format[TIME_STR_SIZE];
+
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     int show_typing_self;  /* boolean */
@@ -60,6 +65,9 @@ struct user_settings {
     int key_peer_list_down;
     int key_toggle_peerlist;
 
+    int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
+    char mplex_away_note [TOX_MAX_STATUSMESSAGE_LENGTH];
+
 #ifdef AUDIO
     int audio_in_dev;
     int audio_out_dev;
@@ -70,9 +78,6 @@ struct user_settings {
 enum {
     AUTOLOG_OFF = 0,
     AUTOLOG_ON = 1,
-
-    TIME_24 = 24,
-    TIME_12 = 12,
 
     TIMESTAMPS_OFF = 0,
     TIMESTAMPS_ON = 1,
@@ -90,12 +95,18 @@ enum {
     SHOW_WELCOME_MSG_ON = 1,
 
     DFLT_HST_SIZE = 700,
+
+    MPLEX_OFF = 0,
+    MPLEX_ON = 1,
 } settings_values;
 
 #define LINE_JOIN    "-->"
 #define LINE_QUIT    "<--"
 #define LINE_ALERT   "-!-"
 #define LINE_NORMAL  "---"
+#define TIMESTAMP_DEFAULT      "%H:%M:%S"
+#define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
+#define MPLEX_AWAY_NOTE "Detached from screen"
 
 int settings_load(struct user_settings *s, const char *patharg);
 #endif /* #define SETTINGS_H */

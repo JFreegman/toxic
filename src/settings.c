@@ -47,10 +47,12 @@
 static struct ui_strings {
     const char* self;
     const char* timestamps;
+    const char* time_format;
+    const char* timestamp_format;
+    const char* log_timestamp_format;
     const char* alerts;
     const char* native_colors;
     const char* autolog;
-    const char* time_format;
     const char* history_size;
     const char* show_typing_self;
     const char* show_typing_other;
@@ -60,13 +62,18 @@ static struct ui_strings {
     const char* line_quit;
     const char* line_alert;
     const char* line_normal;
+
+    const char* mplex_away;
+    const char* mplex_away_note;
 } ui_strings = {
     "ui",
     "timestamps",
+    "time_format",
+    "timestamp_format",
+    "log_timestamp_format",
     "alerts",
     "native_colors",
     "autolog",
-    "time_format",
     "history_size",
     "show_typing_self",
     "show_typing_other",
@@ -75,12 +82,16 @@ static struct ui_strings {
     "line_quit",
     "line_alert",
     "line_normal",
+    "mplex_away",
+    "mplex_away_note",
 };
 
 static void ui_defaults(struct user_settings* settings) 
 {
     settings->timestamps = TIMESTAMPS_ON;
-    settings->time = TIME_24;
+    snprintf(settings->timestamp_format, sizeof(settings->timestamp_format), "%s", TIMESTAMP_DEFAULT);
+    snprintf(settings->log_timestamp_format, sizeof(settings->log_timestamp_format), "%s", LOG_TIMESTAMP_DEFAULT);
+
     settings->autolog = AUTOLOG_OFF;
     settings->alerts = ALERTS_ENABLED;
     settings->colour_theme = DFLT_COLS;
@@ -93,6 +104,12 @@ static void ui_defaults(struct user_settings* settings)
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
     snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
+
+    settings->mplex_away = MPLEX_ON;
+    snprintf (settings->mplex_away_note,
+              sizeof (settings->mplex_away_note),
+              "%s",
+              MPLEX_AWAY_NOTE);
 }
 
 static const struct keys_strings {
@@ -267,6 +284,23 @@ int settings_load(struct user_settings *s, const char *patharg)
     /* ui */
     if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
         config_setting_lookup_bool(setting, ui_strings.timestamps, &s->timestamps);
+
+        int time = 24;
+        if ( config_setting_lookup_int(setting, ui_strings.time_format, &time) ) {
+            if (time == 12) {
+                snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M:%S %p");
+                snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M:%S %p]");
+            }
+        }
+
+        if ( config_setting_lookup_string(setting, ui_strings.timestamp_format, &str) ) {
+            snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", str);
+        }
+
+        if ( config_setting_lookup_string(setting, ui_strings.log_timestamp_format, &str) ) {
+            snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", str);
+        }
+
         config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
         config_setting_lookup_bool(setting, ui_strings.autolog, &s->autolog);
         config_setting_lookup_bool(setting, ui_strings.native_colors, &s->colour_theme);
@@ -274,8 +308,6 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
         config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
         config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
-        config_setting_lookup_int(setting, ui_strings.time_format, &s->time);
-        s->time = s->time == TIME_24 || s->time == TIME_12 ? s->time : TIME_24; /* Check defaults */
 
         if ( config_setting_lookup_string(setting, ui_strings.line_join, &str) ) {
             snprintf(s->line_join, sizeof(s->line_join), "%s", str);
@@ -288,6 +320,12 @@ int settings_load(struct user_settings *s, const char *patharg)
         }
         if ( config_setting_lookup_string(setting, ui_strings.line_normal, &str) ) {
             snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
+        }
+
+        config_setting_lookup_bool (setting, ui_strings.mplex_away, &s->mplex_away);
+
+        if (config_setting_lookup_string (setting, ui_strings.mplex_away_note, &str)) {
+            snprintf (s->mplex_away_note, sizeof (s->mplex_away_note), "%s", str);
         }
     }
 

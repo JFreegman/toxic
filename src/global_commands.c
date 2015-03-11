@@ -34,6 +34,7 @@
 #include "groupchat.h"
 #include "prompt.h"
 #include "help.h"
+#include "term_mplex.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -595,12 +596,14 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     bool have_note = false;
     const char *errmsg;
 
+    lock_status ();
+
     if (argc >= 2) {
         have_note = true;
     } else if (argc < 1) {
         errmsg = "Require a status. Statuses are: online, busy and away.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
-        return;
+        goto finish;
     }
 
     char status[MAX_STR_SIZE];
@@ -618,7 +621,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     else {
         errmsg = "Invalid status. Valid statuses are: online, busy and away.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
-        return;
+        goto finish;
     }
 
     if (tox_set_user_status(m, status_kind) == -1) {
@@ -632,7 +635,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     if (have_note) {
         if (argv[2][0] != '\"') {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
-            return;
+            goto finish;
         }
 
         /* remove opening and closing quotes */
@@ -643,4 +646,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
         prompt_update_statusmessage(prompt, m, msg);
     }
+
+finish:
+    unlock_status ();
 }
