@@ -23,11 +23,9 @@
 #include <limits.h> /* PATH_MAX */
 #include <stdio.h>  /* fgets, popen, pclose */
 #include <stdlib.h> /* malloc, realloc, free, getenv */
-#include <string.h> /* strlen, strcpy, strstr, strchr, strrchr, strcat, strncmp
-                     */
+#include <string.h> /* strlen, strcpy, strstr, strchr, strrchr, strcat, strncmp */
 
 #include <pthread.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -71,7 +69,24 @@ static char buffer [BUFFER_SIZE];
 static mplex_status mplex = MPLEX_NONE;
 static TOX_USERSTATUS prev_status = TOX_USERSTATUS_NONE;
 static char prev_note [TOX_MAX_STATUSMESSAGE_LENGTH] = "";
-static Tox *tox = NULL;
+
+/* mutex for access to status data, for sync between:
+   - user command /status from ncurses thread
+   - auto-away POSIX timer, which runs from a separate thread
+   after init, should be accessed only by cmd_status()
+ */
+pthread_mutex_t status_lock;
+pthread_t mplex_tid;
+
+void lock_status ()
+{
+    pthread_mutex_lock (&status_lock);
+}
+
+void unlock_status ()
+{
+    pthread_mutex_unlock (&status_lock);
+}
 
 static char *read_into_dyn_buffer (FILE *stream)
 {
@@ -294,7 +309,7 @@ static int mplex_is_detached ()
     return gnu_screen_is_detached ()  ||  tmux_is_detached ();
 }
 
-static void mplex_timer_handler (union sigval param)
+static void mplex_timer_handler (Tox *m)
 {
     int detached;
     TOX_USERSTATUS current_status, new_status;
@@ -304,7 +319,10 @@ static void mplex_timer_handler (union sigval param)
         return;
 
     detached = mplex_is_detached ();
-    current_status = tox_get_self_user_status (tox);
+
+    pthread_mutex_lock (&Winthread.lock);
+    current_status = tox_get_self_user_status (m);
+    pthread_mutex_unlock (&Winthread.lock);
 
     if (current_status == TOX_USERSTATUS_AWAY && !detached)
     {
@@ -316,9 +334,9 @@ static void mplex_timer_handler (union sigval param)
     {
         prev_status = current_status;
         new_status = TOX_USERSTATUS_AWAY;
-        tox_get_self_status_message (tox,
-                                     (uint8_t*) prev_note,
-                                     sizeof (prev_note));
+        pthread_mutex_lock (&Winthread.lock);
+        tox_get_self_status_message (m, (uint8_t*) prev_note, sizeof (prev_note));
+        pthread_mutex_unlock (&Winthread.lock);
         new_note = user_settings->mplex_away_note;
     }
     else
@@ -332,33 +350,38 @@ static void mplex_timer_handler (union sigval param)
     strcpy (argv[2] + 1, new_note);
     strcat (argv[2], "\"");
     pthread_mutex_lock (&Winthread.lock);
-    cmd_status (prompt->chatwin->history, prompt, tox, 2, argv);
+    cmd_status (prompt->chatwin->history, prompt, m, 2, argv);
     pthread_mutex_unlock (&Winthread.lock);
 }
 
-void init_mplex_away_timer (Tox *m)
-{
-    struct sigevent sev;
-    timer_t timer_id;
-    struct itimerspec its;
+/* Time in seconds between calls to mplex_timer_handler */
+#define MPLEX_TIMER_INTERVAL 5
 
+void *mplex_timer_thread(void *data)
+{
+    Tox *m = (Tox *) data;
+
+    while (true) {
+        sleep(MPLEX_TIMER_INTERVAL);
+        mplex_timer_handler(m);
+    }
+}
+
+int init_mplex_away_timer (Tox *m)
+{
     if (! detect_mplex ())
-        return;
+        return 0;
 
     if (! user_settings->mplex_away)
-        return;
+        return 0;
 
-    sev.sigev_notify = SIGEV_THREAD;
-    sev.sigev_notify_function = mplex_timer_handler;
-    sev.sigev_notify_attributes = NULL;
+    /* status access mutex */
+    if (pthread_mutex_init (&status_lock, NULL) != 0)
+        return -1;
 
-    if (timer_create (CLOCK_REALTIME, &sev, &timer_id) == -1)
-        return;
+    if (pthread_create(&mplex_tid, NULL, mplex_timer_thread, (void *) m) != 0)
+        return -1;
 
-    its.it_interval.tv_sec = 5;
-    its.it_interval.tv_nsec = 0;
-    its.it_value = its.it_interval;
-
-    timer_settime (timer_id, 0, &its, NULL);
-    tox = m;
+    return 0;
 }
+

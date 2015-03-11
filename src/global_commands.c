@@ -34,6 +34,7 @@
 #include "groupchat.h"
 #include "prompt.h"
 #include "help.h"
+#include "term_mplex.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -524,7 +525,7 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 }
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{   
+{
     bool have_note = false;
     const char *errmsg;
 

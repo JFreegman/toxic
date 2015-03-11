@@ -85,23 +85,6 @@ struct audio_thread audio_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
 
-/* mutex for access to status data, for sync between:
-   - user command /status from ncurses thread
-   - auto-away POSIX timer, which runs from a separate thread
-   after init, should be accessed only by cmd_status()
- */
-static pthread_mutex_t status_lock;
-
-void lock_status ()
-{
-    pthread_mutex_lock (&status_lock);
-}
-
-void unlock_status ()
-{
-    pthread_mutex_unlock (&status_lock);
-}
-
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
 
@@ -154,14 +137,14 @@ void exit_toxic_success(Tox *m)
 
     tox_kill(m);
     endwin();
-    
+
 #ifdef X11
     /* We have to terminate xtra last coz reasons
      * Please don't call this anywhere else coz trust me
      */
     terminate_xtra();
 #endif /* X11 */
-    
+
     exit(EXIT_SUCCESS);
 }
 
@@ -536,7 +519,7 @@ static void first_time_encrypt(const char *msg)
         system("clear");
         printf("%s ", msg);
 
-        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n") 
+        if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
             || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
             break;
 
@@ -1061,41 +1044,37 @@ int main(int argc, char *argv[])
     if (init_xtra(DnD_callback) == -1)
         queue_init_message("X failed to initialize");
 #endif
-    
+
     Tox *m = init_tox();
-    
+
     if (m == NULL)
-        exit_toxic_err("failed in main", FATALERR_NETWORKINIT); 
-    
+        exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
+
     if (!arg_opts.ignore_data_file) {
         if (arg_opts.encrypt_data && !datafile_exists)
             arg_opts.encrypt_data = 0;
-        
+
         load_data(m, DATA_FILE);
-        
+
     }
-    
+
     init_term();
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m);
-    
+
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
-    
+
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-    
+
     /* thread for message queue */
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
-    /* status access mutex */
-    if (pthread_mutex_init (&status_lock, NULL) != 0)
-        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
-
 #ifdef AUDIO
-    
+
     av = init_audio(prompt, m);
 
     /* audio thread */
@@ -1110,11 +1089,11 @@ int main(int argc, char *argv[])
         queue_init_message("Failed to init audio devices");
 
 #endif /* AUDIO */
-    
+
     init_notify(60, 3000);
 
     const char *msg;
-    
+
     if (config_err) {
         msg = "Unable to determine configuration directory. Defaulting to 'data' for data file...";
         queue_init_message("%s", msg);
@@ -1123,6 +1102,10 @@ int main(int argc, char *argv[])
     if (settings_err == -1)
         queue_init_message("Failed to load user settings");
 
+    /* screen/tmux auto-away timer */
+    if (init_mplex_away_timer (m) == -1)
+        queue_init_message("Failed to init mplex auto-away.");
+
     print_init_messages(prompt);
     cleanup_init_messages();
 
@@ -1130,9 +1113,6 @@ int main(int argc, char *argv[])
     char avatarstr[MAX_STR_SIZE];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
-
-    /* screen/tmux auto-away timer */
-    init_mplex_away_timer (m);
 
     uint64_t last_save = (uint64_t) time(NULL);
     uint64_t looptimer = last_save;
