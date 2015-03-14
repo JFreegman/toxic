@@ -66,6 +66,9 @@ static char mplex_data [BUFFER_SIZE];
 
 static char buffer [BUFFER_SIZE];
 
+/* Differentiates between mplex auto-away and manual-away */
+static bool auto_away_active = false;
+
 static mplex_status mplex = MPLEX_NONE;
 static TOX_USERSTATUS prev_status = TOX_USERSTATUS_NONE;
 static char prev_note [TOX_MAX_STATUSMESSAGE_LENGTH] = "";
@@ -75,8 +78,8 @@ static char prev_note [TOX_MAX_STATUSMESSAGE_LENGTH] = "";
    - auto-away POSIX timer, which runs from a separate thread
    after init, should be accessed only by cmd_status()
  */
-pthread_mutex_t status_lock;
-pthread_t mplex_tid;
+static pthread_mutex_t status_lock;
+static pthread_t mplex_tid;
 
 void lock_status ()
 {
@@ -311,27 +314,28 @@ static int mplex_is_detached ()
 
 static void mplex_timer_handler (Tox *m)
 {
-    int detached;
     TOX_USERSTATUS current_status, new_status;
     const char *new_note;
 
     if (mplex == MPLEX_NONE)
         return;
 
-    detached = mplex_is_detached ();
+    int detached = mplex_is_detached ();
 
     pthread_mutex_lock (&Winthread.lock);
     current_status = tox_get_self_user_status (m);
     pthread_mutex_unlock (&Winthread.lock);
 
-    if (current_status == TOX_USERSTATUS_AWAY && !detached)
+    if (auto_away_active && current_status == TOX_USERSTATUS_AWAY && !detached)
     {
+        auto_away_active = false;
         new_status = prev_status;
         new_note = prev_note;
     }
     else
-    if (current_status != TOX_USERSTATUS_AWAY && detached)
+    if (current_status == TOX_USERSTATUS_NONE && detached)
     {
+        auto_away_active = true;
         prev_status = current_status;
         new_status = TOX_USERSTATUS_AWAY;
         pthread_mutex_lock (&Winthread.lock);
@@ -384,4 +388,3 @@ int init_mplex_away_timer (Tox *m)
 
     return 0;
 }
-
