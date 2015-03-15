@@ -34,18 +34,6 @@ ifeq ($(UNAME_S), Solaris)
 	-include $(CFG_DIR)/systems/Solaris.mk
 endif
 
-# Check on which platform we are running
-UNAME_M = $(shell uname -m)
-ifeq ($(UNAME_M), x86_64)
-	-include $(CFG_DIR)/platforms/x86_64.mk
-endif
-ifneq ($(filter %86, $(UNAME_M)),)
-	-include $(CFG_DIR)/platforms/x86.mk
-endif
-ifneq ($(filter arm%, $(UNAME_M)),)
-	-include $(CFG_DIR)/platforms/arm.mk
-endif
-
 # Include all needed checks
 -include $(CFG_DIR)/checks/check_features.mk
 
