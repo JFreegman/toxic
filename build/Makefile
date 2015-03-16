@@ -19,31 +19,31 @@ OBJ += group_commands.o term_mplex.o
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
-	-include $(CFG_DIR)/systems/Linux.mk
+    -include $(CFG_DIR)/systems/Linux.mk
 endif
 ifeq ($(UNAME_S), FreeBSD)
-	-include $(CFG_DIR)/systems/FreeBSD.mk
+    -include $(CFG_DIR)/systems/FreeBSD.mk
 endif
 ifeq ($(UNAME_S), OpenBSD)
     -include $(CFG_DIR)/systems/FreeBSD.mk
 endif
 ifeq ($(UNAME_S), Darwin)
-	-include $(CFG_DIR)/systems/Darwin.mk
+    -include $(CFG_DIR)/systems/Darwin.mk
 endif
 ifeq ($(UNAME_S), Solaris)
-	-include $(CFG_DIR)/systems/Solaris.mk
+    -include $(CFG_DIR)/systems/Solaris.mk
 endif
 
 # Check on which platform we are running
 UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_M), x86_64)
-	-include $(CFG_DIR)/platforms/x86_64.mk
+    -include $(CFG_DIR)/platforms/x86_64.mk
 endif
 ifneq ($(filter %86, $(UNAME_M)),)
-	-include $(CFG_DIR)/platforms/x86.mk
+    -include $(CFG_DIR)/platforms/x86.mk
 endif
 ifneq ($(filter arm%, $(UNAME_M)),)
-	-include $(CFG_DIR)/platforms/arm.mk
+    -include $(CFG_DIR)/platforms/arm.mk
 endif
 
 # Include all needed checks

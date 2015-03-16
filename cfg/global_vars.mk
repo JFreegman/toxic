@@ -2,9 +2,9 @@
 TOXIC_VERSION = 0.5.2
 REV = $(shell git rev-list HEAD --count 2>/dev/null || echo -n "error")
 ifneq (, $(findstring error, $(REV)))
-	VERSION = $(TOXIC_VERSION)
+    VERSION = $(TOXIC_VERSION)
 else
-	VERSION = $(TOXIC_VERSION)_r$(REV)
+    VERSION = $(TOXIC_VERSION)_r$(REV)
 endif
 
 # Project directories

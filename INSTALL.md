@@ -14,7 +14,7 @@
 | [Tox Core](https://github.com/irungentoo/toxcore)    | BASE                       | *None*           |
 | [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev |
 | [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev    |
-| [GNUmake](http://www.gnu.org/software/make/)         | BASE                       | make             |
+| [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make             |
 | [Tox Core AV](https://github.com/irungentoo/toxcore) | AUDIO                      | *None*           |
 | [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev    |
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev      |
