@@ -284,6 +284,8 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
         }
     }
 
+    closedir(dp);
+
     if (dircount == 0)
         return -1;
 
