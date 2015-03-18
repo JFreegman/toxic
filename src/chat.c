@@ -325,6 +325,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     int count = 1;
 
     while ((filecheck = fopen(filename, "r"))) {
+        fclose(filecheck);
         filename[len] = '\0';
         char d[9];
         sprintf(d, "(%d)", count++);
