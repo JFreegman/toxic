@@ -167,10 +167,8 @@ static void kill_groupchat_window(ToxWindow *self)
 }
 
 /* Closes groupchat window and cleans up. */
-void close_groupchat(ToxWindow *self, Tox *m, int groupnum, const char *partmessage, int length)
+void close_groupchat(ToxWindow *self, Tox *m, int groupnum)
 {
-    tox_group_delete(m, groupnum, (uint8_t *) partmessage, (uint16_t) length);
-
     free(groupchats[groupnum].peer_names);
     free(groupchats[groupnum].peer_name_lengths);
     memset(&groupchats[groupnum], 0, sizeof(GroupChat));
@@ -184,6 +182,12 @@ void close_groupchat(ToxWindow *self, Tox *m, int groupnum, const char *partmess
 
     max_groupchat_index = i;
     kill_groupchat_window(self);
+}
+
+static void exit_groupchat(ToxWindow *self, Tox *m, int groupnum, const char *partmessage, int length)
+{
+    tox_group_delete(m, groupnum, (uint8_t *) partmessage, (uint16_t) length);
+    close_groupchat(self, m, groupnum);
 }
 
 /* Note: the arguments to these functions are validated in the caller functions */
@@ -744,7 +748,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 if (line[offset] != '\0')
                     ++offset;
 
-                close_groupchat(self, m, self->num, line + offset, ctx->len - offset);
+                exit_groupchat(self, m, self->num, line + offset, ctx->len - offset);
                 return;
             } else if (strncmp(line, "/me ", 4) == 0) {
                 send_group_action(self, m, self->num, line + 4);
