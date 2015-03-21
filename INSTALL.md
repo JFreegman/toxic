@@ -36,7 +36,6 @@ You can omit `libnotify` if you intend to build without desktop notifications en
 <a name="Compiling">
 ## Compiling
 ```
-cd build/
 make PREFIX="/where/to/install"
 sudo make install PREFIX="/where/to/install"
 ```

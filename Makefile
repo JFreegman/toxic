@@ -1,4 +1,4 @@
-BASE_DIR = $(shell cd .. && pwd -P)
+BASE_DIR = $(shell pwd -P)
 CFG_DIR = $(BASE_DIR)/cfg
 
 -include $(CFG_DIR)/global_vars.mk
@@ -49,22 +49,28 @@ endif
 # Include all needed checks
 -include $(CFG_DIR)/checks/check_features.mk
 
+# Fix path for object files
+OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
+
 # Targets
-all: toxic
+all: $(BUILD_DIR)/toxic
 
-toxic: $(OBJ)
-	@echo "  LD    $@"
-	@$(CC) $(CFLAGS) -o toxic $(OBJ) $(LDFLAGS)
+$(BUILD_DIR)/toxic: $(OBJ)
+	@echo "  LD    $(@:$(BUILD_DIR)/%=%)"
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/toxic $(OBJ) $(LDFLAGS)
 
-%.o: $(SRC_DIR)/%.c
-	@echo "  CC    $@"
-	@$(CC) $(CFLAGS) -o $*.o -c $(SRC_DIR)/$*.c
-	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $*.d
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@if [ ! -e $(BUILD_DIR) ]; then \
+		mkdir -p $(BUILD_DIR) ;\
+	fi
+	@echo "  CC    $(@:$(BUILD_DIR)/%=%)"
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/$*.o -c $(SRC_DIR)/$*.c
+	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $(BUILD_DIR)/$*.d
 
 clean:
-	rm -f *.d *.o toxic
+	rm -rf $(BUILD_DIR)
 
--include $(OBJ:.o=.d)
+-include $(BUILD_DIR)/$(OBJ:.o=.d)
 
 -include $(CFG_DIR)/targets/*.mk
 

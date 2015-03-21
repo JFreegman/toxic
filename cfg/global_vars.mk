@@ -8,6 +8,7 @@ else
 endif
 
 # Project directories
+BUILD_DIR = $(BASE_DIR)/build
 DOC_DIR = $(BASE_DIR)/doc
 SRC_DIR = $(BASE_DIR)/src
 SND_DIR = $(BASE_DIR)/sounds
