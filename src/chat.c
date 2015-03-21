@@ -325,6 +325,7 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     int count = 1;
 
     while ((filecheck = fopen(filename, "r"))) {
+        fclose(filecheck);
         filename[len] = '\0';
         char d[9];
         sprintf(d, "(%d)", count++);
@@ -849,6 +850,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
+
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
@@ -886,6 +888,13 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             diff = dir_match(self, m, ctx->line, L"/sendfile");
         } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/avatar");
+        } else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0){
+            const char status_cmd_list[3][8] = {
+              {"online"},
+              {"away"},
+              {"busy"},
+            };
+            diff = complete_line(self, status_cmd_list, 3, 8);
         } else {
             diff = complete_line(self, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
         }

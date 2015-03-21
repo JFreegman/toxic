@@ -14,6 +14,7 @@
 | [Tox Core](https://github.com/irungentoo/toxcore)    | BASE                       | *None*           |
 | [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev |
 | [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev    |
+| [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make             |
 | [Tox Core AV](https://github.com/irungentoo/toxcore) | AUDIO                      | *None*           |
 | [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev    |
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev      |
@@ -35,7 +36,6 @@ You can omit `libnotify` if you intend to build without desktop notifications en
 <a name="Compiling">
 ## Compiling
 ```
-cd build/
 make PREFIX="/where/to/install"
 sudo make install PREFIX="/where/to/install"
 ```

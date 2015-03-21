@@ -1026,6 +1026,7 @@ void DnD_callback(const char* asdv, DropType dt)
 
 int main(int argc, char *argv[])
 {
+
     parse_args(argc, argv);
 
     if (arg_opts.encrypt_data && arg_opts.unencrypt_data) {

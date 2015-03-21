@@ -245,7 +245,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     const wchar_t *tmpline = &line[wcslen(cmd) + 2];   /* start after "/command \"" */
 
     if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1)
-        return -1; 
+        return -1;
 
     if (wcs_to_mbs_buf(b_cmd, cmd, sizeof(b_cmd)) == -1)
         return -1;
@@ -257,11 +257,11 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 
     if (!b_path[0]) {    /* list everything in pwd */
         b_path[0] = '.';
-        b_path[1] = '\0'; 
+        b_path[1] = '\0';
     } else if (!si && b_path[0] != '/') {    /* look for matches in pwd */
         char tmp[MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), ".%s", b_path);
-        strcpy(b_path, tmp);  
+        strcpy(b_path, tmp);
     }
 
     strcpy(b_name, &b_path[si + 1]);
@@ -277,12 +277,14 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     int dircount = 0;
 
     while ((entry = readdir(dp)) && dircount < MAX_DIRS) {
-        if (strncmp(entry->d_name, b_name, b_name_len) == 0 
+        if (strncmp(entry->d_name, b_name, b_name_len) == 0
                                 && strcmp(".", entry->d_name) && strcmp("..", entry->d_name)) {
             snprintf(dirnames[dircount], sizeof(dirnames[dircount]), "%s", entry->d_name);
             ++dircount;
         }
     }
+
+    closedir(dp);
 
     if (dircount == 0)
         return -1;

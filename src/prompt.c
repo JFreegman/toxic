@@ -194,7 +194,14 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0)
                 diff = dir_match(self, m, ctx->line, L"/avatar");
-            else
+            else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0){
+                const char status_cmd_list[3][8] = {
+                  {"online"},
+                  {"away"},
+                  {"busy"},
+                };
+                diff = complete_line(self, status_cmd_list, 3, 8);
+            } else
                 diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
 
             if (diff != -1) {
