@@ -1,8 +1,8 @@
 # Install target
-install: toxic
+install: $(BUILD_DIR)/toxic
 	@echo "Installing toxic executable"
 	@mkdir -p $(abspath $(DESTDIR)/$(BINDIR))
-	@install -m 0755 toxic $(abspath $(DESTDIR)/$(BINDIR)/toxic)
+	@install -m 0755 $(BUILD_DIR)/toxic $(abspath $(DESTDIR)/$(BINDIR)/toxic)
 	
 	@echo "Installing desktop file"
 	@mkdir -p $(abspath $(DESTDIR)/$(APPDIR))

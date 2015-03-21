@@ -41,7 +41,6 @@ before_script:
   - sudo make install
   - cd ..
 script:
-  - cd build
   - make -j2 || make || exit 1
 notifications:
   email: false
