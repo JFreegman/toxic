@@ -68,7 +68,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $(BUILD_DIR)/$*.d
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -f $(BUILD_DIR)/*.d $(BUILD_DIR)/*.o $(BUILD_DIR)/toxic
 
 -include $(BUILD_DIR)/$(OBJ:.o=.d)
 
