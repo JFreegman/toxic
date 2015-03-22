@@ -686,6 +686,7 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const
     size_t i;
     int peernum = -1, len = 0;
     const char *msg = NULL;
+    char *nick = NULL;
 
     for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
         if (memcmp((char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH], data,
@@ -696,6 +697,7 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const
                 return;
 
             msg = data + groupchats[groupnum].peer_name_lengths[i] + 1;
+            nick = (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH];
             peernum = i;
             break;
         }
@@ -711,15 +713,17 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const
         return;
     }
 
-    char selfname[TOX_MAX_NAME_LENGTH];
-    uint16_t slen = tox_group_get_self_name(m, groupnum, (uint8_t *) selfname);
-    selfname[slen] = '\0';
+    /* turn "peername" into ">peername<" to signify private message */
+    char pm_nick[TOX_MAX_NAME_LENGTH + 2];
+    strcpy(pm_nick, ">");
+    strcpy(pm_nick + 1, nick);
+    strcpy(pm_nick + 1 + groupchats[groupnum].peer_name_lengths[i], "<");
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, OUT_PRVT_MSG, 0, 0, "%s", msg);
-    write_to_log(msg, selfname, ctx->log, false);
+    line_info_add(self, timefrmt, pm_nick, NULL, OUT_PRVT_MSG, 0, 0, "%s", msg);
+    write_to_log(msg, pm_nick, ctx->log, false);
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
