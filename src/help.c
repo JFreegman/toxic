@@ -246,7 +246,8 @@ static void help_draw_group(ToxWindow *self)
     wprintw(win, "  /ignore <nick>             : Ignore peer\n");
     wprintw(win, "  /rejoin                    : Rejoin the group (only works if not connected)\n");
     wprintw(win, "  /topic <msg>               : Set group topic (show current topic if no msg)\n");
-    wprintw(win, "  /unignore <nick>           : Unignore peer \n\n");
+    wprintw(win, "  /unignore <nick>           : Unignore peer \n");
+    wprintw(win, "  /whisper <nick> <msg>      : Send private message to nick\n\n");
 
 #ifdef AUDIO
     wattron(win, A_BOLD);
@@ -313,9 +314,9 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'r':
 #ifdef AUDIO
-            help_init_window(self, 14, 80);
+            help_init_window(self, 15, 80);
 #else
-            help_init_window(self, 10, 80);
+            help_init_window(self, 11, 80);
 #endif
             self->help->type = HELP_GROUP;
             break;

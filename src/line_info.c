@@ -164,6 +164,11 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
             len += strlen(user_settings->line_normal) + 3;
             break;
 
+        case IN_PRVT_MSG:
+        case OUT_PRVT_MSG:
+            len += strlen(user_settings->line_special) + 3;
+            break;
+
         case CONNECTION:
             len += strlen(user_settings->line_join) + 2;
             break;
@@ -301,6 +306,8 @@ void line_info_print(ToxWindow *self)
             case OUT_MSG:
             case OUT_MSG_READ:
             case IN_MSG:
+            case IN_PRVT_MSG:
+            case OUT_PRVT_MSG:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
@@ -313,7 +320,10 @@ void line_info_print(ToxWindow *self)
                     nameclr = CYAN;
 
                 wattron(win, COLOR_PAIR(nameclr));
-                wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
+                wprintw(win, "%s %s: ",(type != OUT_PRVT_MSG && type != IN_PRVT_MSG) ?
+                                        user_settings->line_normal :
+                                        user_settings->line_special,
+                                        line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
                 if (line->msg[0] == '>')

@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 27
+#define AC_NUM_GROUP_COMMANDS 28
 #else
-#define AC_NUM_GROUP_COMMANDS 23
+#define AC_NUM_GROUP_COMMANDS 24
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -100,6 +100,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/status"     },
     { "/topic"      },
     { "/unignore"   },
+    { "/whisper"    },
 
 #ifdef AUDIO
 
@@ -345,7 +346,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
 }
 
 static void groupchat_onGroupPrivateMessage(ToxWindow *self, Tox *m, int groupnum, uint32_t peernum,
-                                            const char *action, uint16_t len)
+                                            const char *msg, uint16_t len)
 {
     if (self->num != groupnum)
         return;
@@ -358,8 +359,8 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Tox *m, int groupnu
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, RED, "%s", action);
-    write_to_log(action, nick, ctx->log, false);
+    line_info_add(self, timefrmt, nick, NULL, IN_PRVT_MSG, 0, MAGENTA, "%s", msg);
+    write_to_log(msg, nick, ctx->log, false);
     sound_notify(self, silent, NT_WNDALERT_1, NULL);
 }
 
@@ -627,9 +628,13 @@ static void send_group_message(ToxWindow *self, Tox *m, int groupnum, const char
 {
     ChatContext *ctx = self->chatwin;
 
+    if (msg == NULL) {
+        wprintw(ctx->history, "Invalid syntax.\n");
+        return;
+    }
+
     if (tox_group_message_send(m, self->num, (uint8_t *) msg, strlen(msg)) == -1) {
-        const char *errmsg = " * Failed to send message.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", errmsg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message");
         return;
     }
 
@@ -644,7 +649,7 @@ static void send_group_message(ToxWindow *self, Tox *m, int groupnum, const char
     write_to_log(msg, selfname, ctx->log, false);
 }
 
-static void send_group_action(ToxWindow *self, Tox *m, int groupnum, char *action)
+static void send_group_action(ToxWindow *self, Tox *m, int groupnum, const char *action)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -654,8 +659,7 @@ static void send_group_action(ToxWindow *self, Tox *m, int groupnum, char *actio
     }
 
     if (tox_group_action_send(m, groupnum, (uint8_t *) action, strlen(action)) == -1) {
-        const char *errmsg = " * Failed to send action.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "%s", errmsg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send action");
         return;
     }
 
@@ -668,6 +672,54 @@ static void send_group_action(ToxWindow *self, Tox *m, int groupnum, char *actio
 
     line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION_READ, 0, 0, "%s", action);
     write_to_log(action, selfname, ctx->log, true);
+}
+
+static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const char *data)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (data == NULL) {
+        wprintw(ctx->history, "Invalid syntax.\n");
+        return;
+    }
+
+    size_t i;
+    int peernum = -1, len = 0;
+    const char *msg = NULL;
+
+    for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
+        if (memcmp((char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH], data,
+                             groupchats[groupnum].peer_name_lengths[i]) == 0) {
+            len = strlen(data) - groupchats[groupnum].peer_name_lengths[i] - 1;
+
+            if (len <= 0)
+                return;
+
+            msg = data + groupchats[groupnum].peer_name_lengths[i] + 1;
+            peernum = i;
+            break;
+        }
+    }
+
+    if (peernum == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid peer name");
+        return;
+    }
+
+    if (tox_group_private_message_send(m, groupnum, peernum, (uint8_t *) msg, len) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send private message");
+        return;
+    }
+
+    char selfname[TOX_MAX_NAME_LENGTH];
+    uint16_t slen = tox_group_get_self_name(m, groupnum, (uint8_t *) selfname);
+    selfname[slen] = '\0';
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, selfname, NULL, OUT_PRVT_MSG, 0, 0, "%s", msg);
+    write_to_log(msg, selfname, ctx->log, false);
 }
 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
@@ -742,7 +794,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             add_line_to_hist(ctx);
 
         if (line[0] == '/') {
-            if (strncmp(line, "/close", 6) == 0) {
+            if (strncmp(line, "/close", strlen("/close")) == 0) {
                 int offset = 6;
 
                 if (line[offset] != '\0')
@@ -750,8 +802,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
                 exit_groupchat(self, m, self->num, line + offset, ctx->len - offset);
                 return;
-            } else if (strncmp(line, "/me ", 4) == 0) {
+            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                 send_group_action(self, m, self->num, line + 4);
+            } else if (strncmp(line, "/whisper ", strlen("/whisper ")) == 0) {
+                send_group_prvt_message(self, m, self->num, line + 9);
             } else {
                 execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
             }

@@ -62,6 +62,7 @@ static struct ui_strings {
     const char* line_quit;
     const char* line_alert;
     const char* line_normal;
+    const char* line_special;
 
     const char* mplex_away;
     const char* mplex_away_note;
@@ -82,11 +83,12 @@ static struct ui_strings {
     "line_quit",
     "line_alert",
     "line_normal",
+    "line_special",
     "mplex_away",
     "mplex_away_note",
 };
 
-static void ui_defaults(struct user_settings* settings) 
+static void ui_defaults(struct user_settings* settings)
 {
     settings->timestamps = TIMESTAMPS_ON;
     snprintf(settings->timestamp_format, sizeof(settings->timestamp_format), "%s", TIMESTAMP_DEFAULT);
@@ -104,6 +106,7 @@ static void ui_defaults(struct user_settings* settings)
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
     snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
+    snprintf(settings->line_special, LINE_HINT_MAX + 1, "%s", LINE_SPECIAL);
 
     settings->mplex_away = MPLEX_ON;
     snprintf (settings->mplex_away_note,
@@ -225,11 +228,11 @@ static int key_parse(const char** bind){
     int len = strlen(*bind);
 
     if (len > 5) {
-        if(strncasecmp(*bind, "ctrl+", 5) == 0) 
+        if(strncasecmp(*bind, "ctrl+", 5) == 0)
             return toupper(bind[0][5]) - 'A' + 1;
     }
 
-    if (strncasecmp(*bind, "tab", 3) == 0) 
+    if (strncasecmp(*bind, "tab", 3) == 0)
         return T_KEY_TAB;
 
     if (strncasecmp(*bind, "page", 4) == 0)
@@ -321,6 +324,9 @@ int settings_load(struct user_settings *s, const char *patharg)
         if ( config_setting_lookup_string(setting, ui_strings.line_normal, &str) ) {
             snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
         }
+        if ( config_setting_lookup_string(setting, ui_strings.line_special, &str) ) {
+            snprintf(s->line_special, sizeof(s->line_special), "%s", str);
+        }
 
         config_setting_lookup_bool (setting, ui_strings.mplex_away, &s->mplex_away);
 
@@ -346,7 +352,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
             int len = strlen(s->chatlogs_path);
 
-            if (len >= sizeof(s->chatlogs_path) - 2) 
+            if (len >= sizeof(s->chatlogs_path) - 2)
                 s->chatlogs_path[0] = '\0';
             else if (s->chatlogs_path[len - 1] != '/')
                 strcat(&s->chatlogs_path[len - 1], "/");
@@ -356,7 +362,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
             int len = strlen(str);
 
-            if (len >= sizeof(s->avatar_path)) 
+            if (len >= sizeof(s->avatar_path))
                 s->avatar_path[0] = '\0';
         }
     }
@@ -423,25 +429,25 @@ int settings_load(struct user_settings *s, const char *patharg)
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(call_incoming, PACKAGE_DATADIR "/sounds/ToxicIncomingCall.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ||
                 !set_sound(call_outgoing, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/ToxicOutgoingCall.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.generic_message, &str) ||
                 !set_sound(generic_message, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(generic_message, PACKAGE_DATADIR "/sounds/ToxicRecvMessage.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.transfer_pending, &str) ||
                 !set_sound(transfer_pending, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/ToxicTransferStart.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.transfer_completed, &str) ||
                 !set_sound(transfer_completed, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)

@@ -94,8 +94,8 @@ static struct cmd_func group_commands[] = {
     { NULL,         NULL            },
 };
 
-#define SPECIAL_COMMANDS 9
-static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
+#define NUM_SPECIAL_COMMANDS 9
+static const char special_commands[NUM_SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
     "/ban",
     "/deop",
     "/group",
@@ -117,7 +117,7 @@ static bool is_special_command(const char *input)
 
     int i;
 
-    for (i = 0; i < SPECIAL_COMMANDS; ++i) {
+    for (i = 0; i < NUM_SPECIAL_COMMANDS; ++i) {
         if (strncmp(input, special_commands[i], s) == 0)
             return true;
     }
@@ -127,7 +127,9 @@ static bool is_special_command(const char *input)
 
 /* Parses commands in the special_commands array which take exactly one argument that may contain spaces.
  * Unlike parse_command, this function does not split the input string at spaces.
- * Returns number of arguments on success, returns -1 on failure
+ *
+ * Returns number of arguments on success
+ * Returns -1 on failure
  */
 static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
@@ -146,7 +148,9 @@ static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, 
 }
 
 /* Parses input command and puts args (split by spaces) into args array.
- * Returns number of arguments on success, -1 on failure.
+ *
+ * Returns number of arguments on success
+ * Returns -1 on failure.
  */
 static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
@@ -194,7 +198,11 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
     return num_args;
 }
 
-/* Matches command to respective function. Returns 0 on match, 1 on no match */
+/* Matches command to respective function.
+ *
+ * Returns 0 on match,
+ * Returns -1 on no match
+ */
 static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct cmd_func *commands,
                       char (*args)[MAX_STR_SIZE])
 {
@@ -207,7 +215,7 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct c
         }
     }
 
-    return 1;
+    return -1;
 }
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
