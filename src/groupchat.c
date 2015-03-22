@@ -684,22 +684,18 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const
     }
 
     size_t i;
-    int peernum = -1, len = 0;
-    const char *msg = NULL;
+    int peernum = -1, nick_len = 0;
     char *nick = NULL;
 
+    /* need to match the longest nick in case of nicks that are smaller sub-strings */
     for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
         if (memcmp((char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH], data,
                              groupchats[groupnum].peer_name_lengths[i]) == 0) {
-            len = strlen(data) - groupchats[groupnum].peer_name_lengths[i] - 1;
-
-            if (len <= 0)
-                return;
-
-            msg = data + groupchats[groupnum].peer_name_lengths[i] + 1;
-            nick = (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH];
-            peernum = i;
-            break;
+            if (groupchats[groupnum].peer_name_lengths[i] > nick_len) {
+                nick_len = groupchats[groupnum].peer_name_lengths[i];
+                nick = (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH];
+                peernum = i;
+            }
         }
     }
 
@@ -708,7 +704,14 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const
         return;
     }
 
-    if (tox_group_private_message_send(m, groupnum, peernum, (uint8_t *) msg, len) == -1) {
+    int msg_len = strlen(data) - groupchats[groupnum].peer_name_lengths[peernum] - 1;
+
+    if (msg_len <= 0)
+        return;
+
+    const char *msg = data + groupchats[groupnum].peer_name_lengths[peernum] + 1;
+
+    if (tox_group_private_message_send(m, groupnum, peernum, (uint8_t *) msg, msg_len) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send private message");
         return;
     }
@@ -717,7 +720,7 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, int groupnum, const
     char pm_nick[TOX_MAX_NAME_LENGTH + 2];
     strcpy(pm_nick, ">");
     strcpy(pm_nick + 1, nick);
-    strcpy(pm_nick + 1 + groupchats[groupnum].peer_name_lengths[i], "<");
+    strcpy(pm_nick + 1 + groupchats[groupnum].peer_name_lengths[peernum], "<");
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
