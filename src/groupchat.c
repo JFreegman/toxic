@@ -361,7 +361,13 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Tox *m, int groupnu
 
     line_info_add(self, timefrmt, nick, NULL, IN_PRVT_MSG, 0, MAGENTA, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
-    sound_notify(self, silent, NT_WNDALERT_1, NULL);
+
+    sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
+
+    if (self->active_box != -1)
+        box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+    else
+        box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
 }
 
 static void groupchat_onGroupTopicChange(ToxWindow *self, Tox *m, int groupnum, uint32_t peernum,
