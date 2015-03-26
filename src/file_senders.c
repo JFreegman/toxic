@@ -53,7 +53,7 @@ void prep_prog_line(char *progline)
     strcat(progline, "] 0%");
 }
 
-/* prints a progress bar for file transfers. 
+/* prints a progress bar for file transfers.
    if friendnum is -1 we're sending the file, otherwise we're receiving.  */
 void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_done)
 {
@@ -136,7 +136,7 @@ static void refresh_sender_prog(Tox *m)
             continue;
 
         int filenum = file_senders[i].filenum;
-        int32_t friendnum = file_senders[i].friendnum;
+        uint32_t friendnum = file_senders[i].friendnum;
         double remain = (double) tox_file_data_remaining(m, friendnum, filenum, 0);
 
         /* must be called once per second */
@@ -175,11 +175,11 @@ void reset_file_sender_queue(void)
 
 /* set CTRL to -1 if we don't want to send a control signal.
    set msg to NULL if we don't want to display a message */
-void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, int32_t friendnum)
+void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL, int filenum, uint32_t friendnum)
 {
-    if (msg != NULL) 
+    if (msg != NULL)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
-    
+
     if (CTRL > 0)
         tox_file_send_control(m, friendnum, 0, filenum, CTRL, 0, 0);
 
@@ -192,7 +192,7 @@ void close_file_sender(ToxWindow *self, Tox *m, int i, const char *msg, int CTRL
 
 void close_all_file_senders(Tox *m)
 {
-    int i;
+    uint8_t i;
 
     for (i = 0; i < max_file_senders_index; ++i) {
         if (file_senders[i].active) {
@@ -206,17 +206,21 @@ void close_all_file_senders(Tox *m)
     }
 }
 
-static void send_file_data(ToxWindow *self, Tox *m, int i, int32_t friendnum, int filenum, const char *filename)
+static void send_file_data(ToxWindow *self, Tox *m, uint8_t i, uint32_t friendnum, uint32_t filenum,
+                           const char *filename)
 {
     FILE *fp = file_senders[i].file;
 
     while (true) {
-        if (tox_file_send_data(m, friendnum, filenum, (uint8_t *) file_senders[i].nextpiece,
-                               file_senders[i].piecelen) == -1)
+        TOX_ERR_FILE_SEND_CHUNK err;
+        if (!tox_file_send_chunk(m, friendnum, filenum, (uint8_t *) file_senders[i].nextpiece,
+                                 file_senders[i].piecelen, &err) {
+            fprintf(stderr, "tox_file_send_chunk failed with error %d\n", err);
             return;
+        }
 
         file_senders[i].timestamp = get_unix_time();
-        file_senders[i].bps += file_senders[i].piecelen;            
+        file_senders[i].bps += file_senders[i].piecelen;
         file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
                                          tox_file_data_size(m, friendnum), fp);
 
@@ -259,7 +263,7 @@ void do_file_senders(Tox *m)
         ToxWindow *self = file_senders[i].toxwin;
         char *filename = file_senders[i].filename;
         int filenum = file_senders[i].filenum;
-        int32_t friendnum = file_senders[i].friendnum;
+        uint32_t friendnum = file_senders[i].friendnum;
 
         /* kill file transfer if chatwindow is closed */
         if (self->chatwin == NULL) {
@@ -273,7 +277,7 @@ void do_file_senders(Tox *m)
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", filename);
             close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, friendnum);
-            
+
             if (self->active_box != -1)
                 box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
             else

@@ -66,7 +66,7 @@ struct user_settings {
     int key_toggle_peerlist;
 
     int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
-    char mplex_away_note [TOX_MAX_STATUSMESSAGE_LENGTH];
+    char mplex_away_note [TOX_MAX_STATUS_MESSAGE_LENGTH];
 
 #ifdef AUDIO
     int audio_in_dev;

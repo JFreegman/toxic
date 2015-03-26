@@ -226,7 +226,7 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
 }
 
 /* adds a single queue item to hst if possible. only called once per call to line_info_print() */
-static void line_info_check_queue(ToxWindow *self) 
+static void line_info_check_queue(ToxWindow *self)
 {
     struct history *hst = self->chatwin->hst;
     struct line_info *line = line_info_ret_queue(hst);
@@ -484,14 +484,14 @@ static void line_info_scroll_up(struct history *hst)
 {
     if (hst->line_start->prev)
         hst->line_start = hst->line_start->prev;
-    else sound_notify(NULL, error, NT_ALWAYS, NULL);
+    else sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
 }
 
 static void line_info_scroll_down(struct history *hst)
 {
     if (hst->line_start->next)
         hst->line_start = hst->line_start->next;
-    else sound_notify(NULL, error, NT_ALWAYS, NULL);
+    else sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
 }
 
 static void line_info_page_up(ToxWindow *self, struct history *hst)

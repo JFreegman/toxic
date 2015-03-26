@@ -114,13 +114,18 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    int len = strlen(statusbar->statusmsg);
+    size_t len = strlen(statusbar->statusmsg);
     statusbar->statusmsg_len = len;
-    tox_set_status_message(m, (uint8_t *) statusmsg, (uint64_t) len);
+
+    TOX_ERR_SET_INFO err;
+    tox_self_set_status_message(m, (uint8_t *) statusmsg, len, &err);
+
+    if (err != TOX_ERR_SET_INFO_OK)
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
 }
 
 /* Updates own status in prompt statusbar */
-void prompt_update_status(ToxWindow *prompt, uint8_t status)
+void prompt_update_status(ToxWindow *prompt, TOX_USER_STATUS status)
 {
     StatusBar *statusbar = prompt->stb;
     statusbar->status = status;
@@ -209,10 +214,10 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                sound_notify(self, error, 0, NULL);
+                sound_notify(self, notif_error, 0, NULL);
             }
         } else {
-            sound_notify(self, error, 0, NULL);
+            sound_notify(self, notif_error, 0, NULL);
         }
     } else if (key == '\n') {
         rm_trailing_spaces_buf(ctx);
@@ -254,28 +259,21 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     wmove(statusbar->topline, 0, 0);
 
     if (statusbar->is_online) {
-        int colour = WHITE;
-        const char *status_text = "Unknown";
+        int colour = MAGENTA;
+        const char *status_text = "ERROR";
 
         switch (statusbar->status) {
-            case TOX_USERSTATUS_NONE:
+            case TOX_USER_STATUS_NONE:
                 status_text = "Online";
                 colour = GREEN;
                 break;
-
-            case TOX_USERSTATUS_AWAY:
+            case TOX_USER_STATUS_AWAY:
                 status_text = "Away";
                 colour = YELLOW;
                 break;
-
-            case TOX_USERSTATUS_BUSY:
+            case TOX_USER_STATUS_BUSY:
                 status_text = "Busy";
                 colour = RED;
-                break;
-
-            case TOX_USERSTATUS_INVALID:
-                status_text = "ERROR";
-                colour = MAGENTA;
                 break;
         }
 
@@ -295,10 +293,10 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     /* Reset statusbar->statusmsg on window resize */
     if (x2 != self->x) {
-        char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {0};
+        char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
 
         pthread_mutex_lock(&Winthread.lock);
-        tox_get_self_status_message(m, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        tox_self_get_status_message(m, (uint8_t *) statusmsg);
         pthread_mutex_unlock(&Winthread.lock);
 
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -334,7 +332,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         help_onDraw(self);
 }
 
-static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum , uint8_t status)
+static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum , TOX_CONNECTION connection_status)
 {
     if (friendnum < 0)
         return;
@@ -351,7 +349,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
     get_time_str(timefrmt, sizeof(timefrmt));
     const char *msg;
 
-    if (status == 1) {
+    if (connection_status != TOX_CONNECTION_NONE) {
         msg = "has come online";
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
@@ -376,7 +374,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, int32_t friendnum
     }
 }
 
-static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data, uint16_t length)
+static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data, size_t length)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -406,15 +404,19 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
-    statusbar->status = TOX_USERSTATUS_NONE;
+    statusbar->status = TOX_USER_STATUS_NONE;
     statusbar->is_online = false;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    char statusmsg[MAX_STR_SIZE];
+    char statusmsg[TOX_MAX_STATUS_MESSAGE_SIZE];
 
-    uint16_t n_len = tox_get_self_name(m, (uint8_t *) nick);
-    uint16_t s_len = tox_get_self_status_message(m, (uint8_t *) statusmsg, MAX_STR_SIZE);
-    uint8_t status = tox_get_self_user_status(m);
+    size_t n_len = tox_self_get_name_size(m);
+    tox_self_get_name(m, (uint8_t *) nick);
+
+    size_t s_len = tox_self_get_status_message_size(m);
+    tox_self_get_status_message(m, (uint8_t *) statusmsg);
+
+    TOX_USER_STATUS status = tox_self_get_status(m);
 
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';
@@ -468,8 +470,8 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     line_info_init(ctx->hst);
 
     if (user_settings->autolog == AUTOLOG_ON) {
-        char myid[TOX_FRIEND_ADDRESS_SIZE];
-        tox_get_address(m, (uint8_t *) myid);
+        char myid[TOX_ADDRESS_SIZE];
+        tox_self_get_address(m, (uint8_t *) myid);
         log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT);
     }
 

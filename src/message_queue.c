@@ -103,7 +103,9 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
         }
 
         char selfname[TOX_MAX_NAME_LENGTH];
-        uint16_t len = tox_get_self_name(m, (uint8_t *) selfname);
+        tox_self_get_name(m, (uint8_t *) selfname);
+
+        size_t len = tox_self_get_name_size(m);
         selfname[len] = '\0';
 
         write_to_log(msg->message, selfname, self->chatwin->log, msg->type == OUT_ACTION);

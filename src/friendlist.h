@@ -35,8 +35,8 @@ struct FileReceiver {
     FILE *file;
     bool pending;
     bool active;
-    uint64_t size;
-    uint64_t bytes_recv;
+    size_t size;
+    size_t bytes_recv;
     double bps;
     uint64_t last_progress;   /* unix-time when we last updated progress */
     uint32_t line_id;
@@ -58,14 +58,14 @@ struct GroupChatInvite {
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     int namelength;
-    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH + 1];
+    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
     uint16_t statusmsg_len;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
-    int32_t num;
+    uint32_t num;
     int chatwin;
     bool active;
-    bool online;
-    uint8_t is_typing;
+    TOX_CONNECTION connection_status;
+    bool is_typing;
     bool logging_on;    /* saves preference for friend irrespective of global settings */
     uint8_t status;
     struct LastOnline last_online;
@@ -78,25 +78,26 @@ typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     int namelength;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
-    int32_t num;
+    uint32_t num;
     bool active;
     uint64_t last_on;
 } BlockedFriend;
 
 typedef struct {
     int num_selected;
-    int max_idx;    /* 1 + the index of the last friend in list */
-    int num_friends;
-    int *index;
+    size_t num_friends;
+    size_t num_online;
+    size_t max_idx;    /* 1 + the index of the last friend in list */
+    uint32_t *index;
     ToxicFriend *list;
 } FriendsList;
 
 ToxWindow new_friendlist(void);
-void disable_chatwin(int32_t f_num);
+void disable_chatwin(uint32_t f_num);
 int get_friendnum(uint8_t *name);
 int load_blocklist(char *data);
 void kill_friendlist(void);
-void friendlist_onFriendAdded(ToxWindow *self, Tox *m, int32_t num, bool sort);
+void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort);
 
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void);

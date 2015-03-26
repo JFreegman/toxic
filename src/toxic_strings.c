@@ -125,7 +125,7 @@ int yank_buf(ChatContext *ctx)
     return 0;
 }
 
-/* Deletes all characters from line starting at pos and going backwards 
+/* Deletes all characters from line starting at pos and going backwards
    until we find a space or run out of characters.
    Return 0 on success, -1 if nothing to delete */
 int del_word_buf(ChatContext *ctx)
@@ -225,7 +225,7 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     if (key_dir == KEY_UP) {
         if (--ctx->hst_pos < 0) {
             ctx->hst_pos = 0;
-            sound_notify(NULL, error, NT_ALWAYS, NULL);
+            sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
         }
     } else {
         if (++ctx->hst_pos >= ctx->hst_tot) {

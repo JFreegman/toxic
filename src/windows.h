@@ -81,21 +81,21 @@ struct audio_thread {
 };
 
 struct arg_opts {
-    int ignore_data_file;
-    int use_ipv4;
-    int force_tcp;
-    int debug;
-    int default_locale;
-    int use_custom_data;
-    int no_connect;
-    int encrypt_data;
-    int unencrypt_data;
+    bool use_ipv4;
+    bool force_tcp;
+    bool debug;
+    bool default_locale;
+    bool use_custom_data;
+    bool no_connect;
+    bool encrypt_data;
+    bool unencrypt_data;
+
     char dns_path[MAX_STR_SIZE];
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
 
-    uint8_t proxy_type;
     char proxy_address[256];
+    uint8_t proxy_type;
     uint16_t proxy_port;
 };
 
@@ -106,27 +106,30 @@ typedef struct ChatContext ChatContext;
 typedef struct Help Help;
 
 struct ToxWindow {
+    /* ncurses */
     void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
-    void(*onFriendRequest)(ToxWindow *, Tox *, const char *, const char *, uint16_t);
-    void(*onFriendAdded)(ToxWindow *, Tox *, int32_t, bool);
-    void(*onConnectionChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onMessage)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
-    void(*onNickChange)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
-    void(*onStatusChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onStatusMessageChange)(ToxWindow *, int32_t, const char *, uint16_t);
-    void(*onAction)(ToxWindow *, Tox *, int32_t, const char *, uint16_t);
+
+    /* toxcore */
+    void(*onFriendRequest)(ToxWindow *, Tox *, const char *, const char *, size_t);
+    void(*onFriendAdded)(ToxWindow *, Tox *, uint32_t, bool);
+    void(*onConnectionChange)(ToxWindow *, Tox *, uint32_t, TOX_CONNECTION);
+    void(*onMessage)(ToxWindow *, Tox *, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
+    void(*onNickChange)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
+    void(*onStatusChange)(ToxWindow *, Tox *, uint32_t, TOX_USER_STATUS);
+    void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupAction)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
     void(*onGroupNamelistChange)(ToxWindow *, Tox *, int, int, uint8_t);
     void(*onGroupTitleChange)(ToxWindow *, Tox *, int, int, const char *, uint8_t);
-    void(*onFileSendRequest)(ToxWindow *, Tox *, int32_t, uint8_t, uint64_t, const char *, uint16_t);
-    void(*onFileControl)(ToxWindow *, Tox *, int32_t, uint8_t, uint8_t, uint8_t, const char *, uint16_t);
-    void(*onFileData)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
-    void(*onTypingChange)(ToxWindow *, Tox *, int32_t, uint8_t);
-    void(*onReadReceipt)(ToxWindow *, Tox *, int32_t, uint32_t);
+    void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
+    void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
+    void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_FILE_CONTROL);
+    void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, uint64_t, const char *, size_t);
+    void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
+    void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
 
 #ifdef AUDIO
 
@@ -143,7 +146,7 @@ struct ToxWindow {
     void(*onPeerTimeout)(ToxWindow *, ToxAv *, int);
     void(*onWriteDevice)(ToxWindow *, Tox *, int, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
-    int call_idx; /* If in a call will have this index set, otherwise it's -1. 
+    int call_idx; /* If in a call will have this index set, otherwise it's -1.
                    * Don't modify outside av callbacks. */
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
 
@@ -151,9 +154,9 @@ struct ToxWindow {
 #endif /* AUDIO */
 
     int active_box; /* For box notify */
-    
+
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    int32_t num;    /* corresponds to friendnumber in chat windows */
+    uint32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;
     int x;
 
@@ -175,19 +178,19 @@ struct ToxWindow {
 /* statusbar info holder */
 struct StatusBar {
     WINDOW *topline;
-    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH + 1];
-    uint16_t statusmsg_len;
+    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
+    size_t statusmsg_len;
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
-    int nick_len;
-    uint8_t status;
-    bool is_online;
+    size_t nick_len;
+    TOX_USER_STATUS status;
+    TOX_CONNECTION connection;
 };
 
 #ifdef AUDIO
 
-
 #define INFOBOX_HEIGHT 7
 #define INFOBOX_WIDTH 21
+
 /* holds display info for audio calls */
 struct infobox {
     float vad_lvl;
@@ -252,7 +255,7 @@ void on_window_resize(void);
 void force_refresh(WINDOW *w);
 ToxWindow *get_window_ptr(int i);
 
-/* refresh inactive windows to prevent scrolling bugs. 
+/* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */
 void refresh_inactive_windows(void);
 

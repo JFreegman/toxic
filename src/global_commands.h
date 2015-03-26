@@ -42,7 +42,7 @@ void cmd_quit(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]
 void cmd_requests(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_status(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 
-void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg);
+void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg);
 
 #ifdef AUDIO
 void cmd_list_devices(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);

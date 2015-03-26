@@ -66,7 +66,9 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     char selfnick[TOX_MAX_NAME_LENGTH];
 
     get_time_str(timefrmt, sizeof(timefrmt));
-    uint16_t sn_len = tox_get_self_name(m, (uint8_t *) selfnick);
+
+    tox_self_get_name(m, (uint8_t *) selfnick);
+    size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';
 
     line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group title to: %s", title);

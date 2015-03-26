@@ -1,5 +1,5 @@
 /*  notify.h
- * 
+ *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
  *
@@ -29,7 +29,7 @@
 typedef enum _Notification
 {
     silent = -1,
-    error,
+    notif_error,
     self_log_in,
     self_log_out,
     user_log_in,
@@ -49,14 +49,14 @@ typedef enum _Flags {
     NT_LOOP = 1 << 2,       /* Loop sound. If this setting active, notify() will return id of the sound
                              * so it could be stopped. It will return 0 if error or NT_NATIVE flag is set and play \a instead
                              */
-    NT_RESTOL = 1 << 3,     /* Respect tolerance. Usually used to stop flood at toxic startup 
+    NT_RESTOL = 1 << 3,     /* Respect tolerance. Usually used to stop flood at toxic startup
                              * Only works if login_cooldown is true when calling init_notify()
                              */
     NT_NOTIFWND = 1 << 4,   /* Pop notify window. NOTE: only works(/WILL WORK) if libnotify is present */
     NT_WNDALERT_0 = 1 << 5, /* Alert toxic */
     NT_WNDALERT_1 = 1 << 6, /* Alert toxic */
     NT_WNDALERT_2 = 1 << 7, /* Alert toxic */
-    
+
     NT_ALWAYS = 1 << 8,     /* Force sound to play */
 } Flags;
 
@@ -68,7 +68,7 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id);
 
 void stop_sound(int id);
 
-int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, char* title, const char* format, ...);
+int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, const char* title, const char* format, ...);
 int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...);
 int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const char* title, const char* format, ...);
 int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* format, ...);

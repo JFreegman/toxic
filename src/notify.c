@@ -1,5 +1,5 @@
 /*  notify.c
- * 
+ *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
  *
@@ -67,12 +67,12 @@ extern struct user_settings *user_settings;
 struct Control {
     time_t cooldown;
     time_t notif_timeout;
-        
+
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
     pthread_mutex_t poll_mutex[1];
     bool poll_active;
 #endif
-    
+
 #ifdef SOUND_NOTIFY
     uint32_t device_idx; /* index of output device */
     char* sounds[SOUNDS_SIZE];
@@ -107,11 +107,11 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
     if (self == NULL)
         return;
 
-    if (flags & NT_WNDALERT_0) 
+    if (flags & NT_WNDALERT_0)
         self->alert = WINDOW_ALERT_0;
-    else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) ) 
+    else if ( (flags & NT_WNDALERT_1) && (!self->alert || self->alert > WINDOW_ALERT_0) )
         self->alert = WINDOW_ALERT_1;
-    else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) ) 
+    else if ( (flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1) )
         self->alert = WINDOW_ALERT_2;
 }
 
@@ -154,14 +154,14 @@ static bool device_opened = false;
 time_t last_opened_update = 0;
 
 bool m_open_device()
-{    
+{
     last_opened_update = get_unix_time();
-    
+
     if (device_opened) return true;
-    
+
     /* Blah error check */
     open_primary_device(output, &Control.device_idx, 48000, 20, 1);
-    
+
     return (device_opened = true);
 }
 
@@ -194,9 +194,9 @@ void graceful_clear()
                     *actives[i].id_indicator = -1;    /* reset indicator value */
 
                 if ( actives[i].looping ) {
-                    stop_sound(i); 
+                    stop_sound(i);
                 } else {
-                    if (!is_playing(actives[i].source)) 
+                    if (!is_playing(actives[i].source))
                         memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
                     else break;
                 }
@@ -217,17 +217,17 @@ void* do_playing(void* _p)
 {
     (void)_p;
     int i;
-    
+
     bool has_looping = false;
-    
+
     while(Control.poll_active) {
         control_lock();
-        
-        
+
+
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
-            
+
             if (actives[i].looping) has_looping = true;
-            
+
             if (actives[i].active && !actives[i].looping
                 #ifdef BOX_NOTIFY
                     && !actives[i].box
@@ -237,7 +237,7 @@ void* do_playing(void* _p)
                     *actives[i].id_indicator = -1;    /* reset indicator value */
 
                 if (!is_playing(actives[i].source)) {
-                /* Close */                    
+                /* Close */
                     alSourceStop(actives[i].source);
                     alDeleteSources(1, &actives[i].source);
                     alDeleteBuffers(1, &actives[i].buffer);
@@ -263,14 +263,14 @@ void* do_playing(void* _p)
             }
         #endif
         }
-        
+
         /* device is opened and no activity in under DEVICE_COOLDOWN time, close device*/
-        if (device_opened && !has_looping && 
+        if (device_opened && !has_looping &&
            (get_unix_time() - last_opened_update) > DEVICE_COOLDOWN) {
             m_close_device();
         }
         has_looping = false;
-        
+
         control_unlock();
         usleep(10000);
     }
@@ -278,20 +278,20 @@ void* do_playing(void* _p)
 }
 
 int play_source(uint32_t source, uint32_t buffer, bool looping)
-{    
+{
     int i = 0;
     for (; i < ACTIVE_NOTIFS_MAX && actives[i].active; i ++);
     if ( i == ACTIVE_NOTIFS_MAX ) {
         return -1; /* Full */
     }
-    
+
     alSourcePlay(source);
-    
+
     actives[i].active = 1;
     actives[i].source = source;
     actives[i].buffer = buffer;
     actives[i].looping = looping;
-    
+
     return i;
 }
 
@@ -324,20 +324,20 @@ void graceful_clear()
 {
     int i;
     control_lock();
-    
+
     for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
         if (actives[i].box) {
             GError* ignore;
             notify_notification_close(actives[i].box, &ignore);
             actives[i].box = NULL;
         }
-        
+
         if (actives[i].id_indicator)
             *actives[i].id_indicator = -1;    /* reset indicator value */
 
         memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
-    }   
-    
+    }
+
     control_unlock();
 }
 #endif
@@ -356,7 +356,7 @@ int init_notify(int login_cooldown, int notification_timeout)
 #ifdef SOUND_NOTIFY
     alutInitWithoutContext(NULL, NULL);
 #endif /* SOUND_NOTIFY */
-        
+
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
     if (pthread_mutex_init(Control.poll_mutex, NULL) != 0)
         return -1;
@@ -371,8 +371,8 @@ int init_notify(int login_cooldown, int notification_timeout)
     Control.poll_active = 1;
 #endif
     Control.cooldown = get_unix_time() + login_cooldown;
-    
-    
+
+
 #ifdef BOX_NOTIFY
     notify_init("Toxic");
 #endif
@@ -381,11 +381,11 @@ int init_notify(int login_cooldown, int notification_timeout)
 }
 
 void terminate_notify()
-{    
-#if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)    
-    if ( !Control.poll_active ) return;    
+{
+#if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
+    if ( !Control.poll_active ) return;
     Control.poll_active = 0;
-    
+
     graceful_clear();
 #endif
 
@@ -394,7 +394,7 @@ void terminate_notify()
     for (; i < SOUNDS_SIZE; i ++) free(Control.sounds[i]);
     alutExit();
 #endif /* SOUND_NOTIFY */
-    
+
 #ifdef BOX_NOTIFY
     notify_uninit();
 #endif
@@ -404,7 +404,7 @@ void terminate_notify()
 int set_sound(Notification sound, const char* value)
 {
     if (sound == silent) return 0;
-    
+
     free(Control.sounds[sound]);
 
     size_t len = strlen(value) + 1;
@@ -416,18 +416,18 @@ int set_sound(Notification sound, const char* value)
 }
 
 int play_sound_internal(Notification what, bool loop)
-{        
+{
     uint32_t source;
     uint32_t buffer;
-    
+
     m_open_device();
-    
+
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
     buffer = alutCreateBufferFromFile(Control.sounds[what]);
     alSourcei(source, AL_BUFFER, buffer);
     alSourcei(source, AL_LOOPING, loop);
-    
+
     int rc = play_source(source, buffer, loop);
     if (rc < 0) {
         alSourceStop(source);
@@ -435,7 +435,7 @@ int play_sound_internal(Notification what, bool loop)
         alDeleteBuffers(1,&buffer);
         return -1;
     }
-    
+
     return rc;
 }
 
@@ -464,7 +464,7 @@ void stop_sound(int id)
             notify_notification_close(actives[id].box, &ignore);
         }
 #endif
-        if (actives[id].id_indicator) 
+        if (actives[id].id_indicator)
             *actives[id].id_indicator = -1;
 //         alSourcei(actives[id].source, AL_LOOPING, false);
         alSourceStop(actives[id].source);
@@ -484,11 +484,11 @@ static int m_play_sound(Notification notif, uint64_t flags)
         beep();
 
     return -1;
-#endif /* SOUND_NOTIFY */   
+#endif /* SOUND_NOTIFY */
 }
 
 #ifdef BOX_NOTIFY
-void m_notify_action(NotifyNotification *box, char *action, void* data) 
+void m_notify_action(NotifyNotification *box, char *action, void* data)
 {
 }
 #endif
@@ -503,7 +503,7 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
     int id = -1;
     control_lock();
 
-    if (self && (!self->stb || self->stb->status != TOX_USERSTATUS_BUSY) && user_settings->alerts == ALERTS_ENABLED) 
+    if (self && (!self->stb || self->stb->status != TOX_USER_STATUS_BUSY) && user_settings->alerts == ALERTS_ENABLED)
         id = m_play_sound(notif, flags);
     else if (flags & NT_ALWAYS)
         id = m_play_sound(notif, flags);
@@ -520,7 +520,7 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
 
 #endif
 
-    if ( id_indicator && id != -1 ) { 
+    if ( id_indicator && id != -1 ) {
         actives[id].id_indicator = id_indicator;
         *id_indicator = id;
     }
@@ -533,46 +533,46 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
 int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
 {
     tab_notify(self, flags);
-    
+
     if (notifications_are_disabled(flags))
         return -1;
-    
+
     if (id < 0 || id >= ACTIVE_NOTIFS_MAX) return -1;
-#ifdef SOUND_NOTIFY    
+#ifdef SOUND_NOTIFY
     control_lock();
-    
+
     if (!actives[id].active || !Control.sounds[notif]) {
         control_unlock();
         return -1;
     }
-    
+
     m_open_device();
-    
+
     alSourceStop(actives[id].source);
     alDeleteSources(1, &actives[id].source);
     alDeleteBuffers(1,&actives[id].buffer);
-    
-    
+
+
     alGenSources(1, &actives[id].source);
     alGenBuffers(1, &actives[id].buffer);
     actives[id].buffer = alutCreateBufferFromFile(Control.sounds[notif]);
     alSourcei(actives[id].source, AL_BUFFER, actives[id].buffer);
     alSourcei(actives[id].source, AL_LOOPING, flags & NT_LOOP);
-    
+
     alSourcePlay(actives[id].source);
-    
+
     control_unlock();
-    
+
     return id;
 #else
     if (notif != silent)
         beep();
-    
+
     return 0;
 #endif /* SOUND_NOTIFY */
 }
 
-int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, char* title, const char* format, ...)
+int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, const char* title, const char* format, ...)
 {
     if (notifications_are_disabled(flags)) {
         tab_notify(self, flags);
@@ -594,7 +594,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
             return -1; /* Full */
         }
 
-        actives[id].active = 1;    
+        actives[id].active = 1;
         actives[id].id_indicator = id_indicator;
         if (id_indicator) *id_indicator = id;
     }
@@ -607,13 +607,13 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
     vsnprintf (actives[id].messages[0], MAX_BOX_MSG_LEN, format, __ARGS__);
     va_end (__ARGS__);
 
-    if (strlen(actives[id].messages[0]) > MAX_BOX_MSG_LEN - 3) 
+    if (strlen(actives[id].messages[0]) > MAX_BOX_MSG_LEN - 3)
         strcpy(actives[id].messages[0] + MAX_BOX_MSG_LEN - 3, "...");
 
     actives[id].box = notify_notification_new(actives[id].title, actives[id].messages[0], NULL);
     actives[id].size++;
     actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
-    
+
     notify_notification_set_timeout(actives[id].box, Control.notif_timeout);
     notify_notification_set_app_name(actives[id].box, "toxic");
     /*notify_notification_add_action(actives[id].box, "lel", "default", m_notify_action, self, NULL);*/
@@ -687,7 +687,7 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
 
     control_lock();
 
-    int id;        
+    int id;
     for (id = 0; id < ACTIVE_NOTIFS_MAX && actives[id].active; id ++);
     if ( id == ACTIVE_NOTIFS_MAX ) {
         control_unlock();
@@ -706,7 +706,7 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
     vsnprintf (actives[id].messages[0], MAX_BOX_MSG_LEN, format, __ARGS__);
     va_end (__ARGS__);
 
-    if (strlen(actives[id].messages[0]) > MAX_BOX_MSG_LEN - 3) 
+    if (strlen(actives[id].messages[0]) > MAX_BOX_MSG_LEN - 3)
         strcpy(actives[id].messages[0] + MAX_BOX_MSG_LEN - 3, "...");
 
     actives[id].active = 1;

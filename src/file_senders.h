@@ -37,7 +37,7 @@
 typedef struct {
     FILE *file;
     ToxWindow *toxwin;
-    int32_t friendnum;
+    uint32_t friendnum;
     bool active;
     bool noconnection;  /* set when the connection has been interrupted */
     bool paused;        /* set when transfer has been explicitly paused */
@@ -45,7 +45,7 @@ typedef struct {
     bool started;       /* set after TOX_FILECONTROL_ACCEPT received */
     int filenum;
     char nextpiece[FILE_PIECE_SIZE];
-    uint16_t piecelen;
+    size_t piecelen;
     char filename[MAX_STR_SIZE];
     uint64_t timestamp;    /* marks the last time data was successfully transfered */
     uint64_t last_progress;    /* marks the last time the progress bar was refreshed */
@@ -59,7 +59,7 @@ typedef struct {
    Assumes progline is of size MAX_STR_SIZE */
 void prep_prog_line(char *progline);
 
-/* prints a progress bar for file transfers. 
+/* prints a progress bar for file transfers.
    if friendnum is -1 we're sending the file, otherwise we're receiving.  */
 void print_progress_bar(ToxWindow *self, int idx, int friendnum, double pct_remain);
 

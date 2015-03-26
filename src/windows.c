@@ -46,12 +46,12 @@ extern struct user_settings *user_settings;
 static int num_active_windows;
 
 /* CALLBACKS START */
-void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t length, void *userdata)
+void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) data, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendRequest != NULL) {
@@ -60,22 +60,22 @@ void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, uint16_t
     }
 }
 
-void on_connectionchange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata)
+void on_connectionchange(Tox *m, uint32_t friendnumber, TOX_CONNECTION connection_status, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onConnectionChange != NULL)
-            windows[i].onConnectionChange(&windows[i], m, friendnumber, status);
+            windows[i].onConnectionChange(&windows[i], m, friendnumber, connection_status);
     }
 }
 
-void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *userdata)
+void on_typing_change(Tox *m, uint32_t friendnumber, uint8_t is_typing, void *userdata)
 {
     if (user_settings->show_typing_other == SHOW_TYPING_OFF)
         return;
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onTypingChange != NULL)
@@ -83,39 +83,27 @@ void on_typing_change(Tox *m, int32_t friendnumber, uint8_t is_typing, void *use
     }
 }
 
-void on_message(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
+void on_message(Tox *m, uint32_t friendnumber, TOX_MESSAGE_TYPE type, const uint8_t *string, size_t length,
+                void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onMessage != NULL)
-            windows[i].onMessage(&windows[i], m, friendnumber, msg, length);
+            windows[i].onMessage(&windows[i], m, friendnumber, type, msg, length);
     }
 }
 
-void on_action(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
-{
-    char msg[MAX_STR_SIZE + 1];
-    length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
-
-    int i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onAction != NULL)
-            windows[i].onAction(&windows[i], m, friendnumber, msg, length);
-    }
-}
-
-void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
+void on_nickchange(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata)
 {
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(nick, sizeof(nick), (const char *) string, length);
     filter_str(nick, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onNickChange != NULL)
@@ -125,13 +113,13 @@ void on_nickchange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t
     store_data(m, DATA_FILE);
 }
 
-void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string, uint16_t length, void *userdata)
+void on_statusmessagechange(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata)
 {
-    char msg[TOX_MAX_STATUSMESSAGE_LENGTH + 1];
+    char msg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
     filter_str(msg, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusMessageChange != NULL)
@@ -139,9 +127,9 @@ void on_statusmessagechange(Tox *m, int32_t friendnumber, const uint8_t *string,
     }
 }
 
-void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdata)
+void on_statuschange(Tox *m, uint32_t friendnumber, TOX_USER_STATUS status, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onStatusChange != NULL)
@@ -149,9 +137,9 @@ void on_statuschange(Tox *m, int32_t friendnumber, uint8_t status, void *userdat
     }
 }
 
-void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
+void on_friendadded(Tox *m, uint32_t friendnumber, bool sort)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFriendAdded != NULL)
@@ -161,13 +149,13 @@ void on_friendadded(Tox *m, int32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,
+void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, size_t length,
                      void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
@@ -175,13 +163,13 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *mes
     }
 }
 
-void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length,
+void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, size_t length,
                     void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) action, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupAction != NULL)
@@ -189,10 +177,10 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *acti
     }
 }
 
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
+void on_groupinvite(Tox *m, uint32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, size_t length,
                     void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupInvite != NULL)
@@ -202,7 +190,7 @@ void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *g
 
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupNamelistChange != NULL)
@@ -216,7 +204,7 @@ void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t
     char data[MAX_STR_SIZE + 1];
     length = copy_tox_str(data, sizeof(data), (const char *) title, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupTitleChange != NULL)
@@ -224,44 +212,54 @@ void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t
     }
 }
 
-void on_file_sendrequest(Tox *m, int32_t friendnumber, uint8_t filenumber, uint64_t filesize,
-                         const uint8_t *filename, uint16_t filename_length, void *userdata)
+void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position,
+                           size_t length, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onFileSendRequest != NULL)
-            windows[i].onFileSendRequest(&windows[i], m, friendnumber, filenumber, filesize,
-                                         (const char *) filename, filename_length);
+        if (windows[i].onFileChunkRequest != NULL)
+            windows[i].onFileChunkRequest(&windows[i], m, friendnumber, filenumber, position, length);
     }
 }
 
-void on_file_control (Tox *m, int32_t friendnumber, uint8_t receive_send, uint8_t filenumber,
-                      uint8_t control_type, const uint8_t *data, uint16_t length, void *userdata)
+void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position,
+                        const uint8_t *data, size_t length, void *user_data)
 {
-    int i;
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onFileRecvChunk != NULL)
+            windows[i].onFileRecvChunk(&windows[i], m, friendnumber, filenumber, position, data, length);
+    }
+}
+
+void on_file_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control,
+                     void *userdata)
+{
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileControl != NULL)
-            windows[i].onFileControl(&windows[i], m, friendnumber, receive_send, filenumber,
-                                     control_type, (const char *) data, length);
+            windows[i].onFileControl(&windows[i], m, friendnumber, filenumber, control);
     }
 }
 
-void on_file_data(Tox *m, int32_t friendnumber, uint8_t filenumber, const uint8_t *data, uint16_t length,
-                  void *userdata)
+void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
+                  const uint8_t *filename, size_t filename_length, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileData != NULL)
-            windows[i].onFileData(&windows[i], m, friendnumber, filenumber, (const char *) data, length);
+            windows[i].onFileRecv(&windows[i], m, friendnumber, filenumber, kind, file_size, filename,
+                                  filename_length);
     }
 }
 
-void on_read_receipt(Tox *m, int32_t friendnumber, uint32_t receipt, void *userdata)
+void on_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onReadReceipt != NULL)
@@ -273,7 +271,7 @@ void on_read_receipt(Tox *m, int32_t friendnumber, uint32_t receipt, void *userd
 void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
                                  uint8_t channels, unsigned int sample_rate, void *arg)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onWriteDevice != NULL)
@@ -289,7 +287,7 @@ int add_window(Tox *m, ToxWindow w)
     if (LINES < 2)
         return -1;
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; i++) {
         if (windows[i].active)
@@ -383,7 +381,7 @@ void on_window_resize(void)
     getmaxyx(stdscr, y2, x2);
     y2 -= 2;
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (!windows[i].active)
@@ -455,7 +453,7 @@ static void draw_bar(void)
     printw(" TOXIC " TOXICVER " |");
     attroff(COLOR_PAIR(BLUE) | A_BOLD);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (!windows[i].active)
@@ -529,11 +527,11 @@ void draw_active_window(Tox *m)
     }
 }
 
-/* refresh inactive windows to prevent scrolling bugs. 
+/* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */
 void refresh_inactive_windows(void)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *a = &windows[i];
@@ -569,7 +567,7 @@ int get_num_active_windows(void)
 /* destroys all chat and groupchat windows (should only be called on shutdown) */
 void kill_all_windows(Tox *m)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].is_chat)
