@@ -11,7 +11,7 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 If you don't like installation methods listed above, you can still download precompiled binaries from [jenkins](https://jenkins.libtoxcore.so):
 * [Linux 32 bit](https://jenkins.libtoxcore.so/job/toxic_linux_i386/lastSuccessfulBuild/artifact/toxic_linux_i386.tar.xz) [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_i386/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_i386/lastSuccessfulBuild/artifact/toxic_linux_i386.tar.xz)
 * [Linux 64 bit](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/lastSuccessfulBuild/artifact/toxic_linux_amd64.tar.xz) [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/lastSuccessfulBuild/artifact/toxic_linux_amd64.tar.xz)
-* [~~Linux ARMv6~~](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/lastSuccessfulBuild/artifact/toxic_linux_armv6.tar.xz) **CURRENTLY DISABLED** [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/lastSuccessfulBuild/artifact/toxic_linux_armv6.tar.xz)
+* [~~Linux ARMv6~~](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/lastSuccessfulBuild/artifact/toxic_linux_armv6.tar.xz) **CURRENTLY DISABLED** [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/lastSuccessfulBuild/artifact/toxic_linux_armv6.tar.xz)
 
 #### DEBs packages
 * [toxic-i386.deb](https://jenkins.libtoxcore.so/job/toxic-linux-pkg/lastSuccessfulBuild/artifact/toxic-i386.deb)
