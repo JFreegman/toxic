@@ -31,14 +31,10 @@
 #include "line_info.h"
 #include "groupchat.h"
 #include "chat.h"
-#include "file_senders.h"
+#include "file_transfers.h"
 
 extern ToxWindow *prompt;
 extern FriendsList Friends;
-
-extern FileSender file_senders[MAX_FILES];
-extern uint8_t max_file_senders_index;
-extern uint8_t num_active_file_senders;
 
 void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -47,46 +43,35 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
+    char msg[MAX_STR_SIZE];
     const char *inoutstr = argv[1];
-    int filenum = atoi(argv[2]);
+    int idx = atoi(argv[2]);
 
-    if (filenum >= MAX_FILES || filenum < 0) {
+    if (idx >= MAX_FILES || idx < 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
     if (strcasecmp(inoutstr, "in") == 0) {    /* cancel an incoming file transfer */
-        if (!Friends.list[self->num].file_receiver[filenum].active) {
+        if (!Friends.list[self->num].file_receiver[idx].active) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
-            return;  
+            return;
         }
 
-        const char *filepath = Friends.list[self->num].file_receiver[filenum].filename;
-        char name[MAX_STR_SIZE];
-        get_file_name(name, sizeof(name), filepath);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer for '%s' canceled.", name);
-        chat_close_file_receiver(m, filenum, self->num, TOX_FILECONTROL_KILL);
+        const char *file_path = Friends.list[self->num].file_receiver[idx].file_path;
+        char file_name[MAX_STR_SIZE];
+        get_file_name(file_name, sizeof(file_name), file_path);
+        snprintf(msg, sizeof(msg), "File transfer for '%s' canceled.", file_name);
+        close_file_transfer(self, m, get_file_receiver_filenum(idx), self->num, TOX_FILE_CONTROL_CANCEL, msg, silent);
         return;
     } else if (strcasecmp(inoutstr, "out") == 0) {    /* cancel an outgoing file transfer */
-        int i;
-        bool match = false;
-
-        for (i = 0; i < MAX_FILES; ++i) {
-            if (file_senders[i].active && file_senders[i].filenum == filenum) {
-                match = true;
-                break;
-            }
-        }
-
-        if (!match) {
+        if (!Friends.list[self->num].file_sender[idx].active) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
-            return;  
+            return;
         }
 
-        const char *filename = file_senders[i].filename;
-        char msg[MAX_STR_SIZE];
-        snprintf(msg, sizeof(msg), "File transfer for '%s' canceled.", filename);
-        close_file_sender(self, m, i, msg, TOX_FILECONTROL_KILL, filenum, self->num);
+        snprintf(msg, sizeof(msg), "File transfer for '%s' canceled.", Friends.list[self->num].file_sender[idx].file_name);
+        close_file_transfer(self, m, idx, self->num, TOX_FILE_CONTROL_CANCEL, msg, silent);
         return;
     } else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
@@ -162,50 +147,73 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    uint8_t filenum = atoi(argv[1]);
+    int idx = atoi(argv[1]);
 
-    if ((filenum == 0 && strcmp(argv[1], "0")) || filenum >= MAX_FILES) {
+    if ((idx == 0 && strcmp(argv[1], "0")) || idx >= MAX_FILES) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
-    if (!Friends.list[self->num].file_receiver[filenum].pending) {
+    uint32_t filenum = get_file_receiver_filenum(idx);
+
+    if (!Friends.list[self->num].file_receiver[idx].pending) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
-    const char *filename = Friends.list[self->num].file_receiver[filenum].filename;
+    const char *file_path = Friends.list[self->num].file_receiver[idx].file_path;
 
-    if (tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_ACCEPT, 0, 0) == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%d] as: '%s'", filenum, filename);
+    TOX_ERR_FILE_CONTROL err;
+    tox_file_control(m, self->num, filenum, TOX_FILE_CONTROL_RESUME, &err);
 
-        /* prep progress bar line */
-        char progline[MAX_STR_SIZE];
-        prep_prog_line(progline);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-        Friends.list[self->num].file_receiver[filenum].line_id = self->chatwin->hst->line_end->id + 2;
+    if (err != TOX_ERR_FILE_CONTROL_OK)
+        goto on_recv_error;
 
-        if ((Friends.list[self->num].file_receiver[filenum].file = fopen(filename, "a")) == NULL) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Error writing to file.");
-            tox_file_send_control(m, self->num, 1, filenum, TOX_FILECONTROL_KILL, 0, 0);
-        } else {
-            Friends.list[self->num].file_receiver[filenum].active = true;
-            ++Friends.list[self->num].active_file_receivers;
-        }
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%d] as: '%s'", idx, file_path);
+
+    /* prep progress bar line */
+    char progline[MAX_STR_SIZE];
+    prep_prog_line(progline);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
+    Friends.list[self->num].file_receiver[idx].line_id = self->chatwin->hst->line_end->id + 2;
+    Friends.list[self->num].file_receiver[idx].pending = false;
+
+    if ((Friends.list[self->num].file_receiver[idx].file = fopen(file_path, "a")) == NULL) {
+        tox_file_control(m, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Invalid file path.");
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed.");
+        Friends.list[self->num].file_receiver[idx].active = true;
     }
 
-    Friends.list[self->num].file_receiver[filenum].pending = false;
+    return;
+
+on_recv_error:
+    switch (err) {
+        case TOX_ERR_FILE_CONTROL_FRIEND_NOT_FOUND:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
+            return;
+
+        case TOX_ERR_FILE_CONTROL_FRIEND_NOT_CONNECTED:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend is not online.");
+            return;
+
+        case TOX_ERR_FILE_CONTROL_NOT_FOUND:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Invalid filenumber.");
+            return;
+
+        case TOX_ERR_FILE_CONTROL_SENDQ:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Connection error.");
+            return;
+
+        default:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed (error %d)\n", err);
+            return;
+    }
 }
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (max_file_senders_index >= (MAX_FILES - 1)) {
-        const char *errmsg = "Please wait for some of your outgoing file transfers to complete.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
-        return;
-    }
+    const char *errmsg = NULL;
 
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File path required.");
@@ -237,51 +245,67 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     off_t filesize = file_size(path);
 
-    if (filesize == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File corrupt.");
+    if (filesize == 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
         fclose(file_to_send);
         return;
     }
 
-    char filename[MAX_STR_SIZE] = {0};
-    get_file_name(filename, sizeof(filename), path);
-    int namelen = strlen(filename);
-    int filenum = tox_new_file_sender(m, self->num, filesize, (const uint8_t *) filename, namelen);
+    char file_name[TOX_MAX_FILENAME_LENGTH];
+    get_file_name(file_name, sizeof(file_name), path);
+    size_t namelen = strlen(file_name);
 
-    if (filenum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error sending file.");
-        fclose(file_to_send);
-        return;
+    TOX_ERR_FILE_SEND err;
+    uint32_t filenum = tox_file_send(m, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize,
+                                     NULL, (uint8_t *) file_name, namelen, &err);
+
+    if (err != TOX_ERR_FILE_SEND_OK)
+        goto on_send_error;
+
+    uint32_t idx = get_file_transfer_index(filenum);
+
+    if (idx >= MAX_FILES) {
+        errmsg = "File transfer failed: Too many concurrent file transfers";
+        goto on_send_error;
     }
 
-    int i;
+    memcpy(Friends.list[self->num].file_sender[idx].file_name, file_name, namelen + 1);
+    Friends.list[self->num].file_sender[idx].active = true;
+    Friends.list[self->num].file_sender[idx].started = false;
+    Friends.list[self->num].file_sender[idx].file = file_to_send;
+    Friends.list[self->num].file_sender[idx].timestamp = get_unix_time();
+    Friends.list[self->num].file_sender[idx].file_size = filesize;
 
-    for (i = 0; i < MAX_FILES; ++i) {
-        if (!file_senders[i].active) {
-            memcpy(file_senders[i].filename, filename, namelen + 1);
-            file_senders[i].active = true;
-            file_senders[i].started = false;
-            file_senders[i].toxwin = self;
-            file_senders[i].file = file_to_send;
-            file_senders[i].filenum = filenum;
-            file_senders[i].friendnum = self->num;
-            file_senders[i].timestamp = get_unix_time();
-            file_senders[i].size = filesize;
-            file_senders[i].piecelen = fread(file_senders[i].nextpiece, 1,
-                                             tox_file_data_size(m, self->num), file_to_send);
+    char sizestr[32];
+    bytes_convert_str(sizestr, sizeof(sizestr), filesize);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s' (%s)", idx, file_name, sizestr);
 
-            char sizestr[32];
-            bytes_convert_str(sizestr, sizeof(sizestr), filesize);
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, 
-                          "Sending file [%d]: '%s' (%s)", filenum, filename, sizestr);
+    return;
 
-            ++num_active_file_senders;
+on_send_error:
+    switch (err) {
+        case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND:
+            errmsg = "File transfer failed: Invalid friend.";
+            break;
 
-            if (i == max_file_senders_index)
-                ++max_file_senders_index;
+        case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED:
+            errmsg = "File transfer failed: Friend is offline.";
+            break;
 
-            reset_file_sender_queue();
-            return;
-        }
+        case TOX_ERR_FILE_SEND_NAME_TOO_LONG:
+            errmsg = "File transfer failed: Filename is too long.";
+            break;
+
+        case TOX_ERR_FILE_SEND_TOO_MANY:
+            errmsg = "File transfer failed: Too many concurrent file transfers.";
+            break;
+
+        default:
+            errmsg = "File transfer failed";
+            break;
     }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
+    tox_file_control(m, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+    fclose(file_to_send);
 }

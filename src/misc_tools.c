@@ -32,7 +32,7 @@
 #include "windows.h"
 #include "misc_tools.h"
 #include "settings.h"
-#include "file_senders.h"
+#include "file_transfers.h"
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
@@ -265,13 +265,13 @@ void str_to_lower(char *str)
    Returns nick len */
 size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum)
 {
-    size_t len = tox_self_get_name_size(m);
+    size_t len = tox_friend_get_name_size(m, friendnum, NULL);
 
     if (len == 0) {
         strcpy(buf, UNKNOWN_NAME);
         len = strlen(UNKNOWN_NAME);
     } else {
-        tox_self_get_name(m, (uint8_t *) buf);
+        tox_friend_get_name(m, friendnum, (uint8_t *) buf, NULL);
     }
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
@@ -363,13 +363,13 @@ bool file_exists(const char *path)
     return stat(path, &s) == 0;
 }
 
-/* returns file size or -1 on error */
+/* returns file size or 0 on error */
 off_t file_size(const char *path)
 {
     struct stat st;
 
     if (stat(path, &st) == -1)
-        return -1;
+        return 0;
 
     return st.st_size;
 }

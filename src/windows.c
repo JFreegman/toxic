@@ -70,7 +70,7 @@ void on_connectionchange(Tox *m, uint32_t friendnumber, TOX_CONNECTION connectio
     }
 }
 
-void on_typing_change(Tox *m, uint32_t friendnumber, uint8_t is_typing, void *userdata)
+void on_typing_change(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata)
 {
     if (user_settings->show_typing_other == SHOW_TYPING_OFF)
         return;
@@ -149,7 +149,7 @@ void on_friendadded(Tox *m, uint32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, size_t length,
+void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,
                      void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -163,7 +163,7 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *mes
     }
 }
 
-void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, size_t length,
+void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length,
                     void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -177,7 +177,7 @@ void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *acti
     }
 }
 
-void on_groupinvite(Tox *m, uint32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, size_t length,
+void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
                     void *userdata)
 {
     size_t i;
@@ -230,7 +230,7 @@ void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileRecvChunk != NULL)
-            windows[i].onFileRecvChunk(&windows[i], m, friendnumber, filenumber, position, data, length);
+            windows[i].onFileRecvChunk(&windows[i], m, friendnumber, filenumber, position, (char *) data, length);
     }
 }
 
@@ -251,8 +251,8 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onFileData != NULL)
-            windows[i].onFileRecv(&windows[i], m, friendnumber, filenumber, kind, file_size, filename,
+        if (windows[i].onFileRecv != NULL)
+            windows[i].onFileRecv(&windows[i], m, friendnumber, filenumber, kind, file_size, (char *) filename,
                                   filename_length);
     }
 }

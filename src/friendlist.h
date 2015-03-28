@@ -27,20 +27,7 @@
 
 #include "toxic.h"
 #include "windows.h"
-#include "file_senders.h"
-
-struct FileReceiver {
-    char filename[MAX_STR_SIZE];
-    int filenum;
-    FILE *file;
-    bool pending;
-    bool active;
-    size_t size;
-    size_t bytes_recv;
-    double bps;
-    uint64_t last_progress;   /* unix-time when we last updated progress */
-    uint32_t line_id;
-};
+#include "file_transfers.h"
 
 struct LastOnline {
     uint64_t last_on;
@@ -59,7 +46,7 @@ typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     int namelength;
     char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
-    uint16_t statusmsg_len;
+    size_t statusmsg_len;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
     uint32_t num;
     int chatwin;
@@ -68,10 +55,12 @@ typedef struct {
     bool is_typing;
     bool logging_on;    /* saves preference for friend irrespective of global settings */
     uint8_t status;
+
     struct LastOnline last_online;
-    struct FileReceiver file_receiver[MAX_FILES];
     struct GroupChatInvite group_invite;
-    uint8_t active_file_receivers;
+
+    struct FileReceiver file_receiver[MAX_FILES];
+    struct FileSender file_sender[MAX_FILES];
 } ToxicFriend;
 
 typedef struct {

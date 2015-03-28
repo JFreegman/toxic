@@ -131,7 +131,8 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
         /* fallthrough */
         default:
             errmsg = "Faile to add friend: Unknown error.";
-    }       break;
+            break;
+    }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
 }
@@ -288,8 +289,26 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     char *binary_string = hex_string_to_bin(key);
-    tox_bootstrap_from_address(m, ip, atoi(port), (uint8_t *) binary_string);
+
+    TOX_ERR_BOOTSTRAP err;
+    tox_bootstrap(m, ip, atoi(port), (uint8_t *) binary_string, &err);
     free(binary_string);
+
+    switch (err) {
+        case TOX_ERR_BOOTSTRAP_BAD_HOST:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed: Invalid IP.");
+            break;
+
+        case TOX_ERR_BOOTSTRAP_BAD_PORT:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed: Invalid port.");
+            break;
+
+        case TOX_ERR_BOOTSTRAP_NULL:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed.");
+            break;
+        default:
+            break;
+    }
 }
 
 void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -544,7 +563,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto finish;
     }
 
-    const char *status_str = argv[1]);
+    const char *status_str = argv[1];
     TOX_USER_STATUS status;
 
     if (!strcasecmp(status_str, "online"))

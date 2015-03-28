@@ -92,7 +92,7 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
 int valid_nick(const char *nick);
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
-void filter_str(char *str, int len);
+void filter_str(char *str, size_t len);;
 
 /* gets base file name from path or original file name if no path is supplied */
 void get_file_name(char *namebuf, int bufsize, const char *pathname);
@@ -102,14 +102,14 @@ void str_to_lower(char *str);
 
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
    Returns nick len on success, -1 on failure */
-int get_nick_truncate(Tox *m, char *buf, int friendnum);
+size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum);
 
 /* same as get_nick_truncate but for groupchats */
 int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum);
 
 /* copies data to msg buffer.
    returns length of msg, which will be no larger than size-1 */
-uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length);
+size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length);
 
 /* returns index of the first instance of ch in s starting at idx.
    returns length of s if char not found */
@@ -125,10 +125,10 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes);
 /* checks if a file exists. Returns true or false */
 bool file_exists(const char *path);
 
-/* returns file size or -1 on error */
+/* returns file size or 0 on error */
 off_t file_size(const char *path);
 
-/* compares the first size bytes of fp and signature. 
+/* compares the first size bytes of fp and signature.
    Returns 0 if they are the same, 1 if they differ, and -1 on error.
 
    On success this function will seek back to the beginning of fp */

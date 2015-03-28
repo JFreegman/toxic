@@ -86,7 +86,7 @@ static struct ui_strings {
     "mplex_away_note",
 };
 
-static void ui_defaults(struct user_settings* settings) 
+static void ui_defaults(struct user_settings* settings)
 {
     settings->timestamps = TIMESTAMPS_ON;
     snprintf(settings->timestamp_format, sizeof(settings->timestamp_format), "%s", TIMESTAMP_DEFAULT);
@@ -196,7 +196,7 @@ static void audio_defaults(struct user_settings* settings)
 #ifdef SOUND_NOTIFY
 static const struct sound_strings {
     const char* self;
-    const char* error;
+    const char* notif_error;
     const char* self_log_in;
     const char* self_log_out;
     const char* user_log_in;
@@ -208,7 +208,7 @@ static const struct sound_strings {
     const char* transfer_completed;
 } sound_strings = {
     "sounds",
-    "error",
+    "notif_error",
     "self_log_in",
     "self_log_out",
     "user_log_in",
@@ -225,11 +225,11 @@ static int key_parse(const char** bind){
     int len = strlen(*bind);
 
     if (len > 5) {
-        if(strncasecmp(*bind, "ctrl+", 5) == 0) 
+        if(strncasecmp(*bind, "ctrl+", 5) == 0)
             return toupper(bind[0][5]) - 'A' + 1;
     }
 
-    if (strncasecmp(*bind, "tab", 3) == 0) 
+    if (strncasecmp(*bind, "tab", 3) == 0)
         return T_KEY_TAB;
 
     if (strncasecmp(*bind, "page", 4) == 0)
@@ -346,7 +346,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
             int len = strlen(s->chatlogs_path);
 
-            if (len >= sizeof(s->chatlogs_path) - 2) 
+            if (len >= sizeof(s->chatlogs_path) - 2)
                 s->chatlogs_path[0] = '\0';
             else if (s->chatlogs_path[len - 1] != '/')
                 strcat(&s->chatlogs_path[len - 1], "/");
@@ -356,7 +356,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
             int len = strlen(str);
 
-            if (len >= sizeof(s->avatar_path)) 
+            if (len >= sizeof(s->avatar_path))
                 s->avatar_path[0] = '\0';
         }
     }
@@ -400,10 +400,10 @@ int settings_load(struct user_settings *s, const char *patharg)
 
 #ifdef SOUND_NOTIFY
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
-        if ( (config_setting_lookup_string(setting, sound_strings.error, &str) != CONFIG_TRUE) ||
-                !set_sound(error, str) ) {
+        if ( (config_setting_lookup_string(setting, sound_strings.notif_error, &str) != CONFIG_TRUE) ||
+                !set_sound(notif_error, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
-                set_sound(error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
+                set_sound(notif_error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
         }
 
         if ( !config_setting_lookup_string(setting, sound_strings.user_log_in, &str) ||
@@ -423,25 +423,25 @@ int settings_load(struct user_settings *s, const char *patharg)
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(call_incoming, PACKAGE_DATADIR "/sounds/ToxicIncomingCall.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ||
                 !set_sound(call_outgoing, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/ToxicOutgoingCall.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.generic_message, &str) ||
                 !set_sound(generic_message, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(generic_message, PACKAGE_DATADIR "/sounds/ToxicRecvMessage.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.transfer_pending, &str) ||
                 !set_sound(transfer_pending, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/ToxicTransferStart.wav");
         }
-        
+
         if ( !config_setting_lookup_string(setting, sound_strings.transfer_completed, &str) ||
                 !set_sound(transfer_completed, str) ) {
             if (str && strcasecmp(str, NO_SOUND) != 0)
@@ -449,7 +449,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         }
     }
     else {
-        set_sound(error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
+        set_sound(notif_error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
         set_sound(user_log_in, PACKAGE_DATADIR "/sounds/ToxicContactOnline.wav");
         set_sound(user_log_out, PACKAGE_DATADIR "/sounds/ToxicContactOffline.wav");
         set_sound(call_incoming, PACKAGE_DATADIR "/sounds/ToxicIncomingCall.wav");

@@ -59,7 +59,7 @@ static int set_call(Call* call, bool start)
 {
     call->in_idx = -1;
     call->out_idx = -1;
-    
+
     if ( start ) {
         call->ttas = true;
 
@@ -79,9 +79,9 @@ struct ASettings {
     AudioError errors;
 
     ToxAv *av;
-    
+
     ToxAvCSettings cs;
-    
+
     Call calls[MAX_CALLS];
 } ASettins;
 
@@ -105,15 +105,15 @@ static void print_err (ToxWindow *self, const char *error_str)
 }
 
 ToxAv *init_audio(ToxWindow *self, Tox *tox)
-{    
+{
     ASettins.cs = av_DefaultSettings;
     ASettins.cs.max_video_height = ASettins.cs.max_video_width = 0;
-    
+
     ASettins.errors = ae_None;
-    
+
     memset(ASettins.calls, 0, sizeof(ASettins.calls));
 
-    
+
     /* Streaming stuff from core */
 
     ASettins.av = toxav_new(tox, MAX_CALLS);
@@ -122,7 +122,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
         ASettins.errors |= ae_StartingCoreAudio;
         return NULL;
     }
-    
+
     if ( init_devices(ASettins.av) == de_InternalError ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
         toxav_kill(ASettins.av);
@@ -142,7 +142,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     toxav_register_callstate_callback(ASettins.av, callback_requ_timeout, av_OnRequestTimeout, self);
     toxav_register_callstate_callback(ASettins.av, callback_peer_timeout, av_OnPeerTimeout, self);
     //toxav_register_callstate_callback(ASettins.av, callback_media_change, av_OnMediaChange, self);
-    
+
     toxav_register_audio_callback(ASettins.av, write_device_callback, NULL);
 
     return ASettins.av;
@@ -156,14 +156,14 @@ void terminate_audio()
 
     if ( ASettins.av )
         toxav_kill(ASettins.av);
-    
+
     terminate_devices();
 }
 
 void read_device_callback (const int16_t* captured, uint32_t size, void* data)
 {
     int32_t call_index = *((int32_t*)data); /* TODO: Or pass an array of call_idx's */
-    
+
     uint8_t encoded_payload[RTP_PAYLOAD_SIZE];
     int32_t payload_size = toxav_prepare_audio_frame(ASettins.av, call_index, encoded_payload, RTP_PAYLOAD_SIZE, captured, size);
     if ( payload_size <= 0 || toxav_send_audio(ASettins.av, call_index, encoded_payload, payload_size) < 0 ) {
@@ -207,15 +207,15 @@ int start_transmission(ToxWindow *self, Call *call)
     toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
 
     if ( open_primary_device(input, &call->in_idx,
-            csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) 
+            csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None )
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
 
-    if ( register_device_callback(self->call_idx, call->in_idx, 
-         read_device_callback, &self->call_idx, true) != de_None) 
+    if ( register_device_callback(self->call_idx, call->in_idx,
+         read_device_callback, &self->call_idx, true) != de_None)
         /* Set VAD as true for all; TODO: Make it more dynamic */
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
 
-    if ( open_primary_device(output, &call->out_idx, 
+    if ( open_primary_device(output, &call->out_idx,
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
         call->has_output = 0;
@@ -225,23 +225,23 @@ int start_transmission(ToxWindow *self, Call *call)
 }
 
 int stop_transmission(Call *call, int32_t call_index)
-{    
+{
     if ( call->ttas ) {
         toxav_kill_transmission(ASettins.av, call_index);
         call->ttas = false;
-        
+
         if ( call->in_idx != -1 )
             close_device(input, call->in_idx);
-        
+
         if ( call->out_idx != -1 )
             close_device(output, call->out_idx);
-        
+
         if (set_call(call, false) == -1)
             return -1;
 
         return 0;
     }
-    
+
     return -1;
 }
 /*
@@ -269,10 +269,10 @@ void callback_recv_ringing ( void* av, int32_t call_index, void* arg )
 }
 void callback_recv_starting ( void* av, int32_t call_index, void* arg )
 {
-    ToxWindow* windows = arg; 
+    ToxWindow* windows = arg;
     int i;
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) 
-        if (windows[i].onStarting != NULL && windows[i].call_idx == call_index) { 
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i)
+        if (windows[i].onStarting != NULL && windows[i].call_idx == call_index) {
             windows[i].onStarting(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i], &ASettins.calls[call_index])) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , "Error starting transmission!");
@@ -287,10 +287,10 @@ void callback_recv_ending ( void* av, int32_t call_index, void* arg )
 }
 
 void callback_call_started ( void* av, int32_t call_index, void* arg )
-{    
-    ToxWindow* windows = arg; 
+{
+    ToxWindow* windows = arg;
     int i;
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) 
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onStart != NULL && windows[i].call_idx == call_index) {
             windows[i].onStart(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i], &ASettins.calls[call_index]) ) {/* YEAH! */
@@ -357,7 +357,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         goto on_error;
     }
 
-    if (!self->stb->is_online) {
+    if (!self->stb->connection) {
         error_str = "Friend is offline.";
         goto on_error;
     }
@@ -545,12 +545,12 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         error_str = "Invalid input";
         goto on_error;
     }
-    
+
     if ( set_primary_device(type, selection) == de_InvalidSelection ) {
         error_str="Invalid selection!";
         goto on_error;
     }
-    
+
     return;
 on_error:
     print_err (self, error_str);
@@ -559,71 +559,71 @@ on_error:
 void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
-    
+
     if ( argc != 2 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
         else if ( argc < 2 ) error_str = "Must have id!";
         else error_str = "Only two arguments allowed!";
-        
+
         goto on_error;
     }
-    
+
     DeviceType type;
-    
+
     if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
         type = input;
-    
+
     else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
         type = output;
-    
+
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
-    
-    
+
+
     char *end;
     long int selection = strtol(argv[2], &end, 10);
-    
+
     if ( *end ) {
         error_str = "Invalid input";
         goto on_error;
     }
-    
+
     if ( selection_valid(type, selection) == de_InvalidSelection ) {
         error_str="Invalid selection!";
         goto on_error;
     }
-    
+
     /* If call is active, change device */
     if ( self->call_idx > -1) {
         Call* this_call = &ASettins.calls[self->call_idx];
         if (this_call->ttas) {
-            
+
             ToxAvCSettings csettings;
             toxav_get_peer_csettings(ASettins.av, self->call_idx, 0, &csettings);
-            
+
             if (type == output) {
                 pthread_mutex_lock(&this_call->mutex);
                 close_device(output, this_call->out_idx);
-                this_call->has_output = open_device(output, selection, &this_call->out_idx, 
-                    csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) 
+                this_call->has_output = open_device(output, selection, &this_call->out_idx,
+                    csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels)
                     == de_None ? 1 : 0;
                 pthread_mutex_unlock(&this_call->mutex);
             }
             else {
                 /* TODO: check for failure */
                 close_device(input, this_call->in_idx);
-                open_device(input, selection, &this_call->in_idx, csettings.audio_sample_rate, 
+                open_device(input, selection, &this_call->in_idx, csettings.audio_sample_rate,
                     csettings.audio_frame_duration, csettings.audio_channels);
                 /* Set VAD as true for all; TODO: Make it more dynamic */
                 register_device_callback(self->call_idx, this_call->in_idx, read_device_callback, &self->call_idx, true);
             }
         }
     }
-    
+
     self->device_selection[type] = selection;
-    
+
     return;
     on_error:
     print_err (self, error_str);
@@ -632,33 +632,33 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
-    
+
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Type must be specified!";
         else error_str = "Only two arguments allowed!";
-        
+
         goto on_error;
     }
-    
+
     DeviceType type;
-    
+
     if ( strcasecmp(argv[1], "in") == 0 ) /* Input devices */
         type = input;
-    
+
     else if ( strcasecmp(argv[1], "out") == 0 ) /* Output devices */
         type = output;
-    
+
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
-    
-    
+
+
     /* If call is active, use this_call values */
     if ( self->call_idx > -1) {
         Call* this_call = &ASettins.calls[self->call_idx];
-        
-        pthread_mutex_lock(&this_call->mutex);   
+
+        pthread_mutex_lock(&this_call->mutex);
         if (type == input) {
             device_mute(type, this_call->in_idx);
             self->chatwin->infobox.in_is_muted ^= 1;
@@ -668,9 +668,9 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         }
         pthread_mutex_unlock(&this_call->mutex);
     }
-    
+
     return;
-    
+
     on_error:
     print_err (self, error_str);
 }
@@ -678,39 +678,39 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
-    
+
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Must have value!";
         else error_str = "Only two arguments allowed!";
-        
+
         goto on_error;
     }
-    
+
     char *end;
     float value = strtof(argv[1], &end);
-    
+
     if ( *end ) {
         error_str = "Invalid input";
         goto on_error;
     }
-    
+
     /* Call must be active */
     if ( self->call_idx > -1) {
         device_set_VAD_treshold(ASettins.calls[self->call_idx].in_idx, value);
         self->chatwin->infobox.vad_lvl = value;
-    }   
-    
+    }
+
     return;
-    
+
 on_error:
     print_err (self, error_str);
 }
 
 
 void stop_current_call(ToxWindow* self)
-{    
+{
     ToxAvCallState callstate;
-    if ( ASettins.av != NULL && self->call_idx != -1 && 
+    if ( ASettins.av != NULL && self->call_idx != -1 &&
        ( callstate = toxav_get_call_state(ASettins.av, self->call_idx) ) != av_CallNonExistent) {
         switch (callstate)
         {

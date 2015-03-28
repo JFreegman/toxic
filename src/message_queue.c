@@ -42,7 +42,7 @@ void cqueue_cleanup(struct chat_queue *q)
     free(q);
 }
 
-void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, uint32_t line_id)
+void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type, uint32_t line_id)
 {
     struct cqueue_msg *new_m = malloc(sizeof(struct cqueue_msg));
 
@@ -147,10 +147,8 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
 
     uint32_t receipt = 0;
 
-    if (msg->type == OUT_MSG)
-        receipt = tox_send_message(m, self->num, (uint8_t *) msg->message, msg->len);
-    else
-        receipt = tox_send_action(m, self->num, (uint8_t *) msg->message, msg->len);
+    TOX_MESSAGE_TYPE type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
+    receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, NULL);
 
     msg->last_send_try = curtime;
     msg->receipt = receipt;

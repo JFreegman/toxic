@@ -101,6 +101,13 @@ void kill_prompt_window(ToxWindow *self)
     del_window(self);
 }
 
+/* callback: Updates own connection status in prompt statusbar */
+void prompt_onSelfConnectionChange(Tox *m, TOX_CONNECTION connection_status, void *userdata)
+{
+    StatusBar *statusbar = prompt->stb;
+    statusbar->connection = connection_status;
+}
+
 /* Updates own nick in prompt statusbar */
 void prompt_update_nick(ToxWindow *prompt, const char *nick)
 {
@@ -121,7 +128,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     tox_self_set_status_message(m, (uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK)
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
 }
 
 /* Updates own status in prompt statusbar */
@@ -129,13 +136,6 @@ void prompt_update_status(ToxWindow *prompt, TOX_USER_STATUS status)
 {
     StatusBar *statusbar = prompt->stb;
     statusbar->status = status;
-}
-
-/* Updates own connection status in prompt statusbar */
-void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected)
-{
-    StatusBar *statusbar = prompt->stb;
-    statusbar->is_online = is_connected;
 }
 
 /* Adds friend request to pending friend requests.
@@ -258,7 +258,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
-    if (statusbar->is_online) {
+    if (statusbar->connection != TOX_CONNECTION_NONE) {
         int colour = MAGENTA;
         const char *status_text = "ERROR";
 
@@ -405,10 +405,10 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
     statusbar->status = TOX_USER_STATUS_NONE;
-    statusbar->is_online = false;
+    statusbar->connection = TOX_CONNECTION_NONE;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    char statusmsg[TOX_MAX_STATUS_MESSAGE_SIZE];
+    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
 
     size_t n_len = tox_self_get_name_size(m);
     tox_self_get_name(m, (uint8_t *) nick);

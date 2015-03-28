@@ -25,7 +25,7 @@
 
 struct cqueue_msg {
     char message[MAX_STR_SIZE];
-    int len;
+    size_t len;
     int line_id;
     uint8_t type;
     uint32_t receipt;
@@ -40,7 +40,7 @@ struct chat_queue {
 };
 
 void cqueue_cleanup(struct chat_queue *q);
-void cqueue_add(struct chat_queue *q, const char *msg, int len, uint8_t type, uint32_t line_id);
+void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type, uint32_t line_id);
 
 /* Tries to send the oldest unsent message in queue. */
 void cqueue_try_send(ToxWindow *self, Tox *m);
