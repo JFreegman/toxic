@@ -275,6 +275,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     ft->file = file_to_send;
     ft->file_size = filesize;
     ft->filenum = filenum;
+    ft->friendnum = self->num;
     ft->direction = FILE_TRANSFER_SEND;
 
     char sizestr[32];

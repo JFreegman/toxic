@@ -499,6 +499,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     ft->state = FILE_TRANSFER_PENDING;
     ft->direction = FILE_TRANSFER_RECV;
     ft->file_size = file_size;
+    ft->friendnum = friendnum;
     ft->filenum = filenum;
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
