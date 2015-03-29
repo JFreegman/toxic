@@ -131,7 +131,7 @@ struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filen
     return NULL;
 }
 
-/* Returns a pointer to friendnum's file receiver associated with index with the direction specified.
+/* Returns a pointer to the FileTransfer struct associated with index with the direction specified.
  * Returns NULL on failure.
  */
 struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,

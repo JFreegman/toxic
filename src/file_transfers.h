@@ -71,7 +71,7 @@ void prep_prog_line(char *progline);
 /* prints a progress bar for file transfers */
 void print_progress_bar(ToxWindow *self, double pct_done, double bps, uint32_t line_id);
 
-/* refreshes active file receiver status bars for friendnum */
+/* refreshes active file transfer status bars for friendnum */
 void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum);
 
 /* Returns a pointer to friendnum's FileTransfer struct associated with filenum.
@@ -80,7 +80,7 @@ void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum)
 struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filenum);
 
 
-/* Returns a pointer to friendnum's file receiver associated with index with the direction specified.
+/* Returns a pointer to the FileTransfer struct associated with index with the direction specified.
  * Returns NULL on failure.
  */
 struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,

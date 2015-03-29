@@ -685,13 +685,38 @@ static Tox *load_toxic(char *data_path)
     return m;
 }
 
+#define TRY_BOOTSTRAP_INTERVAL 5
+static uint64_t last_bootstrap_time = 0;
+
+static void do_bootstrap(Tox *m)
+{
+    static int conn_err = 0;
+    uint64_t curtime = get_unix_time();
+
+    if (!timed_out(last_bootstrap_time, curtime, TRY_BOOTSTRAP_INTERVAL))
+        return;
+
+    if (tox_self_get_connection_status(m) != TOX_CONNECTION_NONE)
+        return;
+
+    if (conn_err != 0)
+        return;
+
+    last_bootstrap_time = curtime;
+    conn_err = init_connection(m);
+
+    if (conn_err != 0)
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Auto-connect failed with error code %d", conn_err);
+}
+
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
+    if (arg_opts.no_connect)
+        return;
+
     pthread_mutex_lock(&Winthread.lock);
-
-    if (arg_opts.no_connect == 0)
-        tox_iterate(m);    /* main toxcore loop */
-
+    tox_iterate(m);
+    do_bootstrap(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -997,6 +1022,9 @@ int main(int argc, char *argv[])
 
     int config_err = init_default_data_files();
     bool datafile_exists = file_exists(DATA_FILE);
+
+    if (datafile_exists)
+        last_bootstrap_time = get_unix_time();
 
     if (!datafile_exists && !arg_opts.unencrypt_data)
         first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
