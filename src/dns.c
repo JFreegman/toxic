@@ -44,7 +44,7 @@
 
 #define DNS3_KEY_SIZE 32
 #define MAX_DNS_REQST_SIZE 255
-#define TOX_DNS3_TXT_PREFIX "v=tox3;id="
+#define TOX_DNS3_TXT_PREFIX "v=toxdns3;id="
 
 extern struct Winthread Winthread;
 extern struct dns3_servers dns3_servers;
