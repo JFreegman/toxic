@@ -222,17 +222,19 @@ void filter_str(char *str, size_t len)
     }
 }
 
-/* gets base file name from path or original file name if no path is supplied */
-void get_file_name(char *namebuf, int bufsize, const char *pathname)
+/* gets base file name from path or original file name if no path is supplied.
+ * Returns the file name length
+ */
+size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
 {
-    int idx = strlen(pathname) - 1;
+    int len = strlen(pathname) - 1;
     char *path = strdup(pathname);
 
     if (path == NULL)
         exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
 
-    while (idx >= 0 && pathname[idx] == '/')
-        path[idx--] = '\0';
+    while (len >= 0 && pathname[len] == '/')
+        path[len--] = '\0';
 
     char *finalname = strdup(path);
 
@@ -249,6 +251,8 @@ void get_file_name(char *namebuf, int bufsize, const char *pathname)
     snprintf(namebuf, bufsize, "%s", finalname);
     free(finalname);
     free(path);
+
+    return strlen(namebuf);
 }
 
 /* converts str to all lowercase */
@@ -363,7 +367,7 @@ bool file_exists(const char *path)
     return stat(path, &s) == 0;
 }
 
-/* returns file size or 0 on error */
+/* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path)
 {
     struct stat st;

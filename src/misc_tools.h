@@ -92,10 +92,10 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
 int valid_nick(const char *nick);
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
-void filter_str(char *str, size_t len);;
+void filter_str(char *str, size_t len);
 
 /* gets base file name from path or original file name if no path is supplied */
-void get_file_name(char *namebuf, int bufsize, const char *pathname);
+size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname);
 
 /* converts str to all lowercase */
 void str_to_lower(char *str);
@@ -125,7 +125,7 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes);
 /* checks if a file exists. Returns true or false */
 bool file_exists(const char *path);
 
-/* returns file size or 0 on error */
+/* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path);
 
 /* compares the first size bytes of fp and signature.

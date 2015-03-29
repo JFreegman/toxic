@@ -189,7 +189,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TY
 }
 
 static void chat_resume_file_transfers(Tox *m, uint32_t fnum);
-static void chat_stop_file_senders(uint32_t friendnum);
+static void chat_stop_file_senders(Tox *m, uint32_t friendnum);
 
 static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_CONNECTION connection_status)
 {
@@ -222,7 +222,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
         if (self->chatwin->self_is_typing)
             set_self_typingstatus(self, m, 0);
 
-        chat_stop_file_senders(num);
+        chat_stop_file_senders(m, num);
 
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
@@ -278,164 +278,146 @@ static void chat_onReadReceipt(ToxWindow *self, Tox *m, uint32_t num, uint32_t r
 }
 
 /* Stops active file senders for this friend. Call when a friend goes offline */
-static void chat_stop_file_senders(uint32_t friendnum)
+static void chat_stop_file_senders(Tox *m, uint32_t friendnum)
 {
-    // size_t i;
-
-    // for (i = 0; i < MAX_FILES; ++i) {
-    //     if (Friends.list[friendnum].file_sender[i].active)
-    //         Friends.list[friendnum].file_sender[i].noconnection = true;
-    // }
+    // TODO: core purges file transfers when a friend goes offline. Ideally we want to repair/resume
+    kill_all_file_transfers_friend(m, friendnum);
 }
 
 /* Tries to resume broken file transfers. Call when a friend comes online */
 static void chat_resume_file_transfers(Tox *m, uint32_t fnum)
 {
-    // size_t i;
-
-    // for (i = 0; i < MAX_FILES; ++i) {
-    //     if (Friends.list[fnum].file_receiver[i].active) {
-    //         uint8_t bytes_recv[sizeof(uint64_t)];
-    //         memcpy(bytes_recv, &Friends.list[fnum].file_receiver[i].bytes_recv, sizeof(uint64_t));
-    //         net_to_host(bytes_recv, sizeof(uint64_t));
-    //         uint32_t filenum = Friends.list[fnum].file_receiver[i].filenum;
-    //         tox_file_send_control(m, fnum, 1, filenum, TOX_FILECONTROL_RESUME_BROKEN, bytes_recv, sizeof(uint64_t));
-    //     }
-    // }
+    // TODO
 }
 
-static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t num, uint32_t filenum, uint64_t position,
+static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
                                     size_t length)
 {
-    if (num != self->num)
+    if (friendnum != self->num)
         return;
 
-    uint32_t idx = get_file_transfer_index(filenum);
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    if (idx >= MAX_FILES)
+    if (ft == NULL)
+        return;
+
+    if (ft->state != FILE_TRANSFER_STARTED)
         return;
 
     char msg[MAX_STR_SIZE];
-    const char *file_name = Friends.list[num].file_sender[idx].file_name;
-
-    FILE *fp = Friends.list[num].file_sender[idx].file;
-
-    if (fp == NULL) {
-        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Null file pointer.", file_name);
-        close_file_transfer(self, m, filenum, num, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
-        return;
-    }
 
     if (length == 0) {
-        snprintf(msg, sizeof(msg), "File '%s' successfully sent.", file_name);
-        print_progress_bar(self, Friends.list[num].file_sender[idx].bps, 100.0, Friends.list[num].file_sender[idx].line_id);
-        close_file_transfer(self, m, filenum, num, -1, msg, transfer_completed);
+        snprintf(msg, sizeof(msg), "File '%s' successfully sent.", ft->file_name);
+        print_progress_bar(self, ft->bps, 100.0, ft->line_id);
+        close_file_transfer(self, m, ft, -1, msg, transfer_completed);
         return;
     }
 
-    if (Friends.list[num].file_sender[idx].position != position) {
-        if (fseek(fp, position, SEEK_SET) == -1) {
-            snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Seek fail.", file_name);
-            close_file_transfer(self, m, filenum, num, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+    if (ft->file == NULL) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Null file pointer.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        return;
+    }
+
+    if (ft->position != position) {
+        if (fseek(ft->file, position, SEEK_SET) == -1) {
+            snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Seek fail.", ft->file_name);
+            close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
             return;
         }
 
-        Friends.list[num].file_sender[idx].position = position;
+        ft->position = position;
     }
 
     uint8_t send_data[length];
-    size_t send_length = fread(send_data, 1, sizeof(send_data), fp);
+    size_t send_length = fread(send_data, 1, sizeof(send_data), ft->file);
 
     if (send_length != length) {
-        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Read fail.", file_name);
-        close_file_transfer(self, m, filenum, num, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Read fail.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
         return;
     }
 
     TOX_ERR_FILE_SEND_CHUNK err;
-    tox_file_send_chunk(m, num, filenum, position, send_data, send_length, &err);
+    tox_file_send_chunk(m, friendnum, filenum, position, send_data, send_length, &err);
 
     if (err != TOX_ERR_FILE_SEND_CHUNK_OK)
         fprintf(stderr, "tox_file_send_chunk failed (error %d)\n", err);
 
-    Friends.list[num].file_sender[idx].position += send_length;
-    Friends.list[num].file_sender[idx].bps += send_length;
+    ft->position += send_length;
+    ft->bps += send_length;
 }
 
-static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t num, uint32_t filenum, uint64_t position,
+static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
                                  const char *data, size_t length)
 {
-    if (num != self->num)
+    if (friendnum != self->num)
         return;
 
-    uint32_t idx = get_file_transfer_index(filenum);
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    if (idx >= MAX_FILES)
+    if (ft == NULL)
+        return;
+
+    if (ft->state != FILE_TRANSFER_STARTED)
         return;
 
     char msg[MAX_STR_SIZE];
-    char file_name[MAX_STR_SIZE];
-    get_file_name(file_name, sizeof(file_name), Friends.list[num].file_receiver[idx].file_path);
 
     if (length == 0) {
-        snprintf(msg, sizeof(msg), "File '%s' successfully received.", file_name);
-        print_progress_bar(self, Friends.list[num].file_receiver[idx].bps, 100.0, Friends.list[num].file_receiver[idx].line_id);
-        close_file_transfer(self, m, filenum, num, -1, msg, transfer_completed);
+        snprintf(msg, sizeof(msg), "File '%s' successfully received.", ft->file_name);
+        print_progress_bar(self, ft->bps, 100.0, ft->line_id);
+        close_file_transfer(self, m, ft, -1, msg, transfer_completed);
         return;
     }
 
-    FILE *fp = Friends.list[num].file_receiver[idx].file;
-
-    if (fp == NULL) {
-        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Invalid file pointer.", file_name);
-        close_file_transfer(self, m, filenum, num, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+    if (ft->file == NULL) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Invalid file pointer.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
         return;
     }
 
-    if (fwrite(data, length, 1, fp) != 1) {
-        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Write fail.", file_name);
-        close_file_transfer(self, m, filenum, num, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+    if (fwrite(data, length, 1, ft->file) != 1) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Write fail.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
         return;
     }
 
-    Friends.list[num].file_receiver[idx].bps += length;
-    Friends.list[num].file_receiver[idx].position += length;
+    ft->bps += length;
+    ft->position += length;
 }
 
-static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t num, uint32_t filenum, TOX_FILE_CONTROL control)
+static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, TOX_FILE_CONTROL control)
 {
-    if (self->num != num)
+    if (self->num != friendnum)
         return;
 
-    uint32_t idx = get_file_transfer_index(filenum);
-    bool sending = filenum_is_sending(filenum);
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    if (idx >= MAX_FILES)
+    if (ft == NULL)
         return;
 
-    char file_name[MAX_STR_SIZE];
     char msg[MAX_STR_SIZE];
-
-    if (sending && Friends.list[num].file_sender[idx].active) {
-        snprintf(file_name, sizeof(file_name), "%s", Friends.list[num].file_sender[idx].file_name);
-    } else if (!sending && Friends.list[num].file_receiver[idx].active) {
-        get_file_name(file_name, sizeof(file_name), Friends.list[num].file_receiver[idx].file_path);
-    } else {
-        return;
-    }
 
     switch (control) {
         case TOX_FILE_CONTROL_RESUME:
             /* transfer is accepted */
-            if (sending && !Friends.list[num].file_sender[idx].started) {
-                Friends.list[num].file_sender[idx].started = true;
+            if (ft->state == FILE_TRANSFER_PENDING) {
+                ft->state = FILE_TRANSFER_STARTED;
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
-                                                                      idx, file_name);
+                                                                      ft->index, ft->file_name);
                 char progline[MAX_STR_SIZE];
                 prep_prog_line(progline);
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-                Friends.list[num].file_sender[idx].line_id = self->chatwin->hst->line_end->id + 2;
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
+                ft->line_id = self->chatwin->hst->line_end->id + 2;
+
+                break;
+            }
+
+            /* transfer is resumed */
+            if (ft->state == FILE_TRANSFER_PAUSED) {
+                ft->state = FILE_TRANSFER_STARTED;
             }
 
             break;
@@ -444,29 +426,29 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t num, uint32_t f
             break;
 
         case TOX_FILE_CONTROL_CANCEL:
-            snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", file_name);
-            close_file_transfer(self, m, filenum, num, -1, msg, notif_error);
+            snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", ft->file_name);
+            close_file_transfer(self, m, ft, -1, msg, notif_error);
             break;
     }
 }
 
-static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_t filenum, uint32_t kind,
-                            uint64_t file_size, const char *filename, size_t name_length)
+static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t file_size,
+                            const char *filename, size_t name_length)
 {
-    if (self->num != num)
+    if (self->num != friendnum)
         return;
 
-    uint32_t idx = get_file_transfer_index(filenum);
+    struct FileTransfer *ft = get_new_file_receiver(friendnum);
 
-    if (idx >= MAX_FILES) {
+    if (!ft) {
+        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Too many concurrent file transfers.");
         return;
     }
 
     char sizestr[32];
     bytes_convert_str(sizestr, sizeof(sizestr), file_size);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)",
-                                                          filename, sizestr);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)", filename, sizestr);
 
     char file_path[MAX_STR_SIZE];
     size_t path_len = name_length;
@@ -479,8 +461,9 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_t file
         snprintf(file_path, sizeof(file_path), "%s", filename);
     }
 
-    if (path_len >= sizeof(Friends.list[num].file_receiver[idx].file_path)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer faield: File name too long.");
+    if (path_len >= sizeof(ft->file_path) || name_length >= sizeof(ft->file_name)) {
+        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer faield: File path too long.");
         return;
     }
 
@@ -505,16 +488,20 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_t file
         file_path[path_len + d_len] = '\0';
 
         if (count > 999) {
+            tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: invalid file path.");
             return;
         }
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", idx);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", ft->index);
 
-    Friends.list[num].file_receiver[idx].pending = true;
-    Friends.list[num].file_receiver[idx].file_size = file_size;
-    strcpy(Friends.list[num].file_receiver[idx].file_path, file_path);
+    ft->state = FILE_TRANSFER_PENDING;
+    ft->direction = FILE_TRANSFER_RECV;
+    ft->file_size = file_size;
+    ft->filenum = filenum;
+    snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
+    snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
 
     if (self->active_box != -1)
         box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box,

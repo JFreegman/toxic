@@ -127,7 +127,7 @@ struct ToxWindow {
     void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
     void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_FILE_CONTROL);
-    void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, uint64_t, const char *, size_t);
+    void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
     void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
 

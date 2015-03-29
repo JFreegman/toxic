@@ -248,11 +248,17 @@ void on_file_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FIL
 void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
                   const uint8_t *filename, size_t filename_length, void *userdata)
 {
+    /* We don't care about receiving avatars */
+    if (kind != TOX_FILE_KIND_DATA) {
+        tox_file_control(m, friendnumber, filenumber, TOX_FILE_CONTROL_CANCEL, NULL);
+        return;
+    }
+
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onFileRecv != NULL)
-            windows[i].onFileRecv(&windows[i], m, friendnumber, filenumber, kind, file_size, (char *) filename,
+            windows[i].onFileRecv(&windows[i], m, friendnumber, filenumber, file_size, (char *) filename,
                                   filename_length);
     }
 }

@@ -33,31 +33,31 @@
 #define MiB 1048576       /* 1024 ^ 2 */
 #define GiB 1073741824    /* 1024 ^ 3 */
 
-#define FILE_PIECE_SIZE 2048
 #define MAX_FILES 32
 #define TIMEOUT_FILESENDER 120
 
-struct FileSender {
-    FILE *file;
-    char file_name[TOX_MAX_FILENAME_LENGTH];
-    bool active;
-    bool noconnection;  /* set when the connection has been interrupted */
-    bool paused;        /* set when transfer has been explicitly paused */
-    bool started;       /* set after TOX_FILECONTROL_ACCEPT received */
-    uint64_t timestamp;        /* marks the last time data was successfully transfered */
-    double bps;
-    uint64_t file_size;
-    uint64_t last_progress;    /* marks the last time the progress bar was refreshed */
-    uint64_t position;
-    uint32_t line_id;
-};
+typedef enum FILE_TRANSFER_STATE {
+    FILE_TRANSFER_INACTIVE,
+    FILE_TRANSFER_PENDING,
+    FILE_TRANSFER_STARTED,
+    FILE_TRANSFER_PAUSED
+} FILE_TRANSFER_STATE;
 
-struct FileReceiver {
+typedef enum FILE_TRANSFER_DIRECTION {
+    FILE_TRANSFER_SEND,
+    FILE_TRANSFER_RECV
+} FILE_TRANSFER_DIRECTION;
+
+struct FileTransfer {
     FILE *file;
-    char file_path[PATH_MAX + 1];
-    bool pending;
-    bool active;
+    FILE_TRANSFER_STATE state;
+    FILE_TRANSFER_DIRECTION direction;
+    char file_name[TOX_MAX_FILENAME_LENGTH + 1];
+    char file_path[PATH_MAX + 1];    /* Not used by senders */
     double bps;
+    uint32_t filenum;
+    uint32_t friendnum;
+    size_t   index;
     uint64_t file_size;
     uint64_t last_progress;
     uint64_t position;
@@ -74,21 +74,35 @@ void print_progress_bar(ToxWindow *self, double pct_done, double bps, uint32_t l
 /* refreshes active file receiver status bars for friendnum */
 void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum);
 
-/* Returns filenum's file transfer array index */
-uint32_t get_file_transfer_index(uint32_t filenum);
+/* Returns a pointer to friendnum's FileTransfer struct associated with filenum.
+ * Returns NULL if filenum is invalid.
+ */
+struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filenum);
 
-/* Returns the filenumber of a file receiver's index */
-uint32_t get_file_receiver_filenum(uint32_t idx);
 
-/* Return true if filenum is associated with a file receiver, false if file sender */
-bool filenum_is_sending(uint32_t filenum);
+/* Returns a pointer to friendnum's file receiver associated with index with the direction specified.
+ * Returns NULL on failure.
+ */
+struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,
+                                                    FILE_TRANSFER_DIRECTION direction);
 
-/* Closes file transfer with filenum.
+/* Returns a pointer to an unused file sender.
+ * Returns NULL if all file senders are in use.
+ */
+struct FileTransfer *get_new_file_sender(uint32_t friendnum);
+
+/* Returns a pointer to an unused file receiver.
+ * Returns NULL if all file receivers are in use.
+ */
+struct FileTransfer *get_new_file_receiver(uint32_t friendnum);
+
+/* Closes file transfer ft.
+ *
  * Set CTRL to -1 if we don't want to send a control signal.
  * Set message or self to NULL if we don't want to display a message.
  */
-void close_file_transfer(ToxWindow *self, Tox *m, uint32_t filenum, uint32_t friendnum, int CTRL,
-                         const char *message, Notification sound_type);
+void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int CTRL, const char *message,
+                         Notification sound_type);
 
 /* Kills all active file transfers for friendnum */
 void kill_all_file_transfers_friend(Tox *m, uint32_t friendnum);

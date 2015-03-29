@@ -334,9 +334,6 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
 static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum , TOX_CONNECTION connection_status)
 {
-    if (friendnum < 0)
-        return;
-
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH] = {0};    /* stop removing this initiation */
