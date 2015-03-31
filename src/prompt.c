@@ -31,6 +31,7 @@
 #include "toxic.h"
 #include "windows.h"
 #include "prompt.h"
+#include "friendlist.h"
 #include "execute.h"
 #include "misc_tools.h"
 #include "toxic_strings.h"
@@ -46,6 +47,7 @@ extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
+extern FriendsList Friends;
 FriendRequests FrndRequests;
 
 #ifdef AUDIO
@@ -346,7 +348,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
     get_time_str(timefrmt, sizeof(timefrmt));
     const char *msg;
 
-    if (connection_status != TOX_CONNECTION_NONE) {
+    if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
@@ -357,7 +359,8 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
         else
             box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
                        "Toxic", "%s has come online", nick );
-    } else {
+    }
+    else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);

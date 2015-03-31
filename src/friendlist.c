@@ -332,7 +332,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num,
 
     if (connection_status == TOX_CONNECTION_NONE)
         --Friends.num_online;
-    else
+    else if (Friends.list[num].connection_status == TOX_CONNECTION_NONE)
         ++Friends.num_online;
 
     Friends.list[num].connection_status = connection_status;
