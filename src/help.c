@@ -250,14 +250,7 @@ static void help_draw_group(ToxWindow *self)
     wprintw(win, "  /whisper <nick> <msg>      : Send private message to nick\n\n");
 
 #ifdef AUDIO
-    wattron(win, A_BOLD);
-    wprintw(win, " Audio commands:\n");
-    wattroff(win, A_BOLD);
-
-    wprintw(win, "  /mute <type>               : Mute active device where type: in | out\n");
-    wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n\n");
 #endif /* AUDIO */
-
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
@@ -313,11 +306,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-#ifdef AUDIO
-            help_init_window(self, 15, 80);
-#else
-            help_init_window(self, 11, 80);
-#endif
+            help_init_window(self, 6, 80);
             self->help->type = HELP_GROUP;
             break;
 

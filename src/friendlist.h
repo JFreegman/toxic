@@ -56,6 +56,7 @@ typedef struct {
 
     struct LastOnline last_online;
     struct GroupInvite group_invite;
+
     struct FileTransfer file_receiver[MAX_FILES];
     struct FileTransfer file_sender[MAX_FILES];
 } ToxicFriend;

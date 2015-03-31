@@ -151,7 +151,7 @@ void on_friendadded(Tox *m, uint32_t friendnumber, bool sort)
 
 void on_group_invite(Tox *m, int32_t friendnumber, const uint8_t *invite_data, uint16_t length, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupInvite != NULL)
@@ -213,7 +213,7 @@ void on_group_namelistchange(Tox *m, int groupnumber, void *userdata)
 
 void on_group_peer_join(Tox *m, int groupnumber, uint32_t peernumber, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupPeerJoin != NULL)
@@ -228,12 +228,12 @@ void on_group_peer_exit(Tox *m, int groupnumber, uint32_t peernumber, const uint
 
     if (length == 0 || !partmsg) {
         strcpy(msg, "Quit");
-        length = 5;
+        length = strlen(msg);
     } else {
         length = copy_tox_str(msg, sizeof(msg), (const char *) partmsg, length);
     }
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupPeerExit != NULL)
@@ -262,7 +262,7 @@ void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const ui
     length = copy_tox_str(name, sizeof(name), (const char *) newname, length);
     filter_str(name, length);
 
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupNickChange != NULL)
@@ -273,7 +273,7 @@ void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const ui
 void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint32_t tgt_peernum, uint8_t cert_type,
                              void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupOpCertificate != NULL)
@@ -283,7 +283,7 @@ void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint
 
 void on_group_self_join(Tox *m, int groupnumber, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupSelfJoin != NULL)
@@ -293,7 +293,7 @@ void on_group_self_join(Tox *m, int groupnumber, void *userdata)
 
 void on_group_self_timeout(Tox *m, int groupnumber, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupSelfTimeout != NULL)
@@ -303,7 +303,7 @@ void on_group_self_timeout(Tox *m, int groupnumber, void *userdata)
 
 void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupRejected != NULL)

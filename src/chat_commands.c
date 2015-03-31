@@ -149,6 +149,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     ft->state = FILE_TRANSFER_STARTED;
 
     return;
+ 
+
+
 
 on_recv_error:
     switch (err) {

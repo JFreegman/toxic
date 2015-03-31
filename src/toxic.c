@@ -359,6 +359,17 @@ int init_connection(Tox *m)
     return 4;
 }
 
+static void load_groups(Tox *m)
+{
+    size_t i;
+    size_t numgroups = tox_group_count_groups(m);
+
+    for (i = 0; i < numgroups; ++i) {
+        if (init_groupchat_win(m, i, NULL, 0) == -1)
+            tox_group_delete(m, i, NULL, 0);
+    }
+}
+
 static void load_friendlist(Tox *m)
 {
     size_t i;
@@ -368,17 +379,6 @@ static void load_friendlist(Tox *m)
         friendlist_onFriendAdded(NULL, m, i, false);
 
     sort_friendlist_index();
-}
-
-static void load_groups(Tox *m)
-{
-    uint32_t i;
-    uint32_t numgroups = tox_group_count_groups(m);
-
-    for (i = 0; i < numgroups; ++i) {
-        if (init_groupchat_win(m, i, NULL, 0) == -1)
-            tox_group_delete(m, i, NULL, 0);
-    }
 }
 
 /* return length of password on success, 0 on failure */
@@ -525,7 +525,6 @@ int store_data(Tox *m, const char *path)
 static void init_tox_callbacks(Tox *m)
 {
     tox_callback_self_connection_status(m, prompt_onSelfConnectionChange, NULL);
-
     tox_callback_friend_connection_status(m, on_connectionchange, NULL);
     tox_callback_friend_typing(m, on_typing_change, NULL);
     tox_callback_friend_request(m, on_request, NULL);
@@ -534,12 +533,10 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_friend_status(m, on_statuschange, NULL);
     tox_callback_friend_status_message(m, on_statusmessagechange, NULL);
     tox_callback_friend_read_receipt(m, on_read_receipt, NULL);
-
     tox_callback_file_recv(m, on_file_recv, NULL);
     tox_callback_file_chunk_request(m, on_file_chunk_request, NULL);
     tox_callback_file_recv_control(m, on_file_control, NULL);
     tox_callback_file_recv_chunk(m, on_file_recv_chunk, NULL);
-
     tox_callback_group_invite(m, on_group_invite, NULL);
     tox_callback_group_message(m, on_group_message, NULL);
     tox_callback_group_action(m, on_group_action, NULL);

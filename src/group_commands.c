@@ -111,7 +111,9 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     char selfnick[TOX_MAX_NAME_LENGTH];
 
     get_time_str(timefrmt, sizeof(timefrmt));
-    int sn_len = tox_group_get_self_name(m, self->num, (uint8_t *) selfnick);
+    
+    tox_self_get_name(m, (uint8_t *) selfnick);
+    size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';
 
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- You set the topic to: %s", topic);
