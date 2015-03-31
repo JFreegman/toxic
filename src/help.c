@@ -219,7 +219,7 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "Key bindings:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  Ctrl+O and Ctrl+P         : Navigate through the tabs\n"); 
+    wprintw(win, "  Ctrl+O and Ctrl+P         : Navigate through the tabs\n");
     wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
     wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
     wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
@@ -244,13 +244,6 @@ static void help_draw_group(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
     wprintw(win, "  /title <msg>               : Set group title (show current title if no msg)\n\n");
-
-    wattron(win, A_BOLD);
-    wprintw(win, " Audio commands:\n");
-    wattroff(win, A_BOLD);
-
-    wprintw(win, "  /mute <type>               : Mute active device where type: in | out\n");
-    wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n\n");
 
     help_draw_bottom_menu(win);
 
@@ -306,12 +299,10 @@ void help_onKey(ToxWindow *self, wint_t key)
             self->help->type = HELP_GLOBAL;
             break;
 
-#ifdef AUDIO    /* remove if/when we add non-audio group commands */
         case 'r':
-            help_init_window(self, 10, 80);
+            help_init_window(self, 6, 80);
             self->help->type = HELP_GROUP;
             break;
-#endif
 
         case 'f':
             help_init_window(self, 10, 80);
