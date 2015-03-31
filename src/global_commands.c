@@ -61,13 +61,14 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    const char *msg;
-    int32_t friendnum = tox_add_friend_norequest(m, FrndRequests.request[req].key);
+    TOX_ERR_FRIEND_ADD err;
+    uint32_t friendnum = tox_friend_add_norequest(m, FrndRequests.request[req].key, &err);
 
-    if (friendnum == -1)
-        msg = "Failed to add friend.";
-    else {
-        msg = "Friend request accepted.";
+    if (err != TOX_ERR_FRIEND_ADD_OK) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to add friend (error %d\n)", err);
+        return;
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Friend request accepted.");
         on_friendadded(m, friendnum, true);
     }
 
@@ -82,46 +83,54 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     FrndRequests.max_idx = i;
     --FrndRequests.num_requests;
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+
 }
 
-void cmd_add_helper(ToxWindow *self, Tox *m, char *id_bin, char *msg)
+void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg)
 {
     const char *errmsg;
-    int32_t f_num = tox_add_friend(m, (uint8_t *) id_bin, (uint8_t *) msg, (uint16_t) strlen(msg));
 
-    switch (f_num) {
-        case TOX_FAERR_TOOLONG:
+    TOX_ERR_FRIEND_ADD err;
+    uint32_t f_num = tox_friend_add(m, (uint8_t *) id_bin, (uint8_t *) msg, strlen(msg), &err);
+
+    switch (err) {
+        case TOX_ERR_FRIEND_ADD_TOO_LONG:
             errmsg = "Message is too long.";
             break;
 
-        case TOX_FAERR_NOMESSAGE:
+        case TOX_ERR_FRIEND_ADD_NO_MESSAGE:
             errmsg = "Please add a message to your request.";
             break;
 
-        case TOX_FAERR_OWNKEY:
+        case TOX_ERR_FRIEND_ADD_OWN_KEY:
             errmsg = "That appears to be your own ID.";
             break;
 
-        case TOX_FAERR_ALREADYSENT:
+        case TOX_ERR_FRIEND_ADD_ALREADY_SENT:
             errmsg = "Friend request has already been sent.";
             break;
 
-        case TOX_FAERR_UNKNOWN:
-            errmsg = "Undefined error when adding friend.";
-            break;
-
-        case TOX_FAERR_BADCHECKSUM:
+        case TOX_ERR_FRIEND_ADD_BAD_CHECKSUM:
             errmsg = "Bad checksum in address.";
             break;
 
-        case TOX_FAERR_SETNEWNOSPAM:
+        case TOX_ERR_FRIEND_ADD_SET_NEW_NOSPAM:
             errmsg = "Nospam was different.";
             break;
 
-        default:
+        case TOX_ERR_FRIEND_ADD_MALLOC:
+            errmsg = "Core memory allocation failed.";
+            break;
+
+        case TOX_ERR_FRIEND_ADD_OK:
             errmsg = "Friend request sent.";
             on_friendadded(m, f_num, true);
+            break;
+
+        case TOX_ERR_FRIEND_ADD_NULL:
+        /* fallthrough */
+        default:
+            errmsg = "Faile to add friend: Unknown error.";
             break;
     }
 
@@ -152,21 +161,23 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         snprintf(msg, sizeof(msg), "%s", tmp);
     } else {
         char selfname[TOX_MAX_NAME_LENGTH];
-        uint16_t n_len = tox_get_self_name(m, (uint8_t *) selfname);
+        tox_self_get_name(m, (uint8_t *) selfname);
+
+        size_t n_len = tox_self_get_name_size(m);
         selfname[n_len] = '\0';
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 
-    char id_bin[TOX_FRIEND_ADDRESS_SIZE] = {0};
+    char id_bin[TOX_ADDRESS_SIZE] = {0};
     uint16_t id_len = (uint16_t) strlen(id);
 
     /* try to add tox ID */
-    if (id_len == 2 * TOX_FRIEND_ADDRESS_SIZE) {
+    if (id_len == 2 * TOX_ADDRESS_SIZE) {
         size_t i;
         char xx[3];
         uint32_t x;
 
-        for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
+        for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
             xx[0] = id[2 * i];
             xx[1] = id[2 * i + 1];
             xx[2] = '\0';
@@ -187,77 +198,72 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (argc < 2) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: No file path supplied.");
-        return;
-    }
+    // if (argc < 2) {
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: No file path supplied.");
+    //     return;
+    // }
 
-    /* turns the avatar off */
-    if (strlen(argv[1]) < 3) {
-        tox_unset_avatar(m);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No avatar set.");
-        return;
-    }
+    // /* turns the avatar off */
+    // if (strlen(argv[1]) < 3) {
+    //     tox_unset_avatar(m);
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No avatar set.");
+    //     return;
+    // }
 
-    if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
-        return;
-    }
+    // if (argv[1][0] != '\"') {
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
+    //     return;
+    // }
 
-    /* remove opening and closing quotes */
-    char path[MAX_STR_SIZE];
-    snprintf(path, sizeof(path), "%s", &argv[1][1]);
-    int len = strlen(path) - 1;
-    path[len] = '\0';
+    // /* remove opening and closing quotes */
+    // char path[MAX_STR_SIZE];
+    // snprintf(path, sizeof(path), "%s", &argv[1][1]);
+    // int len = strlen(path) - 1;
+    // path[len] = '\0';
 
-    off_t sz = file_size(path);
+    // off_t sz = file_size(path);
 
-    if (sz <= 8) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Invalid file.");
-        return;
-    }
+    // if (sz <= 8) {
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Invalid file.");
+    //     return;
+    // }
 
-    if (sz > TOX_AVATAR_MAX_DATA_LENGTH) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: File is too large.");
-        return;
-    }
+    // FILE *fp = fopen(path, "rb");
 
-    FILE *fp = fopen(path, "rb");
+    // if (fp == NULL) {
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Could not open file.");
+    //     return;
+    // }
 
-    if (fp == NULL) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Could not open file.");
-        return;
-    }
+    // char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
-    char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    // if (check_file_signature(PNG_signature, sizeof(PNG_signature), fp) != 0) {
+    //     fclose(fp);
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: File type not supported.");
+    //     return;
+    // }
 
-    if (check_file_signature(PNG_signature, sizeof(PNG_signature), fp) != 0) {
-        fclose(fp);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: File type not supported.");
-        return;
-    }
+    // char *avatar = malloc(sz);
 
-    char *avatar = malloc(sz);
+    // if (avatar == NULL)
+    //     exit_toxic_err("Failed in cmd_avatar", FATALERR_MEMORY);
 
-    if (avatar == NULL)
-        exit_toxic_err("Failed in set_avatar", FATALERR_MEMORY);
+    // if (fread(avatar, sz, 1, fp) != 1) {
+    //     fclose(fp);
+    //     free(avatar);
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Read fail.");
+    //     return;
+    // }
 
-    if (fread(avatar, sz, 1, fp) != 1) {
-        fclose(fp);
-        free(avatar);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Read fail.");
-        return;
-    }
+    // if (tox_set_avatar(m, TOX_AVATAR_FORMAT_PNG, (const uint8_t *) avatar, (uint32_t) sz) == -1)
+    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar");
 
-    if (tox_set_avatar(m, TOX_AVATAR_FORMAT_PNG, (const uint8_t *) avatar, (uint32_t) sz) == -1)
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Core error.");
+    // char filename[MAX_STR_SIZE];
+    // get_file_name(filename, sizeof(filename), path);
+    // line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
 
-    char filename[MAX_STR_SIZE];
-    get_file_name(filename, sizeof(filename), path);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
-
-    fclose(fp);
-    free(avatar);
+    // fclose(fp);
+    // free(avatar);
 }
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -283,8 +289,26 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     char *binary_string = hex_string_to_bin(key);
-    tox_bootstrap_from_address(m, ip, atoi(port), (uint8_t *) binary_string);
+
+    TOX_ERR_BOOTSTRAP err;
+    tox_bootstrap(m, ip, atoi(port), (uint8_t *) binary_string, &err);
     free(binary_string);
+
+    switch (err) {
+        case TOX_ERR_BOOTSTRAP_BAD_HOST:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed: Invalid IP.");
+            break;
+
+        case TOX_ERR_BOOTSTRAP_BAD_PORT:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed: Invalid port.");
+            break;
+
+        case TOX_ERR_BOOTSTRAP_NULL:
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed.");
+            break;
+        default:
+            break;
+    }
 }
 
 void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -456,8 +480,8 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     const char *swch = argv[1];
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
-        char myid[TOX_FRIEND_ADDRESS_SIZE];
-        tox_get_address(m, (uint8_t *) myid);
+        char myid[TOX_ADDRESS_SIZE];
+        tox_self_get_address(m, (uint8_t *) myid);
 
         if (self->is_chat) {
             Friends.list[self->num].logging_on = true;
@@ -488,13 +512,13 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char id[TOX_FRIEND_ADDRESS_SIZE * 2 + 1] = {0};
-    char address[TOX_FRIEND_ADDRESS_SIZE];
-    tox_get_address(m, (uint8_t *) address);
+    char id[TOX_ADDRESS_SIZE * 2 + 1] = {0};
+    char address[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) address);
 
     size_t i;
 
-    for (i = 0; i < TOX_FRIEND_ADDRESS_SIZE; ++i) {
+    for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
         char xx[3];
         snprintf(xx, sizeof(xx), "%02X", address[i] & 0xff);
         strcat(id, xx);
@@ -511,7 +535,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     char nick[MAX_STR_SIZE];
-    int len = 0;
+    size_t len = 0;
 
     if (argv[1][0] == '\"') {    /* remove opening and closing quotes */
         snprintf(nick, sizeof(nick), "%s", &argv[1][1]);
@@ -530,11 +554,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     nick[len] = '\0';
 
-    if (tox_set_name(m, (uint8_t *) nick, (uint16_t) len) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Core error setting nick.");
-        return;
-    }
-
+    tox_self_set_name(m, (uint8_t *) nick, len, NULL);
     prompt_update_nick(prompt, nick);
     set_nick_all_groups(m, nick, len);
 
@@ -606,31 +626,24 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto finish;
     }
 
-    char status[MAX_STR_SIZE];
-    snprintf(status, sizeof(status), "%s", argv[1]);
-    str_to_lower(status);
+    const char *status_str = argv[1];
+    TOX_USER_STATUS status;
 
-    TOX_USERSTATUS status_kind;
-
-    if (!strcmp(status, "online"))
-        status_kind = TOX_USERSTATUS_NONE;
-    else if (!strcmp(status, "away"))
-        status_kind = TOX_USERSTATUS_AWAY;
-    else if (!strcmp(status, "busy"))
-        status_kind = TOX_USERSTATUS_BUSY;
+    if (!strcasecmp(status_str, "online"))
+        status = TOX_USER_STATUS_NONE;
+    else if (!strcasecmp(status_str, "away"))
+        status = TOX_USER_STATUS_AWAY;
+    else if (!strcasecmp(status_str, "busy"))
+        status = TOX_USER_STATUS_BUSY;
     else {
         errmsg = "Invalid status. Valid statuses are: online, busy and away.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         goto finish;
     }
 
-    if (tox_set_user_status(m, status_kind) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Core failed to set status\n");
-        return;
-    }
-
-    set_status_all_groups(m, status_kind);
-    prompt_update_status(prompt, status_kind);
+    tox_self_set_status(m, status);
+    prompt_update_status(prompt, status);
+    set_status_all_groups(m, status);
 
     if (have_note) {
         if (argv[2][0] != '\"') {

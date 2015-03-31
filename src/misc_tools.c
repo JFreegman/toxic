@@ -32,7 +32,7 @@
 #include "windows.h"
 #include "misc_tools.h"
 #include "settings.h"
-#include "file_senders.h"
+#include "file_transfers.h"
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
@@ -212,9 +212,9 @@ int valid_nick(const char *nick)
 }
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
-void filter_str(char *str, int len)
+void filter_str(char *str, size_t len)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < len; ++i) {
         if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v')
@@ -222,17 +222,19 @@ void filter_str(char *str, int len)
     }
 }
 
-/* gets base file name from path or original file name if no path is supplied */
-void get_file_name(char *namebuf, int bufsize, const char *pathname)
+/* gets base file name from path or original file name if no path is supplied.
+ * Returns the file name length
+ */
+size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
 {
-    int idx = strlen(pathname) - 1;
+    int len = strlen(pathname) - 1;
     char *path = strdup(pathname);
 
     if (path == NULL)
         exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
 
-    while (idx >= 0 && pathname[idx] == '/')
-        path[idx--] = '\0';
+    while (len >= 0 && pathname[len] == '/')
+        path[len--] = '\0';
 
     char *finalname = strdup(path);
 
@@ -249,6 +251,8 @@ void get_file_name(char *namebuf, int bufsize, const char *pathname)
     snprintf(namebuf, bufsize, "%s", finalname);
     free(finalname);
     free(path);
+
+    return strlen(namebuf);
 }
 
 /* converts str to all lowercase */
@@ -263,13 +267,15 @@ void str_to_lower(char *str)
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
    if toxcore API call fails, put UNKNOWN_NAME in buf
    Returns nick len */
-int get_nick_truncate(Tox *m, char *buf, int friendnum)
+size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum)
 {
-    int len = tox_get_name(m, friendnum, (uint8_t *) buf);
+    size_t len = tox_friend_get_name_size(m, friendnum, NULL);
 
-    if (len == -1) {
+    if (len == 0) {
         strcpy(buf, UNKNOWN_NAME);
         len = strlen(UNKNOWN_NAME);
+    } else {
+        tox_friend_get_name(m, friendnum, (uint8_t *) buf, NULL);
     }
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
@@ -297,7 +303,7 @@ int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
 /* copies data to msg buffer.
    returns length of msg.
    returns 0 and nulls msg if length is too big for buffer size */
-uint16_t copy_tox_str(char *msg, size_t size, const char *data, uint16_t length)
+size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length)
 {
     if (length > size - 1) {
         msg[0] = '\0';
@@ -366,13 +372,13 @@ bool file_exists(const char *path)
     return stat(path, &s) == 0;
 }
 
-/* returns file size or -1 on error */
+/* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path)
 {
     struct stat st;
 
     if (stat(path, &st) == -1)
-        return -1;
+        return 0;
 
     return st.st_size;
 }

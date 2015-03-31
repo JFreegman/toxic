@@ -70,8 +70,8 @@ static char buffer [BUFFER_SIZE];
 static bool auto_away_active = false;
 
 static mplex_status mplex = MPLEX_NONE;
-static TOX_USERSTATUS prev_status = TOX_USERSTATUS_NONE;
-static char prev_note [TOX_MAX_STATUSMESSAGE_LENGTH] = "";
+static TOX_USER_STATUS prev_status = TOX_USER_STATUS_NONE;
+static char prev_note [TOX_MAX_STATUS_MESSAGE_LENGTH] = "";
 
 /* mutex for access to status data, for sync between:
    - user command /status from ncurses thread
@@ -314,7 +314,7 @@ static int mplex_is_detached ()
 
 static void mplex_timer_handler (Tox *m)
 {
-    TOX_USERSTATUS current_status, new_status;
+    TOX_USER_STATUS current_status, new_status;
     const char *new_note;
 
     if (mplex == MPLEX_NONE)
@@ -323,23 +323,23 @@ static void mplex_timer_handler (Tox *m)
     int detached = mplex_is_detached ();
 
     pthread_mutex_lock (&Winthread.lock);
-    current_status = tox_get_self_user_status (m);
+    current_status = tox_self_get_status (m);
     pthread_mutex_unlock (&Winthread.lock);
 
-    if (auto_away_active && current_status == TOX_USERSTATUS_AWAY && !detached)
+    if (auto_away_active && current_status == TOX_USER_STATUS_AWAY && !detached)
     {
         auto_away_active = false;
         new_status = prev_status;
         new_note = prev_note;
     }
     else
-    if (current_status == TOX_USERSTATUS_NONE && detached)
+    if (current_status == TOX_USER_STATUS_NONE && detached)
     {
         auto_away_active = true;
         prev_status = current_status;
-        new_status = TOX_USERSTATUS_AWAY;
+        new_status = TOX_USER_STATUS_AWAY;
         pthread_mutex_lock (&Winthread.lock);
-        tox_get_self_status_message (m, (uint8_t*) prev_note, sizeof (prev_note));
+        tox_self_get_status_message (m, (uint8_t*) prev_note);
         pthread_mutex_unlock (&Winthread.lock);
         new_note = user_settings->mplex_away_note;
     }
@@ -348,8 +348,8 @@ static void mplex_timer_handler (Tox *m)
 
     char argv[3][MAX_STR_SIZE];
     strcpy (argv[0], "/status");
-    strcpy (argv[1], (new_status == TOX_USERSTATUS_AWAY ? "away" :
-                      new_status == TOX_USERSTATUS_BUSY ? "busy" : "online"));
+    strcpy (argv[1], (new_status == TOX_USER_STATUS_AWAY ? "away" :
+                      new_status == TOX_USER_STATUS_BUSY ? "busy" : "online"));
     argv[2][0] = '\"';
     strcpy (argv[2] + 1, new_note);
     strcat (argv[2], "\"");

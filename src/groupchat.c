@@ -284,7 +284,9 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
     get_group_nick_truncate(m, nick, peernum, groupnum);
 
     char selfnick[TOX_MAX_NAME_LENGTH];
-    uint16_t sn_len = tox_group_get_self_name(m, groupnum, (uint8_t *) selfnick);
+    tox_self_get_name(m, (uint8_t *) selfnick);
+
+    size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';
 
     int nick_clr = CYAN;
@@ -323,7 +325,9 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     get_group_nick_truncate(m, nick, peernum, groupnum);
 
     char selfnick[TOX_MAX_NAME_LENGTH];
-    uint16_t n_len = tox_group_get_self_name(m, groupnum, (uint8_t *) selfnick);
+    tox_self_get_name(m, (uint8_t *) selfnick);
+
+    size_t n_len = tox_self_get_name_size(m);
     selfnick[n_len] = '\0';
 
     if (strcasestr(action, selfnick)) {
@@ -782,10 +786,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                sound_notify(self, error, 0, NULL);
+                sound_notify(self, notif_error, 0, NULL);
             }
         } else {
-            sound_notify(self, error, 0, NULL);
+            sound_notify(self, notif_error, 0, NULL);
         }
     } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
@@ -931,8 +935,8 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     line_info_init(ctx->hst);
 
     if (user_settings->autolog == AUTOLOG_ON) {
-        char myid[TOX_FRIEND_ADDRESS_SIZE];
-        tox_get_address(m, (uint8_t *) myid);
+        char myid[TOX_ADDRESS_SIZE];
+        tox_self_get_address(m, (uint8_t *) myid);
         log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP);
     }
 

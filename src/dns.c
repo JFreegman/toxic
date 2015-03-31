@@ -75,7 +75,7 @@ static struct dns3_server_backup {
 
 static struct thread_data {
     ToxWindow *self;
-    char id_bin[TOX_FRIEND_ADDRESS_SIZE];
+    char id_bin[TOX_ADDRESS_SIZE];
     char addr[MAX_STR_SIZE];
     char msg[MAX_STR_SIZE];
     uint8_t busy;
@@ -168,39 +168,39 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
     uint8_t *ans_pt = answer + sizeof(HEADER);
     uint8_t *ans_end = answer + ans_len;
     char exp_ans[PACKETSZ];
-    
+
     int len = dn_expand(answer, ans_end, ans_pt, exp_ans, sizeof(exp_ans));
 
     if (len == -1)
-        return dns_error(self, "dn_expand failed."); 
+        return dns_error(self, "dn_expand failed.");
 
     ans_pt += len;
 
     if (ans_pt > ans_end - 4)
-         return dns_error(self, "DNS reply was too short."); 
+         return dns_error(self, "DNS reply was too short.");
 
     int type;
     GETSHORT(type, ans_pt);
 
     if (type != T_TXT)
-        return dns_error(self, "Broken DNS reply."); 
- 
+        return dns_error(self, "Broken DNS reply.");
+
 
     ans_pt += INT16SZ;    /* class */
     uint32_t size = 0;
 
     /* recurse through CNAME rr's */
-    do { 
+    do {
         ans_pt += size;
         len = dn_expand(answer, ans_end, ans_pt, exp_ans, sizeof(exp_ans));
 
         if (len == -1)
-            return dns_error(self, "Second dn_expand failed."); 
+            return dns_error(self, "Second dn_expand failed.");
 
         ans_pt += len;
 
         if (ans_pt > ans_end - 10)
-            return dns_error(self, "DNS reply was too short."); 
+            return dns_error(self, "DNS reply was too short.");
 
         GETSHORT(type, ans_pt);
         ans_pt += INT16SZ;
@@ -208,12 +208,12 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
         GETSHORT(size, ans_pt);
 
         if (ans_pt + size < answer || ans_pt + size > ans_end)
-            return dns_error(self, "RR overflow."); 
+            return dns_error(self, "RR overflow.");
 
     } while (type == T_CNAME);
 
     if (type != T_TXT)
-        return dns_error(self, "DNS response failed."); 
+        return dns_error(self, "DNS response failed.");
 
     uint32_t txt_len = *ans_pt;
 
@@ -230,7 +230,7 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
     return txt_len;
 }
 
-/* Takes address addr in the form "username@domain", puts the username in namebuf, 
+/* Takes address addr in the form "username@domain", puts the username in namebuf,
    and the domain in dombuf.
 
    return length of username on success, -1 on failure */
@@ -322,7 +322,7 @@ void *dns3_lookup_thread(void *data)
     char string[MAX_DNS_REQST_SIZE + 1];
     uint32_t request_id;
 
-    int str_len = tox_generate_dns3_string(dns_obj, (uint8_t *) string, sizeof(string), &request_id, 
+    int str_len = tox_generate_dns3_string(dns_obj, (uint8_t *) string, sizeof(string), &request_id,
                                            (uint8_t *) name, namelen);
 
     if (str_len == -1) {
@@ -361,7 +361,7 @@ void *dns3_lookup_thread(void *data)
 
     memcpy(encrypted_id, ans_id + prfx_len, ans_len - prfx_len);
 
-    if (tox_decrypt_dns3_TXT(dns_obj, (uint8_t *) t_data.id_bin, (uint8_t *) encrypted_id, 
+    if (tox_decrypt_dns3_TXT(dns_obj, (uint8_t *) t_data.id_bin, (uint8_t *) encrypted_id,
                              strlen(encrypted_id), request_id) == -1) {
         dns_error(self, "Core failed to decrypt DNS response.");
         killdns_thread(dns_obj);
@@ -378,7 +378,7 @@ void *dns3_lookup_thread(void *data)
 /* creates new thread for dns3 lookup. Only allows one lookup at a time. */
 void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *msg)
 {
-    if (arg_opts.proxy_type != TOX_PROXY_NONE && arg_opts.force_tcp) {
+    if (arg_opts.proxy_type != TOX_PROXY_TYPE_NONE && arg_opts.force_tcp) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "DNS lookups are disabled.");
         return;
     }

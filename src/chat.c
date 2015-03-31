@@ -29,11 +29,13 @@
 #include <time.h>
 #include <wchar.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "toxic.h"
 #include "windows.h"
 #include "execute.h"
 #include "misc_tools.h"
+#include "file_transfers.h"
 #include "friendlist.h"
 #include "toxic_strings.h"
 #include "log.h"
@@ -49,10 +51,7 @@
     #include "audio_call.h"
 #endif /* AUDIO */
 
-
 extern char *DATA_FILE;
-
-extern FileSender file_senders[MAX_FILES];
 extern FriendsList Friends;
 
 extern struct Winthread Winthread;
@@ -105,25 +104,23 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* AUDIO */
 };
 
-static void set_self_typingstatus(ToxWindow *self, Tox *m, uint8_t is_typing)
+static void set_self_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
 {
     if (user_settings->show_typing_self == SHOW_TYPING_OFF)
         return;
 
     ChatContext *ctx = self->chatwin;
 
-    tox_set_user_is_typing(m, self->num, is_typing);
+    tox_self_set_typing(m, self->num, is_typing, NULL);
     ctx->self_is_typing = is_typing;
 }
-
-static void close_all_file_receivers(Tox *m, int friendnum);
 
 void kill_chat_window(ToxWindow *self, Tox *m)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
-    close_all_file_receivers(m, self->num);
+    kill_all_file_transfers_friend(m, self->num);
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
     cqueue_cleanup(ctx->cqueue);
@@ -145,18 +142,10 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     del_window(self);
 }
 
-static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg, uint16_t len)
+static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const char *msg, size_t len,
+                               const char *nick, const char *timefrmt)
 {
-    if (self->num != num)
-        return;
-
     ChatContext *ctx = self->chatwin;
-
-    char nick[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(m, nick, num);
-
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, 0, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
@@ -165,13 +154,44 @@ static void chat_onMessage(ToxWindow *self, Tox *m, int32_t num, const char *msg
         box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "%s", msg);
     else
         box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, nick, "%s", msg);
-
 }
 
-static void chat_resume_file_transfers(Tox *m, int fnum);
-static void chat_stop_file_senders(int fnum);
+static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char *action, size_t len,
+                               const char *nick, const char *timefrmt)
+{
+    ChatContext *ctx = self->chatwin;
 
-static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
+    line_info_add(self, timefrmt, nick, NULL, IN_ACTION, 0, 0, "%s", action);
+    write_to_log(action, nick, ctx->log, true);
+
+    if (self->active_box != -1)
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
+    else
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action );
+}
+
+static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TYPE type, const char *msg, size_t len)
+{
+    if (self->num != num)
+        return;
+
+    char nick[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, nick, num);
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    if (type == TOX_MESSAGE_TYPE_NORMAL)
+        return recv_message_helper(self, m, num, msg, len, nick, timefrmt);
+
+    if (type == TOX_MESSAGE_TYPE_ACTION)
+        return recv_action_helper(self, m, num, msg, len, nick, timefrmt);
+}
+
+static void chat_resume_file_transfers(Tox *m, uint32_t fnum);
+static void chat_stop_file_senders(Tox *m, uint32_t friendnum);
+
+static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_CONNECTION connection_status)
 {
     if (self->num != num)
         return;
@@ -186,23 +206,23 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, nick, num);
 
-    if (status == 1) { /* Friend goes online */
-        statusbar->is_online = true;
+    statusbar->connection = connection_status;
+
+    if (connection_status != TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = user_settings->show_typing_other == SHOW_TYPING_ON
-                                      ? tox_get_is_typing(m, num) : 0;
+                                      ? tox_friend_get_typing(m, num, NULL) : false;
         chat_resume_file_transfers(m, num);
 
         msg = "has come online";
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
-    } else { /* Friend goes offline */
-        statusbar->is_online = false;
-        Friends.list[num].is_typing = 0;
+    } else {
+        Friends.list[num].is_typing = false;
 
         if (self->chatwin->self_is_typing)
             set_self_typingstatus(self, m, 0);
 
-        chat_stop_file_senders(num);
+        chat_stop_file_senders(m, num);
 
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
@@ -210,7 +230,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, int32_t num, uint8_
     }
 }
 
-static void chat_onTypingChange(ToxWindow *self, Tox *m, int32_t num, uint8_t is_typing)
+static void chat_onTypingChange(ToxWindow *self, Tox *m, uint32_t num, bool is_typing)
 {
     if (self->num != num)
         return;
@@ -218,29 +238,7 @@ static void chat_onTypingChange(ToxWindow *self, Tox *m, int32_t num, uint8_t is
     Friends.list[num].is_typing = is_typing;
 }
 
-static void chat_onAction(ToxWindow *self, Tox *m, int32_t num, const char *action, uint16_t len)
-{
-    if (self->num != num)
-        return;
-
-    ChatContext *ctx = self->chatwin;
-
-    char nick[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(m, nick, num);
-
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
-
-    line_info_add(self, timefrmt, nick, NULL, IN_ACTION, 0, 0, "%s", action);
-    write_to_log(action, nick, ctx->log, true);
-
-    if (self->active_box != -1)
-        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
-    else
-        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action );
-}
-
-static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *nick, uint16_t len)
+static void chat_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const char *nick, size_t length)
 {
     if (self->num != num)
         return;
@@ -248,13 +246,13 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, int32_t num, const char *
     StatusBar *statusbar = self->stb;
 
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
-    len = strlen(statusbar->nick);
-    statusbar->nick_len = len;
+    length = strlen(statusbar->nick);
+    statusbar->nick_len = length;
 
-    set_window_title(self, statusbar->nick, len);
+    set_window_title(self, statusbar->nick, length);
 }
 
-static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t status)
+static void chat_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, TOX_USER_STATUS status)
 {
     if (self->num != num)
         return;
@@ -263,7 +261,7 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, int32_t num, uint8_t st
     statusbar->status = status;
 }
 
-static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, const char *status, uint16_t len)
+static void chat_onStatusMessageChange(ToxWindow *self, uint32_t num, const char *status, size_t length)
 {
     if (self->num != num)
         return;
@@ -274,83 +272,237 @@ static void chat_onStatusMessageChange(ToxWindow *self, int32_t num, const char 
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 }
 
-static void chat_onReadReceipt(ToxWindow *self, Tox *m, int32_t num, uint32_t receipt)
+static void chat_onReadReceipt(ToxWindow *self, Tox *m, uint32_t num, uint32_t receipt)
 {
     cqueue_remove(self, m, receipt);
 }
 
-static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum,
-                                   uint64_t filesize, const char *pathname, uint16_t path_len)
+/* Stops active file senders for this friend. Call when a friend goes offline */
+static void chat_stop_file_senders(Tox *m, uint32_t friendnum)
 {
-    if (self->num != num)
+    // TODO: core purges file transfers when a friend goes offline. Ideally we want to repair/resume
+    kill_all_file_transfers_friend(m, friendnum);
+}
+
+/* Tries to resume broken file transfers. Call when a friend comes online */
+static void chat_resume_file_transfers(Tox *m, uint32_t fnum)
+{
+    // TODO
+}
+
+static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
+                                    size_t length)
+{
+    if (friendnum != self->num)
         return;
 
-    /* holds the filename appended to the user specified path */
-    char filename_path[MAX_STR_SIZE] = {0};
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    /* holds the lone filename */
-    char filename_nopath[MAX_STR_SIZE];
-    get_file_name(filename_nopath, sizeof(filename_nopath), pathname);
+    if (ft == NULL)
+        return;
+
+    if (ft->state != FILE_TRANSFER_STARTED)
+        return;
+
+    char msg[MAX_STR_SIZE];
+
+    if (length == 0) {
+        snprintf(msg, sizeof(msg), "File '%s' successfully sent.", ft->file_name);
+        print_progress_bar(self, ft->bps, 100.0, ft->line_id);
+        close_file_transfer(self, m, ft, -1, msg, transfer_completed);
+        return;
+    }
+
+    if (ft->file == NULL) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Null file pointer.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        return;
+    }
+
+    if (ft->position != position) {
+        if (fseek(ft->file, position, SEEK_SET) == -1) {
+            snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Seek fail.", ft->file_name);
+            close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+            return;
+        }
+
+        ft->position = position;
+    }
+
+    uint8_t send_data[length];
+    size_t send_length = fread(send_data, 1, sizeof(send_data), ft->file);
+
+    if (send_length != length) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Read fail.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        return;
+    }
+
+    TOX_ERR_FILE_SEND_CHUNK err;
+    tox_file_send_chunk(m, friendnum, filenum, position, send_data, send_length, &err);
+
+    if (err != TOX_ERR_FILE_SEND_CHUNK_OK)
+        fprintf(stderr, "tox_file_send_chunk failed (error %d)\n", err);
+
+    ft->position += send_length;
+    ft->bps += send_length;
+}
+
+static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
+                                 const char *data, size_t length)
+{
+    if (friendnum != self->num)
+        return;
+
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
+
+    if (ft == NULL)
+        return;
+
+    if (ft->state != FILE_TRANSFER_STARTED)
+        return;
+
+    char msg[MAX_STR_SIZE];
+
+    if (length == 0) {
+        snprintf(msg, sizeof(msg), "File '%s' successfully received.", ft->file_name);
+        print_progress_bar(self, ft->bps, 100.0, ft->line_id);
+        close_file_transfer(self, m, ft, -1, msg, transfer_completed);
+        return;
+    }
+
+    if (ft->file == NULL) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Invalid file pointer.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        return;
+    }
+
+    if (fwrite(data, length, 1, ft->file) != 1) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Write fail.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        return;
+    }
+
+    ft->bps += length;
+    ft->position += length;
+}
+
+static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, TOX_FILE_CONTROL control)
+{
+    if (self->num != friendnum)
+        return;
+
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
+
+    if (ft == NULL)
+        return;
+
+    char msg[MAX_STR_SIZE];
+
+    switch (control) {
+        case TOX_FILE_CONTROL_RESUME:
+            /* transfer is accepted */
+            if (ft->state == FILE_TRANSFER_PENDING) {
+                ft->state = FILE_TRANSFER_STARTED;
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
+                                                                      ft->index, ft->file_name);
+                char progline[MAX_STR_SIZE];
+                prep_prog_line(progline);
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
+                sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
+                ft->line_id = self->chatwin->hst->line_end->id + 2;
+
+                break;
+            }
+
+            /* transfer is resumed */
+            if (ft->state == FILE_TRANSFER_PAUSED) {
+                ft->state = FILE_TRANSFER_STARTED;
+            }
+
+            break;
+
+        case TOX_FILE_CONTROL_PAUSE:
+            break;
+
+        case TOX_FILE_CONTROL_CANCEL:
+            snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", ft->file_name);
+            close_file_transfer(self, m, ft, -1, msg, notif_error);
+            break;
+    }
+}
+
+static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t file_size,
+                            const char *filename, size_t name_length)
+{
+    if (self->num != friendnum)
+        return;
+
+    struct FileTransfer *ft = get_new_file_receiver(friendnum);
+
+    if (!ft) {
+        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Too many concurrent file transfers.");
+        return;
+    }
+
     char sizestr[32];
-    bytes_convert_str(sizestr, sizeof(sizestr), filesize);
-    int len = strlen(filename_nopath);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)",
-                                                          filename_nopath, sizestr);
+    bytes_convert_str(sizestr, sizeof(sizestr), file_size);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)", filename, sizestr);
 
-    if (filenum >= MAX_FILES) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Too many pending file requests; discarding.");
+    char file_path[MAX_STR_SIZE];
+    size_t path_len = name_length;
+
+    /* use specified download path in config if possible */
+    if (!string_is_empty(user_settings->download_path)) {
+        snprintf(file_path, sizeof(file_path), "%s%s", user_settings->download_path, filename);
+        path_len += strlen(user_settings->download_path);
+    } else {
+        snprintf(file_path, sizeof(file_path), "%s", filename);
+    }
+
+    if (path_len >= sizeof(ft->file_path) || name_length >= sizeof(ft->file_name)) {
+        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer faield: File path too long.");
         return;
     }
-
-    /* use specified path in config if possible */
-    if (user_settings->download_path[0]) {
-        snprintf(filename_path, sizeof(filename_path), "%s%s", user_settings->download_path, filename_nopath);
-        len += strlen(user_settings->download_path);
-    }
-
-    if (len >= sizeof(Friends.list[num].file_receiver[filenum].filename)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File name too long; discarding.");
-        return;
-    }
-
-    char filename[MAX_STR_SIZE];
-
-    if (filename_path[0])
-        strcpy(filename, filename_path);
-    else
-        strcpy(filename, filename_nopath);
 
     /* Append a number to duplicate file names */
     FILE *filecheck = NULL;
     int count = 1;
 
-    while ((filecheck = fopen(filename, "r"))) {
+    while ((filecheck = fopen(file_path, "r"))) {
         fclose(filecheck);
-        filename[len] = '\0';
+        file_path[path_len] = '\0';
         char d[9];
-        sprintf(d, "(%d)", count++);
-        int d_len = strlen(d);
+        sprintf(d, "(%d)", count);
+        ++count;
+        size_t d_len = strlen(d);
 
-        if (len + d_len >= sizeof(filename)) {
-            len -= d_len;
-            filename[len] = '\0';
+        if (path_len + d_len >= sizeof(file_path)) {
+            path_len -= d_len;
+            file_path[path_len] = '\0';
         }
 
-        strcat(filename, d);
-        filename[len + d_len] = '\0';
+        strcat(file_path, d);
+        file_path[path_len + d_len] = '\0';
 
         if (count > 999) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error saving file to disk.");
+            tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: invalid file path.");
             return;
         }
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", filenum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", ft->index);
 
-    Friends.list[num].file_receiver[filenum].pending = true;
-    Friends.list[num].file_receiver[filenum].size = filesize;
-    Friends.list[num].file_receiver[filenum].filenum = filenum;
-    strcpy(Friends.list[num].file_receiver[filenum].filename, filename);
+    ft->state = FILE_TRANSFER_PENDING;
+    ft->direction = FILE_TRANSFER_RECV;
+    ft->file_size = file_size;
+    ft->friendnum = friendnum;
+    ft->filenum = filenum;
+    snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
+    snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
 
     if (self->active_box != -1)
         box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box,
@@ -358,208 +510,6 @@ static void chat_onFileSendRequest(ToxWindow *self, Tox *m, int32_t num, uint8_t
     else
         box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, &self->active_box, self->name,
                     "Incoming file: %s", filename );
-}
-
-/* Stops active file senders for this friend. Call when a friend goes offline */
-static void chat_stop_file_senders(int fnum)
-{
-    int i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
-        if (file_senders[i].active && file_senders[i].friendnum == fnum)
-            file_senders[i].noconnection = true;
-    }
-}
-
-/* Tries to resume broken file transfers. Call when a friend comes online */
-static void chat_resume_file_transfers(Tox *m, int fnum)
-{
-    if (Friends.list[fnum].active_file_receivers == 0)
-        return;
-
-    int i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
-        if (Friends.list[fnum].file_receiver[i].active) {
-            uint8_t bytes_recv[sizeof(uint64_t)];
-            memcpy(bytes_recv, &Friends.list[fnum].file_receiver[i].bytes_recv, sizeof(uint64_t));
-            net_to_host(bytes_recv, sizeof(uint64_t));
-            int filenum = Friends.list[fnum].file_receiver[i].filenum;
-            tox_file_send_control(m, fnum, 1, filenum, TOX_FILECONTROL_RESUME_BROKEN, bytes_recv, sizeof(uint64_t));
-        }
-    }
-}
-
-/* set CTRL to -1 if we don't want to send a control signal.
-   set msg to NULL if we don't want to display a message */
-void chat_close_file_receiver(Tox *m, int filenum, int friendnum, int CTRL)
-{
-    if (CTRL > 0)
-        tox_file_send_control(m, friendnum, 1, filenum, CTRL, 0, 0);
-
-    FILE *file = Friends.list[friendnum].file_receiver[filenum].file;
-
-    if (file != NULL)
-        fclose(file);
-
-    memset(&Friends.list[friendnum].file_receiver[filenum], 0, sizeof(struct FileReceiver));
-    --Friends.list[friendnum].active_file_receivers;
-}
-
-static void close_all_file_receivers(Tox *m, int friendnum)
-{
-    int i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
-        if (Friends.list[friendnum].file_receiver[i].active)
-            chat_close_file_receiver(m, i, friendnum, TOX_FILECONTROL_KILL);
-    }
-}
-
-static void chat_onFileControl(ToxWindow *self, Tox *m, int32_t num, uint8_t receive_send,
-                               uint8_t filenum, uint8_t control_type, const char *data, uint16_t length)
-{
-    if (self->num != num)
-        return;
-
-    const char *filename;
-    char msg[MAX_STR_SIZE] = {0};
-    int send_idx = 0;   /* file sender index */
-
-    if (receive_send == 0) {
-        if (!Friends.list[num].file_receiver[filenum].active)
-            return;
-
-        filename = Friends.list[num].file_receiver[filenum].filename;
-    } else {
-        int i;
-
-        for (i = 0; i < MAX_FILES; ++i) {
-            send_idx = i;
-
-            if (file_senders[i].active && file_senders[i].filenum == filenum)
-                break;
-        }
-
-        if (!file_senders[send_idx].active)
-            return;
-
-        filename = file_senders[send_idx].filename;
-    }
-
-    switch (control_type) {
-        case TOX_FILECONTROL_ACCEPT:
-            if (receive_send != 1)
-                break;
-
-            /* transfer is accepted */
-            if (!file_senders[send_idx].started) {
-                file_senders[send_idx].started = true;
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
-                                                                      filenum, filename);
-                char progline[MAX_STR_SIZE];
-                prep_prog_line(progline);
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-                file_senders[send_idx].line_id = self->chatwin->hst->line_end->id + 2;
-                sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
-            } else {   /* active transfer is unpaused by receiver */
-                file_senders[send_idx].paused = false;
-                file_senders[send_idx].timestamp = get_unix_time();
-            }
-
-            break;
-
-        case TOX_FILECONTROL_PAUSE:
-            if (receive_send == 1)
-                file_senders[send_idx].paused = true;
-
-            break;
-
-        case TOX_FILECONTROL_KILL:
-            snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", filename);
-
-            if (self->active_box != -1)
-                box_notify2(self, error, NT_NOFOCUS | NT_WNDALERT_2,
-                            self->active_box, "File transfer for '%s' failed!", filename );
-            else
-                box_notify(self, error, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
-                           self->name, "File transfer for '%s' failed!", filename );
-
-            if (receive_send == 0)
-                chat_close_file_receiver(m, filenum, num, -1);
-            else
-                close_file_sender(self, m, send_idx, NULL, -1, filenum, num);
-
-            break;
-
-        case TOX_FILECONTROL_FINISHED:
-            if (receive_send == 0) {
-                print_progress_bar(self, filenum, num, 100.0);
-
-                char filename_nopath[MAX_STR_SIZE];
-                get_file_name(filename_nopath, sizeof(filename_nopath), filename);
-                snprintf(msg, sizeof(msg), "File transfer for '%s' complete.", filename_nopath);
-                chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_FINISHED);
-            } else {
-                snprintf(msg, sizeof(msg), "File '%s' successfuly sent.", filename);
-                close_file_sender(self, m, send_idx, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
-            }
-
-            if (self->active_box != -1)
-                box_notify2(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", msg);
-            else
-                box_notify(self, transfer_completed, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box,
-                            self->name, "%s", msg);
-
-            break;
-
-        case TOX_FILECONTROL_RESUME_BROKEN:
-            if (receive_send == 0)
-                break;
-
-            FILE *fp = file_senders[send_idx].file;
-
-            if (fp == NULL)
-                break;
-
-            uint8_t tmp[sizeof(uint64_t)];
-            memcpy(tmp, &data, sizeof(uint64_t));
-            net_to_host(tmp, sizeof(uint64_t));
-            uint64_t datapos;
-            memcpy(&datapos, tmp, sizeof(uint64_t));
-
-            if (fseek(fp, datapos, SEEK_SET) == -1) {
-                snprintf(msg, sizeof(msg), "File transfer for '%s' failed to resume", filename);
-                close_file_sender(self, m, send_idx, NULL, TOX_FILECONTROL_FINISHED, filenum, num);
-                break;
-            }
-
-            tox_file_send_control(m, num, 0, filenum, TOX_FILECONTROL_ACCEPT, 0, 0);
-            file_senders[send_idx].noconnection = false;
-            break;
-    }
-
-    if (msg[0])
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
-}
-
-static void chat_onFileData(ToxWindow *self, Tox *m, int32_t num, uint8_t filenum, const char *data,
-                            uint16_t length)
-{
-    if (self->num != num)
-        return;
-
-    FILE *fp = Friends.list[num].file_receiver[filenum].file;
-
-    if (fp) {
-        if (fwrite(data, length, 1, fp) != 1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Error writing to file.");
-            chat_close_file_receiver(m, filenum, num, TOX_FILECONTROL_KILL);
-        }
-    }
-
-    Friends.list[num].file_receiver[filenum].bps += length;
-    Friends.list[num].file_receiver[filenum].bytes_recv += length;
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *invite_data,
@@ -838,7 +788,9 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
         return;
 
     char selfname[TOX_MAX_NAME_LENGTH];
-    uint16_t len = tox_get_self_name(m, (uint8_t *) selfname);
+    tox_self_get_name(m, (uint8_t *) selfname);
+
+    size_t len = tox_self_get_name_size(m);
     selfname[len] = '\0';
 
     char timefrmt[TIME_STR_SIZE];
@@ -869,7 +821,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (ltr) {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
 
-        if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->is_online)
+        if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->connection != TOX_CONNECTION_NONE)
             set_self_typingstatus(self, m, 1);
 
         return;
@@ -905,7 +857,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
             }
         } else {
-            sound_notify(self, error, 0, NULL);
+            sound_notify(self, notif_error, 0, NULL);
         }
 
     } else if (key == '\n') {
@@ -930,7 +882,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             }
         } else if (!string_is_empty(line)) {
             char selfname[TOX_MAX_NAME_LENGTH];
-            uint16_t len = tox_get_self_name(m, (uint8_t *) selfname);
+            tox_self_get_name(m, (uint8_t *) selfname);
+
+            size_t len = tox_self_get_name_size(m);
             selfname[len] = '\0';
 
             char timefrmt[TIME_STR_SIZE];
@@ -970,25 +924,19 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     wmove(statusbar->topline, 0, 0);
 
     /* Draw name, status and note in statusbar */
-    if (statusbar->is_online) {
-        int colour = WHITE;
-        uint8_t status = statusbar->status;
+    if (statusbar->connection != TOX_CONNECTION_NONE) {
+        int colour = MAGENTA;
+        TOX_USER_STATUS status = statusbar->status;
 
         switch (status) {
-            case TOX_USERSTATUS_NONE:
+            case TOX_USER_STATUS_NONE:
                 colour = GREEN;
                 break;
-
-            case TOX_USERSTATUS_AWAY:
+            case TOX_USER_STATUS_AWAY:
                 colour = YELLOW;
                 break;
-
-            case TOX_USERSTATUS_BUSY:
+            case TOX_USER_STATUS_BUSY:
                 colour = RED;
-                break;
-
-            case TOX_USERSTATUS_INVALID:
-                colour = MAGENTA;
                 break;
         }
 
@@ -1014,10 +962,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     /* Reset statusbar->statusmsg on window resize */
     if (x2 != self->x) {
-        char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
+        char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH] = {'\0'};
 
         pthread_mutex_lock(&Winthread.lock);
-        int s_len = tox_get_status_message(m, self->num, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+        tox_friend_get_status_message(m, self->num, (uint8_t *) statusmsg, NULL);
+        size_t s_len = tox_friend_get_status_message_size(m, self->num, NULL);
         pthread_mutex_unlock(&Winthread.lock);
 
         filter_str(statusmsg, s_len);
@@ -1028,7 +977,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 6;
+    size_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 6;
 
     if (statusbar->statusmsg_len > maxlen) {
         statusbar->statusmsg[maxlen - 3] = '\0';
@@ -1043,7 +992,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
     wprintw(statusbar->topline, "{");
 
-    int i;
+    size_t i;
 
     for (i = 0; i < KEY_IDENT_DIGITS; ++i)
         wprintw(statusbar->topline, "%02X", Friends.list[self->num].pub_key[i] & 0xff);
@@ -1069,6 +1018,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     if (self->help->active)
         help_onDraw(self);
+
+    pthread_mutex_lock(&Winthread.lock);
+    refresh_file_transfer_progress(self, m, self->num);
+    pthread_mutex_unlock(&Winthread.lock);
 }
 
 static void chat_onInit(ToxWindow *self, Tox *m)
@@ -1081,11 +1034,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
 
-    statusbar->status = tox_get_user_status(m, self->num);
-    statusbar->is_online = tox_get_friend_connection_status(m, self->num) == 1;
+    statusbar->status = tox_friend_get_status(m, self->num, NULL);
+    statusbar->connection = tox_friend_get_connection_status(m, self->num, NULL);
 
-    char statusmsg[TOX_MAX_STATUSMESSAGE_LENGTH] = {'\0'};
-    uint16_t s_len = tox_get_status_message(m, self->num, (uint8_t *) statusmsg, TOX_MAX_STATUSMESSAGE_LENGTH);
+    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
+    tox_friend_get_status_message(m, self->num, (uint8_t *) statusmsg, NULL);
+
+    size_t s_len = tox_friend_get_status_message_size(m, self->num, NULL);
     statusmsg[s_len] = '\0';
 
     filter_str(statusmsg, s_len);
@@ -1093,7 +1048,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 
     char nick[TOX_MAX_NAME_LENGTH + 1];
-    int n_len = get_nick_truncate(m, nick, self->num);
+    size_t n_len = get_nick_truncate(m, nick, self->num);
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
     statusbar->nick_len = n_len;
 
@@ -1113,8 +1068,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    char myid[TOX_FRIEND_ADDRESS_SIZE];
-    tox_get_address(m, (uint8_t *) myid);
+    char myid[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) myid);
 
     log_enable(nick, myid, Friends.list[self->num].pub_key, ctx->log, LOG_CHAT);
     load_chat_history(self, ctx->log);
@@ -1128,7 +1083,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_chat(Tox *m, int32_t friendnum)
+ToxWindow new_chat(Tox *m, uint32_t friendnum)
 {
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
@@ -1145,10 +1100,10 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.onNickChange = &chat_onNickChange;
     ret.onStatusChange = &chat_onStatusChange;
     ret.onStatusMessageChange = &chat_onStatusMessageChange;
-    ret.onAction = &chat_onAction;
-    ret.onFileSendRequest = &chat_onFileSendRequest;
+    ret.onFileChunkRequest = &chat_onFileChunkRequest;
+    ret.onFileRecvChunk = &chat_onFileRecvChunk;
     ret.onFileControl = &chat_onFileControl;
-    ret.onFileData = &chat_onFileData;
+    ret.onFileRecv = &chat_onFileRecv;
     ret.onReadReceipt = &chat_onReadReceipt;
     ret.onGroupInvite = &chat_onGroupInvite;
 
@@ -1173,7 +1128,7 @@ ToxWindow new_chat(Tox *m, int32_t friendnum)
     ret.active_box = -1;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    int n_len = get_nick_truncate(m, nick, friendnum);
+    size_t n_len = get_nick_truncate(m, nick, friendnum);
     set_window_title(&ret, nick, n_len);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));

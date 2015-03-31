@@ -50,7 +50,7 @@
 #include "groupchat.h"
 #include "prompt.h"
 #include "misc_tools.h"
-#include "file_senders.h"
+#include "file_transfers.h"
 #include "line_info.h"
 #include "settings.h"
 #include "log.h"
@@ -79,6 +79,8 @@ char *BLOCK_FILE = NULL;
 ToxWindow *prompt = NULL;
 
 #define AUTOSAVE_FREQ 60
+#define MIN_PASSWORD_LEN 6
+#define MAX_PASSWORD_LEN 64
 
 struct Winthread Winthread;
 struct cqueue_thread cqueue_thread;
@@ -86,8 +88,6 @@ struct audio_thread audio_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
 
-#define MIN_PASSWORD_LEN 6
-#define MAX_PASSWORD_LEN 64
 
 static struct user_password {
     bool data_is_encrypted;
@@ -102,7 +102,7 @@ static void catch_SIGINT(int sig)
 
 static void catch_SIGSEGV(int sig)
 {
-    freopen("/dev/tty", "w", stderr);
+    freopen("/dev/tty", "w", stderr);    // make sure stderr is enabled since we may have disabled it
     endwin();
     fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
     exit(EXIT_FAILURE);
@@ -124,7 +124,6 @@ void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
     memset(&user_password, 0, sizeof(struct user_password));
-    close_all_file_senders(m);
     kill_all_windows(m);
     terminate_notify();
 
@@ -151,9 +150,6 @@ void exit_toxic_success(Tox *m)
 
 void exit_toxic_err(const char *errmsg, int errcode)
 {
-    if (errmsg == NULL)
-        errmsg = "No error message";
-
     freopen("/dev/tty", "w", stderr);
     endwin();
     fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
@@ -167,7 +163,7 @@ static void init_term(void)
     if (!arg_opts.default_locale) {
         if (setlocale(LC_ALL, "") == NULL)
             exit_toxic_err("Could not set your locale, please check your locale settings or "
-                           "disable unicode support with the -d flag.", FATALERR_LOCALE_SET);
+                           "disable unicode support with the -d flag.", FATALERR_LOCALE_NOT_SET);
     }
 
 #endif
@@ -255,82 +251,6 @@ static void print_init_messages(ToxWindow *toxwin)
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
 }
 
-static Tox *init_tox(void)
-{
-    Tox_Options tox_opts;
-    tox_opts.ipv6enabled = !arg_opts.use_ipv4;
-    tox_opts.udp_disabled = arg_opts.force_tcp;
-    tox_opts.proxy_type = arg_opts.proxy_type;
-
-    if (tox_opts.proxy_type != TOX_PROXY_NONE) {
-        tox_opts.proxy_port = arg_opts.proxy_port;
-        snprintf(tox_opts.proxy_address, sizeof(tox_opts.proxy_address), "%s", arg_opts.proxy_address);
-        const char *ps = tox_opts.proxy_type == TOX_PROXY_SOCKS5 ? "SOCKS5" : "HTTP";
-
-        char tmp[48];
-        snprintf(tmp, sizeof(tmp), "Using %s proxy %s : %d", ps, arg_opts.proxy_address, arg_opts.proxy_port);
-        queue_init_message("%s", tmp);
-    }
-
-    if (tox_opts.udp_disabled) {
-        queue_init_message("UDP disabled");
-    } else if (tox_opts.proxy_type != TOX_PROXY_NONE) {
-        const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
-        queue_init_message("%s", msg);
-        msg = "Use the -t option to disable UDP.";
-        queue_init_message("%s", msg);
-    }
-
-    /* Init core */
-    Tox *m = tox_new(&tox_opts);
-
-    if (tox_opts.ipv6enabled && m == NULL) {
-        queue_init_message("IPv6 failed to initialize");
-        tox_opts.ipv6enabled = 0;
-        m = tox_new(&tox_opts);
-    }
-
-    if (!tox_opts.ipv6enabled)
-        queue_init_message("Forcing IPv4 connection");
-
-    if (tox_opts.proxy_type != TOX_PROXY_NONE && m == NULL)
-        exit_toxic_err("Proxy error", FATALERR_PROXY);
-
-    if (m == NULL)
-        return NULL;
-
-    /* Callbacks */
-    tox_callback_connection_status(m, on_connectionchange, NULL);
-    tox_callback_typing_change(m, on_typing_change, NULL);
-    tox_callback_friend_request(m, on_request, NULL);
-    tox_callback_friend_message(m, on_message, NULL);
-    tox_callback_name_change(m, on_nickchange, NULL);
-    tox_callback_user_status(m, on_statuschange, NULL);
-    tox_callback_status_message(m, on_statusmessagechange, NULL);
-    tox_callback_friend_action(m, on_action, NULL);
-    tox_callback_file_send_request(m, on_file_sendrequest, NULL);
-    tox_callback_file_control(m, on_file_control, NULL);
-    tox_callback_file_data(m, on_file_data, NULL);
-    tox_callback_read_receipt(m, on_read_receipt, NULL);
-    tox_callback_group_invite(m, on_group_invite, NULL);
-    tox_callback_group_message(m, on_group_message, NULL);
-    tox_callback_group_action(m, on_group_action, NULL);
-    tox_callback_group_private_message(m, on_group_private_message, NULL);
-    tox_callback_group_op_certificate(m, on_group_op_certificate, NULL);
-    tox_callback_group_peerlist_update(m, on_group_namelistchange, NULL);
-    tox_callback_group_peer_join(m, on_group_peer_join, NULL);
-    tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
-    tox_callback_group_nick_change(m, on_group_nick_change, NULL);
-    tox_callback_group_topic_change(m, on_group_topic_change, NULL);
-    tox_callback_group_self_join(m, on_group_self_join, NULL);
-    tox_callback_group_self_timeout(m, on_group_self_timeout, NULL);
-    tox_callback_group_rejected(m, on_group_rejected, NULL);
-
-    tox_set_name(m, (uint8_t *) "Toxic User", strlen("Toxic User"));
-
-    return m;
-}
-
 #define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
 #define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
@@ -387,7 +307,7 @@ static int load_nodelist(const char *filename)
 
 int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap_from_address(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line]);
+    return tox_bootstrap(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], NULL);
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
@@ -439,43 +359,10 @@ int init_connection(Tox *m)
     return 4;
 }
 
-#define TRY_CONNECT 10   /* Seconds between connection attempts when DHT is not connected */
-
-static void do_connection(Tox *m, ToxWindow *prompt)
-{
-    if (arg_opts.no_connect == 1)
-        return;
-
-    static int conn_err = 0;
-    static bool was_connected = false;
-    static uint64_t last_conn_try = 0;
-    uint64_t curtime = get_unix_time();
-    bool is_connected = tox_isconnected(m);
-
-    if (was_connected && is_connected)
-        return;
-
-    if (!was_connected && is_connected) {
-        was_connected = true;
-        prompt_update_connectionstatus(prompt, was_connected);
-    } else if (was_connected && !is_connected) {
-        was_connected = false;
-        prompt_update_connectionstatus(prompt, was_connected);
-    } else if (!was_connected && !is_connected && timed_out(last_conn_try, curtime, TRY_CONNECT)) {
-        /* if autoconnect has already failed there's no point in trying again */
-        if (conn_err == 0) {
-            last_conn_try = curtime;
-
-            if ((conn_err = init_connection(m)) != 0)
-                line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Auto-connect failed with error code %d", conn_err);
-        }
-    }
-}
-
 static void load_friendlist(Tox *m)
 {
-    uint32_t i;
-    uint32_t numfriends = tox_count_friendlist(m);
+    size_t i;
+    size_t numfriends = tox_self_get_friend_list_size(m);
 
     for (i = 0; i < numfriends; ++i)
         friendlist_onFriendAdded(NULL, m, i, false);
@@ -554,6 +441,7 @@ static void first_time_encrypt(const char *msg)
         int len = 0;
         bool valid_password = false;
         char passconfirm[MAX_PASSWORD_LEN + 1] = {0};
+
         printf("Enter a new password (must be at least %d characters) ", MIN_PASSWORD_LEN);
 
         while (valid_password == false) {
@@ -584,7 +472,7 @@ static void first_time_encrypt(const char *msg)
             valid_password = true;
         }
 
-        queue_init_message("Data file '%s' has been encrypted", DATA_FILE);
+        queue_init_message("Data file '%s' will be encrypted", DATA_FILE);
         memset(passconfirm, 0, sizeof(passconfirm));
         user_password.data_is_encrypted = true;
     }
@@ -598,13 +486,10 @@ static void first_time_encrypt(const char *msg)
  */
 int store_data(Tox *m, const char *path)
 {
-    if (arg_opts.ignore_data_file)
-        return 0;
-
     if (path == NULL)
         return -1;
 
-    int len = user_password.data_is_encrypted ? tox_encrypted_size(m) : tox_size(m);
+    size_t len = user_password.data_is_encrypted ? tox_encrypted_size(m) : tox_get_savedata_size(m);
     char *buf = malloc(len);
 
     if (buf == NULL)
@@ -616,72 +501,136 @@ int store_data(Tox *m, const char *path)
             return -1;
         }
     } else {
-        tox_save(m, (uint8_t *) buf);
+        tox_get_savedata(m, (uint8_t *) buf);
     }
 
-    FILE *fd = fopen(path, "wb");
+    FILE *fp = fopen(path, "wb");
 
-    if (fd == NULL) {
+    if (fp == NULL) {
         free(buf);
         return -1;
     }
 
-    if (fwrite(buf, len, 1, fd) != 1) {
+    if (fwrite(buf, len, 1, fp) != 1) {
         free(buf);
-        fclose(fd);
+        fclose(fp);
         return -1;
     }
 
     free(buf);
-    fclose(fd);
+    fclose(fp);
     return 0;
 }
 
-static void load_data(Tox *m, char *path)
+static void init_tox_callbacks(Tox *m)
 {
-    if (arg_opts.ignore_data_file)
-        return;
+    tox_callback_self_connection_status(m, prompt_onSelfConnectionChange, NULL);
 
-    FILE *fd = fopen(path, "rb");
+    tox_callback_friend_connection_status(m, on_connectionchange, NULL);
+    tox_callback_friend_typing(m, on_typing_change, NULL);
+    tox_callback_friend_request(m, on_request, NULL);
+    tox_callback_friend_message(m, on_message, NULL);
+    tox_callback_friend_name(m, on_nickchange, NULL);
+    tox_callback_friend_status(m, on_statuschange, NULL);
+    tox_callback_friend_status_message(m, on_statusmessagechange, NULL);
+    tox_callback_friend_read_receipt(m, on_read_receipt, NULL);
 
-    if (fd != NULL) {
-        off_t len = file_size(path);
+    tox_callback_file_recv(m, on_file_recv, NULL);
+    tox_callback_file_chunk_request(m, on_file_chunk_request, NULL);
+    tox_callback_file_recv_control(m, on_file_control, NULL);
+    tox_callback_file_recv_chunk(m, on_file_recv_chunk, NULL);
 
-        if (len == -1) {
-            fclose(fd);
-            exit_toxic_err("failed in load_data", FATALERR_FILEOP);
+    tox_callback_group_invite(m, on_group_invite, NULL);
+    tox_callback_group_message(m, on_group_message, NULL);
+    tox_callback_group_action(m, on_group_action, NULL);
+    tox_callback_group_private_message(m, on_group_private_message, NULL);
+    tox_callback_group_op_certificate(m, on_group_op_certificate, NULL);
+    tox_callback_group_peerlist_update(m, on_group_namelistchange, NULL);
+    tox_callback_group_peer_join(m, on_group_peer_join, NULL);
+    tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
+    tox_callback_group_nick_change(m, on_group_nick_change, NULL);
+    tox_callback_group_topic_change(m, on_group_topic_change, NULL);
+    tox_callback_group_self_join(m, on_group_self_join, NULL);
+    tox_callback_group_self_timeout(m, on_group_self_timeout, NULL);
+    tox_callback_group_rejected(m, on_group_rejected, NULL);
+}
+
+static void init_tox_options(struct Tox_Options *tox_opts)
+{
+    tox_opts->ipv6_enabled = !arg_opts.use_ipv4;
+    tox_opts->udp_enabled = !arg_opts.force_tcp;
+    tox_opts->proxy_type = arg_opts.proxy_type;
+
+    if (!tox_opts->ipv6_enabled)
+        queue_init_message("Forcing IPv4 connection");
+
+    if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE) {
+        tox_opts->proxy_port = arg_opts.proxy_port;
+        tox_opts->proxy_host = arg_opts.proxy_address;
+        const char *ps = tox_opts->proxy_type == TOX_PROXY_TYPE_SOCKS5 ? "SOCKS5" : "HTTP";
+
+        char tmp[48];
+        snprintf(tmp, sizeof(tmp), "Using %s proxy %s : %d", ps, arg_opts.proxy_address, arg_opts.proxy_port);
+        queue_init_message("%s", tmp);
+    }
+
+    if (!tox_opts->udp_enabled) {
+        queue_init_message("UDP disabled");
+    } else if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE) {
+        const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
+        queue_init_message("%s", msg);
+        msg = "Use the -t option to disable UDP.";
+        queue_init_message("%s", msg);
+    }
+}
+
+/* Returns a new Tox object on success.
+ * If object fails to initialize the toxic process will terminate.
+ */
+static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
+{
+    Tox *m = NULL;
+
+    FILE *fp = fopen(data_path, "rb");
+
+    if (fp != NULL) {
+        off_t len = file_size(data_path);
+
+        if (len == 0) {
+            fclose(fp);
+            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
         }
 
         char *buf = malloc(len);
 
         if (buf == NULL) {
-            fclose(fd);
-            exit_toxic_err("failed in load_data", FATALERR_MEMORY);
+            fclose(fp);
+            exit_toxic_err("failed in load_toxic", FATALERR_MEMORY);
         }
 
-        if (fread(buf, len, 1, fd) != 1) {
+        if (fread(buf, len, 1, fp) != 1) {
             free(buf);
-            fclose(fd);
-            exit_toxic_err("failed in load_data", FATALERR_FILEOP);
+            fclose(fp);
+            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
         }
 
-        bool is_encrypted = tox_is_save_encrypted((uint8_t *) buf);
+        bool is_encrypted = tox_is_data_encrypted((uint8_t *) buf);
 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted)
-            exit_toxic_err("failed in load_data", FATALERR_ENCRYPT);
+            exit_toxic_err("failed in load_toxic", FATALERR_ENCRYPT);
 
         if (arg_opts.unencrypt_data && is_encrypted)
-            queue_init_message("Data file '%s' has been unencrypted", path);
+            queue_init_message("Data file '%s' has been unencrypted", data_path);
         else if (arg_opts.unencrypt_data)
-            queue_init_message("Warning: passed --unencrypt-data option with unencrypted data file '%s'", path);
+            queue_init_message("Warning: passed --unencrypt-data option with unencrypted data file '%s'", data_path);
 
         if (is_encrypted) {
             if (!arg_opts.unencrypt_data)
                 user_password.data_is_encrypted = true;
 
-            int pwlen = 0;
-            system("clear");
+            size_t pwlen = 0;
+            system("clear");   // TODO: is this portable?
             printf("Enter password (q to quit) ");
 
             while (true) {
@@ -698,44 +647,99 @@ static void load_data(Tox *m, char *path)
                     continue;
                 }
 
-                if (tox_encrypted_load(m, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen) == 0) {
+                TOX_ERR_ENCRYPTED_NEW enc_err;
+                m = tox_encrypted_new(tox_opts, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen, &enc_err);
+
+                if (enc_err == TOX_ERR_ENCRYPTED_NEW_OK) {
                     break;
-                } else {
+                } else if (enc_err == TOX_ERR_ENCRYPTED_NEW_LOAD_DECRYPTION_FAILED) {
                     system("clear");
                     sleep(1);
                     printf("Invalid password. Try again. ");
+                } else {
+                    exit_toxic_err("tox_encrypted_new() failed", enc_err);
                 }
             }
         } else {
-            /* tox_load errors are to be ignored until toxcore is fixed */
-            tox_load(m, (uint8_t *) buf, len);
+            TOX_ERR_NEW err;
+            m = tox_new(tox_opts, (uint8_t *) buf, len, &err);
+
+            if (err != TOX_ERR_NEW_OK)
+                exit_toxic_err("tox_new() failed", err);
         }
 
-        load_friendlist(m);
-        load_blocklist(BLOCK_FILE);
-
         free(buf);
-        fclose(fd);
+        fclose(fp);
     } else {
         /* if file exists then open() failing is fatal */
-        if (file_exists(path))
-            exit_toxic_err("failed in load_data", FATALERR_FILEOP);
+        if (file_exists(data_path))
+            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
 
-        if (store_data(m, path) != 0)
-            exit_toxic_err("failed in load_data", FATALERR_STORE_DATA);
+        TOX_ERR_NEW err;
+        m = tox_new(tox_opts, NULL, 0, &err);
+
+        if (err != TOX_ERR_NEW_OK)
+            exit_toxic_err("tox_new() failed", err);
+
+        if (store_data(m, data_path) == -1)
+            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
     }
+
+    return m;
+}
+
+static Tox *load_toxic(char *data_path)
+{
+    struct Tox_Options tox_opts;
+    init_tox_options(&tox_opts);
+
+    Tox *m = load_tox(data_path, &tox_opts);
+
+    if (m == NULL)
+        exit_toxic_err("load_tox() failed", FATALERR_TOX_INIT);
+
+    init_tox_callbacks(m);
+    load_friendlist(m);
+    load_blocklist(BLOCK_FILE);
+
+    if (tox_self_get_name_size(m) == 0)
+        tox_self_set_name(m, (uint8_t *) "Toxic User", strlen("Toxic User"), NULL);
+
+    return m;
+}
+
+#define TRY_BOOTSTRAP_INTERVAL 5
+static uint64_t last_bootstrap_time = 0;
+
+static void do_bootstrap(Tox *m)
+{
+    static int conn_err = 0;
+    uint64_t curtime = get_unix_time();
+
+    if (!timed_out(last_bootstrap_time, curtime, TRY_BOOTSTRAP_INTERVAL))
+        return;
+
+    if (tox_self_get_connection_status(m) != TOX_CONNECTION_NONE)
+        return;
+
+    if (conn_err != 0)
+        return;
+
+    last_bootstrap_time = curtime;
+    conn_err = init_connection(m);
+
+    if (conn_err != 0)
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Auto-connect failed with error code %d", conn_err);
 }
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
+    if (arg_opts.no_connect)
+        return;
+
     pthread_mutex_lock(&Winthread.lock);
-    do_connection(m, prompt);
-    do_file_senders(m);
-
-    if (arg_opts.no_connect == 0) {
-        tox_do(m);    /* main tox-core loop */
-    }
-
+    tox_iterate(m);
+    do_bootstrap(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -772,16 +776,19 @@ void *thread_cqueue(void *data)
 
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
-        int i;
+
+        size_t i;
 
         for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
             ToxWindow *toxwin = get_window_ptr(i);
 
-            if (toxwin != NULL && toxwin->is_chat && tox_get_friend_connection_status(m, toxwin->num) == 1)
+            if (toxwin != NULL && toxwin->is_chat
+                && tox_friend_get_connection_status(m, toxwin->num, NULL) != TOX_CONNECTION_NONE)
                 cqueue_try_send(toxwin, m);
         }
 
         pthread_mutex_unlock(&Winthread.lock);
+
         usleep(4000);
     }
 }
@@ -795,6 +802,7 @@ void *thread_audio(void *data)
         pthread_mutex_lock(&Winthread.lock);
         toxav_do(av);
         pthread_mutex_unlock(&Winthread.lock);
+
         usleep(toxav_do_interval(av) * 1000);
     }
 }
@@ -817,7 +825,6 @@ static void print_usage(void)
     fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
     fprintf(stderr, "  -t, --force-tcp          Force TCP connection (use this with proxies)\n");
     fprintf(stderr, "  -u, --unencrypt-data     Unencrypt an encrypted data file\n");
-    fprintf(stderr, "  -x, --nodata             Ignore data file\n");
 }
 
 static void set_default_opts(void)
@@ -825,7 +832,7 @@ static void set_default_opts(void)
     memset(&arg_opts, 0, sizeof(struct arg_opts));
 
     /* set any non-zero defaults here*/
-    arg_opts.proxy_type = TOX_PROXY_NONE;
+    arg_opts.proxy_type = TOX_PROXY_TYPE_NONE;
 }
 
 static void parse_args(int argc, char *argv[])
@@ -834,7 +841,6 @@ static void parse_args(int argc, char *argv[])
 
     static struct option long_opts[] = {
         {"file", required_argument, 0, 'f'},
-        {"nodata", no_argument, 0, 'x'},
         {"ipv4", no_argument, 0, '4'},
         {"debug", no_argument, 0, 'b'},
         {"default-locale", no_argument, 0, 'd'},
@@ -911,7 +917,7 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'p':
-                arg_opts.proxy_type = TOX_PROXY_SOCKS5;
+                arg_opts.proxy_type = TOX_PROXY_TYPE_SOCKS5;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
                 if (++optind > argc || argv[optind-1][0] == '-')
@@ -921,7 +927,7 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'P':
-                arg_opts.proxy_type = TOX_PROXY_HTTP;
+                arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
                 if (++optind > argc || argv[optind-1][0] == '-')
@@ -944,11 +950,6 @@ static void parse_args(int argc, char *argv[])
 
             case 'u':
                 arg_opts.unencrypt_data = 1;
-                break;
-
-            case 'x':
-                arg_opts.ignore_data_file = 1;
-                queue_init_message("Ignoring data file");
                 break;
 
             case 'h':
@@ -1015,6 +1016,7 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
 }
 
 #ifdef X11
+// FIXME
 void DnD_callback(const char* asdv, DropType dt)
 {
     if (dt != DT_plain)
@@ -1026,8 +1028,11 @@ void DnD_callback(const char* asdv, DropType dt)
 
 int main(int argc, char *argv[])
 {
-
     parse_args(argc, argv);
+
+    /* Use the -b flag to enable stderr */
+    if (!arg_opts.debug)
+        freopen("/dev/null", "w", stderr);
 
     if (arg_opts.encrypt_data && arg_opts.unencrypt_data) {
         arg_opts.encrypt_data = 0;
@@ -1035,22 +1040,20 @@ int main(int argc, char *argv[])
         queue_init_message("Warning: Using --unencrypt-data and --encrypt-data simultaneously has no effect");
     }
 
-    /* Use the -b flag to enable stderr */
-    if (!arg_opts.debug)
-        freopen("/dev/null", "w", stderr);
-
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
     int config_err = init_default_data_files();
     bool datafile_exists = file_exists(DATA_FILE);
 
-    if (!arg_opts.ignore_data_file) {
-        if (!datafile_exists && !arg_opts.unencrypt_data)
-            first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
-        else if (arg_opts.encrypt_data)
-            first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
-    }
+    if (datafile_exists)
+        last_bootstrap_time = get_unix_time();
+
+    if (!datafile_exists && !arg_opts.unencrypt_data)
+        first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
+    else if (arg_opts.encrypt_data)
+        first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
+
 
     /* init user_settings struct and load settings from conf file */
     user_settings = calloc(1, sizeof(struct user_settings));
@@ -1066,20 +1069,14 @@ int main(int argc, char *argv[])
         queue_init_message("X failed to initialize");
 #endif
 
-    Tox *m = init_tox();
+    Tox *m = load_toxic(DATA_FILE);
 
-    if (m == NULL)
-        exit_toxic_err("failed in main", FATALERR_NETWORKINIT);
+    if (arg_opts.encrypt_data && !datafile_exists)
+        arg_opts.encrypt_data = 0;
 
-    if (!arg_opts.ignore_data_file) {
-        if (arg_opts.encrypt_data && !datafile_exists)
-            arg_opts.encrypt_data = 0;
-
-        load_data(m, DATA_FILE);
-
-    }
 
     init_term();
+
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m);
 
@@ -1124,7 +1121,7 @@ int main(int argc, char *argv[])
         queue_init_message("Failed to load user settings");
 
     /* screen/tmux auto-away timer */
-    if (init_mplex_away_timer (m) == -1)
+    if (init_mplex_away_timer(m) == -1)
         queue_init_message("Failed to init mplex auto-away.");
 
     load_groups(m);
