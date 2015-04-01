@@ -460,7 +460,7 @@ static void first_time_encrypt(const char *msg)
             valid_password = true;
         }
 
-        queue_init_message("Data file '%s' will be encrypted", DATA_FILE);
+        queue_init_message("Data file '%s' is encrypted", DATA_FILE);
         memset(passconfirm, 0, sizeof(passconfirm));
         user_password.data_is_encrypted = true;
     }
@@ -468,44 +468,51 @@ static void first_time_encrypt(const char *msg)
     system("clear");
 }
 
-/*
- * Store Messenger to given location
- * Return 0 if stored successfully or ignoring data file. Return -1 on error
+/* Store Tox data to given location
+ *
+ * Return 0 if stored successfully or ignoring data file.
+ * Return -1 on error
  */
 int store_data(Tox *m, const char *path)
 {
     if (path == NULL)
         return -1;
 
-    size_t len = user_password.data_is_encrypted ? tox_encrypted_size(m) : tox_get_savedata_size(m);
-    char *buf = malloc(len);
+    FILE *fp = fopen(path, "wb");
 
-    if (buf == NULL)
-        exit_toxic_err("failed in store_data", FATALERR_MEMORY);
+    if (fp == NULL)
+        return -1;
+
+    size_t data_len = tox_get_savedata_size(m);
+    char data[data_len];
+
+    tox_get_savedata(m, (uint8_t *) data);
 
     if (user_password.data_is_encrypted && !arg_opts.unencrypt_data) {
-        if (tox_encrypted_save(m, (uint8_t *) buf, (uint8_t *) user_password.pass, user_password.len) != 0) {
-            free(buf);
+        size_t enc_len = data_len + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
+        char enc_data[enc_len];
+
+        TOX_ERR_ENCRYPTION err;
+        tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) user_password.pass, user_password.len,
+                         (uint8_t *) enc_data, &err);
+
+        if (err != TOX_ERR_ENCRYPTION_OK) {
+            fprintf(stderr, "tox_pass_encrypt() failed with error %d\n", err);
+            fclose(fp);
+            return -1;
+        }
+
+        if (fwrite(enc_data, enc_len, 1, fp) != 1) {
+            fclose(fp);
             return -1;
         }
     } else {
-        tox_get_savedata(m, (uint8_t *) buf);
+        if (fwrite(data, data_len, 1, fp) != 1) {
+            fclose(fp);
+            return -1;
+        }
     }
 
-    FILE *fp = fopen(path, "wb");
-
-    if (fp == NULL) {
-        free(buf);
-        return -1;
-    }
-
-    if (fwrite(buf, len, 1, fp) != 1) {
-        free(buf);
-        fclose(fp);
-        return -1;
-    }
-
-    free(buf);
     fclose(fp);
     return 0;
 }
@@ -570,7 +577,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
 
     FILE *fp = fopen(data_path, "rb");
 
-    if (fp != NULL) {
+    if (fp != NULL) {   /* Data file exists */
         off_t len = file_size(data_path);
 
         if (len == 0) {
@@ -578,20 +585,14 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
             exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
         }
 
-        char *buf = malloc(len);
+        char data[len];
 
-        if (buf == NULL) {
-            fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_MEMORY);
-        }
-
-        if (fread(buf, len, 1, fp) != 1) {
-            free(buf);
+        if (fread(data, sizeof(data), 1, fp) != 1) {
             fclose(fp);
             exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
         }
 
-        bool is_encrypted = tox_is_data_encrypted((uint8_t *) buf);
+        bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted)
@@ -610,6 +611,9 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
             system("clear");   // TODO: is this portable?
             printf("Enter password (q to quit) ");
 
+            size_t plain_len = len - TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
+            char plain[plain_len];
+
             while (true) {
                 pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
                 user_password.len = pwlen;
@@ -624,31 +628,36 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
                     continue;
                 }
 
-                TOX_ERR_ENCRYPTED_NEW enc_err;
-                m = tox_encrypted_new(tox_opts, (uint8_t *) buf, len, (uint8_t *) user_password.pass, pwlen, &enc_err);
+                TOX_ERR_DECRYPTION pwerr;
+                tox_pass_decrypt((uint8_t *) data, len, (uint8_t *) user_password.pass, pwlen,
+                                 (uint8_t *) plain, &pwerr);
 
-                if (enc_err == TOX_ERR_ENCRYPTED_NEW_OK) {
+                if (pwerr == TOX_ERR_DECRYPTION_OK) {
+                    TOX_ERR_NEW err;
+                    m = tox_new(tox_opts, (uint8_t *) plain, plain_len, &err);
+
+                    if (err != TOX_ERR_NEW_OK)
+                        exit_toxic_err("tox_new() failed", err);
+
                     break;
-                } else if (enc_err == TOX_ERR_ENCRYPTED_NEW_LOAD_DECRYPTION_FAILED) {
+                } else if (pwerr == TOX_ERR_DECRYPTION_FAILED) {
                     system("clear");
                     sleep(1);
                     printf("Invalid password. Try again. ");
                 } else {
-                    exit_toxic_err("tox_encrypted_new() failed", enc_err);
+                    exit_toxic_err("tox_pass_decrypt() failed", pwerr);
                 }
             }
-        } else {
+        } else {   /* data is not encrypted */
             TOX_ERR_NEW err;
-            m = tox_new(tox_opts, (uint8_t *) buf, len, &err);
+            m = tox_new(tox_opts, (uint8_t *) data, len, &err);
 
             if (err != TOX_ERR_NEW_OK)
                 exit_toxic_err("tox_new() failed", err);
         }
 
-        free(buf);
         fclose(fp);
-    } else {
-        /* if file exists then open() failing is fatal */
+    } else {   /* Data file does not/should not exist */
         if (file_exists(data_path))
             exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
 

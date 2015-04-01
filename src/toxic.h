@@ -83,7 +83,7 @@ typedef enum _FATAL_ERRS {
     FATALERR_WININIT = -9,          /* window init failed */
     FATALERR_PROXY = -10,           /* Tox network failed to init using a proxy */
     FATALERR_ENCRYPT = -11,         /* Data file encryption failure */
-    FATALERR_TOX_INIT = -12,      /* Tox instance failed to initialize */
+    FATALERR_TOX_INIT = -12,        /* Tox instance failed to initialize */
 } FATAL_ERRS;
 
 /* Fixes text color problem on some terminals.
