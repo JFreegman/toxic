@@ -409,7 +409,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
         if (err != TOX_ERR_FRIEND_GET_PUBLIC_KEY_OK)
             fprintf(stderr, "tox_friend_get_public_key failed (error %d)\n", err);
 
-        // update_friend_last_online(i, 0);
+        update_friend_last_online(i, tox_friend_get_last_online(m, num, NULL));
 
         char tempname[TOX_MAX_NAME_LENGTH] = {0};
         get_nick_truncate(m, tempname, num);
@@ -873,8 +873,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         return;
     }
 
-   // uint64_t cur_time = get_unix_time();
-   // struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
+   uint64_t cur_time = get_unix_time();
+   struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
 
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Online: ");
@@ -979,34 +979,31 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 if (f_selected)
                     wattroff(self->window, COLOR_PAIR(BLUE));
 
-                wprintw(self->window, "\n");
-                /* Last online is currently broken in core */
+                uint64_t last_seen = Friends.list[f].last_online.last_on;
 
-                // uint64_t last_seen = Friends.list[f].last_online.last_on;
-                //
-                // if (last_seen != 0) {
-                //     int day_dist = (
-                //             cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
-                //         + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
-                //     );
-                //     const char *hourmin = Friends.list[f].last_online.hour_min_str;
+                if (last_seen != 0) {
+                    int day_dist = (
+                            cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
+                        + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
+                    );
+                    const char *hourmin = Friends.list[f].last_online.hour_min_str;
 
-                //     switch (day_dist) {
-                //         case 0:
-                //             wprintw(self->window, " Last seen: Today %s\n", hourmin);
-                //             break;
+                    switch (day_dist) {
+                        case 0:
+                            wprintw(self->window, " Last seen: Today %s\n", hourmin);
+                            break;
 
-                //         case 1:
-                //             wprintw(self->window, " Last seen: Yesterday %s\n", hourmin);
-                //             break;
+                        case 1:
+                            wprintw(self->window, " Last seen: Yesterday %s\n", hourmin);
+                            break;
 
-                //         default:
-                //             wprintw(self->window, " Last seen: %d days ago\n", day_dist);
-                //             break;
-                //     }
-                // } else {
-                //     wprintw(self->window, " Last seen: Never\n");
-                // }
+                        default:
+                            wprintw(self->window, " Last seen: %d days ago\n", day_dist);
+                            break;
+                    }
+                } else {
+                    wprintw(self->window, " Last seen: Never\n");
+                }
             }
         }
     }
