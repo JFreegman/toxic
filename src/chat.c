@@ -298,7 +298,7 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
 
     struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    if (ft == NULL)
+    if (!ft)
         return;
 
     if (ft->state != FILE_TRANSFER_STARTED)
@@ -339,10 +339,10 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
     }
 
     TOX_ERR_FILE_SEND_CHUNK err;
-    tox_file_send_chunk(m, friendnum, filenum, position, send_data, send_length, &err);
+    tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
 
     if (err != TOX_ERR_FILE_SEND_CHUNK_OK)
-        fprintf(stderr, "tox_file_send_chunk failed (error %d)\n", err);
+        fprintf(stderr, "tox_file_send_chunk failed in chat callback (error %d)\n", err);
 
     ft->position += send_length;
     ft->bps += send_length;
@@ -356,7 +356,7 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, ui
 
     struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    if (ft == NULL)
+    if (!ft)
         return;
 
     if (ft->state != FILE_TRANSFER_STARTED)
@@ -389,12 +389,12 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, ui
 
 static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, TOX_FILE_CONTROL control)
 {
-    if (self->num != friendnum)
+    if (friendnum != self->num)
         return;
 
     struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
 
-    if (ft == NULL)
+    if (!ft)
         return;
 
     char msg[MAX_STR_SIZE];
@@ -411,18 +411,14 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
                 ft->line_id = self->chatwin->hst->line_end->id + 2;
-
-                break;
-            }
-
-            /* transfer is resumed */
-            if (ft->state == FILE_TRANSFER_PAUSED) {
+            } else if (ft->state == FILE_TRANSFER_PAUSED) {    /* transfer is resumed */
                 ft->state = FILE_TRANSFER_STARTED;
             }
 
             break;
 
         case TOX_FILE_CONTROL_PAUSE:
+            ft->state = FILE_TRANSFER_PAUSED;
             break;
 
         case TOX_FILE_CONTROL_CANCEL:
@@ -501,6 +497,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     ft->file_size = file_size;
     ft->friendnum = friendnum;
     ft->filenum = filenum;
+    ft->file_type = TOX_FILE_KIND_DATA;
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
 

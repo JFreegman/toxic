@@ -124,6 +124,7 @@ void exit_toxic_success(Tox *m)
     store_data(m, DATA_FILE);
     memset(&user_password, 0, sizeof(struct user_password));
     kill_all_windows(m);
+    kill_all_file_transfers(m);
     terminate_notify();
 
 #ifdef AUDIO
@@ -506,7 +507,7 @@ int store_data(Tox *m, const char *path)
             fclose(fp);
             return -1;
         }
-    } else {
+    } else {  /* data will not be encrypted */
         if (fwrite(data, data_len, 1, fp) != 1) {
             fclose(fp);
             return -1;

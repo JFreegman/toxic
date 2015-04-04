@@ -230,7 +230,15 @@ void kill_all_file_transfers_friend(Tox *m, uint32_t friendnum)
     size_t i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        close_file_transfer(NULL, m, &Friends.list[friendnum].file_sender[i], -1, NULL, silent);
-        close_file_transfer(NULL, m, &Friends.list[friendnum].file_receiver[i], -1, NULL, silent);
+        close_file_transfer(NULL, m, &Friends.list[friendnum].file_sender[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        close_file_transfer(NULL, m, &Friends.list[friendnum].file_receiver[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
     }
+}
+
+void kill_all_file_transfers(Tox *m)
+{
+    size_t i;
+
+    for (i = 0; i < Friends.max_idx; ++i)
+        kill_all_file_transfers_friend(m, Friends.list[i].num);
 }

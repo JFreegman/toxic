@@ -35,6 +35,7 @@
 #include "prompt.h"
 #include "help.h"
 #include "term_mplex.h"
+#include "avatars.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -198,72 +199,37 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    // if (argc < 2) {
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: No file path supplied.");
-    //     return;
-    // }
+    if (argc < 2 || strlen(argv[1]) < 3) {
+        avatar_unset(m);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar is not set.");
+        return;
+    }
 
-    // /* turns the avatar off */
-    // if (strlen(argv[1]) < 3) {
-    //     tox_unset_avatar(m);
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No avatar set.");
-    //     return;
-    // }
+    if (argv[1][0] != '\"') {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
+        return;
+    }
 
-    // if (argv[1][0] != '\"') {
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
-    //     return;
-    // }
+    /* remove opening and closing quotes */
+    char path[MAX_STR_SIZE];
+    snprintf(path, sizeof(path), "%s", &argv[1][1]);
+    int len = strlen(path) - 1;
 
-    // /* remove opening and closing quotes */
-    // char path[MAX_STR_SIZE];
-    // snprintf(path, sizeof(path), "%s", &argv[1][1]);
-    // int len = strlen(path) - 1;
-    // path[len] = '\0';
+    if (len <= 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid path.");
+        return;
+    }
 
-    // off_t sz = file_size(path);
+    path[len] = '\0';
+    char filename[MAX_STR_SIZE];
+    get_file_name(filename, sizeof(filename), path);
 
-    // if (sz <= 8) {
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Invalid file.");
-    //     return;
-    // }
+    if (avatar_set(m, path, len) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar.");
+        return;
+    }
 
-    // FILE *fp = fopen(path, "rb");
-
-    // if (fp == NULL) {
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Could not open file.");
-    //     return;
-    // }
-
-    // char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
-
-    // if (check_file_signature(PNG_signature, sizeof(PNG_signature), fp) != 0) {
-    //     fclose(fp);
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: File type not supported.");
-    //     return;
-    // }
-
-    // char *avatar = malloc(sz);
-
-    // if (avatar == NULL)
-    //     exit_toxic_err("Failed in cmd_avatar", FATALERR_MEMORY);
-
-    // if (fread(avatar, sz, 1, fp) != 1) {
-    //     fclose(fp);
-    //     free(avatar);
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar: Read fail.");
-    //     return;
-    // }
-
-    // if (tox_set_avatar(m, TOX_AVATAR_FORMAT_PNG, (const uint8_t *) avatar, (uint32_t) sz) == -1)
-    //     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar");
-
-    // char filename[MAX_STR_SIZE];
-    // get_file_name(filename, sizeof(filename), path);
-    // line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
-
-    // fclose(fp);
-    // free(avatar);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
 }
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -372,7 +338,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         groupnum = tox_add_groupchat(m);
 #ifdef AUDIO
     else
-        groupnum = toxav_add_av_groupchat(m, write_device_callback_group, NULL);
+        groupnum = toxav_add_av_groupchat(m, NULL, NULL);
 #endif
 
     if (groupnum == -1) {

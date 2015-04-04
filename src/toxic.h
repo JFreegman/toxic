@@ -121,9 +121,4 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
 void on_typing_change(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata);
 void on_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata);
 
-#ifdef AUDIO
-void write_device_callback_group(Tox *m, int groupnum, int peernum, const int16_t *pcm, unsigned int samples,
-                                 uint8_t channels, unsigned int sample_rate, void *arg);
-#endif  /* AUDIO */
-
 #endif  /* #define TOXIC_H */

@@ -52,6 +52,7 @@ struct FileTransfer {
     FILE *file;
     FILE_TRANSFER_STATE state;
     FILE_TRANSFER_DIRECTION direction;
+    uint8_t file_type;
     char file_name[TOX_MAX_FILENAME_LENGTH + 1];
     char file_path[PATH_MAX + 1];    /* Not used by senders */
     double bps;
@@ -59,8 +60,8 @@ struct FileTransfer {
     uint32_t friendnum;
     size_t   index;
     uint64_t file_size;
-    uint64_t last_progress;
     uint64_t position;
+    uint64_t last_progress;
     uint32_t line_id;
 };
 
@@ -106,5 +107,7 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
 
 /* Kills all active file transfers for friendnum */
 void kill_all_file_transfers_friend(Tox *m, uint32_t friendnum);
+
+void kill_all_file_transfers(Tox *m);
 
 #endif  /* #define FILE_TRANSFERS_H */

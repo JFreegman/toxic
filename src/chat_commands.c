@@ -123,7 +123,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 #ifdef AUDIO
     else
         groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
-                                           write_device_callback_group, NULL);
+                                           NULL, NULL);
 #endif
 
     if (groupnum == -1) {
@@ -277,6 +277,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     ft->filenum = filenum;
     ft->friendnum = self->num;
     ft->direction = FILE_TRANSFER_SEND;
+    ft->file_type = TOX_FILE_KIND_DATA;
 
     char sizestr[32];
     bytes_convert_str(sizestr, sizeof(sizestr), filesize);
