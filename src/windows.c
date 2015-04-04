@@ -33,8 +33,10 @@
 #include "chat.h"
 #include "line_info.h"
 #include "misc_tools.h"
-
+#include "avatars.h"
 #include "settings.h"
+#include "file_transfers.h"
+
 extern char *DATA_FILE;
 extern struct Winthread Winthread;
 static ToxWindow windows[MAX_WINDOWS_NUM];
@@ -314,6 +316,16 @@ void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata)
 void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position,
                            size_t length, void *userdata)
 {
+    struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+
+    if (!ft)
+        return;
+
+    if (ft->file_type == TOX_FILE_KIND_AVATAR) {
+        on_avatar_chunk_request(m, ft, position, length);
+        return;
+    }
+
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -325,6 +337,11 @@ void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, u
 void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position,
                         const uint8_t *data, size_t length, void *user_data)
 {
+    struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+
+    if (!ft)
+        return;
+
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -336,6 +353,16 @@ void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint
 void on_file_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control,
                      void *userdata)
 {
+    struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+
+    if (!ft)
+        return;
+
+    if (ft->file_type == TOX_FILE_KIND_AVATAR) {
+        on_avatar_file_control(m, ft, control);
+        return;
+    }
+
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -371,7 +398,6 @@ void on_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *user
             windows[i].onReadReceipt(&windows[i], m, friendnumber, receipt);
     }
 }
-
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow w)

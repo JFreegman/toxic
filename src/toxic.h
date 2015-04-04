@@ -129,5 +129,4 @@ void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint
 void on_group_self_join(Tox *m, int groupnumber, void *userdata);
 void on_group_self_timeout(Tox *m, int groupnumber, void *userdata);
 void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata);
-
 #endif  /* #define TOXIC_H */
