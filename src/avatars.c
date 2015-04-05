@@ -27,6 +27,7 @@
 #include "misc_tools.h"
 #include "file_transfers.h"
 #include "friendlist.h"
+#include "avatars.h"
 
 extern FriendsList Friends;
 
@@ -36,7 +37,6 @@ static struct Avatar {
     char path[PATH_MAX + 1];
     size_t path_len;
     off_t size;
-    bool is_set;
 } Avatar;
 
 
@@ -55,8 +55,7 @@ int avatar_send(Tox *m, uint32_t friendnum)
     TOX_ERR_FILE_SEND err;
     uint32_t filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
                                      NULL, (uint8_t *) Avatar.name, Avatar.name_len, &err);
-
-    if (!Avatar.is_set)
+    if (Avatar.size == 0)
         return 0;
 
     if (err != TOX_ERR_FILE_SEND_OK) {
@@ -74,14 +73,8 @@ int avatar_send(Tox *m, uint32_t friendnum)
     if (ft->file == NULL)
         return -1;
 
-    ft->file_size = Avatar.size;
-
-    if (ft->file_size == 0) {
-        fclose(ft->file);
-        return -1;
-    }
-
     memcpy(ft->file_name, Avatar.name, Avatar.name_len + 1);
+    ft->file_size = Avatar.size;
     ft->state = FILE_TRANSFER_PENDING;
     ft->filenum = filenum;
     ft->friendnum = friendnum;
@@ -109,8 +102,6 @@ static void avatar_send_all(Tox *m)
  */
 int avatar_set(Tox *m, const char *path, size_t path_len)
 {
-    avatar_clear();
-
     if (path_len == 0 || path_len >= sizeof(Avatar.path))
         return -1;
 
@@ -128,12 +119,16 @@ int avatar_set(Tox *m, const char *path, size_t path_len)
 
     fclose(fp);
 
+    off_t size = file_size(path);
+
+    if (size == 0 || size > MAX_AVATAR_FILE_SIZE)
+        return -1;
+
     get_file_name(Avatar.name, sizeof(Avatar.name), path);
     Avatar.name_len = strlen(Avatar.name);
     memcpy(Avatar.path, path, sizeof(Avatar.path));
     Avatar.path_len = path_len;
-    Avatar.size = file_size(path);
-    Avatar.is_set = 1;
+    Avatar.size = size;
 
     avatar_send_all(m);
 
