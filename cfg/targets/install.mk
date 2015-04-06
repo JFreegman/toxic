@@ -13,7 +13,8 @@ install: $(BUILD_DIR)/toxic
 	@for f in $(DATAFILES) ; do \
 		install -m 0644 $(MISC_DIR)/$$f $(abspath $(DESTDIR)/$(DATADIR)/$$f) ;\
 		file=$(abspath $(DESTDIR)/$(DATADIR)/$$f) ;\
-		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
+		sed -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file > temp_file && \
+		mv temp_file $$file ;\
 	done
 	@mkdir -p $(abspath $(DESTDIR)/$(DATADIR))/sounds
 	@for f in $(SNDFILES) ; do \
@@ -30,8 +31,10 @@ install: $(BUILD_DIR)/toxic
 		file=$$section/$$f ;\
 		mkdir -p $$section ;\
 		install -m 0644 $(DOC_DIR)/$$f $$file ;\
-		sed -i'' -e 's:__VERSION__:'$(VERSION)':g' $$file ;\
-		sed -i'' -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file ;\
+		sed -e 's:__VERSION__:'$(VERSION)':g' $$file > temp_file && \
+		mv temp_file $$file ;\
+		sed -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file > temp_file && \
+		mv temp_file $$file ;\
 		gzip -f -9 $$file ;\
 	done
 
