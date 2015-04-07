@@ -124,8 +124,8 @@ void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
     memset(&user_password, 0, sizeof(struct user_password));
-    kill_all_windows(m);
     kill_all_file_transfers(m);
+    kill_all_windows(m);
     terminate_notify();
 
 #ifdef AUDIO

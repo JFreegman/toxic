@@ -225,7 +225,9 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     get_file_name(filename, sizeof(filename), path);
 
     if (avatar_set(m, path, len) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set avatar.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to set avatar. Avatars must be in PNG format and may not exceed %d bytes.",
+                      MAX_AVATAR_FILE_SIZE);
         return;
     }
 
