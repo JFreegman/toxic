@@ -32,7 +32,7 @@
 extern FriendsList Friends;
 
 static struct Avatar {
-    char name[MAX_STR_SIZE + 1];
+    char name[TOX_MAX_FILENAME_LENGTH + 1];
     size_t name_len;
     char path[PATH_MAX + 1];
     size_t path_len;
@@ -73,7 +73,7 @@ int avatar_send(Tox *m, uint32_t friendnum)
     if (ft->file == NULL)
         return -1;
 
-    memcpy(ft->file_name, Avatar.name, Avatar.name_len + 1);
+    snprintf(ft->file_name, sizeof(ft->file_name), "%s", Avatar.name);
     ft->file_size = Avatar.size;
     ft->state = FILE_TRANSFER_PENDING;
     ft->filenum = filenum;
@@ -126,7 +126,7 @@ int avatar_set(Tox *m, const char *path, size_t path_len)
 
     get_file_name(Avatar.name, sizeof(Avatar.name), path);
     Avatar.name_len = strlen(Avatar.name);
-    memcpy(Avatar.path, path, sizeof(Avatar.path));
+    snprintf(Avatar.path, sizeof(Avatar.path), "%s", path);
     Avatar.path_len = path_len;
     Avatar.size = size;
 
