@@ -572,7 +572,7 @@ static void init_tox_options(struct Tox_Options *tox_opts)
 /* Returns a new Tox object on success.
  * If object fails to initialize the toxic process will terminate.
  */
-static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
+static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW *new_err)
 {
     Tox *m = NULL;
 
@@ -596,8 +596,10 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
         bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
 
         /* attempt to encrypt an already encrypted data file */
-        if (arg_opts.encrypt_data && is_encrypted)
+        if (arg_opts.encrypt_data && is_encrypted) {
+            fclose(fp);
             exit_toxic_err("failed in load_toxic", FATALERR_ENCRYPT);
+        }
 
         if (arg_opts.unencrypt_data && is_encrypted)
             queue_init_message("Data file '%s' has been unencrypted", data_path);
@@ -619,8 +621,10 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
                 pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
                 user_password.len = pwlen;
 
-                if (strcasecmp(user_password.pass, "q") == 0)
+                if (strcasecmp(user_password.pass, "q") == 0) {
+                    fclose(fp);
                     exit(0);
+                }
 
                 if (pwlen < MIN_PASSWORD_LEN) {
                     system("clear");
@@ -634,11 +638,12 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
                                  (uint8_t *) plain, &pwerr);
 
                 if (pwerr == TOX_ERR_DECRYPTION_OK) {
-                    TOX_ERR_NEW err;
-                    m = tox_new(tox_opts, (uint8_t *) plain, plain_len, &err);
+                    m = tox_new(tox_opts, (uint8_t *) plain, plain_len, new_err);
 
-                    if (err != TOX_ERR_NEW_OK)
-                        exit_toxic_err("tox_new() failed", err);
+                    if (*new_err != TOX_ERR_NEW_OK) {
+                        fclose(fp);
+                        return NULL;
+                    }
 
                     break;
                 } else if (pwerr == TOX_ERR_DECRYPTION_FAILED) {
@@ -646,15 +651,17 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
                     sleep(1);
                     printf("Invalid password. Try again. ");
                 } else {
+                    fclose(fp);
                     exit_toxic_err("tox_pass_decrypt() failed", pwerr);
                 }
             }
         } else {   /* data is not encrypted */
-            TOX_ERR_NEW err;
-            m = tox_new(tox_opts, (uint8_t *) data, len, &err);
+            m = tox_new(tox_opts, (uint8_t *) data, len, new_err);
 
-            if (err != TOX_ERR_NEW_OK)
-                exit_toxic_err("tox_new() failed", err);
+            if (*new_err != TOX_ERR_NEW_OK) {
+                fclose(fp);
+                return NULL;
+            }
         }
 
         fclose(fp);
@@ -662,11 +669,10 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts)
         if (file_exists(data_path))
             exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
 
-        TOX_ERR_NEW err;
-        m = tox_new(tox_opts, NULL, 0, &err);
+        m = tox_new(tox_opts, NULL, 0, new_err);
 
-        if (err != TOX_ERR_NEW_OK)
-            exit_toxic_err("tox_new() failed", err);
+        if (*new_err != TOX_ERR_NEW_OK)
+            return NULL;
 
         if (store_data(m, data_path) == -1)
             exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
@@ -680,10 +686,17 @@ static Tox *load_toxic(char *data_path)
     struct Tox_Options tox_opts;
     init_tox_options(&tox_opts);
 
-    Tox *m = load_tox(data_path, &tox_opts);
+    TOX_ERR_NEW new_err;
+    Tox *m = load_tox(data_path, &tox_opts, &new_err);
 
-    if (m == NULL)
-        exit_toxic_err("load_tox() failed", FATALERR_TOX_INIT);
+    if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_opts.ipv6_enabled) {
+        queue_init_message("Falling back to ipv4");
+        tox_opts.ipv6_enabled = false;
+        m = load_tox(data_path, &tox_opts, &new_err);
+    }
+
+    if (m == NULL || new_err != TOX_ERR_NEW_OK)
+        exit_toxic_err("Tox network failed to initialize (tox_new failed with error %d)", new_err);
 
     init_tox_callbacks(m);
     load_friendlist(m);
