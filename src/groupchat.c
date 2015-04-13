@@ -533,26 +533,6 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, int groupnum)
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- Topic set to: %s", topic);
 }
 
-static void groupchat_onGroupSelfTimeout(ToxWindow *self, Tox *m, int groupnum)
-{
-    if (groupnum != self->num)
-        return;
-
-    int i;
-
-    for (i = 0; i < max_groupchat_index; ++i) {
-        if (groupchats[i].active && groupchats[i].groupnumber == groupnum) {
-            groupchats[i].is_connected = false;
-            break;
-        }
-    }
-
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
-
-    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, RED, "-!- Disconnected from group");
-}
-
 static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uint8_t type)
 {
     if (groupnum != self->num)
@@ -967,7 +947,6 @@ ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length
     ret.onGroupOpCertificate = &groupchat_onGroupOpCertificate;
     ret.onGroupNickChange = &groupchat_onGroupNickChange;
     ret.onGroupSelfJoin = &groupchat_onGroupSelfJoin;
-    ret.onGroupSelfTimeout = &groupchat_onGroupSelfTimeout;
     ret.onGroupRejected = &groupchat_onGroupRejected;
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));

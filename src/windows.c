@@ -293,16 +293,6 @@ void on_group_self_join(Tox *m, int groupnumber, void *userdata)
     }
 }
 
-void on_group_self_timeout(Tox *m, int groupnumber, void *userdata)
-{
-    size_t i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupSelfTimeout != NULL)
-            windows[i].onGroupSelfTimeout(&windows[i], m, groupnumber);
-    }
-}
-
 void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata)
 {
     size_t i;

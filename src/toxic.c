@@ -556,7 +556,6 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_nick_change(m, on_group_nick_change, NULL);
     tox_callback_group_topic_change(m, on_group_topic_change, NULL);
     tox_callback_group_self_join(m, on_group_self_join, NULL);
-    tox_callback_group_self_timeout(m, on_group_self_timeout, NULL);
     tox_callback_group_rejected(m, on_group_rejected, NULL);
 }
 

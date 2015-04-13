@@ -137,7 +137,6 @@ struct ToxWindow {
     void(*onGroupNickChange)(ToxWindow *, Tox *, int, uint32_t, const char *, uint16_t);
     void(*onGroupTopicChange)(ToxWindow *, Tox *, int, uint32_t, const char *, uint16_t);
     void(*onGroupSelfJoin)(ToxWindow *, Tox *, int);
-    void(*onGroupSelfTimeout)(ToxWindow *, Tox *, int);
     void(*onGroupRejected)(ToxWindow *, Tox *, int, uint8_t);
 
 #ifdef AUDIO
