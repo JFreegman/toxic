@@ -689,14 +689,13 @@ static Tox *load_toxic(char *data_path)
     TOX_ERR_NEW new_err;
     Tox *m = load_tox(data_path, &tox_opts, &new_err);
 
-    if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_opts.ipv6_enabled) {
+    if (new_err != TOX_ERR_NEW_OK && tox_opts.ipv6_enabled) {
         queue_init_message("Falling back to ipv4");
         tox_opts.ipv6_enabled = false;
         m = load_tox(data_path, &tox_opts, &new_err);
-    }
-
-    if (m == NULL || new_err != TOX_ERR_NEW_OK)
+    } else if (new_err != TOX_ERR_NEW_OK) {
         exit_toxic_err("Tox network failed to initialize (tox_new failed with error %d)", new_err);
+    }
 
     init_tox_callbacks(m);
     load_friendlist(m);
