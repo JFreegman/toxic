@@ -49,13 +49,20 @@ endif
 # Include all needed checks
 -include $(CFG_DIR)/checks/check_features.mk
 
+# Include saved variables (previously defined by user)
+ifneq ($(MAKECMDGOALS), clean)
+    -include $(BUILD_DIR)/.config.mk
+endif
+
 # Fix path for object files
 OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
 
 # Targets
 all: $(BUILD_DIR)/toxic
 
-$(BUILD_DIR)/toxic: $(OBJ)
+toxic: $(BUILD_DIR)/toxic
+
+$(BUILD_DIR)/toxic: $(BUILD_DIR)/.config.mk $(OBJ)
 	@echo "  LD    $(@:$(BUILD_DIR)/%=%)"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/toxic $(OBJ) $(LDFLAGS)
 
@@ -68,10 +75,10 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $(BUILD_DIR)/$*.d
 
 clean:
-	rm -f $(BUILD_DIR)/*.d $(BUILD_DIR)/*.o $(BUILD_DIR)/toxic
+	rm -f $(BUILD_DIR)/.config.mk $(BUILD_DIR)/*.d $(BUILD_DIR)/*.o $(BUILD_DIR)/toxic
 
 -include $(BUILD_DIR)/$(OBJ:.o=.d)
 
 -include $(CFG_DIR)/targets/*.mk
 
-.PHONY: clean all
+.PHONY: all clean toxic
