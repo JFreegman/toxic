@@ -712,9 +712,10 @@ static Tox *load_toxic(char *data_path)
         queue_init_message("Falling back to ipv4");
         tox_opts.ipv6_enabled = false;
         m = load_tox(data_path, &tox_opts, &new_err);
-    } else if (new_err != TOX_ERR_NEW_OK) {
-        exit_toxic_err("Tox network failed to initialize (tox_new failed with error %d)", new_err);
     }
+
+    if (new_err != TOX_ERR_NEW_OK)
+        exit_toxic_err("Tox network failed to initialize (tox_new failed with error %d)", new_err);
 
     init_tox_callbacks(m);
     load_friendlist(m);

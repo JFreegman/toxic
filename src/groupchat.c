@@ -114,6 +114,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 
 static void groupchat_set_group_name(ToxWindow *self, Tox *m, int groupnum);
 ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length);
+static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnum);
 
 int init_groupchat_win(Tox *m, int groupnum, const char *groupname, int length)
 {
@@ -139,12 +140,13 @@ int init_groupchat_win(Tox *m, int groupnum, const char *groupname, int length)
             if (groupchats[i].peer_names == NULL || groupchats[i].peer_name_lengths == NULL)
                 exit_toxic_err("failed in init_groupchat_win", FATALERR_MEMORY);
 
-            set_active_window(groupchats[i].chatwin);
-
             if (i == max_groupchat_index)
                 ++max_groupchat_index;
 
+            set_active_window(groupchats[i].chatwin);
+            groupchat_onGroupNamelistChange(&self, m, groupnum);
             store_data(m, DATA_FILE);
+
             return 0;
         }
     }
@@ -435,6 +437,9 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
         return;
 
     int num_peers = tox_group_get_number_peers(m, groupnum);
+
+    if (num_peers <= 0)
+        return;
 
     uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
     uint16_t tmp_peerlens[num_peers];
