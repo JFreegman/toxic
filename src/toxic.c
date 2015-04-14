@@ -640,7 +640,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 if (pwerr == TOX_ERR_DECRYPTION_OK) {
                     m = tox_new(tox_opts, (uint8_t *) plain, plain_len, new_err);
 
-                    if (*new_err != TOX_ERR_NEW_OK) {
+                    if (m == NULL) {
                         fclose(fp);
                         return NULL;
                     }
@@ -658,7 +658,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         } else {   /* data is not encrypted */
             m = tox_new(tox_opts, (uint8_t *) data, len, new_err);
 
-            if (*new_err != TOX_ERR_NEW_OK) {
+            if (m == NULL) {
                 fclose(fp);
                 return NULL;
             }
@@ -671,7 +671,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
         m = tox_new(tox_opts, NULL, 0, new_err);
 
-        if (*new_err != TOX_ERR_NEW_OK)
+        if (m == NULL)
             return NULL;
 
         if (store_data(m, data_path) == -1)
@@ -689,14 +689,17 @@ static Tox *load_toxic(char *data_path)
     TOX_ERR_NEW new_err;
     Tox *m = load_tox(data_path, &tox_opts, &new_err);
 
-    if (new_err != TOX_ERR_NEW_OK && tox_opts.ipv6_enabled) {
+    if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_opts.ipv6_enabled) {
         queue_init_message("Falling back to ipv4");
         tox_opts.ipv6_enabled = false;
         m = load_tox(data_path, &tox_opts, &new_err);
     }
 
+    if (!m)
+        exit_toxic_err("tox_new returned fatal error %d", new_err);
+
     if (new_err != TOX_ERR_NEW_OK)
-        exit_toxic_err("Tox network failed to initialize (tox_new failed with error %d)", new_err);
+        queue_init_message("tox_new returned non-fatal error %d", new_err);
 
     init_tox_callbacks(m);
     load_friendlist(m);
