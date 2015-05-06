@@ -341,7 +341,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         snprintf(name, sizeof(name), "%s", argv[1]);
     }
 
-    int groupnum = tox_group_new(m, (uint8_t *) name, len);
+    int groupnum = tox_group_new(m, TOX_GP_PUBLIC, (uint8_t *) name, len);
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
