@@ -542,6 +542,8 @@ static void init_tox_callbacks(Tox *m)
 
 static void init_tox_options(struct Tox_Options *tox_opts)
 {
+    tox_options_default(tox_opts);
+
     tox_opts->ipv6_enabled = !arg_opts.use_ipv4;
     tox_opts->udp_enabled = !arg_opts.force_tcp;
     tox_opts->proxy_type = arg_opts.proxy_type;
@@ -696,7 +698,7 @@ static Tox *load_toxic(char *data_path)
     }
 
     if (!m)
-        exit_toxic_err("tox_new returned fatal error %d", new_err);
+        exit_toxic_err("tox_new returned fatal error", new_err);
 
     if (new_err != TOX_ERR_NEW_OK)
         queue_init_message("tox_new returned non-fatal error %d", new_err);
