@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 28
+#define AC_NUM_GROUP_COMMANDS 29
 #else
-#define AC_NUM_GROUP_COMMANDS 24
+#define AC_NUM_GROUP_COMMANDS 25
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -97,6 +97,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/quit"       },
     { "/rejoin"     },
     { "/requests"   },
+    { "/passwd"     },
     { "/status"     },
     { "/topic"      },
     { "/unignore"   },
@@ -552,8 +553,8 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uin
         case TOX_GJ_GROUP_FULL:
             msg = "Group is full. Try again with the 'rejoin' command.";
             break;
-        case TOX_GJ_INVITES_DISABLED:
-            msg = "Invites for this group have been disabled.";
+        case TOX_GJ_INCORRECT_PASSWORD:
+            msg = "Invalid password.";
             break;
         case TOX_GJ_INVITE_FAILED:
             msg = "Invite failed. Try again with the 'rejoin' command.";

@@ -34,6 +34,8 @@
 #include "misc_tools.h"
 #include "notify.h"
 
+#define MAX_NUM_ARGS 10     /* Includes command */
+
 struct cmd_func {
     const char *name;
     void (*func)(WINDOW *w, ToxWindow *, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
@@ -67,6 +69,7 @@ static struct cmd_func global_commands[] = {
 
 static struct cmd_func chat_commands[] = {
     { "/cancel",    cmd_cancelfile  },
+    { "/gaccept",   cmd_groupaccept },
     { "/invite",    cmd_groupinvite },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
@@ -84,6 +87,7 @@ static struct cmd_func chat_commands[] = {
 static struct cmd_func group_commands[] = {
     { "/chatid",    cmd_chatid      },
     { "/ignore",    cmd_ignore      },
+    { "/passwd",    cmd_set_passwd  },
     { "/rejoin",    cmd_rejoin      },
     { "/topic",     cmd_set_topic   },
     { "/unignore",  cmd_unignore    },
@@ -94,15 +98,14 @@ static struct cmd_func group_commands[] = {
     { NULL,         NULL            },
 };
 
-#define NUM_SPECIAL_COMMANDS 9
+#define NUM_SPECIAL_COMMANDS 8
 static const char special_commands[NUM_SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
-    "/ban",
-    "/deop",
+    "/gaccept",
     "/group",
     "/ignore",
     "/nick",
     "/note",
-    "/op",
+    "/passwd",
     "/topic",
     "/unignore"
 };
@@ -193,6 +196,10 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
         snprintf(tmp, sizeof(tmp), "%s", &cmd[i + 1]);
         strcpy(cmd, tmp);    /* tmp will always fit inside cmd */
     }
+
+    /* Ugly special case concatinates all args after arg1 for multi-word group passwords */
+    if (num_args > 2 && strcmp(args[0], "/join") == 0)
+        strcpy(args[2], input + strlen(args[0]) + 1 + strlen(args[1]) + 1);
 
     free(cmd);
     return num_args;

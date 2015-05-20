@@ -76,6 +76,42 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
 }
 
+void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    const char *passwd = NULL;
+    size_t len = 0;
+
+    if (argc > 0) {
+        passwd = argv[1];
+        len = strlen(passwd);
+    }
+
+    if (len > TOX_MAX_GROUP_PASSWD_SIZE) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password exceeds %d character limit", TOX_MAX_GROUP_PASSWD_SIZE);
+        return;
+    }
+
+    int ret = tox_group_set_password(m, self->num, (uint8_t *) passwd, len);
+
+    switch (ret) {
+        case 0: {
+            if (len > 0)
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password has been set to %s", passwd);
+            else
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password has been unset");
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the password");
+            return;
+        }
+        default: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error setting password");
+            return;
+        }
+    }
+}
+
 void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (tox_group_reconnect(m, self->num) == -1)
@@ -111,7 +147,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     char selfnick[TOX_MAX_NAME_LENGTH];
 
     get_time_str(timefrmt, sizeof(timefrmt));
-    
+
     tox_self_get_name(m, (uint8_t *) selfnick);
     size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';

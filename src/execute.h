@@ -26,8 +26,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-#define MAX_NUM_ARGS 4     /* Includes command */
-
 enum {
     GLOBAL_COMMAND_MODE,
     CHAT_COMMAND_MODE,

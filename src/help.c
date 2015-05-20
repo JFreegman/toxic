@@ -151,7 +151,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /group                     : Create a group chat\n");
-    wprintw(win, "  /join <chat id>            : Join a group chat\n");
+    wprintw(win, "  /join <chat id> <passwd>   : Join a group chat with optional password\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
@@ -184,6 +184,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "Chat Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
+    wprintw(win, "  /gaccept <password>        : Accept a group invite with optional password\n");
     wprintw(win, "  /sendfile <path>           : Send a file\n");
     wprintw(win, "  /savefile <id>             : Receive a file\n");
     wprintw(win, "  /cancel <type> <id>        : Cancel file transfer where type: in|out\n");
@@ -244,7 +245,8 @@ static void help_draw_group(ToxWindow *self)
 
     wprintw(win, "  /chatid                    : Print the group chat id to share with others.\n");
     wprintw(win, "  /ignore <nick>             : Ignore peer\n");
-    wprintw(win, "  /rejoin                    : Rejoin the group (only works if not connected)\n");
+    wprintw(win, "  /passwd <password>         : Set group password (leave blank to unset)\n");
+    wprintw(win, "  /rejoin                    : Rejoin the group\n");
     wprintw(win, "  /topic <msg>               : Set group topic (show current topic if no msg)\n");
     wprintw(win, "  /unignore <nick>           : Unignore peer \n");
     wprintw(win, "  /whisper <nick> <msg>      : Send private message to nick\n\n");
@@ -306,7 +308,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-            help_init_window(self, 6, 80);
+            help_init_window(self, 12, 80);
             self->help->type = HELP_GROUP;
             break;
 

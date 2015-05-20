@@ -355,23 +355,6 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     }
 }
 
-static void join_invite(ToxWindow *self, Tox *m)
-{
-    int groupnumber = tox_group_accept_invite(m, Friends.list[self->num].group_invite.data,
-                                              Friends.list[self->num].group_invite.length);
-
-    if (groupnumber == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
-        return;
-    }
-
-    if (init_groupchat_win(m, groupnumber, NULL, 0) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_group_delete(m, groupnumber, NULL, 0);
-        return;
-    }
-}
-
 void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
@@ -379,15 +362,9 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    /* If no input check for a group invite */
     if (argc < 1) {
-        if (!self->is_chat || Friends.list[self->num].group_invite.length == 0) {
-            const char *msg = "You must either be invited to a group or input the group ID of the group you wish to join.";
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
-            return;
-        }
-
-        return join_invite(self, m);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Chat ID is required.");
+        return;
     }
 
     const char *chat_id = argv[1];
@@ -416,10 +393,18 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         id_bin[i] = x;
     }
 
-    int groupnum = tox_group_new_join(m, (uint8_t *) id_bin);
+    const char *passwd = NULL;
+    uint16_t passwd_len = 0;
+
+    if (argc > 1) {
+        passwd = argv[2];
+        passwd_len = strlen(passwd);
+    }
+
+    int groupnum = tox_group_new_join(m, (uint8_t *) id_bin, (uint8_t *) passwd, passwd_len);
 
     if (groupnum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group.");
         return;
     }
 
