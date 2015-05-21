@@ -2,10 +2,10 @@ env:
   secure: m+RsGCgemJNMKbinD97PtjC1pUuFzDBrAol3tI6Z3xP1FE2qF0/efbcC5OyNwUWwcaqGRb83d0vWt4hzhxMwrwJC8O6EFLFHgJs0WpslP+++KRN30PUOqRFFqH404InF4pFNULlnwJYFZ8bGft4ThxppbEOeSYcXN4WSgb66RjM=
 
 before_script:
- - sudo apt-get install curl
+ - sudo apt-get install wget
 
 script:
-  - curl https://jenkins.libtoxcore.so/job/toxic_linux_beta/build?token=$TOKEN
+  - wget -O temp https://jenkins.libtoxcore.so/job/toxic_linux_beta/build?token=$TOKEN && cat temp
 
 notifications:
   email: false
