@@ -88,6 +88,7 @@ static struct cmd_func group_commands[] = {
     { "/chatid",    cmd_chatid      },
     { "/ignore",    cmd_ignore      },
     { "/passwd",    cmd_set_passwd  },
+    { "/privacy",   cmd_set_privacy },
     { "/rejoin",    cmd_rejoin      },
     { "/topic",     cmd_set_topic   },
     { "/unignore",  cmd_unignore    },

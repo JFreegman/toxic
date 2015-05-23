@@ -112,6 +112,51 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     }
 }
 
+void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    const char *pstate_str = NULL;
+    TOX_GROUP_PRIVACY_STATE privacy_state;
+
+    if (argc < 1) {
+        privacy_state = tox_group_get_privacy_state(m, self->num);
+
+        if (privacy_state == TOX_GP_INVALID) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve privacy state");
+            return;
+        }
+
+        pstate_str = privacy_state == TOX_GP_PRIVATE ? "private" : "public";
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Privacy state is set to %s.", pstate_str);
+        return;
+    }
+
+    pstate_str = argv[1];
+
+    if (strcasecmp(pstate_str, "private") != 0 && strcasecmp(pstate_str, "public") != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Privacy state must be \"private\" or \"public\".");
+        return;
+    }
+
+    privacy_state = strcasecmp(pstate_str, "private") == 0 ? TOX_GP_PRIVATE : TOX_GP_PUBLIC;
+
+    int ret = tox_group_set_privacy_state(m, self->num, privacy_state);
+
+    switch (ret) {
+        case 0: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Privacy state has been set to %s.", pstate_str);
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the privacy state.");
+            return;
+        }
+        default: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error setting privacy state.");
+            return;
+        }
+    }
+}
+
 void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (tox_group_reconnect(m, self->num) == -1)
