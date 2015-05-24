@@ -640,7 +640,11 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                                  (uint8_t *) plain, &pwerr);
 
                 if (pwerr == TOX_ERR_DECRYPTION_OK) {
-                    m = tox_new(tox_opts, (uint8_t *) plain, plain_len, new_err);
+                    tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
+                    tox_opts->savedata_data = (uint8_t *) plain;
+                    tox_opts->savedata_length = plain_len;
+
+                    m = tox_new(tox_opts, new_err);
 
                     if (m == NULL) {
                         fclose(fp);
@@ -658,7 +662,11 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 }
             }
         } else {   /* data is not encrypted */
-            m = tox_new(tox_opts, (uint8_t *) data, len, new_err);
+            tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
+            tox_opts->savedata_data = (uint8_t *) data;
+            tox_opts->savedata_length = len;
+
+            m = tox_new(tox_opts, new_err);
 
             if (m == NULL) {
                 fclose(fp);
@@ -671,7 +679,9 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         if (file_exists(data_path))
             exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
 
-        m = tox_new(tox_opts, NULL, 0, new_err);
+        tox_opts->savedata_type = TOX_SAVEDATA_TYPE_NONE;
+
+        m = tox_new(tox_opts, new_err);
 
         if (m == NULL)
             return NULL;
