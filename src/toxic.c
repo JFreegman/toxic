@@ -305,14 +305,34 @@ static int load_nodelist(const char *filename)
     return 0;
 }
 
+/* Bootstraps and adds as TCP relay.
+ * Returns 0 if both actions are successful.
+ * Returns -1 otherwise.
+ */
 int init_connection_helper(Tox *m, int line)
 {
-    return tox_bootstrap(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], NULL);
+    TOX_ERR_BOOTSTRAP err;
+    tox_bootstrap(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], &err);
+
+    if (err != TOX_ERR_BOOTSTRAP_OK) {
+        fprintf(stderr, "Failed to bootstrap %s:%d\n", toxNodes.nodes[line], toxNodes.ports[line]);
+        return -1;
+    }
+
+    tox_add_tcp_relay(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], &err);
+
+    if (err != TOX_ERR_BOOTSTRAP_OK) {
+        fprintf(stderr, "Failed to add TCP relay %s:%d\n", toxNodes.nodes[line], toxNodes.ports[line]);
+        return -1;
+    }
+
+    return 0;
 }
 
 /* Connects to a random DHT node listed in the DHTnodes file
  *
  * return codes:
+ * 0: success
  * 1: failed to open node file
  * 2: no line of sufficient length in node file
  * 3: failed to resolve name to IP
@@ -324,8 +344,10 @@ static bool srvlist_loaded = false;
 
 int init_connection(Tox *m)
 {
-    if (toxNodes.lines > 0) /* already loaded nodelist */
-        return init_connection_helper(m, rand() % toxNodes.lines) ? 0 : 3;
+    if (toxNodes.lines > 0) { /* already loaded nodelist */
+        init_connection_helper(m, rand() % toxNodes.lines);
+        return 0;
+    }
 
     /* only once:
      * - load the nodelist
@@ -348,7 +370,7 @@ int init_connection(Tox *m)
         int n = MIN(NUM_INIT_NODES, toxNodes.lines);
 
         for (i = 0; i < n; ++i) {
-            if (init_connection_helper(m, rand() % toxNodes.lines))
+            if (init_connection_helper(m, rand() % toxNodes.lines) == 0)
                 res = 0;
         }
 

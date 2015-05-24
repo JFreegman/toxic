@@ -260,6 +260,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     TOX_ERR_BOOTSTRAP err;
     tox_bootstrap(m, ip, atoi(port), (uint8_t *) binary_string, &err);
+    tox_add_tcp_relay(m, ip, atoi(port), (uint8_t *) binary_string, &err);
     free(binary_string);
 
     switch (err) {
