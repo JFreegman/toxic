@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 30
+#define AC_NUM_GROUP_COMMANDS 31
 #else
-#define AC_NUM_GROUP_COMMANDS 26
+#define AC_NUM_GROUP_COMMANDS 27
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -95,6 +95,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/nick"       },
     { "/note"       },
     { "/passwd"     },
+    { "/peerlimit"  },
     { "/privacy"    },
     { "/quit"       },
     { "/rejoin"     },

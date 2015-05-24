@@ -21,6 +21,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -107,6 +108,47 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         }
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error setting password");
+            return;
+        }
+    }
+}
+
+void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    int maxpeers = 0;
+
+    if (argc < 1) {
+        maxpeers = tox_group_get_peer_limit(m, self->num);
+
+        if (maxpeers == -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve peer limit");
+            return;
+        }
+
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer limit is set to %d", maxpeers);
+        return;
+    }
+
+    maxpeers = atoi(argv[1]);
+
+    if (maxpeers <= 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer limit must be a value greater than 0");
+        return;
+    }
+
+    int ret = tox_group_set_peer_limit(m, self->num, (uint32_t) maxpeers);
+
+    switch (ret) {
+        case 0: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer limit has been set to %d", maxpeers);
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the peer limit.");
+            return;
+        }
+        default: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set the peer limit");
             return;
         }
     }
