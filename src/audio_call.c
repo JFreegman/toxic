@@ -37,6 +37,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #ifdef __APPLE__
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
@@ -237,7 +243,7 @@ int start_transmission(ToxWindow *self, Call *call)
     if ( register_device_callback(self->num, call->in_idx,
          read_device_callback, &self->num, true) != de_None)
         /* Set VAD as true for all; TODO: Make it more dynamic */
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to register input handler!"));
 
     if ( open_primary_device(output, &call->out_idx,
             CallContrl.audio_sample_rate, CallContrl.audio_frame_duration, CallContrl.audio_channels) != de_None ) {
@@ -559,8 +565,7 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         goto on_error;
     }
 
-    self->is_call = call_running;
-    callback_recv_ringing(CallContrl.av, self->num, &CallContrl);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Calling... idx: %d"), self->call_idx);
 
     return;
 on_error:
@@ -689,8 +694,8 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     const char *error_str;
 
     if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else error_str = "Only one argument allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else error_str = gettext("Only one argument allowed!");
 
         goto on_error;
     }
@@ -704,7 +709,7 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -721,9 +726,9 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     const char *error_str;
 
     if ( argc != 2 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else if ( argc < 2 ) error_str = "Must have id!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else if ( argc < 2 ) error_str = gettext("Must have id!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -737,7 +742,7 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -746,12 +751,12 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     long int selection = strtol(argv[2], &end, 10);
 
     if ( *end ) {
-        error_str = "Invalid input";
+        error_str = gettext("Invalid input");
         goto on_error;
     }
 
     if ( set_primary_device(type, selection) == de_InvalidSelection ) {
-        error_str="Invalid selection!";
+        error_str=gettext("Invalid selection!");
         goto on_error;
     }
 
@@ -765,9 +770,9 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     const char *error_str;
 
     if ( argc != 2 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else if ( argc < 2 ) error_str = "Must have id!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else if ( argc < 2 ) error_str = gettext("Must have id!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -781,7 +786,7 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -790,12 +795,12 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     long int selection = strtol(argv[2], &end, 10);
 
     if ( *end ) {
-        error_str = "Invalid input";
+        error_str = gettext("Invalid input");
         goto on_error;
     }
 
     if ( selection_valid(type, selection) == de_InvalidSelection ) {
-        error_str="Invalid selection!";
+        error_str=gettext("Invalid selection!");
         goto on_error;
     }
 
@@ -836,8 +841,8 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     const char *error_str;
 
     if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -851,7 +856,7 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -882,8 +887,8 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     const char *error_str;
 
     if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Must have value!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Must have value!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -892,7 +897,7 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     float value = strtof(argv[1], &end);
 
     if ( *end ) {
-        error_str = "Invalid input";
+        error_str = gettext("Invalid input");
         goto on_error;
     }
 

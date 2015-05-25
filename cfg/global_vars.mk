@@ -13,6 +13,7 @@ DOC_DIR = $(BASE_DIR)/doc
 SRC_DIR = $(BASE_DIR)/src
 SND_DIR = $(BASE_DIR)/sounds
 MISC_DIR = $(BASE_DIR)/misc
+TRANSLATIONS_DIR = $(BASE_DIR)/translations
 
 # Project files
 MANFILES = toxic.1 toxic.conf.5
@@ -22,9 +23,13 @@ SNDFILES = ToxicContactOnline.wav ToxicContactOffline.wav ToxicError.wav
 SNDFILES += ToxicRecvMessage.wav ToxicOutgoingCall.wav ToxicIncomingCall.wav
 SNDFILES += ToxicTransferComplete.wav ToxicTransferStart.wav
 
+# Available languages (sorted alphabetically)
+LANGS = en it
+
 # Install directories
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/share/man
 APPDIR = $(PREFIX)/share/applications
+LOCALEDIR = ${PREFIX}/share/locale
