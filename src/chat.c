@@ -596,7 +596,8 @@ void chat_onStarting (ToxWindow *self, ToxAV *av, uint32_t friend_number, int st
     self->is_call = true;
 
     init_infobox(self);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call started! Type: \"/hangup\" to end it.");
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Call started! Type: \"%s\" to end it."), "/hangup");
 
 #ifdef SOUND_NOTIFY
     stop_sound(self->ringing_sound);

@@ -1,10 +1,14 @@
+# English translations for Toxic package.
+# Copyright (C) 2015 Toxic Team
+# This file is distributed under the same license as the Toxic package.
+# Automatically generated, 2015.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Toxic 0.6.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-28 15:47+0200\n"
-"PO-Revision-Date: 2015-05-26 11:37+0200\n"
+"Report-Msgid-Bugs-To: JFreegman@tox.im\n"
+"POT-Creation-Date: 2015-05-30 11:30+0200\n"
+"PO-Revision-Date: 2015-05-30 11:30+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "MIME-Version: 1.0\n"
@@ -695,14 +699,9 @@ msgid "No pending friend request with that ID."
 msgstr "No pending friend request with that ID."
 
 #: ../src/global_commands.c:75
-#, fuzzy, c-format
-#| msgid ""
-#| "Failed to add friend (error %d\n"
-#| ")"
+#, c-format
 msgid "Failed to add friend (error %d)\n"
-msgstr ""
-"Failed to add friend (error %d\n"
-")"
+msgstr "Failed to add friend (error %d)\n"
 
 #: ../src/global_commands.c:78
 msgid "Friend request accepted."
@@ -1585,13 +1584,11 @@ msgstr "WARNING: Failed to save to data file"
 
 #: ../src/toxic.h:43
 msgid "Anonymous"
-msgstr ""
+msgstr "Anonymous"
 
 #: ../src/toxic.h:44
-#, fuzzy
-#| msgid "Toxic User"
 msgid "Tox User"
-msgstr "Toxic User"
+msgstr "Tox User"
 
 #: ../src/windows.c:368
 msgid "failed in set_next_window"
