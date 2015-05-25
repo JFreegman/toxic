@@ -22,6 +22,12 @@
 
 #include <string.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #include "windows.h"
 #include "toxic.h"
 #include "help.h"
@@ -139,32 +145,50 @@ static void help_draw_global(ToxWindow *self)
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Global Commands:\n");
+    wprintw(win, gettext("Global Commands:\n"));
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /add <addr> <msg>          : Add contact with optional message\n");
-    wprintw(win, "  /accept <id>               : Accept friend request\n");
-    wprintw(win, "  /avatar <path>             : Set an avatar (leave path empty to unset)\n");
-    wprintw(win, "  /decline <id>              : Decline friend request\n");
-    wprintw(win, "  /requests                  : List pending friend requests\n");
-    wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
-    wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
-    wprintw(win, "  /note <msg>                : Set a personal note\n");
-    wprintw(win, "  /nick <nick>               : Set your nickname\n");
-    wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
-    wprintw(win, "  /group <type>              : Create a group chat where type: text | audio\n");
-    wprintw(win, "  /myid                      : Print your Tox ID\n");
-    wprintw(win, "  /clear                     : Clear window history\n");
-    wprintw(win, "  /close                     : Close the current chat window\n");
-    wprintw(win, "  /quit or /exit             : Exit Toxic\n");
+    wprintw(win, "  /add <ToxID> <msg>         : ");
+    wprintw(win, gettext("Add contact with optional message\n"));
+    wprintw(win, "  /accept <id>               : ");
+    wprintw(win, gettext("Accept friend request\n"));
+    wprintw(win, "  /avatar <path>             : ");
+    wprintw(win, gettext("Set an avatar (leave path empty to unset)\n"));
+    wprintw(win, "  /decline <id>              : ");
+    wprintw(win, gettext("Decline friend request\n"));
+    wprintw(win, "  /requests                  : ");
+    wprintw(win, gettext("List pending friend requests\n"));
+    wprintw(win, "  /connect <ip> <port> <key> : ");
+    wprintw(win, gettext("Manually connect to a DHT node\n"));
+    wprintw(win, "  /status <type> <msg>       : ");
+    wprintw(win, gettext("Set status with optional note\n"));
+    wprintw(win, "  /note <msg>                : ");
+    wprintw(win, gettext("Set a personal note\n"));
+    wprintw(win, "  /nick <nick>               : ");
+    wprintw(win, gettext("Set your nickname\n"));
+    wprintw(win, "  /log <on> or <off>         : ");
+    wprintw(win, gettext("Enable/disable logging\n"));
+    wprintw(win, "  /group <type>              : ");
+    wprintw(win, gettext("Create a group chat where type: text | audio\n"));
+    wprintw(win, "  /myid                      : ");
+    wprintw(win, gettext("Print your Tox ID\n"));
+    wprintw(win, "  /clear                     : ");
+    wprintw(win, gettext("Clear window history\n"));
+    wprintw(win, "  /close                     : ");
+    wprintw(win, gettext("Close the current chat window\n"));
+    wprintw(win, "  /quit or /exit             : ");
+    wprintw(win, gettext("Exit Toxic\n"));
 
 #ifdef AUDIO
     wattron(win, A_BOLD);
-    wprintw(win, "\n Audio:\n");
+    wprintw(win, gettext("\n Audio:\n"));
     wattroff(win, A_BOLD);
 
-    wprintw(win, "  /lsdev <type>              : List devices where type: in|out\n");
-    wprintw(win, "  /sdev <type> <id>          : Set active device\n");
+    wprintw(win, "  /lsdev <type>              : ");
+    wprintw(win, gettext("List devices where type:"));
+    wprintw(win, " in|out\n");
+    wprintw(win, "  /sdev <type> <id>          : ");
+    wprintw(win, gettext("Set active device\n"));
 #endif /* AUDIO */
 
     help_draw_bottom_menu(win);
@@ -180,27 +204,40 @@ static void help_draw_chat(ToxWindow *self)
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Chat Commands:\n");
+    wprintw(win, gettext("Chat Commands:\n"));
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /invite <n>                : Invite contact to a group chat\n");
-    wprintw(win, "  /join                      : Join a pending group chat\n");
-    wprintw(win, "  /sendfile <path>           : Send a file\n");
-    wprintw(win, "  /savefile <id>             : Receive a file\n");
-    wprintw(win, "  /cancel <type> <id>        : Cancel file transfer where type: in|out\n");
+    wprintw(win, "  /invite <n>                : ");
+    wprintw(win, gettext("Invite contact to a group chat\n"));
+    wprintw(win, "  /join                      : ");
+    wprintw(win, gettext("Join a pending group chat\n"));
+    wprintw(win, "  /sendfile <path>           : ");
+    wprintw(win, gettext("Send a file\n"));
+    wprintw(win, "  /savefile <id>             : ");
+    wprintw(win, gettext("Receive a file\n"));
+    wprintw(win, "  /cancel <type> <id>        : ");
+    wprintw(win, gettext("Cancel file transfer where type:"));
+    wprintw(win, " in|out\n");
 
 #ifdef AUDIO
     wattron(win, A_BOLD);
-    wprintw(win, "\n Audio:\n");
+    wprintw(win, gettext("\n Audio:\n"));
     wattroff(win, A_BOLD);
 
-    wprintw(win, "  /call                      : Audio call\n");
-    wprintw(win, "  /answer                    : Answer incoming call\n");
-    wprintw(win, "  /reject                    : Reject incoming call\n");
-    wprintw(win, "  /hangup                    : Hangup active call\n");
-    wprintw(win, "  /sdev <type> <id>          : Change active device\n");
-    wprintw(win, "  /mute <type>               : Mute active device if in call\n");
-    wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n");
+    wprintw(win, "  /call                      : ");
+    wprintw(win, gettext("Audio call\n"));
+    wprintw(win, "  /answer                    : ");
+    wprintw(win, gettext("Answer incoming call\n"));
+    wprintw(win, "  /reject                    : ");
+    wprintw(win, gettext("Reject incoming call\n"));
+    wprintw(win, "  /hangup                    : ");
+    wprintw(win, gettext("Hangup active call\n"));
+    wprintw(win, "  /sdev <type> <id>          : ");
+    wprintw(win, gettext("Change active device\n"));
+    wprintw(win, "  /mute <type>               : ");
+    wprintw(win, gettext("Mute active device if in call\n"));
+    wprintw(win, "  /sense <n>                 : ");
+    wprintw(win, gettext("VAD sensitivity threshold\n"));
 #endif /* AUDIO */
 
     help_draw_bottom_menu(win);
@@ -216,16 +253,22 @@ static void help_draw_keys(ToxWindow *self)
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Key bindings:\n");
+    wprintw(win, gettext("Key bindings:\n"));
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  Ctrl+O and Ctrl+P         : Navigate through the tabs\n");
-    wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
-    wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
-    wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
-    wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n");
-    wprintw(win, "  Ctrl+B                    : Toggle the groupchat peerlist\n\n");
-    wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
+    wprintw(win, "  Ctrl+O -- Ctrl+P          : ");
+    wprintw(win, gettext("Navigate through the tabs\n"));
+    wprintw(win, "  Page Up -- Page Down      : ");
+    wprintw(win, gettext("Scroll window history one line\n"));
+    wprintw(win, "  Ctrl+F -- Ctrl+V          : ");
+    wprintw(win, gettext("Scroll window history half a page\n"));
+    wprintw(win, "  Ctrl+H                    : ");
+    wprintw(win, gettext("Move to the bottom of window history\n"));
+    wprintw(win, "  Ctrl+[ -- Ctrl+]          : ");
+    wprintw(win, gettext("Scroll peer list in groupchats\n"));
+    wprintw(win, "  Ctrl+B                    : ");
+    wprintw(win, gettext("Toggle the groupchat peerlist\n\n"));
+    wprintw(win, gettext("  (Note: Custom keybindings override these defaults.)\n\n"));
 
     help_draw_bottom_menu(win);
 
@@ -240,10 +283,11 @@ static void help_draw_group(ToxWindow *self)
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Group commands:\n");
+    wprintw(win, gettext("Group commands:\n"));
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /title <msg>               : Set group title (show current title if no msg)\n\n");
+    wprintw(win, "  /title <msg>               : ");
+    wprintw(win, gettext("Set group title (show current title if no msg)\n\n"));
 
     help_draw_bottom_menu(win);
 
@@ -258,14 +302,15 @@ static void help_draw_contacts(ToxWindow *self)
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Friendlist controls:\n");
+    wprintw(win, gettext("Friendlist controls:\n"));
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  Up and Down arrows            : Scroll through list\n");
-    wprintw(win, "  Right and Left arrows         : Switch between friendlist and blocked list\n");
-    wprintw(win, "  Enter                         : Open a chat window with selected contact\n");
-    wprintw(win, "  Delete                        : Permanently delete a contact\n");
-    wprintw(win, "  B                             : Block or unblock a contact\n");
+    wprintw(win, gettext("  Up and Down arrows            : Scroll through list\n"));
+    wprintw(win, gettext("  Right and Left arrows         : Switch between friendlist and blocked list\n"));
+    wprintw(win, gettext("  Enter                         : Open a chat window with selected contact\n"));
+    wprintw(win, gettext("  Delete                        : Permanently delete a contact\n"));
+    wprintw(win, "  B                             : ");
+    wprintw(win, gettext("Block or unblock a contact\n"));
 
     help_draw_bottom_menu(win);
 

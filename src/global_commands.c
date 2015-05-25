@@ -24,6 +24,12 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #include "toxic.h"
 #include "windows.h"
 #include "misc_tools.h"
@@ -46,19 +52,19 @@ extern FriendRequests FrndRequests;
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Request ID required."));
         return;
     }
 
     int req = atoi(argv[1]);
 
     if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req > MAX_FRIEND_REQUESTS) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("No pending friend request with that ID."));
         return;
     }
 
     if (!FrndRequests.request[req].active) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("No pending friend request with that ID."));
         return;
     }
 
@@ -66,10 +72,10 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     uint32_t friendnum = tox_friend_add_norequest(m, FrndRequests.request[req].key, &err);
 
     if (err != TOX_ERR_FRIEND_ADD_OK) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to add friend (error %d\n)", err);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to add friend (error %d)\n"), err);
         return;
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Friend request accepted.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Friend request accepted."));
         on_friendadded(m, friendnum, true);
     }
 
@@ -96,42 +102,42 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 
     switch (err) {
         case TOX_ERR_FRIEND_ADD_TOO_LONG:
-            errmsg = "Message is too long.";
+            errmsg = gettext("Message is too long.");
             break;
 
         case TOX_ERR_FRIEND_ADD_NO_MESSAGE:
-            errmsg = "Please add a message to your request.";
+            errmsg = gettext("Please add a message to your request.");
             break;
 
         case TOX_ERR_FRIEND_ADD_OWN_KEY:
-            errmsg = "That appears to be your own ID.";
+            errmsg = gettext("That appears to be your own ID.");
             break;
 
         case TOX_ERR_FRIEND_ADD_ALREADY_SENT:
-            errmsg = "Friend request has already been sent.";
+            errmsg = gettext("Friend request has already been sent.");
             break;
 
         case TOX_ERR_FRIEND_ADD_BAD_CHECKSUM:
-            errmsg = "Bad checksum in address.";
+            errmsg = gettext("Bad checksum in address.");
             break;
 
         case TOX_ERR_FRIEND_ADD_SET_NEW_NOSPAM:
-            errmsg = "Nospam was different.";
+            errmsg = gettext("Nospam was different.");
             break;
 
         case TOX_ERR_FRIEND_ADD_MALLOC:
-            errmsg = "Core memory allocation failed.";
+            errmsg = gettext("Core memory allocation failed.");
             break;
 
         case TOX_ERR_FRIEND_ADD_OK:
-            errmsg = "Friend request sent.";
+            errmsg = gettext("Friend request sent.");
             on_friendadded(m, f_num, true);
             break;
 
         case TOX_ERR_FRIEND_ADD_NULL:
         /* fallthrough */
         default:
-            errmsg = "Faile to add friend: Unknown error.";
+            errmsg = gettext("Failed to add friend: Unknown error.");
             break;
     }
 
@@ -141,7 +147,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Tox ID or address required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Tox ID or address required."));
         return;
     }
 
@@ -150,7 +156,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     if (argc > 1) {
         if (argv[2][0] != '\"') {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Message must be enclosed in quotes.");
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Message must be enclosed in quotes."));
             return;
         }
 
@@ -166,7 +172,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
         size_t n_len = tox_self_get_name_size(m);
         selfname[n_len] = '\0';
-        snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
+        snprintf(msg, sizeof(msg), gettext("Hello, my name is %s. Care to Tox?"), selfname);
     }
 
     char id_bin[TOX_ADDRESS_SIZE] = {0};
@@ -184,7 +190,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             xx[2] = '\0';
 
             if (sscanf(xx, "%02x", &x) != 1) {
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid Tox ID.");
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid Tox ID."));
                 return;
             }
 
@@ -201,12 +207,12 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 {
     if (argc < 2 || strlen(argv[1]) < 3) {
         avatar_unset(m);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar is not set.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Avatar is not set."));
         return;
     }
 
     if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Path must be enclosed in quotes."));
         return;
     }
 
@@ -216,7 +222,7 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     int len = strlen(path) - 1;
 
     if (len <= 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid path.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid path."));
         return;
     }
 
@@ -226,12 +232,12 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if (avatar_set(m, path, len) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
-                      "Failed to set avatar. Avatars must be in PNG format and may not exceed %d bytes.",
+                      gettext("Failed to set avatar. Avatars must be in PNG format and may not exceed %d bytes."),
                       MAX_AVATAR_FILE_SIZE);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Avatar set to '%s'"), filename);
 }
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -243,7 +249,7 @@ void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc != 3) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Require: <ip> <port> <key>");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Require: <ip> <port> <key>"));
         return;
     }
 
@@ -252,7 +258,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     const char *key = argv[3];
 
     if (atoi(port) == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid port.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid port."));
         return;
     }
 
@@ -265,15 +271,15 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     switch (err) {
         case TOX_ERR_BOOTSTRAP_BAD_HOST:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed: Invalid IP.");
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Bootstrap failed: Invalid IP."));
             break;
 
         case TOX_ERR_BOOTSTRAP_BAD_PORT:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed: Invalid port.");
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Bootstrap failed: Invalid port."));
             break;
 
         case TOX_ERR_BOOTSTRAP_NULL:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed.");
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Bootstrap failed."));
             break;
         default:
             break;
@@ -283,19 +289,19 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Request ID required."));
         return;
     }
 
     int req = atoi(argv[1]);
 
     if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req > MAX_FRIEND_REQUESTS) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("No pending friend request with that ID."));
         return;
     }
 
     if (!FrndRequests.request[req].active) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("No pending friend request with that ID."));
         return;
     }
 
@@ -315,12 +321,12 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext(" * Warning: Too many windows are open."));
         return;
     }
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify group type: text | audio");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Please specify group type: %s"), "text|audio");
         return;
     }
 
@@ -331,7 +337,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     else if (!strcasecmp(argv[1], "text"))
         type = TOX_GROUPCHAT_TYPE_TEXT;
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid group types are: text | audio");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Valid group types are: %s"), "text|audio");
         return;
     }
 
@@ -345,17 +351,17 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 #endif
 
     if (groupnum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Group chat instance failed to initialize."));
         return;
     }
 
     if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Group chat window failed to initialize."));
         tox_del_groupchat(m, groupnum);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat [%d] created.", groupnum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Group chat [%d] created."), groupnum);
 }
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -365,9 +371,9 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     if (argc == 0) {
         if (log->log_on)
-            msg = "Logging for this window is ON. Type \"/log off\" to disable.";
+            msg = gettext("Logging for this window is ON. Type \"/log off\" to disable.");
         else
-            msg = "Logging for this window is OFF. Type \"/log on\" to enable.";
+            msg = gettext("Logging for this window is OFF. Type \"/log on\" to enable.");
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
@@ -388,7 +394,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             log_enable(self->name, myid, NULL, log, LOG_GROUP);
         }
 
-        msg = "Logging enabled";
+        msg = gettext("Logging enabled");
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
@@ -397,13 +403,13 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
         log_disable(log);
 
-        msg = "Logging disabled";
+        msg = gettext("Logging disabled");
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     }
 
-    msg = "Invalid option. Use \"/log on\" and \"/log off\" to toggle logging.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    msg = gettext("Invalid option. Use \"%s\" to toggle logging.");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg, "/log on|off");
 }
 
 void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -426,7 +432,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Input required."));
         return;
     }
 
@@ -443,7 +449,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     if (!valid_nick(nick)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid name.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid name."));
         return;
     }
 
@@ -459,12 +465,12 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Input required."));
         return;
     }
 
     if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Note must be enclosed in quotes."));
         return;
     }
 
@@ -490,7 +496,7 @@ void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (FrndRequests.num_requests == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend requests.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("No pending friend requests."));
         return;
     }
 
@@ -527,8 +533,8 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     if (argc >= 2) {
         have_note = true;
     } else if (argc < 1) {
-        errmsg = "Require a status. Statuses are: online, busy and away.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        errmsg = gettext("Require a status. Statuses are: %s.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg, "online|busy|away");
         goto finish;
     }
 
@@ -542,8 +548,8 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     else if (!strcasecmp(status_str, "busy"))
         status = TOX_USER_STATUS_BUSY;
     else {
-        errmsg = "Invalid status. Valid statuses are: online, busy and away.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        errmsg = gettext("Invalid status. Valid statuses are: %s.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg, "online|busy|away");
         goto finish;
     }
 
@@ -552,7 +558,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if (have_note) {
         if (argv[2][0] != '\"') {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Note must be enclosed in quotes."));
             goto finish;
         }
 
