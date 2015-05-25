@@ -1,4 +1,4 @@
-/*  audio_call.h
+/*  video_call.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,32 +20,26 @@
  *
  */
 
-#ifndef AUDIO_H
-#define AUDIO_H
+#ifndef VIDEO_H
+#define VIDEO_H
 
 #include <tox/toxav.h>
 
-#include "audio_device.h"
+#include "audio_call.h"
+#include "video_device.h"
 
-typedef enum _AudioError {
-    ae_None = 0,
-    ae_StartingCaptureDevice = 1 << 0,
-    ae_StartingOutputDevice = 1 << 1,
-    ae_StartingCoreAudio = 1 << 2
-} AudioError;
-
-typedef struct Call {
-    pthread_t ttid; /* Transmission thread id */
-    bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
-    uint32_t in_idx, out_idx;
-    pthread_mutex_t mutex;
-} Call;
+typedef enum _VideoError {
+    ve_None = 0,
+    ve_StartingCaptureDevice = 1 << 0,
+    ve_StartingOutputDevice = 1 << 1,
+    ve_StartingCoreVideo = 1 << 2
+} VideoError;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
-ToxAv *init_audio(ToxWindow *self, Tox *tox);
-void terminate_audio();
-int start_transmission(ToxWindow *self, Call *call);
-int stop_transmission(Call *call, int call_index);
-void stop_current_call(ToxWindow *self);
+ToxAv *init_video(ToxWindow *self, Tox *tox, ToxAv *av);
+void terminate_video();
+int start_video_transmission(ToxWindow *self, Call *call);
+int stop_video_transmission(Call *call, int call_index);
+void stop_current_video_call(ToxWindow *self);
 
-#endif /* AUDIO_H */
+ #endif /* VIDEO_H */

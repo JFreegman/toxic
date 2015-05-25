@@ -1,4 +1,4 @@
-/*  device.c
+/*  audio_device.c
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,7 +20,7 @@
  *
  */
 
-#include "device.h"
+#include "audio_device.h"
 
 #ifdef AUDIO
 #include "audio_call.h"

@@ -31,7 +31,7 @@
 #include <sys/stat.h>
 
 #include "notify.h"
-#include "device.h"
+#include "audio_device.h"
 #include "settings.h"
 #include "line_info.h"
 #include "misc_tools.h"

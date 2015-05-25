@@ -23,7 +23,7 @@
 #include "toxic.h"
 #include "windows.h"
 #include "audio_call.h"
-#include "device.h"
+#include "audio_device.h"
 #include "chat_commands.h"
 #include "global_commands.h"
 #include "line_info.h"
@@ -69,7 +69,7 @@ static int set_call(Call* call, bool start)
     else {
         call->ttid = 0;
         if (pthread_mutex_destroy(&call->mutex) != 0)
-            return -1;
+               return -1;
     }
 
     return 0;

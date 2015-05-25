@@ -101,6 +101,12 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/mute"       },
     { "/sense"      },
 
+#ifdef VIDEO
+
+    { "/enablevid"      },
+    { "/disablevid"     },
+
+#endif /* VIDEO */
 #endif /* AUDIO */
 };
 

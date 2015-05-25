@@ -54,7 +54,8 @@
 #include "settings.h"
 #include "log.h"
 #include "notify.h"
-#include "device.h"
+#include "audio_device.h"
+#include "video_device.h"
 #include "message_queue.h"
 #include "execute.h"
 #include "term_mplex.h"
@@ -65,6 +66,9 @@
 
 #ifdef AUDIO
 #include "audio_call.h"
+#ifdef VIDEO
+#include "video_call.h"
+#endif /* VIDEO */
 ToxAv *av;
 #endif /* AUDIO */
 
@@ -130,6 +134,10 @@ void exit_toxic_success(Tox *m)
 #ifdef AUDIO
     terminate_audio();
 #endif /* AUDIO */
+
+#ifdef VIDEO
+    terminate_video();
+#endif /* VIDEO */
 
     free(DATA_FILE);
     free(BLOCK_FILE);
@@ -1131,6 +1139,11 @@ int main(int argc, char *argv[])
 #ifdef AUDIO
 
     av = init_audio(prompt, m);
+    
+#ifdef VIDEO
+    av = init_video(prompt, m, av);
+
+#endif /* VIDEO*/
 
     /* audio thread */
     if (pthread_create(&audio_thread.tid, NULL, thread_audio, (void *) av) != 0)

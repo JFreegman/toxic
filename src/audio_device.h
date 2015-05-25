@@ -1,4 +1,4 @@
-/*  device.h
+/*  audio_device.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -26,8 +26,8 @@
  * Read from running input device(s) via select()/callback combo.
  */
 
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef AUDIO_DEVICE_H
+#define AUDIO_DEVICE_H
 
 #define OPENAL_BUFS 5
 #define MAX_DEVICES 32
@@ -88,4 +88,4 @@ void print_devices(ToxWindow* self, DeviceType type);
 void get_primary_device_name(DeviceType type, char *buf, int size);
 
 DeviceError selection_valid(DeviceType type, int32_t selection);
-#endif /* DEVICE_H */
+#endif /* AUDIO_DEVICE_H */
