@@ -37,6 +37,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #ifdef __APPLE__
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
@@ -124,7 +130,7 @@ ToxAv *init_audio(ToxWindow *self, Tox *tox)
     }
 
     if ( init_devices(ASettins.av) == de_InternalError ) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to init devices"));
         toxav_kill(ASettins.av);
         return ASettins.av = NULL;
     }
@@ -167,7 +173,7 @@ void read_device_callback (const int16_t* captured, uint32_t size, void* data)
     uint8_t encoded_payload[RTP_PAYLOAD_SIZE];
     int32_t payload_size = toxav_prepare_audio_frame(ASettins.av, call_index, encoded_payload, RTP_PAYLOAD_SIZE, captured, size);
     if ( payload_size <= 0 || toxav_send_audio(ASettins.av, call_index, encoded_payload, payload_size) < 0 ) {
-        /*fprintf(stderr, "Could not encode audio packet\n");*/
+        /*fprintf(stderr, gettext("Could not encode audio packet\n"));*/
     }
 }
 
@@ -186,13 +192,13 @@ void write_device_callback(void *agent, int32_t call_index, const int16_t* PCM, 
 int start_transmission(ToxWindow *self, Call *call)
 {
     if ( !self || !ASettins.av || self->call_idx == -1 ) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Could not prepare transmission"));
         return -1;
     }
 
     /* Don't provide support for video */
     if ( 0 != toxav_prepare_transmission(ASettins.av, self->call_idx, 0) ) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Could not prepare transmission");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Could not prepare transmission"));
         return -1;
     }
 
@@ -208,16 +214,16 @@ int start_transmission(ToxWindow *self, Call *call)
 
     if ( open_primary_device(input, &call->in_idx,
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None )
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input device!");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to open input device!"));
 
     if ( register_device_callback(self->call_idx, call->in_idx,
          read_device_callback, &self->call_idx, true) != de_None)
         /* Set VAD as true for all; TODO: Make it more dynamic */
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to register input handler!"));
 
     if ( open_primary_device(output, &call->out_idx,
             csettings.audio_sample_rate, csettings.audio_frame_duration, csettings.audio_channels) != de_None ) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to open output device!"));
         call->has_output = 0;
     }
 
@@ -275,7 +281,7 @@ void callback_recv_starting ( void* av, int32_t call_index, void* arg )
         if (windows[i].onStarting != NULL && windows[i].call_idx == call_index) {
             windows[i].onStarting(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i], &ASettins.calls[call_index])) {/* YEAH! */
-                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , "Error starting transmission!");
+                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , gettext("Error starting transmission!"));
             }
             return;
         }
@@ -294,7 +300,7 @@ void callback_call_started ( void* av, int32_t call_index, void* arg )
         if (windows[i].onStart != NULL && windows[i].call_idx == call_index) {
             windows[i].onStart(&windows[i], ASettins.av, call_index);
             if ( 0 != start_transmission(&windows[i], &ASettins.calls[call_index]) ) {/* YEAH! */
-                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
+                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Error starting transmission!"));
                 return;
             }
         }
@@ -348,30 +354,30 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Unknown arguments.";
+        error_str = gettext("Unknown arguments.");
         goto on_error;
     }
 
     if ( !ASettins.av ) {
-        error_str = "Audio not supported!";
+        error_str = gettext("Audio not supported!");
         goto on_error;
     }
 
     if (!self->stb->connection) {
-        error_str = "Friend is offline.";
+        error_str = gettext("Friend is offline.");
         goto on_error;
     }
 
     ToxAvError error = toxav_call(ASettins.av, &self->call_idx, self->num, &ASettins.cs, 30);
 
     if ( error != av_ErrorNone ) {
-        if ( error == av_ErrorAlreadyInCallWithPeer ) error_str = "Already in a call!";
-        else error_str = "Internal error!";
+        if ( error == av_ErrorAlreadyInCallWithPeer ) error_str = gettext("Already in a call!");
+        else error_str = gettext("Internal error!");
 
         goto on_error;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Calling... idx: %d", self->call_idx);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Calling... idx: %d"), self->call_idx);
 
     return;
 on_error:
@@ -383,21 +389,21 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Unknown arguments.";
+        error_str = gettext("Unknown arguments.");
         goto on_error;
     }
 
     if ( !ASettins.av ) {
-        error_str = "Audio not supported!";
+        error_str = gettext("Audio not supported!");
         goto on_error;
     }
 
     ToxAvError error = toxav_answer(ASettins.av, self->call_idx, &ASettins.cs);
 
     if ( error != av_ErrorNone ) {
-        if ( error == av_ErrorInvalidState ) error_str = "Cannot answer in invalid state!";
-        else if ( error == av_ErrorNoCall ) error_str = "No incoming call!";
-        else error_str = "Internal error!";
+        if ( error == av_ErrorInvalidState ) error_str = gettext("Cannot answer in invalid state!");
+        else if ( error == av_ErrorNoCall ) error_str = gettext("No incoming call!");
+        else error_str = gettext("Internal error!");
 
         goto on_error;
     }
@@ -414,21 +420,21 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Unknown arguments.";
+        error_str = gettext("Unknown arguments.");
         goto on_error;
     }
 
     if ( !ASettins.av ) {
-        error_str = "Audio not supported!";
+        error_str = gettext("Audio not supported!");
         goto on_error;
     }
 
-    ToxAvError error = toxav_reject(ASettins.av, self->call_idx, "Why not?");
+    ToxAvError error = toxav_reject(ASettins.av, self->call_idx, gettext("Why not?"));
 
     if ( error != av_ErrorNone ) {
-        if ( error == av_ErrorInvalidState ) error_str = "Cannot reject in invalid state!";
-        else if ( error == av_ErrorNoCall ) error_str = "No incoming call!";
-        else error_str = "Internal error!";
+        if ( error == av_ErrorInvalidState ) error_str = gettext("Cannot reject in invalid state!");
+        else if ( error == av_ErrorNoCall ) error_str = gettext("No incoming call!");
+        else error_str = gettext("Internal error!");
 
         goto on_error;
     }
@@ -445,12 +451,12 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *error_str;
 
     if (argc != 0) {
-        error_str = "Unknown arguments.";
+        error_str = gettext("Unknown arguments.");
         goto on_error;
     }
 
     if ( !ASettins.av ) {
-        error_str = "Audio not supported!";
+        error_str = gettext("Audio not supported!");
         goto on_error;
     }
 
@@ -458,19 +464,19 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     if (toxav_get_call_state(ASettins.av, self->call_idx) == av_CallInviting) {
         error = toxav_cancel(ASettins.av, self->call_idx, self->num,
-                                        "Only those who appreciate small things know the beauty that is life");
+                                        gettext("Only those who appreciate small things know the beauty that is life"));
 #ifdef SOUND_NOTIFY
         stop_sound(self->ringing_sound);
 #endif
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call canceled!");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Call canceled!"));
     } else {
         error = toxav_hangup(ASettins.av, self->call_idx);
     }
 
     if ( error != av_ErrorNone ) {
-        if ( error == av_ErrorInvalidState ) error_str = "Cannot hangup in invalid state!";
-        else if ( error == av_ErrorNoCall ) error_str = "No call!";
-        else error_str = "Internal error!";
+        if ( error == av_ErrorInvalidState ) error_str = gettext("Cannot hangup in invalid state!");
+        else if ( error == av_ErrorNoCall ) error_str = gettext("No call!");
+        else error_str = gettext("Internal error!");
 
         goto on_error;
     }
@@ -485,8 +491,8 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     const char *error_str;
 
     if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else error_str = "Only one argument allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else error_str = gettext("Only one argument allowed!");
 
         goto on_error;
     }
@@ -500,7 +506,7 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -517,9 +523,9 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     const char *error_str;
 
     if ( argc != 2 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else if ( argc < 2 ) error_str = "Must have id!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else if ( argc < 2 ) error_str = gettext("Must have id!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -533,7 +539,7 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -542,12 +548,12 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     long int selection = strtol(argv[2], &end, 10);
 
     if ( *end ) {
-        error_str = "Invalid input";
+        error_str = gettext("Invalid input");
         goto on_error;
     }
 
     if ( set_primary_device(type, selection) == de_InvalidSelection ) {
-        error_str="Invalid selection!";
+        error_str=gettext("Invalid selection!");
         goto on_error;
     }
 
@@ -561,9 +567,9 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     const char *error_str;
 
     if ( argc != 2 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else if ( argc < 2 ) error_str = "Must have id!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else if ( argc < 2 ) error_str = gettext("Must have id!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -577,7 +583,7 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -586,12 +592,12 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     long int selection = strtol(argv[2], &end, 10);
 
     if ( *end ) {
-        error_str = "Invalid input";
+        error_str = gettext("Invalid input");
         goto on_error;
     }
 
     if ( selection_valid(type, selection) == de_InvalidSelection ) {
-        error_str="Invalid selection!";
+        error_str=gettext("Invalid selection!");
         goto on_error;
     }
 
@@ -634,8 +640,8 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     const char *error_str;
 
     if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Type must be specified!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -649,7 +655,7 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         type = output;
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Invalid type: %s"), argv[1]);
         return;
     }
 
@@ -680,8 +686,8 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     const char *error_str;
 
     if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Must have value!";
-        else error_str = "Only two arguments allowed!";
+        if ( argc < 1 ) error_str = gettext("Must have value!");
+        else error_str = gettext("Only two arguments allowed!");
 
         goto on_error;
     }
@@ -690,7 +696,7 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     float value = strtof(argv[1], &end);
 
     if ( *end ) {
-        error_str = "Invalid input";
+        error_str = gettext("Invalid input");
         goto on_error;
     }
 
@@ -719,10 +725,10 @@ void stop_current_call(ToxWindow* self)
             toxav_hangup(ASettins.av, self->call_idx);
             break;
         case av_CallInviting:
-            toxav_cancel(ASettins.av, self->call_idx, 0, "Not interested anymore");
+            toxav_cancel(ASettins.av, self->call_idx, 0, gettext("Not interested anymore"));
             break;
         case av_CallStarting:
-            toxav_reject(ASettins.av, self->call_idx, "Not interested");
+            toxav_reject(ASettins.av, self->call_idx, gettext("Not interested"));
             break;
         default:
             break;

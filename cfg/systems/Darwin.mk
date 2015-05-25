@@ -8,3 +8,9 @@ LIBS := $(filter-out ncursesw, $(LIBS))
 # OS X ships a usable, recent version of ncurses, but calls it ncurses not ncursesw.
 LDFLAGS += -lncurses -lalut -ltoxav -ltoxcore -ltoxdns -lresolv -lconfig -ltoxencryptsave -g
 CFLAGS += -I/usr/local/opt/freealut/include/AL -I/usr/local/opt/glib/include/glib-2.0 -g
+
+# Check if we want build localization support
+LOCALIZATION = $(shell if [ -z "$(DISABLE_LOCALIZATION)" ] || [ "$(DISABLE_LOCALIZATION)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(LOCALIZATION), disabled)
+    LDFLAGS += -lintl
+endif

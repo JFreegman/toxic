@@ -28,6 +28,12 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #include "toxic.h"
 #include "windows.h"
 #include "misc_tools.h"
@@ -231,7 +237,7 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     char *path = strdup(pathname);
 
     if (path == NULL)
-        exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+        exit_toxic_err(gettext("failed in get_file_name"), FATALERR_MEMORY);
 
     while (len >= 0 && pathname[len] == '/')
         path[len--] = '\0';
@@ -239,7 +245,7 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     char *finalname = strdup(path);
 
     if (finalname == NULL)
-        exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+        exit_toxic_err(gettext("failed in get_file_name"), FATALERR_MEMORY);
 
     const char *basenm = strrchr(path, '/');
 

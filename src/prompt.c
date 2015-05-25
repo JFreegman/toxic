@@ -28,6 +28,12 @@
 #include <string.h>
 #include <wchar.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #include "toxic.h"
 #include "windows.h"
 #include "prompt.h"
@@ -130,7 +136,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     tox_self_set_status_message(m, (uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK)
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to set note (error %d)\n"), err);
 }
 
 /* Updates own status in prompt statusbar */
@@ -262,19 +268,19 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (statusbar->connection != TOX_CONNECTION_NONE) {
         int colour = MAGENTA;
-        const char *status_text = "ERROR";
+        const char *status_text = gettext("ERROR");
 
         switch (statusbar->status) {
             case TOX_USER_STATUS_NONE:
-                status_text = "Online";
+                status_text = gettext("Online");
                 colour = GREEN;
                 break;
             case TOX_USER_STATUS_AWAY:
-                status_text = "Away";
+                status_text = gettext("Away");
                 colour = YELLOW;
                 break;
             case TOX_USER_STATUS_BUSY:
-                status_text = "Busy";
+                status_text = gettext("Busy");
                 colour = RED;
                 break;
         }
@@ -287,7 +293,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, " %s", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
     } else {
-        wprintw(statusbar->topline, " [Offline]");
+        wprintw(statusbar->topline, gettext(" [Offline]"));
         wattron(statusbar->topline, A_BOLD);
         wprintw(statusbar->topline, " %s", statusbar->nick);
         wattroff(statusbar->topline, A_BOLD);
@@ -351,28 +357,28 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
     const char *msg;
 
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
-        msg = "has come online";
+        msg = gettext("has come online");
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1)
             box_notify2(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
-                        "%s has come online", nick );
+                        gettext("%s has come online"), nick );
         else
             box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
-                       "Toxic", "%s has come online", nick );
+                       "Toxic", gettext("%s has come online"), nick );
     }
     else if (connection_status == TOX_CONNECTION_NONE) {
-        msg = "has gone offline";
+        msg = gettext("has gone offline");
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1)
             box_notify2(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
-                        "%s has gone offline", nick );
+                        gettext("%s has gone offline"), nick );
         else
             box_notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
-                       "Toxic", "%s has gone offline", nick );
+                       "Toxic", gettext("%s has gone offline"), nick );
     }
 }
 
@@ -383,18 +389,18 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
-    write_to_log("Friend request with the message '%s'", "", ctx->log, true);
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, gettext("Friend request with the message '%s'"), data);
+    write_to_log(gettext("Friend request with the message '%s'"), "", ctx->log, true);
 
     int n = add_friend_request(key, data);
 
     if (n == -1) {
-        const char *errmsg = "Friend request queue is full. Discarding request.";
+        const char *errmsg = gettext("Friend request queue is full. Discarding request.");
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Type \"%s %d\" or \"%s %d\""), "/accept", n, "/decline", n);
     sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
@@ -423,8 +429,8 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';
 
-    if (s_len == 0 || !strncmp(statusmsg, "Toxing on Toxic", strlen("Toxing on Toxic"))) {
-        snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic");
+    if (s_len == 0 || !strncmp(statusmsg, gettext("Toxing on Toxic"), strlen(gettext("Toxing on Toxic")))) {
+        snprintf(statusmsg, sizeof(statusmsg), gettext("Toxing on Toxic"));
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';
     }
@@ -446,10 +452,10 @@ static void print_welcome_msg(ToxWindow *self)
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 
-    const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";
+    const char *msg = gettext("Welcome to Toxic, a free, open source Tox-based instant messenging client.");
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
-    msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    msg = gettext("Type \"%s\" for assistance. Further help may be found via the man page.");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg, "/help");
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
@@ -467,7 +473,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     ctx->hst = calloc(1, sizeof(struct history));
 
     if (ctx->log == NULL || ctx->hst == NULL)
-        exit_toxic_err("failed in prompt_onInit", FATALERR_MEMORY);
+        exit_toxic_err(gettext("failed in prompt_onInit"), FATALERR_MEMORY);
 
     line_info_init(ctx->hst);
 
@@ -505,7 +511,7 @@ ToxWindow new_prompt(void)
     Help *help = calloc(1, sizeof(Help));
 
     if (stb == NULL || chatwin == NULL || help == NULL)
-        exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+        exit_toxic_err(gettext("failed in new_prompt"), FATALERR_MEMORY);
 
     ret.chatwin = chatwin;
     ret.stb = stb;
