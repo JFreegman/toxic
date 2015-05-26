@@ -54,7 +54,7 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Who do you want to ignore?");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
         return;
     }
 
@@ -62,7 +62,7 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     int peernum = group_get_nick_peernumber(self->num, nick);
 
     if (peernum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer '%s' does not exist", nick);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid peer name");
         return;
     }
 
@@ -75,6 +75,39 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
+}
+
+void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        return;
+    }
+
+    const char *nick = argv[1];
+    int peernumber = group_get_nick_peernumber(self->num, nick);
+
+    if (peernumber == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name");
+        return;
+    }
+
+    int ret = tox_group_op_kick_peer(m, self->num, (uint32_t) peernumber);
+
+    switch (ret) {
+        case 0: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You have kicked %s from the group.", nick);
+            return;
+        }
+        case -1: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to kick %s from the group.", nick);
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to kick %s.", nick);
+            return;
+        }
+    }
 }
 
 void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

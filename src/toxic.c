@@ -571,7 +571,6 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_message(m, on_group_message, NULL);
     tox_callback_group_action(m, on_group_action, NULL);
     tox_callback_group_private_message(m, on_group_private_message, NULL);
-    tox_callback_group_op_certificate(m, on_group_op_certificate, NULL);
     tox_callback_group_peerlist_update(m, on_group_namelistchange, NULL);
     tox_callback_group_peer_join(m, on_group_peer_join, NULL);
     tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
@@ -579,6 +578,7 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_topic_change(m, on_group_topic_change, NULL);
     tox_callback_group_self_join(m, on_group_self_join, NULL);
     tox_callback_group_rejected(m, on_group_rejected, NULL);
+    tox_callback_group_moderation(m, on_group_moderation, NULL);
 }
 
 static void init_tox_options(struct Tox_Options *tox_opts)

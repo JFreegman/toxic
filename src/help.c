@@ -245,6 +245,7 @@ static void help_draw_group(ToxWindow *self)
 
     wprintw(win, "  /chatid                    : Print the group chat id to share with others.\n");
     wprintw(win, "  /ignore <nick>             : Ignore peer\n");
+    wprintw(win, "  /kick <nick>               : Kick peer\n");
     wprintw(win, "  /passwd <password>         : Set group password (leave blank to unset)\n");
     wprintw(win, "  /peerlimit <num>           : Set group peer limit\n");
     wprintw(win, "  /privacy <state>           : Set group privacy state: private|public\n");
@@ -310,7 +311,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-            help_init_window(self, 14, 80);
+            help_init_window(self, 15, 80);
             self->help->type = HELP_GROUP;
             break;
 

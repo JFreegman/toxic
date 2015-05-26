@@ -125,7 +125,9 @@ void on_group_peer_join(Tox *m, int groupnumber, uint32_t peernumber, void *user
 void on_group_peer_exit(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *partmsg, uint16_t length, void *userdata);
 void on_group_topic_change(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *topic, uint16_t length, void *userdata);
 void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const uint8_t *newname, uint16_t length, void *userdata);
-void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint32_t tgt_peernum, uint8_t cert_type, void *userdata);
 void on_group_self_join(Tox *m, int groupnumber, void *userdata);
 void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata);
+void on_group_moderation(Tox *m, int groupnumber, uint32_t source_peernum, uint32_t target_peernum,
+                         TOX_GROUP_MOD_TYPE type, void *userdata);
+
 #endif  /* #define TOXIC_H */

@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 31
+#define AC_NUM_GROUP_COMMANDS 32
 #else
-#define AC_NUM_GROUP_COMMANDS 27
+#define AC_NUM_GROUP_COMMANDS 28
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -90,6 +90,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/help"       },
     { "/ignore"     },
     { "/join"       },
+    { "/kick"       },
     { "/log"        },
     { "/myid"       },
     { "/nick"       },
@@ -210,9 +211,9 @@ void set_nick_all_groups(Tox *m, const char *nick, uint16_t length)
             int ret = tox_group_set_self_name(m, groupchats[i].groupnumber, (uint8_t *) nick, length);
 
             if (ret == -1 && groupchats[i].is_connected)
-                line_info_add(self, timefrmt, NULL, 0, SYS_MSG, 0, 0, "Invalid nick");
+                line_info_add(self, NULL, NULL, 0, SYS_MSG, 0, 0, "Invalid nick");
             else if (ret == -2)
-                line_info_add(self, timefrmt, NULL, 0, SYS_MSG, 0, RED, "-!- That nick is already in use");
+                line_info_add(self, NULL, NULL, 0, SYS_MSG, 0, RED, "-!- That nick is already in use");
             else
                 line_info_add(self, timefrmt, NULL, nick, NAME_CHANGE, 0, MAGENTA, "You are now known as ");
         }
@@ -571,32 +572,33 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uin
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, RED, "-!- %s", msg);
 }
 
-static void groupchat_onGroupOpCertificate(ToxWindow *self, Tox *m, int groupnum, uint32_t src_peernum,
-                                           uint32_t tgt_peernum, uint8_t type)
+static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, int groupnum, uint32_t src_peernum,
+                                        uint32_t tgt_peernum, TOX_GROUP_MOD_TYPE type)
 {
     if (groupnum != self->num)
         return;
 
     char src_name[TOX_MAX_NAME_LENGTH];
-    get_group_nick_truncate(m, src_name, src_peernum, groupnum);
-
     char tgt_name[TOX_MAX_NAME_LENGTH];
-    get_group_nick_truncate(m, tgt_name, tgt_peernum, groupnum);
 
-    const char *msg = NULL;
+    if (get_group_nick_truncate(m, src_name, src_peernum, groupnum) == -1)
+        return;
+
+    if (get_group_nick_truncate(m, tgt_name, tgt_peernum, groupnum) == -1)
+        return;
+
+    const char *eventstr = NULL;
+    int colour = RED;
 
     switch (type) {
-        case TOX_GC_BAN:
-            msg = "has banned";
+        case TOX_MOD_KICK:
+            eventstr = "kicked";
             break;
-        case TOX_GC_PROMOTE_OP:
-            msg = "has given operator status to";
+        case TOX_MOD_BAN:
+            eventstr = "banned";
             break;
-        case TOX_GC_REVOKE_OP:
-            msg = "has removed operator status from";
-            break;
-        case TOX_GC_SILENCE:
-            msg = "has silenced";
+        case TOX_MOD_SILENCE:
+            eventstr = "silenced";
             break;
         default:
             return;
@@ -604,7 +606,7 @@ static void groupchat_onGroupOpCertificate(ToxWindow *self, Tox *m, int groupnum
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
-    line_info_add(self, timefrmt, src_name, tgt_name, NAME_CHANGE, 0, MAGENTA, "%s", msg);
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, colour, "-!- %s has been %s by %s", tgt_name, eventstr, src_name);
 }
 
 static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, int groupnum, uint32_t peernum,
@@ -952,10 +954,10 @@ ToxWindow new_group_chat(Tox *m, int groupnum, const char *groupname, int length
     ret.onGroupPeerJoin = &groupchat_onGroupPeerJoin;
     ret.onGroupPeerExit = &groupchat_onGroupPeerExit;
     ret.onGroupTopicChange = &groupchat_onGroupTopicChange;
-    ret.onGroupOpCertificate = &groupchat_onGroupOpCertificate;
     ret.onGroupNickChange = &groupchat_onGroupNickChange;
     ret.onGroupSelfJoin = &groupchat_onGroupSelfJoin;
     ret.onGroupRejected = &groupchat_onGroupRejected;
+    ret.onGroupModeration = &groupchat_onGroupModeration;
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     Help *help = calloc(1, sizeof(Help));

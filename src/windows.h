@@ -130,7 +130,6 @@ struct ToxWindow {
     void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupAction)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
     void(*onGroupPrivateMessage)(ToxWindow *, Tox *, int, uint32_t, const char *, uint16_t);
-    void(*onGroupOpCertificate)(ToxWindow *, Tox *, int, uint32_t, uint32_t, uint8_t);
     void(*onGroupNamelistChange)(ToxWindow *, Tox *, int);
     void(*onGroupPeerJoin)(ToxWindow *, Tox *, int, uint32_t);
     void(*onGroupPeerExit)(ToxWindow *, Tox *, int, uint32_t, const char *, uint16_t);
@@ -138,6 +137,7 @@ struct ToxWindow {
     void(*onGroupTopicChange)(ToxWindow *, Tox *, int, uint32_t, const char *, uint16_t);
     void(*onGroupSelfJoin)(ToxWindow *, Tox *, int);
     void(*onGroupRejected)(ToxWindow *, Tox *, int, uint8_t);
+    void(*onGroupModeration)(ToxWindow *, Tox *, int, uint32_t, uint32_t, TOX_GROUP_MOD_TYPE);
 
 #ifdef AUDIO
 

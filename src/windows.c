@@ -272,17 +272,6 @@ void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const ui
     }
 }
 
-void on_group_op_certificate(Tox *m, int groupnumber, uint32_t src_peernum, uint32_t tgt_peernum, uint8_t cert_type,
-                             void *userdata)
-{
-    size_t i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupOpCertificate != NULL)
-            windows[i].onGroupOpCertificate(&windows[i], m, groupnumber, src_peernum, tgt_peernum, cert_type);
-    }
-}
-
 void on_group_self_join(Tox *m, int groupnumber, void *userdata)
 {
     size_t i;
@@ -300,6 +289,17 @@ void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata)
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupRejected != NULL)
             windows[i].onGroupRejected(&windows[i], m, groupnumber, type);
+    }
+}
+
+void on_group_moderation(Tox *m, int groupnumber, uint32_t source_peernum, uint32_t target_peernum,
+                         TOX_GROUP_MOD_TYPE type, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupModeration != NULL)
+            windows[i].onGroupModeration(&windows[i], m, groupnumber, source_peernum, target_peernum, type);
     }
 }
 

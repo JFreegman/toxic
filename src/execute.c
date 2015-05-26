@@ -87,6 +87,7 @@ static struct cmd_func chat_commands[] = {
 static struct cmd_func group_commands[] = {
     { "/chatid",    cmd_chatid         },
     { "/ignore",    cmd_ignore         },
+    { "/kick",      cmd_kick           },
     { "/passwd",    cmd_set_passwd     },
     { "/peerlimit", cmd_set_peerlimit  },
     { "/privacy",   cmd_set_privacy    },
@@ -100,11 +101,12 @@ static struct cmd_func group_commands[] = {
     { NULL,         NULL               },
 };
 
-#define NUM_SPECIAL_COMMANDS 8
+#define NUM_SPECIAL_COMMANDS 9
 static const char special_commands[NUM_SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
     "/gaccept",
     "/group",
     "/ignore",
+    "/kick",
     "/nick",
     "/note",
     "/passwd",
