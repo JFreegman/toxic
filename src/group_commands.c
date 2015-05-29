@@ -96,7 +96,7 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     switch (ret) {
         case 0: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You have kicked %s from the group.", nick);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, RED,  "You have kicked %s from the group.", nick);
             return;
         }
         case -1: {
@@ -105,6 +105,72 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         }
         case -2: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to kick %s.", nick);
+            return;
+        }
+    }
+}
+
+void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        return;
+    }
+
+    const char *nick = argv[1];
+    int peernumber = group_get_nick_peernumber(self->num, nick);
+
+    if (peernumber == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name.");
+        return;
+    }
+
+    int ret = tox_group_set_peer_role(m, self->num, peernumber, TOX_GR_MODERATOR);
+
+    switch (ret) {
+        case 0: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "You have promoted %s to moderator.", nick);
+            return;
+        }
+        case -1: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to promote peer to moderator");
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to promote moderators.");
+            return;
+        }
+    }
+}
+
+void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        return;
+    }
+
+    const char *nick = argv[1];
+    int peernumber = group_get_nick_peernumber(self->num, nick);
+
+    if (peernumber == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name.");
+        return;
+    }
+
+    int ret = tox_group_set_peer_role(m, self->num, peernumber, TOX_GR_USER);
+
+    switch (ret) {
+        case 0: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "You have revoked moderator powers from %s.", nick);
+            return;
+        }
+        case -1: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to revoke moderator powers from %s.", nick);
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Nice try.");
             return;
         }
     }
@@ -234,8 +300,10 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
 void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (tox_group_reconnect(m, self->num) == -1)
+    if (tox_group_reconnect(m, self->num) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to rejoin group.");
         return;
+    }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Reconnecting to group...");
 }

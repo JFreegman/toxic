@@ -88,12 +88,14 @@ static struct cmd_func group_commands[] = {
     { "/chatid",    cmd_chatid         },
     { "/ignore",    cmd_ignore         },
     { "/kick",      cmd_kick           },
+    { "/mod",       cmd_mod            },
     { "/passwd",    cmd_set_passwd     },
     { "/peerlimit", cmd_set_peerlimit  },
     { "/privacy",   cmd_set_privacy    },
     { "/rejoin",    cmd_rejoin         },
     { "/topic",     cmd_set_topic      },
     { "/unignore",  cmd_unignore       },
+    { "/unmod",     cmd_unmod          },
 #ifdef AUDIO
     { "/mute",      cmd_mute           },
     { "/sense",     cmd_sense          },
@@ -101,17 +103,19 @@ static struct cmd_func group_commands[] = {
     { NULL,         NULL               },
 };
 
-#define NUM_SPECIAL_COMMANDS 9
+#define NUM_SPECIAL_COMMANDS 11
 static const char special_commands[NUM_SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
     "/gaccept",
     "/group",
     "/ignore",
     "/kick",
+    "/mod",
     "/nick",
     "/note",
     "/passwd",
     "/topic",
-    "/unignore"
+    "/unignore",
+    "/unmod",
 };
 
 /* return true if input command is in the special_commands array. False otherwise.*/

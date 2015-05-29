@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 32
+#define AC_NUM_GROUP_COMMANDS 34
 #else
-#define AC_NUM_GROUP_COMMANDS 28
+#define AC_NUM_GROUP_COMMANDS 30
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -92,6 +92,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/join"       },
     { "/kick"       },
     { "/log"        },
+    { "/mod"        },
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
@@ -104,6 +105,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/status"     },
     { "/topic"      },
     { "/unignore"   },
+    { "/unmod"      },
     { "/whisper"    },
 
 #ifdef AUDIO
@@ -573,7 +575,7 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, int groupnum, uin
 }
 
 static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, int groupnum, uint32_t src_peernum,
-                                        uint32_t tgt_peernum, TOX_GROUP_MOD_TYPE type)
+                                        uint32_t tgt_peernum, TOX_GROUP_MOD_EVENT type)
 {
     if (groupnum != self->num)
         return;
@@ -587,26 +589,28 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, int groupnum, u
     if (get_group_nick_truncate(m, tgt_name, tgt_peernum, groupnum) == -1)
         return;
 
-    const char *eventstr = NULL;
-    int colour = RED;
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
 
     switch (type) {
-        case TOX_MOD_KICK:
-            eventstr = "kicked";
+        case TOX_GROUP_MOD_EVENT_KICK:
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been kicked by %s", tgt_name, src_name);
             break;
-        case TOX_MOD_BAN:
-            eventstr = "banned";
+        case TOX_GROUP_MOD_EVENT_BAN:
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been banned by %s", tgt_name, src_name);
             break;
-        case TOX_MOD_SILENCE:
-            eventstr = "silenced";
+        case TOX_GROUP_MOD_EVENT_OBSERVER:
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been silenced by %s", tgt_name, src_name);
+            break;
+        case TOX_GROUP_MOD_EVENT_USER:
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been user'd by %s", tgt_name, src_name);
+            break;
+        case TOX_GROUP_MOD_EVENT_MODERATOR:
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been promoted to moderator by %s", tgt_name, src_name);
             break;
         default:
             return;
     }
-
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
-    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, colour, "-!- %s has been %s by %s", tgt_name, eventstr, src_name);
 }
 
 static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, int groupnum, uint32_t peernum,
@@ -867,29 +871,48 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
             wmove(ctx->sidebar, i + 2, 1);
             int peer = i + groupchats[self->num].side_pos;
 
+            /* TODO: Make this not poll */
+            pthread_mutex_lock(&Winthread.lock);
+            uint8_t status = tox_group_get_status(m, self->num, i);
+            TOX_GROUP_ROLE role = tox_group_get_role(m, self->num, i);
+            pthread_mutex_unlock(&Winthread.lock);
+
+            int maxlen_offset = role == TOX_GR_USER ? 2 : 3;
+
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
-            int maxlen = SIDEBAR_WIDTH - 2;
+            int maxlen = SIDEBAR_WIDTH - maxlen_offset;
             pthread_mutex_lock(&Winthread.lock);
             memcpy(tmpnck, &groupchats[self->num].peer_names[peer * TOX_MAX_NAME_LENGTH], maxlen);
             pthread_mutex_unlock(&Winthread.lock);
             tmpnck[maxlen] = '\0';
 
-            /* TODO: Make this not poll */
-            pthread_mutex_lock(&Winthread.lock);
-            uint8_t status = tox_group_get_status(m, self->num, i);
-            pthread_mutex_unlock(&Winthread.lock);
-
-            int colour = WHITE;
+            int namecolour = WHITE;
 
             if (status == TOX_GS_AWAY)
-                colour = YELLOW;
+                namecolour = YELLOW;
             else if (status == TOX_GS_BUSY)
-                colour = RED;
+                namecolour = RED;
 
-            wattron(ctx->sidebar, COLOR_PAIR(colour));
+            /* Signify roles (e.g. founder, moderator) */
+            const char *rolesig = "";
+            int rolecolour = WHITE;
+
+            if (role == TOX_GR_FOUNDER) {
+                rolesig = "&";
+                rolecolour = BLUE;
+            } else if (role == TOX_GR_MODERATOR) {
+                rolesig = "+";
+                rolecolour = GREEN;
+            }
+
+            wattron(ctx->sidebar, COLOR_PAIR(rolecolour) | A_BOLD);
+            wprintw(ctx->sidebar, "%s", rolesig);
+            wattroff(ctx->sidebar, COLOR_PAIR(rolecolour) | A_BOLD);
+
+            wattron(ctx->sidebar, COLOR_PAIR(namecolour));
             wprintw(ctx->sidebar, "%s\n", tmpnck);
-            wattroff(ctx->sidebar, COLOR_PAIR(colour));
+            wattroff(ctx->sidebar, COLOR_PAIR(namecolour));
         }
     }
 

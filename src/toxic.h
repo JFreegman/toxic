@@ -128,6 +128,6 @@ void on_group_nick_change(Tox *m, int groupnumber, uint32_t peernumber, const ui
 void on_group_self_join(Tox *m, int groupnumber, void *userdata);
 void on_group_rejected(Tox *m, int groupnumber, uint8_t type, void *userdata);
 void on_group_moderation(Tox *m, int groupnumber, uint32_t source_peernum, uint32_t target_peernum,
-                         TOX_GROUP_MOD_TYPE type, void *userdata);
+                         TOX_GROUP_MOD_EVENT type, void *userdata);
 
 #endif  /* #define TOXIC_H */
