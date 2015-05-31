@@ -603,7 +603,7 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, int groupnum, u
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been silenced by %s", tgt_name, src_name);
             break;
         case TOX_GROUP_MOD_EVENT_USER:
-            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been user'd by %s", tgt_name, src_name);
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been made a normal user by %s", tgt_name, src_name);
             break;
         case TOX_GROUP_MOD_EVENT_MODERATOR:
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been promoted to moderator by %s", tgt_name, src_name);

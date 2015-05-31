@@ -92,6 +92,7 @@ static struct cmd_func group_commands[] = {
     { "/passwd",    cmd_set_passwd     },
     { "/peerlimit", cmd_set_peerlimit  },
     { "/privacy",   cmd_set_privacy    },
+    { "/prune",     cmd_prune          },
     { "/rejoin",    cmd_rejoin         },
     { "/topic",     cmd_set_topic      },
     { "/unignore",  cmd_unignore       },
