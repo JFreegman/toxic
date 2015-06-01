@@ -149,12 +149,14 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_prune(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (tox_group_prune_moderator_list(m, self->num) == -1) {
+    int num_pruned = tox_group_prune_moderator_list(m, self->num);
+
+    if (num_pruned == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to prune moderator list.");
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Moderator list has been successfully pruned.");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d offline moderators have been pruned from the list.", num_pruned);
 }
 
 void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
