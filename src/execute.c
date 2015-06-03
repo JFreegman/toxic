@@ -85,6 +85,7 @@ static struct cmd_func chat_commands[] = {
 };
 
 static struct cmd_func group_commands[] = {
+    { "/ban",       cmd_ban            },
     { "/chatid",    cmd_chatid         },
     { "/ignore",    cmd_ignore         },
     { "/kick",      cmd_kick           },
@@ -95,6 +96,7 @@ static struct cmd_func group_commands[] = {
     { "/prune",     cmd_prune          },
     { "/rejoin",    cmd_rejoin         },
     { "/topic",     cmd_set_topic      },
+    { "/unban",     cmd_unban          },
     { "/unignore",  cmd_unignore       },
     { "/unmod",     cmd_unmod          },
 #ifdef AUDIO

@@ -77,14 +77,8 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
 }
 
-void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+static void cmd_kickban_helper(ToxWindow *self, Tox *m, const char *nick, bool set_ban)
 {
-    if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
-        return;
-    }
-
-    const char *nick = argv[1];
     int peernumber = group_get_nick_peernumber(self->num, nick);
 
     if (peernumber == -1) {
@@ -92,22 +86,101 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    int ret = tox_group_kick_peer(m, self->num, (uint32_t) peernumber);
+    const char *type_str = set_ban ? "ban" : "kick";
+    int ret = tox_group_remove_peer(m, self->num, (uint32_t) peernumber, set_ban);
 
     switch (ret) {
         case 0: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, RED,  "You have kicked %s from the group.", nick);
+            type_str = set_ban ? "banned" : "kicked";
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, RED,  "You have %s %s from the group.", type_str, nick);
             return;
         }
         case -1: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to kick %s from the group.", nick);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to %s %s from the group.", type_str, nick);
             return;
         }
         case -2: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to kick %s.", nick);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to %s %s.", type_str, nick);
             return;
         }
     }
+}
+
+void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        return;
+    }
+
+    cmd_kickban_helper(self, m, argv[1], false);
+}
+
+void cmd_ban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        int banlist_size = tox_group_get_ban_list_size(m, self->num);
+
+        if (banlist_size == -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to get the ban list.");
+            return;
+        }
+
+        if (banlist_size == 0) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban list is empty.");
+            return;
+        }
+
+        struct Tox_Group_Ban *ban_list = malloc(banlist_size);
+
+        if (ban_list == NULL)
+            return;
+
+        int num_banned = tox_group_get_ban_list(m, self->num, ban_list);
+
+        if (num_banned == -1) {
+            free(ban_list);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to get the ban list.");
+            return;
+        }
+
+        uint16_t i;
+
+        for (i = 0; i < num_banned; ++i) {
+            struct tm tm_set = *localtime((const time_t *) &ban_list[i].time_set);
+            char time_str[64];
+            strftime(time_str, sizeof(time_str), "%c", &tm_set);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "[ID: %d] %s : %s : %s", ban_list[i].id,
+                                                                  ban_list[i].ip_address, ban_list[i].nick, time_str);
+        }
+
+        free(ban_list);
+        return;
+    }
+
+    cmd_kickban_helper(self, m, argv[1], true);
+}
+
+void cmd_unban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban ID must be specified.");
+        return;
+    }
+
+    int ban_id = atoi(argv[1]);
+
+    if (ban_id == 0 && strcmp(argv[1], "0")) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban ID must be a non-negative interger.");
+        return;
+    }
+
+    if (tox_group_remove_ban_entry(m, self->num, ban_id) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban ID does not exist.");
+        return;
+    }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban list entry with id %d has been removed.", ban_id);
 }
 
 void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
