@@ -243,21 +243,31 @@ static void help_draw_group(ToxWindow *self)
     wprintw(win, "Group commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /chatid                    : Print the group chat id to share with others.\n");
+    wprintw(win, "  /chatid                    : Print the group chat id to share with others\n");
     wprintw(win, "  /ignore <nick>             : Ignore peer\n");
     wprintw(win, "  /unignore <nick>           : Unignore peer \n");
+    wprintw(win, "  /rejoin                    : Rejoin the group\n");
+    wprintw(win, "  /topic <msg>               : Set group topic (show current topic if no msg)\n");
+    wprintw(win, "  /whisper <nick> <msg>      : Send private message to nick\n");
+
+    wattron(win, A_BOLD);
+    wprintw(win, " Moderator commands:\n");
+    wattroff(win, A_BOLD);
     wprintw(win, "  /kick <nick>               : Kick peer\n");
     wprintw(win, "  /ban <nick>                : Ban peer (leave nick blank to see ban list)\n");
     wprintw(win, "  /unban <Ban ID>            : Unban entry\n");
+    wprintw(win, "  /silence <nick>            : Silences peer for the entire group\n");
+    wprintw(win, "  /unsilence <nick>          : Unsilences peer\n");
+
+    wattron(win, A_BOLD);
+    wprintw(win, " Founder commands:\n");
+    wattroff(win, A_BOLD);
+    wprintw(win, "  /mod <nick>                : Promote peer to moderator\n");
+    wprintw(win, "  /unmod <nick>              : Demote moderator to normal user\n");
     wprintw(win, "  /passwd <password>         : Set group password (leave blank to unset)\n");
     wprintw(win, "  /peerlimit <num>           : Set group peer limit\n");
     wprintw(win, "  /privacy <state>           : Set group privacy state: private|public\n");
-    wprintw(win, "  /rejoin                    : Rejoin the group\n");
-    wprintw(win, "  /topic <msg>               : Set group topic (show current topic if no msg)\n");
-    wprintw(win, "  /whisper <nick> <msg>      : Send private message to nick\n\n");
 
-#ifdef AUDIO
-#endif /* AUDIO */
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
@@ -313,7 +323,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-            help_init_window(self, 17, 80);
+            help_init_window(self, 23, 80);
             self->help->type = HELP_GROUP;
             break;
 

@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 36
+#define AC_NUM_GROUP_COMMANDS 38
 #else
-#define AC_NUM_GROUP_COMMANDS 32
+#define AC_NUM_GROUP_COMMANDS 34
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -103,11 +103,13 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/quit"       },
     { "/rejoin"     },
     { "/requests"   },
+    { "/silence"    },
     { "/status"     },
     { "/topic"      },
     { "/unban"      },
     { "/unignore"   },
     { "/unmod"      },
+    { "/unsilence"  },
     { "/whisper"    },
 
 #ifdef AUDIO
@@ -876,7 +878,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
             /* TODO: Make this not poll */
             pthread_mutex_lock(&Winthread.lock);
             uint8_t status = tox_group_get_status(m, self->num, i);
-            TOX_GROUP_ROLE role = tox_group_get_role(m, self->num, i);
+            TOX_GROUP_ROLE role = tox_group_get_peer_role(m, self->num, i);
             pthread_mutex_unlock(&Winthread.lock);
 
             int maxlen_offset = role == TOX_GR_USER ? 2 : 3;
@@ -906,6 +908,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
             } else if (role == TOX_GR_MODERATOR) {
                 rolesig = "+";
                 rolecolour = GREEN;
+            } else if (role == TOX_GR_OBSERVER) {
+                rolesig = "-";
+                rolecolour = MAGENTA;
             }
 
             wattron(ctx->sidebar, COLOR_PAIR(rolecolour) | A_BOLD);
