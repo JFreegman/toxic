@@ -604,13 +604,13 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, int groupnum, u
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been banned by %s", tgt_name, src_name);
             break;
         case TOX_GROUP_MOD_EVENT_OBSERVER:
-            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been silenced by %s", tgt_name, src_name);
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to observer", src_name, tgt_name);
             break;
         case TOX_GROUP_MOD_EVENT_USER:
-            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been made a normal user by %s", tgt_name, src_name);
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to user", src_name, tgt_name);
             break;
         case TOX_GROUP_MOD_EVENT_MODERATOR:
-            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has been promoted to moderator by %s", tgt_name, src_name);
+            line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to moderator", src_name, tgt_name);
             break;
         default:
             return;
