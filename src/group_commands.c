@@ -119,27 +119,21 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_ban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        int banlist_size = tox_group_get_ban_list_size(m, self->num);
+        int num_banned = tox_group_get_ban_list_size(m, self->num);
 
-        if (banlist_size == -1) {
+        if (num_banned == -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to get the ban list.");
             return;
         }
 
-        if (banlist_size == 0) {
+        if (num_banned == 0) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban list is empty.");
             return;
         }
 
-        struct Tox_Group_Ban *ban_list = malloc(banlist_size);
+        struct Tox_Group_Ban ban_list[num_banned];
 
-        if (ban_list == NULL)
-            return;
-
-        int num_banned = tox_group_get_ban_list(m, self->num, ban_list);
-
-        if (num_banned == -1) {
-            free(ban_list);
+        if (tox_group_get_ban_list(m, self->num, ban_list) == -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to get the ban list.");
             return;
         }
@@ -147,14 +141,14 @@ void cmd_ban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         uint16_t i;
 
         for (i = 0; i < num_banned; ++i) {
+            ban_list[i].nick[ban_list[i].nick_len] = '\0';
             struct tm tm_set = *localtime((const time_t *) &ban_list[i].time_set);
             char time_str[64];
             strftime(time_str, sizeof(time_str), "%e %b %Y %H:%M:%S%p", &tm_set);
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "[ID: %d] %s : %s : %s", ban_list[i].id,
-                                                                  ban_list[i].ip_address, ban_list[i].nick, time_str);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "ID %d : %s [Set:%s]", ban_list[i].id,
+                                                                  ban_list[i].nick, time_str);
         }
 
-        free(ban_list);
         return;
     }
 
