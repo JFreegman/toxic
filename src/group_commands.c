@@ -169,12 +169,22 @@ void cmd_unban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         return;
     }
 
-    if (tox_group_remove_ban_entry(m, self->num, ban_id) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban ID does not exist.");
-        return;
-    }
+    int ret = tox_group_remove_ban_entry(m, self->num, ban_id);
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban list entry with id %d has been removed.", ban_id);
+    switch (ret) {
+        case 0: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban list entry with id %d has been removed.", ban_id);
+            return;
+        }
+        case -2: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to unban peers.");
+            return;
+        }
+        default: {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban ID does not exist.");
+            return;
+        }
+    }
 }
 
 void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
