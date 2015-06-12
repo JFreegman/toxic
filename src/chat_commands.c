@@ -120,11 +120,11 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
     if (type == TOX_GROUPCHAT_TYPE_TEXT)
         groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
-#ifdef AUDIO
+/*#ifdef AUDIO
     else
         groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
                                            NULL, NULL);
-#endif
+#endif*/
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");

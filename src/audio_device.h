@@ -56,7 +56,7 @@ typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
 
 
 #ifdef AUDIO
-DeviceError init_devices(ToxAv* av);
+DeviceError init_devices(ToxAV* av);
 #else
 DeviceError init_devices();
 #endif /* AUDIO */

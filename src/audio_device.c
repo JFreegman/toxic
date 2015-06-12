@@ -57,7 +57,7 @@ typedef struct Device {
     ALCcontext *ctx;                       /* Device context */
     DataHandleCallback cb;                 /* Use this to handle data from input device usually */
     void* cb_data;                         /* Data to be passed to callback */
-    int32_t call_idx;                      /* ToxAv call index */
+    int32_t friend_number;                      /* ToxAV friend number */
     
     uint32_t source, buffers[OPENAL_BUFS]; /* Playback source/buffers */
     uint32_t ref_count;
@@ -80,7 +80,7 @@ Device *running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
 uint32_t primary_device[2];          /* Primary device */
 
 #ifdef AUDIO
-static ToxAv* av = NULL;
+static ToxAV* av = NULL;
 #endif /* AUDIO */
 
 /* q_mutex */
@@ -95,7 +95,7 @@ bool thread_running = true,
 void* thread_poll(void*);
 /* Meet devices */
 #ifdef AUDIO
-DeviceError init_devices(ToxAv* av_)
+DeviceError init_devices(ToxAV* av_)
 #else
 DeviceError init_devices()
 #endif /* AUDIO */
@@ -339,7 +339,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     return rc;
 }
 
-DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD)
+DeviceError register_device_callback( int32_t friend_number, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD)
 {    
     if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) 
         return de_InvalidSelection;
@@ -348,7 +348,7 @@ DeviceError register_device_callback( int32_t call_idx, uint32_t device_idx, Dat
     running[input][device_idx]->cb = callback;
     running[input][device_idx]->cb_data = data;
     running[input][device_idx]->enable_VAD = enable_VAD;
-    running[input][device_idx]->call_idx = call_idx;
+    running[input][device_idx]->friend_number = friend_number;
     unlock;
 
     return de_None;

@@ -49,7 +49,7 @@ typedef enum VideoDeviceError {
 } VideoDeviceError;
 
 #ifdef VIDEO
-VideoDeviceError init_video_devices(ToxAv* av);
+VideoDeviceError init_video_devices(ToxAV* av);
 #else
 VideoDeviceError init_video_devices();
 #endif /* VIDEO */

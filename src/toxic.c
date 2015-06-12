@@ -69,7 +69,7 @@
 #ifdef VIDEO
 #include "video_call.h"
 #endif /* VIDEO */
-ToxAv *av;
+ToxAV *av;
 #endif /* AUDIO */
 
 #ifndef PACKAGE_DATADIR
@@ -841,14 +841,14 @@ void *thread_cqueue(void *data)
 #ifdef AUDIO
 void *thread_audio(void *data)
 {
-    ToxAv *av = (ToxAv *) data;
-
+    ToxAV *av = (ToxAV *) data;
+    
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
-        toxav_do(av);
+        toxav_iterate(av);
         pthread_mutex_unlock(&Winthread.lock);
 
-        usleep(toxav_do_interval(av) * 1000);
+        usleep(2 * 1000);
     }
 }
 #endif  /* AUDIO */
@@ -1140,10 +1140,10 @@ int main(int argc, char *argv[])
 
     av = init_audio(prompt, m);
     
-#ifdef VIDEO
-    av = init_video(prompt, m, av);
-
-#endif /* VIDEO*/
+//#ifdef VIDEO
+//   av = init_video(prompt, m, av);
+//
+//#endif /* VIDEO*/
 
     /* audio thread */
     if (pthread_create(&audio_thread.tid, NULL, thread_audio, (void *) av) != 0)

@@ -78,7 +78,7 @@ VideoDevice *video_device_running[2][MAX_DEVICES] = {{NULL}};
 uint32_t primary_video_device[2];
 
 #ifdef VIDEO
-static ToxAv* av = NULL;
+static ToxAV* av = NULL;
 #endif /* VIDEO */
 
 pthread_mutex_t video_mutex;
@@ -89,7 +89,7 @@ bool video_thread_running = true,
 void* video_thread_poll(void*);
 /* Meet devices */
 #ifdef VIDEO
-VideoDeviceError init_video_devices(ToxAv* av_)
+VideoDeviceError init_video_devices(ToxAV* av_)
 #else
 VideoDeviceError init_video_devices()
 #endif /* AUDIO */

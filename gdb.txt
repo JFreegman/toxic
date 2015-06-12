@@ -1,0 +1,518 @@
+Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 14024)]
+[New Thread 0x7fffe7f61700 (LWP 14035)]
+[New Thread 0x7fffe7760700 (LWP 14036)]
+[New Thread 0x7fffe5dad700 (LWP 14037)]
+[Thread 0x7fffe5dad700 (LWP 14037) exited]
+[New Thread 0x7fffe5dad700 (LWP 14038)]
+[Thread 0x7fffe5dad700 (LWP 14038) exited]
+[New Thread 0x7fffe5dad700 (LWP 14039)]
+[Thread 0x7fffe5dad700 (LWP 14039) exited]
+[New Thread 0x7fffe5dad700 (LWP 14040)]
+[Thread 0x7fffe5dad700 (LWP 14040) exited]
+[New Thread 0x7fffe5dad700 (LWP 14041)]
+[Thread 0x7fffe5dad700 (LWP 14041) exited]
+[New Thread 0x7fffe4d03700 (LWP 14042)]
+[Thread 0x7fffe4d03700 (LWP 14042) exited]
+[New Thread 0x7fffe5dad700 (LWP 14043)]
+[Thread 0x7fffe5dad700 (LWP 14043) exited]
+[New Thread 0x7fffe5dad700 (LWP 14044)]
+[New Thread 0x7fffe4c82700 (LWP 14045)]
+[New Thread 0x7fffdfcef700 (LWP 14046)]
+[New Thread 0x7fffdf4ee700 (LWP 14076)]
+[Thread 0x7fffdf4ee700 (LWP 14076) exited]
+[New Thread 0x7fffdf4ee700 (LWP 14077)]
+[New Thread 0x7fffdacec700 (LWP 14078)]
+[New Thread 0x7fffda4eb700 (LWP 14079)]
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffe7f61700 (LWP 14035)]
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#0  0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007ffff574083b in abort () from /lib/x86_64-linux-gnu/libc.so.6
+#2  0x00007ffff5735d9e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#3  0x00007ffff5735e42 in __assert_fail () from /lib/x86_64-linux-gnu/libc.so.6
+#4  0x00007ffff7020c99 in rtp_new (payload_type=193, m=0x74de60, friend_num=0, cs=0x0, 
+    mcb=0x7ffff7024790 <vc_queue_message>) at ../toxav/rtp.c:84
+#5  0x00007ffff7025c67 in call_prepare_transmission (call=0x8e0080) at ../toxav/toxav.c:1283
+#6  0x00007ffff7025e54 in toxav_answer (av=0x86e130, friend_number=0, audio_bit_rate=48, 
+    video_bit_rate=0, error=0x7fffe7f5ef58) at ../toxav/toxav.c:410
+#7  0x000000000042bc11 in cmd_answer (window=0x7fffe002ab60, self=0x63ff90, m=0x74de60, argc=0, 
+    argv=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/audio_call.c:645
+#8  0x000000000040d4b3 in do_command (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, num_args=1, 
+    commands=0x63ab40, args=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/execute.c:151
+#9  0x000000000040d592 in execute (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, 
+    input=0x7fffe7f60620 "/answer", mode=1) at /home/cnhenry/Workspace/toxic/src/execute.c:176
+#10 0x0000000000409827 in chat_onKey (self=0x63ff90, m=0x74de60, key=10, ltr=false)
+    at /home/cnhenry/Workspace/toxic/src/chat.c:889
+#11 0x0000000000427e67 in draw_active_window (m=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/windows.c:544
+#12 0x0000000000424a05 in thread_winref (data=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/toxic.c:800
+#13 0x00007ffff612ce9a in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#14 0x00007ffff57fa38d in clone () from /lib/x86_64-linux-gnu/libc.so.6
+#15 0x0000000000000000 in ?? ()Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 16834)]
+[New Thread 0x7fffe7f61700 (LWP 16845)]
+[New Thread 0x7fffe7760700 (LWP 16846)]
+[New Thread 0x7fffe5dad700 (LWP 16847)]
+[Thread 0x7fffe5dad700 (LWP 16847) exited]
+[New Thread 0x7fffe5dad700 (LWP 16848)]
+[Thread 0x7fffe5dad700 (LWP 16848) exited]
+[New Thread 0x7fffe5dad700 (LWP 16849)]
+[Thread 0x7fffe5dad700 (LWP 16849) exited]
+[New Thread 0x7fffe5dad700 (LWP 16850)]
+[Thread 0x7fffe5dad700 (LWP 16850) exited]
+[New Thread 0x7fffe5dad700 (LWP 16851)]
+[Thread 0x7fffe5dad700 (LWP 16851) exited]
+[New Thread 0x7fffe4d03700 (LWP 16852)]
+[Thread 0x7fffe4d03700 (LWP 16852) exited]
+[New Thread 0x7fffe5dad700 (LWP 16853)]
+[Thread 0x7fffe5dad700 (LWP 16853) exited]
+[New Thread 0x7fffe5dad700 (LWP 16854)]
+[New Thread 0x7fffe4c82700 (LWP 16855)]
+[New Thread 0x7fffdfcef700 (LWP 16856)]
+[New Thread 0x7fffdf4ee700 (LWP 16894)]
+[Thread 0x7fffdf4ee700 (LWP 16894) exited]
+[New Thread 0x7fffdf4ee700 (LWP 16895)]
+[New Thread 0x7fffdacec700 (LWP 16896)]
+[New Thread 0x7fffda4eb700 (LWP 16897)]
+[Thread 0x7fffdacec700 (LWP 16896) exited]
+[Thread 0x7fffdf4ee700 (LWP 16895) exited]
+[New Thread 0x7fffdf4ee700 (LWP 16949)]
+[New Thread 0x7fffdacec700 (LWP 16950)]
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffe7f61700 (LWP 16845)]
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+Breakpoint 1 at 0x7ffff7024c34: file ../toxav/video.c, line 61.
+Breakpoint 2 at 0x7ffff7024c53: file ../toxav/video.c, line 63.
+Breakpoint 3 at 0x7ffff7024c6d: file ../toxav/video.c, line 65.
+Breakpoint 4 at 0x7ffff7024c98: file ../toxav/video.c, line 71.
+Breakpoint 5 at 0x7ffff7024ca9: file ../toxav/video.c, line 76.
+Breakpoint 6 at 0x7ffff7024cbb: file ../toxav/video.c, line 81.
+#0  0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007ffff574083b in abort () from /lib/x86_64-linux-gnu/libc.so.6
+#2  0x00007ffff5735d9e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#3  0x00007ffff5735e42 in __assert_fail () from /lib/x86_64-linux-gnu/libc.so.6
+#4  0x00007ffff7020c99 in rtp_new (payload_type=193, m=0x74de60, friend_num=0, cs=0x0, 
+    mcb=0x7ffff7024790 <vc_queue_message>) at ../toxav/rtp.c:84
+#5  0x00007ffff7025c67 in call_prepare_transmission (call=0x8c9db0) at ../toxav/toxav.c:1283
+#6  0x00007ffff7025e54 in toxav_answer (av=0x86dce0, friend_number=0, audio_bit_rate=48, 
+    video_bit_rate=0, error=0x7fffe7f5ef58) at ../toxav/toxav.c:410
+#7  0x000000000042bc11 in cmd_answer (window=0x7fffe002ab60, self=0x63ff90, m=0x74de60, argc=0, 
+    argv=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/audio_call.c:645
+#8  0x000000000040d4b3 in do_command (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, num_args=1, 
+    commands=0x63ab40, args=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/execute.c:151
+#9  0x000000000040d592 in execute (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, 
+    input=0x7fffe7f60620 "/answer", mode=1) at /home/cnhenry/Workspace/toxic/src/execute.c:176
+#10 0x0000000000409827 in chat_onKey (self=0x63ff90, m=0x74de60, key=10, ltr=false)
+    at /home/cnhenry/Workspace/toxic/src/chat.c:889
+#11 0x0000000000427e67 in draw_active_window (m=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/windows.c:544
+#12 0x0000000000424a05 in thread_winref (data=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/toxic.c:800
+#13 0x00007ffff612ce9a in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#14 0x00007ffff57fa38d in clone () from /lib/x86_64-linux-gnu/libc.so.6
+#15 0x0000000000000000 in ?? ()
+#5  0x00007ffff7025c67 in call_prepare_transmission (call=0x8c9db0) at ../toxav/toxav.c:1283
+1283	        call->video.first = rtp_new(rtp_TypeVideo, av->m, call->friend_number, call->video.second, vc_queue_message);
+
+Breakpoint 1, vc_new (av=0x86dce0, friend_number=0, cb=0x42b14c <receive_video_frame_cb>, 
+    cb_data=0x71c260, mvfpsz=500) at ../toxav/video.c:62
+62	    if ( !(vc->split_video_frame = calloc(VIDEOFRAME_PIECE_SIZE + VIDEOFRAME_HEADER_SIZE, 1)) )
+The program being debugged stopped while in a function called from GDB.
+Evaluation of the expression containing the function
+(vc_new) will be abandoned.
+When the function is done executing, GDB will silently stop.
+Continuing.
+
+Breakpoint 2, vc_new (av=0x86dce0, friend_number=0, cb=0x42b14c <receive_video_frame_cb>, 
+    cb_data=0x71c260, mvfpsz=500) at ../toxav/video.c:64
+64	    if ( !(vc->vbuf_raw = rb_new(VIDEO_DECODE_BUFFER_SIZE)) )
+Continuing.
+
+Breakpoint 3, vc_new (av=0x86dce0, friend_number=0, cb=0x42b14c <receive_video_frame_cb>, 
+    cb_data=0x71c260, mvfpsz=500) at ../toxav/video.c:67
+67	    int rc = vpx_codec_dec_init_ver(vc->decoder, VIDEO_CODEC_DECODER_INTERFACE, 
+Continuing.
+Continuing.
+[Thread 0x7fffdacec700 (LWP 16950) exited]
+[Thread 0x7fffdf4ee700 (LWP 16949) exited]
+[Thread 0x7fffe4c82700 (LWP 16855) exited]
+[Thread 0x7fffe7f61700 (LWP 16845) exited]
+[Thread 0x7fffe5dad700 (LWP 16854) exited]
+[Thread 0x7fffe7760700 (LWP 16846) exited]
+[Thread 0x7fffdfcef700 (LWP 16856) exited]
+[Thread 0x7fffe8b60700 (LWP 16834) exited]
+[Thread 0x7ffff7fae940 (LWP 16831) exited]
+
+Program terminated with signal SIGABRT, Aborted.
+The program no longer exists.
+Quit
+Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 27196)]
+[New Thread 0x7fffe7f61700 (LWP 27207)]
+[New Thread 0x7fffe7760700 (LWP 27208)]
+[New Thread 0x7fffe5dad700 (LWP 27209)]
+[Thread 0x7fffe5dad700 (LWP 27209) exited]
+[New Thread 0x7fffe5dad700 (LWP 27210)]
+[Thread 0x7fffe5dad700 (LWP 27210) exited]
+[New Thread 0x7fffe5dad700 (LWP 27211)]
+[Thread 0x7fffe5dad700 (LWP 27211) exited]
+[New Thread 0x7fffe5dad700 (LWP 27212)]
+[Thread 0x7fffe5dad700 (LWP 27212) exited]
+[New Thread 0x7fffe5dad700 (LWP 27213)]
+[Thread 0x7fffe5dad700 (LWP 27213) exited]
+[New Thread 0x7fffe4d03700 (LWP 27214)]
+[Thread 0x7fffe4d03700 (LWP 27214) exited]
+[New Thread 0x7fffe5dad700 (LWP 27215)]
+[Thread 0x7fffe5dad700 (LWP 27215) exited]
+[New Thread 0x7fffe5dad700 (LWP 27216)]
+[New Thread 0x7fffe4c82700 (LWP 27217)]
+[New Thread 0x7fffdfcef700 (LWP 27218)]
+[New Thread 0x7fffdf4ee700 (LWP 27255)]
+[Thread 0x7fffdf4ee700 (LWP 27255) exited]
+[New Thread 0x7fffdf4ee700 (LWP 27256)]
+[New Thread 0x7fffdacec700 (LWP 27258)]
+[New Thread 0x7fffda4eb700 (LWP 27261)]
+[Thread 0x7fffdacec700 (LWP 27258) exited]
+[Thread 0x7fffdf4ee700 (LWP 27256) exited]
+[New Thread 0x7fffdf4ee700 (LWP 27279)]
+[New Thread 0x7fffdacec700 (LWP 27280)]
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffe7f61700 (LWP 27207)]
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#0  0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007ffff574083b in abort () from /lib/x86_64-linux-gnu/libc.so.6
+#2  0x00007ffff5735d9e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#3  0x00007ffff5735e42 in __assert_fail () from /lib/x86_64-linux-gnu/libc.so.6
+#4  0x00007ffff7024dc4 in vc_new (av=0x86e690, friend_number=0, 
+    cb=0x42b14c <receive_video_frame_cb>, cb_data=0x71c260, mvfpsz=500) at ../toxav/video.c:71
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x90a5a0) at ../toxav/toxav.c:1282
+#6  0x00007ffff7025ef4 in toxav_answer (av=0x86e690, friend_number=0, audio_bit_rate=48, 
+    video_bit_rate=0, error=0x7fffe7f5ef58) at ../toxav/toxav.c:410
+#7  0x000000000042bc11 in cmd_answer (window=0x7fffe002ab60, self=0x63ff90, m=0x74de60, argc=0, 
+    argv=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/audio_call.c:645
+#8  0x000000000040d4b3 in do_command (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, num_args=1, 
+    commands=0x63ab40, args=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/execute.c:151
+#9  0x000000000040d592 in execute (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, 
+    input=0x7fffe7f60620 "/answer", mode=1) at /home/cnhenry/Workspace/toxic/src/execute.c:176
+#10 0x0000000000409827 in chat_onKey (self=0x63ff90, m=0x74de60, key=10, ltr=false)
+    at /home/cnhenry/Workspace/toxic/src/chat.c:889
+#11 0x0000000000427e67 in draw_active_window (m=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/windows.c:544
+#12 0x0000000000424a05 in thread_winref (data=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/toxic.c:800
+#13 0x00007ffff612ce9a in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#14 0x00007ffff57fa38d in clone () from /lib/x86_64-linux-gnu/libc.so.6
+#15 0x0000000000000000 in ?? ()
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x90a5a0) at ../toxav/toxav.c:1282
+1282	        call->video.second = vc_new(av, call->friend_number, av->vcb.first, av->vcb.second, call->msi_call->peer_vfpsz);
+Breakpoint 1 at 0x7ffff7024d2c: file ../toxav/video.c, line 61.
+Breakpoint 2 at 0x7ffff7024de3: file ../toxav/video.c, line 63.
+Breakpoint 3 at 0x7ffff7024dc4: file ../toxav/video.c, line 65.
+Breakpoint 4 at 0x7ffff7024da5: file ../toxav/video.c, line 71.
+Breakpoint 5 at 0x7ffff7024d86: file ../toxav/video.c, line 76.
+Breakpoint 6 at 0x7ffff7024d5d: file ../toxav/video.c, line 81.
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x90a5a0) at ../toxav/toxav.c:1282
+1282	        call->video.second = vc_new(av, call->friend_number, av->vcb.first, av->vcb.second, call->msi_call->peer_vfpsz);
+
+Breakpoint 4, vc_new (av=0x86e690, friend_number=0, cb=0x42b14c <receive_video_frame_cb>, 
+    cb_data=0x71c260, mvfpsz=500) at ../toxav/video.c:71
+71	        assert(0);//goto BASE_CLEANUP;
+The program being debugged stopped while in a function called from GDB.
+Evaluation of the expression containing the function
+(vc_new) will be abandoned.
+When the function is done executing, GDB will silently stop.
+Continuing.
+
+Program received signal SIGABRT, Aborted.
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+Continuing.
+[Thread 0x7fffdacec700 (LWP 27280) exited]
+[Thread 0x7fffda4eb700 (LWP 27261) exited]
+[Thread 0x7fffdfcef700 (LWP 27218) exited]
+[Thread 0x7fffdf4ee700 (LWP 27279) exited]
+[Thread 0x7fffe4c82700 (LWP 27217) exited]
+[Thread 0x7fffe5dad700 (LWP 27216) exited]
+[Thread 0x7fffe7760700 (LWP 27208) exited]
+[Thread 0x7fffe8b60700 (LWP 27196) exited]
+[Thread 0x7ffff7fae940 (LWP 27193) exited]
+
+Program terminated with signal SIGABRT, Aborted.
+The program no longer exists.
+Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 27641)]
+[New Thread 0x7fffe7f61700 (LWP 27652)]
+[New Thread 0x7fffe7760700 (LWP 27653)]
+[New Thread 0x7fffe5dad700 (LWP 27654)]
+[Thread 0x7fffe5dad700 (LWP 27654) exited]
+[New Thread 0x7fffe5dad700 (LWP 27655)]
+[Thread 0x7fffe5dad700 (LWP 27655) exited]
+[New Thread 0x7fffe5dad700 (LWP 27656)]
+[Thread 0x7fffe5dad700 (LWP 27656) exited]
+[New Thread 0x7fffe5dad700 (LWP 27657)]
+[Thread 0x7fffe5dad700 (LWP 27657) exited]
+[New Thread 0x7fffe5dad700 (LWP 27658)]
+[Thread 0x7fffe5dad700 (LWP 27658) exited]
+[New Thread 0x7fffe4d03700 (LWP 27659)]
+[Thread 0x7fffe4d03700 (LWP 27659) exited]
+[New Thread 0x7fffe5dad700 (LWP 27660)]
+[Thread 0x7fffe5dad700 (LWP 27660) exited]
+[New Thread 0x7fffe5dad700 (LWP 27661)]
+[New Thread 0x7fffe4c82700 (LWP 27662)]
+[New Thread 0x7fffdfcef700 (LWP 27663)]
+[New Thread 0x7fffdf4ee700 (LWP 27679)]
+[Thread 0x7fffdf4ee700 (LWP 27679) exited]
+[New Thread 0x7fffdf4ee700 (LWP 27680)]
+[New Thread 0x7fffdacec700 (LWP 27681)]
+[New Thread 0x7fffda4eb700 (LWP 27682)]
+[Thread 0x7fffdacec700 (LWP 27681) exited]
+[Thread 0x7fffdf4ee700 (LWP 27680) exited]
+[New Thread 0x7fffdf4ee700 (LWP 27703)]
+[New Thread 0x7fffdacec700 (LWP 27704)]
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffe7f61700 (LWP 27652)]
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#0  0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007ffff574083b in abort () from /lib/x86_64-linux-gnu/libc.so.6
+#2  0x00007ffff5735d9e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#3  0x00007ffff5735e42 in __assert_fail () from /lib/x86_64-linux-gnu/libc.so.6
+#4  0x00007ffff7024dc4 in vc_new (av=0x86d900, friend_number=0, 
+    cb=0x42b14c <receive_video_frame_cb>, cb_data=0x71c260, mvfpsz=500) at ../toxav/video.c:71
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x8f4190) at ../toxav/toxav.c:1282
+#6  0x00007ffff7025ef4 in toxav_answer (av=0x86d900, friend_number=0, audio_bit_rate=48, 
+    video_bit_rate=0, error=0x7fffe7f5ef58) at ../toxav/toxav.c:410
+#7  0x000000000042bc11 in cmd_answer (window=0x7fffe002ab60, self=0x63ff90, m=0x74de60, argc=0, 
+    argv=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/audio_call.c:645
+#8  0x000000000040d4b3 in do_command (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, num_args=1, 
+    commands=0x63ab40, args=0x7fffe7f5f000) at /home/cnhenry/Workspace/toxic/src/execute.c:151
+#9  0x000000000040d592 in execute (w=0x7fffe002ab60, self=0x63ff90, m=0x74de60, 
+    input=0x7fffe7f60620 "/answer", mode=1) at /home/cnhenry/Workspace/toxic/src/execute.c:176
+#10 0x0000000000409827 in chat_onKey (self=0x63ff90, m=0x74de60, key=10, ltr=false)
+    at /home/cnhenry/Workspace/toxic/src/chat.c:889
+#11 0x0000000000427e67 in draw_active_window (m=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/windows.c:544
+#12 0x0000000000424a05 in thread_winref (data=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/toxic.c:800
+#13 0x00007ffff612ce9a in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#14 0x00007ffff57fa38d in clone () from /lib/x86_64-linux-gnu/libc.so.6
+#15 0x0000000000000000 in ?? ()
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x8f4190) at ../toxav/toxav.c:1282
+1282	        call->video.second = vc_new(av, call->friend_number, av->vcb.first, av->vcb.second, call->msi_call->peer_vfpsz);
+
+Program received signal SIGABRT, Aborted.
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+The program being debugged was signaled while in a function called from GDB.
+GDB remains in the frame where the signal was received.
+To change this behavior use "set unwindonsignal on".
+Evaluation of the expression containing the function
+(vc_new) will be abandoned.
+When the function is done executing, GDB will silently stop.
+Continuing.
+[Thread 0x7fffe7760700 (LWP 27653) exited]
+[Thread 0x7fffdacec700 (LWP 27704) exited]
+[Thread 0x7fffdf4ee700 (LWP 27703) exited]
+[Thread 0x7fffda4eb700 (LWP 27682) exited]
+[Thread 0x7fffdfcef700 (LWP 27663) exited]
+[Thread 0x7fffe4c82700 (LWP 27662) exited]
+[Thread 0x7fffe5dad700 (LWP 27661) exited]
+[Thread 0x7fffe7f61700 (LWP 27652) exited]
+[Thread 0x7fffe8b60700 (LWP 27641) exited]
+
+Program terminated with signal SIGABRT, Aborted.
+The program no longer exists.Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 32161)]
+[New Thread 0x7fffe7f61700 (LWP 32172)]
+[New Thread 0x7fffe7760700 (LWP 32173)]
+[New Thread 0x7fffe5dad700 (LWP 32174)]
+[Thread 0x7fffe5dad700 (LWP 32174) exited]
+[New Thread 0x7fffe5dad700 (LWP 32175)]
+[Thread 0x7fffe5dad700 (LWP 32175) exited]
+[New Thread 0x7fffe5dad700 (LWP 32176)]
+[Thread 0x7fffe5dad700 (LWP 32176) exited]
+[New Thread 0x7fffe5dad700 (LWP 32177)]
+[Thread 0x7fffe5dad700 (LWP 32177) exited]
+[New Thread 0x7fffe5dad700 (LWP 32178)]
+[Thread 0x7fffe5dad700 (LWP 32178) exited]
+[New Thread 0x7fffe4d03700 (LWP 32179)]
+[Thread 0x7fffe4d03700 (LWP 32179) exited]
+[New Thread 0x7fffe5dad700 (LWP 32180)]
+[Thread 0x7fffe5dad700 (LWP 32180) exited]
+[New Thread 0x7fffe5dad700 (LWP 32181)]
+[New Thread 0x7fffe4c82700 (LWP 32182)]
+[New Thread 0x7fffdfcef700 (LWP 32183)]
+[New Thread 0x7fffdf4ee700 (LWP 32661)]
+[Thread 0x7fffdf4ee700 (LWP 32661) exited]
+[New Thread 0x7fffdf4ee700 (LWP 32663)]
+[New Thread 0x7fffdacec700 (LWP 32664)]
+[New Thread 0x7fffda4eb700 (LWP 32666)]
+[Thread 0x7fffdacec700 (LWP 32664) exited]
+[Thread 0x7fffdf4ee700 (LWP 32663) exited]
+[New Thread 0x7fffdf4ee700 (LWP 32677)]
+[New Thread 0x7fffdacec700 (LWP 32679)]
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffe7f61700 (LWP 32172)]
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#0  0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007ffff574083b in abort () from /lib/x86_64-linux-gnu/libc.so.6
+#2  0x00007ffff5735d9e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#3  0x00007ffff5735e42 in __assert_fail ()
+   from /lib/x86_64-linux-gnu/libc.so.6
+#4  0x00007ffff7024dc4 in vc_new (av=0x7e1fc0, friend_number=0, 
+    cb=0x42b14c <receive_video_frame_cb>, cb_data=0x71c260, mvfpsz=500)
+    at ../toxav/video.c:71
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x84e2c0)
+    at ../toxav/toxav.c:1282
+#6  0x00007ffff7025ef4 in toxav_answer (av=0x7e1fc0, friend_number=0, 
+    audio_bit_rate=48, video_bit_rate=0, error=0x7fffe7f5ef58)
+    at ../toxav/toxav.c:410
+#7  0x000000000042bc11 in cmd_answer (window=0x7fffe000dc90, self=0x63ff90, 
+    m=0x74de60, argc=0, argv=0x7fffe7f5f000)
+    at /home/cnhenry/Workspace/toxic/src/audio_call.c:645
+#8  0x000000000040d4b3 in do_command (w=0x7fffe000dc90, self=0x63ff90, 
+    m=0x74de60, num_args=1, commands=0x63ab40, args=0x7fffe7f5f000)
+    at /home/cnhenry/Workspace/toxic/src/execute.c:151
+#9  0x000000000040d592 in execute (w=0x7fffe000dc90, self=0x63ff90, 
+    m=0x74de60, input=0x7fffe7f60620 "/answer", mode=1)
+    at /home/cnhenry/Workspace/toxic/src/execute.c:176
+#10 0x0000000000409827 in chat_onKey (self=0x63ff90, m=0x74de60, key=10, 
+    ltr=false) at /home/cnhenry/Workspace/toxic/src/chat.c:889
+#11 0x0000000000427e67 in draw_active_window (m=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/windows.c:544
+#12 0x0000000000424a05 in thread_winref (data=0x74de60)
+    at /home/cnhenry/Workspace/toxic/src/toxic.c:800
+#13 0x00007ffff612ce9a in start_thread ()
+   from /lib/x86_64-linux-gnu/libpthread.so.0
+#14 0x00007ffff57fa38d in clone () from /lib/x86_64-linux-gnu/libc.so.6
+#15 0x0000000000000000 in ?? ()
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x84e2c0)
+    at ../toxav/toxav.c:1282
+1282	        call->video.second = vc_new(av, call->friend_number, av->vcb.first, av->vcb.second, call->msi_call->peer_vfpsz);
+#5  0x00007ffff7025ce5 in call_prepare_transmission (call=0x84e2c0)
+    at ../toxav/toxav.c:1282
+1282	        call->video.second = vc_new(av, call->friend_number, av->vcb.first, av->vcb.second, call->msi_call->peer_vfpsz);
+The history is empty.
+Invalid character ';' in expression.
+Invalid character ';' in expression.
+
+Program received signal SIGABRT, Aborted.
+0x00007ffff573d0d5 in raise () from /lib/x86_64-linux-gnu/libc.so.6
+The program being debugged was signaled while in a function called from GDB.
+GDB remains in the frame where the signal was received.
+To change this behavior use "set unwindonsignal on".
+Evaluation of the expression containing the function
+(vc_new) will be abandoned.
+When the function is done executing, GDB will silently stop.
+Continuing.
+[Thread 0x7fffda4eb700 (LWP 32666) exited]
+[Thread 0x7fffdacec700 (LWP 32679) exited]
+[Thread 0x7fffe4c82700 (LWP 32182) exited]
+[Thread 0x7fffdf4ee700 (LWP 32677) exited]
+[Thread 0x7fffdfcef700 (LWP 32183) exited]
+[Thread 0x7fffe5dad700 (LWP 32181) exited]
+[Thread 0x7fffe7f61700 (LWP 32172) exited]
+[Thread 0x7fffe8b60700 (LWP 32161) exited]
+[Thread 0x7ffff7fae940 (LWP 32158) exited]
+
+Program terminated with signal SIGABRT, Aborted.
+The program no longer exists.
+No stack.
+No registers.
+Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 4878)]
+[New Thread 0x7fffe7f61700 (LWP 5333)]
+[New Thread 0x7fffe7760700 (LWP 5334)]
+[New Thread 0x7fffe5dad700 (LWP 5335)]
+[Thread 0x7fffe5dad700 (LWP 5335) exited]
+[New Thread 0x7fffe5dad700 (LWP 5336)]
+[Thread 0x7fffe5dad700 (LWP 5336) exited]
+[New Thread 0x7fffe5dad700 (LWP 5337)]
+[Thread 0x7fffe5dad700 (LWP 5337) exited]
+[New Thread 0x7fffe5dad700 (LWP 5338)]
+[Thread 0x7fffe5dad700 (LWP 5338) exited]
+[New Thread 0x7fffe5dad700 (LWP 5339)]
+[Thread 0x7fffe5dad700 (LWP 5339) exited]
+[New Thread 0x7fffe4d03700 (LWP 5340)]
+[Thread 0x7fffe4d03700 (LWP 5340) exited]
+[New Thread 0x7fffe5dad700 (LWP 5341)]
+[Thread 0x7fffe5dad700 (LWP 5341) exited]
+[New Thread 0x7fffe5dad700 (LWP 5342)]
+[New Thread 0x7fffe4c82700 (LWP 5343)]
+[New Thread 0x7fffdfcef700 (LWP 5344)]
+[New Thread 0x7fffdf4ee700 (LWP 5738)]
+[Thread 0x7fffdf4ee700 (LWP 5738) exited]
+[New Thread 0x7fffdf4ee700 (LWP 5739)]
+[New Thread 0x7fffdacec700 (LWP 5740)]
+[New Thread 0x7fffda4eb700 (LWP 5741)]
+[Thread 0x7fffdacec700 (LWP 5740) exited]
+[Thread 0x7fffdf4ee700 (LWP 5739) exited]
+
+Program received signal SIGINT, Interrupt.
+0x00007ffff57c60ad in nanosleep () from /lib/x86_64-linux-gnu/libc.so.6
+A debugging session is active.
+
+	Inferior 1 [process 4875] will be killed.
+
+Quit anyway? (y or n) Reading symbols from /usr/local/bin/toxic...done.
+Starting program: /usr/local/bin/toxic 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffe8b60700 (LWP 20862)]
+[New Thread 0x7fffe7eb2700 (LWP 20876)]
+[New Thread 0x7fffe76b1700 (LWP 20877)]
+[New Thread 0x7fffe5cdb700 (LWP 20878)]
+[Thread 0x7fffe5cdb700 (LWP 20878) exited]
+[New Thread 0x7fffe5cdb700 (LWP 20879)]
+[Thread 0x7fffe5cdb700 (LWP 20879) exited]
+[New Thread 0x7fffe5cdb700 (LWP 20880)]
+[Thread 0x7fffe5cdb700 (LWP 20880) exited]
+[New Thread 0x7fffe5cdb700 (LWP 20881)]
+[Thread 0x7fffe5cdb700 (LWP 20881) exited]
+[New Thread 0x7fffe5cdb700 (LWP 20882)]
+[Thread 0x7fffe5cdb700 (LWP 20882) exited]
+[New Thread 0x7fffe4c31700 (LWP 20883)]
+[Thread 0x7fffe4c31700 (LWP 20883) exited]
+[New Thread 0x7fffe5cdb700 (LWP 20884)]
+[Thread 0x7fffe5cdb700 (LWP 20884) exited]
+[New Thread 0x7fffe5cdb700 (LWP 20885)]
+[New Thread 0x7fffe4bb0700 (LWP 20886)]
+[New Thread 0x7fffdfcef700 (LWP 20887)]
+[New Thread 0x7fffdf4ee700 (LWP 21416)]
+[Thread 0x7fffdf4ee700 (LWP 21416) exited]
+[New Thread 0x7fffdf4ee700 (LWP 21417)]
+[New Thread 0x7fffdacec700 (LWP 21418)]
+[New Thread 0x7fffda4eb700 (LWP 21419)]
+[Thread 0x7fffdacec700 (LWP 21418) exited]
+[Thread 0x7fffdf4ee700 (LWP 21417) exited]
+
+Program received signal SIGINT, Interrupt.
+0x00007ffff57c60ad in nanosleep () from /lib/x86_64-linux-gnu/libc.so.6
+Quit
+A debugging session is active.
+
+	Inferior 1 [process 20859] will be killed.
+
+Quit anyway? (y or n) 

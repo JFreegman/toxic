@@ -42,10 +42,10 @@ typedef struct Call {
 } Call;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
-ToxAv *init_audio(ToxWindow *self, Tox *tox);
+ToxAV *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio();
 int start_transmission(ToxWindow *self, Call *call);
-int stop_transmission(Call *call, int call_index);
+int stop_transmission(Call *call, int friend_number);
 void stop_current_call(ToxWindow *self);
 
 #endif /* AUDIO_H */

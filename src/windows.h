@@ -133,21 +133,19 @@ struct ToxWindow {
 
 #ifdef AUDIO
 
-    void(*onInvite)(ToxWindow *, ToxAv *, int);
-    void(*onRinging)(ToxWindow *, ToxAv *, int);
-    void(*onStarting)(ToxWindow *, ToxAv *, int);
-    void(*onEnding)(ToxWindow *, ToxAv *, int);
-    void(*onError)(ToxWindow *, ToxAv *, int);
-    void(*onStart)(ToxWindow *, ToxAv *, int);
-    void(*onCancel)(ToxWindow *, ToxAv *, int);
-    void(*onReject)(ToxWindow *, ToxAv *, int);
-    void(*onEnd)(ToxWindow *, ToxAv *, int);
-    void(*onRequestTimeout)(ToxWindow *, ToxAv *, int);
-    void(*onPeerTimeout)(ToxWindow *, ToxAv *, int);
-    void(*onWriteDevice)(ToxWindow *, Tox *, int, int, const int16_t *, unsigned int, uint8_t, unsigned int);
+    void(*onInvite)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onRinging)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onStarting)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onEnding)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onError)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onStart)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onCancel)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onReject)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onEnd)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onRequestTimeout)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onPeerTimeout)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onWriteDevice)(ToxWindow *, Tox *, uint32_t, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
-    int call_idx; /* If in a call will have this index set, otherwise it's -1.
-                   * Don't modify outside av callbacks. */
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
 
     int ringing_sound;
@@ -156,7 +154,7 @@ struct ToxWindow {
     int active_box; /* For box notify */
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    uint32_t num;    /* corresponds to friendnumber in chat windows */
+    int num;    /* corresponds to friendnumber in chat windows */
     bool active;
     int x;
 

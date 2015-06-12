@@ -339,10 +339,10 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     if (type == TOX_GROUPCHAT_TYPE_TEXT)
         groupnum = tox_add_groupchat(m);
-#ifdef AUDIO
+/*#ifdef AUDIO
     else
         groupnum = toxav_add_av_groupchat(m, NULL, NULL);
-#endif
+#endif*/
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");

@@ -41,54 +41,14 @@
 
 #define MAX_CALLS 10
 
-struct VSettings {
-    VideoError errors;
-
-    ToxAv *av;
-
-    ToxAvCSettings cs;
-
-    Call calls[MAX_CALLS];
-} VSettins;
-
-ToxAv *init_video(ToxWindow *self, Tox *tox, ToxAv *av)
+ToxAV *init_video(ToxWindow *self, Tox *tox, ToxAV *av)
 {
-    VSettins.cs = av_DefaultSettings;
-    VSettins.cs.max_video_height = 1024;
-    VSettins.cs.max_video_width = 1024;
 
-    VSettins.errors = ve_None;
-
-    VSettins.av = av;
-
-    memset(VSettins.calls, 0, sizeof(VSettins.calls));
-
-    if( !VSettins.av ) {
-        //line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "New toxav instance");
-        VSettins.av = toxav_new(tox, MAX_CALLS);
-    }
-
-    if ( !VSettins.av ) {
-        VSettins.errors |= ve_StartingCoreVideo;
-        return NULL;
-    }
-
-    if ( init_video_devices(VSettins.av) == vde_InternalError ) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
-        //toxav_kill(VSettins.av);
-        return VSettins.av = NULL;
-    }
-
-    return VSettins.av;	
 }
 
 void terminate_video()
 {
-    int i;
-    for (i = 0; i < MAX_CALLS; ++i)
-        stop_video_transmission(&VSettins.calls[i], i);
-
-    terminate_video_devices();
+ 
 }
 
 int start_video_transmission(ToxWindow *self, Call *call)
@@ -97,7 +57,7 @@ int start_video_transmission(ToxWindow *self, Call *call)
     return 0;
 }
 
-int stop_video_transmission(Call *call, int call_index)
+int stop_video_transmission(Call *call, int friend_number)
 {
 
     return 0;

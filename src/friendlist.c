@@ -1048,23 +1048,25 @@ void disable_chatwin(uint32_t f_num)
 }
 
 #ifdef AUDIO
-static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
+static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    int id = toxav_get_peer_id(av, call_index, 0);
-
-    if ( id != av_ErrorUnknown && id >= Friends.max_idx)
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "friendlist_onAV fired");
+    if( friend_number >= Friends.max_idx)
         return;
 
-    Tox *m = toxav_get_tox(av);
 
-    if (Friends.list[id].chatwin == -1) {
+    Tox *m = toxav_get_tox(av);
+    
+    if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            if (toxav_get_call_state(av, call_index) == av_CallStarting) { /* Only open windows when call is incoming */
-                Friends.list[id].chatwin = add_window(m, new_chat(m, Friends.list[id].num));
+            //line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "List number %d", Friends.list[friend_number].num);
+            if(state != TOXAV_CALL_STATE_FINISHED) {
+                Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
+                set_active_window(Friends.list[friend_number].chatwin);
             }
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
-            get_nick_truncate(m, nick, Friends.list[id].num);
+            get_nick_truncate(m, nick, Friends.list[friend_number].num);
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
 
             const char *errmsg = "* Warning: Too many windows are open.";
@@ -1096,19 +1098,19 @@ ToxWindow new_friendlist(void)
     ret.onGroupInvite = &friendlist_onGroupInvite;
 
 #ifdef AUDIO
-    ret.onInvite = &friendlist_onAv;
-    ret.onRinging = &friendlist_onAv;
-    ret.onStarting = &friendlist_onAv;
-    ret.onEnding = &friendlist_onAv;
-    ret.onError = &friendlist_onAv;
-    ret.onStart = &friendlist_onAv;
-    ret.onCancel = &friendlist_onAv;
-    ret.onReject = &friendlist_onAv;
-    ret.onEnd = &friendlist_onAv;
-    ret.onRequestTimeout = &friendlist_onAv;
-    ret.onPeerTimeout = &friendlist_onAv;
+    ret.onInvite = &friendlist_onAV;
+    ret.onRinging = &friendlist_onAV;
+    ret.onStarting = &friendlist_onAV;
+    ret.onEnding = &friendlist_onAV;
+    ret.onError = &friendlist_onAV;
+    ret.onStart = &friendlist_onAV;
+    ret.onCancel = &friendlist_onAV;
+    ret.onReject = &friendlist_onAV;
+    ret.onEnd = &friendlist_onAV;
+    ret.onRequestTimeout = &friendlist_onAV;
+    ret.onPeerTimeout = &friendlist_onAV;
 
-    ret.call_idx = -1;
+    ret.num = -1;
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* AUDIO */
 
