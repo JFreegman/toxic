@@ -9,22 +9,22 @@ before_script:
   # Installing libsodium, needed for toxcore
   - git clone https://github.com/jedisct1/libsodium.git libsodium
   - cd libsodium
-  - git checkout tags/1.0.2 > /dev/null
+  - git checkout tags/1.0.3 > /dev/null
   - ./autogen.sh > /dev/null
   - ./configure > /dev/null
   - make check -j2 || make check || exit 1 > /dev/null
   - sudo make install > /dev/null
   - cd ..
   # Installing libopus, needed for audio encoding/decoding
-  - wget http://downloads.xiph.org/releases/opus/opus-1.0.3.tar.gz
-  - tar xzf opus-1.0.3.tar.gz > /dev/null
-  - cd opus-1.0.3
+  - wget http://downloads.xiph.org/releases/opus/opus-1.1.tar.gz
+  - tar xzf opus-1.1.tar.gz > /dev/null
+  - cd opus-1.1
   - ./configure > /dev/null
   - make -j2 || make || exit 1 > /dev/null
   - sudo make install > /dev/null
   - cd ..
   # Installing vpx
-  - git clone http://git.chromium.org/webm/libvpx.git libvpx
+  - git clone https://chromium.googlesource.com/webm/libvpx libvpx
   - cd libvpx
   - ./configure --enable-shared > /dev/null
   - make -j2 || make || exit 1 > /dev/null
