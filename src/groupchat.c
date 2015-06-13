@@ -241,7 +241,7 @@ int group_get_nick_peernumber(int groupnum, const char *nick)
     int i;
 
     for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
-        if (strcasecmp(nick, (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH]) == 0)
+        if (strcmp(nick, (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH]) == 0)
             return i;
     }
 
