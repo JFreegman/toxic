@@ -25,6 +25,12 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
+#ifdef NO_GETTEXT
+#define gettext(A) (A)
+#else
+#include <libintl.h>
+#endif
+
 #include "toxic.h"
 #include "windows.h"
 #include "line_info.h"
@@ -41,7 +47,7 @@ void line_info_init(struct history *hst)
     hst->line_root = calloc(1, sizeof(struct line_info));
 
     if (hst->line_root == NULL)
-        exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
+        exit_toxic_err(gettext("failed in line_info_init"), FATALERR_MEMORY);
 
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
@@ -141,7 +147,7 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
     if (new_line == NULL)
-        exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
+        exit_toxic_err(gettext("failed in line_info_add"), FATALERR_MEMORY);
 
     char frmt_msg[MAX_LINE_INFO_MSG_SIZE] = {0};
 

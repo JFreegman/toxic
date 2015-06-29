@@ -40,8 +40,8 @@
 
 #include <tox/tox.h>
 
-#define UNKNOWN_NAME "Anonymous"
-#define DEFAULT_TOX_NAME "Tox User"   /* should always be the same as toxcore's default name */
+#define UNKNOWN_NAME gettext("Anonymous")
+#define DEFAULT_TOX_NAME gettext("Tox User")   /* should always be the same as toxcore's default name */
 
 #define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH    /* must be >= TOX_MAX_MESSAGE_LENGTH */
 #define MAX_CMDNAME_SIZE 64

@@ -24,6 +24,12 @@ ifneq ($(DESK_NOTIFY), disabled)
     -include $(CHECKS_DIR)/desktop_notifications.mk
 endif
 
+# Check if we want build localization support
+LOCALIZATION = $(shell if [ -z "$(DISABLE_LOCALIZATION)" ] || [ "$(DISABLE_LOCALIZATION)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(LOCALIZATION), enabled)
+    CFLAGS += -DNO_GETTEXT
+endif
+
 # Check if we can build Toxic
 CHECK_LIBS = $(shell pkg-config --exists $(LIBS) || echo -n "error")
 ifneq ($(CHECK_LIBS), error)

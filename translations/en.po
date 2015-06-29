@@ -1,0 +1,1599 @@
+# English translations for Toxic package.
+# Copyright (C) 2015 Toxic Team
+# This file is distributed under the same license as the Toxic package.
+# Automatically generated, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Toxic 0.6.0\n"
+"Report-Msgid-Bugs-To: JFreegman@tox.chat\n"
+"POT-Creation-Date: 2015-05-30 11:30+0200\n"
+"PO-Revision-Date: 2015-05-30 11:30+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../src/audio_call.c:133
+msgid "Failed to init devices"
+msgstr "Failed to init devices"
+
+#: ../src/audio_call.c:195 ../src/audio_call.c:201
+msgid "Could not prepare transmission"
+msgstr "Could not prepare transmission"
+
+#: ../src/audio_call.c:217
+msgid "Failed to open input device!"
+msgstr "Failed to open input device!"
+
+#: ../src/audio_call.c:222
+msgid "Failed to register input handler!"
+msgstr "Failed to register input handler!"
+
+#: ../src/audio_call.c:226
+msgid "Failed to open output device!"
+msgstr "Failed to open output device!"
+
+#: ../src/audio_call.c:284 ../src/audio_call.c:303
+msgid "Error starting transmission!"
+msgstr "Error starting transmission!"
+
+#: ../src/audio_call.c:357 ../src/audio_call.c:392 ../src/audio_call.c:423
+#: ../src/audio_call.c:454
+msgid "Unknown arguments."
+msgstr "Unknown arguments."
+
+#: ../src/audio_call.c:362 ../src/audio_call.c:397 ../src/audio_call.c:428
+#: ../src/audio_call.c:459
+msgid "Audio not supported!"
+msgstr "Audio not supported!"
+
+#: ../src/audio_call.c:367
+msgid "Friend is offline."
+msgstr "Friend is offline."
+
+#: ../src/audio_call.c:374
+msgid "Already in a call!"
+msgstr "Already in a call!"
+
+#: ../src/audio_call.c:375 ../src/audio_call.c:406 ../src/audio_call.c:437
+#: ../src/audio_call.c:479
+msgid "Internal error!"
+msgstr "Internal error!"
+
+#: ../src/audio_call.c:380
+#, c-format
+msgid "Calling... idx: %d"
+msgstr "Calling... idx: %d"
+
+#: ../src/audio_call.c:404
+msgid "Cannot answer in invalid state!"
+msgstr "Cannot answer in invalid state!"
+
+#: ../src/audio_call.c:405 ../src/audio_call.c:436
+msgid "No incoming call!"
+msgstr "No incoming call!"
+
+#: ../src/audio_call.c:432
+msgid "Why not?"
+msgstr "Why not?"
+
+#: ../src/audio_call.c:435
+msgid "Cannot reject in invalid state!"
+msgstr "Cannot reject in invalid state!"
+
+#: ../src/audio_call.c:467
+msgid "Only those who appreciate small things know the beauty that is life"
+msgstr "Only those who appreciate small things know the beauty that is life"
+
+#: ../src/audio_call.c:471 ../src/chat.c:653
+msgid "Call canceled!"
+msgstr "Call canceled!"
+
+#: ../src/audio_call.c:477
+msgid "Cannot hangup in invalid state!"
+msgstr "Cannot hangup in invalid state!"
+
+#: ../src/audio_call.c:478
+msgid "No call!"
+msgstr "No call!"
+
+#: ../src/audio_call.c:494 ../src/audio_call.c:526 ../src/audio_call.c:570
+#: ../src/audio_call.c:643
+msgid "Type must be specified!"
+msgstr "Type must be specified!"
+
+#: ../src/audio_call.c:495
+msgid "Only one argument allowed!"
+msgstr "Only one argument allowed!"
+
+#: ../src/audio_call.c:509 ../src/audio_call.c:542 ../src/audio_call.c:586
+#: ../src/audio_call.c:658
+#, c-format
+msgid "Invalid type: %s"
+msgstr "Invalid type: %s"
+
+#: ../src/audio_call.c:527 ../src/audio_call.c:571
+msgid "Must have id!"
+msgstr "Must have id!"
+
+#: ../src/audio_call.c:528 ../src/audio_call.c:572 ../src/audio_call.c:644
+#: ../src/audio_call.c:690
+msgid "Only two arguments allowed!"
+msgstr "Only two arguments allowed!"
+
+#: ../src/audio_call.c:551 ../src/audio_call.c:595 ../src/audio_call.c:699
+msgid "Invalid input"
+msgstr "Invalid input"
+
+#: ../src/audio_call.c:556 ../src/audio_call.c:600
+msgid "Invalid selection!"
+msgstr "Invalid selection!"
+
+#: ../src/audio_call.c:689
+msgid "Must have value!"
+msgstr "Must have value!"
+
+#: ../src/audio_call.c:728
+msgid "Not interested anymore"
+msgstr "Not interested anymore"
+
+#: ../src/audio_call.c:731
+msgid "Not interested"
+msgstr "Not interested"
+
+#: ../src/autocomplete.c:126
+msgid "failed in complete_line"
+msgstr "failed in complete_line"
+
+#: ../src/avatars.c:68
+#, c-format
+msgid "tox_file_send failed for friendnumber %d (error %d)\n"
+msgstr "tox_file_send failed for friendnumber %d (error %d)\n"
+
+#: ../src/avatars.c:212
+#, c-format
+msgid "tox_file_send_chunk failed in avatar callback (error %d)\n"
+msgstr "tox_file_send_chunk failed in avatar callback (error %d)\n"
+
+#: ../src/chat.c:56
+msgid "yes"
+msgstr "yes"
+
+#: ../src/chat.c:57
+msgid "no"
+msgstr "no"
+
+#: ../src/chat.c:223 ../src/prompt.c:360
+msgid "has come online"
+msgstr "has come online"
+
+#: ../src/chat.c:234 ../src/prompt.c:372
+msgid "has gone offline"
+msgstr "has gone offline"
+
+#: ../src/chat.c:319
+#, c-format
+msgid "File '%s' successfully sent."
+msgstr "File '%s' successfully sent."
+
+#: ../src/chat.c:326
+#, c-format
+msgid "File transfer for '%s' failed: Null file pointer."
+msgstr "File transfer for '%s' failed: Null file pointer."
+
+#: ../src/chat.c:333
+#, c-format
+msgid "File transfer for '%s' failed: Seek fail."
+msgstr "File transfer for '%s' failed: Seek fail."
+
+#: ../src/chat.c:345
+#, c-format
+msgid "File transfer for '%s' failed: Read fail."
+msgstr "File transfer for '%s' failed: Read fail."
+
+#: ../src/chat.c:354
+#, c-format
+msgid "tox_file_send_chunk failed in chat callback (error %d)\n"
+msgstr "tox_file_send_chunk failed in chat callback (error %d)\n"
+
+#: ../src/chat.c:377
+#, c-format
+msgid "File '%s' successfully received."
+msgstr "File '%s' successfully received."
+
+#: ../src/chat.c:384
+#, c-format
+msgid "File transfer for '%s' failed: Invalid file pointer."
+msgstr "File transfer for '%s' failed: Invalid file pointer."
+
+#: ../src/chat.c:390
+#, c-format
+msgid "File transfer for '%s' failed: Write fail."
+msgstr "File transfer for '%s' failed: Write fail."
+
+#: ../src/chat.c:416
+#, c-format
+msgid "File transfer [%d] for '%s' accepted."
+msgstr "File transfer [%d] for '%s' accepted."
+
+#: ../src/chat.c:434
+#, c-format
+msgid "File transfer for '%s' was aborted."
+msgstr "File transfer for '%s' was aborted."
+
+#: ../src/chat.c:450 ../src/chat_commands.c:309
+msgid "File transfer failed: Too many concurrent file transfers."
+msgstr "File transfer failed: Too many concurrent file transfers."
+
+#: ../src/chat.c:456
+#, c-format
+msgid "File transfer request for '%s' (%s)"
+msgstr "File transfer request for '%s' (%s)"
+
+#: ../src/chat.c:471
+msgid "File transfer faield: File path too long."
+msgstr "File transfer faield: File path too long."
+
+#: ../src/chat.c:497
+msgid "File transfer failed: invalid file path."
+msgstr "File transfer failed: invalid file path."
+
+#: ../src/chat.c:502
+#, c-format
+msgid "Type '%s %d' to accept the file transfer."
+msgstr "Type '%s %d' to accept the file transfer."
+
+#: ../src/chat.c:515 ../src/chat.c:518
+#, c-format
+msgid "Incoming file: %s"
+msgstr "Incoming file: %s"
+
+#: ../src/chat.c:533
+msgid "Failed in chat_onGroupInvite"
+msgstr "Failed in chat_onGroupInvite"
+
+#: ../src/chat.c:547 ../src/chat.c:549
+msgid "invites you to join group chat"
+msgstr "invites you to join group chat"
+
+#: ../src/chat.c:551
+#, c-format
+msgid "%s has invited you to a group chat."
+msgstr "%s has invited you to a group chat."
+
+#: ../src/chat.c:552
+#, c-format
+msgid "Type \"%s\" to join the chat."
+msgstr "Type \"%s\" to join the chat."
+
+#: ../src/chat.c:566
+#, c-format
+msgid "Incoming audio call! Type: \"%s\" or \"%s\""
+msgstr "Incoming audio call! Type: \"%s\" or \"%s\""
+
+#: ../src/chat.c:573 ../src/chat.c:575
+msgid "Incoming audio call!"
+msgstr "Incoming audio call!"
+
+#: ../src/chat.c:583
+#, c-format
+msgid "Ringing...type \"%s\" to cancel it."
+msgstr "Ringing...type \"%s\" to cancel it."
+
+#: ../src/chat.c:598 ../src/chat.c:639
+#, c-format
+msgid "Call started! Type: \"%s\" to end it."
+msgstr "Call started! Type: \"%s\" to end it."
+
+#: ../src/chat.c:612 ../src/chat.c:680
+msgid "Call ended!"
+msgstr "Call ended!"
+
+#: ../src/chat.c:625
+msgid "Error!"
+msgstr "Error!"
+
+#: ../src/chat.c:666
+msgid "Rejected!"
+msgstr "Rejected!"
+
+#: ../src/chat.c:693
+msgid "No answer!"
+msgstr "No answer!"
+
+#: ../src/chat.c:707
+msgid "Peer disconnected; call ended!"
+msgstr "Peer disconnected; call ended!"
+
+#: ../src/chat.c:769
+msgid "    Call Active\n"
+msgstr "    Call Active\n"
+
+#: ../src/chat.c:773
+msgid " Duration: "
+msgstr " Duration: "
+
+#: ../src/chat.c:778
+msgid " In muted: "
+msgstr " In muted: "
+
+#: ../src/chat.c:783
+msgid " Out muted: "
+msgstr " Out muted: "
+
+#: ../src/chat.c:788
+msgid " VAD level: "
+msgstr " VAD level: "
+
+#: ../src/chat.c:1080
+msgid "failed in chat_onInit"
+msgstr "failed in chat_onInit"
+
+#: ../src/chat.c:1152
+msgid "failed in new_chat"
+msgstr "failed in new_chat"
+
+#: ../src/chat_commands.c:48
+#, c-format
+msgid "Requires type %s and the file ID."
+msgstr "Requires type %s and the file ID."
+
+#: ../src/chat_commands.c:57 ../src/chat_commands.c:74
+#: ../src/chat_commands.c:79
+msgid "Invalid file ID."
+msgstr "Invalid file ID."
+
+#: ../src/chat_commands.c:69
+#, c-format
+msgid "Type must be '%s' or '%s'."
+msgstr "Type must be '%s' or '%s'."
+
+#: ../src/chat_commands.c:83
+#, c-format
+msgid "File transfer for '%s' aborted."
+msgstr "File transfer for '%s' aborted."
+
+#: ../src/chat_commands.c:90
+msgid "Group number required."
+msgstr "Group number required."
+
+#: ../src/chat_commands.c:97
+msgid "Invalid group number."
+msgstr "Invalid group number."
+
+#: ../src/chat_commands.c:102
+msgid "Failed to invite contact to group."
+msgstr "Failed to invite contact to group."
+
+#: ../src/chat_commands.c:106
+#, c-format
+msgid "Invited contact to Group %d."
+msgstr "Invited contact to Group %d."
+
+#: ../src/chat_commands.c:112 ../src/global_commands.c:324
+msgid " * Warning: Too many windows are open."
+msgstr " * Warning: Too many windows are open."
+
+#: ../src/chat_commands.c:121
+msgid "No pending group chat invite."
+msgstr "No pending group chat invite."
+
+#: ../src/chat_commands.c:136 ../src/global_commands.c:354
+msgid "Group chat instance failed to initialize."
+msgstr "Group chat instance failed to initialize."
+
+#: ../src/chat_commands.c:141 ../src/global_commands.c:359
+msgid "Group chat window failed to initialize."
+msgstr "Group chat window failed to initialize."
+
+#: ../src/chat_commands.c:151
+msgid "File ID required."
+msgstr "File ID required."
+
+#: ../src/chat_commands.c:158 ../src/chat_commands.c:165
+#: ../src/chat_commands.c:170
+msgid "No pending file transfers with that ID."
+msgstr "No pending file transfers with that ID."
+
+#: ../src/chat_commands.c:175
+msgid "File transfer failed: Invalid file path."
+msgstr "File transfer failed: Invalid file path."
+
+#: ../src/chat_commands.c:186
+#, c-format
+msgid "Saving file [%d] as: '%s'"
+msgstr "Saving file [%d] as: '%s'"
+
+#: ../src/chat_commands.c:201
+msgid "File transfer failed: Friend not found."
+msgstr "File transfer failed: Friend not found."
+
+#: ../src/chat_commands.c:205
+msgid "File transfer failed: Friend is not online."
+msgstr "File transfer failed: Friend is not online."
+
+#: ../src/chat_commands.c:209
+msgid "File transfer failed: Invalid filenumber."
+msgstr "File transfer failed: Invalid filenumber."
+
+#: ../src/chat_commands.c:213
+msgid "File transfer failed: Connection error."
+msgstr "File transfer failed: Connection error."
+
+#: ../src/chat_commands.c:217
+#, c-format
+msgid "File transfer failed (error %d)\n"
+msgstr "File transfer failed (error %d)\n"
+
+#: ../src/chat_commands.c:227
+msgid "File path required."
+msgstr "File path required."
+
+#: ../src/chat_commands.c:232
+msgid "File path must be enclosed in quotes."
+msgstr "File path must be enclosed in quotes."
+
+#: ../src/chat_commands.c:243
+msgid "File path exceeds character limit."
+msgstr "File path exceeds character limit."
+
+#: ../src/chat_commands.c:250
+msgid "File not found."
+msgstr "File not found."
+
+#: ../src/chat_commands.c:257
+msgid "Invalid file."
+msgstr "Invalid file."
+
+#: ../src/chat_commands.c:290
+#, c-format
+msgid "Sending file [%d]: '%s' (%s)"
+msgstr "Sending file [%d]: '%s' (%s)"
+
+#: ../src/chat_commands.c:297
+msgid "File transfer failed: Invalid friend."
+msgstr "File transfer failed: Invalid friend."
+
+#: ../src/chat_commands.c:301
+msgid "File transfer failed: Friend is offline."
+msgstr "File transfer failed: Friend is offline."
+
+#: ../src/chat_commands.c:305
+msgid "File transfer failed: Filename is too long."
+msgstr "File transfer failed: Filename is too long."
+
+#: ../src/chat_commands.c:313
+msgid "File transfer failed."
+msgstr "File transfer failed."
+
+#: ../src/configdir.c:125 ../src/toxic.c:1039 ../src/toxic.c:1045
+msgid "failed in load_data_structures"
+msgstr "failed in load_data_structures"
+
+#: ../src/dns.c:155
+#, c-format
+msgid "User lookup failed: %s"
+msgstr "User lookup failed: %s"
+
+#: ../src/dns.c:181
+msgid "dn_expand failed."
+msgstr "dn_expand failed."
+
+#: ../src/dns.c:186 ../src/dns.c:209
+msgid "DNS reply was too short."
+msgstr "DNS reply was too short."
+
+#: ../src/dns.c:192
+msgid "Broken DNS reply."
+msgstr "Broken DNS reply."
+
+#: ../src/dns.c:204
+msgid "Second dn_expand failed."
+msgstr "Second dn_expand failed."
+
+#: ../src/dns.c:217
+msgid "RR overflow."
+msgstr "RR overflow."
+
+#: ../src/dns.c:222
+msgid "DNS response failed."
+msgstr "DNS response failed."
+
+#: ../src/dns.c:227
+msgid "No record found."
+msgstr "No record found."
+
+#: ../src/dns.c:230
+msgid "Invalid DNS response."
+msgstr "Invalid DNS response."
+
+#: ../src/dns.c:307
+msgid "Must be a Tox ID or an address in the form username@domain"
+msgstr "Must be a Tox ID or an address in the form username@domain"
+
+#: ../src/dns.c:317
+msgid "Domain not found."
+msgstr "Domain not found."
+
+#: ../src/dns.c:324
+msgid "Core failed to create DNS object."
+msgstr "Core failed to create DNS object."
+
+#: ../src/dns.c:335
+msgid "Core failed to generate DNS3 string."
+msgstr "Core failed to generate DNS3 string."
+
+#: ../src/dns.c:349
+msgid "DNS query failed."
+msgstr "DNS query failed."
+
+#: ../src/dns.c:364
+msgid "Bad DNS3 TXT response."
+msgstr "Bad DNS3 TXT response."
+
+#: ../src/dns.c:372
+msgid "Core failed to decrypt DNS response."
+msgstr "Core failed to decrypt DNS response."
+
+#: ../src/dns.c:388
+msgid "DNS lookups are disabled."
+msgstr "DNS lookups are disabled."
+
+#: ../src/dns.c:393
+msgid "Please wait for previous user lookup to finish."
+msgstr "Please wait for previous user lookup to finish."
+
+#: ../src/dns.c:403
+#, c-format
+msgid ""
+"DNS server list failed to load with error code %d. Falling back to hard-"
+"coded list."
+msgstr ""
+"DNS server list failed to load with error code %d. Falling back to hard-"
+"coded list."
+
+#: ../src/dns.c:416
+msgid "Error: DNS thread attr failed to init"
+msgstr "Error: DNS thread attr failed to init"
+
+#: ../src/dns.c:422
+msgid "Error: DNS thread attr failed to set"
+msgstr "Error: DNS thread attr failed to set"
+
+#: ../src/dns.c:429
+msgid "Error: DNS thread failed to init"
+msgstr "Error: DNS thread failed to init"
+
+#: ../src/execute.c:107
+msgid "failed in parse_command"
+msgstr "failed in parse_command"
+
+#: ../src/execute.c:121
+msgid "Invalid argument. Did you forget a closing \"?"
+msgstr "Invalid argument. Did you forget a closing \"?"
+
+#: ../src/execute.c:192
+msgid "Invalid command."
+msgstr "Invalid command."
+
+#: ../src/friendlist.c:93
+msgid "failed in realloc_friends"
+msgstr "failed in realloc_friends"
+
+#: ../src/friendlist.c:113
+msgid "failed in realloc_blocklist"
+msgstr "failed in realloc_blocklist"
+
+#: ../src/friendlist.c:141
+msgid "Failed in save_blocklist"
+msgstr "Failed in save_blocklist"
+
+#: ../src/friendlist.c:208
+msgid "Failed in load_blocklist"
+msgstr "Failed in load_blocklist"
+
+#: ../src/friendlist.c:331 ../src/friendlist.c:766 ../src/friendlist.c:1076
+msgid "* Warning: Too many windows are open."
+msgstr "* Warning: Too many windows are open."
+
+#: ../src/friendlist.c:346
+#, c-format
+msgid "avatar_send failed for friend %d\n"
+msgstr "avatar_send failed for friend %d\n"
+
+#: ../src/friendlist.c:421
+#, c-format
+msgid "tox_friend_get_public_key failed (error %d)\n"
+msgstr "tox_friend_get_public_key failed (error %d)\n"
+
+#: ../src/friendlist.c:500
+#, c-format
+msgid "* File transfer from %s failed: too many windows are open."
+msgstr "* File transfer from %s failed: too many windows are open."
+
+#: ../src/friendlist.c:523
+#, c-format
+msgid "* Group chat invite from %s failed: too many windows are open."
+msgstr "* Group chat invite from %s failed: too many windows are open."
+
+#: ../src/friendlist.c:546
+#, c-format
+msgid "tox_friend_delete failed with error %d\n"
+msgstr "tox_friend_delete failed with error %d\n"
+
+#: ../src/friendlist.c:626
+msgid "Delete contact "
+msgstr "Delete contact "
+
+#: ../src/friendlist.c:707
+#, c-format
+msgid "Failed to unblock friend (error %d)\n"
+msgstr "Failed to unblock friend (error %d)\n"
+
+#: ../src/friendlist.c:803
+msgid " Blocked: "
+msgstr " Blocked: "
+
+#: ../src/friendlist.c:855 ../src/friendlist.c:1035
+msgid "Key: "
+msgstr "Key: "
+
+#: ../src/friendlist.c:881
+msgid " Press the"
+msgstr " Press the"
+
+#: ../src/friendlist.c:885
+msgid ""
+"key for help\n"
+"\n"
+msgstr ""
+"key for help\n"
+"\n"
+
+#: ../src/friendlist.c:897
+msgid " Online: "
+msgstr " Online: "
+
+#: ../src/friendlist.c:1011
+#, c-format
+msgid " Last seen: Today %s\n"
+msgstr " Last seen: Today %s\n"
+
+#: ../src/friendlist.c:1015
+#, c-format
+msgid " Last seen: Yesterday %s\n"
+msgstr " Last seen: Yesterday %s\n"
+
+#: ../src/friendlist.c:1019
+#, c-format
+msgid " Last seen: %d days ago\n"
+msgstr " Last seen: %d days ago\n"
+
+#: ../src/friendlist.c:1023
+msgid " Last seen: Never\n"
+msgstr " Last seen: Never\n"
+
+#: ../src/friendlist.c:1074
+#, c-format
+msgid "Audio action from: %s!"
+msgstr "Audio action from: %s!"
+
+#: ../src/friendlist.c:1126
+msgid "failed in new_friendlist"
+msgstr "failed in new_friendlist"
+
+#: ../src/friendlist.c:1129
+msgid "contacts"
+msgstr "contacts"
+
+#: ../src/global_commands.c:55 ../src/global_commands.c:292
+msgid "Request ID required."
+msgstr "Request ID required."
+
+#: ../src/global_commands.c:62 ../src/global_commands.c:67
+#: ../src/global_commands.c:299 ../src/global_commands.c:304
+msgid "No pending friend request with that ID."
+msgstr "No pending friend request with that ID."
+
+#: ../src/global_commands.c:75
+#, c-format
+msgid "Failed to add friend (error %d)\n"
+msgstr "Failed to add friend (error %d)\n"
+
+#: ../src/global_commands.c:78
+msgid "Friend request accepted."
+msgstr "Friend request accepted."
+
+#: ../src/global_commands.c:105
+msgid "Message is too long."
+msgstr "Message is too long."
+
+#: ../src/global_commands.c:109
+msgid "Please add a message to your request."
+msgstr "Please add a message to your request."
+
+#: ../src/global_commands.c:113
+msgid "That appears to be your own ID."
+msgstr "That appears to be your own ID."
+
+#: ../src/global_commands.c:117
+msgid "Friend request has already been sent."
+msgstr "Friend request has already been sent."
+
+#: ../src/global_commands.c:121
+msgid "Bad checksum in address."
+msgstr "Bad checksum in address."
+
+#: ../src/global_commands.c:125
+msgid "Nospam was different."
+msgstr "Nospam was different."
+
+#: ../src/global_commands.c:129
+msgid "Core memory allocation failed."
+msgstr "Core memory allocation failed."
+
+#: ../src/global_commands.c:133
+msgid "Friend request sent."
+msgstr "Friend request sent."
+
+#: ../src/global_commands.c:140
+msgid "Failed to add friend: Unknown error."
+msgstr "Failed to add friend: Unknown error."
+
+#: ../src/global_commands.c:150
+msgid "Tox ID or address required."
+msgstr "Tox ID or address required."
+
+#: ../src/global_commands.c:159
+msgid "Message must be enclosed in quotes."
+msgstr "Message must be enclosed in quotes."
+
+#: ../src/global_commands.c:175
+#, c-format
+msgid "Hello, my name is %s. Care to Tox?"
+msgstr "Hello, my name is %s. Care to Tox?"
+
+#: ../src/global_commands.c:193
+msgid "Invalid Tox ID."
+msgstr "Invalid Tox ID."
+
+#: ../src/global_commands.c:210
+msgid "Avatar is not set."
+msgstr "Avatar is not set."
+
+#: ../src/global_commands.c:215
+msgid "Path must be enclosed in quotes."
+msgstr "Path must be enclosed in quotes."
+
+#: ../src/global_commands.c:225
+msgid "Invalid path."
+msgstr "Invalid path."
+
+#: ../src/global_commands.c:235
+#, c-format
+msgid ""
+"Failed to set avatar. Avatars must be in PNG format and may not exceed %d "
+"bytes."
+msgstr ""
+"Failed to set avatar. Avatars must be in PNG format and may not exceed %d "
+"bytes."
+
+#: ../src/global_commands.c:240
+#, c-format
+msgid "Avatar set to '%s'"
+msgstr "Avatar set to '%s'"
+
+#: ../src/global_commands.c:252
+msgid "Require: <ip> <port> <key>"
+msgstr "Require: <ip> <port> <key>"
+
+#: ../src/global_commands.c:261
+msgid "Invalid port."
+msgstr "Invalid port."
+
+#: ../src/global_commands.c:274
+msgid "Bootstrap failed: Invalid IP."
+msgstr "Bootstrap failed: Invalid IP."
+
+#: ../src/global_commands.c:278
+msgid "Bootstrap failed: Invalid port."
+msgstr "Bootstrap failed: Invalid port."
+
+#: ../src/global_commands.c:282
+msgid "Bootstrap failed."
+msgstr "Bootstrap failed."
+
+#: ../src/global_commands.c:329
+#, c-format
+msgid "Please specify group type: %s"
+msgstr "Please specify group type: %s"
+
+#: ../src/global_commands.c:340
+#, c-format
+msgid "Valid group types are: %s"
+msgstr "Valid group types are: %s"
+
+#: ../src/global_commands.c:364
+#, c-format
+msgid "Group chat [%d] created."
+msgstr "Group chat [%d] created."
+
+#: ../src/global_commands.c:374
+msgid "Logging for this window is ON. Type \"/log off\" to disable."
+msgstr "Logging for this window is ON. Type \"/log off\" to disable."
+
+#: ../src/global_commands.c:376
+msgid "Logging for this window is OFF. Type \"/log on\" to enable."
+msgstr "Logging for this window is OFF. Type \"/log on\" to enable."
+
+#: ../src/global_commands.c:397
+msgid "Logging enabled"
+msgstr "Logging enabled"
+
+#: ../src/global_commands.c:406
+msgid "Logging disabled"
+msgstr "Logging disabled"
+
+#: ../src/global_commands.c:411
+#, c-format
+msgid "Invalid option. Use \"%s\" to toggle logging."
+msgstr "Invalid option. Use \"%s\" to toggle logging."
+
+#: ../src/global_commands.c:435 ../src/global_commands.c:468
+msgid "Input required."
+msgstr "Input required."
+
+#: ../src/global_commands.c:452
+msgid "Invalid name."
+msgstr "Invalid name."
+
+#: ../src/global_commands.c:473 ../src/global_commands.c:561
+msgid "Note must be enclosed in quotes."
+msgstr "Note must be enclosed in quotes."
+
+#: ../src/global_commands.c:499
+msgid "No pending friend requests."
+msgstr "No pending friend requests."
+
+#: ../src/global_commands.c:536
+#, c-format
+msgid "Require a status. Statuses are: %s."
+msgstr "Require a status. Statuses are: %s."
+
+#: ../src/global_commands.c:551
+#, c-format
+msgid "Invalid status. Valid statuses are: %s."
+msgstr "Invalid status. Valid statuses are: %s."
+
+#: ../src/group_commands.c:46
+#, c-format
+msgid "Title is set to: %s"
+msgstr "Title is set to: %s"
+
+#: ../src/group_commands.c:48
+msgid "Title is not set"
+msgstr "Title is not set"
+
+#: ../src/group_commands.c:55
+msgid "Title must be enclosed in quotes."
+msgstr "Title must be enclosed in quotes."
+
+#: ../src/group_commands.c:65
+msgid "Failed to set title."
+msgstr "Failed to set title."
+
+#: ../src/group_commands.c:80 ../src/groupchat.c:337
+#, c-format
+msgid " set the group title to: %s"
+msgstr " set the group title to: %s"
+
+#: ../src/group_commands.c:83 ../src/groupchat.c:340
+#, c-format
+msgid "set title to %s"
+msgstr "set title to %s"
+
+#: ../src/groupchat.c:143
+msgid "failed in init_groupchat_win"
+msgstr "failed in init_groupchat_win"
+
+#: ../src/groupchat.c:151
+#, c-format
+msgid "Group Audio failed to init\n"
+msgstr "Group Audio failed to init\n"
+
+#: ../src/groupchat.c:362
+msgid "failed in copy_peernames"
+msgstr "failed in copy_peernames"
+
+#: ../src/groupchat.c:419
+msgid "has joined the room"
+msgstr "has joined the room"
+
+#: ../src/groupchat.c:517
+msgid "has left the room"
+msgstr "has left the room"
+
+#: ../src/groupchat.c:534
+msgid " is now known as "
+msgstr " is now known as "
+
+#: ../src/groupchat.c:538
+#, c-format
+msgid "is now known as %s"
+msgstr "is now known as %s"
+
+#: ../src/groupchat.c:549
+msgid "Invalid syntax.\n"
+msgstr "Invalid syntax.\n"
+
+#: ../src/groupchat.c:554
+msgid " * Failed to send action."
+msgstr " * Failed to send action."
+
+#: ../src/groupchat.c:641
+msgid " * Failed to send message."
+msgstr " * Failed to send message."
+
+#: ../src/groupchat.c:678
+#, c-format
+msgid "Peers: %d\n"
+msgstr "Peers: %d\n"
+
+#: ../src/groupchat.c:728
+msgid "failed in groupchat_onInit"
+msgstr "failed in groupchat_onInit"
+
+#: ../src/groupchat.c:813
+#, c-format
+msgid "source: %d, queued: %d, processed: %d\n"
+msgstr "source: %d, queued: %d, processed: %d\n"
+
+#: ../src/groupchat.c:852
+#, c-format
+msgid "dvhandle is null)\n"
+msgstr "dvhandle is null)\n"
+
+#: ../src/groupchat.c:855
+#, c-format
+msgid "ctx is null\n"
+msgstr "ctx is null\n"
+
+#: ../src/groupchat.c:858
+#, c-format
+msgid "write: %d\n"
+msgstr "write: %d\n"
+
+#: ../src/groupchat.c:882
+#, c-format
+msgid "Group %d"
+msgstr "Group %d"
+
+#: ../src/groupchat.c:888
+msgid "failed in new_group_chat"
+msgstr "failed in new_group_chat"
+
+#: ../src/help.c:148
+msgid "Global Commands:\n"
+msgstr "Global Commands:\n"
+
+#: ../src/help.c:152
+msgid "Add contact with optional message\n"
+msgstr "Add contact with optional message\n"
+
+#: ../src/help.c:154
+msgid "Accept friend request\n"
+msgstr "Accept friend request\n"
+
+#: ../src/help.c:156
+msgid "Set an avatar (leave path empty to unset)\n"
+msgstr "Set an avatar (leave path empty to unset)\n"
+
+#: ../src/help.c:158
+msgid "Decline friend request\n"
+msgstr "Decline friend request\n"
+
+#: ../src/help.c:160
+msgid "List pending friend requests\n"
+msgstr "List pending friend requests\n"
+
+#: ../src/help.c:162
+msgid "Manually connect to a DHT node\n"
+msgstr "Manually connect to a DHT node\n"
+
+#: ../src/help.c:164
+msgid "Set status with optional note\n"
+msgstr "Set status with optional note\n"
+
+#: ../src/help.c:166
+msgid "Set a personal note\n"
+msgstr "Set a personal note\n"
+
+#: ../src/help.c:168
+msgid "Set your nickname\n"
+msgstr "Set your nickname\n"
+
+#: ../src/help.c:170
+msgid "Enable/disable logging\n"
+msgstr "Enable/disable logging\n"
+
+#: ../src/help.c:172
+msgid "Create a group chat where type: text | audio\n"
+msgstr "Create a group chat where type: text | audio\n"
+
+#: ../src/help.c:174
+msgid "Print your Tox ID\n"
+msgstr "Print your Tox ID\n"
+
+#: ../src/help.c:176
+msgid "Clear window history\n"
+msgstr "Clear window history\n"
+
+#: ../src/help.c:178
+msgid "Close the current chat window\n"
+msgstr "Close the current chat window\n"
+
+#: ../src/help.c:180
+msgid "Exit Toxic\n"
+msgstr "Exit Toxic\n"
+
+#: ../src/help.c:184 ../src/help.c:224
+msgid ""
+"\n"
+" Audio:\n"
+msgstr ""
+"\n"
+" Audio:\n"
+
+#: ../src/help.c:188
+msgid "List devices where type:"
+msgstr "List devices where type:"
+
+#: ../src/help.c:191
+msgid "Set active device\n"
+msgstr "Set active device\n"
+
+#: ../src/help.c:207
+msgid "Chat Commands:\n"
+msgstr "Chat Commands:\n"
+
+#: ../src/help.c:211
+msgid "Invite contact to a group chat\n"
+msgstr "Invite contact to a group chat\n"
+
+#: ../src/help.c:213
+msgid "Join a pending group chat\n"
+msgstr "Join a pending group chat\n"
+
+#: ../src/help.c:215
+msgid "Send a file\n"
+msgstr "Send a file\n"
+
+#: ../src/help.c:217
+msgid "Receive a file\n"
+msgstr "Receive a file\n"
+
+#: ../src/help.c:219
+msgid "Cancel file transfer where type:"
+msgstr "Cancel file transfer where type:"
+
+#: ../src/help.c:228
+msgid "Audio call\n"
+msgstr "Audio call\n"
+
+#: ../src/help.c:230
+msgid "Answer incoming call\n"
+msgstr "Answer incoming call\n"
+
+#: ../src/help.c:232
+msgid "Reject incoming call\n"
+msgstr "Reject incoming call\n"
+
+#: ../src/help.c:234
+msgid "Hangup active call\n"
+msgstr "Hangup active call\n"
+
+#: ../src/help.c:236
+msgid "Change active device\n"
+msgstr "Change active device\n"
+
+#: ../src/help.c:238
+msgid "Mute active device if in call\n"
+msgstr "Mute active device if in call\n"
+
+#: ../src/help.c:240
+msgid "VAD sensitivity threshold\n"
+msgstr "VAD sensitivity threshold\n"
+
+#: ../src/help.c:256
+msgid "Key bindings:\n"
+msgstr "Key bindings:\n"
+
+#: ../src/help.c:260
+msgid "Navigate through the tabs\n"
+msgstr "Navigate through the tabs\n"
+
+#: ../src/help.c:262
+msgid "Scroll window history one line\n"
+msgstr "Scroll window history one line\n"
+
+#: ../src/help.c:264
+msgid "Scroll window history half a page\n"
+msgstr "Scroll window history half a page\n"
+
+#: ../src/help.c:266
+msgid "Move to the bottom of window history\n"
+msgstr "Move to the bottom of window history\n"
+
+#: ../src/help.c:268
+msgid "Scroll peer list in groupchats\n"
+msgstr "Scroll peer list in groupchats\n"
+
+#: ../src/help.c:270
+msgid ""
+"Toggle the groupchat peerlist\n"
+"\n"
+msgstr ""
+"Toggle the groupchat peerlist\n"
+"\n"
+
+#: ../src/help.c:271
+msgid ""
+"  (Note: Custom keybindings override these defaults.)\n"
+"\n"
+msgstr ""
+"  (Note: Custom keybindings override these defaults.)\n"
+"\n"
+
+#: ../src/help.c:286
+msgid "Group commands:\n"
+msgstr "Group commands:\n"
+
+#: ../src/help.c:290
+msgid ""
+"Set group title (show current title if no msg)\n"
+"\n"
+msgstr ""
+"Set group title (show current title if no msg)\n"
+"\n"
+
+#: ../src/help.c:305
+msgid "Friendlist controls:\n"
+msgstr "Friendlist controls:\n"
+
+#: ../src/help.c:308
+msgid "  Up and Down arrows            : Scroll through list\n"
+msgstr "  Up and Down arrows            : Scroll through list\n"
+
+#: ../src/help.c:309
+msgid ""
+"  Right and Left arrows         : Switch between friendlist and blocked "
+"list\n"
+msgstr ""
+"  Right and Left arrows         : Switch between friendlist and blocked "
+"list\n"
+
+#: ../src/help.c:310
+msgid ""
+"  Enter                         : Open a chat window with selected contact\n"
+msgstr ""
+"  Enter                         : Open a chat window with selected contact\n"
+
+#: ../src/help.c:311
+msgid "  Delete                        : Permanently delete a contact\n"
+msgstr "  Delete                        : Permanently delete a contact\n"
+
+#: ../src/help.c:313
+msgid "Block or unblock a contact\n"
+msgstr "Block or unblock a contact\n"
+
+#: ../src/line_info.c:50
+msgid "failed in line_info_init"
+msgstr "failed in line_info_init"
+
+#: ../src/line_info.c:150
+msgid "failed in line_info_add"
+msgstr "failed in line_info_add"
+
+#: ../src/log.c:189
+msgid "failed in load_chat_history"
+msgstr "failed in load_chat_history"
+
+#: ../src/log.c:193 ../src/log.c:199
+msgid " * Failed to read log file"
+msgstr " * Failed to read log file"
+
+#: ../src/message_queue.c:56
+msgid "failed in cqueue_message"
+msgstr "failed in cqueue_message"
+
+#: ../src/misc_tools.c:240 ../src/misc_tools.c:248
+msgid "failed in get_file_name"
+msgstr "failed in get_file_name"
+
+#: ../src/prompt.c:139
+#, c-format
+msgid "Failed to set note (error %d)\n"
+msgstr "Failed to set note (error %d)\n"
+
+#: ../src/prompt.c:271
+msgid "ERROR"
+msgstr "ERROR"
+
+#: ../src/prompt.c:275
+msgid "Online"
+msgstr "Online"
+
+#: ../src/prompt.c:279
+msgid "Away"
+msgstr "Away"
+
+#: ../src/prompt.c:283
+msgid "Busy"
+msgstr "Busy"
+
+#: ../src/prompt.c:296
+msgid " [Offline]"
+msgstr " [Offline]"
+
+#: ../src/prompt.c:366 ../src/prompt.c:369
+#, c-format
+msgid "%s has come online"
+msgstr "%s has come online"
+
+#: ../src/prompt.c:378 ../src/prompt.c:381
+#, c-format
+msgid "%s has gone offline"
+msgstr "%s has gone offline"
+
+#: ../src/prompt.c:392 ../src/prompt.c:393
+#, c-format
+msgid "Friend request with the message '%s'"
+msgstr "Friend request with the message '%s'"
+
+#: ../src/prompt.c:398
+msgid "Friend request queue is full. Discarding request."
+msgstr "Friend request queue is full. Discarding request."
+
+#: ../src/prompt.c:403
+#, c-format
+msgid "Type \"%s %d\" or \"%s %d\""
+msgstr "Type \"%s %d\" or \"%s %d\""
+
+#: ../src/prompt.c:432 ../src/prompt.c:433
+#, c-format
+msgid "Toxing on Toxic"
+msgstr "Toxing on Toxic"
+
+#: ../src/prompt.c:455
+msgid ""
+"Welcome to Toxic, a free, open source Tox-based instant messenging client."
+msgstr ""
+"Welcome to Toxic, a free, open source Tox-based instant messenging client."
+
+#: ../src/prompt.c:457
+#, c-format
+msgid "Type \"%s\" for assistance. Further help may be found via the man page."
+msgstr ""
+"Type \"%s\" for assistance. Further help may be found via the man page."
+
+#: ../src/prompt.c:476
+msgid "failed in prompt_onInit"
+msgstr "failed in prompt_onInit"
+
+#: ../src/prompt.c:514
+msgid "failed in new_prompt"
+msgstr "failed in new_prompt"
+
+#: ../src/toxic.c:112
+#, c-format
+msgid "Caught SIGSEGV: Aborting toxic session.\n"
+msgstr "Caught SIGSEGV: Aborting toxic session.\n"
+
+#: ../src/toxic.c:161
+#, c-format
+msgid "Toxic session aborted with error code %d (%s)\n"
+msgstr "Toxic session aborted with error code %d (%s)\n"
+
+#: ../src/toxic.c:171
+msgid ""
+"Could not set your locale, please check your locale settings or disable "
+"unicode support with the -d flag."
+msgstr ""
+"Could not set your locale, please check your locale settings or disable "
+"unicode support with the -d flag."
+
+#: ../src/toxic.c:231 ../src/toxic.c:236
+msgid "Failed in queue_init_message"
+msgstr "Failed in queue_init_message"
+
+#: ../src/toxic.c:328
+#, c-format
+msgid "Failed to bootstrap %s:%d\n"
+msgstr "Failed to bootstrap %s:%d\n"
+
+#: ../src/toxic.c:335
+#, c-format
+msgid "Failed to add TCP relay %s:%d\n"
+msgstr "Failed to add TCP relay %s:%d\n"
+
+#: ../src/toxic.c:466
+#, c-format
+msgid "Enter a new password (must be at least %d characters) "
+msgstr "Enter a new password (must be at least %d characters) "
+
+#: ../src/toxic.c:476
+#, c-format
+msgid "Password must be between %d and %d characters long. "
+msgstr "Password must be between %d and %d characters long. "
+
+#: ../src/toxic.c:481
+#, c-format
+msgid "Enter password again "
+msgstr "Enter password again "
+
+#: ../src/toxic.c:489
+#, c-format
+msgid "Passwords don't match. Try again. "
+msgstr "Passwords don't match. Try again. "
+
+#: ../src/toxic.c:496
+#, c-format
+msgid "Data file '%s' is encrypted"
+msgstr "Data file '%s' is encrypted"
+
+#: ../src/toxic.c:533
+#, c-format
+msgid "tox_pass_encrypt() failed with error %d\n"
+msgstr "tox_pass_encrypt() failed with error %d\n"
+
+#: ../src/toxic.c:584
+msgid "Forcing IPv4 connection"
+msgstr "Forcing IPv4 connection"
+
+#: ../src/toxic.c:592
+#, c-format
+msgid "Using %s proxy %s : %d"
+msgstr "Using %s proxy %s : %d"
+
+#: ../src/toxic.c:597
+msgid "UDP disabled"
+msgstr "UDP disabled"
+
+#: ../src/toxic.c:599
+msgid ""
+"WARNING: Using a proxy without disabling UDP may leak your real IP address."
+msgstr ""
+"WARNING: Using a proxy without disabling UDP may leak your real IP address."
+
+#: ../src/toxic.c:601
+msgid "Use the -t option to disable UDP."
+msgstr "Use the -t option to disable UDP."
+
+#: ../src/toxic.c:620 ../src/toxic.c:627 ../src/toxic.c:635 ../src/toxic.c:712
+#: ../src/toxic.c:722
+msgid "failed in load_toxic"
+msgstr "failed in load_toxic"
+
+#: ../src/toxic.c:639
+#, c-format
+msgid "Data file '%s' has been unencrypted"
+msgstr "Data file '%s' has been unencrypted"
+
+#: ../src/toxic.c:641
+#, c-format
+msgid "Warning: passed --unencrypt-data option with unencrypted data file '%s'"
+msgstr ""
+"Warning: passed --unencrypt-data option with unencrypted data file '%s'"
+
+#: ../src/toxic.c:649
+#, c-format
+msgid "Enter password (\"%s\" to quit) "
+msgstr "Enter password (\"%s\" to quit) "
+
+#: ../src/toxic.c:666 ../src/toxic.c:690
+#, c-format
+msgid "Invalid password. Try again. "
+msgstr "Invalid password. Try again. "
+
+#: ../src/toxic.c:693
+msgid "tox_pass_decrypt() failed"
+msgstr "tox_pass_decrypt() failed"
+
+#: ../src/toxic.c:737
+msgid "Falling back to ipv4"
+msgstr "Falling back to ipv4"
+
+#: ../src/toxic.c:743
+msgid "tox_new returned fatal error"
+msgstr "tox_new returned fatal error"
+
+#: ../src/toxic.c:746
+#, c-format
+msgid "tox_new returned non-fatal error %d"
+msgstr "tox_new returned non-fatal error %d"
+
+#: ../src/toxic.c:753
+msgid "Toxic User"
+msgstr "Toxic User"
+
+#: ../src/toxic.c:779
+#, c-format
+msgid "Auto-connect failed with error code %d"
+msgstr "Auto-connect failed with error code %d"
+
+#: ../src/toxic.c:860
+#, c-format
+msgid "usage: toxic [OPTION] [FILE ...]\n"
+msgstr "usage: toxic [OPTION] [FILE ...]\n"
+
+#: ../src/toxic.c:862
+#, c-format
+msgid "Force IPv4 connection\n"
+msgstr "Force IPv4 connection\n"
+
+#: ../src/toxic.c:864
+#, c-format
+msgid "Enable stderr for debugging\n"
+msgstr "Enable stderr for debugging\n"
+
+#: ../src/toxic.c:866
+#, c-format
+msgid "Use specified config file\n"
+msgstr "Use specified config file\n"
+
+#: ../src/toxic.c:868
+#, c-format
+msgid "Use default POSIX locale\n"
+msgstr "Use default POSIX locale\n"
+
+#: ../src/toxic.c:870
+#, c-format
+msgid "Encrypt an unencrypted data file\n"
+msgstr "Encrypt an unencrypted data file\n"
+
+#: ../src/toxic.c:872
+#, c-format
+msgid "Use specified data file\n"
+msgstr "Use specified data file\n"
+
+#: ../src/toxic.c:874
+#, c-format
+msgid "Show this message and exit\n"
+msgstr "Show this message and exit\n"
+
+#: ../src/toxic.c:876
+#, c-format
+msgid "Use specified DHTnodes file\n"
+msgstr "Use specified DHTnodes file\n"
+
+#: ../src/toxic.c:878
+#, c-format
+msgid "Do not connect to the DHT network\n"
+msgstr "Do not connect to the DHT network\n"
+
+#: ../src/toxic.c:880
+#, c-format
+msgid "Use SOCKS5 proxy: Requires [IP] [port]\n"
+msgstr "Use SOCKS5 proxy: Requires [IP] [port]\n"
+
+#: ../src/toxic.c:882
+#, c-format
+msgid "Use HTTP proxy: Requires [IP] [port]\n"
+msgstr "Use HTTP proxy: Requires [IP] [port]\n"
+
+#: ../src/toxic.c:884
+#, c-format
+msgid "Use specified DNSservers file\n"
+msgstr "Use specified DNSservers file\n"
+
+#: ../src/toxic.c:886
+#, c-format
+msgid "Force TCP connection (use this with proxies)\n"
+msgstr "Force TCP connection (use this with proxies)\n"
+
+#: ../src/toxic.c:888
+#, c-format
+msgid "Unencrypt an encrypted data file\n"
+msgstr "Unencrypt an encrypted data file\n"
+
+#: ../src/toxic.c:932
+msgid "stderr enabled"
+msgstr "stderr enabled"
+
+#: ../src/toxic.c:939
+msgid "Config file not found"
+msgstr "Config file not found"
+
+#: ../src/toxic.c:945
+msgid "Using default POSIX locale"
+msgstr "Using default POSIX locale"
+
+#: ../src/toxic.c:958
+msgid "failed in parse_args"
+msgstr "failed in parse_args"
+
+#: ../src/toxic.c:963
+#, c-format
+msgid "Using '%s' data file"
+msgstr "Using '%s' data file"
+
+#: ../src/toxic.c:971
+msgid "DHTnodes file not found"
+msgstr "DHTnodes file not found"
+
+#: ../src/toxic.c:977
+msgid "DHT disabled"
+msgstr "DHT disabled"
+
+#: ../src/toxic.c:985 ../src/toxic.c:995
+msgid "Proxy error"
+msgstr "Proxy error"
+
+#: ../src/toxic.c:1004
+msgid "DNSservers file not found"
+msgstr "DNSservers file not found"
+
+#: ../src/toxic.c:1101
+#, c-format
+msgid "Warning: Using \"%s\" and \"%s\" simultaneously has no effect"
+msgstr "Warning: Using \"%s\" and \"%s\" simultaneously has no effect"
+
+#: ../src/toxic.c:1114
+msgid "Creating new data file. Would you like to encrypt it? Y/n (q to quit)"
+msgstr "Creating new data file. Would you like to encrypt it? Y/n (q to quit)"
+
+#: ../src/toxic.c:1116
+msgid "Encrypt existing data file? Y/n (q to quit)"
+msgstr "Encrypt existing data file? Y/n (q to quit)"
+
+#: ../src/toxic.c:1123 ../src/toxic.c:1146 ../src/toxic.c:1149
+#: ../src/toxic.c:1153 ../src/toxic.c:1161
+msgid "failed in main"
+msgstr "failed in main"
+
+#: ../src/toxic.c:1130
+msgid "X failed to initialize"
+msgstr "X failed to initialize"
+
+#: ../src/toxic.c:1168
+msgid "Failed to init audio devices"
+msgstr "Failed to init audio devices"
+
+#: ../src/toxic.c:1177
+msgid ""
+"Unable to determine configuration directory. Defaulting to 'data' for data "
+"file..."
+msgstr ""
+"Unable to determine configuration directory. Defaulting to 'data' for data "
+"file..."
+
+#: ../src/toxic.c:1182
+msgid "Failed to load user settings"
+msgstr "Failed to load user settings"
+
+#: ../src/toxic.c:1186
+msgid "Failed to init mplex auto-away."
+msgstr "Failed to init mplex auto-away."
+
+#: ../src/toxic.c:1209
+msgid "WARNING: Failed to save to data file"
+msgstr "WARNING: Failed to save to data file"
+
+#: ../src/toxic.h:43
+msgid "Anonymous"
+msgstr "Anonymous"
+
+#: ../src/toxic.h:44
+msgid "Tox User"
+msgstr "Tox User"
+
+#: ../src/windows.c:368
+msgid "failed in set_next_window"
+msgstr "failed in set_next_window"
+
+#: ../src/windows.c:390
+msgid "failed in init_windows"
+msgstr "failed in init_windows"
