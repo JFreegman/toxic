@@ -142,7 +142,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, int groupnum, uint8_t type)
                 || groupchats[i].peer_name_lengths == NULL || groupchats[i].oldpeer_name_lengths == NULL)
                 exit_toxic_err(gettext("failed in init_groupchat_win"), FATALERR_MEMORY);
 
-            memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, sizeof(UNKNOWN_NAME));
+            memcpy(&groupchats[i].oldpeer_names[0], UNKNOWN_NAME, strlen(UNKNOWN_NAME));
             groupchats[i].oldpeer_name_lengths[0] = (uint16_t) strlen(UNKNOWN_NAME);
 
 #ifdef AUDIO
