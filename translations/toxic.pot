@@ -7,11 +7,12 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Toxic 0.6.0\n"
-"Report-Msgid-Bugs-To: JFreegman@tox.im\n"
-"POT-Creation-Date: 2015-05-30 11:30+0200\n"
+"Report-Msgid-Bugs-To: JFreegman@tox.chat\n"
+"POT-Creation-Date: 2015-06-30 23:49-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -166,11 +167,11 @@ msgstr ""
 msgid "no"
 msgstr ""
 
-#: ../src/chat.c:223 ../src/prompt.c:360
+#: ../src/chat.c:223 ../src/prompt.c:363
 msgid "has come online"
 msgstr ""
 
-#: ../src/chat.c:234 ../src/prompt.c:372
+#: ../src/chat.c:234 ../src/prompt.c:375
 msgid "has gone offline"
 msgstr ""
 
@@ -328,11 +329,11 @@ msgstr ""
 msgid " VAD level: "
 msgstr ""
 
-#: ../src/chat.c:1080
+#: ../src/chat.c:1083
 msgid "failed in chat_onInit"
 msgstr ""
 
-#: ../src/chat.c:1152
+#: ../src/chat.c:1155
 msgid "failed in new_chat"
 msgstr ""
 
@@ -862,33 +863,6 @@ msgstr ""
 msgid "Invalid status. Valid statuses are: %s."
 msgstr ""
 
-#: ../src/group_commands.c:46
-#, c-format
-msgid "Title is set to: %s"
-msgstr ""
-
-#: ../src/group_commands.c:48
-msgid "Title is not set"
-msgstr ""
-
-#: ../src/group_commands.c:55
-msgid "Title must be enclosed in quotes."
-msgstr ""
-
-#: ../src/group_commands.c:65
-msgid "Failed to set title."
-msgstr ""
-
-#: ../src/group_commands.c:80 ../src/groupchat.c:337
-#, c-format
-msgid " set the group title to: %s"
-msgstr ""
-
-#: ../src/group_commands.c:83 ../src/groupchat.c:340
-#, c-format
-msgid "set title to %s"
-msgstr ""
-
 #: ../src/groupchat.c:143
 msgid "failed in init_groupchat_win"
 msgstr ""
@@ -896,6 +870,16 @@ msgstr ""
 #: ../src/groupchat.c:151
 #, c-format
 msgid "Group Audio failed to init\n"
+msgstr ""
+
+#: ../src/groupchat.c:337 ../src/group_commands.c:80
+#, c-format
+msgid " set the group title to: %s"
+msgstr ""
+
+#: ../src/groupchat.c:340 ../src/group_commands.c:83
+#, c-format
+msgid "set title to %s"
 msgstr ""
 
 #: ../src/groupchat.c:362
@@ -931,42 +915,59 @@ msgstr ""
 msgid " * Failed to send message."
 msgstr ""
 
-#: ../src/groupchat.c:678
+#: ../src/groupchat.c:681
 #, c-format
 msgid "Peers: %d\n"
 msgstr ""
 
-#: ../src/groupchat.c:728
+#: ../src/groupchat.c:731
 msgid "failed in groupchat_onInit"
 msgstr ""
 
-#: ../src/groupchat.c:813
+#: ../src/groupchat.c:816
 #, c-format
 msgid "source: %d, queued: %d, processed: %d\n"
 msgstr ""
 
-#: ../src/groupchat.c:852
+#: ../src/groupchat.c:855
 #, c-format
 msgid "dvhandle is null)\n"
 msgstr ""
 
-#: ../src/groupchat.c:855
+#: ../src/groupchat.c:858
 #, c-format
 msgid "ctx is null\n"
 msgstr ""
 
-#: ../src/groupchat.c:858
+#: ../src/groupchat.c:861
 #, c-format
 msgid "write: %d\n"
 msgstr ""
 
-#: ../src/groupchat.c:882
+#: ../src/groupchat.c:885
 #, c-format
 msgid "Group %d"
 msgstr ""
 
-#: ../src/groupchat.c:888
+#: ../src/groupchat.c:891
 msgid "failed in new_group_chat"
+msgstr ""
+
+#: ../src/group_commands.c:46
+#, c-format
+msgid "Title is set to: %s"
+msgstr ""
+
+#: ../src/group_commands.c:48
+msgid "Title is not set"
+msgstr ""
+
+#: ../src/group_commands.c:55
+msgid "Title must be enclosed in quotes."
+msgstr ""
+
+#: ../src/group_commands.c:65
+msgid "Failed to set title."
 msgstr ""
 
 #: ../src/help.c:148
@@ -1201,70 +1202,70 @@ msgstr ""
 msgid "Failed to set note (error %d)\n"
 msgstr ""
 
-#: ../src/prompt.c:271
+#: ../src/prompt.c:274
 msgid "ERROR"
 msgstr ""
 
-#: ../src/prompt.c:275
+#: ../src/prompt.c:278
 msgid "Online"
 msgstr ""
 
-#: ../src/prompt.c:279
+#: ../src/prompt.c:282
 msgid "Away"
 msgstr ""
 
-#: ../src/prompt.c:283
+#: ../src/prompt.c:286
 msgid "Busy"
 msgstr ""
 
-#: ../src/prompt.c:296
+#: ../src/prompt.c:299
 msgid " [Offline]"
 msgstr ""
 
-#: ../src/prompt.c:366 ../src/prompt.c:369
+#: ../src/prompt.c:369 ../src/prompt.c:372
 #, c-format
 msgid "%s has come online"
 msgstr ""
 
-#: ../src/prompt.c:378 ../src/prompt.c:381
+#: ../src/prompt.c:381 ../src/prompt.c:384
 #, c-format
 msgid "%s has gone offline"
 msgstr ""
 
-#: ../src/prompt.c:392 ../src/prompt.c:393
+#: ../src/prompt.c:395 ../src/prompt.c:396
 #, c-format
 msgid "Friend request with the message '%s'"
 msgstr ""
 
-#: ../src/prompt.c:398
+#: ../src/prompt.c:401
 msgid "Friend request queue is full. Discarding request."
 msgstr ""
 
-#: ../src/prompt.c:403
+#: ../src/prompt.c:406
 #, c-format
 msgid "Type \"%s %d\" or \"%s %d\""
 msgstr ""
 
-#: ../src/prompt.c:432 ../src/prompt.c:433
+#: ../src/prompt.c:435 ../src/prompt.c:436
 #, c-format
 msgid "Toxing on Toxic"
 msgstr ""
 
-#: ../src/prompt.c:455
+#: ../src/prompt.c:458
 msgid ""
 "Welcome to Toxic, a free, open source Tox-based instant messenging client."
 msgstr ""
 
-#: ../src/prompt.c:457
+#: ../src/prompt.c:460
 #, c-format
 msgid "Type \"%s\" for assistance. Further help may be found via the man page."
 msgstr ""
 
-#: ../src/prompt.c:476
+#: ../src/prompt.c:479
 msgid "failed in prompt_onInit"
 msgstr ""
 
-#: ../src/prompt.c:514
+#: ../src/prompt.c:517
 msgid "failed in new_prompt"
 msgstr ""
 
