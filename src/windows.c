@@ -561,8 +561,11 @@ void refresh_inactive_windows(void)
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *a = &windows[i];
 
-        if (a->active && a != active_window && !a->is_friendlist)
+        if (a->active && a != active_window && !a->is_friendlist) {
+            pthread_mutex_lock(&Winthread.lock);
             line_info_print(a);
+            pthread_mutex_unlock(&Winthread.lock);
+        }
     }
 }
 

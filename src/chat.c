@@ -923,7 +923,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     ChatContext *ctx = self->chatwin;
 
+    pthread_mutex_lock(&Winthread.lock);
     line_info_print(self);
+    pthread_mutex_unlock(&Winthread.lock);
+
     wclear(ctx->linewin);
 
     curs_set(1);
