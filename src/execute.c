@@ -77,10 +77,10 @@ static struct cmd_func chat_commands[] = {
     { "/hangup",    cmd_hangup      },
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
-#ifdef VIDEO
-    { "/enablevid", cmd_enablevid   },
-    { "/disablevid",cmd_disablevid  },
-#endif /* VIDEO */
+//#ifdef VIDEO
+    //{ "/enablevid", cmd_enablevid   },
+    //{ "/disablevid",cmd_disablevid  },
+//#endif /* VIDEO */
 #endif /* AUDIO */
     { NULL,         NULL            },
 };

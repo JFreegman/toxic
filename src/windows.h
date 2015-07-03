@@ -147,14 +147,14 @@ struct ToxWindow {
     void(*onWriteDevice)(ToxWindow *, Tox *, uint32_t, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
-
+    bool is_call;
     int ringing_sound;
 #endif /* AUDIO */
 
     int active_box; /* For box notify */
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    int num;    /* corresponds to friendnumber in chat windows */
+    uint32_t  num;    /* corresponds to friendnumber in chat windows */
     bool active;
     int x;
 

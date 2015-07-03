@@ -124,58 +124,6 @@ VideoDeviceError init_video_devices()
     }
 #endif /* __linux__ */
     
-#ifdef __WIN32
-    /* Enumerate video capture devices using win32 api */
-
-    HRESULT hr;
-    CoInitialize(NULL);
-    ICreateDevEnum *pSysDevEnum = NULL;
-    hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, &IID_ICreateDevEnum, (void**)&pSysDevEnum);
-    if(FAILED(hr)) {
-        printf("CoCreateInstance failed()\n");
-    }
-    // Obtain a class enumerator for the video compressor category.
-    IEnumMoniker *pEnumCat = NULL;
-    hr = pSysDevEnum->lpVtbl->CreateClassEnumerator(pSysDevEnum, &CLSID_VideoInputDeviceCategory, &pEnumCat, 0);
-    if(hr != S_OK) {
-        pSysDevEnum->lpVtbl->Release(pSysDevEnum);
-        printf("CreateClassEnumerator failed()\n");
-    }
-
-    IMoniker *pMoniker = NULL;
-
-    ULONG cFetched;
-    i = 0;
-    while( pEnumCat->lpVtbl->Next(pEnumCat, 1, &pMoniker, &cFetched) == S_OK && i <= MAX_DEVICES ) {
-        IPropertyBag *pPropBag;
-        hr = pMoniker->lpVtbl->BindToStorage(pMoniker, 0, 0, &IID_IPropertyBag, (void **)&pPropBag);
-        if(SUCCEEDED(hr)) {
-            /* To retrieve the filter's friendly name, do the following: */
-            VARIANT varName;
-            VariantInit(&varName);
-            hr = pPropBag->lpVtbl->Read(pPropBag, L"FriendlyName", &varName, 0);
-            if (SUCCEEDED(hr)) {
-                if(varName.vt == VT_BSTR) {
-                    int name_length = wcslen(varName.bstrVal);
-                    char* name = (char*)malloc(name_length + 1);
-                    wcstombs(name, varName.bstrVal, name_length + 1);
-                    video_device_names[input][i] = name;
-                } else {
-                    video_device_names[input][i] = "Unknown Device";
-                }
-                ++i;
-            }
-            
-            VariantClear(&varName);
-            pPropBag->lpVtbl->Release(pPropBag);
-        }
-        pMoniker->lpVtbl->Release(pMoniker);
-    }
-    video_device_size[input] = i-1;
-    pEnumCat->lpVtbl->Release(pEnumCat);
-    pSysDevEnum->lpVtbl->Release(pSysDevEnum);
-#endif /* __WIN32 */
-
     /* Start poll thread */
     if (pthread_mutex_init(&video_mutex, NULL) != 0)
         return vde_InternalError;

@@ -68,12 +68,10 @@ int stop_video_transmission(Call *call, int friend_number)
  */
 void cmd_enablevid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video Enabled");
     return;
 }
 
 void cmd_disablevid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video Disabled");
     return;
 }
