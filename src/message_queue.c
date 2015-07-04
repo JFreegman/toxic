@@ -22,12 +22,6 @@
 
 #include <stdlib.h>
 
-#ifdef NO_GETTEXT
-#define gettext(A) (A)
-#else
-#include <libintl.h>
-#endif
-
 #include "toxic.h"
 #include "windows.h"
 #include "message_queue.h"
@@ -53,7 +47,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
     struct cqueue_msg *new_m = malloc(sizeof(struct cqueue_msg));
 
     if (new_m == NULL)
-        exit_toxic_err(gettext("failed in cqueue_message"), FATALERR_MEMORY);
+        exit_toxic_err("failed in cqueue_message", FATALERR_MEMORY);
 
     snprintf(new_m->message, sizeof(new_m->message), "%s", msg);
     new_m->len = len;

@@ -25,12 +25,6 @@
 #include <time.h>
 #include <sys/stat.h>
 
-#ifdef NO_GETTEXT
-#define gettext(A) (A)
-#else
-#include <libintl.h>
-#endif
-
 #include "configdir.h"
 #include "toxic.h"
 #include "windows.h"
@@ -186,17 +180,17 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     char *hstbuf = malloc(sz);
 
     if (hstbuf == NULL)
-        exit_toxic_err(gettext("failed in load_chat_history"), FATALERR_MEMORY);
+        exit_toxic_err("failed in load_chat_history", FATALERR_MEMORY);
 
     if (fseek(log->file, 0L, SEEK_SET) == -1) {
         free(hstbuf);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext(" * Failed to read log file"));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to read log file");
         return;
     }
 
     if (fread(hstbuf, sz, 1, log->file) != 1) {
         free(hstbuf);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext(" * Failed to read log file"));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to read log file");
         return;
     }
 
