@@ -26,12 +26,6 @@
 #include <netinet/in.h>
 #include <resolv.h>
 
-#ifdef NO_GETTEXT
-#define gettext(A) (A)
-#else
-#include <libintl.h>
-#endif
-
 #ifdef __APPLE__
     #include <arpa/nameser_compat.h>
 #else
@@ -152,7 +146,7 @@ static int load_dns_domainlist(const char *path)
 static int dns_error(ToxWindow *self, const char *errmsg)
 {
     pthread_mutex_lock(&Winthread.lock);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("User lookup failed: %s"), errmsg);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "User lookup failed: %s", errmsg);
     pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
@@ -178,18 +172,18 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
     int len = dn_expand(answer, ans_end, ans_pt, exp_ans, sizeof(exp_ans));
 
     if (len == -1)
-        return dns_error(self, gettext("dn_expand failed."));
+        return dns_error(self, "dn_expand failed.");
 
     ans_pt += len;
 
     if (ans_pt > ans_end - 4)
-         return dns_error(self, gettext("DNS reply was too short."));
+         return dns_error(self, "DNS reply was too short.");
 
     int type;
     GETSHORT(type, ans_pt);
 
     if (type != T_TXT)
-        return dns_error(self, gettext("Broken DNS reply."));
+        return dns_error(self, "Broken DNS reply.");
 
 
     ans_pt += INT16SZ;    /* class */
@@ -201,12 +195,12 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
         len = dn_expand(answer, ans_end, ans_pt, exp_ans, sizeof(exp_ans));
 
         if (len == -1)
-            return dns_error(self, gettext("Second dn_expand failed."));
+            return dns_error(self, "Second dn_expand failed.");
 
         ans_pt += len;
 
         if (ans_pt > ans_end - 10)
-            return dns_error(self, gettext("DNS reply was too short."));
+            return dns_error(self, "DNS reply was too short.");
 
         GETSHORT(type, ans_pt);
         ans_pt += INT16SZ;
@@ -214,20 +208,20 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
         GETSHORT(size, ans_pt);
 
         if (ans_pt + size < answer || ans_pt + size > ans_end)
-            return dns_error(self, gettext("RR overflow."));
+            return dns_error(self, "RR overflow.");
 
     } while (type == T_CNAME);
 
     if (type != T_TXT)
-        return dns_error(self, gettext("DNS response failed."));
+        return dns_error(self, "DNS response failed.");
 
     uint32_t txt_len = *ans_pt;
 
     if (!size || txt_len >= size || !txt_len)
-        return dns_error(self, gettext("No record found."));
+        return dns_error(self, "No record found.");
 
     if (txt_len > MAX_DNS_REQST_SIZE)
-        return dns_error(self, gettext("Invalid DNS response."));
+        return dns_error(self, "Invalid DNS response.");
 
     ans_pt++;
     ans_pt[txt_len] = '\0';
@@ -304,7 +298,7 @@ void *dns3_lookup_thread(void *data)
     int namelen = parse_addr(t_data.addr, name, inputdomain);
 
     if (namelen == -1) {
-        dns_error(self, gettext("Must be a Tox ID or an address in the form username@domain"));
+        dns_error(self, "Must be a Tox ID or an address in the form username@domain");
         killdns_thread(NULL);
     }
 
@@ -314,14 +308,14 @@ void *dns3_lookup_thread(void *data)
     int match = get_domain_match(DNS_pubkey, domain, inputdomain);
 
     if (match == -1) {
-        dns_error(self, gettext("Domain not found."));
+        dns_error(self, "Domain not found.");
         killdns_thread(NULL);
     }
 
     void *dns_obj = tox_dns3_new((uint8_t *) DNS_pubkey);
 
     if (dns_obj == NULL) {
-        dns_error(self, gettext("Core failed to create DNS object."));
+        dns_error(self, "Core failed to create DNS object.");
         killdns_thread(NULL);
     }
 
@@ -332,7 +326,7 @@ void *dns3_lookup_thread(void *data)
                                            (uint8_t *) name, namelen);
 
     if (str_len == -1) {
-        dns_error(self, gettext("Core failed to generate DNS3 string."));
+        dns_error(self, "Core failed to generate DNS3 string.");
         killdns_thread(dns_obj);
     }
 
@@ -346,7 +340,7 @@ void *dns3_lookup_thread(void *data)
     int ans_len = res_query(d_string, C_IN, T_TXT, answer, sizeof(answer));
 
     if (ans_len <= 0) {
-        dns_error(self, gettext("DNS query failed."));
+        dns_error(self, "DNS query failed.");
         killdns_thread(dns_obj);
     }
 
@@ -361,7 +355,7 @@ void *dns3_lookup_thread(void *data)
 
     /* extract the encrypted ID from TXT response */
     if (strncmp(ans_id, TOX_DNS3_TXT_PREFIX, prfx_len) != 0) {
-        dns_error(self, gettext("Bad DNS3 TXT response."));
+        dns_error(self, "Bad DNS3 TXT response.");
         killdns_thread(dns_obj);
     }
 
@@ -369,7 +363,7 @@ void *dns3_lookup_thread(void *data)
 
     if (tox_decrypt_dns3_TXT(dns_obj, (uint8_t *) t_data.id_bin, (uint8_t *) encrypted_id,
                              strlen(encrypted_id), request_id) == -1) {
-        dns_error(self, gettext("Core failed to decrypt DNS response."));
+        dns_error(self, "Core failed to decrypt DNS response.");
         killdns_thread(dns_obj);
     }
 
@@ -385,12 +379,12 @@ void *dns3_lookup_thread(void *data)
 void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *msg)
 {
     if (arg_opts.proxy_type != TOX_PROXY_TYPE_NONE && arg_opts.force_tcp) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("DNS lookups are disabled."));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "DNS lookups are disabled.");
         return;
     }
 
     if (t_data.busy) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Please wait for previous user lookup to finish."));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please wait for previous user lookup to finish.");
         return;
     }
 
@@ -400,7 +394,7 @@ void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
         int ret = load_dns_domainlist(path);
 
         if (ret < 0) {
-            const char *errmsg = gettext("DNS server list failed to load with error code %d. Falling back to hard-coded list.");
+            const char *errmsg = "DNS server list failed to load with error code %d. Falling back to hard-coded list.";
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg, ret);
         }
     }
@@ -413,20 +407,20 @@ void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
     t_data.busy = 1;
 
     if (pthread_attr_init(&dns_thread.attr) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext("Error: DNS thread attr failed to init"));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: DNS thread attr failed to init");
         memset(&t_data, 0, sizeof(struct thread_data));
         return;
     }
 
     if (pthread_attr_setdetachstate(&dns_thread.attr, PTHREAD_CREATE_DETACHED) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext("Error: DNS thread attr failed to set"));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: DNS thread attr failed to set");
         pthread_attr_destroy(&dns_thread.attr);
         memset(&t_data, 0, sizeof(struct thread_data));
         return;
     }
 
     if (pthread_create(&dns_thread.tid, &dns_thread.attr, dns3_lookup_thread, NULL) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext("Error: DNS thread failed to init"));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: DNS thread failed to init");
         pthread_attr_destroy(&dns_thread.attr);
         memset(&t_data, 0, sizeof(struct thread_data));
         return;

@@ -22,12 +22,6 @@
 
 #include <string.h>
 
-#ifdef NO_GETTEXT
-#define gettext(A) (A)
-#else
-#include <libintl.h>
-#endif
-
 #include "toxic.h"
 #include "windows.h"
 #include "line_info.h"
@@ -43,16 +37,16 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
         if (tlen != -1) {
             title[tlen] = '\0';
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Title is set to: %s"), title);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
         } else {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Title is not set"));
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
         }
 
         return;
     }
 
     if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Title must be enclosed in quotes."));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title must be enclosed in quotes.");
         return;
     }
 
@@ -62,7 +56,7 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     title[len] = '\0';
 
     if (tox_group_set_title(m, self->num, (uint8_t *) title, len) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to set title."));
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title.");
         return;
     }
 
@@ -77,9 +71,9 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';
 
-    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, gettext(" set the group title to: %s"), title);
+    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group title to: %s", title);
 
     char tmp_event[MAX_STR_SIZE];
-    snprintf(tmp_event, sizeof(tmp_event), gettext("set title to %s"), title);
+    snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
     write_to_log(tmp_event, selfnick, self->chatwin->log, true);
 }
