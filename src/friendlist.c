@@ -1054,10 +1054,9 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
         return;
 
     Tox *m = toxav_get_tox(av);
-    
+
     if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            //line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "List number %d", Friends.list[friend_number].num);
             if(state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
                 Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
                 set_active_window(Friends.list[friend_number].chatwin);
@@ -1108,7 +1107,6 @@ ToxWindow new_friendlist(void)
     ret.onRequestTimeout = &friendlist_onAV;
     ret.onPeerTimeout = &friendlist_onAV;
 
-    //ret.num = -1;
     ret.is_call = false;
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* AUDIO */

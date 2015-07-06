@@ -1,1 +1,0 @@
-gcc -o example.exe -I C:/opencv/build/include -L C:/opencv/build/x86/vc12/lib capture_playback.c -lopencv_core2411d -lopencv_highgui2411d -luuid -strmiids -lole32 -loleaut32

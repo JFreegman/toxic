@@ -137,7 +137,7 @@ static void print_err (ToxWindow *self, const char *error_str)
 ToxAV *init_audio(ToxWindow *self, Tox *tox)
 {
     TOXAV_ERR_NEW error;
-
+    CallContrl.errors = ae_None;
     CallContrl.window = self;
 
     CallContrl.audio_enabled = true;
@@ -149,8 +149,6 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallContrl.audio_frame_duration = 10;
     CallContrl.video_frame_duration = 0;
     CallContrl.audio_channels = 1;
-
-    CallContrl.errors = ae_None;
 
     memset(CallContrl.calls, 0, sizeof(CallContrl.calls));
 
@@ -313,16 +311,16 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
             CallContrl.pending_call = false;
             callback_call_rejected(CallContrl.av, friend_number, &CallContrl);
         } else {
-            callback_call_ended(CallContrl.av, friend_number, &CallContrl);
+            callback_call_ended(av, friend_number, &CallContrl);
         }
     } else {
         if( state == TOXAV_FRIEND_CALL_STATE_ERROR ) {
             line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
             CallContrl.pending_call = false;
-            callback_call_ended(CallContrl.av, friend_number, &CallContrl);
+            callback_call_ended(av, friend_number, &CallContrl);
         } else {
             CallContrl.pending_call = false;
-            callback_call_started(CallContrl.av, friend_number, &CallContrl);
+            callback_call_started(av, friend_number, &CallContrl);
         }
     }
 }
@@ -378,7 +376,7 @@ void callback_recv_invite ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onInvite != NULL && windows[i].num == friend_number) {
-            windows[i].onInvite(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onInvite(&windows[i], av, friend_number, cc->call_state);
         }
 }
 
@@ -391,7 +389,7 @@ void callback_recv_ringing ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onRinging != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onRinging(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onRinging(&windows[i], av, friend_number, cc->call_state);
         }
 }
 void callback_recv_starting ( void* av, uint32_t friend_number, void* arg )
@@ -402,7 +400,7 @@ void callback_recv_starting ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onStarting != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onStarting(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onStarting(&windows[i], av, friend_number, cc->call_state);
             if ( 0 != start_transmission(&windows[i], &CallContrl.calls[friend_number])) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , "Error starting transmission!");
             }
@@ -418,7 +416,7 @@ void callback_recv_ending ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onEnding != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onEnding(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onEnding(&windows[i], av, friend_number, cc->call_state);
         }
 
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
@@ -432,7 +430,7 @@ void callback_call_started ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onStart != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onStart(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onStart(&windows[i], av, friend_number, cc->call_state);
             if ( 0 != start_transmission(&windows[i], &CallContrl.calls[friend_number]) ) {/* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                 return;
@@ -448,7 +446,7 @@ void callback_call_canceled ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onCancel != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onCancel(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onCancel(&windows[i], av, friend_number, cc->call_state);
         }
 
     /* In case call is active */
@@ -464,7 +462,7 @@ void callback_call_rejected ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onReject != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onReject(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onReject(&windows[i], av, friend_number, cc->call_state);
         }
 
 }
@@ -477,7 +475,7 @@ void callback_call_ended ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onEnd != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onEnd(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onEnd(&windows[i], av, friend_number, cc->call_state);
         }
 
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
@@ -492,7 +490,7 @@ void callback_requ_timeout ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onRequestTimeout != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onRequestTimeout(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onRequestTimeout(&windows[i], av, friend_number, cc->call_state);
         }
 }
 void callback_peer_timeout ( void* av, uint32_t friend_number, void* arg )
@@ -504,7 +502,7 @@ void callback_peer_timeout ( void* av, uint32_t friend_number, void* arg )
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
         if (windows[i].onPeerTimeout != NULL && windows[i].is_call && windows[i].num == friend_number) {
-            windows[i].onPeerTimeout(&windows[i], cc->av, friend_number, cc->call_state);
+            windows[i].onPeerTimeout(&windows[i], av, friend_number, cc->call_state);
         }
 
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
@@ -512,7 +510,7 @@ void callback_peer_timeout ( void* av, uint32_t friend_number, void* arg )
      * actions that one can possibly take on timeout
      */
     TOXAV_ERR_CALL_CONTROL error;
-    bool call_running = toxav_call_control(cc->av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
+    bool call_running = toxav_call_control(av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
 }
 
 // void callback_media_change(void* av, int32_t friend_number, void* arg)
@@ -584,7 +582,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto on_error;
     }
 
-    bool call_running = toxav_answer(CallContrl.av, self->num, 48, 0, &error);
+    bool call_running = toxav_answer(CallContrl.av, self->num, CallContrl.audio_bit_rate, CallContrl.video_bit_rate, &error);
 
     if ( !call_running ) {
         if ( error == TOXAV_ERR_ANSWER_FRIEND_NOT_CALLING ) error_str = "No incoming call!";
@@ -671,7 +669,6 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         call_running = toxav_call_control(CallContrl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, &error);
         callback_call_ended(CallContrl.av, self->num, &CallContrl);
     }
-    self->is_call = call_running;
 
     if ( error != TOXAV_ERR_CALL_CONTROL_OK ) {
         if ( error == TOXAV_ERR_CALL_CONTROL_INVALID_TRANSITION ) error_str = "Cannot hangup in invalid state!";

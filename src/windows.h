@@ -154,7 +154,7 @@ struct ToxWindow {
     int active_box; /* For box notify */
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    uint32_t  num;    /* corresponds to friendnumber in chat windows */
+    uint32_t num;    /* corresponds to friendnumber in chat windows */
     bool active;
     int x;
 

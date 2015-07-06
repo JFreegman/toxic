@@ -41,10 +41,6 @@ void cmd_cancel(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZ
 void cmd_ccur_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_mute(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_sense(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-#ifdef VIDEO
-void cmd_enablevid(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-void cmd_disablevid(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-#endif /* VIDEO */
 #endif /* AUDIO */
 
 #endif /* #define CHAT_COMMANDS_H */
