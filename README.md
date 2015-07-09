@@ -1,10 +1,10 @@
 # Toxic [![Build Status](https://travis-ci.org/Tox/toxic.png?branch=master)](https://travis-ci.org/Tox/toxic)
-Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
+Toxic is a [Tox](https://tox.chat)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
 
 [![Toxic Screenshot](https://i.imgur.com/san99Z2.png "Home Screen")](https://i.imgur.com/san99Z2.png)
 
 ## Installation
-[Use our repositories](https://wiki.tox.im/Binaries#Linux)<br />
+[Use our repositories](https://wiki.tox.chat/doku.php?id=developers:binaries#other_linux)<br />
 [Compile it yourself](/INSTALL.md)
 
 ## Downloads
