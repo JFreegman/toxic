@@ -97,6 +97,8 @@ struct arg_opts {
     char proxy_address[256];
     uint8_t proxy_type;
     uint16_t proxy_port;
+
+    uint16_t tcp_port;
 };
 
 typedef struct ToxWindow ToxWindow;

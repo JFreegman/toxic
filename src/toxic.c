@@ -569,9 +569,13 @@ static void init_tox_options(struct Tox_Options *tox_opts)
     tox_opts->ipv6_enabled = !arg_opts.use_ipv4;
     tox_opts->udp_enabled = !arg_opts.force_tcp;
     tox_opts->proxy_type = arg_opts.proxy_type;
+    tox_opts->tcp_port = arg_opts.tcp_port;
 
     if (!tox_opts->ipv6_enabled)
         queue_init_message("Forcing IPv4 connection");
+
+    if (tox_opts->tcp_port)
+        queue_init_message("TCP relaying enabled on port %d", tox_opts->tcp_port);
 
     if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE) {
         tox_opts->proxy_port = arg_opts.proxy_port;
@@ -860,7 +864,8 @@ static void print_usage(void)
     fprintf(stderr, "  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]\n");
     fprintf(stderr, "  -P, --HTTP-proxy         Use HTTP proxy: Requires [IP] [port]\n");
     fprintf(stderr, "  -r, --dnslist            Use specified DNSservers file\n");
-    fprintf(stderr, "  -t, --force-tcp          Force TCP connection (use this with proxies)\n");
+    fprintf(stderr, "  -t, --force-tcp          Force toxic to use a TCP connection (use with proxies)\n");
+    fprintf(stderr, "  -T, --tcp-server         Act as a TCP relay server: Requires [port]\n");
     fprintf(stderr, "  -u, --unencrypt-data     Unencrypt an encrypted data file\n");
 }
 
@@ -888,13 +893,14 @@ static void parse_args(int argc, char *argv[])
         {"noconnect", no_argument, 0, 'o'},
         {"dnslist", required_argument, 0, 'r'},
         {"force-tcp", no_argument, 0, 't'},
+        {"tcp-server", required_argument, 0, 'T'},
         {"SOCKS5-proxy", required_argument, 0, 'p'},
         {"HTTP-proxy", required_argument, 0, 'P'},
         {"unencrypt-data", no_argument, 0, 'u'},
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotuxc:f:n:r:p:P:";
+    const char *opts_str = "4bdehotuxc:f:n:r:p:P:T:";
     int opt, indexptr;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
@@ -983,6 +989,10 @@ static void parse_args(int argc, char *argv[])
 
             case 't':
                 arg_opts.force_tcp = 1;
+                break;
+
+            case 'T':
+                arg_opts.tcp_port = (uint16_t) atoi(optarg);
                 break;
 
             case 'u':
