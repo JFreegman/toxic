@@ -251,7 +251,7 @@ static void print_init_messages(ToxWindow *toxwin)
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
 }
 
-#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
+#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
 #define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
 #define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
