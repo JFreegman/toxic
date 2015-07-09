@@ -26,12 +26,6 @@
 #include <time.h>
 #include <arpa/inet.h>
 
-#ifdef NO_GETTEXT
-#define gettext(A) (A)
-#else
-#include <libintl.h>
-#endif
-
 #include <tox/tox.h>
 
 #include "toxic.h"
@@ -90,7 +84,7 @@ static void realloc_friends(int n)
     uint32_t *f_idx = realloc(Friends.index, n * sizeof(uint32_t));
 
     if (f == NULL || f_idx == NULL)
-        exit_toxic_err(gettext("failed in realloc_friends"), FATALERR_MEMORY);
+        exit_toxic_err("failed in realloc_friends", FATALERR_MEMORY);
 
     Friends.list = f;
     Friends.index = f_idx;
@@ -110,7 +104,7 @@ static void realloc_blocklist(int n)
     uint32_t *b_idx = realloc(Blocked.index, n * sizeof(uint32_t));
 
     if (b == NULL || b_idx == NULL)
-        exit_toxic_err(gettext("failed in realloc_blocklist"), FATALERR_MEMORY);
+        exit_toxic_err("failed in realloc_blocklist", FATALERR_MEMORY);
 
     Blocked.list = b;
     Blocked.index = b_idx;
@@ -138,7 +132,7 @@ static int save_blocklist(char *path)
     char *data = malloc(len);
 
     if (data == NULL)
-        exit_toxic_err(gettext("Failed in save_blocklist"), FATALERR_MEMORY);
+        exit_toxic_err("Failed in save_blocklist", FATALERR_MEMORY);
 
     int i;
 
@@ -205,7 +199,7 @@ int load_blocklist(char *path)
 
     if (data == NULL) {
         fclose(fp);
-        exit_toxic_err(gettext("Failed in load_blocklist"), FATALERR_MEMORY);
+        exit_toxic_err("Failed in load_blocklist", FATALERR_MEMORY);
     }
 
     if (fread(data, len, 1, fp) != 1) {
@@ -328,7 +322,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESS
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(prompt, timefrmt, nick, NULL, IN_MSG, 0, 0, "%s", str);
-    line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, gettext("* Warning: Too many windows are open."));
+    line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "* Warning: Too many windows are open.");
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
 
@@ -343,7 +337,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num,
         ++Friends.num_online;
 
         if (avatar_send(m, num) == -1)
-            fprintf(stderr, gettext("avatar_send failed for friend %d\n"), num);
+            fprintf(stderr, "avatar_send failed for friend %d\n", num);
     }
 
     Friends.list[num].connection_status = connection_status;
@@ -418,7 +412,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
         tox_friend_get_public_key(m, num, (uint8_t *) Friends.list[i].pub_key, &pkerr);
 
         if (pkerr != TOX_ERR_FRIEND_GET_PUBLIC_KEY_OK)
-            fprintf(stderr, gettext("tox_friend_get_public_key failed (error %d)\n"), pkerr);
+            fprintf(stderr, "tox_friend_get_public_key failed (error %d)\n", pkerr);
 
         TOX_ERR_FRIEND_GET_LAST_ONLINE loerr;
         uint64_t t = tox_friend_get_last_online(m, num, &loerr);
@@ -497,7 +491,7 @@ static void friendlist_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_
     get_nick_truncate(m, nick, num);
 
     line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
-                  gettext("* File transfer from %s failed: too many windows are open."), nick);
+                  "* File transfer from %s failed: too many windows are open.", nick);
 
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
@@ -520,7 +514,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
     get_nick_truncate(m, nick, num);
 
     line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
-                 gettext("* Group chat invite from %s failed: too many windows are open."), nick);
+                 "* Group chat invite from %s failed: too many windows are open.", nick);
 
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
@@ -543,7 +537,7 @@ static void delete_friend(Tox *m, uint32_t f_num)
 {
     TOX_ERR_FRIEND_DELETE err;
     if (tox_friend_delete(m, f_num, &err) != true) {
-        fprintf(stderr, gettext("tox_friend_delete failed with error %d\n"), err);
+        fprintf(stderr, "tox_friend_delete failed with error %d\n", err);
         return;
     }
 
@@ -623,7 +617,7 @@ static void draw_del_popup(void)
     wattroff(PendingDelete.popup, A_BOLD);
 
     wmove(PendingDelete.popup, 1, 1);
-    wprintw(PendingDelete.popup, gettext("Delete contact "));
+    wprintw(PendingDelete.popup, "Delete contact ");
     wattron(PendingDelete.popup, A_BOLD);
 
     if (blocklist_view == 0)
@@ -704,7 +698,7 @@ static void unblock_friend(Tox *m, uint32_t bnum)
     uint32_t friendnum = tox_friend_add_norequest(m, (uint8_t *) Blocked.list[bnum].pub_key, &err);
 
     if (err != TOX_ERR_FRIEND_ADD_OK) {
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Failed to unblock friend (error %d)\n"), err);
+        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to unblock friend (error %d)\n", err);
         return;
     }
 
@@ -763,7 +757,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 Friends.list[f].chatwin = add_window(m, new_chat(m, Friends.list[f].num));
                 set_active_window(Friends.list[f].chatwin);
             } else {
-                const char *msg = gettext("* Warning: Too many windows are open.");
+                const char *msg = "* Warning: Too many windows are open.";
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
                 sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
             }
@@ -800,7 +794,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 static void blocklist_onDraw(ToxWindow *self, Tox *m, int y2, int x2)
 {
     wattron(self->window, A_BOLD);
-    wprintw(self->window, gettext(" Blocked: "));
+    wprintw(self->window, " Blocked: ");
     wattroff(self->window, A_BOLD);
     wprintw(self->window, "%d\n\n", Blocked.num_blocked);
 
@@ -852,7 +846,7 @@ static void blocklist_onDraw(ToxWindow *self, Tox *m, int y2, int x2)
         wmove(self->window, y2 - 1, 1);
 
         wattron(self->window, A_BOLD);
-        wprintw(self->window, gettext("Key: "));
+        wprintw(self->window, "Key: ");
         wattroff(self->window, A_BOLD);
 
         int i;
@@ -878,11 +872,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     bool fix_statuses = x2 != self->x;    /* true if window max x value has changed */
 
     wattron(self->window, COLOR_PAIR(CYAN));
-    wprintw(self->window, gettext(" Press the"));
+    wprintw(self->window, " Press the");
     wattron(self->window, A_BOLD);
     wprintw(self->window, " h ");
     wattroff(self->window, A_BOLD);
-    wprintw(self->window, gettext("key for help\n\n"));
+    wprintw(self->window, "key for help\n\n");
     wattroff(self->window, COLOR_PAIR(CYAN));
 
     if (blocklist_view == 1) {
@@ -894,7 +888,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
    struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
 
     wattron(self->window, A_BOLD);
-    wprintw(self->window, gettext(" Online: "));
+    wprintw(self->window, " Online: ");
     wattroff(self->window, A_BOLD);
     wprintw(self->window, "%d/%d \n\n", Friends.num_online, Friends.num_friends);
 
@@ -1008,19 +1002,19 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
                     switch (day_dist) {
                         case 0:
-                            wprintw(self->window, gettext(" Last seen: Today %s\n"), hourmin);
+                            wprintw(self->window, " Last seen: Today %s\n", hourmin);
                             break;
 
                         case 1:
-                            wprintw(self->window, gettext(" Last seen: Yesterday %s\n"), hourmin);
+                            wprintw(self->window, " Last seen: Yesterday %s\n", hourmin);
                             break;
 
                         default:
-                            wprintw(self->window, gettext(" Last seen: %d days ago\n"), day_dist);
+                            wprintw(self->window, " Last seen: %d days ago\n", day_dist);
                             break;
                     }
                 } else {
-                    wprintw(self->window, gettext(" Last seen: Never\n"));
+                    wprintw(self->window, " Last seen: Never\n");
                 }
             }
         }
@@ -1032,7 +1026,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         wmove(self->window, y2 - 1, 1);
 
         wattron(self->window, A_BOLD);
-        wprintw(self->window, gettext("Key: "));
+        wprintw(self->window, "Key: ");
         wattroff(self->window, A_BOLD);
 
         int i;
@@ -1071,9 +1065,9 @@ static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(m, nick, Friends.list[id].num);
-            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, gettext("Audio action from: %s!"), nick);
+            line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
 
-            const char *errmsg = gettext("* Warning: Too many windows are open.");
+            const char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
 
             sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
@@ -1123,9 +1117,9 @@ ToxWindow new_friendlist(void)
     Help *help = calloc(1, sizeof(Help));
 
     if (help == NULL)
-        exit_toxic_err(gettext("failed in new_friendlist"), FATALERR_MEMORY);
+        exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
 
     ret.help = help;
-    strcpy(ret.name, gettext("contacts"));
+    strcpy(ret.name, "contacts");
     return ret;
 }
