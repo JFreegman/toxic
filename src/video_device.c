@@ -75,7 +75,7 @@ static ToxAV* av = NULL;
 pthread_mutext_t mutex;
 
 bool thread_running = true,
-	  thread_paused = true;				   /* Thread control */
+      thread_paused = true;                /* Thread control */
 
 void* thread_poll(void*);
 /* Meet devices */
@@ -84,52 +84,53 @@ VideoDeviceError init_video_devices(ToxAV* av_)
 #else
 #endif /* VIDEO */
 {
-	size[input] = 0;
-	
-	#ifdef __linux__
-	for(int i = 0; <= MAX_DEVICES; ++i) {
-		int v4l_fd;
-		struct v4l2_capability cap;
-		char *dev_name;
+    size[input] = 0;
 
-		v4l_fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
-		if (v4l_fd == -1)
-			break;
-		else {
-			int name_length = sizeof(cap.card);
-			device_names[input][i] = video_cap.card;
-		}
+    #ifdef __linux__
+    for(int i = 0; <= MAX_DEVICES; ++i) {
+        int v4l_fd;
+        struct v4l2_capability cap;
+        char *dev_name;
 
-		close(v4l_fd);
-		size[input] = i;
-	}
-	#endif /* __linux__ */
+        v4l_fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
+        if (v4l_fd == -1)
+            break;
+        else {
+            device_names[input][i] = video_cap.card;
+        }
 
-	size[output] = 0;
+        close(v4l_fd);
+        size[input] = i;
+    }
+    #endif /* __linux__ */
+    /* TODO: Add OSX implementation for listing input video devices */
 
-	// Start poll thread
-	if (pthread_mutex_init(&mutex, NULL) != 0)
-		return vde_InternalError;
+    size[output] = 0;
+    /* TODO: List output video devices */
 
-	pthread_t thread_id;
-	if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detatch(thread_id) != 0)
-		return vde_InternalError;
+    // Start poll thread
+    if (pthread_mutex_init(&mutex, NULL) != 0)
+        return vde_InternalError;
+
+    pthread_t thread_id;
+    if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detatch(thread_id) != 0)
+        return vde_InternalError;
 
 #ifdef VIDEO
-	av = av_;
+    av = av_;
 #endif /* VIDEO */
 
-	return (VideoDeviceError) vde_None;
+    return (VideoDeviceError) vde_None;
 }
 
 VideoDeviceError terminate_video_devices()
 {
-	/* Cleanup if needed */
-	thread_running = false;
-	usleep(20000);
+    /* Cleanup if needed */
+    thread_running = false;
+    usleep(20000);
 
-	if (pthread_mutex_destroy(&mutex) != 0)
-		return (VideoDeviceError) vde_InternalError;
+    if (pthread_mutex_destroy(&mutex) != 0)
+        return (VideoDeviceError) vde_InternalError;
 
-	return (VideoDeviceError) vde_None;
+    return (VideoDeviceError) vde_None;
 }

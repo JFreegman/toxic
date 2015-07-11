@@ -8,9 +8,9 @@ else
 endif
 
 # Variables for video call support
-VIDEO_LIBS = libtoxav xlib
-AUDIO_CFLAGS = -DVIDEO
-ifneq (, $(findstring video_device.o $(OBJ)))
+VIDEO_LIBS = libtoxav Xlib
+VIDEO_CFLAGS = -DVIDEO
+ifneq (, $(findstring video_device.o, $(OBJ)))
     VIDEO_OBJ = video_call.o
 else
     VIDEO_OBJ = video_call.o video_device.o
@@ -40,3 +40,4 @@ else ifneq ($(MAKECMDGOALS), clean)
     $(warning WARNING -- Toxic will be compiled without video support)
     $(warning WARNING -- You will need these libraries for video support)
     $(warning WARNING -- $(MISSING_VIDEO_LIBS))
+endif
