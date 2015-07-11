@@ -8,7 +8,7 @@ else
 endif
 
 # Variables for video call support
-VIDEO_LIBS = libtoxav opencv
+VIDEO_LIBS = libtoxav xlib
 AUDIO_CFLAGS = -DVIDEO
 ifneq (, $(findstring video_device.o $(OBJ)))
     VIDEO_OBJ = video_call.o

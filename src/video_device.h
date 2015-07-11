@@ -19,3 +19,59 @@
  *  along with Toxic.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#ifndef VIDEO_DEVICE_H
+#define VIDEO_DEVICE_H
+
+#define MAX_DEVICES 32
+#include <inttypes.h>
+#include "windows.h"
+
+typedef enum VideoDeviceType {
+    input,
+    output,
+} VideoDeviceType;
+
+typedef enum VideoDeviceError {
+    vde_None,
+    vde_InternalError = -1,
+    vde_InvalidSelection = -2,
+    vde_FailedStart = -3,
+    vde_Busy = -4,
+    vde_AllDevicesBusy = -5,
+    vde_DeviceNotActive = -6,
+    vde_BufferError = -7,
+    vde_UnsupportedMode = -8,
+    vde_CaptureError = -9,
+} VideoDeviceError;
+
+typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
+
+
+#ifdef VIDEO
+DeviceError init_video_devices(ToxAV* av);
+#else
+DeviceError init_video_devices();
+#endif /* VIDEO */
+
+VideoDeviceError terminate_video_devices();
+
+/* Callback handles ready data from INPUT device */
+VideoDeviceError register_video_device_callback(int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data);
+void* get_video_device_callback_data(uint32_t device_idx);
+
+VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection);
+VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+/* Start device */
+VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+/* Stop device */
+VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx);
+
+/* Write data to device */
+VideoDeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels);
+
+void print_devices(ToxWindow* self, DeviceType type);
+void get_primary_device_name(VideoDeviceType type, char *buf, int size);
+
+VideoDeviceError selection_valid(VideoDeviceType type, int32_t selection);
+#endif /* VIDEO_DEVICE_H */
