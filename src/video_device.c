@@ -26,6 +26,10 @@
 #include "video_call.h"
 #endif /* VIDEO */
 
+#ifdef __linux__
+#include "linux/videodev2.h"
+#endif /* __linux__ */
+
 #include "line_info.h"
 #include "settings.h"
 
@@ -80,9 +84,26 @@ VideoDeviceError init_video_devices(ToxAV* av_)
 #else
 #endif /* VIDEO */
 {
-	const char *stringed_device_list;
-
 	size[input] = 0;
+	
+	#ifdef __linux__
+	for(int i = 0; <= MAX_DEVICES; ++i) {
+		int v4l_fd;
+		struct v4l2_capability cap;
+		char *dev_name;
+
+		v4l_fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
+		if (v4l_fd == -1)
+			break;
+		else {
+			int name_length = sizeof(cap.card);
+			device_names[input][i] = video_cap.card;
+		}
+
+		close(v4l_fd);
+		size[input] = i;
+	}
+	#endif /* __linux__ */
 
 	size[output] = 0;
 
