@@ -25,12 +25,12 @@ ifneq ($(DESK_NOTIFY), disabled)
 endif
 
 # Check if we can build Toxic
-CHECK_LIBS = $(shell pkg-config --exists $(LIBS) || echo -n "error")
+CHECK_LIBS = $(shell $(PKG_CONFIG) --exists $(LIBS) || echo -n "error")
 ifneq ($(CHECK_LIBS), error)
-    CFLAGS += $(shell pkg-config --cflags $(LIBS))
-    LDFLAGS += $(shell pkg-config --libs $(LIBS))
+    CFLAGS += $(shell $(PKG_CONFIG) --cflags $(LIBS))
+    LDFLAGS += $(shell $(PKG_CONFIG) --libs $(LIBS))
 else ifneq ($(MAKECMDGOALS), clean)
-    MISSING_LIBS = $(shell for lib in $(LIBS) ; do if ! pkg-config --exists $$lib ; then echo $$lib ; fi ; done)
+    MISSING_LIBS = $(shell for lib in $(LIBS) ; do if ! $(PKG_CONFIG) --exists $$lib ; then echo $$lib ; fi ; done)
     $(warning ERROR -- Cannot compile Toxic)
     $(warning ERROR -- You need these libraries)
     $(warning ERROR -- $(MISSING_LIBS))
