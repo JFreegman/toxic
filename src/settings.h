@@ -49,6 +49,7 @@ struct user_settings {
     char line_quit[LINE_HINT_MAX + 1];
     char line_alert[LINE_HINT_MAX + 1];
     char line_normal[LINE_HINT_MAX + 1];
+    char line_special[LINE_HINT_MAX + 1];
 
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
@@ -104,6 +105,7 @@ enum {
 #define LINE_QUIT    "<--"
 #define LINE_ALERT   "-!-"
 #define LINE_NORMAL  "---"
+#define LINE_SPECIAL ">>>"
 #define TIMESTAMP_DEFAULT      "%H:%M:%S"
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Detached from screen"

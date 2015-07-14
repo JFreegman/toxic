@@ -62,6 +62,7 @@ static struct ui_strings {
     const char* line_quit;
     const char* line_alert;
     const char* line_normal;
+    const char* line_special;
 
     const char* mplex_away;
     const char* mplex_away_note;
@@ -82,6 +83,7 @@ static struct ui_strings {
     "line_quit",
     "line_alert",
     "line_normal",
+    "line_special",
     "mplex_away",
     "mplex_away_note",
 };
@@ -104,6 +106,7 @@ static void ui_defaults(struct user_settings* settings)
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
     snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
+    snprintf(settings->line_special, LINE_HINT_MAX + 1, "%s", LINE_SPECIAL);
 
     settings->mplex_away = MPLEX_ON;
     snprintf (settings->mplex_away_note,
@@ -320,6 +323,9 @@ int settings_load(struct user_settings *s, const char *patharg)
         }
         if ( config_setting_lookup_string(setting, ui_strings.line_normal, &str) ) {
             snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
+        }
+        if ( config_setting_lookup_string(setting, ui_strings.line_special, &str) ) {
+            snprintf(s->line_special, sizeof(s->line_special), "%s", str);
         }
 
         config_setting_lookup_bool (setting, ui_strings.mplex_away, &s->mplex_away);

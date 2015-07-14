@@ -35,11 +35,9 @@ struct LastOnline {
     char hour_min_str[TIME_STR_SIZE];    /* holds 12/24-hour time string e.g. "10:43 PM" */
 };
 
-struct GroupChatInvite {
-    char *key;
+struct GroupInvite {
+    uint8_t *data;
     uint16_t length;
-    uint8_t type;
-    bool pending;
 };
 
 typedef struct {
@@ -57,7 +55,7 @@ typedef struct {
     uint8_t status;
 
     struct LastOnline last_online;
-    struct GroupChatInvite group_invite;
+    struct GroupInvite group_invite;
 
     struct FileTransfer file_receiver[MAX_FILES];
     struct FileTransfer file_sender[MAX_FILES];

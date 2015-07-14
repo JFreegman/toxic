@@ -26,13 +26,11 @@
 #include "toxic.h"
 #include "windows.h"
 
-#define MAX_NUM_ARGS 4     /* Includes command */
-
 enum {
     GLOBAL_COMMAND_MODE,
     CHAT_COMMAND_MODE,
     GROUPCHAT_COMMAND_MODE,
-};
+} COMMAND_MODE;
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode);
 

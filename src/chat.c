@@ -63,9 +63,9 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 27
+#define AC_NUM_CHAT_COMMANDS 28
 #else
-#define AC_NUM_CHAT_COMMANDS 20
+#define AC_NUM_CHAT_COMMANDS 21
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
@@ -78,6 +78,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/close"      },
     { "/connect"    },
     { "/exit"       },
+    { "/gaccept"    },
     { "/group"      },
     { "/help"       },
     { "/invite"     },
@@ -509,25 +510,18 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
                     "Incoming file: %s", filename );
 }
 
-static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t type, const char *group_pub_key,
-                               uint16_t length)
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *invite_data,
+                               size_t length)
 {
     if (self->num != friendnumber)
         return;
 
-    if (Friends.list[friendnumber].group_invite.key != NULL)
-        free(Friends.list[friendnumber].group_invite.key);
+    if (Friends.list[friendnumber].group_invite.data)
+        free(Friends.list[friendnumber].group_invite.data);
 
-    char *k = malloc(length);
-
-    if (k == NULL)
-        exit_toxic_err("Failed in chat_onGroupInvite", FATALERR_MEMORY);
-
-    memcpy(k, group_pub_key, length);
-    Friends.list[friendnumber].group_invite.key = k;
-    Friends.list[friendnumber].group_invite.pending = true;
+    Friends.list[friendnumber].group_invite.data = malloc(length * sizeof(uint8_t));
+    memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
     Friends.list[friendnumber].group_invite.length = length;
-    Friends.list[friendnumber].group_invite.type = type;
 
     sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
 
@@ -540,7 +534,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
         box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join group chat");
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/gaccept\" to join the chat.");
 }
 
 /* Av Stuff */
@@ -1104,7 +1098,6 @@ ToxWindow new_chat(Tox *m, uint32_t friendnum)
     ret.onMessage = &chat_onMessage;
     ret.onConnectionChange = &chat_onConnectionChange;
     ret.onTypingChange = & chat_onTypingChange;
-    ret.onGroupInvite = &chat_onGroupInvite;
     ret.onNickChange = &chat_onNickChange;
     ret.onStatusChange = &chat_onStatusChange;
     ret.onStatusMessageChange = &chat_onStatusMessageChange;
@@ -1113,6 +1106,7 @@ ToxWindow new_chat(Tox *m, uint32_t friendnum)
     ret.onFileControl = &chat_onFileControl;
     ret.onFileRecv = &chat_onFileRecv;
     ret.onReadReceipt = &chat_onReadReceipt;
+    ret.onGroupInvite = &chat_onGroupInvite;
 
 #ifdef AUDIO
     ret.onInvite = &chat_onInvite;

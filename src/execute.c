@@ -34,6 +34,8 @@
 #include "misc_tools.h"
 #include "notify.h"
 
+#define MAX_NUM_ARGS 10     /* Includes command */
+
 struct cmd_func {
     const char *name;
     void (*func)(WINDOW *w, ToxWindow *, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
@@ -49,6 +51,7 @@ static struct cmd_func global_commands[] = {
     { "/exit",      cmd_quit          },
     { "/group",     cmd_groupchat     },
     { "/help",      cmd_prompt_help   },
+    { "/join",      cmd_join          },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
     { "/nick",      cmd_nick          },
@@ -66,8 +69,8 @@ static struct cmd_func global_commands[] = {
 
 static struct cmd_func chat_commands[] = {
     { "/cancel",    cmd_cancelfile  },
+    { "/gaccept",   cmd_groupaccept },
     { "/invite",    cmd_groupinvite },
-    { "/join",      cmd_join_group  },
     { "/savefile",  cmd_savefile    },
     { "/sendfile",  cmd_sendfile    },
 #ifdef AUDIO
@@ -82,19 +85,96 @@ static struct cmd_func chat_commands[] = {
 };
 
 static struct cmd_func group_commands[] = {
-    { "/title",     cmd_set_title   },
-
+    { "/ban",       cmd_ban            },
+    { "/chatid",    cmd_chatid         },
+    { "/ignore",    cmd_ignore         },
+    { "/kick",      cmd_kick           },
+    { "/mod",       cmd_mod            },
+    { "/passwd",    cmd_set_passwd     },
+    { "/peerlimit", cmd_set_peerlimit  },
+    { "/privacy",   cmd_set_privacy    },
+    { "/rejoin",    cmd_rejoin         },
+    { "/silence",   cmd_silence        },
+    { "/topic",     cmd_set_topic      },
+    { "/unban",     cmd_unban          },
+    { "/unignore",  cmd_unignore       },
+    { "/unmod",     cmd_unmod          },
+    { "/unsilence", cmd_unsilence      },
 #ifdef AUDIO
-    { "/mute",      cmd_mute        },
-    { "/sense",     cmd_sense       },
+    { "/mute",      cmd_mute           },
+    { "/sense",     cmd_sense          },
 #endif /* AUDIO */
-    { NULL,         NULL            },
+    { NULL,         NULL               },
 };
 
-/* Parses input command and puts args into arg array.
-   Returns number of arguments on success, -1 on failure. */
+#define NUM_SPECIAL_COMMANDS 14
+static const char special_commands[NUM_SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
+    "/ban",
+    "/gaccept",
+    "/group",
+    "/ignore",
+    "/kick",
+    "/mod",
+    "/nick",
+    "/note",
+    "/passwd",
+    "/silence",
+    "/topic",
+    "/unignore",
+    "/unmod",
+    "/unsilence",
+};
+
+/* return true if input command is in the special_commands array. False otherwise.*/
+static bool is_special_command(const char *input)
+{
+    int s = char_find(0, input, ' ');
+
+    if (s == strlen(input))
+        return false;
+
+    int i;
+
+    for (i = 0; i < NUM_SPECIAL_COMMANDS; ++i) {
+        if (strncmp(input, special_commands[i], s) == 0)
+            return true;
+    }
+
+    return false;
+}
+
+/* Parses commands in the special_commands array which take exactly one argument that may contain spaces.
+ * Unlike parse_command, this function does not split the input string at spaces.
+ *
+ * Returns number of arguments on success
+ * Returns -1 on failure
+ */
+static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
+{
+    int len = strlen(input);
+    int s = char_find(0, input, ' ');
+
+    if (s + 1 >= len)
+        return -1;
+
+    memcpy(args[0], input, s);
+    args[0][s++] = '\0';    /* increment to remove space after /command */
+    memcpy(args[1], input + s, len - s);
+    args[1][len - s] = '\0';
+
+    return 2;
+}
+
+/* Parses input command and puts args (split by spaces) into args array.
+ *
+ * Returns number of arguments on success
+ * Returns -1 on failure.
+ */
 static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
+    if (is_special_command(input))
+        return parse_special_command(w, self, input, args);
+
     char *cmd = strdup(input);
 
     if (cmd == NULL)
@@ -132,11 +212,19 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
         strcpy(cmd, tmp);    /* tmp will always fit inside cmd */
     }
 
+    /* Ugly special case concatinates all args after arg1 for multi-word group passwords */
+    if (num_args > 2 && strcmp(args[0], "/join") == 0)
+        strcpy(args[2], input + strlen(args[0]) + 1 + strlen(args[1]) + 1);
+
     free(cmd);
     return num_args;
 }
 
-/* Matches command to respective function. Returns 0 on match, 1 on no match */
+/* Matches command to respective function.
+ *
+ * Returns 0 on match,
+ * Returns -1 on no match
+ */
 static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct cmd_func *commands,
                       char (*args)[MAX_STR_SIZE])
 {
@@ -149,7 +237,7 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct c
         }
     }
 
-    return 1;
+    return -1;
 }
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
@@ -177,6 +265,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
         case GROUPCHAT_COMMAND_MODE:
             if (do_command(w, self, m, num_args, group_commands, args) == 0)
                 return;
+
             break;
     }
 

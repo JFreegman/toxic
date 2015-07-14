@@ -151,8 +151,18 @@ void on_friendadded(Tox *m, uint32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,
-                     void *userdata)
+void on_group_invite(Tox *m, int32_t friendnumber, const uint8_t *invite_data, size_t length, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupInvite != NULL)
+            windows[i].onGroupInvite(&windows[i], m, friendnumber, (char *) invite_data, length);
+    }
+}
+
+void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+                      const uint8_t *message, size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
@@ -161,56 +171,121 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *mes
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, msg, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, type, msg, length);
     }
 }
 
-void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length,
-                    void *userdata)
+void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *message,
+                              size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
-    length = copy_tox_str(msg, sizeof(msg), (const char *) action, length);
+    length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
 
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupAction != NULL)
-            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, msg, length);
+        if (windows[i].onGroupPrivateMessage != NULL)
+            windows[i].onGroupPrivateMessage(&windows[i], m, groupnumber, peernumber, msg, length);
     }
 }
 
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
-                    void *userdata)
-{
-    size_t i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupInvite != NULL)
-            windows[i].onGroupInvite(&windows[i], m, friendnumber, type, (char *) group_pub_key, length);
-    }
-}
-
-void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata)
+void on_group_namelistchange(Tox *m, uint32_t groupnumber, void *userdata)
 {
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupNamelistChange != NULL)
-            windows[i].onGroupNamelistChange(&windows[i], m, groupnumber, peernumber, change);
+            windows[i].onGroupNamelistChange(&windows[i], m, groupnumber);
     }
 }
 
-void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length,
-                          void *userdata)
+void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peernumber, void *userdata)
 {
-    char data[MAX_STR_SIZE + 1];
-    length = copy_tox_str(data, sizeof(data), (const char *) title, length);
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupPeerJoin != NULL)
+            windows[i].onGroupPeerJoin(&windows[i], m, groupnumber, peernumber);
+    }
+}
+
+void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *partmsg, size_t length,
+                        void *userdata)
+{
+    char msg[MAX_STR_SIZE + 1];
+
+    if (length == 0 || !partmsg) {
+        strcpy(msg, "Quit");
+        length = strlen(msg);
+    } else {
+        length = copy_tox_str(msg, sizeof(msg), (const char *) partmsg, length);
+    }
 
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupTitleChange != NULL)
-            windows[i].onGroupTitleChange(&windows[i], m, groupnumber, peernumber, data, length);
+        if (windows[i].onGroupPeerExit != NULL)
+            windows[i].onGroupPeerExit(&windows[i], m, groupnumber, peernumber, msg, length);
+    }
+}
+
+void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *topic, size_t length,
+                          void *userdata)
+{
+    char data[MAX_STR_SIZE + 1];
+    length = copy_tox_str(data, sizeof(data), (const char *) topic, length);
+
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupTopicChange != NULL)
+            windows[i].onGroupTopicChange(&windows[i], m, groupnumber, peernumber, data, length);
+    }
+}
+
+void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
+                          void *userdata)
+{
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    length = copy_tox_str(name, sizeof(name), (const char *) newname, length);
+    filter_str(name, length);
+
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupNickChange != NULL)
+            windows[i].onGroupNickChange(&windows[i], m, groupnumber, peernumber, name, length);
+    }
+}
+
+void on_group_self_join(Tox *m, uint32_t groupnumber, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupSelfJoin != NULL)
+            windows[i].onGroupSelfJoin(&windows[i], m, groupnumber);
+    }
+}
+
+void on_group_rejected(Tox *m, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL type, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupRejected != NULL)
+            windows[i].onGroupRejected(&windows[i], m, groupnumber, type);
+    }
+}
+
+void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
+                         TOX_GROUP_MOD_EVENT type, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupModeration != NULL)
+            windows[i].onGroupModeration(&windows[i], m, groupnumber, source_peernum, target_peernum, type);
     }
 }
 
@@ -595,7 +670,7 @@ void kill_all_windows(Tox *m)
         if (windows[i].is_chat)
             kill_chat_window(&windows[i], m);
         else if (windows[i].is_groupchat)
-            close_groupchat(&windows[i], m, i);
+            close_groupchat(&windows[i], m, windows[i].num);
     }
 
     kill_prompt_window(prompt);

@@ -47,6 +47,7 @@
 #include "toxic.h"
 #include "windows.h"
 #include "friendlist.h"
+#include "groupchat.h"
 #include "prompt.h"
 #include "misc_tools.h"
 #include "file_transfers.h"
@@ -251,7 +252,7 @@ static void print_init_messages(ToxWindow *toxwin)
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
 }
 
-#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.im = 6) */
+#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
 #define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
 #define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
@@ -379,6 +380,17 @@ int init_connection(Tox *m)
 
     /* empty nodelist file */
     return 4;
+}
+
+static void load_groups(Tox *m)
+{
+    size_t i;
+    size_t numgroups = tox_group_get_number_groups(m);
+
+    for (i = 0; i < numgroups; ++i) {
+        if (init_groupchat_win(m, i, NULL, 0) == -1)
+            tox_group_leave(m, i, NULL, 0, NULL);
+    }
 }
 
 static void load_friendlist(Tox *m)
@@ -551,15 +563,26 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_friend_status(m, on_statuschange, NULL);
     tox_callback_friend_status_message(m, on_statusmessagechange, NULL);
     tox_callback_friend_read_receipt(m, on_read_receipt, NULL);
-    tox_callback_group_invite(m, on_groupinvite, NULL);
-    tox_callback_group_message(m, on_groupmessage, NULL);
-    tox_callback_group_action(m, on_groupaction, NULL);
-    tox_callback_group_namelist_change(m, on_group_namelistchange, NULL);
-    tox_callback_group_title(m, on_group_titlechange, NULL);
     tox_callback_file_recv(m, on_file_recv, NULL);
     tox_callback_file_chunk_request(m, on_file_chunk_request, NULL);
     tox_callback_file_recv_control(m, on_file_control, NULL);
     tox_callback_file_recv_chunk(m, on_file_recv_chunk, NULL);
+    tox_callback_group_invite(m, on_group_invite, NULL);
+    tox_callback_group_message(m, on_group_message, NULL);
+    tox_callback_group_private_message(m, on_group_private_message, NULL);
+    tox_callback_group_peerlist_update(m, on_group_namelistchange, NULL);
+    tox_callback_group_peer_join(m, on_group_peer_join, NULL);
+    tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
+    tox_callback_group_peer_name(m, on_group_nick_change, NULL);
+    tox_callback_group_topic(m, on_group_topic_change, NULL);
+
+    // tox_callback_group_peer_limit(m, on_group_peer_limit, NULL);
+    // tox_callback_group_privacy_state(m, on_group_privacy_state, NULL);
+    // tox_callback_group_password(m, on_group_password, NULL);
+
+    tox_callback_group_self_join(m, on_group_self_join, NULL);
+    tox_callback_group_join_fail(m, on_group_rejected, NULL);
+    tox_callback_group_moderation(m, on_group_moderation, NULL);
 }
 
 static void init_tox_options(struct Tox_Options *tox_opts)
@@ -1171,6 +1194,7 @@ int main(int argc, char *argv[])
     if (init_mplex_away_timer(m) == -1)
         queue_init_message("Failed to init mplex auto-away.");
 
+    load_groups(m);
     print_init_messages(prompt);
     cleanup_init_messages();
 

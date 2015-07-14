@@ -121,17 +121,24 @@ struct ToxWindow {
     void(*onNickChange)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
     void(*onStatusChange)(ToxWindow *, Tox *, uint32_t, TOX_USER_STATUS);
     void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
-    void(*onGroupMessage)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
-    void(*onGroupAction)(ToxWindow *, Tox *, int, int, const char *, uint16_t);
-    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
-    void(*onGroupNamelistChange)(ToxWindow *, Tox *, int, int, uint8_t);
-    void(*onGroupTitleChange)(ToxWindow *, Tox *, int, int, const char *, uint8_t);
     void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
     void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_FILE_CONTROL);
     void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
     void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
+
+    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, const char *, size_t);
+    void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
+    void(*onGroupPrivateMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupNamelistChange)(ToxWindow *, Tox *, uint32_t);
+    void(*onGroupPeerJoin)(ToxWindow *, Tox *, uint32_t, uint32_t);
+    void(*onGroupPeerExit)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupNickChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupTopicChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupSelfJoin)(ToxWindow *, Tox *, uint32_t);
+    void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_JOIN_FAIL);
+    void(*onGroupModeration)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, TOX_GROUP_MOD_EVENT);
 
 #ifdef AUDIO
 
@@ -146,7 +153,6 @@ struct ToxWindow {
     void(*onEnd)(ToxWindow *, ToxAv *, int);
     void(*onRequestTimeout)(ToxWindow *, ToxAv *, int);
     void(*onPeerTimeout)(ToxWindow *, ToxAv *, int);
-    void(*onWriteDevice)(ToxWindow *, Tox *, int, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
     int call_idx; /* If in a call will have this index set, otherwise it's -1.
                    * Don't modify outside av callbacks. */

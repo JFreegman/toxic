@@ -44,6 +44,9 @@ ui = {
   // Indicator for normal messages.
   line_normal="---";
 
+  // Indicator for special messages (currently only used for private group messages)
+  line_special=">>>";
+
   // true to change status based on screen/tmux attach/detach, false to disable
   mplex_away=true;
 
@@ -57,7 +60,7 @@ audio = {
 
   // preferred audio output device; numbers correspond to /lsdev out
   output_device=0;
-  
+
   // default VAD treshold; float (recommended values are around 40)
   VAD_treshold=40.0;
 };
