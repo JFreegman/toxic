@@ -22,7 +22,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-
 #include "toxic.h"
 #include "windows.h"
 #include "line_info.h"

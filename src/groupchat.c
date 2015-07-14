@@ -419,8 +419,70 @@ static void groupchat_onGroupTopicChange(ToxWindow *self, Tox *m, uint32_t group
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- %s set the topic to: %s", nick, topic);
 
     char tmp_event[MAX_STR_SIZE];
-    snprintf(tmp_event, sizeof(tmp_event), " set the group topic to %s", topic);
+    snprintf(tmp_event, sizeof(tmp_event), " set the topic to %s", topic);
     write_to_log(tmp_event, nick, ctx->log, true);
+}
+
+static void groupchat_onGroupPeerLimit(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t peer_limit)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (self->num != groupnumber)
+        return;
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has set the peer limit to %d", peer_limit);
+
+    char tmp_event[MAX_STR_SIZE];
+    snprintf(tmp_event, sizeof(tmp_event), " set the peer limit to %d", peer_limit);
+    write_to_log(tmp_event, "The founder", ctx->log, true);
+}
+
+static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE state)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (self->num != groupnumber)
+        return;
+
+    const char *state_str = state == TOX_GROUP_PRIVACY_STATE_PUBLIC ? "public" : "private";
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has set the group to %s.", state_str);
+
+    char tmp_event[MAX_STR_SIZE];
+    snprintf(tmp_event, sizeof(tmp_event), " set the group to %s.", state_str);
+    write_to_log(tmp_event, "The founder", ctx->log, true);
+}
+
+static void groupchat_onGroupPassword(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *password,
+                                      size_t length)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (self->num != groupnumber)
+        return;
+
+    char timefrmt[TIME_STR_SIZE];
+    get_time_str(timefrmt, sizeof(timefrmt));
+
+    if (length > 0) {
+        line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has password protected the group.");
+
+        char tmp_event[MAX_STR_SIZE];
+        snprintf(tmp_event, sizeof(tmp_event), " set a new password.");
+        write_to_log(tmp_event, "The founder", ctx->log, true);
+    } else {
+        line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has removed password protection.");
+
+        char tmp_event[MAX_STR_SIZE];
+        snprintf(tmp_event, sizeof(tmp_event), " removed password protection.");
+        write_to_log(tmp_event, "The founder", ctx->log, true);
+    }
 }
 
 /* Copies peer names/lengths  */
@@ -1055,6 +1117,9 @@ ToxWindow new_group_chat(Tox *m, uint32_t groupnum, const char *groupname, int l
     ret.onGroupPeerJoin = &groupchat_onGroupPeerJoin;
     ret.onGroupPeerExit = &groupchat_onGroupPeerExit;
     ret.onGroupTopicChange = &groupchat_onGroupTopicChange;
+    ret.onGroupPeerLimit = &groupchat_onGroupPeerLimit;
+    ret.onGroupPrivacyState = &groupchat_onGroupPrivacyState;
+    ret.onGroupPassword = &groupchat_onGroupPassword;
     ret.onGroupNickChange = &groupchat_onGroupNickChange;
     ret.onGroupSelfJoin = &groupchat_onGroupSelfJoin;
     ret.onGroupRejected = &groupchat_onGroupRejected;

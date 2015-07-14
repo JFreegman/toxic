@@ -243,6 +243,36 @@ void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, co
     }
 }
 
+void on_group_peer_limit(Tox *m, uint32_t groupnumber, uint32_t peer_limit, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupPeerLimit != NULL)
+            windows[i].onGroupPeerLimit(&windows[i], m, groupnumber, peer_limit);
+    }
+}
+
+void on_group_privacy_state(Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE privacy_state, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupPrivacyState != NULL)
+            windows[i].onGroupPrivacyState(&windows[i], m, groupnumber, privacy_state);
+    }
+}
+
+void on_group_password(Tox *m, uint32_t groupnumber, const uint8_t *password, size_t length, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupPassword != NULL)
+            windows[i].onGroupPassword(&windows[i], m, groupnumber, (char *) password, length);
+    }
+}
+
 void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
                           void *userdata)
 {

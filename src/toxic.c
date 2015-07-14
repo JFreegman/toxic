@@ -575,11 +575,9 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
     tox_callback_group_peer_name(m, on_group_nick_change, NULL);
     tox_callback_group_topic(m, on_group_topic_change, NULL);
-
-    // tox_callback_group_peer_limit(m, on_group_peer_limit, NULL);
-    // tox_callback_group_privacy_state(m, on_group_privacy_state, NULL);
-    // tox_callback_group_password(m, on_group_password, NULL);
-
+    tox_callback_group_peer_limit(m, on_group_peer_limit, NULL);
+    tox_callback_group_privacy_state(m, on_group_privacy_state, NULL);
+    tox_callback_group_password(m, on_group_password, NULL);
     tox_callback_group_self_join(m, on_group_self_join, NULL);
     tox_callback_group_join_fail(m, on_group_rejected, NULL);
     tox_callback_group_moderation(m, on_group_moderation, NULL);
