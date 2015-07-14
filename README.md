@@ -4,7 +4,7 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 [![Toxic Screenshot](https://i.imgur.com/san99Z2.png "Home Screen")](https://i.imgur.com/san99Z2.png)
 
 ## Installation
-[Use our repositories](https://wiki.tox.chat/Binaries#Linux)<br />
+[Use our repositories](https://wiki.tox.chat/doku.php?id=developers:binaries#other_linux)<br />
 [Compile it yourself](/INSTALL.md)
 
 ## Downloads

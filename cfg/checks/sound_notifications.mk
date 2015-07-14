@@ -8,13 +8,13 @@ else
 endif
 
 # Check if we can build sound notifications support
-CHECK_SND_NOTIFY_LIBS = $(shell pkg-config --exists $(SND_NOTIFY_LIBS) || echo -n "error")
+CHECK_SND_NOTIFY_LIBS = $(shell $(PKG_CONFIG) --exists $(SND_NOTIFY_LIBS) || echo -n "error")
 ifneq ($(CHECK_SND_NOTIFY_LIBS), error)
     LIBS += $(SND_NOTIFY_LIBS)
     CFLAGS += $(SND_NOTIFY_CFLAGS)
     OBJ += $(SND_NOTIFY_OBJ)
 else ifneq ($(MAKECMDGOALS), clean)
-    MISSING_SND_NOTIFY_LIBS = $(shell for lib in $(SND_NOTIFY_LIBS) ; do if ! pkg-config --exists $$lib ; then echo $$lib ; fi ; done)
+    MISSING_SND_NOTIFY_LIBS = $(shell for lib in $(SND_NOTIFY_LIBS) ; do if ! $(PKG_CONFIG) --exists $$lib ; then echo $$lib ; fi ; done)
     $(warning WARNING -- Toxic will be compiled without sound notifications support)
     $(warning WARNING -- You need these libraries for sound notifications support)
     $(warning WARNING -- $(MISSING_SND_NOTIFY_LIBS))

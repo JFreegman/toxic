@@ -28,3 +28,5 @@ BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/share/man
 APPDIR = $(PREFIX)/share/applications
+# Platform tools
+PKG_CONFIG = pkg-config
