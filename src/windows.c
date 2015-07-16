@@ -194,8 +194,18 @@ void on_group_namelistchange(Tox *m, uint32_t groupnumber, void *userdata)
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupNamelistChange != NULL)
-            windows[i].onGroupNamelistChange(&windows[i], m, groupnumber);
+        if (windows[i].onGroupPeerlistUpdate != NULL)
+            windows[i].onGroupPeerlistUpdate(&windows[i], m, groupnumber);
+    }
+}
+
+void on_group_status_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_USER_STATUS status, void *userdata)
+{
+    size_t i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onGroupStatusChange != NULL)
+            windows[i].onGroupStatusChange(&windows[i], m, groupnumber, peernumber, status);
     }
 }
 

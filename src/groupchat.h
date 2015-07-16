@@ -26,50 +26,27 @@
 #include "toxic.h"
 #include "windows.h"
 
-#ifdef AUDIO
-#include "audio_call.h"
-#endif
-
-#ifdef AUDIO
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-/* compatibility with older versions of OpenAL */
-#ifndef ALC_ALL_DEVICES_SPECIFIER
-#include <AL/alext.h>
-#endif  /* ALC_ALL_DEVICES_SPECIFIER */
-#endif  /* __APPLE__ */
-#endif  /* AUDIO */
-
 #define SIDEBAR_WIDTH 16
 #define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
 #define GROUP_EVENT_WAIT 3
 
-#ifdef AUDIO
-struct GAudio {
-    ALCdevice  *dvhandle;    /* Handle of device selected/opened */
-    ALCcontext *dvctx;
-    ALuint source;
-    ALuint buffers[OPENAL_BUFS];
+struct GroupPeer {
+    char       name[TOX_MAX_NAME_LENGTH];
+    size_t     name_length;
+    TOX_USER_STATUS status;
+    TOX_GROUP_ROLE  role;
 };
-#endif  /* AUDIO */
 
 typedef struct {
-    uint32_t groupnumber;
-    int chatwin;
-    bool active;
-    bool is_connected;
-    int side_pos;    /* current position of the sidebar - used for scrolling up and down */
-    uint32_t num_peers;
-    uint8_t  *peer_names;
-    uint16_t *peer_name_lengths;
-#ifdef AUDIO
-    struct GAudio audio;
-#endif
+    struct GroupPeer *peer_list;
+    char       *name_list;    /* List of peer names, needed for tab completion */
+    uint32_t   num_peers;
+    uint32_t   groupnumber;
+    int        chatwin;
+    bool       active;
+    bool       is_connected;
+    int        side_pos;    /* current position of the sidebar - used for scrolling up and down */
 } GroupChat;
 
 void close_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum);
@@ -78,7 +55,7 @@ void set_nick_all_groups(Tox *m, const char *nick, size_t length);
 void set_status_all_groups(Tox *m, uint8_t status);
 int group_get_nick_peernumber(uint32_t groupnum, const char *nick);
 
-/* destroys and re-creates groupchat window with or without the peerlist */
+/* destroys and re-creates groupchat window */
 void redraw_groupchat_win(ToxWindow *self);
 
 #endif /* #define GROUPCHAT_H */

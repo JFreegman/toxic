@@ -95,8 +95,6 @@ static void cmd_kickban_helper(ToxWindow *self, Tox *m, const char *nick, bool s
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_REMOVE_PEER_OK: {
-            type_str = set_ban ? "banned" : "kicked";
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, RED,  "You have %s %s from the group.", type_str, nick);
             return;
         }
         case TOX_ERR_GROUP_MOD_REMOVE_PEER_PERMISSIONS: {
@@ -241,7 +239,6 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "You have promoted %s to moderator.", nick);
             return;
         }
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
@@ -284,7 +281,6 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "You have revoked moderator powers from %s.", nick);
             return;
         }
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
@@ -444,7 +440,6 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "You have silenced %s", nick);
             return;
         }
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
@@ -483,7 +478,6 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "You have unsilenced %s.", nick);
             return;
         }
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {

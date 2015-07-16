@@ -574,6 +574,7 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_peer_join(m, on_group_peer_join, NULL);
     tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
     tox_callback_group_peer_name(m, on_group_nick_change, NULL);
+    tox_callback_group_peer_status(m, on_group_status_change, NULL);
     tox_callback_group_topic(m, on_group_topic_change, NULL);
     tox_callback_group_peer_limit(m, on_group_peer_limit, NULL);
     tox_callback_group_privacy_state(m, on_group_privacy_state, NULL);

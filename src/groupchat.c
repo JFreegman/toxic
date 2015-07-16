@@ -124,7 +124,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 
 static void groupchat_set_group_name(ToxWindow *self, Tox *m, uint32_t groupnum);
 ToxWindow new_group_chat(Tox *m, uint32_t groupnum, const char *groupname, int length);
-static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, uint32_t groupnum);
+static void groupchat_onGroupPeerlistUpdate(ToxWindow *self, Tox *m, uint32_t groupnum);
 
 int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t length)
 {
@@ -134,7 +134,7 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t 
     ToxWindow self = new_group_chat(m, groupnum, groupname, length);
 
     /* In case we're loading a saved group */
-    if (length <= 0)
+    if (length == 0)
         groupchat_set_group_name(&self, m, groupnum);
 
     int i;
@@ -143,18 +143,13 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t 
         if (!groupchats[i].active) {
             groupchats[i].chatwin = add_window(m, self);
             groupchats[i].active = true;
-            groupchats[i].peer_names = malloc(sizeof(uint8_t) * TOX_MAX_NAME_LENGTH);
-            groupchats[i].peer_name_lengths = malloc(sizeof(uint16_t));
             groupchats[i].groupnumber = groupnum;
-
-            if (groupchats[i].peer_names == NULL || groupchats[i].peer_name_lengths == NULL)
-                exit_toxic_err("failed in init_groupchat_win", FATALERR_MEMORY);
 
             if (i == max_groupchat_index)
                 ++max_groupchat_index;
 
             set_active_window(groupchats[i].chatwin);
-            groupchat_onGroupNamelistChange(&self, m, groupnum);
+            groupchat_onGroupPeerlistUpdate(&self, m, groupnum);
             store_data(m, DATA_FILE);
 
             return 0;
@@ -182,8 +177,14 @@ static void kill_groupchat_window(ToxWindow *self)
 /* Closes groupchat window and cleans up. */
 void close_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
-    free(groupchats[groupnum].peer_names);
-    free(groupchats[groupnum].peer_name_lengths);
+    GroupChat *chat = &groupchats[groupnum];
+
+    if (chat->peer_list)
+        free(chat->peer_list);
+
+    if (chat->name_list)
+        free(chat->name_list);
+
     memset(&groupchats[groupnum], 0, sizeof(GroupChat));
 
     int i;
@@ -223,7 +224,6 @@ void set_nick_all_groups(Tox *m, const char *nick, size_t length)
 
             switch (err) {
                 case TOX_ERR_GROUP_SELF_NAME_SET_OK: {
-                    line_info_add(self, timefrmt, NULL, nick, NAME_CHANGE, 0, MAGENTA, "You are now known as ");
                     break;
                 }
                 case TOX_ERR_GROUP_SELF_NAME_SET_TAKEN: {
@@ -256,14 +256,32 @@ int group_get_nick_peernumber(uint32_t groupnum, const char *nick)
     uint32_t i;
 
     for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
-        if (strcmp(nick, (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH]) == 0)
+        if (strcmp(nick, groupchats[groupnum].peer_list[i].name) == 0)
             return i;
     }
 
     return -1;
 }
 
-/* destroys and re-creates groupchat window with or without the peerlist */
+static void group_update_name_list(uint32_t groupnum)
+{
+    GroupChat *chat = &groupchats[groupnum];
+
+    if (chat->name_list)
+        free(chat->name_list);
+
+    chat->name_list = malloc(sizeof(char *) * chat->num_peers * TOX_MAX_NAME_LENGTH);
+
+    if (chat->name_list == NULL)
+        exit_toxic_err("failed in group_update_name_list", FATALERR_MEMORY);
+
+    uint32_t i;
+
+    for (i = 0; i < chat->num_peers; ++i)
+        memcpy(&chat->name_list[i * TOX_MAX_NAME_LENGTH], chat->peer_list[i].name, chat->peer_list[i].name_length + 1);
+}
+
+/* destroys and re-creates groupchat window */
 void redraw_groupchat_win(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
@@ -320,8 +338,7 @@ static void group_onAction(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t 
             box_silent_notify2(self, NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
         else
             box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action);
-    }
-    else {
+    } else {
         sound_notify(self, silent, NT_WNDALERT_1, NULL);
     }
 
@@ -366,8 +383,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum,
             box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
 
         nick_clr = RED;
-    }
-    else {
+    } else {
         sound_notify(self, silent, NT_WNDALERT_1, NULL);
     }
 
@@ -485,51 +501,8 @@ static void groupchat_onGroupPassword(ToxWindow *self, Tox *m, uint32_t groupnum
     }
 }
 
-/* Copies peer names/lengths  */
-static void copy_peernames(int gnum, uint8_t peerlist[][TOX_MAX_NAME_LENGTH], uint16_t lengths[], int npeers)
-{
-    free(groupchats[gnum].peer_names);
-    free(groupchats[gnum].peer_name_lengths);
-
-    int N = TOX_MAX_NAME_LENGTH;
-
-    groupchats[gnum].peer_names = calloc(1, sizeof(uint8_t) * MAX(1, npeers) * N);
-    groupchats[gnum].peer_name_lengths = calloc(1, sizeof(uint32_t) * MAX(1, npeers));
-
-    if (groupchats[gnum].peer_names == NULL || groupchats[gnum].peer_name_lengths == NULL)
-        exit_toxic_err("failed in copy_peernames", FATALERR_MEMORY);
-
-    if (npeers == 0)
-        return;
-
-    uint16_t u_len = strlen(UNKNOWN_NAME);
-    int i;
-
-    for (i = 0; i < npeers; ++i) {
-         if (!lengths[i]) {
-            memcpy(&groupchats[gnum].peer_names[i * N], UNKNOWN_NAME, u_len);
-            groupchats[gnum].peer_names[i * N + u_len] = '\0';
-            groupchats[gnum].peer_name_lengths[i] = u_len;
-        } else {
-            uint16_t n_len = MIN(lengths[i], TOXIC_MAX_NAME_LENGTH - 1);
-            memcpy(&groupchats[gnum].peer_names[i * N], peerlist[i], n_len);
-            groupchats[gnum].peer_names[i * N + n_len] = '\0';
-            groupchats[gnum].peer_name_lengths[i] = n_len;
-            filter_str((char *) &groupchats[gnum].peer_names[i * N], n_len);
-        }
-    }
-}
-
-/* copies name to dest and assigns len to dest_len. dest must have room for TOX_MAX_NAME_LENGTH */
-static void copy_temp_peernames(uint8_t *dest, uint16_t *dest_len, const char *name, size_t len)
-{
-    *dest_len = (uint16_t) len;
-    memcpy(dest, name, *dest_len);
-    dest[*dest_len] = '\0';
-}
-
 /* TODO: This function could probably be cleaned up and optimized */
-static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, uint32_t groupnum)
+static void groupchat_onGroupPeerlistUpdate(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
     if (self->num != groupnum)
         return;
@@ -540,29 +513,42 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, uint32_t gr
     if (num_peers == 0 || err != TOX_ERR_GROUP_STATE_QUERIES_OK)
         return;
 
-    uint8_t tmp_peerlist[num_peers][TOX_MAX_NAME_LENGTH];
-    uint16_t tmp_peerlens[num_peers];
+    GroupChat *chat = &groupchats[groupnum];
+    chat->num_peers = num_peers;
+
+    if (chat->peer_list)
+        free(chat->peer_list);
+
+    chat->peer_list = malloc(sizeof(struct GroupPeer) * num_peers);
+
+    if (chat->peer_list == NULL)
+        exit_toxic_err("failed in groupchat_onGroupPeerlistUpdate", FATALERR_MEMORY);
 
     uint32_t i;
 
     for (i = 0; i < num_peers; ++i) {
-        TOX_ERR_GROUP_PEER_QUERY name_err;
-        size_t len = tox_group_peer_get_name_size(m, groupnum, i, &name_err);
+        memset(&chat->peer_list[i], 0, sizeof(struct GroupPeer));
 
-        if (name_err != TOX_ERR_GROUP_PEER_QUERY_OK) {
-            copy_temp_peernames(tmp_peerlist[i], &tmp_peerlens[i], UNKNOWN_NAME, strlen(UNKNOWN_NAME));
-        } else {
-            char name[len];
+        TOX_ERR_GROUP_PEER_QUERY err;
+        size_t name_length = tox_group_peer_get_name_size(m, groupnum, i, &err);
 
-            if (tox_group_peer_get_name(m, groupnum, i, (uint8_t *) name, NULL))
-                copy_temp_peernames(tmp_peerlist[i], &tmp_peerlens[i], name, len);
-            else
-                copy_temp_peernames(tmp_peerlist[i], &tmp_peerlens[i], UNKNOWN_NAME, strlen(UNKNOWN_NAME));
+        if (err != TOX_ERR_GROUP_PEER_QUERY_OK)
+            name_length = 0;
+        else
+            name_length = MIN(name_length, TOX_MAX_NAME_LENGTH - 1);
+
+        if (!tox_group_peer_get_name(m, groupnum, i, (uint8_t *) chat->peer_list[i].name, NULL)) {
+            chat->peer_list[i].name_length = strlen(UNKNOWN_NAME);
+            memcpy(chat->peer_list[i].name, UNKNOWN_NAME, chat->peer_list[i].name_length);
         }
+
+        chat->peer_list[i].name[name_length] = '\0';
+        chat->peer_list[i].name_length = name_length;
+        chat->peer_list[i].status = tox_group_peer_get_status(m, groupnum, i, NULL);
+        chat->peer_list[i].role = tox_group_peer_get_role(m, groupnum, i, NULL);
     }
 
-    groupchats[groupnum].num_peers = num_peers;
-    copy_peernames(groupnum, tmp_peerlist, tmp_peerlens, num_peers);
+    group_update_name_list(groupnum);
 }
 
 static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum)
@@ -707,6 +693,8 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupn
     if (groupnum != self->num)
         return;
 
+    GroupChat *chat = &groupchats[groupnum];
+
     char src_name[TOX_MAX_NAME_LENGTH];
     char tgt_name[TOX_MAX_NAME_LENGTH];
 
@@ -727,12 +715,15 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupn
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been banned by %s", tgt_name, src_name);
             break;
         case TOX_GROUP_MOD_EVENT_OBSERVER:
+            chat->peer_list[tgt_peernum].role = TOX_GROUP_ROLE_OBSERVER;
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to observer", src_name, tgt_name);
             break;
         case TOX_GROUP_MOD_EVENT_USER:
+            chat->peer_list[tgt_peernum].role = TOX_GROUP_ROLE_USER;
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to user", src_name, tgt_name);
             break;
         case TOX_GROUP_MOD_EVENT_MODERATOR:
+            chat->peer_list[tgt_peernum].role = TOX_GROUP_ROLE_MODERATOR;
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to moderator", src_name, tgt_name);
             break;
         default:
@@ -746,14 +737,32 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, uint32_t groupn
     if (groupnum != self->num)
         return;
 
+    GroupChat *chat = &groupchats[groupnum];
+
     char oldnick[TOX_MAX_NAME_LENGTH];
     get_group_nick_truncate(m, oldnick, peernum, groupnum);
 
+    len = MAX(len, TOX_MAX_NAME_LENGTH - 1);
+    memcpy(groupchats[groupnum].peer_list[peernum].name, newnick, len);
+    chat->peer_list[peernum].name[len] = '\0';
+    chat->peer_list[peernum].name_length = len;
+
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
-    line_info_add(self, timefrmt, oldnick, newnick, NAME_CHANGE, 0, MAGENTA, " is now known as ");
+    line_info_add(self, timefrmt, oldnick, chat->peer_list[peernum].name, NAME_CHANGE, 0, MAGENTA, " is now known as ");
+
+    group_update_name_list(groupnum);
 }
 
+static void groupchat_onGroupStatusChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
+                                          TOX_USER_STATUS status)
+{
+    if (groupnum != self->num)
+        return;
+
+    GroupChat *chat = &groupchats[groupnum];
+    chat->peer_list[peernum].status = status;
+}
 
 static void send_group_message(ToxWindow *self, Tox *m, uint32_t groupnum, const char *msg, TOX_MESSAGE_TYPE type)
 {
@@ -804,6 +813,7 @@ static void send_group_message(ToxWindow *self, Tox *m, uint32_t groupnum, const
 static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnum, const char *data)
 {
     ChatContext *ctx = self->chatwin;
+    GroupChat *chat = &groupchats[groupnum];
 
     if (data == NULL) {
         wprintw(ctx->history, "Message is empty.\n");
@@ -815,12 +825,11 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnum, 
     char *nick = NULL;
 
     /* need to match the longest nick in case of nicks that are smaller sub-strings */
-    for (i = 0; i < groupchats[groupnum].num_peers; ++i) {
-        if (memcmp((char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH], data,
-                             groupchats[groupnum].peer_name_lengths[i]) == 0) {
-            if (groupchats[groupnum].peer_name_lengths[i] > nick_len) {
-                nick_len = groupchats[groupnum].peer_name_lengths[i];
-                nick = (char *) &groupchats[groupnum].peer_names[i * TOX_MAX_NAME_LENGTH];
+    for (i = 0; i < chat->num_peers; ++i) {
+        if (memcmp(chat->peer_list[i].name, data, chat->peer_list[i].name_length) == 0) {
+            if (chat->peer_list[i].name_length > nick_len) {
+                nick_len = chat->peer_list[i].name_length;
+                nick = chat->peer_list[i].name;
                 peernum = i;
             }
         }
@@ -831,12 +840,12 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnum, 
         return;
     }
 
-    int msg_len = strlen(data) - groupchats[groupnum].peer_name_lengths[peernum] - 1;
+    int msg_len = strlen(data) - chat->peer_list[i].name_length - 1;
 
     if (msg_len <= 0)
         return;
 
-    const char *msg = data + groupchats[groupnum].peer_name_lengths[peernum] + 1;
+    const char *msg = data + chat->peer_list[i].name_length + 1;
 
     TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE err;
     if (!tox_group_send_private_message(m, groupnum, peernum, (uint8_t *) msg, msg_len, &err)) {
@@ -853,7 +862,7 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnum, 
     char pm_nick[TOX_MAX_NAME_LENGTH + 2];
     strcpy(pm_nick, ">");
     strcpy(pm_nick + 1, nick);
-    strcpy(pm_nick + 1 + groupchats[groupnum].peer_name_lengths[peernum], "<");
+    strcpy(pm_nick + 1 + chat->peer_list[i].name_length, "<");
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -865,6 +874,7 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnum, 
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
+    GroupChat *chat = &groupchats[self->num];
 
     int x, y, y2, x2;
     getyx(self->window, y, x);
@@ -891,12 +901,11 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t') {  /* TAB key: auto-completes peer name or command */
         if (ctx->len > 0) {
-            int diff;
+            int diff = -1;
 
             /* TODO: make this not suck */
             if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {
-                diff = complete_line(self, groupchats[self->num].peer_names, groupchats[self->num].num_peers,
-                                     TOX_MAX_NAME_LENGTH);
+                diff = complete_line(self, chat->name_list, chat->num_peers, TOX_MAX_NAME_LENGTH);
             } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
             } else {
@@ -918,10 +927,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
         if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
-            ++groupchats[self->num].side_pos;
+            ++chat->side_pos;
     } else if (key == user_settings->key_peer_list_up) {
         if (groupchats[self->num].side_pos > 0)
-            --groupchats[self->num].side_pos;
+            --chat->side_pos;
     } else if (key == '\n') {
         rm_trailing_spaces_buf(ctx);
 
@@ -965,6 +974,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     getmaxyx(self->window, y2, x2);
 
     ChatContext *ctx = self->chatwin;
+    GroupChat *chat = &groupchats[self->num];
 
     pthread_mutex_lock(&Winthread.lock);
     line_info_print(self);
@@ -986,11 +996,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
         pthread_mutex_lock(&Winthread.lock);
 
-        uint32_t num_peers = groupchats[self->num].num_peers;
-
         wmove(ctx->sidebar, 0, 1);
         wattron(ctx->sidebar, A_BOLD);
-        wprintw(ctx->sidebar, "Peers: %d\n", num_peers);
+        wprintw(ctx->sidebar, "Peers: %d\n", chat->num_peers);
         wattroff(ctx->sidebar, A_BOLD);
 
         mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
@@ -999,48 +1007,36 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
         uint32_t i;
 
-        for (i = 0; i < num_peers && i < maxlines; ++i) {
+        for (i = 0; i < chat->num_peers && i < maxlines; ++i) {
             wmove(ctx->sidebar, i + 2, 1);
-            int peer = i + groupchats[self->num].side_pos;
+            int peer = i + chat->side_pos;
 
-            /* TODO: Make this not poll */
-            TOX_ERR_GROUP_PEER_QUERY err;
-            TOX_USER_STATUS status = tox_group_peer_get_status(m, self->num, i, &err);
-
-            if (err != TOX_ERR_GROUP_PEER_QUERY_OK)
-                status = TOX_USER_STATUS_NONE;
-
-            TOX_GROUP_ROLE role = tox_group_peer_get_role(m, self->num, i, &err);
-
-            if (err != TOX_ERR_GROUP_PEER_QUERY_OK)
-                role = TOX_GROUP_ROLE_USER;
-
-            int maxlen_offset = role == TOX_GROUP_ROLE_USER ? 2 : 3;
+            int maxlen_offset = chat->peer_list[i].role == TOX_GROUP_ROLE_USER ? 2 : 3;
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
             int maxlen = SIDEBAR_WIDTH - maxlen_offset;
-            memcpy(tmpnck, &groupchats[self->num].peer_names[peer * TOX_MAX_NAME_LENGTH], maxlen);
+            memcpy(tmpnck, chat->peer_list[peer].name, maxlen);
             tmpnck[maxlen] = '\0';
 
             int namecolour = WHITE;
 
-            if (status == TOX_USER_STATUS_AWAY)
+            if (chat->peer_list[i].status == TOX_USER_STATUS_AWAY)
                 namecolour = YELLOW;
-            else if (status == TOX_USER_STATUS_BUSY)
+            else if (chat->peer_list[i].status == TOX_USER_STATUS_BUSY)
                 namecolour = RED;
 
             /* Signify roles (e.g. founder, moderator) */
             const char *rolesig = "";
             int rolecolour = WHITE;
 
-            if (role == TOX_GROUP_ROLE_FOUNDER) {
+            if (chat->peer_list[i].role == TOX_GROUP_ROLE_FOUNDER) {
                 rolesig = "&";
                 rolecolour = BLUE;
-            } else if (role == TOX_GROUP_ROLE_MODERATOR) {
+            } else if (chat->peer_list[i].role == TOX_GROUP_ROLE_MODERATOR) {
                 rolesig = "+";
                 rolecolour = GREEN;
-            } else if (role == TOX_GROUP_ROLE_OBSERVER) {
+            } else if (chat->peer_list[i].role == TOX_GROUP_ROLE_OBSERVER) {
                 rolesig = "-";
                 rolecolour = MAGENTA;
             }
@@ -1112,7 +1108,7 @@ ToxWindow new_group_chat(Tox *m, uint32_t groupnum, const char *groupname, int l
     ret.onDraw = &groupchat_onDraw;
     ret.onInit = &groupchat_onInit;
     ret.onGroupMessage = &groupchat_onGroupMessage;
-    ret.onGroupNamelistChange = &groupchat_onGroupNamelistChange;
+    ret.onGroupPeerlistUpdate = &groupchat_onGroupPeerlistUpdate;
     ret.onGroupPrivateMessage = &groupchat_onGroupPrivateMessage;
     ret.onGroupPeerJoin = &groupchat_onGroupPeerJoin;
     ret.onGroupPeerExit = &groupchat_onGroupPeerExit;
@@ -1121,6 +1117,7 @@ ToxWindow new_group_chat(Tox *m, uint32_t groupnum, const char *groupname, int l
     ret.onGroupPrivacyState = &groupchat_onGroupPrivacyState;
     ret.onGroupPassword = &groupchat_onGroupPassword;
     ret.onGroupNickChange = &groupchat_onGroupNickChange;
+    ret.onGroupStatusChange = &groupchat_onGroupStatusChange;
     ret.onGroupSelfJoin = &groupchat_onGroupSelfJoin;
     ret.onGroupRejected = &groupchat_onGroupRejected;
     ret.onGroupModeration = &groupchat_onGroupModeration;
