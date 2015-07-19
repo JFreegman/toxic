@@ -27,11 +27,17 @@
 #endif /* VIDEO */
 
 #ifdef __linux__
-#include "linux/videodev2.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <linux/videodev2.h>
 #endif /* __linux__ */
 
 #include "line_info.h"
 #include "settings.h"
+
+#include <errno.h>
 
 #include <stdbool.h>
 #include <string.h>
@@ -44,25 +50,32 @@
 
 extern struct user_settings *user_settings;
 
+struct VideoBuffer {
+    void *start;
+    size_t length;
+};
+
 typedef struct VideoDevice {
-    //ALCdevice  *dhndl;                     /* Handle of device selected/opened */
-    //ALCcontext *ctx;                       /* Device context */
+    int fd;                                 /* File descriptor of video device selected/opened */
     DataHandleCallback cb;                 /* Use this to handle data from input device usually */
     void* cb_data;                         /* Data to be passed to callback */
     int32_t friend_number;                      /* ToxAV friend number */
     
-    uint32_t source, buffers[OPENAL_BUFS]; /* Playback source/buffers */
+    struct v4l2_format fmt;
+    struct VideoBuffer *buffers;
+    uint32_t n_buffers; 
+
     uint32_t ref_count;
     int32_t selection;
     pthread_mutex_t mutex[1];
-    uint32_t sample_rate; 
-    uint32_t frame_duration;
+    uint16_t video_width;
+    uint16_t video_height;
 } VideoDevice;
 
 const char *ddevice_names[2];              /* Default device */
 const char *devices_names[2][MAX_DEVICES]; /* Container of available devices */
 static int size[2];                        /* Size of above containers */
-Device *running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
+VideoDevice *running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
 uint32_t primary_device[2];          /* Primary device */
 
 #ifdef VIDEO
@@ -72,34 +85,47 @@ static ToxAV* av = NULL;
 /* q_mutex */
 #define lock pthread_mutex_lock(&mutex);
 #define unlock pthread_mutex_unlock(&mutex);
-pthread_mutext_t mutex;
+pthread_mutex_t mutex;
 
 bool thread_running = true,
       thread_paused = true;                /* Thread control */
 
 void* thread_poll(void*);
+
+static int xioctl(int fh, unsigned long request, void *arg)
+{
+    int r;
+
+    do {
+        r = ioctl(fh, request, arg);
+    } while (-1 == r && EINTR == errno);
+
+    return r;
+}
+
 /* Meet devices */
-#ifndef VIDEO
+#ifdef VIDEO
 VideoDeviceError init_video_devices(ToxAV* av_)
 #else
+VideoDeviceError init_video_devices()
 #endif /* VIDEO */
 {
     size[input] = 0;
 
     #ifdef __linux__
-    for(int i = 0; <= MAX_DEVICES; ++i) {
-        int v4l_fd;
+    for(int i = 0; i <= MAX_DEVICES; ++i) {
+        int fd;
         struct v4l2_capability cap;
-        char *dev_name;
+        char *device_address;
 
-        v4l_fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
-        if (v4l_fd == -1)
+        fd = open(device_address, O_RDWR | O_NONBLOCK, 0);
+        if (fd == -1)
             break;
         else {
-            device_names[input][i] = video_cap.card;
+            devices_names[input][i] = cap.card;
         }
 
-        close(v4l_fd);
+        close(fd);
         size[input] = i;
     }
     #endif /* __linux__ */
@@ -113,7 +139,7 @@ VideoDeviceError init_video_devices(ToxAV* av_)
         return vde_InternalError;
 
     pthread_t thread_id;
-    if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detatch(thread_id) != 0)
+    if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0)
         return vde_InternalError;
 
 #ifdef VIDEO
@@ -133,4 +159,271 @@ VideoDeviceError terminate_video_devices()
         return (VideoDeviceError) vde_InternalError;
 
     return (VideoDeviceError) vde_None;
+}
+
+VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection)
+{
+    if (size[type] <= selection || selection < 0) return vde_InvalidSelection;
+    primary_device[type] = selection;
+    
+    return vde_None;
+}
+
+VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t* device_idx)
+{
+    return open_video_device(type, primary_device[type], device_idx);
+}
+
+void get_primary_device_name(VideoDeviceType type, char *buf, int size)
+{
+    memcpy(buf, ddevice_names[type], size);
+}
+
+VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t* device_idx)
+{
+    if (size[type] <= selection || selection < 0) return vde_InvalidSelection;
+    
+    lock;
+    
+    uint32_t i;
+    for (i = 0; i < MAX_DEVICES && running[type][i] != NULL; ++i);
+    
+    if (i == MAX_DEVICES) { unlock; return vde_AllDevicesBusy; }
+    else *device_idx = i;
+    
+    for (i = 0; i < MAX_DEVICES; i ++) { /* Check if any device has the same selection */
+        if ( running[type][i] && running[type][i]->selection == selection ) {
+            
+            running[type][*device_idx] = running[type][i];            
+            running[type][i]->ref_count ++;
+            
+            unlock;
+            return vde_None;
+        }
+    }
+    
+    VideoDevice* device = running[type][*device_idx] = calloc(1, sizeof(VideoDevice));
+    device->selection = selection;
+    
+    if (pthread_mutex_init(device->mutex, NULL) != 0) {
+        free(device);
+        unlock;
+        return vde_InternalError;
+    }
+    
+    if (type == input) {
+        char device_address[] = "/dev/videoXX";
+        snprintf(device_address + 10 , sizeof(device_address) - 10, "%i", selection);
+
+        device->fd = open(device_address, O_RDWR);
+        if ( device->fd == -1 )
+            return vde_FailedStart;
+    }
+    else { 
+
+    }
+    
+    if (type == input) {
+#ifdef __linux__
+        /* Obtain video device capabilities */
+        struct v4l2_capability cap;
+        if (-1 == xioctl(device->fd, VIDIOC_QUERYCAP, &cap)) {
+            return vde_UnsupportedMode;
+        }
+
+        /* Setup video format */
+        struct v4l2_format fmt;
+        memset(&(fmt), 0, sizeof(fmt));
+
+        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUV420;
+        if(-1 == xioctl(device->fd, VIDIOC_G_FMT, &fmt)) {
+            return vde_UnsupportedMode;
+        }
+
+        device->video_width = fmt.fmt.pix.width;
+        device->video_height = fmt.fmt.pix.height;
+
+        /* Request buffers */
+        struct v4l2_requestbuffers req;
+        memset(&(req), 0, sizeof(req));
+
+        req.count = 4;
+        req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        req.memory = V4L2_MEMORY_MMAP;
+
+        if (-1 == xioctl(device->fd, VIDIOC_REQBUFS, &req)) {
+            return vde_UnsupportedMode;
+        }
+
+        if(req.count < 2) {
+            return vde_UnsupportedMode;
+        }
+
+        device->buffers = calloc(req.count, sizeof(*device->buffers));
+
+        for(i = 0; i < req.count; ++i) {
+            struct v4l2_buffer buf;
+            memset(&(buf), 0, sizeof(buf));
+
+            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buf.memory = V4L2_MEMORY_MMAP;
+            buf.index = device->n_buffers;
+            device->n_buffers = i;
+
+            if (-1 == xioctl(device->fd, VIDIOC_QUERYBUF, &buf)) {
+                return vde_UnsupportedMode;
+            }
+
+            device->buffers[i].length = buf.length;
+            device->buffers[i].start = mmap(NULL /* start anywhere */,
+                          buf.length,
+                          PROT_READ | PROT_WRITE /* required */,
+                          MAP_SHARED /* recommended */,
+                          device->fd, buf.m.offset);
+
+            if(MAP_FAILED == device->buffers[i].start) {
+                return vde_UnsupportedMode;
+            }
+        }
+
+        enum v4l2_buf_type type;
+
+        for (i = 0; i < device->n_buffers; ++i) {
+            struct v4l2_buffer buf;
+
+            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buf.memory = V4L2_MEMORY_MMAP;
+            buf.index = i;
+
+            if (-1 == xioctl(device->fd, VIDIOC_QBUF, &buf)) {
+                return vde_FailedStart;
+            }
+        }
+        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        if (-1 == xioctl(device->fd, VIDIOC_STREAMON, &type)) {
+            return vde_FailedStart;
+        }
+#endif /* __linux__ */
+
+        /*TODO: Add OSX implementation of opening video devices */
+
+        thread_paused = false;
+    }
+    
+    unlock;
+    return vde_None;
+}
+
+void* thread_poll (void* arg) // TODO: maybe use thread for every input source
+{
+    /*
+     * NOTE: We only need to poll input devices for data.
+     */
+    (void)arg;
+    uint32_t i;
+    
+    
+    while (thread_running)
+    {
+        if (thread_paused) usleep(10000); /* Wait for unpause. */
+        else
+        {
+            for (i = 0; i < size[input]; ++i)
+             {
+                lock;
+                if (running[input][i] != NULL) 
+                {
+                    VideoDevice* device = running[input][i];
+                    struct v4l2_buffer buf;
+                    memset(&(buf), 0, sizeof(buf));
+
+                    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                    buf.memory = V4L2_MEMORY_MMAP;
+
+                    if (-1 == ioctl(device->fd, VIDIOC_DQBUF, &buf)) {
+                        unlock;
+                        continue;
+                    }
+
+                    void *data = (void*)device->buffers[buf.index].start;
+                    uint8_t *y;
+                    uint8_t *u;
+                    uint8_t *v;
+                    yuv422to420(y, u, v, data, device->video_width, device->video_width);
+
+                    if ( device->cb ) device->cb(device->video_width, device->video_height, y, u, v, device->cb_data);
+
+                    if (-1 == xioctl(device->fd, VIDIOC_QBUF, &buf)) {
+                        unlock;
+                        continue;
+                    }
+                } 
+                unlock;
+            }
+            usleep(5000);
+        }
+    }
+    
+    pthread_exit(NULL);
+}
+
+VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
+{
+    if (device_idx >= MAX_DEVICES) return vde_InvalidSelection;
+    
+    lock;
+    VideoDevice* device = running[type][device_idx];
+    VideoDeviceError rc = vde_None;
+    
+    if (!device) { 
+        unlock;
+        return vde_DeviceNotActive;
+    }
+    
+    running[type][device_idx] = NULL;
+    
+    if ( !device->ref_count ) {
+        
+        if (type == input) {
+            int i;
+            for(i = 0; i < device->n_buffers; ++i) {
+                if (-1 == munmap(device->buffers[i].start, device->buffers[i].length)) {}
+            }
+
+            close(device->fd);
+        }
+        else { 
+            
+        }
+        
+        free(device);
+    }
+    else device->ref_count--;
+    
+    unlock;
+    return rc;
+}
+
+void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *input, uint16_t width, uint16_t height)
+{
+    uint8_t *end = input + width * height * 2;
+    while(input != end) {
+        uint8_t *line_end = input + width * 2;
+        while(input != line_end) {
+            *plane_y++ = *input++;
+            *plane_v++ = *input++;
+            *plane_y++ = *input++;
+            *plane_u++ = *input++;
+        }
+
+        line_end = input + width * 2;
+        while(input != line_end) {
+            *plane_y++ = *input++;
+            input++;//u
+            *plane_y++ = *input++;
+            input++;//v
+        }
+
+    }
 }

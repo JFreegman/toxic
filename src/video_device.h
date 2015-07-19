@@ -45,13 +45,13 @@ typedef enum VideoDeviceError {
     vde_CaptureError = -9,
 } VideoDeviceError;
 
-typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
+typedef void (*DataHandleCallback) (int16_t width, int16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, void* data);
 
 
 #ifdef VIDEO
-DeviceError init_video_devices(ToxAV* av);
+VideoDeviceError init_video_devices(ToxAV* av);
 #else
-DeviceError init_video_devices();
+VideoDeviceError init_video_devices();
 #endif /* VIDEO */
 
 VideoDeviceError terminate_video_devices();
@@ -61,17 +61,17 @@ VideoDeviceError register_video_device_callback(int32_t call_idx, uint32_t devic
 void* get_video_device_callback_data(uint32_t device_idx);
 
 VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection);
-VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t* device_idx);
 /* Start device */
-VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t* device_idx);
 /* Stop device */
 VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx);
 
 /* Write data to device */
 VideoDeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels);
 
-void print_devices(ToxWindow* self, DeviceType type);
-void get_primary_device_name(VideoDeviceType type, char *buf, int size);
+void print_video_devices(ToxWindow* self, VideoDeviceType type);
+void get_primary_video_device_name(VideoDeviceType type, char *buf, int size);
 
 VideoDeviceError selection_valid(VideoDeviceType type, int32_t selection);
 #endif /* VIDEO_DEVICE_H */
