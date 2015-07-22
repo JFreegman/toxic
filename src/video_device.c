@@ -72,11 +72,11 @@ typedef struct VideoDevice {
     uint16_t video_height;
 } VideoDevice;
 
-const char *ddevice_names[2];              /* Default device */
-const char *devices_names[2][MAX_DEVICES]; /* Container of available devices */
+const char *dvideo_device_names[2];              /* Default device */
+const char *video_devices_names[2][MAX_DEVICES]; /* Container of available devices */
 static int size[2];                        /* Size of above containers */
-VideoDevice *running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
-uint32_t primary_device[2];          /* Primary device */
+VideoDevice *video_devices_running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
+uint32_t primary_video_device[2];          /* Primary device */
 
 #ifdef VIDEO
 static ToxAV* av = NULL;
@@ -87,10 +87,10 @@ static ToxAV* av = NULL;
 #define unlock pthread_mutex_unlock(&mutex);
 pthread_mutex_t mutex;
 
-bool thread_running = true,
-      thread_paused = true;                /* Thread control */
+bool video_thread_running = true,
+      video_thread_paused = true;                /* Thread control */
 
-void* thread_poll(void*);
+void* video_thread_poll(void*);
 
 static int xioctl(int fh, unsigned long request, void *arg)
 {
@@ -122,7 +122,7 @@ VideoDeviceError init_video_devices()
         if (fd == -1)
             break;
         else {
-            devices_names[input][i] = cap.card;
+            video_devices_names[input][i] = cap.card;
         }
 
         close(fd);
@@ -139,7 +139,7 @@ VideoDeviceError init_video_devices()
         return vde_InternalError;
 
     pthread_t thread_id;
-    if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0)
+    if ( pthread_create(&thread_id, NULL, video_thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0)
         return vde_InternalError;
 
 #ifdef VIDEO
@@ -152,7 +152,7 @@ VideoDeviceError init_video_devices()
 VideoDeviceError terminate_video_devices()
 {
     /* Cleanup if needed */
-    thread_running = false;
+    video_thread_running = false;
     usleep(20000);
 
     if (pthread_mutex_destroy(&mutex) != 0)
@@ -164,19 +164,19 @@ VideoDeviceError terminate_video_devices()
 VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection)
 {
     if (size[type] <= selection || selection < 0) return vde_InvalidSelection;
-    primary_device[type] = selection;
+    primary_video_device[type] = selection;
     
     return vde_None;
 }
 
 VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t* device_idx)
 {
-    return open_video_device(type, primary_device[type], device_idx);
+    return open_video_device(type, primary_video_device[type], device_idx);
 }
 
-void get_primary_device_name(VideoDeviceType type, char *buf, int size)
+void get_primary_video_device_name(VideoDeviceType type, char *buf, int size)
 {
-    memcpy(buf, ddevice_names[type], size);
+    memcpy(buf, dvideo_device_names[type], size);
 }
 
 VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t* device_idx)
@@ -186,23 +186,23 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
     lock;
     
     uint32_t i;
-    for (i = 0; i < MAX_DEVICES && running[type][i] != NULL; ++i);
+    for (i = 0; i < MAX_DEVICES && video_devices_running[type][i] != NULL; ++i);
     
     if (i == MAX_DEVICES) { unlock; return vde_AllDevicesBusy; }
     else *device_idx = i;
     
     for (i = 0; i < MAX_DEVICES; i ++) { /* Check if any device has the same selection */
-        if ( running[type][i] && running[type][i]->selection == selection ) {
+        if ( video_devices_running[type][i] && video_devices_running[type][i]->selection == selection ) {
             
-            running[type][*device_idx] = running[type][i];            
-            running[type][i]->ref_count ++;
+            video_devices_running[type][*device_idx] = video_devices_running[type][i];            
+            video_devices_running[type][i]->ref_count ++;
             
             unlock;
             return vde_None;
         }
     }
     
-    VideoDevice* device = running[type][*device_idx] = calloc(1, sizeof(VideoDevice));
+    VideoDevice* device = video_devices_running[type][*device_idx] = calloc(1, sizeof(VideoDevice));
     device->selection = selection;
     
     if (pthread_mutex_init(device->mutex, NULL) != 0) {
@@ -308,14 +308,14 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         /*TODO: Add OSX implementation of opening video devices */
 
-        thread_paused = false;
+        video_thread_paused = false;
     }
     
     unlock;
     return vde_None;
 }
 
-void* thread_poll (void* arg) // TODO: maybe use thread for every input source
+void* video_thread_poll (void* arg) // TODO: maybe use thread for every input source
 {
     /*
      * NOTE: We only need to poll input devices for data.
@@ -324,17 +324,17 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
     uint32_t i;
     
     
-    while (thread_running)
+    while (video_thread_running)
     {
-        if (thread_paused) usleep(10000); /* Wait for unpause. */
+        if (video_thread_paused) usleep(10000); /* Wait for unpause. */
         else
         {
             for (i = 0; i < size[input]; ++i)
              {
                 lock;
-                if (running[input][i] != NULL) 
+                if (video_devices_running[input][i] != NULL) 
                 {
-                    VideoDevice* device = running[input][i];
+                    VideoDevice* device = video_devices_running[input][i];
                     struct v4l2_buffer buf;
                     memset(&(buf), 0, sizeof(buf));
 
@@ -373,7 +373,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     if (device_idx >= MAX_DEVICES) return vde_InvalidSelection;
     
     lock;
-    VideoDevice* device = running[type][device_idx];
+    VideoDevice* device = video_devices_running[type][device_idx];
     VideoDeviceError rc = vde_None;
     
     if (!device) { 
@@ -381,7 +381,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
         return vde_DeviceNotActive;
     }
     
-    running[type][device_idx] = NULL;
+    video_devices_running[type][device_idx] = NULL;
     
     if ( !device->ref_count ) {
         

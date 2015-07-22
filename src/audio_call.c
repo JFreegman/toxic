@@ -51,8 +51,6 @@
 
 #define cbend pthread_exit(NULL)
 
-#define MAX_CALLS 10
-
 #define frame_size (CallContrl.audio_sample_rate * CallContrl.audio_frame_duration / 1000)
 
 static int set_call(Call* call, bool start)
@@ -74,29 +72,6 @@ static int set_call(Call* call, bool start)
 
     return 0;
 }
-
-typedef struct CallControl {
-    AudioError errors;
-
-    ToxAV *av;
-    ToxWindow *window;
-
-    Call calls[MAX_CALLS];
-    bool pending_call;
-    uint32_t call_state;
-
-    bool audio_enabled;
-    bool video_enabled;
-    uint32_t audio_bit_rate;
-    uint32_t video_bit_rate;
-    uint32_t audio_sample_rate;
-    uint32_t video_sample_rate;
-    int32_t audio_frame_duration;
-    int32_t video_frame_duration;
-
-    uint8_t audio_channels;
-
-} CallControl;
 
 CallControl CallContrl;
 
@@ -140,22 +115,30 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallContrl.errors = ae_None;
     CallContrl.window = self;
 
-    CallContrl.audio_enabled = true;
-    CallContrl.video_enabled = false;
-    CallContrl.audio_bit_rate = 48;
-    CallContrl.video_bit_rate = 0;
-    CallContrl.audio_sample_rate = 48000;
-    CallContrl.video_sample_rate = 0;
-    CallContrl.audio_frame_duration = 10;
-    CallContrl.video_frame_duration = 0;
-    CallContrl.audio_channels = 1;
-
-    memset(CallContrl.calls, 0, sizeof(CallContrl.calls));
-
-    /* Streaming stuff from core */
-
     CallContrl.av = toxav_new(tox, &error);
 
+    CallContrl.audio_enabled = true;
+    CallContrl.audio_bit_rate = 48;
+    CallContrl.audio_sample_rate = 48000;
+    CallContrl.audio_frame_duration = 10;
+    CallContrl.audio_channels = 1;
+
+#ifdef VIDEO
+    if ( !init_video(self, tox, CallContrl.av, &CallContrl) ) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video");
+        return NULL;
+    }
+    if (CallContrl.video_enabled == true) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video enabled");
+    }
+#else
+    CallContrl.video_enabled = false;
+    CallContrl.video_bit_rate = 0;
+    CallContrl.video_sample_rate = 0;
+    CallContrl.video_frame_duration = 0;
+#endif /* VIDEO */
+
+    memset(CallContrl.calls, 0, sizeof(CallContrl.calls));
 
     if ( !CallContrl.av ) {
         CallContrl.errors |= ae_StartingCoreAudio;
@@ -191,7 +174,7 @@ void terminate_audio()
     terminate_devices();
 }
 
-void read_device_callback (const int16_t* captured, uint32_t size, void* data)
+void read_device_callback(const int16_t* captured, uint32_t size, void* data)
 {
     TOXAV_ERR_SEND_FRAME error;
     int32_t friend_number = *((int32_t*)data); /* TODO: Or pass an array of call_idx's */
@@ -342,25 +325,6 @@ void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number,
     if ( stable )
         cc->audio_bit_rate = bit_rate;
 }
-
-void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
-                                    uint16_t width, uint16_t height,
-                                    uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
-                                    int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride,
-                                    void *user_data)
-{}
-
-void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, 
-                                      bool stable, uint32_t bit_rate, void *user_data)
-{
-    CallControl* cc = user_data;
-
-    if ( stable )
-        cc->video_bit_rate = bit_rate;
-}
-
-
-
 
 
 #define CB_BODY(friend_number, Arg, onFunc) do { ToxWindow* windows = (Arg); int i;\

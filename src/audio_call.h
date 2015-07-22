@@ -26,6 +26,8 @@
 #include <tox/toxav.h>
 
 #include "audio_device.h"
+ 
+#define MAX_CALLS 10
 
 typedef enum _AudioError {
     ae_None = 0,
@@ -40,6 +42,29 @@ typedef struct Call {
     uint32_t in_idx, out_idx;
     pthread_mutex_t mutex;
 } Call;
+
+typedef struct CallControl {
+    AudioError errors;
+
+    ToxAV *av;
+    ToxWindow *window;
+
+    Call calls[MAX_CALLS];
+    bool pending_call;
+    uint32_t call_state;
+
+    bool audio_enabled;
+    bool video_enabled;
+    uint32_t audio_bit_rate;
+    uint32_t video_bit_rate;
+    uint32_t audio_sample_rate;
+    uint32_t video_sample_rate;
+    int32_t audio_frame_duration;
+    int32_t video_frame_duration;
+
+    uint8_t audio_channels;
+
+} CallControl;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAV *init_audio(ToxWindow *self, Tox *tox);

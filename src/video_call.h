@@ -25,6 +25,7 @@
 
 #include <tox/toxav.h>
 
+#include "audio_call.h"
 #include "video_device.h"
 
 typedef enum _VideoError {
@@ -35,7 +36,7 @@ typedef enum _VideoError {
 } VideoError;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
-ToxAV *init_video(ToxWindow *self, Tox *tox);
+ToxAV *init_video(ToxWindow *self, Tox *tox, ToxAV *av, CallControl *user_data);
 void terminate_video();
 //int start_video_transmission(ToxWindow *self, Call *call);
 //int stop_video_transmission(Call *call, int friend_number);
