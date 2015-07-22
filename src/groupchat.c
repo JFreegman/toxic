@@ -538,8 +538,8 @@ static void groupchat_onGroupPeerlistUpdate(ToxWindow *self, Tox *m, uint32_t gr
             name_length = MIN(name_length, TOX_MAX_NAME_LENGTH - 1);
 
         if (!tox_group_peer_get_name(m, groupnum, i, (uint8_t *) chat->peer_list[i].name, NULL)) {
-            chat->peer_list[i].name_length = strlen(UNKNOWN_NAME);
-            memcpy(chat->peer_list[i].name, UNKNOWN_NAME, chat->peer_list[i].name_length);
+            name_length = strlen(UNKNOWN_NAME);
+            memcpy(chat->peer_list[i].name, UNKNOWN_NAME, name_length);
         }
 
         chat->peer_list[i].name[name_length] = '\0';

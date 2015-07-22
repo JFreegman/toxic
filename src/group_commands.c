@@ -135,7 +135,7 @@ void cmd_ban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             return;
         }
 
-        uint16_t ban_list[num_banned];
+        uint32_t ban_list[num_banned];
 
         if (!tox_group_ban_get_list(m, self->num, ban_list, &err)) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to get the ban list (error %d).", err);
@@ -145,7 +145,7 @@ void cmd_ban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         uint16_t i;
 
         for (i = 0; i < num_banned; ++i) {
-            uint16_t id = ban_list[i];
+            uint32_t id = ban_list[i];
             size_t len = tox_group_ban_get_name_size(m, self->num, id, &err);
 
             if (err != TOX_ERR_GROUP_BAN_QUERY_OK) {
