@@ -57,7 +57,7 @@ struct VideoBuffer {
 
 typedef struct VideoDevice {
     int fd;                                 /* File descriptor of video device selected/opened */
-    DataHandleCallback cb;                 /* Use this to handle data from input device usually */
+    VideoDataHandleCallback cb;                 /* Use this to handle data from input device usually */
     void* cb_data;                         /* Data to be passed to callback */
     int32_t friend_number;                      /* ToxAV friend number */
     
@@ -110,7 +110,7 @@ VideoDeviceError init_video_devices(ToxAV* av_)
 VideoDeviceError init_video_devices()
 #endif /* VIDEO */
 {
-    size[input] = 0;
+    size[vdt_input] = 0;
 
     #ifdef __linux__
     for(int i = 0; i <= MAX_DEVICES; ++i) {
@@ -122,11 +122,11 @@ VideoDeviceError init_video_devices()
         if (fd == -1)
             break;
         else {
-            video_devices_names[input][i] = cap.card;
+            video_devices_names[vdt_input][i] = cap.card;
         }
 
         close(fd);
-        size[input] = i;
+        size[vdt_input] = i;
     }
     #endif /* __linux__ */
     /* TODO: Add OSX implementation for listing input video devices */
@@ -211,7 +211,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         return vde_InternalError;
     }
     
-    if (type == input) {
+    if (type == vdt_input) {
         char device_address[] = "/dev/videoXX";
         snprintf(device_address + 10 , sizeof(device_address) - 10, "%i", selection);
 
@@ -223,7 +223,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
     }
     
-    if (type == input) {
+    if (type == vdt_input) {
 #ifdef __linux__
         /* Obtain video device capabilities */
         struct v4l2_capability cap;
@@ -329,12 +329,12 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
         if (video_thread_paused) usleep(10000); /* Wait for unpause. */
         else
         {
-            for (i = 0; i < size[input]; ++i)
+            for (i = 0; i < size[vdt_input]; ++i)
              {
                 lock;
-                if (video_devices_running[input][i] != NULL) 
+                if (video_devices_running[vdt_input][i] != NULL) 
                 {
-                    VideoDevice* device = video_devices_running[input][i];
+                    VideoDevice* device = video_devices_running[vdt_input][i];
                     struct v4l2_buffer buf;
                     memset(&(buf), 0, sizeof(buf));
 
@@ -385,7 +385,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     
     if ( !device->ref_count ) {
         
-        if (type == input) {
+        if (type == vdt_input) {
             int i;
             for(i = 0; i < device->n_buffers; ++i) {
                 if (-1 == munmap(device->buffers[i].start, device->buffers[i].length)) {}
@@ -426,4 +426,14 @@ void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
         }
 
     }
+}
+
+void print_video_devices(ToxWindow* self, VideoDeviceType type)
+{
+    int i;
+
+    for (i = 0; i < size[type]; ++i)
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
+
+    return;
 }
