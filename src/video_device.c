@@ -401,9 +401,9 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     uint16_t video_height = device->video_height;
                     int screen = DefaultScreen(device->x_display);
 
-                    yuv422to420(device->input.planes[0], device->input.planes[1], device->input.planes[2], data, video_width, video_height);
+                    yuv422to420(device->input.planes[0], device->input.planes[2], device->input.planes[1], data, video_width, video_height);
                     uint8_t *img_data = malloc(video_width * video_height * 4);
-                    yuv420tobgr(video_width, video_height, device->input.planes[0], device->input.planes[1], device->input.planes[2], video_width, video_width / 2, video_width / 2, img_data);
+                    yuv420tobgr(video_width, video_height, device->input.planes[0], device->input.planes[1], device->input.planes[2], video_width, video_width/2, video_width/2, img_data);
 
                     XImage image = {
                         .width = video_width,
