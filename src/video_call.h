@@ -39,7 +39,7 @@ typedef enum _VideoError {
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAV *init_video(ToxWindow *self, Tox *tox, ToxAV *av, CallControl *user_data);
 void terminate_video();
-//int start_video_transmission(ToxWindow *self, Call *call);
-//int stop_video_transmission(Call *call, int friend_number);
+int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call);
+int stop_video_transmission(Call *call, int friend_number);
 
 #endif /* VIDEO_CALL_H */

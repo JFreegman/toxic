@@ -73,8 +73,6 @@ static int set_call(Call* call, bool start)
     return 0;
 }
 
-CallControl CallContrl;
-
 void call_cb( ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data );
 void callstate_cb( ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data );
 void receive_audio_frame_cb( ToxAV *av, uint32_t friend_number, 
@@ -124,18 +122,19 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallContrl.audio_channels = 1;
 
 #ifdef VIDEO
+
     if ( !init_video(self, tox, CallContrl.av, &CallContrl) ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video");
         return NULL;
     }
-    if (CallContrl.video_enabled == true) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video enabled");
-    }
+
 #else
+
     CallContrl.video_enabled = false;
     CallContrl.video_bit_rate = 0;
     CallContrl.video_sample_rate = 0;
     CallContrl.video_frame_duration = 0;
+    
 #endif /* VIDEO */
 
     memset(CallContrl.calls, 0, sizeof(CallContrl.calls));
@@ -343,7 +342,6 @@ void callback_recv_invite ( void* av, uint32_t friend_number, void* arg )
             windows[i].onInvite(&windows[i], av, friend_number, cc->call_state);
         }
 }
-
 void callback_recv_ringing ( void* av, uint32_t friend_number, void* arg )
 {
     //CB_BODY(friend_number, arg, onRinging);
@@ -385,7 +383,6 @@ void callback_recv_ending ( void* av, uint32_t friend_number, void* arg )
 
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
 }
-
 void callback_call_started ( void* av, uint32_t friend_number, void* arg )
 {
     CallControl* cc = arg;

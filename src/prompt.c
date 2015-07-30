@@ -81,6 +81,14 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/sdev"        },
 
 #endif /* AUDIO */
+
+#ifdef VIDEO
+
+    { "/lsvdev"      },
+    { "/svdev"       },
+    
+#endif /* VIDEO */
+    
 };
 
 void kill_prompt_window(ToxWindow *self)

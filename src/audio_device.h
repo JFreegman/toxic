@@ -64,7 +64,7 @@ DeviceError init_devices();
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
-DeviceError register_device_callback(int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD);
+DeviceError register_device_callback(int32_t friend_number, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD);
 void* get_device_callback_data(uint32_t device_idx);
 
 /* toggle device mute */
