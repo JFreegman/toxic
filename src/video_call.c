@@ -54,13 +54,12 @@ void read_video_device_callback(int16_t width, int16_t height, const uint8_t* y,
     line_info_add(CallContrl.window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Read video device");
 }
 
-void write_video_device_callback(void *agent, int32_t friend_number, const int16_t* PCM, uint16_t size, void* arg)
+void write_video_device_callback(uint16_t width, uint16_t height,
+                                 uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                                 int32_t ystride, int32_t ustride, int32_t vstride,
+                                 void *user_data)
 {
-    (void)arg;
-    (void)agent;
 
-    if (friend_number >= 0 && CallContrl.calls[friend_number].ttas)
-        write_out(CallContrl.calls[friend_number].out_idx, PCM, size, CallContrl.audio_channels);
 }
 
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
@@ -103,7 +102,7 @@ int stop_video_transmission(Call *call, int friend_number)
 {
     if ( call->ttas ) {
         if ( call->in_idx != -1 )
-            close_video_device(input, call->in_idx);
+            close_video_device(vdt_input, call->in_idx);
         return 0;
     }
 

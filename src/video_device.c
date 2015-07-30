@@ -365,6 +365,14 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
     return vde_None;
 }
 
+__inline VideoDeviceError write_video_out(uint16_t width, uint16_t height,
+                                          uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                                          int32_t ystride, int32_t ustride, int32_t vstride,
+                                          void *user_data)
+{
+
+}
+
 void* video_thread_poll (void* arg) // TODO: maybe use thread for every input source
 {
     /*
@@ -401,10 +409,12 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     uint16_t video_height = device->video_height;
                     int screen = DefaultScreen(device->x_display);
 
+                    /* Convert to YUV420 for ToxAV */
                     yuv422to420(device->input.planes[0], device->input.planes[2], device->input.planes[1], data, video_width, video_height);
+
+                    /* Display image for video preview */
                     uint8_t *img_data = malloc(video_width * video_height * 4);
                     yuv420tobgr(video_width, video_height, device->input.planes[0], device->input.planes[1], device->input.planes[2], video_width, video_width/2, video_width/2, img_data);
-
                     XImage image = {
                         .width = video_width,
                         .height = video_height,
@@ -420,16 +430,13 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                         .blue_mask = 0xFF,
                         .data = (char*)img_data
                     };
-
                     Pixmap pixmap = XCreatePixmap(device->x_display, device->x_window, video_width, video_height, 24);
                     XPutImage(device->x_display, pixmap, device->x_gc, &image, 0, 0, 0, 0, video_width, video_height);
                     XCopyArea(device->x_display, pixmap, device->x_window, device->x_gc, 0, 0, video_width, video_height, 0, 0);
                     XFreePixmap(device->x_display, pixmap);
                     free(img_data);
-                    //XFlush(device->x_display);
-                    //
 
-                    //if ( device->cb ) device->cb(device->video_width, device->video_height, device->y, device->u, device->v, device->cb_data);
+                    if ( device->cb ) device->cb(device->video_width, device->video_height, device->input.planes[0], device->input.planes[1], device->input.planes[2], device->cb_data);
 
                     if (-1 == xioctl(device->fd, VIDIOC_QBUF, &buf)) {
                         unlock;
@@ -439,7 +446,6 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                 unlock;
             }
             usleep(1000 * 1000 / 24);
-            //usleep(5000);
         }
     }
     
@@ -469,16 +475,14 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
                 if (-1 == munmap(device->buffers[i].start, device->buffers[i].length)) {}
             }
 
-            close(device->fd);
             vpx_img_free(&device->input);
-            XFreeGC(device->x_display, device->x_gc);
+            close(device->fd);
             XDestroyWindow(device->x_display, device->x_window);
             XCloseDisplay(device->x_display);
         }
-        else { 
-            
+        else {    
         }
-        
+
         free(device);
     }
     else device->ref_count--;
