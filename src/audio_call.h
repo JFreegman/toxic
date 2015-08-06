@@ -57,11 +57,9 @@ typedef struct CallControl {
     bool video_enabled;
     uint32_t audio_bit_rate;
     uint32_t video_bit_rate;
-    uint32_t audio_sample_rate;
-    uint32_t video_sample_rate;
     int32_t audio_frame_duration;
     int32_t video_frame_duration;
-
+    uint32_t audio_sample_rate;
     uint8_t audio_channels;
 
 } CallControl;

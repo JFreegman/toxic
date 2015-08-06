@@ -29,6 +29,10 @@
 #include "line_info.h"
 #include "notify.h"
 
+ #ifdef VIDEO
+ #include "video_call.h"
+ #endif /* VIDEO */
+
 #include <stdbool.h>
 #include <curses.h>
 #include <string.h>
@@ -132,7 +136,6 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
 
     CallContrl.video_enabled = false;
     CallContrl.video_bit_rate = 0;
-    CallContrl.video_sample_rate = 0;
     CallContrl.video_frame_duration = 0;
     
 #endif /* VIDEO */
@@ -275,8 +278,8 @@ void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
     TOXAV_ERR_ANSWER error;
     CallControl* cc = user_data;
     ToxWindow* window = cc->window;
-    cc->audio_enabled = audio_enabled;
-    cc->video_enabled = video_enabled;
+    //cc->audio_enabled = audio_enabled;
+    //cc->video_enabled = video_enabled;
     cc->pending_call = true;
 
     callback_recv_invite(av, friend_number, user_data);
@@ -288,15 +291,15 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
     ToxWindow* window = cc->window;
     cc->call_state = state;
 
-    if( state == TOXAV_FRIEND_CALL_STATE_FINISHED ) {
+    if ( state == TOXAV_FRIEND_CALL_STATE_FINISHED ) {
         if ( CallContrl.pending_call ) {        
             CallContrl.pending_call = false;
-            callback_call_rejected(CallContrl.av, friend_number, &CallContrl);
+            callback_call_rejected(av, friend_number, &CallContrl);
         } else {
             callback_call_ended(av, friend_number, &CallContrl);
         }
     } else {
-        if( state == TOXAV_FRIEND_CALL_STATE_ERROR ) {
+        if ( state == TOXAV_FRIEND_CALL_STATE_ERROR ) {
             line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
             CallContrl.pending_call = false;
             callback_call_ended(av, friend_number, &CallContrl);
@@ -305,6 +308,32 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
             callback_call_started(av, friend_number, &CallContrl);
         }
     }
+
+#ifdef VIDEO
+    Call* this_call = &CallContrl.calls[friend_number];
+    VideoDeviceError error;
+    if ( state & TOXAV_FRIEND_CALL_STATE_RECEIVING_V ) {
+        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Receiving video frames");
+        error = open_primary_video_device(vdt_output, &this_call->out_idx);
+    } else {
+        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "No longer receiving video frames");
+        error = close_video_device(vdt_output, &this_call->out_idx);
+    }
+
+    if ( error == vde_FailedStart)
+        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to start input video device");
+
+    if ( error == vde_InternalError )
+        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening input video device");
+
+    if ( error != vde_None )
+        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output video device!");
+
+    if ( state & TOXAV_FRIEND_CALL_STATE_SENDING_V ) {
+        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending video frames");
+    }
+
+#endif /* VIDEO */
 }
 
 void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number, 

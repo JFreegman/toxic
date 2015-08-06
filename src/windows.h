@@ -154,6 +154,7 @@ struct ToxWindow {
 
 #ifdef VIDEO
     int video_device_selection[2]; /* -1 if not set, if set uses these selections instead of primary video device */
+    bool is_video;
 #endif /* VIDEO */
 
 #endif /* AUDIO */

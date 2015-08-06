@@ -144,8 +144,7 @@ VideoDeviceError init_video_devices()
     #endif /* __linux__ */
     /* TODO: Add OSX implementation for listing input video devices */
 
-    size[vdt_output] = 0;
-    /* TODO: List output video devices */
+    size[vdt_output] = 1;
 
     // Start poll thread
     if (pthread_mutex_init(&video_mutex, NULL) != 0)
@@ -174,7 +173,8 @@ VideoDeviceError terminate_video_devices()
     return (VideoDeviceError) vde_None;
 }
 
-VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t device_idx, VideoDataHandleCallback callback, void* data)
+VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t device_idx, 
+                                                VideoDataHandleCallback callback, void* data)
 {
     if (size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] || video_devices_running[vdt_input][device_idx]->fd == NULL) 
         return vde_InvalidSelection;
@@ -329,7 +329,9 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 #endif /* __linux__ */
 
         /*TODO: Add OSX implementation of opening video devices */
+#ifdef __OSX__
 
+#endif /*__OSX__*/
 
         /* Initialize X11 window associated to device */
         if ((device->x_display = XOpenDisplay(NULL)) == NULL) {
@@ -338,8 +340,10 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         int screen = DefaultScreen(device->x_display);
 
-        if ((device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 0, 0, 
-        device->video_width, device->video_height, 0, BlackPixel(device->x_display, screen), WhitePixel(device->x_display, screen))) == NULL) {
+        if ((device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 
+                                                    0, 0, device->video_width, device->video_height, 0, 
+                                                    BlackPixel(device->x_display, screen), 
+                                                    WhitePixel(device->x_display, screen))) == NULL) {
             return vde_FailedStart;
         }
 
@@ -350,15 +354,44 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
             return vde_FailedStart;
         }
 
-
         XMapWindow(device->x_display, device->x_window);
-        //XClearWindow(device->x_display, device->x_window);
+        XClearWindow(device->x_display, device->x_window);
         XMapRaised(device->x_display, device->x_window);
         XFlush(device->x_display);
 
         vpx_img_alloc(&device->input, VPX_IMG_FMT_I420, device->video_width, device->video_height, 1);
 
         video_thread_paused = false;
+    } else {
+        /* Initialize X11 window associated to device */
+        if ((device->x_display = XOpenDisplay(NULL)) == NULL) {
+            return vde_FailedStart;
+        }
+
+        int screen = DefaultScreen(device->x_display);
+
+        if ((device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 
+                                                    0, 0, 800, 400, 0, 
+                                                    BlackPixel(device->x_display, screen), 
+                                                    WhitePixel(device->x_display, screen))) == NULL) {
+            return vde_FailedStart;
+        }
+
+        XStoreName(device->x_display, device->x_window, "Video Receive");
+        XSelectInput(device->x_display, device->x_window, ExposureMask|ButtonPressMask|KeyPressMask);
+
+        if ((device->x_gc = DefaultGC(device->x_display, screen)) == NULL) {
+            return vde_FailedStart;
+        }
+
+
+        XMapWindow(device->x_display, device->x_window);
+        //XClearWindow(device->x_display, device->x_window);
+        //XMapRaised(device->x_display, device->x_window);
+        XFlush(device->x_display);
+
+        vpx_img_alloc(&device->input, VPX_IMG_FMT_I420, device->video_width, device->video_height, 1);
+           
     }
     
     unlock;
@@ -370,7 +403,56 @@ __inline VideoDeviceError write_video_out(uint16_t width, uint16_t height,
                                           int32_t ystride, int32_t ustride, int32_t vstride,
                                           void *user_data)
 {
+    VideoDevice* device = video_devices_running[vdt_output][0];
 
+    if (!device) return vde_DeviceNotActive;
+
+    pthread_mutex_lock(device->mutex);
+
+    /* Resize X11 window to correct size */
+    if(device->video_width != width || device->video_height != height) {
+        device->video_width = width;
+        device->video_height = height;
+        XResizeWindow(device->x_display, device->x_window, width, height);
+        vpx_img_free(&device->input);
+        vpx_img_alloc(&device->input, VPX_IMG_FMT_I420, width, height, 1);
+    }
+    int screen = DefaultScreen(device->x_display);
+
+    /* Display video image */
+    ystride = abs(ystride);
+    ustride = abs(ustride);
+    vstride = abs(vstride);
+
+    uint16_t *img_data = malloc(width * height * 6);
+    yuv420tobgr(width, height, y, u, v, 
+                ystride, ustride, vstride, img_data);
+
+    XImage image = {
+        .width = width,
+        .height = height,
+        .depth = 24,
+        .bits_per_pixel = 32,
+        .format = ZPixmap,
+        .byte_order = LSBFirst,
+        .bitmap_unit = 8,
+        .bitmap_bit_order = LSBFirst,
+        .bytes_per_line = width * 4,
+        .red_mask = 0xFF0000,
+        .green_mask = 0xFF00,
+        .blue_mask = 0xFF,
+        .data = (char*)img_data
+    };
+
+    Pixmap pixmap = XCreatePixmap(device->x_display, device->x_window, width, height, 24);
+    XPutImage(device->x_display, pixmap, device->x_gc, &image, 0, 0, 0, 0, width, height);
+    XCopyArea(device->x_display, pixmap, device->x_window, device->x_gc, 0, 0, width, height, 0, 0);
+    XFreePixmap(device->x_display, pixmap);
+    XFlush(device->x_display);
+    free(img_data);
+
+    pthread_mutex_unlock(device->mutex);
+    return vde_None;
 }
 
 void* video_thread_poll (void* arg) // TODO: maybe use thread for every input source
@@ -407,14 +489,22 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     void *data = (void*)device->buffers[buf.index].start;
                     uint16_t video_width = device->video_width;
                     uint16_t video_height = device->video_height;
+                    uint8_t *y = device->input.planes[0];
+                    uint8_t *u = device->input.planes[1];
+                    uint8_t *v = device->input.planes[2];
                     int screen = DefaultScreen(device->x_display);
 
                     /* Convert to YUV420 for ToxAV */
-                    yuv422to420(device->input.planes[0], device->input.planes[2], device->input.planes[1], data, video_width, video_height);
+                    yuv422to420(y, u, v, data, video_width, video_height);
+
+                    /* Send data to friend through ToxAV */
+                    if ( device->cb )
+                        device->cb(video_width, video_height, y, u, v, device->cb_data);
 
                     /* Display image for video preview */
                     uint8_t *img_data = malloc(video_width * video_height * 4);
-                    yuv420tobgr(video_width, video_height, device->input.planes[0], device->input.planes[1], device->input.planes[2], video_width, video_width/2, video_width/2, img_data);
+                    yuv420tobgr(video_width, video_height, y, u, v, 
+                                video_width, video_width/2, video_width/2, img_data);
                     XImage image = {
                         .width = video_width,
                         .height = video_height,
@@ -430,18 +520,20 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                         .blue_mask = 0xFF,
                         .data = (char*)img_data
                     };
+
                     Pixmap pixmap = XCreatePixmap(device->x_display, device->x_window, video_width, video_height, 24);
                     XPutImage(device->x_display, pixmap, device->x_gc, &image, 0, 0, 0, 0, video_width, video_height);
                     XCopyArea(device->x_display, pixmap, device->x_window, device->x_gc, 0, 0, video_width, video_height, 0, 0);
                     XFreePixmap(device->x_display, pixmap);
-                    free(img_data);
+                    XFlush(device->x_display);
 
-                    if ( device->cb ) device->cb(device->video_width, device->video_height, device->input.planes[0], device->input.planes[1], device->input.planes[2], device->cb_data);
 
                     if (-1 == xioctl(device->fd, VIDIOC_QBUF, &buf)) {
                         unlock;
                         continue;
                     }
+
+                    free(img_data);
                 } 
                 unlock;
             }
@@ -470,20 +562,32 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     if ( !device->ref_count ) {
         
         if (type == vdt_input) {
+
+            enum v4l2_buf_type buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            if(-1 == xioctl(device->fd, VIDIOC_STREAMOFF, &buf_type)) {}
+
             int i;
             for(i = 0; i < device->n_buffers; ++i) {
                 if (-1 == munmap(device->buffers[i].start, device->buffers[i].length)) {}
             }
-
-            vpx_img_free(&device->input);
             close(device->fd);
+            
+            vpx_img_free(&device->input);
             XDestroyWindow(device->x_display, device->x_window);
+            XFlush(device->x_display);
             XCloseDisplay(device->x_display);
-        }
-        else {    
+            pthread_mutex_destroy(device->mutex);
+            free(device->buffers);
+            free(device);
+        } else {   
+            vpx_img_free(&device->input);
+            XDestroyWindow(device->x_display, device->x_window);
+            XFlush(device->x_display);
+            XCloseDisplay(device->x_display);
+            pthread_mutex_destroy(device->mutex);
+            free(device); 
         }
 
-        free(device);
     }
     else device->ref_count--;
     
@@ -491,7 +595,9 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     return rc;
 }
 
-void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, const uint8_t *u, const uint8_t *v, unsigned int ystride, unsigned int ustride, unsigned int vstride, uint8_t *out)
+void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, 
+                 const uint8_t *u, const uint8_t *v, unsigned int ystride, 
+                 unsigned int ustride, unsigned int vstride, uint8_t *out)
 {
     unsigned long int i, j;
     for (i = 0; i < height; ++i) {
@@ -514,16 +620,17 @@ void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, const uint8_
     }
 }
 
-void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *input, uint16_t width, uint16_t height)
+void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, 
+                 uint8_t *input, uint16_t width, uint16_t height)
 {
     uint8_t *end = input + width * height * 2;
     while(input != end) {
         uint8_t *line_end = input + width * 2;
         while(input != line_end) {
             *plane_y++ = *input++;
-            *plane_v++ = *input++;
-            *plane_y++ = *input++;
             *plane_u++ = *input++;
+            *plane_y++ = *input++;
+            *plane_v++ = *input++;
         }
 
         line_end = input + width * 2;
@@ -541,7 +648,7 @@ void print_video_devices(ToxWindow* self, VideoDeviceType type)
     int i;
 
     for (i = 0; i < size[type]; ++i)
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, &video_devices_names[type][i]);
 
     return;
 }
