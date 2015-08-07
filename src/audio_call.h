@@ -51,6 +51,7 @@ typedef struct CallControl {
 
     Call calls[MAX_CALLS];
     bool pending_call;
+    bool video_call;
     uint32_t call_state;
 
     bool audio_enabled;

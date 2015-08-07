@@ -308,32 +308,6 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
             callback_call_started(av, friend_number, &CallContrl);
         }
     }
-
-#ifdef VIDEO
-    Call* this_call = &CallContrl.calls[friend_number];
-    VideoDeviceError error;
-    if ( state & TOXAV_FRIEND_CALL_STATE_RECEIVING_V ) {
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Receiving video frames");
-        error = open_primary_video_device(vdt_output, &this_call->out_idx);
-    } else {
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "No longer receiving video frames");
-        error = close_video_device(vdt_output, &this_call->out_idx);
-    }
-
-    if ( error == vde_FailedStart)
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to start input video device");
-
-    if ( error == vde_InternalError )
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening input video device");
-
-    if ( error != vde_None )
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output video device!");
-
-    if ( state & TOXAV_FRIEND_CALL_STATE_SENDING_V ) {
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending video frames");
-    }
-
-#endif /* VIDEO */
 }
 
 void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number, 
@@ -411,6 +385,10 @@ void callback_recv_ending ( void* av, uint32_t friend_number, void* arg )
         }
 
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
+
+#ifdef VIDEO
+    callback_video_ending(av, friend_number, &CallContrl);
+#endif /* VIDEO */
 }
 void callback_call_started ( void* av, uint32_t friend_number, void* arg )
 {
@@ -441,6 +419,9 @@ void callback_call_canceled ( void* av, uint32_t friend_number, void* arg )
 
     /* In case call is active */
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
+#ifdef VIDEO
+    callback_video_ending(av, friend_number, &CallContrl);
+#endif /* VIDEO */
 }
 void callback_call_rejected ( void* av, uint32_t friend_number, void* arg )
 {
@@ -469,6 +450,9 @@ void callback_call_ended ( void* av, uint32_t friend_number, void* arg )
         }
 
     stop_transmission(&CallContrl.calls[friend_number], friend_number);
+#ifdef VIDEO
+    callback_video_ending(av, friend_number, &CallContrl);
+#endif /* VIDEO */
 }
 
 void callback_requ_timeout ( void* av, uint32_t friend_number, void* arg )

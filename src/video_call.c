@@ -11,12 +11,13 @@
 
 void receive_video_frame_cb( ToxAV *av, uint32_t friend_number,
                                     uint16_t width, uint16_t height,
-                                    uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
-                                    int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride,
+                                    uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                                    int32_t ystride, int32_t ustride, int32_t vstride,
                                     void *user_data );
 void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, 
                                       bool stable, uint32_t bit_rate, void *user_data);
 
+void callback_recv_video_starting(void* av, uint32_t friend_number, void *arg);
 void callback_video_starting ( void* av, uint32_t friend_number, void *arg );
 void callback_video_ending   ( void* av, uint32_t friend_number, void *arg );
 
@@ -69,17 +70,21 @@ void read_video_device_callback(int16_t width, int16_t height, const uint8_t* y,
         } else if ( error == TOXAV_ERR_SEND_FRAME_FRIEND_NOT_FOUND ) {
             line_info_add(CallContrl.window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error friend not found");
         } else if ( error = TOXAV_ERR_SEND_FRAME_INVALID ) {
-            line_info_add(CallContrl.window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error invalid video frame %i, %i, %i", width, height, friend_number);
+            line_info_add(CallContrl.window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error invalid video frame");
         }
     }
 }
 
-void write_video_device_callback(uint16_t width, uint16_t height,
+void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_t height,
                                            uint8_t const *y, uint8_t const *u, uint8_t const *v,
                                            int32_t ystride, int32_t ustride, int32_t vstride,
                                            void *user_data)
 {
-    write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data);
+    CallControl* cc = (CallControl*)user_data;
+    Call* this_call = &cc->calls[friend_number];
+
+    if(write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data) == vde_DeviceNotActive)
+        callback_recv_video_starting(cc->av, friend_number, cc);
 }
 
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
@@ -89,17 +94,10 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
         return -1;
     }
 
-    VideoDeviceError error = open_primary_video_device(vdt_input, &call->in_idx);
-
-    if ( error == vde_FailedStart)
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to start input video device");
-
-    if ( error == vde_InternalError )
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening input video device");
-
-    if ( error != vde_None )
+    if ( open_primary_video_device(vdt_input, &call->in_idx) != vde_None ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input video device!");
-
+        return -1;
+    }
     
     if ( register_video_device_callback(self->num, call->in_idx,
          read_video_device_callback, &self->num) != vde_None)
@@ -110,13 +108,11 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
 
 int stop_video_transmission(Call *call, int friend_number)
 {
-    if ( call->ttas ) {
-        if ( call->in_idx != -1 )
-            close_video_device(vdt_input, call->in_idx);
-        return 0;
-    }
-
-    return -1;
+    if ( call->in_idx != -1 )
+        close_video_device(vdt_input, call->in_idx);
+    if ( call->out_idx != -1 )
+        close_video_device(vdt_output, call->out_idx);
+    return 0;
 }
 
 /*
@@ -130,65 +126,54 @@ int stop_video_transmission(Call *call, int friend_number)
 /*
  * Callbacks
  */
-
 void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
                                     uint16_t width, uint16_t height,
-                                    uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
-                                    int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride,
+                                    uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                                    int32_t ystride, int32_t ustride, int32_t vstride,
                                     void *user_data)
 {
     CallControl* cc = (CallControl*)user_data;
-    ToxWindow* window = CallContrl.window;
 
-    Call* this_call = &CallContrl.calls[friend_number];
-    VideoDeviceError error;
-    if ( CallContrl.call_state & TOXAV_FRIEND_CALL_STATE_SENDING_V ) {
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Receiving video frames");
-        error = open_primary_video_device(vdt_output, &this_call->out_idx);
-    } else {
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "No longer receiving video frames");
-        error = close_video_device(vdt_output, &this_call->out_idx);
-    }
-
-    if ( error == vde_FailedStart)
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to start input video device");
-
-    if ( error == vde_InternalError )
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening input video device");
-
-    if ( error != vde_None )
-        line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output video device!");
-
-    write_video_device_callback(width, height, y, u, v, ystride, ustride, vstride, user_data);
+    write_video_device_callback(friend_number, width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
-
 
 void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, 
                                       bool stable, uint32_t bit_rate, void *user_data)
 {
-    CallControl* cc = user_data;
+    CallControl* cc = (CallControl*)user_data;
 
-    if ( stable && CallContrl.call_state & TOXAV_FRIEND_CALL_STATE_SENDING_V ) {
+    if ( stable ) {
         cc->video_bit_rate = bit_rate;
         toxav_video_bit_rate_set(CallContrl.av, friend_number, CallContrl.video_bit_rate, false, NULL);
     }
 }
 
+void callback_recv_video_starting(void* av, uint32_t friend_number, void *arg)
+{
+    CallControl *cc = (CallControl*)arg;
+    ToxWindow* windows = cc->window;
+    Call* this_call = &cc->calls[friend_number];
+
+    open_primary_video_device(vdt_output, &this_call->out_idx);
+    CallContrl.video_call = true;
+}
 
 void callback_video_starting(void* av, uint32_t friend_number, void *arg)
 {
     CallControl *cc = (CallControl*)arg;
     ToxWindow* windows = cc->window;
+    Call* this_call = &cc->calls[friend_number];
 
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].is_call && windows[i].num == friend_number) {
-            if(0 != start_video_transmission(&windows[i], av, &cc->calls[friend_number])) {
+            if(0 != start_video_transmission(&windows[i], av, this_call)) {
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                 return;
             }
-            windows[i].is_video = true;
-            line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video starting");
+
+            line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
+            cc->video_call = true;
         }
     }
 }
@@ -196,20 +181,23 @@ void callback_video_ending(void* av, uint32_t friend_number, void *arg)
 {
     CallControl *cc = (CallControl*)arg;
     ToxWindow* windows = cc->window;
+    Call* this_call = &cc->calls[friend_number];
 
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].is_call && windows[i].num == friend_number) {
-            line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video ending");
-            windows[i].is_video = false;
+            line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video operations ending.");
+
         }
     }
 
-    stop_video_transmission(&cc->calls[friend_number], friend_number);
+    cc->video_call = false;
+    terminate_video();
 }
 /*
  * End of Callbacks
  */
+
 
 
 /*
@@ -239,8 +227,8 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         goto on_error;
     }
 
-    if ( self->is_video ) {
-        error_str = "Video is already running in this call.";
+    if ( CallContrl.video_call ) {
+        error_str = "Video is already sending in this call.";
         goto on_error;
     }
 
@@ -270,12 +258,7 @@ void cmd_end_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         goto on_error;
     }
 
-    if ( !self->is_call ) {
-        error_str = "Not in call!";
-        goto on_error;
-    }
-
-    if ( !self->is_video ) {
+    if ( !CallContrl.video_call ) {
         error_str = "Video is not running in this call.";
         goto on_error;
     }
@@ -415,7 +398,7 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
             }
             else {
                 /* TODO: check for failure */
-                close_video_device(input, this_call->in_idx);
+                close_video_device(input, &this_call->in_idx);
                 open_video_device(input, selection, &this_call->in_idx);
                 register_video_device_callback(self->num, this_call->in_idx, read_video_device_callback, &self->num);
             }
