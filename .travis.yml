@@ -1,20 +1,49 @@
-env:
-  secure: m+RsGCgemJNMKbinD97PtjC1pUuFzDBrAol3tI6Z3xP1FE2qF0/efbcC5OyNwUWwcaqGRb83d0vWt4hzhxMwrwJC8O6EFLFHgJs0WpslP+++KRN30PUOqRFFqH404InF4pFNULlnwJYFZ8bGft4ThxppbEOeSYcXN4WSgb66RjM=
+language: c
+compiler:
+  - gcc
+  - clang
 
 before_script:
- - sudo apt-get install wget
-
+  # Installing yasm (needed for compiling vpx) and openal
+  - sudo apt-get -yq install yasm libopenal-dev libconfig-dev libalut-dev libnotify-dev clang llvm-dev
+  # Installing libsodium, needed for toxcore
+  - git clone https://github.com/jedisct1/libsodium.git libsodium
+  - cd libsodium
+  - git checkout tags/1.0.3 > /dev/null
+  - ./autogen.sh > /dev/null
+  - ./configure > /dev/null
+  - make check -j2 || make check || exit 1 > /dev/null
+  - sudo make install > /dev/null
+  - cd ..
+  # Installing libopus, needed for audio encoding/decoding
+  - wget http://downloads.xiph.org/releases/opus/opus-1.1.tar.gz
+  - tar xzf opus-1.1.tar.gz > /dev/null
+  - cd opus-1.1
+  - ./configure > /dev/null
+  - make -j2 || make || exit 1 > /dev/null
+  - sudo make install > /dev/null
+  - cd ..
+  # Installing vpx
+  - git clone https://chromium.googlesource.com/webm/libvpx libvpx
+  - cd libvpx
+  - ./configure --enable-shared > /dev/null
+  - make -j2 || make || exit 1 > /dev/null
+  - sudo make install > /dev/null
+  - cd ..
+  # Creating libraries links and updating cache
+  - sudo ldconfig > /dev/null
+  # Installing toxcore
+  - git clone https://github.com/JFreegman/toxcore.git toxcore
+  - cd toxcore
+  - autoreconf -i
+  - ./configure --disable-tests --disable-ntox --disable-daemon --enable-av
+  - make -j2 || make || exit 1
+  - sudo make install
+  - cd ..
 script:
-  - wget -O temp https://jenkins.libtoxcore.so/job/toxic_linux_beta/build?token=$TOKEN && cat temp
-
+  - make -j2 || make || exit 1
 notifications:
   email: false
-
-  irc:
-    channels:
-      - "chat.freenode.net#tox-groupchats"
-    on_success: always
-    on_failure: always
 
   irc:
     channels:
