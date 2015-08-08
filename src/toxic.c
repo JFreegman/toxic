@@ -1048,7 +1048,7 @@ static int init_default_data_files(void)
 /* Adjusts usleep value so that tox_do runs close to the recommended number of times per second */
 static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, uint64_t cur_time, useconds_t msleepval)
 {
-    useconds_t new_sleep = msleepval;
+    useconds_t new_sleep = MAX(msleepval, 3);
     ++(*loopcount);
 
     if (*looptimer == cur_time)
