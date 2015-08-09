@@ -80,11 +80,11 @@ void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_
                                            int32_t ystride, int32_t ustride, int32_t vstride,
                                            void *user_data)
 {
-    CallControl* cc = (CallControl*)user_data;
-    Call* this_call = &cc->calls[friend_number];
+    Call* this_call = &CallContrl.calls[friend_number];
 
-    if(write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data) == vde_DeviceNotActive)
-        callback_recv_video_starting(cc->av, friend_number, cc);
+    if(write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data) == vde_DeviceNotActive) {
+        callback_recv_video_starting(CallContrl.av, friend_number, &CallContrl);
+    }
 }
 
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
@@ -155,7 +155,7 @@ void callback_recv_video_starting(void* av, uint32_t friend_number, void *arg)
     Call* this_call = &cc->calls[friend_number];
 
     open_primary_video_device(vdt_output, &this_call->out_idx);
-    CallContrl.video_call = true;
+    cc->video_call = true;
 }
 
 void callback_video_starting(void* av, uint32_t friend_number, void *arg)
@@ -167,16 +167,18 @@ void callback_video_starting(void* av, uint32_t friend_number, void *arg)
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].is_call && windows[i].num == friend_number) {
+            cc->video_call = true;
             if(0 != start_video_transmission(&windows[i], av, this_call)) {
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
+                cc->video_call = false;
                 return;
             }
 
             line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
-            cc->video_call = true;
         }
     }
 }
+
 void callback_video_ending(void* av, uint32_t friend_number, void *arg)
 {
     CallControl *cc = (CallControl*)arg;
@@ -191,8 +193,11 @@ void callback_video_ending(void* av, uint32_t friend_number, void *arg)
         }
     }
 
+    for (i = 0; i < MAX_CALLS; ++i)
+        stop_video_transmission(&CallContrl.calls[i], i);
+
     cc->video_call = false;
-    terminate_video();
+
 }
 /*
  * End of Callbacks

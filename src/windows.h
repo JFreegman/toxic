@@ -153,7 +153,9 @@ struct ToxWindow {
     int ringing_sound;
 
 #ifdef VIDEO
+
     int video_device_selection[2]; /* -1 if not set, if set uses these selections instead of primary video device */
+    
 #endif /* VIDEO */
 
 #endif /* AUDIO */
