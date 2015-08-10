@@ -65,6 +65,9 @@
 
 #ifdef AUDIO
 #include "audio_call.h"
+#ifdef VIDEO
+#include "video_call.h"
+#endif /* VIDEO */
 ToxAV *av;
 #endif /* AUDIO */
 
@@ -83,7 +86,7 @@ ToxWindow *prompt = NULL;
 
 struct Winthread Winthread;
 struct cqueue_thread cqueue_thread;
-struct audio_thread audio_thread;
+struct av_thread av_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
 
@@ -835,7 +838,7 @@ void *thread_cqueue(void *data)
 }
 
 #ifdef AUDIO
-void *thread_audio(void *data)
+void *thread_av(void *data)
 {
     ToxAV *av = (ToxAV *) data;
     
@@ -1141,9 +1144,14 @@ int main(int argc, char *argv[])
 #ifdef AUDIO
 
     av = init_audio(prompt, m);
+    
+#ifdef VIDEO
+    init_video(prompt, m, av);
 
-    /* audio thread */
-    if (pthread_create(&audio_thread.tid, NULL, thread_audio, (void *) av) != 0)
+#endif /* VIDEO */
+
+    /* AV thread */
+    if (pthread_create(&av_thread.tid, NULL, thread_av, (void *) av) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
     set_primary_device(input, user_settings->audio_in_dev);

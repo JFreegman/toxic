@@ -49,12 +49,13 @@ extern struct Winthread Winthread;
 
 extern FriendsList Friends;
 FriendRequests FrndRequests;
-
-#ifdef AUDIO
+#ifdef VIDEO
+#define AC_NUM_GLOB_COMMANDS 20
+#elif AUDIO
 #define AC_NUM_GLOB_COMMANDS 18
 #else
 #define AC_NUM_GLOB_COMMANDS 16
-#endif /* AUDIO */
+#endif
 
 /* Array of global command names used for tab completion. */
 static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -500,6 +501,7 @@ ToxWindow new_prompt(void)
     ToxWindow ret;
     memset(&ret, 0, sizeof(ret));
 
+    ret.num = -1;
     ret.active = true;
     ret.is_prompt = true;
 

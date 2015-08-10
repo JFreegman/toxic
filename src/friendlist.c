@@ -1111,6 +1111,7 @@ ToxWindow new_friendlist(void)
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* AUDIO */
 
+    ret.num = -1;
     ret.active_box = -1;
 
     Help *help = calloc(1, sizeof(Help));

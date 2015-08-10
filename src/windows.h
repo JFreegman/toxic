@@ -76,7 +76,7 @@ struct cqueue_thread {
     pthread_t tid;
 };
 
-struct audio_thread {
+struct av_thread {
     pthread_t tid;
 };
 

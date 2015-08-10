@@ -627,7 +627,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
 
 void chat_onInvite (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     /* call is flagged active here */
@@ -646,7 +646,7 @@ void chat_onInvite (ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
 
 void chat_onRinging (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ringing...type \"/hangup\" to cancel it.");
@@ -659,15 +659,15 @@ void chat_onRinging (ToxWindow *self, ToxAV *av, uint32_t friend_number, int sta
 
 void chat_onStarting (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
-
-    /* call is flagged active here */
-    self->is_call = true;
 
     init_infobox(self);
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call started! Type: \"/hangup\" to end it.");
+
+    /* call is flagged active here */
+    self->is_call = true;
 
 #ifdef SOUND_NOTIFY
     stop_sound(self->ringing_sound);
@@ -676,12 +676,13 @@ void chat_onStarting (ToxWindow *self, ToxAV *av, uint32_t friend_number, int st
 
 void chat_onEnding (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
-    self->is_call = false;
     kill_infobox(self);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call ended!");
+
+    self->is_call = false;
 
 #ifdef SOUND_NOTIFY
     stop_sound(self->ringing_sound);
@@ -690,7 +691,7 @@ void chat_onEnding (ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
 
 void chat_onError (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     self->is_call = false;
@@ -703,7 +704,7 @@ void chat_onError (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state
 
 void chat_onStart (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     /* call is flagged active here */
@@ -720,7 +721,7 @@ void chat_onStart (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state
 
 void chat_onCancel (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     self->is_call = false;
@@ -734,11 +735,11 @@ void chat_onCancel (ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
 
 void chat_onReject (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self  || self->num != friend_number)
         return;
 
-    self->is_call = false;
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Rejected!");
+    self->is_call = false;
 
 #ifdef SOUND_NOTIFY
     stop_sound(self->ringing_sound);
@@ -747,12 +748,12 @@ void chat_onReject (ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
 
 void chat_onEnd (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
-    self->is_call = false;
     kill_infobox(self);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Call ended!");
+    self->is_call = false;
 
 #ifdef SOUND_NOTIFY
     stop_sound(self->ringing_sound);
@@ -761,7 +762,7 @@ void chat_onEnd (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 
 void chat_onRequestTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     self->is_call = false;
@@ -774,7 +775,7 @@ void chat_onRequestTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, 
 
 void chat_onPeerTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    if (!self || !self->is_call || self->num != friend_number)
+    if (!self || self->num != friend_number)
         return;
 
     self->is_call = false;
