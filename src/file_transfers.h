@@ -30,8 +30,8 @@
 #include "notify.h"
 
 #define KiB 1024
-#define MiB 1048576       /* 1024 ^ 2 */
-#define GiB 1073741824    /* 1024 ^ 3 */
+#define MiB 1048576       /* 1024^2 */
+#define GiB 1073741824    /* 1024^3 */
 
 #define MAX_FILES 32
 #define TIMEOUT_FILESENDER 120
@@ -40,7 +40,7 @@ typedef enum FILE_TRANSFER_STATE {
     FILE_TRANSFER_INACTIVE,
     FILE_TRANSFER_PENDING,
     FILE_TRANSFER_STARTED,
-    FILE_TRANSFER_PAUSED
+    FILE_TRANSFER_PAUSED,
 } FILE_TRANSFER_STATE;
 
 typedef enum FILE_TRANSFER_DIRECTION {
@@ -63,6 +63,7 @@ struct FileTransfer {
     uint64_t position;
     uint64_t last_progress;
     uint32_t line_id;
+    uint8_t  file_id[TOX_FILE_ID_LENGTH];
 };
 
 /* creates initial progress line that will be updated during file transfer.

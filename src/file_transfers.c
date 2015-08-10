@@ -209,8 +209,6 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
     if (ft->file)
         fclose(ft->file);
 
-    memset(ft, 0, sizeof(struct FileTransfer));
-
     if (CTRL >= 0)
         tox_file_control(m, ft->friendnum, ft->filenum, (TOX_FILE_CONTROL) CTRL, NULL);
 
@@ -222,6 +220,8 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
     }
+
+    memset(ft, 0, sizeof(struct FileTransfer));
 }
 
 /* Kills all active file transfers for friendnum */
