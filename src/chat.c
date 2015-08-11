@@ -311,7 +311,7 @@ static void chat_resume_file_senders(ToxWindow *self, Tox *m, uint32_t friendnum
         if (err != TOX_ERR_FILE_SEND_OK) {
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", ft->file_name);
-            close_file_transfer(self, m, ft, -1, msg, notif_error);
+            close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
             continue;
         }
     }
@@ -490,7 +490,7 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, u
     if (!tox_file_seek(m, ft->friendnum, ft->filenum, ft->position, NULL))
         goto on_error;
 
-    if (!tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_RESUME, NULL))
+    if (!tox_file_control(m, ft->friendnum, ft->filenum, TOX_FILE_CONTROL_RESUME, NULL))
         goto on_error;
 
     ft->state = FILE_TRANSFER_STARTED;
@@ -498,7 +498,7 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, u
 
 on_error:
     snprintf(msg, sizeof(msg), "File transfer for '%s' failed.", ft->file_name);
-    close_file_transfer(self, m, ft, -1, msg, notif_error);
+    close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
     return false;
 }
 
