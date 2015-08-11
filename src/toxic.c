@@ -1146,7 +1146,7 @@ int main(int argc, char *argv[])
     av = init_audio(prompt, m);
     
 #ifdef VIDEO
-    init_video(prompt, m, av);
+    init_video(prompt, m);
 
 #endif /* VIDEO */
 

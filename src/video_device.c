@@ -186,7 +186,7 @@ VideoDeviceError init_video_devices()
 
             /* Query V4L for capture capabilities */
             if ( ioctl(fd, VIDIOC_QUERYCAP, &cap) == -1 ) {
-                video_input_name = cap.card;
+                video_input_name = &cap.card;
             } else {
                 video_input_name = device_address;
             }
@@ -311,6 +311,9 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         /* Obtain video device capabilities */
         struct v4l2_capability cap;
         if ( -1 == xioctl(device->fd, VIDIOC_QUERYCAP, &cap) ) {
+            close(device->fd);
+            free(device);
+
             return vde_FailedStart;
         }
 
@@ -321,6 +324,9 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
         if( -1 == xioctl(device->fd, VIDIOC_G_FMT, &fmt) ) {
+            close(device->fd);
+            free(device);
+
             return vde_FailedStart;
         }
 
@@ -334,10 +340,16 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         req.memory = V4L2_MEMORY_MMAP;
         if ( -1 == xioctl(device->fd, VIDIOC_REQBUFS, &req) ) {
+            close(device->fd);
+            free(device);
+
             return vde_FailedStart;
         }
 
         if ( req.count < 2 ) {
+            close(device->fd);
+            free(device);
+
             return vde_FailedStart;
         }
 
@@ -352,6 +364,9 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
             buf.index = i;
 
             if ( -1 == xioctl(device->fd, VIDIOC_QUERYBUF, &buf) ) {
+                close(device->fd);
+                free(device);
+
                 return vde_FailedStart;
             }
 
@@ -363,6 +378,11 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
                           device->fd, buf.m.offset);
 
             if ( MAP_FAILED == device->buffers[i].start ) {
+                for (i = 0; i < buf.index; ++i)
+                    munmap(device->buffers[i].start, device->buffers[i].length);
+                close(device->fd);
+                free(device);
+
                 return vde_FailedStart;
             }
         }
@@ -379,6 +399,11 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
             buf.index = i;
 
             if ( -1 == xioctl(device->fd, VIDIOC_QBUF, &buf) ) {
+                for (i = 0; i < device->n_buffers; ++i)
+                    munmap(device->buffers[i].start, device->buffers[i].length);
+                close(device->fd);
+                free(device);
+
                 return vde_FailedStart;
             }
         }
@@ -387,6 +412,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         /* Turn on video stream */
         if ( -1 == xioctl(device->fd, VIDIOC_STREAMON, &type) ) {
+            close_video_device(vdt_input, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -397,6 +424,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         /* Create X11 window associated to device */
         if ( (device->x_display = XOpenDisplay(NULL)) == NULL ) {
+            close_video_device(vdt_input, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -405,6 +434,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         if ( !(device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 0, 0,
                     device->video_width, device->video_height, 0, BlackPixel(device->x_display, screen), 
                     BlackPixel(device->x_display, screen))) ) {
+            close_video_device(vdt_input, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -412,6 +443,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         XSelectInput(device->x_display, device->x_window, ExposureMask|ButtonPressMask|KeyPressMask);
 
         if ( (device->x_gc = DefaultGC(device->x_display, screen)) == NULL ) {
+            close_video_device(vdt_input, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -427,6 +460,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         /* Create X11 window associated to device */
         if ( (device->x_display = XOpenDisplay(NULL)) == NULL ) {
+            close_video_device(vdt_output, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -434,6 +469,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         if ( !(device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 0, 0,
                     100, 100, 0, BlackPixel(device->x_display, screen), BlackPixel(device->x_display, screen))) ) {
+            close_video_device(vdt_output, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -441,6 +478,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         XSelectInput(device->x_display, device->x_window, ExposureMask|ButtonPressMask|KeyPressMask);
 
         if ( (device->x_gc = DefaultGC(device->x_display, screen)) == NULL ) {
+            close_video_device(vdt_output, *device_idx);
+
             return vde_FailedStart;
         }
 
@@ -465,12 +504,15 @@ __inline VideoDeviceError write_video_out(uint16_t width, uint16_t height,
 
     if ( !device ) return vde_DeviceNotActive;
 
+    if( !device->x_window ) return vde_DeviceNotActive;
+
     pthread_mutex_lock(device->mutex);
 
-    int screen = DefaultScreen(device->x_display);
+    
 
     /* Recreate missing X11 window */
-    if ( !device->x_window ) {
+    /*if ( !device->x_window ) {
+        int screen = DefaultScreen(device->x_display);
         device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 0, 0,
                     device->video_width, device->video_height, 0, BlackPixel(device->x_display, screen), 
                     BlackPixel(device->x_display, screen));
@@ -479,7 +521,7 @@ __inline VideoDeviceError write_video_out(uint16_t width, uint16_t height,
         XMapRaised(device->x_display, device->x_window);
 
         XFlush(device->x_display);
-    }
+    }*/
 
     /* Resize X11 window to correct size */
     if ( device->video_width != width || device->video_height != height ) {

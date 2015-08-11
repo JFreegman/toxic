@@ -217,7 +217,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "\n Video:\n");
     wattroff(win, A_BOLD);
     wprintw(win, "  /video                     : Send video capture\n");
-    wprintw(win, "  /endvideo                  : Close all video windows\n");
+    wprintw(win, "  /endvideo                  : End video capture\n");
 #endif /* VIDEO */
 
     help_draw_bottom_menu(win);

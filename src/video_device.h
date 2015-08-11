@@ -47,7 +47,6 @@ typedef enum VideoDeviceError {
 
 typedef void (*VideoDataHandleCallback) (int16_t width, int16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, void* data);
 
-
 #ifdef VIDEO
 VideoDeviceError init_video_devices(ToxAV* av);
 #else

@@ -36,32 +36,59 @@ typedef enum _AudioError {
     ae_StartingCoreAudio = 1 << 2
 } AudioError;
 
+#ifdef VIDEO
+typedef enum _VideoError {
+    ve_None = 0,
+    ve_StartingCaptureDevice = 1 << 0,
+    ve_StartingOutputDevice = 1 << 1,
+    ve_StartingCoreVideo = 1 << 2
+} VideoError;
+
+typedef enum _VideoState {
+    vs_None = 0,
+    vs_Send = 1 << 0,
+    vs_Receive = 1 << 1,
+    vs_SendReceive = 1 << 2
+} VideoState;
+
+#endif /* VIDEO */
+
 typedef struct Call {
     pthread_t ttid; /* Transmission thread id */
     bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
-    uint32_t in_idx, out_idx;
+    uint32_t in_idx, out_idx; /* Audio Index */
+#ifdef VIDEO
+    uint32_t vin_idx, vout_idx; /* Video Index */
+#endif /* VIDEO */
     pthread_mutex_t mutex;
 } Call;
 
 struct CallControl {
-    AudioError errors;
+    AudioError audio_errors;
+#ifdef VIDEO
+    VideoError video_errors;
+#endif /* VIDEO */
 
     ToxAV *av;
     ToxWindow *prompt;
 
     Call calls[MAX_CALLS];
-    bool pending_call;
-    bool video_call;
     uint32_t call_state;
-
+    bool pending_call;
     bool audio_enabled;
     bool video_enabled;
+
     uint32_t audio_bit_rate;
-    uint32_t video_bit_rate;
     int32_t audio_frame_duration;
-    int32_t video_frame_duration;
     uint32_t audio_sample_rate;
     uint8_t audio_channels;
+    
+#ifdef VIDEO
+    uint32_t video_bit_rate;
+    int32_t video_frame_duration;
+    VideoState video_call;
+
+#endif /* VIDEO */
 
 } CallControl;
 
