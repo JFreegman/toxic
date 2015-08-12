@@ -138,7 +138,7 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
         return -1;
     }
     
-    if ( register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None)
+    if ( register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None )
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
 
     return 0;
@@ -257,49 +257,21 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         goto on_error;
     }
 
-    if ( !self->stb->connection ) {
-        error_str = "Friend is offline.";
-        goto on_error;
-    }
-
-    if ( !self->is_call ) {
-        error_str = "Not in call!";
-        goto on_error;
-    }
-
-    if ( this_call->vin_idx != -1 ) {
-        error_str = "Video is already sending in this call.";
-        goto on_error;
-    }
-
-    callback_video_starting(self->num);
-
-    return;
-on_error:
-    print_err (self, error_str);
-}
-
-void cmd_end_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    const char *error_str;
-    Call* this_call = &CallControl.calls[self->num];
-
-    if ( argc != 0 ) {
-        error_str = "Unknown arguments.";
-        goto on_error;
-    }
-
-    if ( !CallControl.av ) {
-        error_str = "ToxAV not supported!";
-        goto on_error;
-    }
-
     if ( this_call->vin_idx == -1 ) {
-        error_str = "Video is not running in this call.";
-        goto on_error;
-    }
+        if ( !self->stb->connection ) {
+            error_str = "Friend is offline.";
+            goto on_error;
+        }
 
-    callback_video_end(self->num);
+        if ( !self->is_call ) {
+            error_str = "Not in call!";
+            goto on_error;
+        }
+
+        callback_video_starting(self->num);
+    } else {
+        callback_video_end(self->num);
+    }
 
     return;
 on_error:

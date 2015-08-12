@@ -216,8 +216,7 @@ static void help_draw_chat(ToxWindow *self)
     wattron(win, A_BOLD);
     wprintw(win, "\n Video:\n");
     wattroff(win, A_BOLD);
-    wprintw(win, "  /video                     : Send video capture\n");
-    wprintw(win, "  /endvideo                  : End video capture\n");
+    wprintw(win, "  /video                     : Toggle video call\n");
 #endif /* VIDEO */
 
     help_draw_bottom_menu(win);
@@ -300,7 +299,7 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'c':
 #ifdef VIDEO
-            help_init_window(self, 23, 80);
+            help_init_window(self, 22, 80);
 #elif AUDIO
             help_init_window(self, 19, 80);
 #else

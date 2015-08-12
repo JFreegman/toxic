@@ -171,7 +171,7 @@ VideoDeviceError init_video_devices()
 {
     size[vdt_input] = 0;
 
-    #ifdef __linux__
+#ifdef __linux__
     for (; size[vdt_input] <= MAX_DEVICES; ++size[vdt_input]) {
         int fd;
         char device_address[] = "/dev/videoXX";
@@ -186,6 +186,7 @@ VideoDeviceError init_video_devices()
 
             /* Query V4L for capture capabilities */
             if ( ioctl(fd, VIDIOC_QUERYCAP, &cap) != -1 ) {
+                //strcpy(video_input_name,cap.card);
                 video_input_name = cap.card;
             } else {
                 video_input_name = device_address;
@@ -195,11 +196,13 @@ VideoDeviceError init_video_devices()
             close(fd);
         }
     }
-    #endif /* __linux__ */
+#else /* __OSX__ */
     /* TODO: Add OSX implementation for listing input video devices */
+#endif
+
 
     size[vdt_output] = 1;
-    char* video_output_name = "Video Receiver";
+    char* video_output_name = "Toxic Video Receiver";
     video_devices_names[vdt_output][0] = video_output_name;
 
     // Start poll thread
@@ -598,6 +601,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     u = device->input.planes[1];
                     v = device->input.planes[2];
 #else /* __OSX__*/
+
 #endif
 
                     /* Convert frame image data to YUV420 for ToxAV */

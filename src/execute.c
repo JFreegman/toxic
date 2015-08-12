@@ -84,7 +84,6 @@ static struct cmd_func chat_commands[] = {
 #endif /* AUDIO */
 #ifdef VIDEO
     { "/video",     cmd_video       },
-    { "/endvideo",  cmd_end_video   },
 #endif /* VIDEO */
     { NULL,         NULL            },
 };
