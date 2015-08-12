@@ -63,7 +63,7 @@ static int set_call(Call* call, bool start)
     call->out_idx = -1;
 #ifdef VIDEO
     call->vin_idx = -1;
-    call->vin_idx = -1;
+    call->vout_idx = -1;
 #endif /* VIDEO */
 
     if ( start ) {
@@ -273,12 +273,11 @@ void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 
 void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
 {
-    ToxWindow* windows = CallControl.prompt;
     CallControl.call_state = state;
 
     switch ( state ) {
         case ( TOXAV_FRIEND_CALL_STATE_ERROR ):
-            line_info_add(windows, NULL, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
+            line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
 
 #ifdef VIDEO
             callback_video_end(friend_number);
@@ -309,25 +308,22 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
         default:
             if ( CallControl.pending_call ) {
                 /* Start answered call */
-                callback_call_started(friend_number); 
+                callback_call_started(friend_number);
                 CallControl.pending_call = false;
 
             } else {
 #ifdef VIDEO
                 /* Handle receiving client video call states */
-                if ( state & ~TOXAV_FRIEND_CALL_STATE_SENDING_V )
+                if ( state & TOXAV_FRIEND_CALL_STATE_SENDING_V )
+                    callback_recv_video_starting(friend_number);
+                else if ( state & ~TOXAV_FRIEND_CALL_STATE_SENDING_V )
                     callback_recv_video_end(friend_number);
-
-                if ( state & ~(TOXAV_FRIEND_CALL_STATE_ACCEPTING_V & TOXAV_FRIEND_CALL_STATE_SENDING_V)
-                                && CallControl.video_call != vs_Send )
-                    CallControl.video_call = vs_None;
 
 #endif /* VIDEO */
             }
 
         break;
     }
-
 }
 
 void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number, 
@@ -565,12 +561,17 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
 #endif /* VIDEO */ 
 
-    stop_transmission(&CallControl.calls[self->num], self->num);
+   
 
-    if ( CallControl.pending_call )
-        callback_call_ended(self->num);
-    else
+    if ( CallControl.pending_call ) {
+        /* Manually send a cancel call control because call hasn't started */
+        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL); 
         callback_call_canceled(self->num);
+    }
+    else {
+        stop_transmission(&CallControl.calls[self->num], self->num);
+        callback_call_ended(self->num);
+    }
 
     CallControl.pending_call = false;
 

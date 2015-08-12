@@ -185,8 +185,8 @@ VideoDeviceError init_video_devices()
             char* video_input_name;
 
             /* Query V4L for capture capabilities */
-            if ( ioctl(fd, VIDIOC_QUERYCAP, &cap) == -1 ) {
-                video_input_name = &cap.card;
+            if ( ioctl(fd, VIDIOC_QUERYCAP, &cap) != -1 ) {
+                video_input_name = cap.card;
             } else {
                 video_input_name = device_address;
             }
@@ -508,21 +508,6 @@ __inline VideoDeviceError write_video_out(uint16_t width, uint16_t height,
 
     pthread_mutex_lock(device->mutex);
 
-    
-
-    /* Recreate missing X11 window */
-    /*if ( !device->x_window ) {
-        int screen = DefaultScreen(device->x_display);
-        device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 0, 0,
-                    device->video_width, device->video_height, 0, BlackPixel(device->x_display, screen), 
-                    BlackPixel(device->x_display, screen));
-        XMapWindow(device->x_display, device->x_window);
-        XClearWindow(device->x_display, device->x_window);
-        XMapRaised(device->x_display, device->x_window);
-
-        XFlush(device->x_display);
-    }*/
-
     /* Resize X11 window to correct size */
     if ( device->video_width != width || device->video_height != height ) {
         device->video_width = width;
@@ -588,12 +573,13 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                 if ( video_devices_running[vdt_input][i] != NULL ) 
                 {
                     /* Obtain frame image data from device buffers */
+                    VideoDevice* device = video_devices_running[vdt_input][i];
                     void *data;
                     uint16_t video_width;
                     uint16_t video_height;
                     uint8_t *y, *u, *v;
+
 #ifdef __linux__
-                    VideoDevice* device = video_devices_running[vdt_input][i];
                     struct v4l2_buffer buf;
                     memset(&(buf), 0, sizeof(buf));
 

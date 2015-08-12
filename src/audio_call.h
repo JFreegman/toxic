@@ -44,13 +44,6 @@ typedef enum _VideoError {
     ve_StartingCoreVideo = 1 << 2
 } VideoError;
 
-typedef enum _VideoState {
-    vs_None = 0,
-    vs_Send = 1 << 0,
-    vs_Receive = 1 << 1,
-    vs_SendReceive = 1 << 2
-} VideoState;
-
 #endif /* VIDEO */
 
 typedef struct Call {
@@ -86,7 +79,6 @@ struct CallControl {
 #ifdef VIDEO
     uint32_t video_bit_rate;
     int32_t video_frame_duration;
-    VideoState video_call;
 
 #endif /* VIDEO */
 
