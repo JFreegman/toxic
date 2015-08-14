@@ -462,6 +462,10 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
             return vde_FailedStart;
         }
 
+        /* Disable user from manually closing the X11 window */
+        Atom wm_delete_window = XInternAtom(device->x_display, "WM_DELETE_WINDOW", false);
+        XSetWMProtocols(device->x_display, device->x_window, &wm_delete_window, 1);
+
         XMapWindow(device->x_display, device->x_window);
         XClearWindow(device->x_display, device->x_window);
         XMapRaised(device->x_display, device->x_window);
@@ -496,6 +500,10 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
             return vde_FailedStart;
         }
+
+        /* Disable user from manually closing the X11 window */
+        Atom wm_delete_window = XInternAtom(device->x_display, "WM_DELETE_WINDOW", false);
+        XSetWMProtocols(device->x_display, device->x_window, &wm_delete_window, 1);
 
         XMapWindow(device->x_display, device->x_window);
         XClearWindow(device->x_display, device->x_window);
@@ -694,7 +702,6 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
                 }
             }
             close(device->fd);
-            vpx_img_free(&device->input);
             XDestroyWindow(device->x_display, device->x_window);
             XFlush(device->x_display);
             XCloseDisplay(device->x_display);

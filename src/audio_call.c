@@ -295,6 +295,7 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
                 callback_call_ended(friend_number);
 
 #ifdef VIDEO
+            callback_recv_video_end(friend_number);
             callback_video_end(friend_number);
 #endif /* VIDEO */
 

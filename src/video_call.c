@@ -120,10 +120,7 @@ void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_
                                            int32_t ystride, int32_t ustride, int32_t vstride,
                                            void *user_data)
 {
-    if ( write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data) == vde_DeviceNotActive ) {
-        //callback_recv_video_starting(friend_number);
-        return;
-    }
+    write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
