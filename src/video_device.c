@@ -186,7 +186,7 @@ VideoDeviceError init_video_devices()
 
             /* Query V4L for capture capabilities */
             if ( -1 != ioctl(fd, VIDIOC_QUERYCAP, &cap) ) {
-                video_input_name = (char*)malloc(strlen(cap.card) + strlen(device_address) + 4);
+                video_input_name = (char*)malloc(strlen((const char*)cap.card) + strlen(device_address) + 4);
                 strcpy(video_input_name, (char*)cap.card);
                 strcat(video_input_name, " (");
                 strcat(video_input_name, (char*)device_address);
@@ -234,8 +234,7 @@ VideoDeviceError terminate_video_devices()
 
     int i;
     for (i = 0; i < size[vdt_input]; ++i) {
-        const char* video_input_name = video_devices_names[vdt_input][i];
-        free(video_input_name);
+        free((void*)video_devices_names[vdt_input][i]);
     }
 
     if ( pthread_mutex_destroy(&video_mutex) != 0 )
