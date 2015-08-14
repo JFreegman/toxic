@@ -131,12 +131,12 @@ void exit_toxic_success(Tox *m)
     terminate_notify();
 
 #ifdef AUDIO
-    terminate_audio();
-    
+
 #ifdef VIDEO
     terminate_video();
 #endif /* VIDEO */
 
+    terminate_audio();
 #endif /* AUDIO */
 
     free(DATA_FILE);
