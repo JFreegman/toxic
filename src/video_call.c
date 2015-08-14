@@ -260,22 +260,21 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         goto on_error;
     }
 
-    if ( this_call->vin_idx == -1 ) {
-        if ( !self->stb->connection ) {
-            error_str = "Friend is offline.";
-            goto on_error;
-        }
-
-        if ( !self->is_call ) {
-            error_str = "Not in call!";
-            goto on_error;
-        }
-
-        callback_video_starting(self->num);
-    } else {
-        callback_video_end(self->num);
+    if ( !self->stb->connection ) {
+        error_str = "Friend is offline.";
+        goto on_error;
     }
 
+    if ( !self->is_call ) {
+        error_str = "Not in call!";
+        goto on_error;
+    }
+
+    if ( this_call->vin_idx == -1 )
+        callback_video_starting(self->num);
+    else
+        callback_video_end(self->num);
+    
     return;
 on_error:
     print_err (self, error_str);
