@@ -185,11 +185,17 @@ VideoDeviceError init_video_devices()
             char* video_input_name;
 
             /* Query V4L for capture capabilities */
-            if ( ioctl(fd, VIDIOC_QUERYCAP, &cap) != -1 ) {
-                //strcpy(video_input_name,cap.card);
-                video_input_name = cap.card;
+            if ( -1 != ioctl(fd, VIDIOC_QUERYCAP, &cap) ) {
+                video_input_name = (char*)malloc(strlen(cap.card) + strlen(device_address) + 4);
+                strcpy(video_input_name, (char*)cap.card);
+                strcat(video_input_name, " (");
+                strcat(video_input_name, (char*)device_address);
+                strcat(video_input_name, ")");
             } else {
-                video_input_name = device_address;
+                video_input_name = (char*)malloc(strlen(device_address) + 3);
+                strcpy(video_input_name, "(");
+                strcat(video_input_name, device_address);
+                strcat(video_input_name, ")");
             }
             video_devices_names[vdt_input][size[vdt_input]] = video_input_name;
 
@@ -225,6 +231,12 @@ VideoDeviceError terminate_video_devices()
     /* Cleanup if needed */
     video_thread_running = false;
     usleep(20000);
+
+    int i;
+    for (i = 0; i < size[vdt_input]; ++i) {
+        const char* video_input_name = video_devices_names[vdt_input][i];
+        free(video_input_name);
+    }
 
     if ( pthread_mutex_destroy(&video_mutex) != 0 )
         return (VideoDeviceError) vde_InternalError;

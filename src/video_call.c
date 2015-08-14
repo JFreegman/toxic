@@ -81,8 +81,14 @@ ToxAV *init_video(ToxWindow *self, Tox *tox)
 void terminate_video()
 {
     int i;
-    for (i = 0; i < MAX_CALLS; ++i)
-        stop_video_transmission(&CallControl.calls[i], i);
+    for (i = 0; i < MAX_CALLS; ++i) {
+        Call* this_call = &CallControl.calls[i];
+
+        stop_video_transmission(this_call, i);
+
+        if( this_call->vout_idx != -1 )
+            close_video_device(vdt_output, this_call->vout_idx);
+    }
 
     terminate_video_devices();
 }
