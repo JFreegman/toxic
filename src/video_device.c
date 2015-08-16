@@ -65,9 +65,12 @@ typedef struct VideoDevice {
     void* cb_data;                          /* Data to be passed to callback */
     int32_t friend_number;                  /* ToxAV friend number */
     
+#ifdef __linux__
     struct v4l2_format fmt;
     struct VideoBuffer *buffers;
-    uint32_t n_buffers; 
+    uint32_t n_buffers;
+#else /* __OSX__ */
+#endif 
 
     uint32_t ref_count;
     int32_t selection;
@@ -660,10 +663,13 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     XFlush(device->x_display);
                     free(img_data);
 
+#ifdef __linux__
                     if ( -1 == xioctl(device->fd, VIDIOC_QBUF, &buf) ) {
                         unlock;
                         continue;
                     }
+#else /* __OSX__ */
+#endif
                 }
                 unlock;
             }
@@ -692,7 +698,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     if ( !device->ref_count ) {
         
         if ( type == vdt_input ) {
-
+#ifdef __linux__
             enum v4l2_buf_type buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             if( -1 == xioctl(device->fd, VIDIOC_STREAMOFF, &buf_type) ) {}
 
@@ -701,12 +707,18 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
                 if ( -1 == munmap(device->buffers[i].start, device->buffers[i].length) ) {
                 }
             }
+#else /* __OSX__ */
+#endif
+
             close(device->fd);
             XDestroyWindow(device->x_display, device->x_window);
             XFlush(device->x_display);
             XCloseDisplay(device->x_display);
             pthread_mutex_destroy(device->mutex);
+#ifdef __linux__
             free(device->buffers);
+#else /* __OSX__ */
+#endif
             free(device);
         } else {   
             vpx_img_free(&device->input);

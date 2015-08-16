@@ -294,10 +294,10 @@ void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, c
     VideoDeviceType type;
 
     if ( strcasecmp(argv[1], "in") == 0 ) /* Input devices */
-        type = input;
+        type = vdt_input;
 
     else if ( strcasecmp(argv[1], "out") == 0 ) /* Output devices */
-        type = output;
+        type = vdt_output;
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -327,10 +327,10 @@ void cmd_change_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, 
     VideoDeviceType type;
 
     if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
-        type = input;
+        type = vdt_input;
 
     else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
-        type = output;
+        type = vdt_output;
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -371,10 +371,10 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
     VideoDeviceType type;
 
     if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
-        type = input;
+        type = vdt_input;
 
     else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
-        type = output;
+        type = vdt_output;
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -404,8 +404,8 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
             }
             else {
                 /* TODO: check for failure */
-                close_video_device(input, this_call->vin_idx);
-                open_video_device(input, selection, &this_call->vin_idx);
+                close_video_device(vdt_input, this_call->vin_idx);
+                open_video_device(vdt_input, selection, &this_call->vin_idx);
                 register_video_device_callback(self->num, this_call->vin_idx, read_video_device_callback, &self->num);
             }
         }

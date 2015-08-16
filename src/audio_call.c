@@ -186,7 +186,7 @@ void read_device_callback(const int16_t* captured, uint32_t size, void* data)
 
 void write_device_callback(uint32_t friend_number, const int16_t* PCM, uint16_t size)
 {
-    if (friend_number >= 0 && CallControl.calls[friend_number].ttas)
+    if ( CallControl.calls[friend_number].ttas )
         write_out(CallControl.calls[friend_number].out_idx, PCM, size, CallControl.audio_channels);
 }
 
