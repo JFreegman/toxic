@@ -755,9 +755,8 @@ static uint64_t last_bootstrap_time = 0;
 static void do_bootstrap(Tox *m)
 {
     static int conn_err = 0;
-    uint64_t curtime = get_unix_time();
 
-    if (!timed_out(last_bootstrap_time, curtime, TRY_BOOTSTRAP_INTERVAL))
+    if (!timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL))
         return;
 
     if (tox_self_get_connection_status(m) != TOX_CONNECTION_NONE)
@@ -766,7 +765,7 @@ static void do_bootstrap(Tox *m)
     if (conn_err != 0)
         return;
 
-    last_bootstrap_time = curtime;
+    last_bootstrap_time = get_unix_time();
     conn_err = init_connection(m);
 
     if (conn_err != 0)
@@ -1189,7 +1188,7 @@ int main(int argc, char *argv[])
         do_toxic(m, prompt);
         uint64_t cur_time = get_unix_time();
 
-        if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
+        if (timed_out(last_save, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
             if (store_data(m, DATA_FILE) != 0)
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");

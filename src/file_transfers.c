@@ -80,13 +80,13 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
     line_info_set(self, line_id, msg);
 }
 
-static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft, uint64_t curtime)
+static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft)
 {
     if (ft->state == FILE_TRANSFER_INACTIVE)
         return;
 
     /* Timeout must be set to 1 second to show correct bytes per second */
-    if (!timed_out(ft->last_progress, curtime, 1))
+    if (!timed_out(ft->last_progress, 1))
         return;
 
     double remain = ft->file_size - ft->position;
@@ -94,18 +94,17 @@ static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft, ui
     print_progress_bar(self, ft->bps, pct_done, ft->line_id);
 
     ft->bps = 0;
-    ft->last_progress = curtime;
+    ft->last_progress = get_unix_time();
 }
 
 /* refreshes active file receiver status bars for friendnum */
 void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum)
 {
-    uint64_t curtime = get_unix_time();
     size_t i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        refresh_progress_helper(self, &Friends.list[friendnum].file_receiver[i], curtime);
-        refresh_progress_helper(self, &Friends.list[friendnum].file_sender[i], curtime);
+        refresh_progress_helper(self, &Friends.list[friendnum].file_receiver[i]);
+        refresh_progress_helper(self, &Friends.list[friendnum].file_sender[i]);
     }
 }
 

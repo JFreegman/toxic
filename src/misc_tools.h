@@ -75,7 +75,7 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n);
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
+int timed_out(uint64_t timestamp, uint64_t timeout);
 
 /* Colours the window tab according to type. Beeps if is_beep is true */
 void alert_window(ToxWindow *self, int type, bool is_beep);

@@ -140,9 +140,7 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
     if (!msg)
         return;
 
-    uint64_t curtime = get_unix_time();
-
-    if (msg->receipt != 0 && !timed_out(msg->last_send_try, curtime, CQUEUE_TRY_SEND_INTERVAL))
+    if (msg->receipt != 0 && !timed_out(msg->last_send_try, CQUEUE_TRY_SEND_INTERVAL))
         return;
 
     uint32_t receipt = 0;
@@ -150,7 +148,7 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
     TOX_MESSAGE_TYPE type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
     receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, NULL);
 
-    msg->last_send_try = curtime;
+    msg->last_send_try = get_unix_time();
     msg->receipt = receipt;
     return;
 }
