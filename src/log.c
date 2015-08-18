@@ -139,11 +139,9 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
 
-    uint64_t curtime = get_unix_time();
-
-    if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT)) {
+    if (timed_out(log->lastwrite, LOG_FLUSH_LIMIT)) {
         fflush(log->file);
-        log->lastwrite = curtime;
+        log->lastwrite = get_unix_time();
     }
 }
 

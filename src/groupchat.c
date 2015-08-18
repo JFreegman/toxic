@@ -323,7 +323,7 @@ static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, int groupnum, 
     get_time_str(timefrmt, sizeof(timefrmt));
 
     /* don't announce title when we join the room */
-    if (!timed_out(groupchats[self->num].start_time, get_unix_time(), GROUP_EVENT_WAIT))
+    if (!timed_out(groupchats[self->num].start_time, GROUP_EVENT_WAIT))
         return;
 
     char nick[TOX_MAX_NAME_LENGTH];
@@ -402,7 +402,7 @@ void *group_add_wait(void *data)
         pthread_mutex_lock(&Winthread.lock);
         get_group_nick_truncate(m, peername, thrd->peernum, thrd->groupnum);
 
-        if (strcmp(peername, DEFAULT_TOX_NAME) || timed_out(thrd->timestamp, get_unix_time(), GROUP_EVENT_WAIT)) {
+        if (strcmp(peername, DEFAULT_TOX_NAME) || timed_out(thrd->timestamp, GROUP_EVENT_WAIT)) {
             pthread_mutex_unlock(&Winthread.lock);
             break;
         }
@@ -478,7 +478,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
 
     switch (change) {
         case TOX_CHAT_CHANGE_PEER_ADD:
-            if (!timed_out(groupchats[groupnum].start_time, get_unix_time(), GROUP_EVENT_WAIT))
+            if (!timed_out(groupchats[groupnum].start_time, GROUP_EVENT_WAIT))
                 break;
 
             struct group_add_thrd *thrd = malloc(sizeof(struct group_add_thrd));
@@ -518,7 +518,7 @@ static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, int groupnu
             break;
 
         case TOX_CHAT_CHANGE_PEER_NAME:
-            if (!timed_out(groupchats[self->num].start_time, get_unix_time(), GROUP_EVENT_WAIT))
+            if (!timed_out(groupchats[self->num].start_time, GROUP_EVENT_WAIT))
                 return;
 
             /* ignore initial name change (TODO: this is a bad way to do this) */
