@@ -35,11 +35,52 @@
 
 extern FriendsList Friends;
 
-#define NUM_PROG_MARKS 50    /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
+/* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
+#define NUM_PROG_MARKS 50
+
+/* Checks for timed out file transfers and closes them. */
+#define CHECK_FILE_TIMEOUT_INTERAVAL 5
+void check_file_transfer_timeouts(Tox *m)
+{
+    char msg[MAX_STR_SIZE];
+    static uint64_t last_check = 0;
+
+    if (!timed_out(last_check, CHECK_FILE_TIMEOUT_INTERAVAL))
+        return;
+
+    last_check = get_unix_time();
+
+    size_t i, j;
+
+    for (i = 0; i < Friends.max_idx; ++i) {
+        if (!Friends.list[i].active)
+            continue;
+
+        for (j = 0; j < MAX_FILES; ++j) {
+            struct FileTransfer *ft_send = &Friends.list[i].file_sender[j];
+
+            if (ft_send->state > FILE_TRANSFER_PAUSED) {
+                if (timed_out(ft_send->last_keep_alive, TIMEOUT_FILESENDER)) {
+                    snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", ft_send->file_name);
+                    close_file_transfer(ft_send->window, m, ft_send, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+                }
+            }
+
+            struct FileTransfer *ft_recv = &Friends.list[i].file_receiver[j];
+
+            if (ft_recv->state > FILE_TRANSFER_PAUSED) {
+                if (timed_out(ft_recv->last_keep_alive, TIMEOUT_FILESENDER)) {
+                    snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", ft_recv->file_name);
+                    close_file_transfer(ft_recv->window, m, ft_recv, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+                }
+            }
+        }
+    }
+}
 
 /* creates initial progress line that will be updated during file transfer.
    Assumes progline is of size MAX_STR_SIZE */
-void prep_prog_line(char *progline)
+void init_progress_bar(char *progline)
 {
     strcpy(progline, "0.0 B/s [");
     int i;
@@ -80,13 +121,13 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
     line_info_set(self, line_id, msg);
 }
 
-static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft)
+static void refresh_progress_helper(ToxWindow *self, Tox *m, struct FileTransfer *ft)
 {
     if (ft->state == FILE_TRANSFER_INACTIVE)
         return;
 
     /* Timeout must be set to 1 second to show correct bytes per second */
-    if (!timed_out(ft->last_progress, 1))
+    if (!timed_out(ft->last_line_progress, 1))
         return;
 
     double remain = ft->file_size - ft->position;
@@ -94,17 +135,17 @@ static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft)
     print_progress_bar(self, ft->bps, pct_done, ft->line_id);
 
     ft->bps = 0;
-    ft->last_progress = get_unix_time();
+    ft->last_line_progress = get_unix_time();
 }
 
-/* refreshes active file receiver status bars for friendnum */
+/* refreshes active file transfer status bars. */
 void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum)
 {
     size_t i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        refresh_progress_helper(self, &Friends.list[friendnum].file_receiver[i]);
-        refresh_progress_helper(self, &Friends.list[friendnum].file_sender[i]);
+        refresh_progress_helper(self, m, &Friends.list[friendnum].file_receiver[i]);
+        refresh_progress_helper(self, m, &Friends.list[friendnum].file_sender[i]);
     }
 }
 
@@ -156,7 +197,7 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t
 /* Returns a pointer to an unused file sender.
  * Returns NULL if all file senders are in use.
  */
-struct FileTransfer *get_new_file_sender(uint32_t friendnum)
+static struct FileTransfer *new_file_sender(ToxWindow *window, uint32_t friendnum, uint32_t filenum, uint8_t type)
 {
     size_t i;
 
@@ -164,7 +205,15 @@ struct FileTransfer *get_new_file_sender(uint32_t friendnum)
         struct FileTransfer *ft = &Friends.list[friendnum].file_sender[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
+            memset(ft, 0, sizeof(struct FileTransfer));
+            ft->window = window;
             ft->index = i;
+            ft->friendnum = friendnum;
+            ft->filenum = filenum;
+            ft->file_type = type;
+            ft->last_keep_alive = get_unix_time();
+            ft->state = FILE_TRANSFER_PENDING;
+            ft->direction = FILE_TRANSFER_SEND;
             return ft;
         }
     }
@@ -175,7 +224,7 @@ struct FileTransfer *get_new_file_sender(uint32_t friendnum)
 /* Returns a pointer to an unused file receiver.
  * Returns NULL if all file receivers are in use.
  */
-struct FileTransfer *get_new_file_receiver(uint32_t friendnum)
+static struct FileTransfer *new_file_receiver(ToxWindow *window, uint32_t friendnum, uint32_t filenum, uint8_t type)
 {
     size_t i;
 
@@ -183,13 +232,37 @@ struct FileTransfer *get_new_file_receiver(uint32_t friendnum)
         struct FileTransfer *ft = &Friends.list[friendnum].file_receiver[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
+            memset(ft, 0, sizeof(struct FileTransfer));
+            ft->window = window;
             ft->index = i;
+            ft->friendnum = friendnum;
+            ft->filenum = filenum;
+            ft->file_type = type;
+            ft->last_keep_alive = get_unix_time();
+            ft->state = FILE_TRANSFER_PENDING;
+            ft->direction = FILE_TRANSFER_RECV;
             return ft;
         }
     }
 
     return NULL;
 }
+
+/* Initializes an unused file transfer and returns its pointer.
+ * Returns NULL on failure.
+ */
+struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnum, uint32_t filenum,
+                                       FILE_TRANSFER_DIRECTION direction, uint8_t type)
+{
+    if (direction == FILE_TRANSFER_RECV)
+        return new_file_receiver(window, friendnum, filenum, type);
+
+    if (direction == FILE_TRANSFER_SEND)
+        return new_file_sender(window, friendnum, filenum, type);
+
+    return NULL;
+}
+
 
 /* Closes file transfer ft.
  *

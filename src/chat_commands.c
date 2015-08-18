@@ -181,7 +181,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     /* prep progress bar line */
     char progline[MAX_STR_SIZE];
-    prep_prog_line(progline);
+    init_progress_bar(progline);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
 
     ft->line_id = self->chatwin->hst->line_end->id + 2;
@@ -263,7 +263,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     if (err != TOX_ERR_FILE_SEND_OK)
         goto on_send_error;
 
-    struct FileTransfer *ft = get_new_file_sender(self->num);
+    struct FileTransfer *ft = new_file_transfer(self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
 
     if (!ft) {
         err = TOX_ERR_FILE_SEND_TOO_MANY;
@@ -271,13 +271,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     memcpy(ft->file_name, file_name, namelen + 1);
-    ft->state = FILE_TRANSFER_PENDING;
     ft->file = file_to_send;
     ft->file_size = filesize;
-    ft->filenum = filenum;
-    ft->friendnum = self->num;
-    ft->direction = FILE_TRANSFER_SEND;
-    ft->file_type = TOX_FILE_KIND_DATA;
     tox_file_get_file_id(m, self->num, filenum, ft->file_id, NULL);
 
     char sizestr[32];

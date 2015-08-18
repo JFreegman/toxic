@@ -780,6 +780,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     pthread_mutex_lock(&Winthread.lock);
     tox_iterate(m);
     do_bootstrap(m);
+    check_file_transfer_timeouts(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
