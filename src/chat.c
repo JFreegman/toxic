@@ -373,6 +373,7 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
 
     ft->position += send_length;
     ft->bps += send_length;
+    ft->last_keep_alive = get_unix_time();
 }
 
 static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
@@ -412,6 +413,7 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, ui
 
     ft->bps += length;
     ft->position += length;
+    ft->last_keep_alive = get_unix_time();
 }
 
 static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, TOX_FILE_CONTROL control)
@@ -427,14 +429,16 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
     char msg[MAX_STR_SIZE];
 
     switch (control) {
-        case TOX_FILE_CONTROL_RESUME:
+        case TOX_FILE_CONTROL_RESUME: {
+            ft->last_keep_alive = get_unix_time();
+
             /* transfer is accepted */
             if (ft->state == FILE_TRANSFER_PENDING) {
                 ft->state = FILE_TRANSFER_STARTED;
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
                                                                       ft->index, ft->file_name);
                 char progline[MAX_STR_SIZE];
-                prep_prog_line(progline);
+                init_progress_bar(progline);
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
                 sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
                 ft->line_id = self->chatwin->hst->line_end->id + 2;
@@ -443,15 +447,16 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
             }
 
             break;
-
-        case TOX_FILE_CONTROL_PAUSE:
+        }
+        case TOX_FILE_CONTROL_PAUSE: {
             ft->state = FILE_TRANSFER_PAUSED;
             break;
-
-        case TOX_FILE_CONTROL_CANCEL:
+        }
+        case TOX_FILE_CONTROL_CANCEL: {
             snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", ft->file_name);
             close_file_transfer(self, m, ft, -1, msg, notif_error);
             break;
+        }
     }
 }
 
@@ -479,6 +484,8 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, u
 
         if (memcmp(ft->file_id, file_id, TOX_FILE_ID_LENGTH) == 0) {
             ft->filenum = filenum;
+            ft->state = FILE_TRANSFER_STARTED;
+            ft->last_keep_alive = get_unix_time();
             resuming = true;
             break;
         }
@@ -493,7 +500,6 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, u
     if (!tox_file_control(m, ft->friendnum, ft->filenum, TOX_FILE_CONTROL_RESUME, NULL))
         goto on_error;
 
-    ft->state = FILE_TRANSFER_STARTED;
     return true;
 
 on_error:
@@ -512,7 +518,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     if (chat_resume_broken_ft(self, m, friendnum, filenum))
         return;
 
-    struct FileTransfer *ft = get_new_file_receiver(friendnum);
+    struct FileTransfer *ft = new_file_transfer(self, friendnum, filenum, FILE_TRANSFER_RECV, TOX_FILE_KIND_DATA);
 
     if (!ft) {
         tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
@@ -570,12 +576,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", ft->index);
 
-    ft->state = FILE_TRANSFER_PENDING;
-    ft->direction = FILE_TRANSFER_RECV;
     ft->file_size = file_size;
-    ft->friendnum = friendnum;
-    ft->filenum = filenum;
-    ft->file_type = TOX_FILE_KIND_DATA;
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
     tox_file_get_file_id(m, friendnum, filenum, ft->file_id, NULL);
