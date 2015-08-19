@@ -1158,11 +1158,13 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     char myid[TOX_ADDRESS_SIZE];
     tox_self_get_address(m, (uint8_t *) myid);
 
-    log_enable(nick, myid, Friends.list[self->num].pub_key, ctx->log, LOG_CHAT);
+    int log_ret = log_enable(nick, myid, Friends.list[self->num].pub_key, ctx->log, LOG_CHAT);
     load_chat_history(self, ctx->log);
 
     if (!Friends.list[self->num].logging_on)
         log_disable(ctx->log);
+    else if (log_ret == -1)
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 

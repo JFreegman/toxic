@@ -39,8 +39,12 @@ enum {
 /* formats/writes line to log file */
 void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event);
 
-/* enables logging for specified log and creates/fetches file if necessary */
-void log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype);
+/* enables logging for specified log and creates/fetches file if necessary.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype);
 
 /* disables logging for specified log and closes file */
 void log_disable(struct chatlog *log);

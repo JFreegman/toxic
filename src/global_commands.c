@@ -379,16 +379,18 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         char myid[TOX_ADDRESS_SIZE];
         tox_self_get_address(m, (uint8_t *) myid);
 
+        int log_ret = -1;
+
         if (self->is_chat) {
             Friends.list[self->num].logging_on = true;
-            log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
+            log_ret = log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
         } else if (self->is_prompt) {
-            log_enable(self->name, myid, NULL, log, LOG_PROMPT);
+            log_ret = log_enable(self->name, myid, NULL, log, LOG_PROMPT);
         } else if (self->is_groupchat) {
-            log_enable(self->name, myid, NULL, log, LOG_GROUP);
+            log_ret = log_enable(self->name, myid, NULL, log, LOG_GROUP);
         }
 
-        msg = "Logging enabled";
+        msg = log_ret == 0 ? "Logging enabled." : "Warning: Log failed to initialize.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
@@ -397,7 +399,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
         log_disable(log);
 
-        msg = "Logging disabled";
+        msg = "Logging disabled.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     }
