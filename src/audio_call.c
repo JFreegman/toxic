@@ -408,6 +408,7 @@ void callback_peer_timeout(uint32_t friend_number)
     CB_BODY(friend_number, onPeerTimeout);
 
     callback_video_end(friend_number);
+    callback_recv_video_end(friend_number);
     stop_transmission(&CallControl.calls[friend_number], friend_number);
     /* Call is stopped manually since there might be some other
      * actions that one can possibly take on timeout

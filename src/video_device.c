@@ -71,8 +71,6 @@ typedef struct VideoDevice {
     struct v4l2_format fmt;
     struct VideoBuffer *buffers;
     uint32_t n_buffers;
-#else /* __OSX__ */
-
 #endif 
 
     uint32_t ref_count;
@@ -109,17 +107,6 @@ bool video_thread_running = true,
 
 void* video_thread_poll(void*);
 
-static int xioctl(int fh, unsigned long request, void *arg)
-{
-    int r;
-
-    do {
-        r = ioctl(fh, request, arg);
-    } while (-1 == r && EINTR == errno);
-
-    return r;
-}
-
 static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, 
                  const uint8_t *u, const uint8_t *v, unsigned int ystride, 
                  unsigned int ustride, unsigned int vstride, uint8_t *out)
@@ -145,6 +132,7 @@ static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y,
     }
 }
 
+#ifdef __linux__
 static void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, 
                  uint8_t *input, uint16_t width, uint16_t height)
 {
@@ -167,6 +155,19 @@ static void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v,
         }
     }
 }
+
+static int xioctl(int fh, unsigned long request, void *arg)
+{
+    int r;
+
+    do {
+        r = ioctl(fh, request, arg);
+    } while (-1 == r && EINTR == errno);
+
+    return r;
+}
+
+#endif /* __linux__ */
 
 /* Meet devices */
 #ifdef VIDEO
@@ -210,10 +211,9 @@ VideoDeviceError init_video_devices()
     }
 
 #else /* __OSX__ */
-    if( osx_video_init(video_devices_names[vdt_input], &size[vdt_input]) != 0 )
+    if( osx_video_init((char**)video_devices_names[vdt_input], &size[vdt_input]) != 0 )
         return vde_InternalError;
 #endif
-
 
     size[vdt_output] = 1;
     char* video_output_name = "Toxic Video Receiver";
@@ -249,7 +249,7 @@ VideoDeviceError terminate_video_devices()
         return (VideoDeviceError) vde_InternalError;
 
 #ifdef __OSX__
-    void osx_video_release();
+    osx_video_release();
 #endif /* __OSX__ */
 
     return (VideoDeviceError) vde_None;
@@ -449,7 +449,11 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         }
 
 #else /* __OSX__ */
-        osx_video_open_device(*device_idx, device->video_width, device->video_height);
+        if ( osx_video_open_device(selection, &device->video_width, &device->video_height) != 0 ) {
+            free(device);
+
+            return vde_FailedStart;
+        }
 #endif
 
         /* Create X11 window associated to device */
@@ -612,10 +616,11 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                 {
                     /* Obtain frame image data from device buffers */
                     VideoDevice* device = video_devices_running[vdt_input][i];
-                    void *data;
-                    uint16_t video_width;
-                    uint16_t video_height;
-                    uint8_t *y, *u, *v;
+                    uint16_t video_width = device->video_width;
+                    uint16_t video_height = device->video_height;
+                    uint8_t *y = device->input.planes[0];
+                    uint8_t *u = device->input.planes[1];
+                    uint8_t *v = device->input.planes[2];
 
 #ifdef __linux__
                     struct v4l2_buffer buf;
@@ -629,18 +634,17 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                         continue;
                     }   
 
-                    data = (void*)device->buffers[buf.index].start;
-                    video_width = device->video_width;
-                    video_height = device->video_height;
-                    y = device->input.planes[0];
-                    u = device->input.planes[1];
-                    v = device->input.planes[2];
-#else /* __OSX__*/
-
-#endif
+                    void *data = (void*)device->buffers[buf.index].start;
 
                     /* Convert frame image data to YUV420 for ToxAV */
                     yuv422to420(y, u, v, data, video_width, video_height);
+
+#else /* __OSX__*/
+                    if ( osx_video_read_device(y, u, v, &video_width, &video_height) != 0 ) {
+                        unlock;
+                        continue;
+                    }
+#endif
 
                     /* Send frame data to friend through ToxAV */
                     if ( device->cb )
@@ -681,8 +685,8 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                         unlock;
                         continue;
                     }
-#else /* __OSX__ */
-#endif
+#endif /* __linux__ */
+                    
                 }
                 unlock;
             }
@@ -725,7 +729,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
 #else /* __OSX__ */
             osx_video_close_device(device_idx);
 #endif
-
+            vpx_img_free(&device->input);
             XDestroyWindow(device->x_display, device->x_window);
             XFlush(device->x_display);
             XCloseDisplay(device->x_display);
@@ -733,8 +737,8 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
 
 #ifdef __linux__
             free(device->buffers);
-#else /* __OSX__ */
-#endif
+#endif /* __linux__ */
+
             free(device);
         } else {   
             vpx_img_free(&device->input);
