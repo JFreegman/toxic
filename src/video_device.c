@@ -36,7 +36,9 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <linux/videodev2.h>
-#endif /* __linux__ */
+#else /* __OSX__ */
+#import "osx_video.h"
+#endif
 
 #include "line_info.h"
 #include "settings.h"
@@ -60,16 +62,17 @@ struct VideoBuffer {
 };
 
 typedef struct VideoDevice {
-    int fd;                                 /* File descriptor of video device selected/opened */
     VideoDataHandleCallback cb;             /* Use this to handle data from input device usually */
     void* cb_data;                          /* Data to be passed to callback */
     int32_t friend_number;                  /* ToxAV friend number */
     
 #ifdef __linux__
+    int fd;                                 /* File descriptor of video device selected/opened */
     struct v4l2_format fmt;
     struct VideoBuffer *buffers;
     uint32_t n_buffers;
 #else /* __OSX__ */
+
 #endif 
 
     uint32_t ref_count;
@@ -205,8 +208,10 @@ VideoDeviceError init_video_devices()
             close(fd);
         }
     }
+
 #else /* __OSX__ */
-    /* TODO: Add OSX implementation for listing input video devices */
+    if( osx_video_init(video_devices_names[vdt_input], &size[vdt_input]) != 0 )
+        return vde_InternalError;
 #endif
 
 
@@ -243,14 +248,23 @@ VideoDeviceError terminate_video_devices()
     if ( pthread_mutex_destroy(&video_mutex) != 0 )
         return (VideoDeviceError) vde_InternalError;
 
+#ifdef __OSX__
+    void osx_video_release();
+#endif /* __OSX__ */
+
     return (VideoDeviceError) vde_None;
 }
 
 VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t device_idx, 
                                                 VideoDataHandleCallback callback, void* data)
 {
+#ifdef __linux__
     if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] || !video_devices_running[vdt_input][device_idx]->fd ) 
         return vde_InvalidSelection;
+#else /* __OSX__ */
+    if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] ) 
+        return vde_InvalidSelection;
+#endif
 
     lock;
     video_devices_running[vdt_input][device_idx]->cb = callback;
@@ -435,8 +449,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         }
 
 #else /* __OSX__ */
-        /*TODO: Add OSX implementation of opening video devices */
-
+        osx_video_open_device(*device_idx, device->video_width, device->video_height);
 #endif
 
         /* Create X11 window associated to device */
@@ -707,14 +720,17 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
                 if ( -1 == munmap(device->buffers[i].start, device->buffers[i].length) ) {
                 }
             }
+            close(device->fd);
+
 #else /* __OSX__ */
+            osx_video_close_device(device_idx);
 #endif
 
-            close(device->fd);
             XDestroyWindow(device->x_display, device->x_window);
             XFlush(device->x_display);
             XCloseDisplay(device->x_display);
             pthread_mutex_destroy(device->mutex);
+
 #ifdef __linux__
             free(device->buffers);
 #else /* __OSX__ */
