@@ -496,7 +496,7 @@ static void friendlist_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, const char *data, size_t length)
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, uint32_t num, const char *data, size_t length)
 {
     if (num >= Friends.max_idx)
         return;

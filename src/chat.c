@@ -510,7 +510,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
                     "Incoming file: %s", filename );
 }
 
-static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, const char *invite_data,
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, uint32_t friendnumber, const char *invite_data,
                                size_t length)
 {
     if (self->num != friendnumber)

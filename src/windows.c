@@ -151,7 +151,7 @@ void on_friendadded(Tox *m, uint32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_group_invite(Tox *m, int32_t friendnumber, const uint8_t *invite_data, size_t length, void *userdata)
+void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, size_t length, void *userdata)
 {
     size_t i;
 
