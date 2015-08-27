@@ -568,7 +568,7 @@ ToxWindow *get_window_ptr(int i)
 {
     ToxWindow *toxwin = NULL;
 
-    if (i >= 0 && i <= MAX_WINDOWS_NUM && windows[i].active)
+    if (i >= 0 && i < MAX_WINDOWS_NUM && windows[i].active)
         toxwin = &windows[i];
 
     return toxwin;
@@ -595,7 +595,7 @@ void kill_all_windows(Tox *m)
         if (windows[i].is_chat)
             kill_chat_window(&windows[i], m);
         else if (windows[i].is_groupchat)
-            close_groupchat(&windows[i], m, i);
+            close_groupchat(&windows[i], m, windows[i].num);
     }
 
     kill_prompt_window(prompt);

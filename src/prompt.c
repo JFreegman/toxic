@@ -212,7 +212,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
-                    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+                    int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
@@ -330,7 +330,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     getyx(self->window, y, x);
     (void) x;
 
-    int new_x = ctx->start ? x2 - 1 : wcswidth(ctx->line, ctx->pos);
+    int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
     wrefresh(self->window);

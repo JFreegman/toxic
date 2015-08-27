@@ -41,8 +41,14 @@
 
 void hst_to_net(uint8_t *num, uint16_t numbytes);
 
-/* convert a hex string to binary */
-char *hex_string_to_bin(const char *hex_string);
+/*
+ * Converts a hexidecimal string of length hex_len to binary format and puts the result in output.
+ * output_size must be exactly half of hex_len.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size_t output_size);
 
 /* convert a hex string to bytes. returns 0 on success, -1 on failure */
 int hex_string_to_bytes(char *buf, int size, const char *keystr);

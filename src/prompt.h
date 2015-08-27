@@ -41,6 +41,7 @@ typedef struct {
 } FriendRequests;
 
 ToxWindow new_prompt(void);
+
 void prep_prompt_win(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m);
 void prompt_update_nick(ToxWindow *prompt, const char *nick);

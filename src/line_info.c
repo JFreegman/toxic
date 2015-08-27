@@ -133,6 +133,9 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 void line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
                    uint8_t bold, uint8_t colour, const char *msg, ...)
 {
+    if (!self)
+        return;
+
     struct history *hst = self->chatwin->hst;
 
     if (hst->queue_sz >= MAX_LINE_INFO_QUEUE)

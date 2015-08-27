@@ -77,6 +77,9 @@ char *DATA_FILE = NULL;
 char *BLOCK_FILE = NULL;
 ToxWindow *prompt = NULL;
 
+#define DATANAME  "data"
+#define BLOCKNAME "data-blocklist"
+
 #define AUTOSAVE_FREQ 60
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
@@ -119,6 +122,24 @@ static void init_signal_catchers(void)
     signal(SIGSEGV, catch_SIGSEGV);
 }
 
+void free_global_data(void)
+{
+    if (DATA_FILE) {
+        free(DATA_FILE);
+        DATA_FILE = NULL;
+    }
+
+    if (BLOCK_FILE) {
+        free(BLOCK_FILE);
+        BLOCK_FILE = NULL;
+    }
+
+    if (user_settings) {
+        free(user_settings);
+        user_settings = NULL;
+    }
+}
+
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
@@ -131,10 +152,7 @@ void exit_toxic_success(Tox *m)
     terminate_audio();
 #endif /* AUDIO */
 
-    free(DATA_FILE);
-    free(BLOCK_FILE);
-    free(user_settings);
-
+    free_global_data();
     tox_kill(m);
     endwin();
 
@@ -150,6 +168,7 @@ void exit_toxic_success(Tox *m)
 
 void exit_toxic_err(const char *errmsg, int errcode)
 {
+    free_global_data();
     freopen("/dev/tty", "w", stderr);
     endwin();
     fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
@@ -289,9 +308,11 @@ static int load_nodelist(const char *filename)
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
             toxNodes.ports[toxNodes.lines] = atoi(port);
 
-            char *key_binary = hex_string_to_bin(key_ascii);
+            char key_binary[TOX_PUBLIC_KEY_SIZE + 2 + 1];
+            if (hex_string_to_bin(key_ascii, strlen(key_ascii), key_binary, TOX_PUBLIC_KEY_SIZE) == -1)
+                continue;
+
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_PUBLIC_KEY_SIZE);
-            free(key_binary);
 
             toxNodes.lines++;
         }
@@ -933,10 +954,22 @@ static void parse_args(int argc, char *argv[])
 
             case 'f':
                 arg_opts.use_custom_data = 1;
-                DATA_FILE = strdup(optarg);
+
+                if (DATA_FILE)
+                    free(DATA_FILE);
+
+                if (BLOCK_FILE)
+                    free(BLOCK_FILE);
+
+                DATA_FILE = malloc(strlen(optarg) + 1);
+                strcpy(DATA_FILE, optarg);
+
+                if (DATA_FILE == NULL)
+                    exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+
                 BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
-                if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+                if (BLOCK_FILE == NULL)
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
 
                 strcpy(BLOCK_FILE, optarg);
@@ -1007,8 +1040,6 @@ static void parse_args(int argc, char *argv[])
     }
 }
 
-#define DATANAME "data"
-#define BLOCKNAME "data-blocklist"
 static int init_default_data_files(void)
 {
     if (arg_opts.use_custom_data)

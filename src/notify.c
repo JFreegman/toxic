@@ -90,7 +90,7 @@ struct _ActiveNotifications {
 #ifdef BOX_NOTIFY
     NotifyNotification* box;
     char messages[MAX_BOX_MSG_LEN + 1][MAX_BOX_MSG_LEN + 1];
-    char title[24];
+    char title[64];
     size_t size;
     time_t n_timeout;
 #endif
@@ -153,25 +153,26 @@ bool is_playing(int source)
 static bool device_opened = false;
 time_t last_opened_update = 0;
 
-bool m_open_device()
+/* Opens primary device. Returns true on succe*/
+void m_open_device()
 {
     last_opened_update = get_unix_time();
 
-    if (device_opened) return true;
+    if (device_opened) return;
 
     /* Blah error check */
     open_primary_device(output, &Control.device_idx, 48000, 20, 1);
 
-    return (device_opened = true);
+    device_opened = true;
 }
 
-bool m_close_device()
+void m_close_device()
 {
-    if (!device_opened) return true;
+    if (!device_opened) return;
 
     close_device(output, Control.device_idx);
 
-    return !(device_opened = false);
+    device_opened = false;
 }
 
 /* Terminate all sounds but wait for them to finish first */
@@ -598,9 +599,12 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
         actives[id].id_indicator = id_indicator;
         if (id_indicator) *id_indicator = id;
     }
-#endif
+#else
+    if (id == -1)
+        return -1;
+#endif    /* SOUND_NOTIFY */
 
-    strncpy(actives[id].title, title, 24);
+    snprintf(actives[id].title, sizeof(actives[id].title), "%s", title);
     if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
 
     va_list __ARGS__; va_start (__ARGS__, format);
@@ -699,7 +703,7 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
         *id_indicator = id;
     }
 
-    strncpy(actives[id].title, title, 24);
+    snprintf(actives[id].title, sizeof(actives[id].title), "%s", title);
     if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
 
     va_list __ARGS__; va_start (__ARGS__, format);

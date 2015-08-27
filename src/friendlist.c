@@ -139,8 +139,10 @@ static int save_blocklist(char *path)
     int count = 0;
 
     for (i = 0; i < Blocked.max_idx; ++i) {
-        if (count > Blocked.num_blocked)
-            goto on_error;
+        if (count > Blocked.num_blocked) {
+            free(data);
+            return -1;
+        }
 
         if (Blocked.list[i].active) {
             BlockedFriend tmp;
@@ -161,19 +163,20 @@ static int save_blocklist(char *path)
 
     FILE *fp = fopen(path, "wb");
 
-    if (fp == NULL)
-        goto on_error;
+    if (fp == NULL) {
+        free(data);
+        return -1;
+    }
 
-    if (fwrite(data, len, 1, fp) != 1)
-        goto on_error;
+    if (fwrite(data, len, 1, fp) != 1) {
+        fclose(fp);
+        free(data);
+        return -1;
+    }
 
     fclose(fp);
     free(data);
     return 0;
-
-on_error:
-    free(data);
-    return -1;
 }
 
 static void sort_blocklist_index(void);
@@ -221,9 +224,10 @@ int load_blocklist(char *path)
     int i;
 
     for (i = 0; i < num; ++i) {
+        BlockedFriend tmp;
+        memset(&tmp, 0, sizeof(BlockedFriend));
         memset(&Blocked.list[i], 0, sizeof(BlockedFriend));
 
-        BlockedFriend tmp;
         memcpy(&tmp, data + i * sizeof(BlockedFriend), sizeof(BlockedFriend));
         Blocked.list[i].active = true;
         Blocked.list[i].num = i;

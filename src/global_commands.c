@@ -249,19 +249,22 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     const char *ip = argv[1];
     const char *port = argv[2];
-    const char *key = argv[3];
+    const char *ascii_key = argv[3];
 
     if (atoi(port) == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid port.");
         return;
     }
 
-    char *binary_string = hex_string_to_bin(key);
+    char key_binary[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    if (hex_string_to_bin(ascii_key, strlen(ascii_key), key_binary, TOX_PUBLIC_KEY_SIZE) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid key.");
+        return;
+    }
 
     TOX_ERR_BOOTSTRAP err;
-    tox_bootstrap(m, ip, atoi(port), (uint8_t *) binary_string, &err);
-    tox_add_tcp_relay(m, ip, atoi(port), (uint8_t *) binary_string, &err);
-    free(binary_string);
+    tox_bootstrap(m, ip, atoi(port), (uint8_t *) key_binary, &err);
+    tox_add_tcp_relay(m, ip, atoi(port), (uint8_t *) key_binary, &err);
 
     switch (err) {
         case TOX_ERR_BOOTSTRAP_BAD_HOST:

@@ -93,7 +93,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE)
+    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len || ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE)
         return -1;
 
     const char *L = (char *) list;
@@ -136,7 +136,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
         }
     }
 
-    if (string_is_empty(sub)) {
+    if (!sub[0]) {
         free(sub);
         return -1;
     }
@@ -185,7 +185,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
         return -1;
 
     char tmpend[MAX_STR_SIZE];
-    strcpy(tmpend, &ubuf[ctx->pos]);
+    snprintf(tmpend, sizeof(tmpend), "%s", &ubuf[ctx->pos]);
     strcpy(&ubuf[strt], match);
     strcpy(&ubuf[strt + m_len], endchrs);
     strcpy(&ubuf[strt + m_len + n_endchrs], tmpend);
@@ -193,7 +193,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     /* convert to widechar and copy back to original buf */
     wchar_t newbuf[MAX_STR_SIZE];
 
-    if (mbs_to_wcs_buf(newbuf, ubuf, MAX_STR_SIZE) == -1)
+    if (mbs_to_wcs_buf(newbuf, ubuf, sizeof(newbuf) / sizeof(wchar_t)) == -1)
         return -1;
 
     wcscpy(ctx->line, newbuf);
@@ -218,7 +218,7 @@ static void complt_home_dir(ToxWindow *self, char *path, int pathsize, const cha
 
     wchar_t wline[MAX_STR_SIZE];
 
-    if (mbs_to_wcs_buf(wline, newline, sizeof(wline)) == -1)
+    if (mbs_to_wcs_buf(wline, newline, sizeof(wline) / sizeof(wchar_t)) == -1)
         return;
 
     int newlen = wcslen(wline);
@@ -261,10 +261,10 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     } else if (!si && b_path[0] != '/') {    /* look for matches in pwd */
         char tmp[MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), ".%s", b_path);
-        strcpy(b_path, tmp);
+        snprintf(b_path, sizeof(b_path), "%s", tmp);
     }
 
-    strcpy(b_name, &b_path[si + 1]);
+    snprintf(b_name, sizeof(b_name), "%s", &b_path[si + 1]);
     b_path[si + 1] = '\0';
     int b_name_len = strlen(b_name);
     DIR *dp = opendir(b_path);

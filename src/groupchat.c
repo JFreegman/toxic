@@ -593,7 +593,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
-                    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+                    int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
@@ -698,7 +698,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int y, x;
     getyx(self->window, y, x);
     (void) x;
-    int new_x = ctx->start ? x2 - 1 : wcswidth(ctx->line, ctx->pos);
+    int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
     wrefresh(self->window);
@@ -795,66 +795,66 @@ static int group_audio_close_out_device(int groupnum)
     return 0;
 }
 
-static int group_audio_write(int peernum, int groupnum, const int16_t *pcm, unsigned int samples, uint8_t channels,
-                             unsigned int sample_rate)
-{
-    if (!pcm)
-        return -1;
+// static int group_audio_write(int peernum, int groupnum, const int16_t *pcm, unsigned int samples, uint8_t channels,
+//                              unsigned int sample_rate)
+// {
+//     if (!pcm)
+//         return -1;
 
-    if (channels == 0 || channels > 2)
-        return -2;
+//     if (channels == 0 || channels > 2)
+//         return -2;
 
-    ALuint bufid;
-    ALint processed = 0, queued = 0;
+//     ALuint bufid;
+//     ALint processed = 0, queued = 0;
 
-    alGetSourcei(groupchats[groupnum].audio.source, AL_BUFFERS_PROCESSED, &processed);
-    alGetSourcei(groupchats[groupnum].audio.source, AL_BUFFERS_QUEUED, &queued);
-    fprintf(stderr, "source: %d, queued: %d, processed: %d\n", groupchats[groupnum].audio.source, queued, processed);
+//     alGetSourcei(groupchats[groupnum].audio.source, AL_BUFFERS_PROCESSED, &processed);
+//     alGetSourcei(groupchats[groupnum].audio.source, AL_BUFFERS_QUEUED, &queued);
+//     fprintf(stderr, "source: %d, queued: %d, processed: %d\n", groupchats[groupnum].audio.source, queued, processed);
 
-    if (processed) {
-        ALuint bufids[processed];
-        alSourceUnqueueBuffers(groupchats[groupnum].audio.source, processed, bufids);
-        alDeleteBuffers(processed - 1, bufids + 1);
-        bufid = bufids[0];
-    } else if (queued < 16) {
-        alGenBuffers(1, &bufid);
-    } else {
-        return -3;
-    }
+//     if (processed) {
+//         ALuint bufids[processed];
+//         alSourceUnqueueBuffers(groupchats[groupnum].audio.source, processed, bufids);
+//         alDeleteBuffers(processed - 1, bufids + 1);
+//         bufid = bufids[0];
+//     } else if (queued < 16) {
+//         alGenBuffers(1, &bufid);
+//     } else {
+//         return -3;
+//     }
 
-    int length = samples * channels * sizeof(int16_t);
+//     int length = samples * channels * sizeof(int16_t);
 
-    alBufferData(bufid, (channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, length, sample_rate);
-    alSourceQueueBuffers(groupchats[groupnum].audio.source, 1, &bufid);
+//     alBufferData(bufid, (channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, length, sample_rate);
+//     alSourceQueueBuffers(groupchats[groupnum].audio.source, 1, &bufid);
 
-    ALint state;
-    alGetSourcei(groupchats[groupnum].audio.source, AL_SOURCE_STATE, &state);
+//     ALint state;
+//     alGetSourcei(groupchats[groupnum].audio.source, AL_SOURCE_STATE, &state);
 
-    if (state != AL_PLAYING)
-        alSourcePlay(groupchats[groupnum].audio.source);
+//     if (state != AL_PLAYING)
+//         alSourcePlay(groupchats[groupnum].audio.source);
 
-    return 0;
-}
+//     return 0;
+// }
 
 static void groupchat_onWriteDevice(ToxWindow *self, Tox *m, int groupnum, int peernum, const int16_t *pcm,
                                     unsigned int samples, uint8_t channels, unsigned int sample_rate)
 {
     return;
 
-    if (groupnum != self->num)
-        return;
+    // if (groupnum != self->num)
+    //     return;
 
-    if (peernum < 0)
-        return;
+    // if (peernum < 0)
+    //     return;
 
-    if (groupchats[groupnum].audio.dvhandle == NULL)
-        fprintf(stderr, "dvhandle is null)\n");
+    // if (groupchats[groupnum].audio.dvhandle == NULL)
+    //     fprintf(stderr, "dvhandle is null)\n");
 
-    if (groupchats[groupnum].audio.dvctx == NULL)
-        fprintf(stderr, "ctx is null\n");
+    // if (groupchats[groupnum].audio.dvctx == NULL)
+    //     fprintf(stderr, "ctx is null\n");
 
-    int ret = group_audio_write(peernum, groupnum, pcm, samples, channels, sample_rate);
-    fprintf(stderr, "write: %d\n", ret);
+    // int ret = group_audio_write(peernum, groupnum, pcm, samples, channels, sample_rate);
+    // fprintf(stderr, "write: %d\n", ret);
 }
 #endif  /* AUDIO */
 

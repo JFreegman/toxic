@@ -285,7 +285,7 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
         tox_file_control(m, ft->friendnum, ft->filenum, (TOX_FILE_CONTROL) CTRL, NULL);
 
     if (message && self) {
-        if (self->active_box != -1)
+        if (self->active_box != -1 && sound_type != silent)
             box_notify2(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", message);
         else
             box_notify(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);

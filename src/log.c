@@ -179,7 +179,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     if (sz <= 0)
         return;
 
-    char *hstbuf = malloc(sz);
+    char *hstbuf = malloc(sz + 1);
 
     if (hstbuf == NULL)
         exit_toxic_err("failed in load_chat_history", FATALERR_MEMORY);
@@ -195,6 +195,8 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to read log file");
         return;
     }
+
+    hstbuf[sz] = '\0';
 
     /* Number of history lines to load: must not be larger than MAX_LINE_INFO_QUEUE - 2 */
     int L = MIN(MAX_LINE_INFO_QUEUE - 2, user_settings->history_size);
