@@ -295,21 +295,33 @@ static int load_nodelist(const char *filename)
     char line[MAX_NODE_LINE];
 
     while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
-        if (strlen(line) > MIN_NODE_LINE) {
+        size_t line_len = strlen(line);
+
+        if (line_len >= MIN_NODE_LINE && line_len <= MAX_NODE_LINE) {
             const char *name = strtok(line, " ");
             const char *port = strtok(NULL, " ");
             const char *key_ascii = strtok(NULL, " ");
 
-            /* invalid line */
             if (name == NULL || port == NULL || key_ascii == NULL)
+                continue;
+
+            size_t key_len = strlen(key_ascii);
+            size_t name_len = strlen(name);
+
+            if (key_len < TOX_PUBLIC_KEY_SIZE * 2 || name_len >= NODELEN)
                 continue;
 
             snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
             toxNodes.ports[toxNodes.lines] = atoi(port);
 
-            char key_binary[TOX_PUBLIC_KEY_SIZE + 2 + 1];
-            if (hex_string_to_bin(key_ascii, strlen(key_ascii), key_binary, TOX_PUBLIC_KEY_SIZE) == -1)
+            /* remove possible trailing newline from key string */
+            char key_binary[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+            memcpy(key_binary, key_ascii, TOX_PUBLIC_KEY_SIZE * 2);
+            key_len = TOX_PUBLIC_KEY_SIZE * 2;
+            key_binary[key_len] = '\0';
+
+            if (hex_string_to_bin(key_ascii, key_len, key_binary, TOX_PUBLIC_KEY_SIZE) == -1)
                 continue;
 
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_PUBLIC_KEY_SIZE);

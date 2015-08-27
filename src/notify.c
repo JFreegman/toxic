@@ -117,9 +117,12 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
 
 static bool notifications_are_disabled(uint64_t flags)
 {
-    bool res = flags & NT_RESTOL && Control.cooldown > get_unix_time();
+    if (user_settings->alerts != ALERTS_ENABLED)
+        return true;
+
+    bool res = (flags & NT_RESTOL) && (Control.cooldown > get_unix_time());
 #ifdef X11
-    return res || (flags & NT_NOFOCUS && is_focused());
+    return res || ((flags & NT_NOFOCUS) && is_focused());
 #else
     return res;
 #endif
@@ -178,9 +181,11 @@ void m_close_device()
 /* Terminate all sounds but wait for them to finish first */
 void graceful_clear()
 {
-    int i;
     control_lock();
+
     while (1) {
+        int i;
+
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
             if (actives[i].active) {
             #ifdef BOX_NOTIFY
@@ -212,18 +217,24 @@ void graceful_clear()
 
         usleep(1000);
     }
+
+    control_unlock();
 }
 
 void* do_playing(void* _p)
 {
     (void)_p;
-    int i;
 
-    bool has_looping = false;
-
-    while(Control.poll_active) {
+    while(true) {
         control_lock();
 
+        if (!Control.poll_active) {
+            control_unlock();
+            break;
+        }
+
+        bool has_looping = false;
+        int i;
 
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
 
@@ -300,9 +311,17 @@ int play_source(uint32_t source, uint32_t buffer, bool looping)
 void* do_playing(void* _p)
 {
     (void)_p;
-    int i;
-    while(Control.poll_active) {
+
+    while(true) {
         control_lock();
+
+        if (!Control.poll_active) {
+            control_unlock();
+            break;
+        }
+
+        int i;
+
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
             if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
             {
@@ -362,14 +381,15 @@ int init_notify(int login_cooldown, int notification_timeout)
     if (pthread_mutex_init(Control.poll_mutex, NULL) != 0)
         return -1;
 
+    Control.poll_active = 1;
     pthread_t thread;
 
     if (pthread_create(&thread, NULL, do_playing, NULL) != 0 || pthread_detach(thread) != 0 ) {
         pthread_mutex_destroy(Control.poll_mutex);
+        Control.poll_active = 0;
         return -1;
     }
 
-    Control.poll_active = 1;
 #endif
     Control.cooldown = get_unix_time() + login_cooldown;
 
@@ -384,8 +404,15 @@ int init_notify(int login_cooldown, int notification_timeout)
 void terminate_notify()
 {
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
-    if ( !Control.poll_active ) return;
+    control_lock();
+
+    if ( !Control.poll_active ) {
+        control_unlock();
+        return;
+    }
+
     Control.poll_active = 0;
+    control_unlock();
 
     graceful_clear();
 #endif
@@ -504,7 +531,7 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
     int id = -1;
     control_lock();
 
-    if (self && (!self->stb || self->stb->status != TOX_USER_STATUS_BUSY) && user_settings->alerts == ALERTS_ENABLED)
+    if (self && (!self->stb || self->stb->status != TOX_USER_STATUS_BUSY))
         id = m_play_sound(notif, flags);
     else if (flags & NT_ALWAYS)
         id = m_play_sound(notif, flags);
@@ -627,7 +654,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
     return id;
 #else
     return sound_notify(self, notif, flags, id_indicator);
-#endif
+#endif   /* BOX_NOTIFY */
 }
 
 int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...)

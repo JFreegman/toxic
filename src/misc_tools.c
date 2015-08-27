@@ -129,7 +129,6 @@ int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size
     return 0;
 }
 
-
 int hex_string_to_bytes(char *buf, int size, const char *keystr)
 {
     if (size % 2 != 0)
@@ -225,7 +224,7 @@ void filter_str(char *str, size_t len)
     size_t i;
 
     for (i = 0; i < len; ++i) {
-        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v')
+        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v' || str[i] == '\0')
             str[i] = ' ';
     }
 }
