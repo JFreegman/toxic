@@ -53,16 +53,16 @@ int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size
 /* convert a hex string to bytes. returns 0 on success, -1 on failure */
 int hex_string_to_bytes(char *buf, int size, const char *keystr);
 
-/* get the current unix time */
+/* get the current unix time (not thread safe) */
 uint64_t get_unix_time(void);
 
-/* Puts the current time in buf in the format of [HH:mm:ss] */
+/* Puts the current time in buf in the format of [HH:mm:ss] (not thread safe) */
 void get_time_str(char *buf, int bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
 void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs);
 
-/* get the current local time */
+/* get the current local time (not thread safe) */
 struct tm *get_time(void);
 
 /* updates current unix time (should be run once per do_toxic loop) */

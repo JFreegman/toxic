@@ -54,6 +54,7 @@ void hst_to_net(uint8_t *num, uint16_t numbytes)
     return;
 }
 
+/* Note: The time functions are not thread safe */
 void update_unix_time(void)
 {
     current_unix_time = (uint64_t) time(NULL);

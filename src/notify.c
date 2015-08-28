@@ -257,7 +257,7 @@ void* do_playing(void* _p)
                 }
             }
         #ifdef BOX_NOTIFY
-            else if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
+            else if (actives[i].box && time(NULL) >= actives[i].n_timeout)
             {
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -278,7 +278,7 @@ void* do_playing(void* _p)
 
         /* device is opened and no activity in under DEVICE_COOLDOWN time, close device*/
         if (device_opened && !has_looping &&
-           (get_unix_time() - last_opened_update) > DEVICE_COOLDOWN) {
+           (time(NULL) - last_opened_update) > DEVICE_COOLDOWN) {
             m_close_device();
         }
         has_looping = false;
@@ -323,7 +323,7 @@ void* do_playing(void* _p)
         int i;
 
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
-            if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
+            if (actives[i].box && time(NULL) >= actives[i].n_timeout)
             {
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -391,7 +391,7 @@ int init_notify(int login_cooldown, int notification_timeout)
     }
 
 #endif
-    Control.cooldown = get_unix_time() + login_cooldown;
+    Control.cooldown = time(NULL) + login_cooldown;
 
 
 #ifdef BOX_NOTIFY

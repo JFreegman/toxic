@@ -260,14 +260,23 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
 
     StatusBar *statusbar = self->stb;
+
     mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
-    if (statusbar->connection != TOX_CONNECTION_NONE) {
+    pthread_mutex_lock(&Winthread.lock);
+    TOX_CONNECTION connection = statusbar->connection;
+    pthread_mutex_unlock(&Winthread.lock);
+
+    if (connection != TOX_CONNECTION_NONE) {
         int colour = MAGENTA;
         const char *status_text = "ERROR";
 
-        switch (statusbar->status) {
+        pthread_mutex_lock(&Winthread.lock);
+        TOX_USER_STATUS status = statusbar->status;
+        pthread_mutex_unlock(&Winthread.lock);
+
+        switch (status) {
             case TOX_USER_STATUS_NONE:
                 status_text = "Online";
                 colour = GREEN;
@@ -287,12 +296,16 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
         wattron(statusbar->topline, A_BOLD);
+        pthread_mutex_lock(&Winthread.lock);
         wprintw(statusbar->topline, " %s", statusbar->nick);
+        pthread_mutex_unlock(&Winthread.lock);
         wattroff(statusbar->topline, A_BOLD);
     } else {
         wprintw(statusbar->topline, " [Offline]");
         wattron(statusbar->topline, A_BOLD);
+        pthread_mutex_lock(&Winthread.lock);
         wprintw(statusbar->topline, " %s", statusbar->nick);
+        pthread_mutex_unlock(&Winthread.lock);
         wattroff(statusbar->topline, A_BOLD);
     }
 
@@ -304,16 +317,17 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         size_t slen = tox_self_get_status_message_size(m);
         tox_self_get_status_message (m, (uint8_t*) statusmsg);
         statusmsg[slen] = '\0';
-        pthread_mutex_unlock(&Winthread.lock);
-
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
+        pthread_mutex_unlock(&Winthread.lock);
     }
 
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
     uint16_t maxlen = x2 - getcurx(statusbar->topline) - 3;
+
+    pthread_mutex_lock(&Winthread.lock);
 
     if (statusbar->statusmsg_len > maxlen) {
         statusbar->statusmsg[maxlen - 3] = '\0';
@@ -323,6 +337,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     if (statusbar->statusmsg[0])
         wprintw(statusbar->topline, " : %s", statusbar->statusmsg);
+
+    pthread_mutex_unlock(&Winthread.lock);
 
     mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
 

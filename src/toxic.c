@@ -807,10 +807,14 @@ static void do_bootstrap(Tox *m)
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
-    if (arg_opts.no_connect)
-        return;
-
     pthread_mutex_lock(&Winthread.lock);
+    update_unix_time();
+
+    if (arg_opts.no_connect) {
+        pthread_mutex_unlock(&Winthread.lock);
+        return;
+    }
+
     tox_iterate(m);
     do_bootstrap(m);
     check_file_transfer_timeouts(m);
@@ -822,6 +826,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
 void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
+
     uint8_t draw_count = 0;
     init_signal_catchers();
 
@@ -1105,14 +1110,16 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
     return new_sleep;
 }
 
+// this doesn't do anything (yet)
 #ifdef X11
-// FIXME
 void DnD_callback(const char* asdv, DropType dt)
 {
-    if (dt != DT_plain)
-        return;
+    // if (dt != DT_plain)
+    //     return;
 
-   line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
+    // pthread_mutex_lock(&Winthread.lock);
+    // line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
+    pthread_mutex_unlock(&Winthread.lock);
 }
 #endif /* X11 */
 
@@ -1181,6 +1188,7 @@ int main(int argc, char *argv[])
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
+
 #ifdef AUDIO
 
     av = init_audio(prompt, m);
@@ -1214,7 +1222,10 @@ int main(int argc, char *argv[])
     if (init_mplex_away_timer(m) == -1)
         queue_init_message("Failed to init mplex auto-away.");
 
+    pthread_mutex_lock(&Winthread.lock);
     print_init_messages(prompt);
+    pthread_mutex_unlock(&Winthread.lock);
+
     cleanup_init_messages();
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
@@ -1228,7 +1239,6 @@ int main(int argc, char *argv[])
     uint64_t loopcount = 0;
 
     while (true) {
-        update_unix_time();
         do_toxic(m, prompt);
         uint64_t cur_time = get_unix_time();
 

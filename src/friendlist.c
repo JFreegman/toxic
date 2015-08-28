@@ -624,10 +624,12 @@ static void draw_del_popup(void)
     wprintw(PendingDelete.popup, "Delete contact ");
     wattron(PendingDelete.popup, A_BOLD);
 
+    pthread_mutex_lock(&Winthread.lock);
     if (blocklist_view == 0)
         wprintw(PendingDelete.popup, "%s", Friends.list[PendingDelete.num].name);
     else
         wprintw(PendingDelete.popup, "%s", Blocked.list[PendingDelete.num].name);
+    pthread_mutex_unlock(&Winthread.lock);
 
     wattroff(PendingDelete.popup, A_BOLD);
     wprintw(PendingDelete.popup, "? y/n");
@@ -888,12 +890,13 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         return;
     }
 
-   uint64_t cur_time = get_unix_time();
-   struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
+    uint64_t cur_time = time(NULL);
+    struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
 
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Online: ");
     wattroff(self->window, A_BOLD);
+
     wprintw(self->window, "%d/%d \n\n", Friends.num_online, Friends.num_friends);
 
     if ((y2 - FLIST_OFST) <= 0)
@@ -902,18 +905,30 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     uint32_t selected_num = 0;
 
     /* Determine which portion of friendlist to draw based on current position */
+    pthread_mutex_lock(&Winthread.lock);
     int page = Friends.num_selected / (y2 - FLIST_OFST);
+    pthread_mutex_unlock(&Winthread.lock);
+
     int start = (y2 - FLIST_OFST) * page;
     int end = y2 - FLIST_OFST + start;
 
+    pthread_mutex_lock(&Winthread.lock);
+    size_t num_friends = Friends.num_friends;
+    pthread_mutex_unlock(&Winthread.lock);
+
     int i;
 
-    for (i = start; i < Friends.num_friends && i < end; ++i) {
+    for (i = start; i < num_friends && i < end; ++i) {
+        pthread_mutex_lock(&Winthread.lock);
         uint32_t f = Friends.index[i];
+        bool is_active = Friends.list[f].active;
+        int num_selected = Friends.num_selected;
+        pthread_mutex_unlock(&Winthread.lock);
+
         bool f_selected = false;
 
-        if (Friends.list[f].active) {
-            if (i == Friends.num_selected) {
+        if (is_active) {
+            if (i == num_selected) {
                 wattron(self->window, A_BOLD);
                 wprintw(self->window, " > ");
                 wattroff(self->window, A_BOLD);
@@ -923,8 +938,12 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 wprintw(self->window, "   ");
             }
 
-            if (Friends.list[f].connection_status != TOX_CONNECTION_NONE) {
-                TOX_USER_STATUS status = Friends.list[f].status;
+            pthread_mutex_lock(&Winthread.lock);
+            TOX_CONNECTION connection_status = Friends.list[f].connection_status;
+            TOX_USER_STATUS status = Friends.list[f].status;
+            pthread_mutex_unlock(&Winthread.lock);
+
+            if (connection_status != TOX_CONNECTION_NONE) {
                 int colour = MAGENTA;
 
                 switch (status) {
@@ -947,7 +966,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     wattron(self->window, COLOR_PAIR(BLUE));
 
                 wattron(self->window, A_BOLD);
+                pthread_mutex_lock(&Winthread.lock);
                 wprintw(self->window, "%s", Friends.list[f].name);
+                pthread_mutex_unlock(&Winthread.lock);
                 wattroff(self->window, A_BOLD);
 
                 if (f_selected)
@@ -960,16 +981,22 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     pthread_mutex_lock(&Winthread.lock);
                     tox_friend_get_status_message(m, Friends.list[f].num, (uint8_t *) statusmsg, NULL);
                     size_t s_len = tox_friend_get_status_message_size(m, Friends.list[f].num, NULL);
-                    statusmsg[s_len] = '\0';
                     pthread_mutex_unlock(&Winthread.lock);
 
+                    statusmsg[s_len] = '\0';
+
                     filter_str(statusmsg, s_len);
+
+                    pthread_mutex_lock(&Winthread.lock);
                     snprintf(Friends.list[f].statusmsg, sizeof(Friends.list[f].statusmsg), "%s", statusmsg);
                     Friends.list[f].statusmsg_len = strlen(Friends.list[f].statusmsg);
+                    pthread_mutex_unlock(&Winthread.lock);
                 }
 
                 /* Truncate note if it doesn't fit on one line */
                 size_t maxlen = x2 - getcurx(self->window) - 2;
+
+                pthread_mutex_lock(&Winthread.lock);
 
                 if (Friends.list[f].statusmsg_len > maxlen) {
                     Friends.list[f].statusmsg[maxlen - 3] = '\0';
@@ -981,6 +1008,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                 if (Friends.list[f].statusmsg_len > 0)
                     wprintw(self->window, " %s", Friends.list[f].statusmsg);
 
+                pthread_mutex_unlock(&Winthread.lock);
+
                 wprintw(self->window, "\n");
             } else {
                 wprintw(self->window, "%s ", OFFLINE_CHAR);
@@ -989,20 +1018,28 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     wattron(self->window, COLOR_PAIR(BLUE));
 
                 wattron(self->window, A_BOLD);
+                pthread_mutex_lock(&Winthread.lock);
                 wprintw(self->window, "%s", Friends.list[f].name);
+                pthread_mutex_unlock(&Winthread.lock);
                 wattroff(self->window, A_BOLD);
 
                 if (f_selected)
                     wattroff(self->window, COLOR_PAIR(BLUE));
 
+                pthread_mutex_lock(&Winthread.lock);
                 uint64_t last_seen = Friends.list[f].last_online.last_on;
+                pthread_mutex_unlock(&Winthread.lock);
 
                 if (last_seen != 0) {
+                    pthread_mutex_lock(&Winthread.lock);
+
                     int day_dist = (
                             cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
                         + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
                     );
                     const char *hourmin = Friends.list[f].last_online.hour_min_str;
+
+                    pthread_mutex_unlock(&Winthread.lock);
 
                     switch (day_dist) {
                         case 0:
@@ -1026,7 +1063,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     self->x = x2;
 
-    if (Friends.num_friends) {
+    if (num_friends) {
         wmove(self->window, y2 - 1, 1);
 
         wattron(self->window, A_BOLD);
