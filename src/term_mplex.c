@@ -167,6 +167,10 @@ static int detect_gnu_screen ()
 
     free (dyn_buffer);
     dyn_buffer = NULL;
+
+    if (strlen(socket_path) + strlen(PATH_SEP_S) + strlen(socket_name) >= sizeof(mplex_data))
+        goto nomplex;
+
     strcpy (mplex_data, socket_path);
     strcat (mplex_data, PATH_SEP_S);
     strcat (mplex_data, socket_name);
@@ -181,6 +185,8 @@ nomplex:
         pclose (session_info_stream);
     if (dyn_buffer)
         free (dyn_buffer);
+    if (socket_path)
+        free(socket_path);
     return 0;
 }
 
@@ -196,7 +202,7 @@ static int detect_tmux ()
         return 0;
 
     /* store the session number string for later use */
-    strcpy (mplex_data, pos + 1);
+    snprintf (mplex_data, sizeof(mplex_data), "%s", pos + 1);
     mplex = MPLEX_TMUX;
     return 1;
 }

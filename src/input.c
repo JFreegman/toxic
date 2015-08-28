@@ -125,7 +125,7 @@ static void input_yank(ToxWindow *self, int x, int mx_x)
 
     if (x + yank_cols >= mx_x) {
         int rmdr = MAX(0, (x + yank_cols) - mx_x);
-        int s_len = wcswidth(&ctx->line[ctx->start], rmdr);
+        int s_len = MAX(0, wcswidth(&ctx->line[ctx->start], rmdr));
         ctx->start += s_len + 1;
     }
 }
@@ -137,7 +137,7 @@ static void input_mv_end(ToxWindow *self, int y, int mx_x)
 
     ctx->pos = ctx->len;
 
-    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+    int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
     ctx->start = MAX(0, 1 + (mx_x * (wlen / mx_x) - mx_x) + (wlen % mx_x));
 }
 
@@ -196,7 +196,7 @@ static void input_history(ToxWindow *self, wint_t key, int mx_x)
     ChatContext *ctx = self->chatwin;
 
     fetch_hist_item(ctx, key);
-    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+    int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
     ctx->start = wlen < mx_x ? 0 : wlen - mx_x + 1;
 }
 

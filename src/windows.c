@@ -569,10 +569,16 @@ void on_window_resize(void)
 
 static void draw_window_tab(ToxWindow *toxwin)
 {
+    pthread_mutex_lock(&Winthread.lock);
     if (toxwin->alert != WINDOW_ALERT_NONE) attron(COLOR_PAIR(toxwin->alert));
+    pthread_mutex_unlock(&Winthread.lock);
+
     clrtoeol();
     printw(" [%s]", toxwin->name);
+
+    pthread_mutex_lock(&Winthread.lock);
     if (toxwin->alert != WINDOW_ALERT_NONE) attroff(COLOR_PAIR(toxwin->alert));
+    pthread_mutex_unlock(&Winthread.lock);
 }
 
 static void draw_bar(void)
@@ -620,7 +626,10 @@ static void draw_bar(void)
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = active_window;
+
+    pthread_mutex_lock(&Winthread.lock);
     a->alert = WINDOW_ALERT_NONE;
+    pthread_mutex_unlock(&Winthread.lock);
 
     wint_t ch = 0;
 
@@ -683,7 +692,7 @@ ToxWindow *get_window_ptr(int i)
 {
     ToxWindow *toxwin = NULL;
 
-    if (i >= 0 && i <= MAX_WINDOWS_NUM && windows[i].active)
+    if (i >= 0 && i < MAX_WINDOWS_NUM && windows[i].active)
         toxwin = &windows[i];
 
     return toxwin;

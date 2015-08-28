@@ -133,6 +133,9 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 void line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
                    uint8_t bold, uint8_t colour, const char *msg, ...)
 {
+    if (!self)
+        return;
+
     struct history *hst = self->chatwin->hst;
 
     if (hst->queue_sz >= MAX_LINE_INFO_QUEUE)
@@ -332,13 +335,17 @@ void line_info_print(ToxWindow *self)
 
                 if (line->msg[0] == '>')
                     wattron(win, COLOR_PAIR(GREEN));
+                else if (line->msg[0] == '<')
+                    wattron(win, COLOR_PAIR(RED));
 
                 wprintw(win, "%s", line->msg);
 
                 if (line->msg[0] == '>')
                     wattroff(win, COLOR_PAIR(GREEN));
+                else if (line->msg[0] == '<')
+                    wattroff(win, COLOR_PAIR(RED));
 
-                if (type == OUT_MSG && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
+                if (type == OUT_MSG && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));
@@ -365,7 +372,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s %s %s", user_settings->line_normal, line->name1, line->msg);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
-                if (type == OUT_ACTION && timed_out(line->timestamp, get_unix_time(), NOREAD_FLAG_TIMEOUT)) {
+                if (type == OUT_ACTION && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
                     wattron(win, COLOR_PAIR(RED));
                     wprintw(win, " x", line->msg);
                     wattroff(win, COLOR_PAIR(RED));

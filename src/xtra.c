@@ -72,24 +72,24 @@ Property read_property(Window s, Atom p)
     unsigned long read_num;
     unsigned long left_bytes;
     unsigned char *data = NULL;
-    
+
     int read_bytes = 1024;
-    
+
     /* Keep trying to read the property until there are no bytes unread */
     do {
         if (data) XFree(data);
-        
-        XGetWindowProperty(Xtra.display, s, 
-                           p, 0, 
-                           read_bytes, 
+
+        XGetWindowProperty(Xtra.display, s,
+                           p, 0,
+                           read_bytes,
                            False, AnyPropertyType,
-                           &read_type, &read_format, 
-                           &read_num, &left_bytes, 
+                           &read_type, &read_format,
+                           &read_num, &left_bytes,
                            &data);
-        
+
         read_bytes *= 2;
     } while (left_bytes != 0);
-    
+
     Property property = {data, read_format, read_num, read_type};
     return property;
 }
@@ -107,7 +107,7 @@ Atom get_dnd_type(long *a, int l)
 static void handle_xdnd_enter(XClientMessageEvent* e)
 {
     Xtra.handling_version = (e->data.l[1] >> 24);
-    
+
     if ((e->data.l[1] & 1)) {
         // Fetch the list of possible conversions
         Property p = read_property(e->data.l[0], XdndTypeList);
@@ -120,7 +120,7 @@ static void handle_xdnd_enter(XClientMessageEvent* e)
 }
 
 static void handle_xdnd_position(XClientMessageEvent* e)
-{    
+{
     XEvent ev = {
         .xclient = {
             .type = ClientMessage,
@@ -130,15 +130,15 @@ static void handle_xdnd_position(XClientMessageEvent* e)
             .format = 32,
             .data = {
                 .l = {
-                    Xtra.proxy_window, 
-                    (Xtra.expecting_type != XtraNil), 
-                    0, 0, 
+                    Xtra.proxy_window,
+                    (Xtra.expecting_type != XtraNil),
+                    0, 0,
                     XdndActionCopy
                 }
             }
         }
     };
-    
+
     XSendEvent(Xtra.display, e->data.l[0], False, NoEventMask, &ev);
     XFlush(Xtra.display);
 }
@@ -159,7 +159,7 @@ static void handle_xdnd_drop(XClientMessageEvent* e)
                 }
             }
         };
-        
+
         XSendEvent(Xtra.display, e->data.l[0], False, NoEventMask, &ev);
     } else {
         Xtra.source_window = e->data.l[0];
@@ -188,57 +188,57 @@ static void handle_xdnd_selection(XSelectionEvent* e)
         }
     };
     XSendEvent(Xtra.display, Xtra.source_window, False, NoEventMask, &ev);
-    
+
     Property p = read_property(Xtra.proxy_window, XdndSelection);
     DropType dt;
-    
+
     if (strcmp(XGetAtomName(Xtra.display, p.read_type), "text/uri-list") == 0)
         dt = DT_file_list;
     else /* text/uri-list */
         dt = DT_plain;
-    
-    
+
+
     /* Call callback for every entry */
     if (Xtra.on_drop && p.read_num)
     {
         char *sptr;
         char *str = strtok_r((char *) p.data, "\n\r", &sptr);
-        
+
         if (str) Xtra.on_drop(str, dt);
         while ((str = strtok_r(NULL, "\n\r", &sptr)))
             Xtra.on_drop(str, dt);
     }
-    
+
     if (p.data) XFree(p.data);
 }
 
 void *event_loop(void* p)
 {
     /* Handle events like a real nigga */
-    
+
     (void) p; /* DINDUNOTHIN */
-    
+
     XEvent event;
     int pending;
-    
+
     while (Xtra.display)
     {
         /* NEEDMOEVENTSFODEMPROGRAMS */
-        
+
         XLockDisplay(Xtra.display);
         if((pending = XPending(Xtra.display))) XNextEvent(Xtra.display, &event);
-        
+
         if (!pending)
         {
             XUnlockDisplay(Xtra.display);
             usleep(10000);
             continue;
         }
-        
+
         if (event.type == ClientMessage)
         {
             Atom type = event.xclient.message_type;
-            
+
             if      (type == XdndEnter)         handle_xdnd_enter(&event.xclient);
             else if (type == XdndPosition)      handle_xdnd_position(&event.xclient);
             else if (type == XdndDrop)          handle_xdnd_drop(&event.xclient);
@@ -247,11 +247,11 @@ void *event_loop(void* p)
         else if (event.type == SelectionNotify) handle_xdnd_selection(&event.xselection);
         /* AINNOBODYCANHANDLEDEMEVENTS*/
         else XSendEvent(Xtra.display, Xtra.terminal_window, 0, 0, &event);
-        
+
         XUnlockDisplay(Xtra.display);
     }
-    
-    /* Actual XTRA termination 
+
+    /* Actual XTRA termination
      * Please call xtra_terminate() at exit
      * otherwise HEWUSAGUDBOI happens
      */
@@ -262,23 +262,23 @@ void *event_loop(void* p)
 int init_xtra(drop_callback d)
 {
     memset(&Xtra, 0, sizeof(Xtra));
-    
+
     if (!d) return -1;
     else Xtra.on_drop = d;
-    
+
     XInitThreads();
     if ( !(Xtra.display = XOpenDisplay(NULL))) return -1;
-    
+
     Xtra.terminal_window = focused_window_id();
-    
+
     {
         /* Create an invisible window which will act as proxy for the DnD operation. */
         XSetWindowAttributes attr  = {0};
-        attr.event_mask            = EnterWindowMask | 
-                                     LeaveWindowMask | 
-                                     ButtonMotionMask | 
-                                     ButtonPressMask | 
-                                     ButtonReleaseMask | 
+        attr.event_mask            = EnterWindowMask |
+                                     LeaveWindowMask |
+                                     ButtonMotionMask |
+                                     ButtonPressMask |
+                                     ButtonReleaseMask |
                                      ResizeRedirectMask;
 
         attr.do_not_propagate_mask = NoEventMask;
@@ -286,14 +286,14 @@ int init_xtra(drop_callback d)
         Window root;
         int x, y;
         unsigned int wht, hht, b, d;
-        
+
         /* Since we cannot capture resize events for parent window we will have to create
-         * this window to have maximum size as defined in root window 
+         * this window to have maximum size as defined in root window
          */
         XGetGeometry(Xtra.display,
                      XDefaultRootWindow(Xtra.display),
                      &root, &x, &y, &wht, &hht, &b, &d);
-        
+
         if (! (Xtra.proxy_window = XCreateWindow
                         (Xtra.display, Xtra.terminal_window,       /* Parent */
                          0, 0,                                     /* Position */
@@ -306,7 +306,7 @@ int init_xtra(drop_callback d)
                          &attr)) )                                 /* Attributes for value mask */
             return -1;
     }
-    
+
     XMapWindow(Xtra.display, Xtra.proxy_window);   /* Show window (sandwich) */
     XLowerWindow(Xtra.display, Xtra.proxy_window); /* Don't interfere with parent lmao */
 
@@ -321,7 +321,7 @@ int init_xtra(drop_callback d)
     XdndTypeList = XInternAtom(Xtra.display, "XdndTypeList", False);
     XdndActionCopy = XInternAtom(Xtra.display, "XdndActionCopy", False);
     XdndFinished = XInternAtom(Xtra.display, "XdndFinished", False);
-    
+
     /* Inform my nigga windows that we are aware of dnd */
     Atom XdndVersion = 3;
     XChangeProperty(Xtra.display,
@@ -331,18 +331,20 @@ int init_xtra(drop_callback d)
                     32,
                     PropModeReplace,
                     (unsigned char*)&XdndVersion, 1);
-    
+
     pthread_t id;
-    pthread_create(&id, NULL, event_loop, NULL);
+    if (pthread_create(&id, NULL, event_loop, NULL) != 0)
+        return -1;
+
     pthread_detach(id);
-    
+
     return 0;
 }
 
 void terminate_xtra()
 {
     if (!Xtra.display) return;
-    
+
     XEvent terminate = {
         .xclient = {
             .type = ClientMessage,
@@ -350,19 +352,19 @@ void terminate_xtra()
             .message_type = XtraTerminate,
         }
     };
-    
+
     XLockDisplay(Xtra.display);
     XDeleteProperty(Xtra.display, Xtra.proxy_window, XdndAware);
     XSendEvent(Xtra.display, Xtra.proxy_window, 0, NoEventMask, &terminate);
     XUnlockDisplay(Xtra.display);
-    
+
     while (Xtra.display); /* Wait for termination */
 }
 
 long unsigned int focused_window_id()
 {
     if (!Xtra.display) return 0;
-    
+
     Window focus;
     int revert;
     XLockDisplay(Xtra.display);

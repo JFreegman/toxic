@@ -90,7 +90,7 @@ struct _ActiveNotifications {
 #ifdef BOX_NOTIFY
     NotifyNotification* box;
     char messages[MAX_BOX_MSG_LEN + 1][MAX_BOX_MSG_LEN + 1];
-    char title[24];
+    char title[64];
     size_t size;
     time_t n_timeout;
 #endif
@@ -117,9 +117,12 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
 
 static bool notifications_are_disabled(uint64_t flags)
 {
-    bool res = flags & NT_RESTOL && Control.cooldown > get_unix_time();
+    if (user_settings->alerts != ALERTS_ENABLED)
+        return true;
+
+    bool res = (flags & NT_RESTOL) && (Control.cooldown > get_unix_time());
 #ifdef X11
-    return res || (flags & NT_NOFOCUS && is_focused());
+    return res || ((flags & NT_NOFOCUS) && is_focused());
 #else
     return res;
 #endif
@@ -153,33 +156,36 @@ bool is_playing(int source)
 static bool device_opened = false;
 time_t last_opened_update = 0;
 
-bool m_open_device()
+/* Opens primary device. Returns true on succe*/
+void m_open_device()
 {
     last_opened_update = get_unix_time();
 
-    if (device_opened) return true;
+    if (device_opened) return;
 
     /* Blah error check */
     open_primary_device(output, &Control.device_idx, 48000, 20, 1);
 
-    return (device_opened = true);
+    device_opened = true;
 }
 
-bool m_close_device()
+void m_close_device()
 {
-    if (!device_opened) return true;
+    if (!device_opened) return;
 
     close_device(output, Control.device_idx);
 
-    return !(device_opened = false);
+    device_opened = false;
 }
 
 /* Terminate all sounds but wait for them to finish first */
 void graceful_clear()
 {
-    int i;
     control_lock();
+
     while (1) {
+        int i;
+
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
             if (actives[i].active) {
             #ifdef BOX_NOTIFY
@@ -211,18 +217,24 @@ void graceful_clear()
 
         usleep(1000);
     }
+
+    control_unlock();
 }
 
 void* do_playing(void* _p)
 {
     (void)_p;
-    int i;
 
-    bool has_looping = false;
-
-    while(Control.poll_active) {
+    while(true) {
         control_lock();
 
+        if (!Control.poll_active) {
+            control_unlock();
+            break;
+        }
+
+        bool has_looping = false;
+        int i;
 
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
 
@@ -245,7 +257,7 @@ void* do_playing(void* _p)
                 }
             }
         #ifdef BOX_NOTIFY
-            else if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
+            else if (actives[i].box && time(NULL) >= actives[i].n_timeout)
             {
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -266,7 +278,7 @@ void* do_playing(void* _p)
 
         /* device is opened and no activity in under DEVICE_COOLDOWN time, close device*/
         if (device_opened && !has_looping &&
-           (get_unix_time() - last_opened_update) > DEVICE_COOLDOWN) {
+           (time(NULL) - last_opened_update) > DEVICE_COOLDOWN) {
             m_close_device();
         }
         has_looping = false;
@@ -299,11 +311,19 @@ int play_source(uint32_t source, uint32_t buffer, bool looping)
 void* do_playing(void* _p)
 {
     (void)_p;
-    int i;
-    while(Control.poll_active) {
+
+    while(true) {
         control_lock();
+
+        if (!Control.poll_active) {
+            control_unlock();
+            break;
+        }
+
+        int i;
+
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
-            if (actives[i].box && get_unix_time() >= actives[i].n_timeout)
+            if (actives[i].box && time(NULL) >= actives[i].n_timeout)
             {
                 GError* ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -361,16 +381,17 @@ int init_notify(int login_cooldown, int notification_timeout)
     if (pthread_mutex_init(Control.poll_mutex, NULL) != 0)
         return -1;
 
+    Control.poll_active = 1;
     pthread_t thread;
 
     if (pthread_create(&thread, NULL, do_playing, NULL) != 0 || pthread_detach(thread) != 0 ) {
         pthread_mutex_destroy(Control.poll_mutex);
+        Control.poll_active = 0;
         return -1;
     }
 
-    Control.poll_active = 1;
 #endif
-    Control.cooldown = get_unix_time() + login_cooldown;
+    Control.cooldown = time(NULL) + login_cooldown;
 
 
 #ifdef BOX_NOTIFY
@@ -383,8 +404,15 @@ int init_notify(int login_cooldown, int notification_timeout)
 void terminate_notify()
 {
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
-    if ( !Control.poll_active ) return;
+    control_lock();
+
+    if ( !Control.poll_active ) {
+        control_unlock();
+        return;
+    }
+
     Control.poll_active = 0;
+    control_unlock();
 
     graceful_clear();
 #endif
@@ -503,7 +531,7 @@ int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_in
     int id = -1;
     control_lock();
 
-    if (self && (!self->stb || self->stb->status != TOX_USER_STATUS_BUSY) && user_settings->alerts == ALERTS_ENABLED)
+    if (self && (!self->stb || self->stb->status != TOX_USER_STATUS_BUSY))
         id = m_play_sound(notif, flags);
     else if (flags & NT_ALWAYS)
         id = m_play_sound(notif, flags);
@@ -598,9 +626,12 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
         actives[id].id_indicator = id_indicator;
         if (id_indicator) *id_indicator = id;
     }
-#endif
+#else
+    if (id == -1)
+        return -1;
+#endif    /* SOUND_NOTIFY */
 
-    strncpy(actives[id].title, title, 24);
+    snprintf(actives[id].title, sizeof(actives[id].title), "%s", title);
     if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
 
     va_list __ARGS__; va_start (__ARGS__, format);
@@ -623,7 +654,7 @@ int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indi
     return id;
 #else
     return sound_notify(self, notif, flags, id_indicator);
-#endif
+#endif   /* BOX_NOTIFY */
 }
 
 int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...)
@@ -699,7 +730,7 @@ int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const 
         *id_indicator = id;
     }
 
-    strncpy(actives[id].title, title, 24);
+    snprintf(actives[id].title, sizeof(actives[id].title), "%s", title);
     if (strlen(title) > 23) strcpy(actives[id].title + 20, "...");
 
     va_list __ARGS__; va_start (__ARGS__, format);

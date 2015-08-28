@@ -78,6 +78,9 @@ char *DATA_FILE = NULL;
 char *BLOCK_FILE = NULL;
 ToxWindow *prompt = NULL;
 
+#define DATANAME  "data"
+#define BLOCKNAME "data-blocklist"
+
 #define AUTOSAVE_FREQ 60
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
@@ -120,6 +123,24 @@ static void init_signal_catchers(void)
     signal(SIGSEGV, catch_SIGSEGV);
 }
 
+void free_global_data(void)
+{
+    if (DATA_FILE) {
+        free(DATA_FILE);
+        DATA_FILE = NULL;
+    }
+
+    if (BLOCK_FILE) {
+        free(BLOCK_FILE);
+        BLOCK_FILE = NULL;
+    }
+
+    if (user_settings) {
+        free(user_settings);
+        user_settings = NULL;
+    }
+}
+
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
@@ -132,10 +153,7 @@ void exit_toxic_success(Tox *m)
     terminate_audio();
 #endif /* AUDIO */
 
-    free(DATA_FILE);
-    free(BLOCK_FILE);
-    free(user_settings);
-
+    free_global_data();
     tox_kill(m);
     endwin();
 
@@ -151,6 +169,7 @@ void exit_toxic_success(Tox *m)
 
 void exit_toxic_err(const char *errmsg, int errcode)
 {
+    free_global_data();
     freopen("/dev/tty", "w", stderr);
     endwin();
     fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
@@ -277,22 +296,36 @@ static int load_nodelist(const char *filename)
     char line[MAX_NODE_LINE];
 
     while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
-        if (strlen(line) > MIN_NODE_LINE) {
+        size_t line_len = strlen(line);
+
+        if (line_len >= MIN_NODE_LINE && line_len <= MAX_NODE_LINE) {
             const char *name = strtok(line, " ");
             const char *port = strtok(NULL, " ");
             const char *key_ascii = strtok(NULL, " ");
 
-            /* invalid line */
             if (name == NULL || port == NULL || key_ascii == NULL)
+                continue;
+
+            size_t key_len = strlen(key_ascii);
+            size_t name_len = strlen(name);
+
+            if (key_len < TOX_PUBLIC_KEY_SIZE * 2 || name_len >= NODELEN)
                 continue;
 
             snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
             toxNodes.ports[toxNodes.lines] = atoi(port);
 
-            char *key_binary = hex_string_to_bin(key_ascii);
+            /* remove possible trailing newline from key string */
+            char key_binary[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+            memcpy(key_binary, key_ascii, TOX_PUBLIC_KEY_SIZE * 2);
+            key_len = TOX_PUBLIC_KEY_SIZE * 2;
+            key_binary[key_len] = '\0';
+
+            if (hex_string_to_bin(key_ascii, key_len, key_binary, TOX_PUBLIC_KEY_SIZE) == -1)
+                continue;
+
             memcpy(toxNodes.keys[toxNodes.lines], key_binary, TOX_PUBLIC_KEY_SIZE);
-            free(key_binary);
 
             toxNodes.lines++;
         }
@@ -777,9 +810,8 @@ static uint64_t last_bootstrap_time = 0;
 static void do_bootstrap(Tox *m)
 {
     static int conn_err = 0;
-    uint64_t curtime = get_unix_time();
 
-    if (!timed_out(last_bootstrap_time, curtime, TRY_BOOTSTRAP_INTERVAL))
+    if (!timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL))
         return;
 
     if (tox_self_get_connection_status(m) != TOX_CONNECTION_NONE)
@@ -788,7 +820,7 @@ static void do_bootstrap(Tox *m)
     if (conn_err != 0)
         return;
 
-    last_bootstrap_time = curtime;
+    last_bootstrap_time = get_unix_time();
     conn_err = init_connection(m);
 
     if (conn_err != 0)
@@ -797,12 +829,17 @@ static void do_bootstrap(Tox *m)
 
 static void do_toxic(Tox *m, ToxWindow *prompt)
 {
-    if (arg_opts.no_connect)
-        return;
-
     pthread_mutex_lock(&Winthread.lock);
+    update_unix_time();
+
+    if (arg_opts.no_connect) {
+        pthread_mutex_unlock(&Winthread.lock);
+        return;
+    }
+
     tox_iterate(m);
     do_bootstrap(m);
+    check_file_transfer_timeouts(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -811,6 +848,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
 void *thread_winref(void *data)
 {
     Tox *m = (Tox *) data;
+
     uint8_t draw_count = 0;
     init_signal_catchers();
 
@@ -955,10 +993,22 @@ static void parse_args(int argc, char *argv[])
 
             case 'f':
                 arg_opts.use_custom_data = 1;
-                DATA_FILE = strdup(optarg);
+
+                if (DATA_FILE)
+                    free(DATA_FILE);
+
+                if (BLOCK_FILE)
+                    free(BLOCK_FILE);
+
+                DATA_FILE = malloc(strlen(optarg) + 1);
+                strcpy(DATA_FILE, optarg);
+
+                if (DATA_FILE == NULL)
+                    exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+
                 BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
-                if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+                if (BLOCK_FILE == NULL)
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
 
                 strcpy(BLOCK_FILE, optarg);
@@ -1029,8 +1079,6 @@ static void parse_args(int argc, char *argv[])
     }
 }
 
-#define DATANAME "data"
-#define BLOCKNAME "data-blocklist"
 static int init_default_data_files(void)
 {
     if (arg_opts.use_custom_data)
@@ -1070,7 +1118,7 @@ static int init_default_data_files(void)
 /* Adjusts usleep value so that tox_do runs close to the recommended number of times per second */
 static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, uint64_t cur_time, useconds_t msleepval)
 {
-    useconds_t new_sleep = msleepval;
+    useconds_t new_sleep = MAX(msleepval, 3);
     ++(*loopcount);
 
     if (*looptimer == cur_time)
@@ -1084,14 +1132,16 @@ static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, ui
     return new_sleep;
 }
 
+// this doesn't do anything (yet)
 #ifdef X11
-// FIXME
 void DnD_callback(const char* asdv, DropType dt)
 {
-    if (dt != DT_plain)
-        return;
+    // if (dt != DT_plain)
+    //     return;
 
-   line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
+    // pthread_mutex_lock(&Winthread.lock);
+    // line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
+    pthread_mutex_unlock(&Winthread.lock);
 }
 #endif /* X11 */
 
@@ -1160,6 +1210,7 @@ int main(int argc, char *argv[])
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
+
 #ifdef AUDIO
 
     av = init_audio(prompt, m);
@@ -1193,8 +1244,11 @@ int main(int argc, char *argv[])
     if (init_mplex_away_timer(m) == -1)
         queue_init_message("Failed to init mplex auto-away.");
 
+    pthread_mutex_lock(&Winthread.lock);
     load_groups(m);
     print_init_messages(prompt);
+    pthread_mutex_unlock(&Winthread.lock);
+
     cleanup_init_messages();
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
@@ -1208,11 +1262,10 @@ int main(int argc, char *argv[])
     uint64_t loopcount = 0;
 
     while (true) {
-        update_unix_time();
         do_toxic(m, prompt);
         uint64_t cur_time = get_unix_time();
 
-        if (timed_out(last_save, cur_time, AUTOSAVE_FREQ)) {
+        if (timed_out(last_save, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
             if (store_data(m, DATA_FILE) != 0)
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");

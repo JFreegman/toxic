@@ -63,7 +63,7 @@ int avatar_send(Tox *m, uint32_t friendnum)
         return -1;
     }
 
-    struct FileTransfer *ft = get_new_file_sender(friendnum);
+    struct FileTransfer *ft = new_file_transfer(NULL, friendnum, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_AVATAR);
 
     if (!ft)
         return -1;
@@ -75,11 +75,6 @@ int avatar_send(Tox *m, uint32_t friendnum)
 
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", Avatar.name);
     ft->file_size = Avatar.size;
-    ft->state = FILE_TRANSFER_PENDING;
-    ft->filenum = filenum;
-    ft->friendnum = friendnum;
-    ft->direction = FILE_TRANSFER_SEND;
-    ft->file_type = TOX_FILE_KIND_AVATAR;
 
     return 0;
 }
@@ -206,4 +201,5 @@ void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position,
         fprintf(stderr, "tox_file_send_chunk failed in avatar callback (error %d)\n", err);
 
     ft->position += send_length;
+    ft->last_keep_alive = get_unix_time();
 }

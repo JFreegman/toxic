@@ -54,6 +54,7 @@ void hst_to_net(uint8_t *num, uint16_t numbytes)
     return;
 }
 
+/* Note: The time functions are not thread safe */
 void update_unix_time(void)
 {
     current_unix_time = (uint64_t) time(NULL);
@@ -65,9 +66,9 @@ uint64_t get_unix_time(void)
 }
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t curtime, uint64_t timeout)
+int timed_out(uint64_t timestamp, uint64_t timeout)
 {
-    return timestamp + timeout <= curtime;
+    return timestamp + timeout <= get_unix_time();
 }
 
 /* Get the current local time */
@@ -109,20 +110,24 @@ void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs)
         snprintf(buf, bufsize, "%ld:%.2ld:%.2ld", hours, minutes, seconds);
 }
 
-char *hex_string_to_bin(const char *hex_string)
+/*
+ * Converts a hexidecimal string of length hex_len to binary format and puts the result in output.
+ * output_size must be exactly half of hex_len.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size_t output_size)
 {
-    size_t len = strlen(hex_string);
-    char *val = malloc(len);
+    if (output_size == 0 || hex_len != output_size * 2)
+        return -1;
 
-    if (val == NULL)
-        exit_toxic_err("failed in hex_string_to_bin", FATALERR_MEMORY);
+    for (size_t i = 0; i < output_size; ++i) {
+        sscanf(hex_string, "%2hhx", &output[i]);
+        hex_string += 2;
+    }
 
-    size_t i;
-
-    for (i = 0; i < len; ++i, hex_string += 2)
-        sscanf(hex_string, "%2hhx", &val[i]);
-
-    return val;
+    return 0;
 }
 
 int hex_string_to_bytes(char *buf, int size, const char *keystr)
@@ -147,6 +152,9 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string)
 {
+    if (!string)
+        return true;
+
     return string[0] == '\0';
 }
 
@@ -217,7 +225,7 @@ void filter_str(char *str, size_t len)
     size_t i;
 
     for (i = 0; i < len; ++i) {
-        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v')
+        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v' || str[i] == '\0')
             str[i] = ' ';
     }
 }

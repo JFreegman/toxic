@@ -139,11 +139,9 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
 
-    uint64_t curtime = get_unix_time();
-
-    if (timed_out(log->lastwrite, curtime, LOG_FLUSH_LIMIT)) {
+    if (timed_out(log->lastwrite, LOG_FLUSH_LIMIT)) {
         fflush(log->file);
-        log->lastwrite = curtime;
+        log->lastwrite = get_unix_time();
     }
 }
 
@@ -155,15 +153,19 @@ void log_disable(struct chatlog *log)
     memset(log, 0, sizeof(struct chatlog));
 }
 
-void log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
+int log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
 {
     log->log_on = true;
 
     if (log->file != NULL)
-        return;
+        return 0;
 
-    if (init_logging_session(name, selfkey, otherkey, log, logtype) == -1)
+    if (init_logging_session(name, selfkey, otherkey, log, logtype) == -1) {
         log_disable(log);
+        return -1;
+    }
+
+    return 0;
 }
 
 /* Loads previous history from chat log */
@@ -177,7 +179,7 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
     if (sz <= 0)
         return;
 
-    char *hstbuf = malloc(sz);
+    char *hstbuf = malloc(sz + 1);
 
     if (hstbuf == NULL)
         exit_toxic_err("failed in load_chat_history", FATALERR_MEMORY);
@@ -193,6 +195,8 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to read log file");
         return;
     }
+
+    hstbuf[sz] = '\0';
 
     /* Number of history lines to load: must not be larger than MAX_LINE_INFO_QUEUE - 2 */
     int L = MIN(MAX_LINE_INFO_QUEUE - 2, user_settings->history_size);

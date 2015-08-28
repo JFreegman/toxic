@@ -249,19 +249,22 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     const char *ip = argv[1];
     const char *port = argv[2];
-    const char *key = argv[3];
+    const char *ascii_key = argv[3];
 
     if (atoi(port) == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid port.");
         return;
     }
 
-    char *binary_string = hex_string_to_bin(key);
+    char key_binary[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    if (hex_string_to_bin(ascii_key, strlen(ascii_key), key_binary, TOX_PUBLIC_KEY_SIZE) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid key.");
+        return;
+    }
 
     TOX_ERR_BOOTSTRAP err;
-    tox_bootstrap(m, ip, atoi(port), (uint8_t *) binary_string, &err);
-    tox_add_tcp_relay(m, ip, atoi(port), (uint8_t *) binary_string, &err);
-    free(binary_string);
+    tox_bootstrap(m, ip, atoi(port), (uint8_t *) key_binary, &err);
+    tox_add_tcp_relay(m, ip, atoi(port), (uint8_t *) key_binary, &err);
 
     switch (err) {
         case TOX_ERR_BOOTSTRAP_BAD_HOST:
@@ -457,16 +460,18 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         char myid[TOX_ADDRESS_SIZE];
         tox_self_get_address(m, (uint8_t *) myid);
 
+        int log_ret = -1;
+
         if (self->is_chat) {
             Friends.list[self->num].logging_on = true;
-            log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
+            log_ret = log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
         } else if (self->is_prompt) {
-            log_enable(self->name, myid, NULL, log, LOG_PROMPT);
+            log_ret = log_enable(self->name, myid, NULL, log, LOG_PROMPT);
         } else if (self->is_groupchat) {
-            log_enable(self->name, myid, NULL, log, LOG_GROUP);
+            log_ret = log_enable(self->name, myid, NULL, log, LOG_GROUP);
         }
 
-        msg = "Logging enabled";
+        msg = log_ret == 0 ? "Logging enabled." : "Warning: Log failed to initialize.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
@@ -475,7 +480,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
         log_disable(log);
 
-        msg = "Logging disabled";
+        msg = "Logging disabled.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     }

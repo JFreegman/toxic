@@ -914,7 +914,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
-                    int wlen = wcswidth(ctx->line, sizeof(ctx->line));
+                    int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
@@ -1056,7 +1056,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int y, x;
     getyx(self->window, y, x);
     (void) x;
-    int new_x = ctx->start ? x2 - 1 : wcswidth(ctx->line, ctx->pos);
+    int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
     wrefresh(self->window);
@@ -1087,7 +1087,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     if (user_settings->autolog == AUTOLOG_ON) {
         char myid[TOX_ADDRESS_SIZE];
         tox_self_get_address(m, (uint8_t *) myid);
-        log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP);
+
+        if (log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP) == -1)
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
     }
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);

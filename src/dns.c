@@ -234,12 +234,16 @@ static int parse_dns_response(ToxWindow *self, u_char *answer, int ans_len, char
    and the domain in dombuf.
 
    return length of username on success, -1 on failure */
-static int parse_addr(const char *addr, char *namebuf, char *dombuf)
+static int parse_addr(const char *addr, char *namebuf, size_t namebuf_sz, char *dombuf, size_t dombuf_sz)
 {
-    char tmpaddr[MAX_STR_SIZE];
-    char *tmpname, *tmpdom;
+    if (strlen(addr) >= MAX_STR_SIZE)
+        return -1;
 
-    strcpy(tmpaddr, addr);
+    char tmpaddr[MAX_STR_SIZE];
+    char *tmpname = NULL;
+    char *tmpdom = NULL;
+
+    snprintf(tmpaddr, sizeof(tmpaddr), "%s", addr);
     tmpname = strtok(tmpaddr, "@");
     tmpdom = strtok(NULL, "");
 
@@ -247,8 +251,8 @@ static int parse_addr(const char *addr, char *namebuf, char *dombuf)
         return -1;
 
     str_to_lower(tmpdom);
-    strcpy(namebuf, tmpname);
-    strcpy(dombuf, tmpdom);
+    snprintf(namebuf, namebuf_sz, "%s", tmpname);
+    snprintf(dombuf, dombuf_sz, "%s", tmpdom);
 
     return strlen(namebuf);
 }
@@ -295,7 +299,7 @@ void *dns3_lookup_thread(void *data)
     char inputdomain[MAX_STR_SIZE];
     char name[MAX_STR_SIZE];
 
-    int namelen = parse_addr(t_data.addr, name, inputdomain);
+    int namelen = parse_addr(t_data.addr, name, sizeof(name), inputdomain, sizeof(inputdomain));
 
     if (namelen == -1) {
         dns_error(self, "Must be a Tox ID or an address in the form username@domain");

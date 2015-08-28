@@ -4,22 +4,8 @@ Toxic is a [Tox](https://tox.im)-based instant messenging client which formerly 
 [![Toxic Screenshot](https://i.imgur.com/san99Z2.png "Home Screen")](https://i.imgur.com/san99Z2.png)
 
 ## Installation
-[Use our repositories](https://wiki.tox.chat/doku.php?id=developers:binaries#other_linux)<br />
+[Use our repositories](https://wiki.tox.chat/binaries#other_linux)<br />
 [Compile it yourself](/INSTALL.md)
-
-## Downloads
-If you don't like installation methods listed above, you can still download precompiled binaries from [jenkins](https://jenkins.libtoxcore.so):
-* [Linux 32 bit](https://jenkins.libtoxcore.so/job/toxic_linux_i386/lastSuccessfulBuild/artifact/toxic_linux_i386.tar.xz) [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_i386/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_i386/lastSuccessfulBuild/artifact/toxic_linux_i386.tar.xz)
-* [Linux 64 bit](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/lastSuccessfulBuild/artifact/toxic_linux_amd64.tar.xz) [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_amd64/lastSuccessfulBuild/artifact/toxic_linux_amd64.tar.xz)
-* [~~Linux ARMv6~~](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/lastSuccessfulBuild/artifact/toxic_linux_armv6.tar.xz) **CURRENTLY DISABLED** [![Build Status](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/badge/icon)](https://jenkins.libtoxcore.so/job/toxic_linux_armv6/lastSuccessfulBuild/artifact/toxic_linux_armv6.tar.xz)
-
-#### DEBs packages
-* [toxic-i386.deb](https://jenkins.libtoxcore.so/job/toxic-linux-pkg/lastSuccessfulBuild/artifact/toxic-i386.deb)
-* [toxic-x86_64.deb](https://jenkins.libtoxcore.so/job/toxic-linux-pkg/lastSuccessfulBuild/artifact/toxic-x86_64.deb)
-
-#### RPMs packages
-* [toxic-i386.rpm](https://jenkins.libtoxcore.so/job/toxic-linux-pkg/lastSuccessfulBuild/artifact/toxic-i386.rpm)
-* [toxic-x86_64.rpm](https://jenkins.libtoxcore.so/job/toxic-linux-pkg/lastSuccessfulBuild/artifact/toxic-x86_64.rpm)
 
 ## Settings
 Running Toxic for the first time creates an empty file called toxic.conf in your home configuration directory ("~/.config/tox" for Linux users). Adding options to this file allows you to enable auto-logging, change the time format (12/24 hour), and much more.

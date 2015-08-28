@@ -41,22 +41,28 @@
 
 void hst_to_net(uint8_t *num, uint16_t numbytes);
 
-/* convert a hex string to binary */
-char *hex_string_to_bin(const char *hex_string);
+/*
+ * Converts a hexidecimal string of length hex_len to binary format and puts the result in output.
+ * output_size must be exactly half of hex_len.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size_t output_size);
 
 /* convert a hex string to bytes. returns 0 on success, -1 on failure */
 int hex_string_to_bytes(char *buf, int size, const char *keystr);
 
-/* get the current unix time */
+/* get the current unix time (not thread safe) */
 uint64_t get_unix_time(void);
 
-/* Puts the current time in buf in the format of [HH:mm:ss] */
+/* Puts the current time in buf in the format of [HH:mm:ss] (not thread safe) */
 void get_time_str(char *buf, int bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
 void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs);
 
-/* get the current local time */
+/* get the current local time (not thread safe) */
 struct tm *get_time(void);
 
 /* updates current unix time (should be run once per do_toxic loop) */
@@ -75,7 +81,7 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n);
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t timeout, uint64_t curtime);
+int timed_out(uint64_t timestamp, uint64_t timeout);
 
 /* Colours the window tab according to type. Beeps if is_beep is true */
 void alert_window(ToxWindow *self, int type, bool is_beep);
