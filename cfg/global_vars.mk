@@ -1,5 +1,5 @@
 # Version
-TOXIC_VERSION = 0.6.0
+TOXIC_VERSION = 0.6.1
 REV = $(shell git rev-list HEAD --count 2>/dev/null || echo -n "error")
 ifneq (, $(findstring error, $(REV)))
     VERSION = $(TOXIC_VERSION)
