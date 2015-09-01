@@ -265,6 +265,43 @@ void set_status_all_groups(Tox *m, uint8_t status)
     }
 }
 
+/* Returns a weight for peer_sort_cmp based on the peer's role. */
+#define PEER_CMP_BASE_WEIGHT 100000
+static int peer_sort_cmp_weight(struct GroupPeer *peer)
+{
+    int w = PEER_CMP_BASE_WEIGHT;
+
+    if (peer->role == TOX_GROUP_ROLE_FOUNDER)
+        w <<= 2;
+    else if (peer->role == TOX_GROUP_ROLE_MODERATOR)
+        w <<= 1;
+    else if (peer->role == TOX_GROUP_ROLE_OBSERVER)
+        w >>= 1;
+
+    return w;
+}
+
+static int peer_sort_cmp(const void *n1, const void *n2)
+{
+    struct GroupPeer *peer1 = (struct GroupPeer *) n1;
+    struct GroupPeer *peer2 = (struct GroupPeer *) n2;
+
+    int res = qsort_strcasecmp_hlpr(peer1->name, peer2->name);
+    return res - peer_sort_cmp_weight(peer1) + peer_sort_cmp_weight(peer2);
+
+}
+
+/* Sorts the peer list, first by role, then by name. */
+static void sort_peerlist(uint32_t groupnum)
+{
+    GroupChat *chat = &groupchats[groupnum];
+
+    if (!chat)
+        return;
+
+    qsort(chat->peer_list, chat->max_idx, sizeof(struct GroupPeer), peer_sort_cmp);
+}
+
 /* Gets the peer_id associated with nick.
  * Returns -1 on failure or if nick is not assigned to anyone in the group.
  */
@@ -279,8 +316,8 @@ int group_get_nick_peer_id(uint32_t groupnum, const char *nick, uint32_t *peer_i
 
     for (i = 0; i < chat->max_idx; ++i) {
         if (chat->peer_list[i].active) {
-            if (strcmp(nick, groupchats[groupnum].peer_list[i].name) == 0) {
-                *peer_id = groupchats[groupnum].peer_list[i].peer_id;
+            if (strcmp(nick, chat->peer_list[i].name) == 0) {
+                *peer_id = chat->peer_list[i].peer_id;
                 return 0;
             }
         }
@@ -332,6 +369,8 @@ static void group_update_name_list(uint32_t groupnum)
            ++count;
         }
     }
+
+    sort_peerlist(groupnum);
 }
 
 /* destroys and re-creates groupchat window */
@@ -806,14 +845,17 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupn
         case TOX_GROUP_MOD_EVENT_OBSERVER:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_OBSERVER;
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to observer", src_name, tgt_name);
+            sort_peerlist(groupnum);
             break;
         case TOX_GROUP_MOD_EVENT_USER:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_USER;
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to user", src_name, tgt_name);
+            sort_peerlist(groupnum);
             break;
         case TOX_GROUP_MOD_EVENT_MODERATOR:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_MODERATOR;
             line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to moderator", src_name, tgt_name);
+            sort_peerlist(groupnum);
             break;
         default:
             return;
@@ -836,7 +878,7 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, uint32_t groupn
     char oldnick[TOX_MAX_NAME_LENGTH];
     get_group_nick_truncate(m, oldnick, peer_id, groupnum);
 
-    len = MAX(len, TOX_MAX_NAME_LENGTH - 1);
+    len = MIN(len, TOX_MAX_NAME_LENGTH - 1);
     memcpy(groupchats[groupnum].peer_list[peer_index].name, newnick, len);
     chat->peer_list[peer_index].name[len] = '\0';
     chat->peer_list[peer_index].name_length = len;
