@@ -119,7 +119,6 @@ void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, 
 void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
                       const uint8_t *message, size_t length, void *userdata);
 void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *message, size_t length, void *userdata);
-void on_group_namelistchange(Tox *m, uint32_t groupnumber, void *userdata);
 void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peernumber, void *userdata);
 void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *partmsg, size_t length, void *userdata);
 void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *topic, size_t length, void *userdata);

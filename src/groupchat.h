@@ -32,8 +32,10 @@
 #define GROUP_EVENT_WAIT 3
 
 struct GroupPeer {
+    bool       active;
     char       name[TOX_MAX_NAME_LENGTH];
     size_t     name_length;
+    uint32_t   peer_id;
     TOX_USER_STATUS status;
     TOX_GROUP_ROLE  role;
 };
@@ -41,19 +43,20 @@ struct GroupPeer {
 typedef struct {
     struct GroupPeer *peer_list;
     char       *name_list;    /* List of peer names, needed for tab completion */
-    uint32_t   num_peers;
+    uint32_t   num_peers;     /* Number of peers in the chat/name_list array */
+    uint32_t   max_idx;       /* Maximum peer list index - 1 */
     uint32_t   groupnumber;
     int        chatwin;
     bool       active;
-    bool       is_connected;
-    int        side_pos;    /* current position of the sidebar - used for scrolling up and down */
+    uint64_t   time_connected;    /* The time we successfully connected to the group */
+    int        side_pos;     /* current position of the sidebar - used for scrolling up and down */
 } GroupChat;
 
 void close_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum);
 int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t length);
 void set_nick_all_groups(Tox *m, const char *nick, size_t length);
 void set_status_all_groups(Tox *m, uint8_t status);
-int group_get_nick_peernumber(uint32_t groupnum, const char *nick);
+int group_get_nick_peer_id(uint32_t groupnum, const char *nick, uint32_t *peer_id);
 
 /* destroys and re-creates groupchat window */
 void redraw_groupchat_win(ToxWindow *self);

@@ -60,15 +60,15 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     const char *nick = argv[1];
-    int peernum = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernum == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
 
     TOX_ERR_GROUP_TOGGLE_IGNORE err;
-    if (!tox_group_toggle_ignore(m, self->num, peernum, true, &err)) {
+    if (!tox_group_toggle_ignore(m, self->num, peer_id, true, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to ignore %s (error %d).", nick, err);
         return;
     }
@@ -81,9 +81,9 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
 static void cmd_kickban_helper(ToxWindow *self, Tox *m, const char *nick, bool set_ban)
 {
-    int peernumber = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernumber == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
@@ -91,7 +91,7 @@ static void cmd_kickban_helper(ToxWindow *self, Tox *m, const char *nick, bool s
     const char *type_str = set_ban ? "ban" : "kick";
 
     TOX_ERR_GROUP_MOD_REMOVE_PEER err;
-    tox_group_mod_remove_peer(m, self->num, (uint32_t) peernumber, set_ban, &err);
+    tox_group_mod_remove_peer(m, self->num, peer_id, set_ban, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_REMOVE_PEER_OK: {
@@ -227,15 +227,15 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 
     const char *nick = argv[1];
-    int peernumber = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernumber == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
 
     TOX_ERR_GROUP_MOD_SET_ROLE err;
-    tox_group_mod_set_role(m, self->num, peernumber, TOX_GROUP_ROLE_MODERATOR, &err);
+    tox_group_mod_set_role(m, self->num, peer_id, TOX_GROUP_ROLE_MODERATOR, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
@@ -264,20 +264,20 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     }
 
     const char *nick = argv[1];
-    int peernumber = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernumber == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
 
-    if (tox_group_peer_get_role(m, self->num, peernumber, NULL) != TOX_GROUP_ROLE_MODERATOR) {
+    if (tox_group_peer_get_role(m, self->num, peer_id, NULL) != TOX_GROUP_ROLE_MODERATOR) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s is not a moderator", nick);
         return;
     }
 
     TOX_ERR_GROUP_MOD_SET_ROLE err;
-    tox_group_mod_set_role(m, self->num, peernumber, TOX_GROUP_ROLE_USER, &err);
+    tox_group_mod_set_role(m, self->num, peer_id, TOX_GROUP_ROLE_USER, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
@@ -428,15 +428,15 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     const char *nick = argv[1];
-    int peernumber = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernumber == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
 
     TOX_ERR_GROUP_MOD_SET_ROLE err;
-    tox_group_mod_set_role(m, self->num, peernumber, TOX_GROUP_ROLE_OBSERVER, &err);
+    tox_group_mod_set_role(m, self->num, peer_id, TOX_GROUP_ROLE_OBSERVER, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
@@ -461,20 +461,20 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     }
 
     const char *nick = argv[1];
-    int peernumber = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernumber == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
 
-    if (tox_group_peer_get_role(m, self->num, peernumber, NULL) != TOX_GROUP_ROLE_OBSERVER) {
+    if (tox_group_peer_get_role(m, self->num, peer_id, NULL) != TOX_GROUP_ROLE_OBSERVER) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s is not silenced.", nick);
         return;
     }
 
     TOX_ERR_GROUP_MOD_SET_ROLE err;
-    tox_group_mod_set_role(m, self->num, peernumber, TOX_GROUP_ROLE_USER, &err);
+    tox_group_mod_set_role(m, self->num, peer_id, TOX_GROUP_ROLE_USER, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
@@ -583,15 +583,15 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     const char *nick = argv[1];
-    int peernum = group_get_nick_peernumber(self->num, nick);
+    uint32_t peer_id;
 
-    if (peernum == -1) {
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
         return;
     }
 
     TOX_ERR_GROUP_TOGGLE_IGNORE err;
-    if (!tox_group_toggle_ignore(m, self->num, peernum, false, &err)) {
+    if (!tox_group_toggle_ignore(m, self->num, peer_id, false, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to unignore %s (error %d).", nick, err);
         return;
     }

@@ -603,7 +603,6 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_invite(m, on_group_invite, NULL);
     tox_callback_group_message(m, on_group_message, NULL);
     tox_callback_group_private_message(m, on_group_private_message, NULL);
-    tox_callback_group_peerlist_update(m, on_group_namelistchange, NULL);
     tox_callback_group_peer_join(m, on_group_peer_join, NULL);
     tox_callback_group_peer_exit(m, on_group_peer_exit, NULL);
     tox_callback_group_peer_name(m, on_group_nick_change, NULL);
@@ -1147,6 +1146,7 @@ void DnD_callback(const char* asdv, DropType dt)
 
 int main(int argc, char *argv[])
 {
+    update_unix_time();
     parse_args(argc, argv);
 
     /* Use the -b flag to enable stderr */

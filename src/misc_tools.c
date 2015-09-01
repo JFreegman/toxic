@@ -293,16 +293,16 @@ size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum)
 }
 
 /* same as get_nick_truncate but for groupchats */
-int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
+int get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, int groupnum)
 {
     TOX_ERR_GROUP_PEER_QUERY err;
-    size_t len = tox_group_peer_get_name_size(m, groupnum, peernum, &err);
+    size_t len = tox_group_peer_get_name_size(m, groupnum, peer_id, &err);
 
     if (err != TOX_ERR_GROUP_PEER_QUERY_OK) {
         strcpy(buf, UNKNOWN_NAME);
         len = strlen(UNKNOWN_NAME);
     } else {
-        tox_group_peer_get_name(m, groupnum, peernum, (uint8_t *) buf, &err);
+        tox_group_peer_get_name(m, groupnum, peer_id, (uint8_t *) buf, &err);
 
         if (err != TOX_ERR_GROUP_PEER_QUERY_OK) {
             strcpy(buf, UNKNOWN_NAME);

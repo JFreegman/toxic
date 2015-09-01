@@ -161,7 +161,7 @@ void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, 
     }
 }
 
-void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type,
                       const uint8_t *message, size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -171,11 +171,11 @@ void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MES
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, type, msg, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peer_id, type, msg, length);
     }
 }
 
-void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *message,
+void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peer_id, const uint8_t *message,
                               size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -185,41 +185,31 @@ void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber,
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupPrivateMessage != NULL)
-            windows[i].onGroupPrivateMessage(&windows[i], m, groupnumber, peernumber, msg, length);
+            windows[i].onGroupPrivateMessage(&windows[i], m, groupnumber, peer_id, msg, length);
     }
 }
 
-void on_group_namelistchange(Tox *m, uint32_t groupnumber, void *userdata)
-{
-    size_t i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupPeerlistUpdate != NULL)
-            windows[i].onGroupPeerlistUpdate(&windows[i], m, groupnumber);
-    }
-}
-
-void on_group_status_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_USER_STATUS status, void *userdata)
+void on_group_status_change(Tox *m, uint32_t groupnumber, uint32_t peer_id, TOX_USER_STATUS status, void *userdata)
 {
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupStatusChange != NULL)
-            windows[i].onGroupStatusChange(&windows[i], m, groupnumber, peernumber, status);
+            windows[i].onGroupStatusChange(&windows[i], m, groupnumber, peer_id, status);
     }
 }
 
-void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peernumber, void *userdata)
+void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peer_id, void *userdata)
 {
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupPeerJoin != NULL)
-            windows[i].onGroupPeerJoin(&windows[i], m, groupnumber, peernumber);
+            windows[i].onGroupPeerJoin(&windows[i], m, groupnumber, peer_id);
     }
 }
 
-void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *partmsg, size_t length,
+void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peer_id, const uint8_t *partmsg, size_t length,
                         void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -235,11 +225,11 @@ void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peernumber, const
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupPeerExit != NULL)
-            windows[i].onGroupPeerExit(&windows[i], m, groupnumber, peernumber, msg, length);
+            windows[i].onGroupPeerExit(&windows[i], m, groupnumber, peer_id, msg, length);
     }
 }
 
-void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *topic, size_t length,
+void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peer_id, const uint8_t *topic, size_t length,
                           void *userdata)
 {
     char data[MAX_STR_SIZE + 1];
@@ -249,7 +239,7 @@ void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, co
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupTopicChange != NULL)
-            windows[i].onGroupTopicChange(&windows[i], m, groupnumber, peernumber, data, length);
+            windows[i].onGroupTopicChange(&windows[i], m, groupnumber, peer_id, data, length);
     }
 }
 
@@ -283,7 +273,7 @@ void on_group_password(Tox *m, uint32_t groupnumber, const uint8_t *password, si
     }
 }
 
-void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
+void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peer_id, const uint8_t *newname, size_t length,
                           void *userdata)
 {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
@@ -294,7 +284,7 @@ void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, con
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupNickChange != NULL)
-            windows[i].onGroupNickChange(&windows[i], m, groupnumber, peernumber, name, length);
+            windows[i].onGroupNickChange(&windows[i], m, groupnumber, peer_id, name, length);
     }
 }
 
@@ -318,14 +308,14 @@ void on_group_rejected(Tox *m, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL type, v
     }
 }
 
-void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
+void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peer_id, uint32_t target_peer_id,
                          TOX_GROUP_MOD_EVENT type, void *userdata)
 {
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupModeration != NULL)
-            windows[i].onGroupModeration(&windows[i], m, groupnumber, source_peernum, target_peernum, type);
+            windows[i].onGroupModeration(&windows[i], m, groupnumber, source_peer_id, target_peer_id, type);
     }
 }
 
