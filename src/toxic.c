@@ -299,10 +299,15 @@ static int load_nodelist(const char *filename)
 
         if (line_len >= MIN_NODE_LINE && line_len <= MAX_NODE_LINE) {
             const char *name = strtok(line, " ");
-            const char *port = strtok(NULL, " ");
+            const char *port_str = strtok(NULL, " ");
             const char *key_ascii = strtok(NULL, " ");
 
-            if (name == NULL || port == NULL || key_ascii == NULL)
+            if (name == NULL || port_str == NULL || key_ascii == NULL)
+                continue;
+
+            long int port = strtol(port_str, NULL, 10);
+
+            if (port <= 0 || port > MAX_PORT_RANGE)
                 continue;
 
             size_t key_len = strlen(key_ascii);
@@ -313,7 +318,7 @@ static int load_nodelist(const char *filename)
 
             snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
             toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
-            toxNodes.ports[toxNodes.lines] = atoi(port);
+            toxNodes.ports[toxNodes.lines] = port;
 
             /* remove possible trailing newline from key string */
             char real_ascii_key[TOX_PUBLIC_KEY_SIZE * 2 + 1];
@@ -938,6 +943,7 @@ static void parse_args(int argc, char *argv[])
 
     const char *opts_str = "4bdehotuxc:f:n:r:p:P:T:";
     int opt, indexptr;
+    long int port = 0;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
         switch (opt) {
@@ -1014,7 +1020,12 @@ static void parse_args(int argc, char *argv[])
                 if (++optind > argc || argv[optind-1][0] == '-')
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
 
-                arg_opts.proxy_port = (uint16_t) atoi(argv[optind-1]);
+                port = strtol(argv[optind-1], NULL, 10);
+
+                if (port <= 0 || port > MAX_PORT_RANGE)
+                    exit_toxic_err("Proxy error", FATALERR_PROXY);
+
+                arg_opts.proxy_port = port;
                 break;
 
             case 'P':
@@ -1024,7 +1035,12 @@ static void parse_args(int argc, char *argv[])
                 if (++optind > argc || argv[optind-1][0] == '-')
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
 
-                arg_opts.proxy_port = (uint16_t) atoi(argv[optind-1]);
+                port = strtol(argv[optind-1], NULL, 10);
+
+                if (port <= 0 || port > MAX_PORT_RANGE)
+                    exit_toxic_err("Proxy error", FATALERR_PROXY);
+
+                arg_opts.proxy_port = port;
                 break;
 
             case 'r':
@@ -1040,7 +1056,12 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'T':
-                arg_opts.tcp_port = (uint16_t) atoi(optarg);
+                port = strtol(optarg, NULL, 10);
+
+                if (port <= 0 || port > MAX_PORT_RANGE)
+                    port = 14191;
+
+                arg_opts.tcp_port = port;
                 break;
 
             case 'u':

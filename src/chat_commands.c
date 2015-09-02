@@ -45,9 +45,9 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
     char msg[MAX_STR_SIZE];
     const char *inoutstr = argv[1];
-    int idx = atoi(argv[2]);
+    long int idx = strtol(argv[2], NULL, 10);
 
-    if (idx >= MAX_FILES || idx < 0) {
+    if ((idx == 0 && strcmp(argv[2], "0")) || idx >= MAX_FILES || idx < 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
@@ -85,9 +85,9 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    int groupnum = atoi(argv[1]);
+    long int groupnum = strtol(argv[1], NULL, 10);
 
-    if (groupnum == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
+    if ((groupnum == 0 && strcmp(argv[1], "0")) || groupnum < 0 || groupnum == LONG_MAX) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
         return;
     }
@@ -146,9 +146,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    int idx = atoi(argv[1]);
+    long int idx = strtol(argv[1], NULL, 10);
 
-    if ((idx == 0 && strcmp(argv[1], "0")) || idx >= MAX_FILES) {
+    if ((idx == 0 && strcmp(argv[1], "0")) || idx < 0 || idx >= MAX_FILES) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }

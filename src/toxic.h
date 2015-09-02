@@ -49,6 +49,10 @@
 #define KEY_IDENT_DIGITS 3    /* number of hex digits to display for the pub-key based identifier */
 #define TIME_STR_SIZE 32
 
+#ifndef MAX_PORT_RANGE
+#define MAX_PORT_RANGE 65535
+#endif
+
 /* ASCII key codes */
 #define T_KEY_ESC        0x1B     /* ESC key */
 #define T_KEY_KILL       0x0B     /* ctrl-k */
