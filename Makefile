@@ -24,6 +24,9 @@ endif
 ifeq ($(UNAME_S), FreeBSD)
     -include $(CFG_DIR)/systems/FreeBSD.mk
 endif
+ifeq ($(UNAME_S), DragonFly)
+    -include $(CFG_DIR)/systems/FreeBSD.mk
+endif
 ifeq ($(UNAME_S), OpenBSD)
     -include $(CFG_DIR)/systems/FreeBSD.mk
 endif
