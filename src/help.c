@@ -244,6 +244,7 @@ static void help_draw_group(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
     wprintw(win, "  /chatid                    : Print the group chat id to share with others\n");
+    wprintw(win, "  /mykey                     : Print your group public key\n");
     wprintw(win, "  /ignore <nick>             : Ignore peer\n");
     wprintw(win, "  /unignore <nick>           : Unignore peer \n");
     wprintw(win, "  /rejoin                    : Rejoin the group\n");
@@ -323,7 +324,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-            help_init_window(self, 23, 80);
+            help_init_window(self, 24, 80);
             self->help->type = HELP_GROUP;
             break;
 

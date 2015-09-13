@@ -498,9 +498,9 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     size_t i;
 
     for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
-        char xx[3];
-        snprintf(xx, sizeof(xx), "%02X", address[i] & 0xff);
-        strcat(id, xx);
+        char d[3];
+        snprintf(d, sizeof(d), "%02X", address[i] & 0xff);
+        strcat(id, d);
     }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", id);
