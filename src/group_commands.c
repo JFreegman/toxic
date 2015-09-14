@@ -29,6 +29,8 @@
 #include "log.h"
 #include "groupchat.h"
 
+extern GroupChat groupchats[MAX_GROUPCHAT_NUM];
+
 void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char chatid[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
@@ -622,4 +624,68 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, BLUE, "-!- You are no longer ignoring %s", nick);
+}
+
+void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer must be specified.");
+        return;
+    }
+
+    GroupChat *chat = &groupchats[self->num];
+
+    if (!chat) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Whois failed.");
+        return;
+    }
+
+    const char *nick = argv[1];
+    uint32_t peer_id;
+
+    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
+        return;
+    }
+
+    int peer_index = get_peer_index(self->num, peer_id);
+
+    if (peer_index < 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Whois failed.");
+        return;
+    }
+
+    const char *status_str = "Online";
+
+    if (chat->peer_list[peer_index].status == TOX_USER_STATUS_BUSY)
+        status_str = "Busy";
+    else if (chat->peer_list[peer_index].status == TOX_USER_STATUS_AWAY)
+        status_str = "Away";
+
+    const char *role_str = "User";
+
+    if (chat->peer_list[peer_index].role == TOX_GROUP_ROLE_FOUNDER)
+        role_str = "Founder";
+    else if (chat->peer_list[peer_index].role == TOX_GROUP_ROLE_MODERATOR)
+        role_str = "Moderator";
+    else if (chat->peer_list[peer_index].role == TOX_GROUP_ROLE_OBSERVER)
+        role_str = "Observer";
+
+    char last_seen_str[128];
+    get_elapsed_time_str_2(last_seen_str, sizeof(last_seen_str), get_unix_time() - chat->peer_list[peer_index].last_active);
+
+    char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
+    size_t i;
+
+    for (i = 0; i < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++i) {
+        char d[3];
+        snprintf(d, sizeof(d), "%02X", chat->peer_list[peer_index].public_key[i] & 0xff);
+        strcat(pk_string, d);
+    }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Whois for %s", nick);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Role: %s", role_str);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Status: %s", status_str);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Last active: %s", last_seen_str);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Public key: %s", pk_string);
 }

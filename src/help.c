@@ -250,6 +250,7 @@ static void help_draw_group(ToxWindow *self)
     wprintw(win, "  /rejoin                    : Rejoin the group\n");
     wprintw(win, "  /topic <msg>               : Set group topic (show current topic if no msg)\n");
     wprintw(win, "  /whisper <nick> <msg>      : Send private message to nick\n");
+    wprintw(win, "  /whois <nick>              : Display info about nick.\n");
 
     wattron(win, A_BOLD);
     wprintw(win, " Moderator commands:\n");
@@ -324,7 +325,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-            help_init_window(self, 24, 80);
+            help_init_window(self, 25, 80);
             self->help->type = HELP_GROUP;
             break;
 

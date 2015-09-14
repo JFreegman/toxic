@@ -36,8 +36,10 @@ struct GroupPeer {
     char       name[TOX_MAX_NAME_LENGTH];
     size_t     name_length;
     uint32_t   peer_id;
+    uint8_t    public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
     TOX_USER_STATUS status;
     TOX_GROUP_ROLE  role;
+    uint64_t   last_active;
 };
 
 typedef struct {
@@ -57,6 +59,7 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t 
 void set_nick_all_groups(Tox *m, const char *nick, size_t length);
 void set_status_all_groups(Tox *m, uint8_t status);
 int group_get_nick_peer_id(uint32_t groupnum, const char *nick, uint32_t *peer_id);
+int get_peer_index(uint32_t groupnum, uint32_t peer_id);
 
 /* destroys and re-creates groupchat window */
 void redraw_groupchat_win(ToxWindow *self);

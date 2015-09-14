@@ -80,7 +80,7 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
-/*Puts the current time in buf in the format of [HH:mm:ss] */
+/* Puts the current time in buf in the format of [HH:mm:ss] */
 void get_time_str(char *buf, int bufsize)
 {
     if (user_settings->timestamps == TIMESTAMPS_OFF) {
@@ -108,6 +108,24 @@ void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs)
         snprintf(buf, bufsize, "%ld:%.2ld", minutes, seconds);
     else
         snprintf(buf, bufsize, "%ld:%.2ld:%.2ld", hours, minutes, seconds);
+}
+
+/* Converts seconds to string in format H hours, m minutes, s seconds */
+void get_elapsed_time_str_2(char *buf, int bufsize, uint64_t secs)
+{
+    if (!secs)
+        return;
+
+    long int seconds = secs % 60;
+    long int minutes = (secs % 3600) / 60;
+    long int hours = secs / 3600;
+
+    if (!minutes && !hours)
+        snprintf(buf, bufsize, "%ld seconds", seconds);
+    else if (!hours)
+        snprintf(buf, bufsize, "%ld minutes, %ld seconds", minutes, seconds);
+    else
+        snprintf(buf, bufsize, "%ld hours, %ld minutes, %ld seconds", hours, minutes, seconds);
 }
 
 /*

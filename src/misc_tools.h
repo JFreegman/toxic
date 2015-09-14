@@ -62,6 +62,9 @@ void get_time_str(char *buf, int bufsize);
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
 void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs);
 
+/* Converts seconds to string in format H hours, m minutes, s seconds */
+void get_elapsed_time_str_2(char *buf, int bufsize, uint64_t secs);
+
 /* get the current local time (not thread safe) */
 struct tm *get_time(void);
 
