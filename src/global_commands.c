@@ -50,9 +50,9 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    int req = atoi(argv[1]);
+    long int req = strtol(argv[1], NULL, 10);
 
-    if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req > MAX_FRIEND_REQUESTS) {
+    if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req >= MAX_FRIEND_REQUESTS) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
@@ -248,10 +248,12 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     const char *ip = argv[1];
-    const char *port = argv[2];
+    const char *port_str = argv[2];
     const char *ascii_key = argv[3];
 
-    if (atoi(port) == 0) {
+    long int port = strtol(port_str, NULL, 10);
+
+    if (port <= 0 || port > MAX_PORT_RANGE) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid port.");
         return;
     }
@@ -263,8 +265,8 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     TOX_ERR_BOOTSTRAP err;
-    tox_bootstrap(m, ip, atoi(port), (uint8_t *) key_binary, &err);
-    tox_add_tcp_relay(m, ip, atoi(port), (uint8_t *) key_binary, &err);
+    tox_bootstrap(m, ip, port, (uint8_t *) key_binary, &err);
+    tox_add_tcp_relay(m, ip, port, (uint8_t *) key_binary, &err);
 
     switch (err) {
         case TOX_ERR_BOOTSTRAP_BAD_HOST:
@@ -290,9 +292,9 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    int req = atoi(argv[1]);
+    long int req = strtol(argv[1], NULL, 10);
 
-    if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req > MAX_FRIEND_REQUESTS) {
+    if ((req == 0 && strcmp(argv[1], "0")) || req < 0 || req >= MAX_FRIEND_REQUESTS) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }

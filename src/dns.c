@@ -50,29 +50,6 @@ extern struct Winthread Winthread;
 extern struct dns3_servers dns3_servers;
 extern struct arg_opts arg_opts;
 
-#define NUM_DNS3_BACKUP_SERVERS 2
-
-/* Hardcoded backup in case domain list is not loaded */
-static struct dns3_server_backup {
-    const char *name;
-    char key[DNS3_KEY_SIZE];
-} dns3_servers_backup[] = {
-    {
-        "utox.org",
-        {
-          0xD3, 0x15, 0x4F, 0x65, 0xD2, 0x8A, 0x5B, 0x41, 0xA0, 0x5D, 0x4A, 0xC7, 0xE4, 0xB3, 0x9C, 0x6B,
-          0x1C, 0x23, 0x3C, 0xC8, 0x57, 0xFB, 0x36, 0x5C, 0x56, 0xE8, 0x39, 0x27, 0x37, 0x46, 0x2A, 0x12
-        }
-    },
-    {
-        "toxme.se",
-        {
-          0x5D, 0x72, 0xC5, 0x17, 0xDF, 0x6A, 0xEC, 0x54, 0xF1, 0xE9, 0x77, 0xA6, 0xB6, 0xF2, 0x59, 0x14,
-          0xEA, 0x4C, 0xF7, 0x27, 0x7A, 0x85, 0x02, 0x7C, 0xD9, 0xF5, 0x19, 0x6D, 0xF1, 0x7E, 0x0B, 0x13
-        }
-    },
-};
-
 static struct thread_data {
     ToxWindow *self;
     char id_bin[TOX_ADDRESS_SIZE];
@@ -260,35 +237,17 @@ static int parse_addr(const char *addr, char *namebuf, size_t namebuf_sz, char *
 /* matches input domain name with domains in list and obtains key. Return 0 on success, -1 on failure */
 static int get_domain_match(char *pubkey, char *domain, const char *inputdomain)
 {
-    /* check server list first */
     int i;
-    bool match = false;
 
     for (i = 0; i < dns3_servers.lines; ++i) {
         if (strcmp(dns3_servers.names[i], inputdomain) == 0) {
             memcpy(pubkey, dns3_servers.keys[i], DNS3_KEY_SIZE);
             snprintf(domain, MAX_DOMAIN_SIZE, "%s", dns3_servers.names[i]);
-            match = true;
-            break;
+            return 0;
         }
     }
 
-    /* fall back to hard-coded domains on server list failure */
-    if (!match) {
-        for (i = 0; i < NUM_DNS3_BACKUP_SERVERS; ++i) {
-            if (strcmp(dns3_servers_backup[i].name, inputdomain) == 0) {
-                memcpy(pubkey, dns3_servers_backup[i].key, DNS3_KEY_SIZE);
-                snprintf(domain, MAX_DOMAIN_SIZE, "%s", dns3_servers_backup[i].name);
-                match = true;
-                break;
-            }
-        }
-
-        if (!match)
-            return -1;
-    }
-
-    return 0;
+    return -1;
 }
 
 /* Does DNS lookup for addr and puts resulting tox id in id_bin. */
