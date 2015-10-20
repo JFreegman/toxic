@@ -59,7 +59,7 @@
 #include "help.h"
 #include "notify.h"
 #include "autocomplete.h"
-#include "device.h"
+#include "audio_device.h"
 
 extern char *DATA_FILE;
 

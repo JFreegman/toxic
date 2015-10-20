@@ -167,6 +167,15 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /sdev <type> <id>          : Set active device\n");
 #endif /* AUDIO */
 
+#ifdef VIDEO
+    wattron(win, A_BOLD);
+    wprintw(win, "\n Video:\n");
+    wattroff(win, A_BOLD);
+
+    wprintw(win, "  /lsvdev <type>             : List video devices where type: in|out\n");
+    wprintw(win, "  /svdev <type> <id>         : Set active video device\n");
+#endif /* VIDEO */
+
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
@@ -202,6 +211,13 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /mute <type>               : Mute active device if in call\n");
     wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n");
 #endif /* AUDIO */
+
+#ifdef VIDEO
+    wattron(win, A_BOLD);
+    wprintw(win, "\n Video:\n");
+    wattroff(win, A_BOLD);
+    wprintw(win, "  /video                     : Toggle video call\n");
+#endif /* VIDEO */
 
     help_draw_bottom_menu(win);
 
@@ -282,7 +298,9 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'c':
-#ifdef AUDIO
+#ifdef VIDEO
+            help_init_window(self, 22, 80);
+#elif AUDIO
             help_init_window(self, 19, 80);
 #else
             help_init_window(self, 9, 80);
@@ -291,7 +309,9 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'g':
-#ifdef AUDIO
+#ifdef VIDEO
+            help_init_window(self, 28, 80);
+#elif AUDIO
             help_init_window(self, 24, 80);
 #else
             help_init_window(self, 20, 80);
