@@ -83,16 +83,16 @@ static int set_call(Call* call, bool start)
 
 void call_cb                 ( ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data );
 void callstate_cb            ( ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data );
-void receive_audio_frame_cb  ( ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count, 
+void receive_audio_frame_cb  ( ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
                                         uint8_t channels, uint32_t sampling_rate, void *user_data );
-void audio_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, 
-                                        bool stable, uint32_t bit_rate, void *user_data );
+void audio_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
+                                        uint32_t video_bit_rate, void *user_data );
 void receive_video_frame_cb  ( ToxAV *av, uint32_t friend_number,
                                         uint16_t width, uint16_t height,
                                         uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
                                         int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride,
                                         void *user_data );
-void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, 
+void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number,
                                       bool stable, uint32_t bit_rate, void *user_data);
 
 void callback_recv_invite   ( uint32_t friend_number );
@@ -154,7 +154,7 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     toxav_callback_call(CallControl.av, call_cb, &CallControl);
     toxav_callback_call_state(CallControl.av, callstate_cb, &CallControl);
     toxav_callback_audio_receive_frame(CallControl.av, receive_audio_frame_cb, &CallControl);
-    toxav_callback_audio_bit_rate_status(CallControl.av, audio_bit_rate_status_cb, &CallControl);
+    toxav_callback_bit_rate_status(CallControl.av, audio_bit_rate_status_cb, &CallControl);
 
     return CallControl.av;
 }
@@ -177,9 +177,9 @@ void read_device_callback(const int16_t* captured, uint32_t size, void* data)
     uint32_t friend_number = *((uint32_t*)data); /* TODO: Or pass an array of call_idx's */
     int64_t sample_count = CallControl.audio_sample_rate * CallControl.audio_frame_duration / 1000;
 
-    if ( sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number, 
-                                                     captured, sample_count, 
-                                                     CallControl.audio_channels, 
+    if ( sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number,
+                                                     captured, sample_count,
+                                                     CallControl.audio_channels,
                                                      CallControl.audio_sample_rate, &error) == false )
     {}
 }
@@ -231,7 +231,7 @@ int stop_transmission(Call *call, uint32_t friend_number)
         TOXAV_ERR_CALL_CONTROL error = TOXAV_ERR_CALL_CONTROL_OK;
 
         if ( CallControl.call_state != TOXAV_FRIEND_CALL_STATE_FINISHED )
-            toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error); 
+            toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
 
         if ( error == TOXAV_ERR_CALL_CONTROL_OK ) {
             call->ttas = false;
@@ -327,18 +327,17 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
     }
 }
 
-void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number, 
-                                    int16_t const *pcm, size_t sample_count, 
+void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number,
+                                    int16_t const *pcm, size_t sample_count,
                                     uint8_t channels, uint32_t sampling_rate, void *user_data)
 {
     write_device_callback(friend_number, pcm, frame_size);
 }
 
-void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, 
-                                    bool stable, uint32_t bit_rate, void *user_data)
+void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
+                              uint32_t video_bit_rate, void *user_data)
 {
-    if ( stable )
-        CallControl.audio_bit_rate = bit_rate;
+    CallControl.audio_bit_rate = audio_bit_rate;
 }
 
 
@@ -357,7 +356,7 @@ void callback_recv_ringing(uint32_t friend_number)
 void callback_recv_starting(uint32_t friend_number)
 {
     ToxWindow* windows = CallControl.prompt;
-    
+
     int i;
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if ( windows[i].onStarting != NULL && windows[i].num == friend_number ) {
@@ -397,7 +396,7 @@ void callback_call_rejected(uint32_t friend_number)
 }
 void callback_call_ended(uint32_t friend_number)
 {
-    CB_BODY(friend_number, onEnd);   
+    CB_BODY(friend_number, onEnd);
 }
 void callback_requ_timeout(uint32_t friend_number)
 {
@@ -533,7 +532,7 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     /* Manually send a cancel call control because call hasn't started */
-    toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL); 
+    toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
     CallControl.pending_call = false;
 
     /* Callback will print status... */
@@ -561,13 +560,13 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 #ifdef VIDEO
     callback_video_end(self->num);
 
-#endif /* VIDEO */ 
+#endif /* VIDEO */
 
-   
+
 
     if ( CallControl.pending_call ) {
         /* Manually send a cancel call control because call hasn't started */
-        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL); 
+        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
         callback_call_canceled(self->num);
     }
     else {

@@ -44,8 +44,9 @@ void receive_video_frame_cb( ToxAV *av, uint32_t friend_number,
                                     uint8_t const *y, uint8_t const *u, uint8_t const *v,
                                     int32_t ystride, int32_t ustride, int32_t vstride,
                                     void *user_data );
-void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, 
-                                      bool stable, uint32_t bit_rate, void *user_data);
+
+void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
+                                    uint32_t video_bit_rate, void *user_data);
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -73,7 +74,7 @@ ToxAV *init_video(ToxWindow *self, Tox *tox)
     }
 
     toxav_callback_video_receive_frame(CallControl.av, receive_video_frame_cb, &CallControl);
-    toxav_callback_video_bit_rate_status(CallControl.av, video_bit_rate_status_cb, &CallControl);
+    toxav_callback_bit_rate_status(CallControl.av, video_bit_rate_status_cb, &CallControl);
 
     return CallControl.av;
 }
@@ -131,7 +132,7 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
     }
 
     CallControl.video_bit_rate = default_video_bit_rate;
-    if ( toxav_video_bit_rate_set(CallControl.av, self->num, CallControl.video_bit_rate, true, NULL) == false ) {
+    if ( toxav_bit_rate_set(CallControl.av, self->num, -1, CallControl.video_bit_rate, NULL) == false ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
         return -1;
     }
@@ -140,7 +141,7 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input video device!");
         return -1;
     }
-    
+
     if ( register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None )
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
 
@@ -150,7 +151,7 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
 int stop_video_transmission(Call *call, int friend_number)
 {
     CallControl.video_bit_rate = 0;
-    toxav_video_bit_rate_set(CallControl.av, friend_number, CallControl.video_bit_rate, true, NULL);
+    toxav_bit_rate_set(CallControl.av, friend_number, -1, CallControl.video_bit_rate, NULL);
 
     if ( call->vin_idx != -1 )
         close_video_device(vdt_input, call->vin_idx);
@@ -178,13 +179,11 @@ void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
     write_video_device_callback(friend_number, width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
-void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, 
-                                      bool stable, uint32_t bit_rate, void *user_data)
+void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
+                                      uint32_t video_bit_rate, void *user_data)
 {
-    if ( stable ) {
-        CallControl.video_bit_rate = bit_rate;
-        toxav_video_bit_rate_set(CallControl.av, friend_number, CallControl.video_bit_rate, false, NULL);
-    }
+    CallControl.video_bit_rate = video_bit_rate;
+    toxav_bit_rate_set(CallControl.av, friend_number, -1, CallControl.video_bit_rate, NULL);
 }
 
 void callback_recv_video_starting(uint32_t friend_number)
@@ -197,7 +196,7 @@ void callback_recv_video_starting(uint32_t friend_number)
     open_primary_video_device(vdt_output, &this_call->vout_idx);
 }
 void callback_recv_video_end(uint32_t friend_number)
-{   
+{
     Call* this_call = &CallControl.calls[friend_number];
 
     close_video_device(vdt_output, this_call->vout_idx);
@@ -274,7 +273,7 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         callback_video_starting(self->num);
     else
         callback_video_end(self->num);
-    
+
     return;
 on_error:
     print_err (self, error_str);
