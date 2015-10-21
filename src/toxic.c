@@ -1077,7 +1077,6 @@ static void parse_args(int argc, char *argv[])
 }
 
 /* Looks for an old default profile data file and blocklist, and renames them to the new default names.
- * Saves the old data files under the names "toxic_data.old" and "toxic_data_blocklist.old".
  *
  * Returns 0 on success.
  * Returns -1 on failure.
