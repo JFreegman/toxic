@@ -484,6 +484,15 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     prompt_update_statusmessage(prompt, m, msg);
 }
 
+void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    uint32_t nospam = rand();   /* should be random enough */
+    tox_self_set_nospam(m, nospam);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your Tox ID has been changed to:");
+    cmd_myid(window, self, m, 0, NULL);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Any services that relied on your old ID will need to be updated manually.");
+}
+
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     help_init_menu(self);

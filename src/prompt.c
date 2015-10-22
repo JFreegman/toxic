@@ -51,9 +51,9 @@ extern FriendsList Friends;
 FriendRequests FrndRequests;
 
 #ifdef AUDIO
-#define AC_NUM_GLOB_COMMANDS 18
+#define AC_NUM_GLOB_COMMANDS 19
 #else
-#define AC_NUM_GLOB_COMMANDS 16
+#define AC_NUM_GLOB_COMMANDS 17
 #endif /* AUDIO */
 
 /* Array of global command names used for tab completion. */
@@ -71,6 +71,7 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
+    { "/nospam"     },
     { "/quit"       },
     { "/requests"   },
     { "/status"     },

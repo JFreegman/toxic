@@ -53,6 +53,7 @@ static struct cmd_func global_commands[] = {
     { "/myid",      cmd_myid          },
     { "/nick",      cmd_nick          },
     { "/note",      cmd_note          },
+    { "/nospam",    cmd_nospam        },
     { "/q",         cmd_quit          },
     { "/quit",      cmd_quit          },
     { "/requests",  cmd_requests      },
