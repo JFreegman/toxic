@@ -370,9 +370,9 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     if (argc == 0) {
         if (log->log_on)
-            msg = "Logging for this window is ON. Type \"/log off\" to disable.";
+            msg = "Logging for this window is ON; type \"/log off\" to disable. (Logs are not encrypted)";
         else
-            msg = "Logging for this window is OFF. Type \"/log on\" to enable.";
+            msg = "Logging for this window is OFF; type \"/log on\" to enable.";
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
