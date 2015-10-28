@@ -30,12 +30,12 @@
 #include "friendlist.h"
 #include "log.h"
 #include "line_info.h"
-#include "dns.h"
 #include "groupchat.h"
 #include "prompt.h"
 #include "help.h"
 #include "term_mplex.h"
 #include "avatars.h"
+#include "name_lookup.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -192,8 +192,8 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         }
 
         cmd_add_helper(self, m, id_bin, msg);
-    } else {    /* assume id is a username@domain address and do DNS lookup */
-        dns3_lookup(self, m, id_bin, id, msg);
+    } else {    /* assume id is a username@domain address and do http name server lookup */
+        name_lookup(self, m, id_bin, id, msg);
     }
 }
 

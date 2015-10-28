@@ -90,7 +90,7 @@ struct arg_opts {
     bool encrypt_data;
     bool unencrypt_data;
 
-    char dns_path[MAX_STR_SIZE];
+    char nameserver_path[MAX_STR_SIZE];
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
 
