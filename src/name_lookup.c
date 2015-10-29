@@ -41,6 +41,9 @@ extern struct Winthread Winthread;;
 #define MAX_DOMAIN_SIZE 32
 #define MAX_SERVER_LINE MAX_DOMAIN_SIZE + (SERVER_KEY_SIZE * 2) + 3
 
+/* List based on Mozilla's recommended configurations for modern browsers */
+#define TLS_CIPHER_SUITE_LIST "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK"
+
 struct Nameservers {
     int     lines;
     char    names[MAX_SERVERS][MAX_DOMAIN_SIZE];
@@ -282,8 +285,9 @@ void *lookup_thread_func(void *data)
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 
+
     if (curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL) != CURLE_OK) {
-        lookup_error(self, "Failed to enable TLS.");
+        lookup_error(self, "TLS could not be enabled.");
         goto on_exit;
     }
 
@@ -292,13 +296,18 @@ void *lookup_thread_func(void *data)
         goto on_exit;
     }
 
+    if (curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, TLS_CIPHER_SUITE_LIST) != CURLE_OK) {
+        lookup_error(self, "Failed to set TLS cipher list.");
+        goto on_exit;
+    }
+
     if (curl_easy_perform(c_handle) != CURLE_OK) {
-        lookup_error(self, "curl lookup error.");
+        lookup_error(self, "https lookup error.");
         goto on_exit;
     }
 
     if (process_response(&recv_data) == -1) {
-        lookup_error(self, "parsing error.");
+        lookup_error(self, "Name lookup failed.");
         goto on_exit;
     }
 
