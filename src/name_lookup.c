@@ -65,10 +65,17 @@ static struct lookup_thread {
     pthread_attr_t attr;
 } lookup_thread;
 
-static int lookup_error(ToxWindow *self, const char *errmsg)
+static int lookup_error(ToxWindow *self, const char *errmsg, ...)
 {
+    char frmt_msg[MAX_STR_SIZE];
+
+    va_list args;
+    va_start(args, errmsg);
+    vsnprintf(frmt_msg, sizeof(frmt_msg), errmsg, args);
+    va_end(args);
+
     pthread_mutex_lock(&Winthread.lock);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "name lookup failed: %s", errmsg);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "name lookup failed: %s", frmt_msg);
     pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
@@ -285,24 +292,31 @@ void *lookup_thread_func(void *data)
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 
+    int ret = curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
-    if (curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL) != CURLE_OK) {
-        lookup_error(self, "TLS could not be enabled.");
+    if (ret != CURLE_OK) {
+        lookup_error(self, "TLS could not be enabled (libcurl error %d)", ret);
         goto on_exit;
     }
 
-    if (curl_easy_setopt(c_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2) != CURLE_OK) {
-        lookup_error(self, "TLSv1.2 could not be set.");
+    ret = curl_easy_setopt(c_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "TLSv1.2 could not be set (libcurl error %d)", ret);
         goto on_exit;
     }
 
-    if (curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, TLS_CIPHER_SUITE_LIST) != CURLE_OK) {
-        lookup_error(self, "Failed to set TLS cipher list.");
+    ret = curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, TLS_CIPHER_SUITE_LIST);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set TLS cipher list (libcurl error %d)", ret);
         goto on_exit;
     }
 
-    if (curl_easy_perform(c_handle) != CURLE_OK) {
-        lookup_error(self, "https lookup error.");
+    ret = curl_easy_perform(c_handle);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "https lookup error (libcurl error %d)", ret);
         goto on_exit;
     }
 
