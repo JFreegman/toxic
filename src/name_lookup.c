@@ -316,8 +316,16 @@ void *lookup_thread_func(void *data)
     ret = curl_easy_perform(c_handle);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "https lookup error (libcurl error %d)", ret);
-        goto on_exit;
+        /* If system doesn't support any of the specified ciphers suites, fall back to default */
+        if (ret == CURLE_SSL_CIPHER) {
+            curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, NULL);
+            ret = curl_easy_perform(c_handle);
+        }
+
+        if (ret != CURLE_OK) {
+            lookup_error(self, "https lookup error (libcurl error %d)", ret);
+            goto on_exit;
+        }
     }
 
     if (process_response(&recv_data) == -1) {
