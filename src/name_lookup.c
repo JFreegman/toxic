@@ -329,7 +329,7 @@ void *lookup_thread_func(void *data)
     }
 
     if (process_response(&recv_data) == -1) {
-        lookup_error(self, "Name lookup failed.");
+        lookup_error(self, "");
         goto on_exit;
     }
 
