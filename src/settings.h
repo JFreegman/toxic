@@ -37,6 +37,12 @@ struct user_settings {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
 
+    /* boolean (is set to NT_BEEP or 0 after loading) */
+    int beep_on_message;
+    int beep_on_filetrans;
+    int beep_on_filetrans_accept;
+    int beep_on_invite;
+
     int timestamps;        /* boolean */
     char timestamp_format[TIME_STR_SIZE];
     char log_timestamp_format[TIME_STR_SIZE];

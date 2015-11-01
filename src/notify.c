@@ -472,7 +472,7 @@ int play_notify_sound(Notification notif, uint64_t flags)
     int rc = -1;
 
     if (flags & NT_BEEP) beep();
-    else if (notif != silent) {
+    if (notif != silent) {
         if ( !Control.poll_active || !Control.sounds[notif] )
             return -1;
 

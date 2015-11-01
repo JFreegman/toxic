@@ -51,6 +51,10 @@ static struct ui_strings {
     const char* timestamp_format;
     const char* log_timestamp_format;
     const char* alerts;
+    const char* beep_on_message;
+    const char* beep_on_filetrans;
+    const char* beep_on_filetrans_accept;
+    const char* beep_on_invite;
     const char* native_colors;
     const char* autolog;
     const char* history_size;
@@ -73,6 +77,10 @@ static struct ui_strings {
     "timestamp_format",
     "log_timestamp_format",
     "alerts",
+    "beep_on_message",
+    "beep_on_filetrans",
+    "beep_on_filetrans_accept",
+    "beep_on_invite",
     "native_colors",
     "autolog",
     "history_size",
@@ -96,6 +104,10 @@ static void ui_defaults(struct user_settings* settings)
 
     settings->autolog = AUTOLOG_OFF;
     settings->alerts = ALERTS_ENABLED;
+    settings->beep_on_message = 0;
+    settings->beep_on_filetrans = 0;
+    settings->beep_on_filetrans_accept = 0;
+    settings->beep_on_invite = 0;
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
     settings->show_typing_self = SHOW_TYPING_ON;
@@ -319,6 +331,20 @@ int settings_load(struct user_settings *s, const char *patharg)
         }
 
         config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
+
+        if (config_setting_lookup_bool(setting, ui_strings.beep_on_message, &s->beep_on_message)) {
+            s->beep_on_message = s->beep_on_message ? NT_BEEP : 0;
+        }
+        if (config_setting_lookup_bool(setting, ui_strings.beep_on_filetrans, &s->beep_on_filetrans)) {
+            s->beep_on_filetrans = s->beep_on_filetrans ? NT_BEEP : 0;
+        }
+        if (config_setting_lookup_bool(setting, ui_strings.beep_on_filetrans_accept, &s->beep_on_filetrans_accept)) {
+            s->beep_on_filetrans_accept = s->beep_on_filetrans_accept ? NT_BEEP : 0;
+        }
+        if (config_setting_lookup_bool(setting, ui_strings.beep_on_invite, &s->beep_on_invite)) {
+            s->beep_on_invite = s->beep_on_invite ? NT_BEEP : 0;
+        }
+
         config_setting_lookup_bool(setting, ui_strings.autolog, &s->autolog);
         config_setting_lookup_bool(setting, ui_strings.native_colors, &s->colour_theme);
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
