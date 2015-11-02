@@ -50,11 +50,10 @@ extern struct Winthread Winthread;
 extern FriendsList Friends;
 FriendRequests FrndRequests;
 #ifdef VIDEO
-#define AC_NUM_GLOB_COMMANDS 20
+#define AC_NUM_GLOB_COMMANDS 21
 #elif AUDIO
-#define AC_NUM_GLOB_COMMANDS 18
 #else
-#define AC_NUM_GLOB_COMMANDS 16
+#define AC_NUM_GLOB_COMMANDS 17
 #endif
 
 /* Array of global command names used for tab completion. */
@@ -72,6 +71,7 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
+    { "/nospam"     },
     { "/quit"       },
     { "/requests"   },
     { "/status"     },

@@ -30,12 +30,12 @@
 #include "friendlist.h"
 #include "log.h"
 #include "line_info.h"
-#include "dns.h"
 #include "groupchat.h"
 #include "prompt.h"
 #include "help.h"
 #include "term_mplex.h"
 #include "avatars.h"
+#include "name_lookup.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -192,8 +192,8 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         }
 
         cmd_add_helper(self, m, id_bin, msg);
-    } else {    /* assume id is a username@domain address and do DNS lookup */
-        dns3_lookup(self, m, id_bin, id, msg);
+    } else {    /* assume id is a username@domain address and do http name server lookup */
+        name_lookup(self, m, id_bin, id, msg);
     }
 }
 
@@ -370,9 +370,9 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     if (argc == 0) {
         if (log->log_on)
-            msg = "Logging for this window is ON. Type \"/log off\" to disable.";
+            msg = "Logging for this window is ON; type \"/log off\" to disable. (Logs are not encrypted)";
         else
-            msg = "Logging for this window is OFF. Type \"/log on\" to enable.";
+            msg = "Logging for this window is OFF; type \"/log on\" to enable.";
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
@@ -482,6 +482,15 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     msg[len] = '\0';
 
     prompt_update_statusmessage(prompt, m, msg);
+}
+
+void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    uint32_t nospam = rand();   /* should be random enough */
+    tox_self_set_nospam(m, nospam);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your Tox ID has been changed to:");
+    cmd_myid(window, self, m, 0, NULL);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Any services that relied on your old ID will need to be updated manually.");
 }
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

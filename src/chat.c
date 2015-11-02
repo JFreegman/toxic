@@ -63,9 +63,9 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 27
+#define AC_NUM_CHAT_COMMANDS 28
 #else
-#define AC_NUM_CHAT_COMMANDS 20
+#define AC_NUM_CHAT_COMMANDS 21
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
@@ -86,6 +86,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/myid"       },
     { "/nick"       },
     { "/note"       },
+    { "/nospam"     },
     { "/quit"       },
     { "/savefile"   },
     { "/sendfile"   },

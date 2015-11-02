@@ -9,17 +9,18 @@
 
 <a name="deps" />
 ## Dependencies
-| Name                                                 | Needed by                  | Debian package   |
-|------------------------------------------------------|----------------------------|------------------|
-| [Tox Core](https://github.com/irungentoo/toxcore)    | BASE                       | *None*           |
-| [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev |
-| [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev    |
-| [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make             |
-| [Tox Core AV](https://github.com/irungentoo/toxcore) | AUDIO                      | *None*           |
-| [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev    |
-| [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev      |
-| [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev    |
-| [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc         |
+| Name                                                 | Needed by                  | Debian package      |
+|------------------------------------------------------|----------------------------|---------------------|
+| [Tox Core](https://github.com/irungentoo/toxcore)    | BASE                       | *None*              |
+| [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    |
+| [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       |
+| [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                |
+| [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev|
+| [Tox Core AV](https://github.com/irungentoo/toxcore) | AUDIO                      | *None*              |
+| [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       |
+| [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
+| [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       |
+| [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc            |
 <sup>1</sup>: see [Documentation](#docs)
 
 <a name="deps_osx" />
@@ -31,7 +32,7 @@ brew install https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/l
 brew install https://raw.githubusercontent.com/Homebrew/homebrew-x11/master/libnotify.rb
 ```
 
-You can omit `libnotify` if you intend to build without desktop notifications enabled. 
+You can omit `libnotify` if you intend to build without desktop notifications enabled.
 
 <a name="Compiling">
 ## Compiling

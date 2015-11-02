@@ -16,7 +16,7 @@ MISC_DIR = $(BASE_DIR)/misc
 
 # Project files
 MANFILES = toxic.1 toxic.conf.5
-DATAFILES = DHTnodes DNSservers toxic.conf.example
+DATAFILES = DHTnodes nameservers toxic.conf.example
 DESKFILE = toxic.desktop
 SNDFILES = ToxicContactOnline.wav ToxicContactOffline.wav ToxicError.wav
 SNDFILES += ToxicRecvMessage.wav ToxicOutgoingCall.wav ToxicIncomingCall.wav

@@ -151,6 +151,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
+    wprintw(win, "  /nospam                    : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /group <type>              : Create a group chat where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
@@ -310,11 +311,10 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'g':
 #ifdef VIDEO
-            help_init_window(self, 28, 80);
+            help_init_window(self, 29, 80);
 #elif AUDIO
-            help_init_window(self, 24, 80);
 #else
-            help_init_window(self, 20, 80);
+            help_init_window(self, 21, 80);
 #endif
             self->help->type = HELP_GLOBAL;
             break;
