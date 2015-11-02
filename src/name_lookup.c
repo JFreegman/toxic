@@ -243,6 +243,47 @@ static int process_response(struct Recv_Data *recv_data)
     return 0;
 }
 
+/* Sets proxy info for given CURL handler.
+ *
+ * Returns 0 on success or if no proxy is set by the client.
+ * Returns -1 on failure.
+ */
+static int set_lookup_proxy(ToxWindow *self, CURL *c_handle, const char *proxy_address, uint16_t port, uint8_t proxy_type)
+{
+    if (proxy_type == TOX_PROXY_TYPE_NONE)
+        return 0;
+
+    if (proxy_address == NULL || port == 0) {
+        lookup_error(self, "Unknkown proxy error");
+        return -1;
+    }
+
+    int ret = curl_easy_setopt(c_handle, CURLOPT_PROXYPORT, (long) port);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set proxy port (libcurl error %d)", ret);
+        return -1;
+    }
+
+    long int type = proxy_type == TOX_PROXY_TYPE_SOCKS5 ? CURLPROXY_SOCKS5 : CURLPROXY_HTTP;
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_PROXYTYPE, type);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set proxy type (libcurl error %d)", ret);
+        return -1;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_PROXY, proxy_address);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set proxy (libcurl error %d)", ret);
+        return -1;
+    }
+
+    return 0;
+}
+
 void *lookup_thread_func(void *data)
 {
     ToxWindow *self = t_data.self;
@@ -292,6 +333,9 @@ void *lookup_thread_func(void *data)
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 
+    if (set_lookup_proxy(self, c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type) == -1)
+        goto on_exit;
+
     int ret = curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
     if (ret != CURLE_OK) {
@@ -323,13 +367,13 @@ void *lookup_thread_func(void *data)
         }
 
         if (ret != CURLE_OK) {
-            lookup_error(self, "https lookup error (libcurl error %d)", ret);
+            lookup_error(self, "HTTPS lookup error (libcurl error %d)", ret);
             goto on_exit;
         }
     }
 
     if (process_response(&recv_data) == -1) {
-        lookup_error(self, "");
+        lookup_error(self, "Bad response.");
         goto on_exit;
     }
 
@@ -348,11 +392,6 @@ on_exit:
 void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message)
 {
     if (t_data.disabled) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "name lookups are disabled.");
-        return;
-    }
-
-    if (arg_opts.proxy_type != TOX_PROXY_TYPE_NONE && arg_opts.force_tcp) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "name lookups are disabled.");
         return;
     }
