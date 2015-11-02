@@ -1,4 +1,4 @@
 # Specials options for linux systems
 CFLAGS +=
-LDFLAGS += -ldl -lresolv -lrt
+LDFLAGS += -ldl -lrt -lcurl
 MANDIR = $(PREFIX)/share/man

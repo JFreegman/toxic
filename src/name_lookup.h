@@ -1,7 +1,7 @@
-/*  dns.c
+/*  name_lookup.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2015 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -20,13 +20,18 @@
  *
  */
 
-/* Does DNS lookup for addr and puts resulting tox id in id_bin.
-   Return 0 on success, -1 on failure. */
+#ifndef NAME_LOOKUP
+#define NAME_LOOKUP
 
-#ifndef DNS_H
-#define DNS_H
+/* Initializes http based name lookups. Note: This function must be called only once before additional
+ * threads are spawned.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int name_lookup_init(void);
+void name_lookup_cleanup(void);
 
-/* creates new thread for dns3 lookup. Only allows one lookup at a time. */
-void dns3_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *msg);
+int name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message);
 
-#endif /* #define DNS_H */
+#endif /* NAME_LOOKUP */
