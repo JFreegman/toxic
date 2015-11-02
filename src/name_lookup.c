@@ -254,7 +254,7 @@ static int set_lookup_proxy(ToxWindow *self, CURL *c_handle, const char *proxy_a
         return 0;
 
     if (proxy_address == NULL || port == 0) {
-        lookup_error(self, "Unknkown proxy error");
+        lookup_error(self, "Unknown proxy error");
         return -1;
     }
 
@@ -265,7 +265,7 @@ static int set_lookup_proxy(ToxWindow *self, CURL *c_handle, const char *proxy_a
         return -1;
     }
 
-    long int type = proxy_type == TOX_PROXY_TYPE_SOCKS5 ? CURLPROXY_SOCKS5 : CURLPROXY_HTTP;
+    long int type = proxy_type == TOX_PROXY_TYPE_SOCKS5 ? CURLPROXY_SOCKS5_HOSTNAME : CURLPROXY_HTTP;
 
     ret = curl_easy_setopt(c_handle, CURLOPT_PROXYTYPE, type);
 
