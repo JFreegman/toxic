@@ -1213,8 +1213,6 @@ ToxWindow new_chat(Tox *m, uint32_t friendnum)
     ret.onCancel = &chat_onCancel;
     ret.onReject = &chat_onReject;
     ret.onEnd = &chat_onEnd;
-    ret.onRequestTimeout = &chat_onRequestTimeout;
-    ret.onPeerTimeout = &chat_onPeerTimeout;
 
     ret.is_call = false;
     ret.device_selection[0] = ret.device_selection[1] = -1;

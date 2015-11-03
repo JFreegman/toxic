@@ -144,8 +144,6 @@ struct ToxWindow {
     void(*onCancel)(ToxWindow *, ToxAV *, uint32_t, int);
     void(*onReject)(ToxWindow *, ToxAV *, uint32_t, int);
     void(*onEnd)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onRequestTimeout)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onPeerTimeout)(ToxWindow *, ToxAV *, uint32_t, int);
     void(*onWriteDevice)(ToxWindow *, Tox *, uint32_t, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
     int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */

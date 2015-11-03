@@ -84,16 +84,11 @@ static int set_call(Call* call, bool start)
 void call_cb                 ( ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data );
 void callstate_cb            ( ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data );
 void receive_audio_frame_cb  ( ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
-                                        uint8_t channels, uint32_t sampling_rate, void *user_data );
-void audio_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
-                                        uint32_t video_bit_rate, void *user_data );
+                               uint8_t channels, uint32_t sampling_rate, void *user_data );
 void receive_video_frame_cb  ( ToxAV *av, uint32_t friend_number,
-                                        uint16_t width, uint16_t height,
-                                        uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
-                                        int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride,
-                                        void *user_data );
-void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number,
-                                      bool stable, uint32_t bit_rate, void *user_data);
+                               uint16_t width, uint16_t height,
+                               uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
+                               int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride, void *user_data );
 
 void callback_recv_invite   ( uint32_t friend_number );
 void callback_recv_ringing  ( uint32_t friend_number );
@@ -103,9 +98,6 @@ void callback_call_started  ( uint32_t friend_number );
 void callback_call_canceled ( uint32_t friend_number );
 void callback_call_rejected ( uint32_t friend_number );
 void callback_call_ended    ( uint32_t friend_number );
-void callback_requ_timeout  ( uint32_t friend_number );
-void callback_peer_timeout  ( uint32_t friend_number );
-void callback_media_change  ( uint32_t friend_number );
 
 void write_device_callback( uint32_t friend_number, const int16_t* PCM, uint16_t size );
 
@@ -154,7 +146,6 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     toxav_callback_call(CallControl.av, call_cb, &CallControl);
     toxav_callback_call_state(CallControl.av, callstate_cb, &CallControl);
     toxav_callback_audio_receive_frame(CallControl.av, receive_audio_frame_cb, &CallControl);
-    toxav_callback_bit_rate_status(CallControl.av, audio_bit_rate_status_cb, &CallControl);
 
     return CallControl.av;
 }
@@ -268,7 +259,11 @@ int stop_transmission(Call *call, uint32_t friend_number)
 void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data)
 {
     CallControl.pending_call = true;
-    callback_recv_invite(friend_number);
+    if (video_enabled)
+        /* FIXME enable video calls */
+        toxav_call_control(av, friend_number, TOXAV_CALL_CONTROL_CANCEL, NULL);
+    else if (audio_enabled)
+        callback_recv_invite(friend_number);
 }
 
 void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
@@ -341,9 +336,14 @@ void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
 }
 
 
-#define CB_BODY(friend_number, onFunc) do { ToxWindow* windows = CallControl.prompt; int i;\
-for (i = 0; i < MAX_WINDOWS_NUM; ++i) if ( windows[i].onFunc != NULL && windows[i].num == friend_number )\
-windows[i].onFunc(&windows[i], CallControl.av, friend_number, CallControl.call_state); } while (0)
+#define CB_BODY(friend_number, onFunc) \
+do { \
+    ToxWindow* windows = CallControl.prompt; \
+    int i; for (i = 0; i < MAX_WINDOWS_NUM; ++i) \
+        if ( windows[i].onFunc != NULL/* && windows[i].num == friend_number*/ ) {\
+            windows[i].onFunc(&windows[i], CallControl.av, friend_number, CallControl.call_state); \
+        }else assert(0);\
+} while (0)
 
 void callback_recv_invite(uint32_t friend_number)
 {
@@ -398,27 +398,6 @@ void callback_call_ended(uint32_t friend_number)
 {
     CB_BODY(friend_number, onEnd);
 }
-void callback_requ_timeout(uint32_t friend_number)
-{
-    CB_BODY(friend_number, onRequestTimeout);
-}
-void callback_peer_timeout(uint32_t friend_number)
-{
-    CB_BODY(friend_number, onPeerTimeout);
-
-    callback_video_end(friend_number);
-    callback_recv_video_end(friend_number);
-    stop_transmission(&CallControl.calls[friend_number], friend_number);
-    /* Call is stopped manually since there might be some other
-     * actions that one can possibly take on timeout
-     */
-     toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, NULL);
-}
-
-// void callback_media_change(void* av, uint32_t friend_number, void* arg)
-// {
-  /*... TODO cancel all media change requests */
-// }
 
 /*
  * End of Callbacks

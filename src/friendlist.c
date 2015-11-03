@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <assert.h>
 
 #include <tox/tox.h>
 
@@ -1091,11 +1092,13 @@ void disable_chatwin(uint32_t f_num)
 #ifdef AUDIO
 static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    assert(0);
     if( friend_number >= Friends.max_idx)
         return;
 
+    assert(0);
     Tox *m = toxav_get_tox(av);
-
+    
     if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             if(state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
@@ -1145,8 +1148,6 @@ ToxWindow new_friendlist(void)
     ret.onCancel = &friendlist_onAV;
     ret.onReject = &friendlist_onAV;
     ret.onEnd = &friendlist_onAV;
-    ret.onRequestTimeout = &friendlist_onAV;
-    ret.onPeerTimeout = &friendlist_onAV;
 
     ret.is_call = false;
     ret.device_selection[0] = ret.device_selection[1] = -1;
