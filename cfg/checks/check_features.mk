@@ -13,10 +13,12 @@ ifneq ($(AUDIO), disabled)
 endif
 
 # Check if we want build video support
-VIDEO = $*shell if [ -z "$(DISABLE_AV)" ] || [ "$(DISABLE_AV)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+VIDEO = $(shell if [ -z "$(DISABLE_AV)" ] || [ "$(DISABLE_AV)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(X11), disabled)
 ifneq ($(AUDIO), disabled)
 ifneq ($(VIDEO), disabled)
     -include $(CHECKS_DIR)/video.mk
+endif
 endif
 endif
 

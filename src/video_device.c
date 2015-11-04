@@ -65,13 +65,13 @@ typedef struct VideoDevice {
     VideoDataHandleCallback cb;             /* Use this to handle data from input device usually */
     void* cb_data;                          /* Data to be passed to callback */
     int32_t friend_number;                  /* ToxAV friend number */
-    
+
 #ifdef __linux__
     int fd;                                 /* File descriptor of video device selected/opened */
     struct v4l2_format fmt;
     struct VideoBuffer *buffers;
     uint32_t n_buffers;
-#endif 
+#endif
 
     uint32_t ref_count;
     int32_t selection;
@@ -107,8 +107,8 @@ bool video_thread_running = true,
 
 void* video_thread_poll(void*);
 
-static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y, 
-                 const uint8_t *u, const uint8_t *v, unsigned int ystride, 
+static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y,
+                 const uint8_t *u, const uint8_t *v, unsigned int ystride,
                  unsigned int ustride, unsigned int vstride, uint8_t *out)
 {
     unsigned long int i, j;
@@ -133,7 +133,7 @@ static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y,
 }
 
 #ifdef __linux__
-static void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, 
+static void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v,
                  uint8_t *input, uint16_t width, uint16_t height)
 {
     uint8_t *end = input + width * height * 2;
@@ -255,14 +255,14 @@ VideoDeviceError terminate_video_devices()
     return (VideoDeviceError) vde_None;
 }
 
-VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t device_idx, 
+VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t device_idx,
                                                 VideoDataHandleCallback callback, void* data)
 {
 #ifdef __linux__
-    if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] || !video_devices_running[vdt_input][device_idx]->fd ) 
+    if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] || !video_devices_running[vdt_input][device_idx]->fd )
         return vde_InvalidSelection;
 #else /* __OSX__ */
-    if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] ) 
+    if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] )
         return vde_InvalidSelection;
 #endif
 
@@ -278,9 +278,9 @@ VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t 
 VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection)
 {
     if ( size[type] <= selection || selection < 0 ) return vde_InvalidSelection;
-   
+
     primary_video_device[type] = selection;
-    
+
     return vde_None;
 }
 
@@ -297,35 +297,35 @@ void get_primary_video_device_name(VideoDeviceType type, char *buf, int size)
 VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t* device_idx)
 {
     if ( size[type] <= selection || selection < 0 ) return vde_InvalidSelection;
-    
+
     lock;
-    
+
     uint32_t i;
     for (i = 0; i < MAX_DEVICES && video_devices_running[type][i]; ++i);
-    
+
     if (i == MAX_DEVICES) { unlock; return vde_AllDevicesBusy; }
     else *device_idx = i;
-    
+
     for (i = 0; i < MAX_DEVICES; i ++) { /* Check if any device has the same selection */
         if ( video_devices_running[type][i] && video_devices_running[type][i]->selection == selection ) {
 
-            video_devices_running[type][*device_idx] = video_devices_running[type][i];            
+            video_devices_running[type][*device_idx] = video_devices_running[type][i];
             video_devices_running[type][i]->ref_count ++;
-            
+
             unlock;
             return vde_None;
         }
     }
-    
+
     VideoDevice* device = video_devices_running[type][*device_idx] = calloc(1, sizeof(VideoDevice));
     device->selection = selection;
-    
+
     if ( pthread_mutex_init(device->mutex, NULL) != 0 ) {
         free(device);
         unlock;
         return vde_InternalError;
     }
-    
+
     if ( type == vdt_input ) {
         video_thread_paused = true;
 
@@ -466,7 +466,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         int screen = DefaultScreen(device->x_display);
 
         if ( !(device->x_window = XCreateSimpleWindow(device->x_display, RootWindow(device->x_display, screen), 0, 0,
-                    device->video_width, device->video_height, 0, BlackPixel(device->x_display, screen), 
+                    device->video_width, device->video_height, 0, BlackPixel(device->x_display, screen),
                     BlackPixel(device->x_display, screen))) ) {
             close_video_device(vdt_input, *device_idx);
 
@@ -532,7 +532,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         vpx_img_alloc(&device->input, VPX_IMG_FMT_I420, device->video_width, device->video_height, 1);
     }
-    
+
     unlock;
     return vde_None;
 }
@@ -603,7 +603,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
      */
     (void)arg;
     uint32_t i;
-    
+
     while (video_thread_running)
     {
         if ( video_thread_paused ) usleep(10000); /* Wait for unpause. */
@@ -612,7 +612,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
             for (i = 0; i < size[vdt_input]; ++i)
              {
                 lock;
-                if ( video_devices_running[vdt_input][i] != NULL ) 
+                if ( video_devices_running[vdt_input][i] != NULL )
                 {
                     /* Obtain frame image data from device buffers */
                     VideoDevice* device = video_devices_running[vdt_input][i];
@@ -632,7 +632,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     if ( -1 == ioctl(device->fd, VIDIOC_DQBUF, &buf) ) {
                         unlock;
                         continue;
-                    }   
+                    }
 
                     void *data = (void*)device->buffers[buf.index].start;
 
@@ -652,7 +652,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
 
                     /* Convert YUV420 data to BGR */
                     uint8_t *img_data = malloc(video_width * video_height * 4);
-                    yuv420tobgr(video_width, video_height, y, u, v, 
+                    yuv420tobgr(video_width, video_height, y, u, v,
                                 video_width, video_width/2, video_width/2, img_data);
 
                     /* Allocate image data in X11 */
@@ -686,34 +686,34 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                         continue;
                     }
 #endif /* __linux__ */
-                    
+
                 }
                 unlock;
             }
             usleep(1000 * 1000 / 24);
         }
     }
-    
+
     pthread_exit(NULL);
 }
 
 VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
 {
     if ( device_idx >= MAX_DEVICES ) return vde_InvalidSelection;
-    
+
     lock;
     VideoDevice *device = video_devices_running[type][device_idx];
     VideoDeviceError rc = vde_None;
-    
-    if ( !device ) { 
+
+    if ( !device ) {
         unlock;
         return vde_DeviceNotActive;
     }
-    
+
     video_devices_running[type][device_idx] = NULL;
-    
+
     if ( !device->ref_count ) {
-        
+
         if ( type == vdt_input ) {
 #ifdef __linux__
             enum v4l2_buf_type buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -740,18 +740,18 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
 #endif /* __linux__ */
 
             free(device);
-        } else {   
+        } else {
             vpx_img_free(&device->input);
             XDestroyWindow(device->x_display, device->x_window);
             XFlush(device->x_display);
             XCloseDisplay(device->x_display);
             pthread_mutex_destroy(device->mutex);
-            free(device); 
+            free(device);
         }
 
     }
     else device->ref_count--;
-    
+
     unlock;
     return rc;
 }

@@ -26,7 +26,7 @@
 #include <tox/toxav.h>
 
 #include "audio_device.h"
- 
+
 #define MAX_CALLS 10
 
 typedef enum _AudioError {
@@ -75,12 +75,9 @@ struct CallControl {
     int32_t audio_frame_duration;
     uint32_t audio_sample_rate;
     uint8_t audio_channels;
-    
-#ifdef VIDEO
+
     uint32_t video_bit_rate;
     int32_t video_frame_duration;
-
-#endif /* VIDEO */
 
 } CallControl;
 

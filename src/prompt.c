@@ -52,6 +52,7 @@ FriendRequests FrndRequests;
 #ifdef VIDEO
 #define AC_NUM_GLOB_COMMANDS 21
 #elif AUDIO
+#define AC_NUM_GLOB_COMMANDS 19
 #else
 #define AC_NUM_GLOB_COMMANDS 17
 #endif
@@ -87,9 +88,9 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
 
     { "/lsvdev"      },
     { "/svdev"       },
-    
+
 #endif /* VIDEO */
-    
+
 };
 
 void kill_prompt_window(ToxWindow *self)
