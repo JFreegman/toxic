@@ -28,6 +28,8 @@
 #include "global_commands.h"
 #include "line_info.h"
 #include "notify.h"
+#include "friendlist.h"
+#include "chat.h"
 
 #ifdef VIDEO
 #include "video_call.h"
@@ -52,6 +54,8 @@
 #include <AL/alext.h>
 #endif
 #endif
+
+extern FriendsList Friends;
 
 #define cbend pthread_exit(NULL)
 
@@ -90,7 +94,7 @@ void receive_video_frame_cb  ( ToxAV *av, uint32_t friend_number,
                                uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
                                int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride, void *user_data );
 
-void callback_recv_invite   ( uint32_t friend_number );
+void callback_recv_invite   ( Tox *m, uint32_t friend_number );
 void callback_recv_ringing  ( uint32_t friend_number );
 void callback_recv_starting ( uint32_t friend_number );
 void callback_recv_ending   ( uint32_t friend_number );
@@ -143,9 +147,9 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
         return CallControl.av = NULL;
     }
 
-    toxav_callback_call(CallControl.av, call_cb, &CallControl);
-    toxav_callback_call_state(CallControl.av, callstate_cb, &CallControl);
-    toxav_callback_audio_receive_frame(CallControl.av, receive_audio_frame_cb, &CallControl);
+    toxav_callback_call(CallControl.av, call_cb, tox);
+    toxav_callback_call_state(CallControl.av, callstate_cb, NULL);
+    toxav_callback_audio_receive_frame(CallControl.av, receive_audio_frame_cb, NULL);
 
     return CallControl.av;
 }
@@ -258,12 +262,14 @@ int stop_transmission(Call *call, uint32_t friend_number)
  */
 void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data)
 {
+    Tox *m = (Tox *) user_data;
     CallControl.pending_call = true;
+
     if (video_enabled)
         /* FIXME enable video calls */
         toxav_call_control(av, friend_number, TOXAV_CALL_CONTROL_CANCEL, NULL);
     else if (audio_enabled)
-        callback_recv_invite(friend_number);
+        callback_recv_invite(m, friend_number);
 }
 
 void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
@@ -335,23 +341,37 @@ void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
     CallControl.audio_bit_rate = audio_bit_rate;
 }
 
-
-#define CB_BODY(friend_number, onFunc) \
-do { \
-    ToxWindow* windows = CallControl.prompt; \
-    int i; for (i = 0; i < MAX_WINDOWS_NUM; ++i) \
-        if ( windows[i].onFunc != NULL/* && windows[i].num == friend_number*/ ) {\
-            windows[i].onFunc(&windows[i], CallControl.av, friend_number, CallControl.call_state); \
-        }else assert(0);\
-} while (0)
-
-void callback_recv_invite(uint32_t friend_number)
+void callback_recv_invite(Tox *m, uint32_t friend_number)
 {
-    CB_BODY(friend_number, onInvite);
+    if (friend_number >= Friends.max_idx)
+        return;
+
+    if (Friends.list[friend_number].chatwin == -1) {
+        if (get_num_active_windows() >= MAX_WINDOWS_NUM)
+            return;
+
+        Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
+    }
+
+    ToxWindow *windows = CallControl.prompt;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onInvite != NULL && windows[i].num == friend_number) {
+            windows[i].onInvite(&windows[i], CallControl.av, friend_number, CallControl.call_state);
+        }
+    }
 }
 void callback_recv_ringing(uint32_t friend_number)
 {
-    CB_BODY(friend_number, onRinging);
+    ToxWindow *windows = CallControl.prompt;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onRinging != NULL && windows[i].num == friend_number) {
+            windows[i].onRinging(&windows[i], CallControl.av, friend_number, CallControl.call_state);
+        }
+    }
 }
 void callback_recv_starting(uint32_t friend_number)
 {
@@ -370,7 +390,14 @@ void callback_recv_starting(uint32_t friend_number)
 }
 void callback_recv_ending(uint32_t friend_number)
 {
-    CB_BODY(friend_number, onEnding);
+    ToxWindow *windows = CallControl.prompt;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onEnding != NULL && windows[i].num == friend_number) {
+            windows[i].onEnding(&windows[i], CallControl.av, friend_number, CallControl.call_state);
+        }
+    }
 }
 void callback_call_started(uint32_t friend_number)
 {
@@ -388,15 +415,36 @@ void callback_call_started(uint32_t friend_number)
 }
 void callback_call_canceled(uint32_t friend_number)
 {
-    CB_BODY(friend_number, onCancel);
+    ToxWindow *windows = CallControl.prompt;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onCancel != NULL && windows[i].num == friend_number) {
+            windows[i].onCancel(&windows[i], CallControl.av, friend_number, CallControl.call_state);
+        }
+    }
 }
 void callback_call_rejected(uint32_t friend_number)
 {
-    CB_BODY(friend_number, onReject);
+    ToxWindow *windows = CallControl.prompt;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onReject != NULL && windows[i].num == friend_number) {
+            windows[i].onReject(&windows[i], CallControl.av, friend_number, CallControl.call_state);
+        }
+    }
 }
 void callback_call_ended(uint32_t friend_number)
 {
-    CB_BODY(friend_number, onEnd);
+    ToxWindow *windows = CallControl.prompt;
+    int i;
+
+    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i].onEnd != NULL && windows[i].num == friend_number) {
+            windows[i].onEnd(&windows[i], CallControl.av, friend_number, CallControl.call_state);
+        }
+    }
 }
 
 /*

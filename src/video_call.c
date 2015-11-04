@@ -246,6 +246,8 @@ void callback_video_end(uint32_t friend_number)
  */
 void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    return;  // TODO: Fix video
+
     const char *error_str;
     Call* this_call = &CallControl.calls[self->num];
 
