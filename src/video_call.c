@@ -226,13 +226,6 @@ void callback_video_starting(uint32_t friend_number)
 }
 void callback_video_end(uint32_t friend_number)
 {
-    ToxWindow* windows = CallControl.prompt;
-
-    int i;
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i)
-        if ( windows[i].is_call && windows[i].num == friend_number )
-            line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture ending.");
-
     stop_video_transmission(&CallControl.calls[friend_number], friend_number);
 }
 /*
