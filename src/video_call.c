@@ -188,6 +188,8 @@ void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
 
 void callback_recv_video_starting(uint32_t friend_number)
 {
+    return;
+
     Call* this_call = &CallControl.calls[friend_number];
 
     if ( this_call->vout_idx != -1 )
