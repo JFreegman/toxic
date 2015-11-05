@@ -26,6 +26,7 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <tox/tox.h>
 
@@ -124,26 +125,20 @@ void kill_friendlist(void)
     realloc_friends(0);
 }
 
+#define TEMP_BLOCKLIST_SAVE_NAME "toxic_blocklist.tmp"
 static int save_blocklist(char *path)
 {
     if (path == NULL)
         return -1;
 
     int len = sizeof(BlockedFriend) * Blocked.num_blocked;
-    char *data = malloc(len);
+    char data[len];
 
-    if (data == NULL)
-        exit_toxic_err("Failed in save_blocklist", FATALERR_MEMORY);
-
-    int i;
-
-    int count = 0;
+    int i, count = 0;
 
     for (i = 0; i < Blocked.max_idx; ++i) {
-        if (count > Blocked.num_blocked) {
-            free(data);
+        if (count > Blocked.num_blocked)
             return -1;
-        }
 
         if (Blocked.list[i].active) {
             BlockedFriend tmp;
@@ -162,21 +157,29 @@ static int save_blocklist(char *path)
         }
     }
 
-    FILE *fp = fopen(path, "wb");
+    /* Blocklist is empty, we can remove the empty file */
+    if (count == 0) {
+        if (remove(path) != 0)
+            return -1;
 
-    if (fp == NULL) {
-        free(data);
-        return -1;
+        return 0;
     }
+
+    FILE *fp = fopen(TEMP_BLOCKLIST_SAVE_NAME, "wb");
+
+    if (fp == NULL)
+        return -1;
 
     if (fwrite(data, len, 1, fp) != 1) {
         fclose(fp);
-        free(data);
         return -1;
     }
 
     fclose(fp);
-    free(data);
+
+    if (rename(TEMP_BLOCKLIST_SAVE_NAME, path) != 0)
+        return -1;
+
     return 0;
 }
 
@@ -199,22 +202,15 @@ int load_blocklist(char *path)
         return -1;
     }
 
-    char *data = malloc(len);
-
-    if (data == NULL) {
-        fclose(fp);
-        exit_toxic_err("Failed in load_blocklist", FATALERR_MEMORY);
-    }
+    char data[len];
 
     if (fread(data, len, 1, fp) != 1) {
         fclose(fp);
-        free(data);
         return -1;
     }
 
     if (len % sizeof(BlockedFriend) != 0) {
         fclose(fp);
-        free(data);
         return -1;
     }
 
@@ -244,7 +240,6 @@ int load_blocklist(char *path)
         ++Blocked.num_blocked;
     }
 
-    free(data);
     fclose(fp);
     sort_blocklist_index();
 
@@ -1098,7 +1093,7 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
 
     assert(0);
     Tox *m = toxav_get_tox(av);
-    
+
     if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             if(state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
