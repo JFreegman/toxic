@@ -889,7 +889,7 @@ void *thread_cqueue(void *data)
 void *thread_av(void *data)
 {
     ToxAV *av = (ToxAV *) data;
-    
+
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
         toxav_iterate(av);
@@ -1101,6 +1101,9 @@ static int rename_old_profile(const char *user_config_dir)
     if (!file_exists(old_data_file))
         return 0;
 
+    if (file_exists(DATA_FILE))
+        return 0;
+
     if (rename(old_data_file, DATA_FILE) != 0)
         return -1;
 
@@ -1110,6 +1113,9 @@ static int rename_old_profile(const char *user_config_dir)
     snprintf(old_data_blocklist, sizeof(old_data_blocklist), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
 
     if (!file_exists(old_data_blocklist))
+        return 0;
+
+    if (file_exists(BLOCK_FILE))
         return 0;
 
     if (rename(old_data_blocklist, BLOCK_FILE) != 0)
@@ -1276,7 +1282,7 @@ int main(int argc, char **argv)
 #ifdef AUDIO
 
     av = init_audio(prompt, m);
-    
+
 #ifdef VIDEO
     init_video(prompt, m);
 
