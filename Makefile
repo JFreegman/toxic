@@ -59,6 +59,10 @@ $(BUILD_DIR)/toxic: $(OBJ)
 	@echo "  LD    $(@:$(BUILD_DIR)/%=%)"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/toxic $(OBJ) $(LDFLAGS)
 
+$(BUILD_DIR)/osx_video.o: $(SRC_DIR)/$(OSX_VIDEO)
+	@echo "  CC    $(@:$(BUILD_DIR)/)osx_video.o"
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/osx_video.o -c $(SRC_DIR)/$(OSX_VIDEO)
+
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@if [ ! -e $(BUILD_DIR) ]; then \
 		mkdir -p $(BUILD_DIR) ;\

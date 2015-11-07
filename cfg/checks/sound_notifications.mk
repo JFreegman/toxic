@@ -1,10 +1,10 @@
 # Variables for sound notifications support
 SND_NOTIFY_LIBS = openal freealut
 SND_NOTIFY_CFLAGS = -DSOUND_NOTIFY
-ifneq (, $(findstring device.o, $(OBJ)))
+ifneq (, $(findstring audio_device.o, $(OBJ)))
     SND_NOTIFY_OBJ =
 else
-    SND_NOTIFY_OBJ = device.o
+    SND_NOTIFY_OBJ = audio_device.o
 endif
 
 # Check if we can build sound notifications support

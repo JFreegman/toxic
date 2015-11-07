@@ -1,4 +1,4 @@
-/*  device.h
+/*  audio_device.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -26,8 +26,8 @@
  * Read from running input device(s) via select()/callback combo.
  */
 
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef AUDIO_DEVICE_H
+#define AUDIO_DEVICE_H
 
 #define OPENAL_BUFS 5
 #define MAX_DEVICES 32
@@ -56,7 +56,7 @@ typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
 
 
 #ifdef AUDIO
-DeviceError init_devices(ToxAv* av);
+DeviceError init_devices(ToxAV* av);
 #else
 DeviceError init_devices();
 #endif /* AUDIO */
@@ -64,7 +64,7 @@ DeviceError init_devices();
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
-DeviceError register_device_callback(int32_t call_idx, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD);
+DeviceError register_device_callback(int32_t friend_number, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD);
 void* get_device_callback_data(uint32_t device_idx);
 
 /* toggle device mute */
@@ -88,4 +88,4 @@ void print_devices(ToxWindow* self, DeviceType type);
 void get_primary_device_name(DeviceType type, char *buf, int size);
 
 DeviceError selection_valid(DeviceType type, int32_t selection);
-#endif /* DEVICE_H */
+#endif /* AUDIO_DEVICE_H */

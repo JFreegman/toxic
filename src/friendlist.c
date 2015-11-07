@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <assert.h>
+#include <errno.h>
 
 #include <tox/tox.h>
 
@@ -123,26 +125,20 @@ void kill_friendlist(void)
     realloc_friends(0);
 }
 
+#define TEMP_BLOCKLIST_SAVE_NAME "toxic_blocklist.tmp"
 static int save_blocklist(char *path)
 {
     if (path == NULL)
         return -1;
 
     int len = sizeof(BlockedFriend) * Blocked.num_blocked;
-    char *data = malloc(len);
+    char data[len];
 
-    if (data == NULL)
-        exit_toxic_err("Failed in save_blocklist", FATALERR_MEMORY);
-
-    int i;
-
-    int count = 0;
+    int i, count = 0;
 
     for (i = 0; i < Blocked.max_idx; ++i) {
-        if (count > Blocked.num_blocked) {
-            free(data);
+        if (count > Blocked.num_blocked)
             return -1;
-        }
 
         if (Blocked.list[i].active) {
             BlockedFriend tmp;
@@ -161,21 +157,29 @@ static int save_blocklist(char *path)
         }
     }
 
-    FILE *fp = fopen(path, "wb");
+    /* Blocklist is empty, we can remove the empty file */
+    if (count == 0) {
+        if (remove(path) != 0)
+            return -1;
 
-    if (fp == NULL) {
-        free(data);
-        return -1;
+        return 0;
     }
+
+    FILE *fp = fopen(TEMP_BLOCKLIST_SAVE_NAME, "wb");
+
+    if (fp == NULL)
+        return -1;
 
     if (fwrite(data, len, 1, fp) != 1) {
         fclose(fp);
-        free(data);
         return -1;
     }
 
     fclose(fp);
-    free(data);
+
+    if (rename(TEMP_BLOCKLIST_SAVE_NAME, path) != 0)
+        return -1;
+
     return 0;
 }
 
@@ -198,22 +202,15 @@ int load_blocklist(char *path)
         return -1;
     }
 
-    char *data = malloc(len);
-
-    if (data == NULL) {
-        fclose(fp);
-        exit_toxic_err("Failed in load_blocklist", FATALERR_MEMORY);
-    }
+    char data[len];
 
     if (fread(data, len, 1, fp) != 1) {
         fclose(fp);
-        free(data);
         return -1;
     }
 
     if (len % sizeof(BlockedFriend) != 0) {
         fclose(fp);
-        free(data);
         return -1;
     }
 
@@ -243,7 +240,6 @@ int load_blocklist(char *path)
         ++Blocked.num_blocked;
     }
 
-    free(data);
     fclose(fp);
     sort_blocklist_index();
 
@@ -1085,23 +1081,24 @@ void disable_chatwin(uint32_t f_num)
 }
 
 #ifdef AUDIO
-static void friendlist_onAv(ToxWindow *self, ToxAv *av, int call_index)
+static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    int id = toxav_get_peer_id(av, call_index, 0);
-
-    if ( id != av_ErrorUnknown && id >= Friends.max_idx)
+    assert(0);
+    if( friend_number >= Friends.max_idx)
         return;
 
+    assert(0);
     Tox *m = toxav_get_tox(av);
 
-    if (Friends.list[id].chatwin == -1) {
+    if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            if (toxav_get_call_state(av, call_index) == av_CallStarting) { /* Only open windows when call is incoming */
-                Friends.list[id].chatwin = add_window(m, new_chat(m, Friends.list[id].num));
+            if(state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
+                Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
+                set_active_window(Friends.list[friend_number].chatwin);
             }
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
-            get_nick_truncate(m, nick, Friends.list[id].num);
+            get_nick_truncate(m, nick, Friends.list[friend_number].num);
             line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
 
             const char *errmsg = "* Warning: Too many windows are open.";
@@ -1133,22 +1130,21 @@ ToxWindow new_friendlist(void)
     ret.onGroupInvite = &friendlist_onGroupInvite;
 
 #ifdef AUDIO
-    ret.onInvite = &friendlist_onAv;
-    ret.onRinging = &friendlist_onAv;
-    ret.onStarting = &friendlist_onAv;
-    ret.onEnding = &friendlist_onAv;
-    ret.onError = &friendlist_onAv;
-    ret.onStart = &friendlist_onAv;
-    ret.onCancel = &friendlist_onAv;
-    ret.onReject = &friendlist_onAv;
-    ret.onEnd = &friendlist_onAv;
-    ret.onRequestTimeout = &friendlist_onAv;
-    ret.onPeerTimeout = &friendlist_onAv;
+    ret.onInvite = &friendlist_onAV;
+    ret.onRinging = &friendlist_onAV;
+    ret.onStarting = &friendlist_onAV;
+    ret.onEnding = &friendlist_onAV;
+    ret.onError = &friendlist_onAV;
+    ret.onStart = &friendlist_onAV;
+    ret.onCancel = &friendlist_onAV;
+    ret.onReject = &friendlist_onAV;
+    ret.onEnd = &friendlist_onAV;
 
-    ret.call_idx = -1;
+    ret.is_call = false;
     ret.device_selection[0] = ret.device_selection[1] = -1;
 #endif /* AUDIO */
 
+    ret.num = -1;
     ret.active_box = -1;
 
     Help *help = calloc(1, sizeof(Help));

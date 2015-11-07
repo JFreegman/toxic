@@ -55,7 +55,7 @@
 #include "settings.h"
 #include "log.h"
 #include "notify.h"
-#include "device.h"
+#include "audio_device.h"
 #include "message_queue.h"
 #include "execute.h"
 #include "term_mplex.h"
@@ -67,7 +67,10 @@
 
 #ifdef AUDIO
 #include "audio_call.h"
-ToxAv *av;
+#ifdef VIDEO
+#include "video_call.h"
+#endif /* VIDEO */
+ToxAV *av;
 #endif /* AUDIO */
 
 #ifndef PACKAGE_DATADIR
@@ -82,13 +85,13 @@ ToxWindow *prompt = NULL;
 #define DATANAME  "toxic_profile.tox"
 #define BLOCKNAME "toxic_blocklist"
 
-#define AUTOSAVE_FREQ 60
+#define AUTOSAVE_FREQ 600
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
 
 struct Winthread Winthread;
 struct cqueue_thread cqueue_thread;
-struct audio_thread audio_thread;
+struct av_thread av_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
 
@@ -151,6 +154,11 @@ void exit_toxic_success(Tox *m)
     terminate_notify();
 
 #ifdef AUDIO
+
+#ifdef VIDEO
+    terminate_video();
+#endif /* VIDEO */
+
     terminate_audio();
 #endif /* AUDIO */
 
@@ -541,17 +549,18 @@ static void first_time_encrypt(const char *msg)
     system("clear");
 }
 
-/* Store Tox data to given location
+/* Store Tox profile data to given location
  *
- * Return 0 if stored successfully or ignoring data file.
- * Return -1 on error
+ * Return 0 if stored successfully.
+ * Return -1 on error.
  */
+#define TEMP_PROFILE_SAVE_NAME "toxic_profile.tmp"
 int store_data(Tox *m, const char *path)
 {
     if (path == NULL)
         return -1;
 
-    FILE *fp = fopen(path, "wb");
+    FILE *fp = fopen(TEMP_PROFILE_SAVE_NAME, "wb");
 
     if (fp == NULL)
         return -1;
@@ -587,6 +596,10 @@ int store_data(Tox *m, const char *path)
     }
 
     fclose(fp);
+
+    if (rename(TEMP_PROFILE_SAVE_NAME, path) != 0)
+        return -1;
+
     return 0;
 }
 
@@ -899,16 +912,16 @@ void *thread_cqueue(void *data)
 }
 
 #ifdef AUDIO
-void *thread_audio(void *data)
+void *thread_av(void *data)
 {
-    ToxAv *av = (ToxAv *) data;
+    ToxAV *av = (ToxAV *) data;
 
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
-        toxav_do(av);
+        toxav_iterate(av);
         pthread_mutex_unlock(&Winthread.lock);
 
-        usleep(toxav_do_interval(av) * 1000);
+        usleep(toxav_iteration_interval(av) * 1000);
     }
 }
 #endif  /* AUDIO */
@@ -1114,6 +1127,9 @@ static int rename_old_profile(const char *user_config_dir)
     if (!file_exists(old_data_file))
         return 0;
 
+    if (file_exists(DATA_FILE))
+        return 0;
+
     if (rename(old_data_file, DATA_FILE) != 0)
         return -1;
 
@@ -1123,6 +1139,9 @@ static int rename_old_profile(const char *user_config_dir)
     snprintf(old_data_blocklist, sizeof(old_data_blocklist), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
 
     if (!file_exists(old_data_blocklist))
+        return 0;
+
+    if (file_exists(BLOCK_FILE))
         return 0;
 
     if (rename(old_data_blocklist, BLOCK_FILE) != 0)
@@ -1291,8 +1310,13 @@ int main(int argc, char **argv)
 
     av = init_audio(prompt, m);
 
-    /* audio thread */
-    if (pthread_create(&audio_thread.tid, NULL, thread_audio, (void *) av) != 0)
+#ifdef VIDEO
+    init_video(prompt, m);
+
+#endif /* VIDEO */
+
+    /* AV thread */
+    if (pthread_create(&av_thread.tid, NULL, thread_av, (void *) av) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
     set_primary_device(input, user_settings->audio_in_dev);
@@ -1329,6 +1353,7 @@ int main(int argc, char **argv)
 
     while (true) {
         do_toxic(m, prompt);
+
         uint64_t cur_time = get_unix_time();
 
         if (timed_out(last_save, AUTOSAVE_FREQ)) {

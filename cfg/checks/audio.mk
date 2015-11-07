@@ -1,10 +1,10 @@
 # Variables for audio call support
 AUDIO_LIBS = libtoxav openal
 AUDIO_CFLAGS = -DAUDIO
-ifneq (, $(findstring device.o, $(OBJ)))
+ifneq (, $(findstring audio_device.o, $(OBJ)))
     AUDIO_OBJ = audio_call.o
 else
-    AUDIO_OBJ = audio_call.o device.o
+    AUDIO_OBJ = audio_call.o audio_device.o
 endif
 
 # Check if we can build audio support

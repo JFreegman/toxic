@@ -32,7 +32,7 @@
 #include "misc_tools.h"
 
 #ifdef AUDIO
-    #include "device.h"
+    #include "audio_device.h"
 #endif /* AUDIO */
 
 #include "settings.h"

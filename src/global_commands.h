@@ -51,4 +51,9 @@ void cmd_list_devices(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_S
 void cmd_change_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 #endif /* AUDIO */
 
+#ifdef VIDEO
+void cmd_list_video_devices(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_change_video_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
+#endif /* VIDEO */
+
 #endif /* #define GLOBAL_COMMANDS_H */

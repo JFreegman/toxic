@@ -9,7 +9,17 @@ endif
 # Check if we want build audio support
 AUDIO = $(shell if [ -z "$(DISABLE_AV)" ] || [ "$(DISABLE_AV)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(AUDIO), disabled)
-    -include $(CHECKS_DIR)/av.mk
+    -include $(CHECKS_DIR)/audio.mk
+endif
+
+# Check if we want build video support
+VIDEO = $(shell if [ -z "$(DISABLE_AV)" ] || [ "$(DISABLE_AV)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(X11), disabled)
+ifneq ($(AUDIO), disabled)
+ifneq ($(VIDEO), disabled)
+    -include $(CHECKS_DIR)/video.mk
+endif
+endif
 endif
 
 # Check if we want build sound notifications support
