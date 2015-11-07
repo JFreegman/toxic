@@ -329,7 +329,7 @@ void help_onKey(ToxWindow *self, wint_t key)
 #elif AUDIO
             help_init_window(self, 18, 80);
 #else
-            help_init_window(self, 8, 80);
+            help_init_window(self, 9, 80);
 #endif
             self->help->type = HELP_CHAT;
             break;
@@ -338,9 +338,9 @@ void help_onKey(ToxWindow *self, wint_t key)
 #ifdef VIDEO
             help_init_window(self, 30, 80);
 #elif AUDIO
-            help_init_window(self, 27, 80);
+            help_init_window(self, 26, 80);
 #else
-            help_init_window(self, 21, 80);
+            help_init_window(self, 22, 80);
 #endif
             self->help->type = HELP_GLOBAL;
             break;
