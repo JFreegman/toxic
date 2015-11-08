@@ -60,6 +60,9 @@ static void help_init_window(ToxWindow *self, int height, int width)
     int y2, x2;
     getmaxyx(stdscr, y2, x2);
 
+    if (y2 <= 0 || x2 <= 0)
+        return;
+
     height = MIN(height, y2);
     width = MIN(width, x2);
 

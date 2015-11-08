@@ -238,7 +238,7 @@ int load_blocklist(char *path)
         memcpy(&tmp, data + i * sizeof(BlockedFriend), sizeof(BlockedFriend));
         Blocked.list[i].active = true;
         Blocked.list[i].num = i;
-        Blocked.list[i].namelength = ntohs(tmp.namelength);
+        Blocked.list[i].namelength = MIN(TOXIC_MAX_NAME_LENGTH, ntohs(tmp.namelength));
         memcpy(Blocked.list[i].name, tmp.name, Blocked.list[i].namelength + 1);
         memcpy(Blocked.list[i].pub_key, tmp.pub_key, TOX_PUBLIC_KEY_SIZE);
 

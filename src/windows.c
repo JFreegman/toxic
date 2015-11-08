@@ -400,6 +400,9 @@ void on_window_resize(void)
     getmaxyx(stdscr, y2, x2);
     y2 -= 2;
 
+    if (y2 <= 0 || x2 <= 0)
+        return;
+
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {

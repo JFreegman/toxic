@@ -169,8 +169,9 @@ void terminate_audio()
 void read_device_callback(const int16_t* captured, uint32_t size, void* data)
 {
     TOXAV_ERR_SEND_FRAME error;
-    uint32_t friend_number = *((uint32_t*)data); /* TODO: Or pass an array of call_idx's */
-    int64_t sample_count = CallControl.audio_sample_rate * CallControl.audio_frame_duration / 1000;
+    uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
+    int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
+                           ((int64_t) CallControl.audio_frame_duration) / 1000;
 
     if ( sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number,
                                                      captured, sample_count,

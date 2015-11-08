@@ -185,7 +185,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0)
+    if (x2 <= 0 || y2 <= 0)
         return;
 
     /* ignore non-menu related input if active */
@@ -255,6 +255,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (y2 <= 0 || x2 <= 0)
+        return;
 
     ChatContext *ctx = self->chatwin;
 
@@ -431,6 +434,10 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (y2 <= 0 || x2 <= 0)
+        exit_toxic_err("failed in prompt_init_statusbar", FATALERR_CURSES);
+
     (void) y2;
 
     /* Init statusbar info */
@@ -487,6 +494,9 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     curs_set(1);
     int y2, x2;
     getmaxyx(self->window, y2, x2);
+
+    if (y2 <= 0 || x2 <= 0)
+        exit_toxic_err("failed in prompt_onInit", FATALERR_CURSES);
 
     ChatContext *ctx = self->chatwin;
     ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);

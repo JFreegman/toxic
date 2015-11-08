@@ -210,6 +210,9 @@ void redraw_groupchat_win(ToxWindow *self)
     getmaxyx(stdscr, y2, x2);
     y2 -= 2;
 
+    if (y2 <= 0 || x2 <= 0)
+        return;
+
     if (ctx->sidebar) {
         delwin(ctx->sidebar);
         ctx->sidebar = NULL;
@@ -559,7 +562,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0)
+    if (x2 <= 0 || y2 <= 0)
         return;
 
     if (self->help->active) {
@@ -649,6 +652,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
+    if (x2 <= 0 || y2 <= 0)
+        return;
+
     ChatContext *ctx = self->chatwin;
 
     pthread_mutex_lock(&Winthread.lock);
@@ -712,6 +718,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (x2 <= 0 || y2 <= 0)
+        exit_toxic_err("failed in groupchat_onInit", FATALERR_CURSES);
 
     ChatContext *ctx = self->chatwin;
 
