@@ -550,6 +550,10 @@ int store_data(Tox *m, const char *path)
         return -1;
 
     path_len=strlen(path);
+    if (path_len+sizeof(".tmp") > FILENAME_MAX) {
+        fprintf(stderr, "store_data() temp filename is too long\n");
+        return -1;
+    }
     //Place temporary file in same directory as file located in path
     memcpy(temp_path, path, path_len);
     memcpy(temp_path+path_len, ".tmp", sizeof(".tmp"));
