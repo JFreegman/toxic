@@ -542,16 +542,28 @@ static void first_time_encrypt(const char *msg)
  * Return 0 if stored successfully.
  * Return -1 on error.
  */
-#define TEMP_PROFILE_SAVE_NAME "toxic_profile.tmp"
 int store_data(Tox *m, const char *path)
 {
+    char temp_path[FILENAME_MAX];
+    size_t path_len;
     if (path == NULL)
         return -1;
 
-    FILE *fp = fopen(TEMP_PROFILE_SAVE_NAME, "wb");
-
-    if (fp == NULL)
+    path_len=strlen(path);
+    if (path_len+sizeof(".tmp") > FILENAME_MAX) {
+        fprintf(stderr, "store_data() temp filename is too long\n");
         return -1;
+    }
+    //Place temporary file in same directory as file located in path
+    memcpy(temp_path, path, path_len);
+    memcpy(temp_path+path_len, ".tmp", sizeof(".tmp"));
+
+    FILE *fp = fopen(temp_path, "wb");
+
+    if (fp == NULL) {
+        fprintf(stderr, "store_data() failed to open temp file %s\n", temp_path);
+        return -1;
+    }
 
     size_t data_len = tox_get_savedata_size(m);
     char data[data_len];
@@ -573,11 +585,13 @@ int store_data(Tox *m, const char *path)
         }
 
         if (fwrite(enc_data, enc_len, 1, fp) != 1) {
+            fprintf(stderr, "store_data() failed to write encrypted profile data to %s\n", temp_path);
             fclose(fp);
             return -1;
         }
     } else {  /* data will not be encrypted */
         if (fwrite(data, data_len, 1, fp) != 1) {
+            fprintf(stderr, "store_data() failed to write raw data to %s\n", temp_path);
             fclose(fp);
             return -1;
         }
@@ -585,8 +599,10 @@ int store_data(Tox *m, const char *path)
 
     fclose(fp);
 
-    if (rename(TEMP_PROFILE_SAVE_NAME, path) != 0)
+    if (rename(temp_path, path) != 0) {
+        fprintf(stderr, "store_data() failed to rename temp file %s to %s\n", temp_path, path);
         return -1;
+    }
 
     return 0;
 }
