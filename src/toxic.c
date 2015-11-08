@@ -537,18 +537,21 @@ static void first_time_encrypt(const char *msg)
     system("clear");
 }
 
-/* Store Tox profile data to given location
+/* Store Tox profile data to path.
  *
  * Return 0 if stored successfully.
  * Return -1 on error.
  */
-#define TEMP_PROFILE_SAVE_NAME "toxic_profile.tmp"
+#define TEMP_PROFILE_EXT ".tmp"
 int store_data(Tox *m, const char *path)
 {
     if (path == NULL)
         return -1;
 
-    FILE *fp = fopen(TEMP_PROFILE_SAVE_NAME, "wb");
+    char temp_path[strlen(path) + strlen(TEMP_PROFILE_EXT) + 1];
+    snprintf(temp_path, sizeof(temp_path), "%s%s", path, TEMP_PROFILE_EXT);
+
+    FILE *fp = fopen(temp_path, "wb");
 
     if (fp == NULL)
         return -1;
@@ -573,11 +576,13 @@ int store_data(Tox *m, const char *path)
         }
 
         if (fwrite(enc_data, enc_len, 1, fp) != 1) {
+            fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
             return -1;
         }
     } else {  /* data will not be encrypted */
         if (fwrite(data, data_len, 1, fp) != 1) {
+            fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
             return -1;
         }
@@ -585,7 +590,7 @@ int store_data(Tox *m, const char *path)
 
     fclose(fp);
 
-    if (rename(TEMP_PROFILE_SAVE_NAME, path) != 0)
+    if (rename(temp_path, path) != 0)
         return -1;
 
     return 0;
