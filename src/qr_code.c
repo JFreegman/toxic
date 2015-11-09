@@ -34,20 +34,6 @@
 #define CHAR_2 "\342\226\204"
 #define CHAR_3 "\342\226\200"
 
-static void add_border(FILE *fp, size_t width)
-{
-    size_t i, j;
-
-    for (i = 0; i < BORDER_LEN; i += 2) {
-        fprintf(fp, BORDER_CHAR);
-
-        for (j = 0; j < BORDER_LEN + width + BORDER_LEN; ++j)
-            fprintf(fp, "%s", CHAR_1);
-
-        fprintf(fp, "%s\n", BORDER_CHAR);
-    }
-}
-
 /* Converts a tox ID string into a QRcode and prints it to the given file stream.
  *
  * Returns 0 on success.
@@ -64,18 +50,19 @@ int ID_to_QRcode(const char *tox_id, FILE *fp)
         return -1;
 
     size_t width = qr_obj->width;
-    add_border(fp, width);
-
     size_t i, j;
 
+    for (i = 0; i < width + BORDER_LEN * 2; ++i)
+        fprintf(fp, "%s", CHAR_1);
+
+    fprintf(fp, "\n");
+
     for (i = 0; i < width; i += 2) {
-        const unsigned char *row_1 = qr_obj->data + width * i;
-        const unsigned char *row_2 = row_1 + width;
-
-        fprintf(fp, BORDER_CHAR);
-
         for (j = 0; j < BORDER_LEN; ++j)
             fprintf(fp, "%s", CHAR_1);
+
+        const unsigned char *row_1 = qr_obj->data + width * i;
+        const unsigned char *row_2 = row_1 + width;
 
         for (j = 0; j < width; ++j) {
             bool x = row_1[j] & 1;
@@ -94,7 +81,7 @@ int ID_to_QRcode(const char *tox_id, FILE *fp)
         for (j = 0; j < BORDER_LEN; ++j)
             fprintf(fp, "%s", CHAR_1);
 
-        fprintf(fp, "%s\n", BORDER_CHAR);
+        fprintf(fp, "\n");
     }
 
     QRcode_free(qr_obj);
