@@ -28,19 +28,19 @@
 #include "windows.h"
 #include "qr_code.h"
 
-#define BOARDER "|"
+#define BORDER "|"
 
 static void add_border(FILE *output, unsigned width)
 {
     unsigned x, y;
 
     for (y = 0; y < 4; y += 2) {
-        fprintf(output, BOARDER);
+        fprintf(output, BORDER);
 
         for (x = 0; x < 4 + width + 4; x++)
             fprintf(output, "\342\226\210");
 
-        fprintf(output, BOARDER "\n");
+        fprintf(output, BORDER "\n");
     }
 }
 
@@ -67,7 +67,7 @@ int ID_to_QRcode_string(const char *tox_id, FILE *output)
         const unsigned char *row1 = qr->data + qr->width * y;
         const unsigned char *row2 = row1 + qr->width;
 
-        fprintf(output, BOARDER);
+        fprintf(output, BORDER);
         for (x = 0; x < 4; ++x)
             fprintf(output, "\342\226\210");
 
@@ -88,7 +88,7 @@ int ID_to_QRcode_string(const char *tox_id, FILE *output)
         for (x = 0; x < 4; ++x)
             fprintf(output, "\342\226\210");
 
-        fprintf(output, BOARDER "\n");
+        fprintf(output, BORDER "\n");
     }
 
     QRcode_free(qr);
