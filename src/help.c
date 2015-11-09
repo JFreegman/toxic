@@ -158,6 +158,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /group <type>              : Create a group chat where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
+    wprintw(win, "  /myqr                      : Print your Tox ID's QR code to a file.\n");
     wprintw(win, "  /clear                     : Clear window history\n");
     wprintw(win, "  /close                     : Close the current chat window\n");
     wprintw(win, "  /quit or /exit             : Exit Toxic\n");
@@ -314,11 +315,11 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'g':
 #ifdef VIDEO
-            help_init_window(self, 29, 80);
+            help_init_window(self, 30, 80);
 #elif AUDIO
-            help_init_window(self, 25, 80);
+            help_init_window(self, 26, 80);
 #else
-            help_init_window(self, 21, 80);
+            help_init_window(self, 22, 80);
 #endif
             self->help->type = HELP_GLOBAL;
             break;

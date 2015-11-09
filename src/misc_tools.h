@@ -53,6 +53,13 @@ int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size
 /* convert a hex string to bytes. returns 0 on success, -1 on failure */
 int hex_string_to_bytes(char *buf, int size, const char *keystr);
 
+/* Converts a binary representation of a Tox ID into a string.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size);
+
 /* get the current unix time (not thread safe) */
 uint64_t get_unix_time(void);
 
@@ -102,6 +109,14 @@ void filter_str(char *str, size_t len);
 
 /* gets base file name from path or original file name if no path is supplied */
 size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname);
+
+/* Gets the base directory of path and puts it in dir.
+ * dir must have at least as much space as path_len.
+ *
+ * Returns the length of the base directory on success.
+ * Returns -1 on failure.
+ */
+size_t get_base_dir(const char *path, size_t path_len, char *dir);
 
 /* converts str to all lowercase */
 void str_to_lower(char *str);

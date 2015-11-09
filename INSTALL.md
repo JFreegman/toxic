@@ -16,6 +16,7 @@
 | [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       |
 | [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                |
 | [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev|
+| [libqrencode](https://fukuchi.org/works/qrencode/)   | BASE                       | libqrencode-dev     |
 | [Tox Core AV](https://github.com/irungentoo/toxcore) | AUDIO                      | *None*              |
 | [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       |
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
