@@ -149,6 +149,24 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
     return 0;
 }
 
+/* Converts a binary representation of a Tox ID into a string.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size)
+{
+    if (bin_id_size != TOX_ADDRESS_SIZE || output_size < (TOX_ADDRESS_SIZE * 2 + 1))
+        return -1;
+
+    size_t i;
+
+    for (i = 0; i < TOX_ADDRESS_SIZE; ++i)
+        snprintf(&output[i*2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
+
+    return 0;
+}
+
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string)
 {
@@ -263,6 +281,24 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     return strlen(namebuf);
 }
 
+/* Gets the base directory of path and puts it in dir.
+ * dir must have at least as much space as path_len.
+ *
+ * Returns the length of the base directory.
+ */
+size_t get_base_dir(const char *path, size_t path_len, char *dir)
+{
+    size_t dir_len = char_rfind(path, '/', path_len);
+
+    if (dir_len != 0 && dir_len < path_len)
+        ++dir_len;  /* Leave trailing slash */
+
+    memcpy(dir, path, dir_len);
+    dir[dir_len] = '\0';
+
+    return dir_len;
+}
+
 /* converts str to all lowercase */
 void str_to_lower(char *str)
 {
@@ -332,8 +368,8 @@ int char_find(int idx, const char *s, char ch)
     return i;
 }
 
-/* returns index of the last instance of ch in s starting at len
-   returns 0 if char not found (skips 0th index) */
+/* returns index of the last instance of ch in s starting at len.
+   returns 0 if char not found (skips 0th index). */
 int char_rfind(const char *s, char ch, int len)
 {
     int i = 0;
