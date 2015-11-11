@@ -202,12 +202,12 @@ size_t write_lookup_data(void *data, size_t size, size_t nmemb, void *user_point
     struct Recv_Data *recv_data = (struct Recv_Data *) user_pointer;
     size_t real_size = size * nmemb;
 
-    if (real_size > MAX_RECV_LOOKUP_DATA_SIZE)
+    if (real_size >= MAX_RECV_LOOKUP_DATA_SIZE)
         return 0;
 
     memcpy(&recv_data->data, data, real_size);
     recv_data->size = real_size;
-    recv_data->data[real_size] = 0;
+    recv_data->data[real_size] = '\0';
 
     return real_size;
 }

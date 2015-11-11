@@ -31,6 +31,7 @@
 
 #include "toxic.h"
 #include "configdir.h"
+#include "misc_tools.h"
 
 /* get the user's home directory */
 void get_home_dir(char *home, int size)
@@ -69,8 +70,8 @@ char *get_user_config_dir(void)
     char home[NSS_BUFLEN_PASSWD] = {0};
     get_home_dir(home, sizeof(home));
 
-    char *user_config_dir;
-    size_t len;
+    char *user_config_dir = NULL;
+    size_t len = 0;
 
 # if defined(__APPLE__)
     len = strlen(home) + strlen("/Library/Application Support") + 1;
@@ -82,9 +83,9 @@ char *get_user_config_dir(void)
     snprintf(user_config_dir, len, "%s/Library/Application Support", home);
 # else /* __APPLE__ */
 
-    const char *tmp;
+    const char *tmp = getenv("XDG_CONFIG_HOME");
 
-    if (!(tmp = getenv("XDG_CONFIG_HOME"))) {
+    if (tmp == NULL) {
         len = strlen(home) + strlen("/.config") + 1;
         user_config_dir = malloc(len);
 
@@ -97,6 +98,11 @@ char *get_user_config_dir(void)
     }
 
 # endif /* __APPLE__ */
+
+    if (!file_exists(user_config_dir)) {
+        free(user_config_dir);
+        return NULL;
+    }
 
     return user_config_dir;
 }

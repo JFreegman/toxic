@@ -63,9 +63,9 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 29
+#define AC_NUM_CHAT_COMMANDS 30
 #else
-#define AC_NUM_CHAT_COMMANDS 22
+#define AC_NUM_CHAT_COMMANDS 23
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
@@ -85,6 +85,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/join"       },
     { "/log"        },
     { "/myid"       },
+    { "/myqr"       },
     { "/nick"       },
     { "/note"       },
     { "/nospam"     },
@@ -789,6 +790,10 @@ static void init_infobox(ToxWindow *self)
 
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (y2 <= 0 || x2 <= 0)
+        return;
+
     (void) y2;
 
     memset(&ctx->infobox, 0, sizeof(struct infobox));
@@ -895,7 +900,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0)
+    if (y2 <= 0 || x2 <= 0)
         return;
 
     if (self->help->active) {
@@ -992,6 +997,9 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (y2 <= 0 || x2 <= 0)
+        return;
 
     ChatContext *ctx = self->chatwin;
 
@@ -1117,6 +1125,10 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     curs_set(1);
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (y2 <= 0 || x2 <= 0)
+        exit_toxic_err("failed in chat_onInit", FATALERR_CURSES);
+
     self->x = x2;
 
     /* Init statusbar info */

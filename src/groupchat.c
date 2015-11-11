@@ -70,9 +70,9 @@ extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #ifdef AUDIO
-#define AC_NUM_GROUP_COMMANDS 41
+#define AC_NUM_GROUP_COMMANDS 42
 #else
-#define AC_NUM_GROUP_COMMANDS 37
+#define AC_NUM_GROUP_COMMANDS 38
 #endif /* AUDIO */
 
 /* groupchat command names used for tab completion. */
@@ -96,6 +96,7 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/mod"        },
     { "/myid"       },
     { "/mykey"      },
+    { "/myqr"       },
     { "/nick"       },
     { "/note"       },
     { "/passwd"     },
@@ -401,6 +402,9 @@ void redraw_groupchat_win(ToxWindow *self)
     int x2, y2;
     getmaxyx(stdscr, y2, x2);
     y2 -= 2;
+
+    if (y2 <= 0 || x2 <= 0)
+        return;
 
     if (ctx->sidebar) {
         delwin(ctx->sidebar);
@@ -1055,7 +1059,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0)
+    if (x2 <= 0 || y2 <= 0)
         return;
 
     if (self->help->active) {
@@ -1147,6 +1151,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (x2 <= 0 || y2 <= 0)
+        return;
 
     ChatContext *ctx = self->chatwin;
     GroupChat *chat = &groupchats[self->num];
@@ -1249,6 +1256,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
+
+    if (x2 <= 0 || y2 <= 0)
+        exit_toxic_err("failed in groupchat_onInit", FATALERR_CURSES);
 
     ChatContext *ctx = self->chatwin;
 

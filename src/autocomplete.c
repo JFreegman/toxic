@@ -114,7 +114,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     tmp[ctx->pos] = '\0';
 
     const char *s = dir_search ? strchr(tmp, '\"') : strrchr(tmp, ' ');
-    char *sub = malloc(strlen(ubuf) + 1);
+    char *sub = calloc(1, strlen(ubuf) + 1);
 
     if (sub == NULL)
         exit_toxic_err("failed in complete_line", FATALERR_MEMORY);
@@ -142,14 +142,14 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     }
 
     int s_len = strlen(sub);
-    const char *str;
     int n_matches = 0;
     char matches[n_items][MAX_STR_SIZE];
     int i = 0;
 
     /* put all list matches in matches array */
     for (i = 0; i < n_items; ++i) {
-        str = &L[i * size];
+        char str[MAX_CMDNAME_SIZE + 1];
+        snprintf(str, sizeof(str), "%s", &L[i * size]);
 
         if (strncasecmp(str, sub, s_len) == 0)
             strcpy(matches[n_matches++], str);
@@ -165,10 +165,11 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
 
     char match[MAX_STR_SIZE];
     get_str_match(self, match, matches, n_matches);
+    size_t match_len = strlen(match);
 
     if (dir_search) {
         if (n_matches == 1)
-            endchrs = char_rfind(match, '.', strlen(match)) ? "\"" : "/";
+            endchrs = char_rfind(match, '.', match_len) ? "\"" : "/";
         else
             endchrs = "";
     } else if (n_matches > 1) {
@@ -177,18 +178,21 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
 
     /* put match in correct spot in buf and append endchars */
     int n_endchrs = strlen(endchrs);
-    int m_len = strlen(match);
     int strt = ctx->pos - s_len;
-    int diff = m_len - s_len + n_endchrs;
+    int diff = match_len - s_len + n_endchrs;
 
     if (ctx->len + diff >= MAX_STR_SIZE)
         return -1;
 
     char tmpend[MAX_STR_SIZE];
     snprintf(tmpend, sizeof(tmpend), "%s", &ubuf[ctx->pos]);
+
+    if (match_len + n_endchrs + strlen(tmpend) >= sizeof(ubuf))
+        return -1;
+
     strcpy(&ubuf[strt], match);
-    strcpy(&ubuf[strt + m_len], endchrs);
-    strcpy(&ubuf[strt + m_len + n_endchrs], tmpend);
+    strcpy(&ubuf[strt + match_len], endchrs);
+    strcpy(&ubuf[strt + match_len + n_endchrs], tmpend);
 
     /* convert to widechar and copy back to original buf */
     wchar_t newbuf[MAX_STR_SIZE];

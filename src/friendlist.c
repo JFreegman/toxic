@@ -26,7 +26,6 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include <errno.h>
 
 #include <tox/tox.h>
 
@@ -125,7 +124,13 @@ void kill_friendlist(void)
     realloc_friends(0);
 }
 
-#define TEMP_BLOCKLIST_SAVE_NAME "toxic_blocklist.tmp"
+/* Saves the blocklist to path. If there are no items in the blocklist the
+ * empty file will be removed.
+ *
+ * Returns 0 if stored successfully.
+ * Returns -1 on failure.
+ */
+#define TEMP_BLOCKLIST_EXT ".tmp"
 static int save_blocklist(char *path)
 {
     if (path == NULL)
@@ -165,19 +170,23 @@ static int save_blocklist(char *path)
         return 0;
     }
 
-    FILE *fp = fopen(TEMP_BLOCKLIST_SAVE_NAME, "wb");
+    char temp_path[strlen(path) + strlen(TEMP_BLOCKLIST_EXT) + 1];
+    snprintf(temp_path, sizeof(temp_path), "%s%s", path, TEMP_BLOCKLIST_EXT);
+
+    FILE *fp = fopen(temp_path, "wb");
 
     if (fp == NULL)
         return -1;
 
     if (fwrite(data, len, 1, fp) != 1) {
+        fprintf(stderr, "Failed to write blocklist data.\n");
         fclose(fp);
         return -1;
     }
 
     fclose(fp);
 
-    if (rename(TEMP_BLOCKLIST_SAVE_NAME, path) != 0)
+    if (rename(temp_path, path) != 0)
         return -1;
 
     return 0;
@@ -228,7 +237,7 @@ int load_blocklist(char *path)
         memcpy(&tmp, data + i * sizeof(BlockedFriend), sizeof(BlockedFriend));
         Blocked.list[i].active = true;
         Blocked.list[i].num = i;
-        Blocked.list[i].namelength = ntohs(tmp.namelength);
+        Blocked.list[i].namelength = MIN(TOXIC_MAX_NAME_LENGTH, ntohs(tmp.namelength));
         memcpy(Blocked.list[i].name, tmp.name, Blocked.list[i].namelength + 1);
         memcpy(Blocked.list[i].pub_key, tmp.pub_key, TOX_PUBLIC_KEY_SIZE);
 

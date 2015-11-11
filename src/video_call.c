@@ -153,9 +153,10 @@ int stop_video_transmission(Call *call, int friend_number)
     CallControl.video_bit_rate = 0;
     toxav_bit_rate_set(CallControl.av, friend_number, -1, CallControl.video_bit_rate, NULL);
 
-    if ( call->vin_idx != -1 )
+    if ( call->vin_idx != -1 ) {
         close_video_device(vdt_input, call->vin_idx);
         call->vin_idx = -1;
+    }
 
     return 0;
 }
@@ -190,12 +191,12 @@ void callback_recv_video_starting(uint32_t friend_number)
 {
     return;
 
-    Call* this_call = &CallControl.calls[friend_number];
+    // Call* this_call = &CallControl.calls[friend_number];
 
-    if ( this_call->vout_idx != -1 )
-        return;
+    // if ( this_call->vout_idx != -1 )
+    //     return;
 
-    open_primary_video_device(vdt_output, &this_call->vout_idx);
+    // open_primary_video_device(vdt_output, &this_call->vout_idx);
 }
 void callback_recv_video_end(uint32_t friend_number)
 {
@@ -243,37 +244,37 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 {
     return;  // TODO: Fix video
 
-    const char *error_str;
-    Call* this_call = &CallControl.calls[self->num];
+//     const char *error_str;
+//     Call* this_call = &CallControl.calls[self->num];
 
-    if ( argc != 0 ) {
-        error_str = "Unknown arguments.";
-        goto on_error;
-    }
+//     if ( argc != 0 ) {
+//         error_str = "Unknown arguments.";
+//         goto on_error;
+//     }
 
-    if ( !CallControl.av ) {
-        error_str = "ToxAV not supported!";
-        goto on_error;
-    }
+//     if ( !CallControl.av ) {
+//         error_str = "ToxAV not supported!";
+//         goto on_error;
+//     }
 
-    if ( !self->stb->connection ) {
-        error_str = "Friend is offline.";
-        goto on_error;
-    }
+//     if ( !self->stb->connection ) {
+//         error_str = "Friend is offline.";
+//         goto on_error;
+//     }
 
-    if ( !self->is_call ) {
-        error_str = "Not in call!";
-        goto on_error;
-    }
+//     if ( !self->is_call ) {
+//         error_str = "Not in call!";
+//         goto on_error;
+//     }
 
-    if ( this_call->vin_idx == -1 )
-        callback_video_starting(self->num);
-    else
-        callback_video_end(self->num);
+//     if ( this_call->vin_idx == -1 )
+//         callback_video_starting(self->num);
+//     else
+//         callback_video_end(self->num);
 
-    return;
-on_error:
-    print_err (self, error_str);
+//     return;
+// on_error:
+//     print_err (self, error_str);
 }
 
 void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

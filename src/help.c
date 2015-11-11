@@ -60,6 +60,9 @@ static void help_init_window(ToxWindow *self, int height, int width)
     int y2, x2;
     getmaxyx(stdscr, y2, x2);
 
+    if (y2 <= 0 || x2 <= 0)
+        return;
+
     height = MIN(height, y2);
     width = MIN(width, x2);
 
@@ -156,6 +159,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /nospam                    : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
+    wprintw(win, "  /myqr                      : Print your Tox ID's QR code to a file.\n");
     wprintw(win, "  /clear                     : Clear window history\n");
     wprintw(win, "  /close                     : Close the current chat window\n");
     wprintw(win, "  /quit or /exit             : Exit Toxic\n");
@@ -329,7 +333,7 @@ void help_onKey(ToxWindow *self, wint_t key)
 #elif AUDIO
             help_init_window(self, 18, 80);
 #else
-            help_init_window(self, 9, 80);
+            help_init_window(self, 10, 80);
 #endif
             self->help->type = HELP_CHAT;
             break;

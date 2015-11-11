@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -36,6 +35,7 @@
 #include "term_mplex.h"
 #include "avatars.h"
 #include "name_lookup.h"
+#include "qr_code.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -493,19 +493,57 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    char id[TOX_ADDRESS_SIZE * 2 + 1] = {0};
-    char address[TOX_ADDRESS_SIZE];
-    tox_self_get_address(m, (uint8_t *) address);
+    char id_string[TOX_ADDRESS_SIZE * 2 + 1];
+    char bin_id[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) bin_id);
 
-    size_t i;
-
-    for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
-        char d[3];
-        snprintf(d, sizeof(d), "%02X", address[i] & 0xff);
-        strcat(id, d);
+    if (bin_id_to_string(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to print ID.");
+        return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", id);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", id_string);
+}
+
+void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    char id_string[TOX_ADDRESS_SIZE * 2 + 1];
+    char bin_id[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) bin_id);
+
+    if (bin_id_to_string(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+        return;
+    }
+
+    char nick[TOX_MAX_NAME_LENGTH];
+    tox_self_get_name(m, (uint8_t *) nick);
+    size_t nick_len = tox_self_get_name_size(m);
+    nick[nick_len] = '\0';
+
+    size_t data_file_len = strlen(DATA_FILE);
+    char dir[data_file_len];
+    size_t dir_len = get_base_dir(DATA_FILE, data_file_len, dir);
+
+    char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1];
+    snprintf(qr_path, sizeof(qr_path), "%s%s%s", dir, nick, QRCODE_FILENAME_EXT);
+
+    FILE *output = fopen(qr_path, "wb");
+
+    if (output == NULL) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+        return;
+    }
+
+    if (ID_to_QRcode(id_string, output) == -1) {
+        fclose(output);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+        return;
+    }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "QR code has been printed to the file '%s'", qr_path);
+
+    fclose(output);
 }
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
