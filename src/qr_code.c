@@ -28,7 +28,6 @@
 #include "windows.h"
 #include "qr_code.h"
 
-#define BORDER_CHAR "|"
 #define BORDER_LEN 1
 #define CHAR_1 "\342\226\210"
 #define CHAR_2 "\342\226\204"
