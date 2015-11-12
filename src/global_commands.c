@@ -524,11 +524,25 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    uint32_t nospam = rand();   /* should be random enough */
-    tox_self_set_nospam(m, nospam);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your Tox ID has been changed to:");
+    long int nospam = rand();
+
+    if (argc > 0) {
+        nospam = strtol(argv[1], NULL, 16);
+
+        if ((nospam == 0 && strcmp(argv[1], "0")) || nospam < 0) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid nospam value.");
+            return;
+        }
+    }
+
+    uint32_t old_nospam = tox_self_get_nospam(m);
+    tox_self_set_nospam(m, (uint32_t) nospam);
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your new Tox ID is:");
     cmd_myid(window, self, m, 0, NULL);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Any services that relied on your old ID will need to be updated manually.");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "If you ever want your old Tox ID back, type '/nospam %X'", old_nospam);
 }
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

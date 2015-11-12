@@ -154,7 +154,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
-    wprintw(win, "  /nospam                    : Change part of your Tox ID to stop spam\n");
+    wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /group <type>              : Create a group chat where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
