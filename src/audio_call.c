@@ -570,7 +570,7 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 {
     const char *error_str = NULL;
 
-    if ( !self->is_call) {
+    if ( !self->is_call ) {
         error_str = "Not in a call.";
         goto on_error;
     }
@@ -587,10 +587,7 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
 #ifdef VIDEO
     callback_video_end(self->num);
-
 #endif /* VIDEO */
-
-
 
     if ( CallControl.pending_call ) {
         /* Manually send a cancel call control because call hasn't started */
@@ -836,6 +833,8 @@ on_error:
 
 void stop_current_call(ToxWindow* self)
 {
-    TOXAV_ERR_CALL_CONTROL error;
-    toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, &error);
+    Call *this_call = &CallControl.calls[self->num];
+
+    if (this_call && self->is_call)
+        stop_transmission(this_call, self->num);
 }
