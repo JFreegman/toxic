@@ -30,7 +30,7 @@
 
 #include <vpx/vpx_image.h>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -65,7 +65,7 @@ typedef struct VideoDevice {
     void* cb_data;                          /* Data to be passed to callback */
     int32_t friend_number;                  /* ToxAV friend number */
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
     int fd;                                 /* File descriptor of video device selected/opened */
     struct v4l2_format fmt;
     struct VideoBuffer *buffers;
@@ -131,7 +131,7 @@ static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y,
     }
 }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 static void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v,
                  uint8_t *input, uint16_t width, uint16_t height)
 {
@@ -177,7 +177,7 @@ VideoDeviceError init_video_devices()
 {
     size[vdt_input] = 0;
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
     for (; size[vdt_input] <= MAX_DEVICES; ++size[vdt_input]) {
         int fd;
         char device_address[] = "/dev/videoXX";
@@ -257,7 +257,7 @@ VideoDeviceError terminate_video_devices()
 VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t device_idx,
                                                 VideoDataHandleCallback callback, void* data)
 {
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
     if ( size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx] || !video_devices_running[vdt_input][device_idx]->fd )
         return vde_InvalidSelection;
 #else /* __OSX__ */
@@ -336,7 +336,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
     if ( type == vdt_input ) {
         video_thread_paused = true;
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
         /* Open selected device */
         char device_address[] = "/dev/videoXX";
         snprintf(device_address + 10 , sizeof(device_address) - 10, "%i", selection);
@@ -632,7 +632,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     uint8_t *u = device->input.planes[1];
                     uint8_t *v = device->input.planes[2];
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
                     struct v4l2_buffer buf;
                     memset(&(buf), 0, sizeof(buf));
 
@@ -690,7 +690,7 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
                     XFlush(device->x_display);
                     free(img_data);
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
                     if ( -1 == xioctl(device->fd, VIDIOC_QBUF, &buf) ) {
                         unlock;
                         continue;
@@ -725,7 +725,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     if ( !device->ref_count ) {
 
         if ( type == vdt_input ) {
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
             enum v4l2_buf_type buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             if( -1 == xioctl(device->fd, VIDIOC_STREAMOFF, &buf_type) ) {}
 
@@ -745,7 +745,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
             XCloseDisplay(device->x_display);
             pthread_mutex_destroy(device->mutex);
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
             free(device->buffers);
 #endif /* __linux__ */
 
