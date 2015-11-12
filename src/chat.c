@@ -49,7 +49,10 @@
 
 #ifdef AUDIO
     #include "audio_call.h"
-#endif /* AUDIO */
+#ifdef VIDEO
+    #include "video_call.h"
+#endif  /* VIDEO */
+#endif  /* AUDIO */
 
 extern char *DATA_FILE;
 extern FriendsList Friends;
@@ -63,9 +66,9 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 29
+#define AC_NUM_CHAT_COMMANDS 30
 #else
-#define AC_NUM_CHAT_COMMANDS 22
+#define AC_NUM_CHAT_COMMANDS 23
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
@@ -92,6 +95,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/savefile"   },
     { "/sendfile"   },
     { "/status"     },
+    { "/video"      },
 
 #ifdef AUDIO
 
@@ -128,8 +132,11 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     cqueue_cleanup(ctx->cqueue);
 
 #ifdef AUDIO
+#ifdef VIDEO
+    stop_video_stream(self);
+#endif  /* VIDEO */
     stop_current_call(self);
-#endif
+#endif  /* AUDIO */
 
     delwin(ctx->linewin);
     delwin(ctx->history);

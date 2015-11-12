@@ -265,12 +265,7 @@ void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 {
     Tox *m = (Tox *) user_data;
     CallControl.pending_call = true;
-
-    if (video_enabled)
-        /* FIXME enable video calls */
-        toxav_call_control(av, friend_number, TOXAV_CALL_CONTROL_CANCEL, NULL);
-    else if (audio_enabled)
-        callback_recv_invite(m, friend_number);
+    callback_recv_invite(m, friend_number);
 }
 
 void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
@@ -573,7 +568,12 @@ on_error:
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char *error_str;
+    const char *error_str = NULL;
+
+    if ( !self->is_call) {
+        error_str = "Not in a call.";
+        goto on_error;
+    }
 
     if ( argc != 0 ) {
         error_str = "Unknown arguments.";

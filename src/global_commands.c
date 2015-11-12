@@ -444,7 +444,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     nick[nick_len] = '\0';
 
     size_t data_file_len = strlen(DATA_FILE);
-    char dir[data_file_len];
+    char dir[data_file_len + 1];
     size_t dir_len = get_base_dir(DATA_FILE, data_file_len, dir);
 
     char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1];

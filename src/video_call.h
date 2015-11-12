@@ -26,7 +26,7 @@
 #include <tox/toxav.h>
 
 #include "audio_call.h"
- 
+
 #include "video_device.h"
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
@@ -34,6 +34,7 @@ ToxAV *init_video(ToxWindow *self, Tox *tox);
 void terminate_video();
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call);
 int stop_video_transmission(Call *call, int friend_number);
+void stop_video_stream(ToxWindow *self);
 
 void callback_recv_video_starting(uint32_t friend_number);
 void callback_recv_video_end(uint32_t friend_number);
