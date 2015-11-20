@@ -329,7 +329,7 @@ void *lookup_thread_func(void *data)
     curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
     curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, write_lookup_data);
-    curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, (void *) &recv_data);
+    curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, &recv_data);
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 

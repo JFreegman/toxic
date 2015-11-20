@@ -570,8 +570,8 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 {
     const char *error_str = NULL;
 
-    if ( !self->is_call ) {
-        error_str = "Not in a call.";
+    if ( !CallControl.av ) {
+        error_str = "Audio not supported!";
         goto on_error;
     }
 
@@ -580,8 +580,8 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         goto on_error;
     }
 
-    if ( !CallControl.av ) {
-        error_str = "Audio not supported!";
+    if ( !self->is_call && !CallControl.pending_call ) {
+        error_str = "Not in a call.";
         goto on_error;
     }
 
@@ -589,18 +589,7 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     callback_video_end(self->num);
 #endif /* VIDEO */
 
-    if ( CallControl.pending_call ) {
-        /* Manually send a cancel call control because call hasn't started */
-        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
-        callback_call_canceled(self->num);
-    }
-    else {
-        stop_transmission(&CallControl.calls[self->num], self->num);
-        callback_call_ended(self->num);
-    }
-
-    CallControl.pending_call = false;
-
+    stop_current_call(self);
     return;
 on_error:
     print_err (self, error_str);
@@ -835,6 +824,16 @@ void stop_current_call(ToxWindow* self)
 {
     Call *this_call = &CallControl.calls[self->num];
 
-    if (this_call && self->is_call)
-        stop_transmission(this_call, self->num);
+    if ( !this_call )
+        return;
+
+    if ( CallControl.pending_call ) {
+        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
+        callback_call_canceled(self->num);
+    } else {
+        stop_transmission(&CallControl.calls[self->num], self->num);
+        callback_call_ended(self->num);
+    }
+
+    CallControl.pending_call = false;
 }
