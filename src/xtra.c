@@ -271,6 +271,11 @@ int init_xtra(drop_callback d)
 
     Xtra.terminal_window = focused_window_id();
 
+    /* OSX: if focused window is 0, it means toxic is ran from
+     * native terminal and not X11 terminal window, silently exit */
+    if (!Xtra.terminal_window)
+      return 0;
+
     {
         /* Create an invisible window which will act as proxy for the DnD operation. */
         XSetWindowAttributes attr  = {0};
@@ -343,7 +348,7 @@ int init_xtra(drop_callback d)
 
 void terminate_xtra()
 {
-    if (!Xtra.display) return;
+    if (!Xtra.display || !Xtra.terminal_window) return;
 
     XEvent terminate = {
         .xclient = {

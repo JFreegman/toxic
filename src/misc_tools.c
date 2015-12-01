@@ -300,12 +300,15 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
 }
 
 /* Gets the base directory of path and puts it in dir.
- * dir must have at least as much space as path_len.
+ * dir must have at least as much space as path_len + 1.
  *
  * Returns the length of the base directory.
  */
 size_t get_base_dir(const char *path, size_t path_len, char *dir)
 {
+    if (path_len == 0 || path == NULL)
+        return 0;
+
     size_t dir_len = char_rfind(path, '/', path_len);
 
     if (dir_len != 0 && dir_len < path_len)

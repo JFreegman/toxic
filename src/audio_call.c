@@ -265,12 +265,7 @@ void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 {
     Tox *m = (Tox *) user_data;
     CallControl.pending_call = true;
-
-    if (video_enabled)
-        /* FIXME enable video calls */
-        toxav_call_control(av, friend_number, TOXAV_CALL_CONTROL_CANCEL, NULL);
-    else if (audio_enabled)
-        callback_recv_invite(m, friend_number);
+    callback_recv_invite(m, friend_number);
 }
 
 void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
@@ -573,37 +568,28 @@ on_error:
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    const char *error_str;
-
-    if ( argc != 0 ) {
-        error_str = "Unknown arguments.";
-        goto on_error;
-    }
+    const char *error_str = NULL;
 
     if ( !CallControl.av ) {
         error_str = "Audio not supported!";
         goto on_error;
     }
 
+    if ( argc != 0 ) {
+        error_str = "Unknown arguments.";
+        goto on_error;
+    }
+
+    if ( !self->is_call && !CallControl.pending_call ) {
+        error_str = "Not in a call.";
+        goto on_error;
+    }
+
 #ifdef VIDEO
     callback_video_end(self->num);
-
 #endif /* VIDEO */
 
-
-
-    if ( CallControl.pending_call ) {
-        /* Manually send a cancel call control because call hasn't started */
-        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
-        callback_call_canceled(self->num);
-    }
-    else {
-        stop_transmission(&CallControl.calls[self->num], self->num);
-        callback_call_ended(self->num);
-    }
-
-    CallControl.pending_call = false;
-
+    stop_current_call(self);
     return;
 on_error:
     print_err (self, error_str);
@@ -836,6 +822,18 @@ on_error:
 
 void stop_current_call(ToxWindow* self)
 {
-    TOXAV_ERR_CALL_CONTROL error;
-    toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, &error);
+    Call *this_call = &CallControl.calls[self->num];
+
+    if ( !this_call )
+        return;
+
+    if ( CallControl.pending_call ) {
+        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
+        callback_call_canceled(self->num);
+    } else {
+        stop_transmission(&CallControl.calls[self->num], self->num);
+        callback_call_ended(self->num);
+    }
+
+    CallControl.pending_call = false;
 }

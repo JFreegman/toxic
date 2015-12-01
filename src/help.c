@@ -156,7 +156,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /group                     : Create a group chat\n");
     wprintw(win, "  /join <chat id> <passwd>   : Join a group chat with optional password\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
-    wprintw(win, "  /nospam                    : Change part of your Tox ID to stop spam\n");
+    wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
     wprintw(win, "  /myqr                      : Print your Tox ID's QR code to a file.\n");

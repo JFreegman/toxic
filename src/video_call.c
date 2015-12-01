@@ -132,6 +132,7 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
     }
 
     CallControl.video_bit_rate = default_video_bit_rate;
+
     if ( toxav_bit_rate_set(CallControl.av, self->num, -1, CallControl.video_bit_rate, NULL) == false ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
         return -1;
@@ -142,8 +143,10 @@ int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
         return -1;
     }
 
-    if ( register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None )
+    if ( register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None ) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
+        return -1;
+    }
 
     return 0;
 }
@@ -189,14 +192,12 @@ void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
 
 void callback_recv_video_starting(uint32_t friend_number)
 {
-    return;
+    Call* this_call = &CallControl.calls[friend_number];
 
-    // Call* this_call = &CallControl.calls[friend_number];
+    if ( this_call->vout_idx != -1 )
+        return;
 
-    // if ( this_call->vout_idx != -1 )
-    //     return;
-
-    // open_primary_video_device(vdt_output, &this_call->vout_idx);
+    open_primary_video_device(vdt_output, &this_call->vout_idx);
 }
 void callback_recv_video_end(uint32_t friend_number)
 {
@@ -214,10 +215,10 @@ void callback_video_starting(uint32_t friend_number)
     toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
 
     if (error == TOXAV_ERR_CALL_CONTROL_OK) {
-        int i;
+        size_t i;
         for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
             if ( windows[i].is_call && windows[i].num == friend_number ) {
-                if(0 != start_video_transmission(&windows[i], CallControl.av, this_call)) {
+                if ( 0 != start_video_transmission(&windows[i], CallControl.av, this_call) ) {
                     line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                     return;
                 }
@@ -242,39 +243,37 @@ void callback_video_end(uint32_t friend_number)
  */
 void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    return;  // TODO: Fix video
+    const char *error_str;
+    Call* this_call = &CallControl.calls[self->num];
 
-//     const char *error_str;
-//     Call* this_call = &CallControl.calls[self->num];
+    if ( argc != 0 ) {
+        error_str = "Unknown arguments.";
+        goto on_error;
+    }
 
-//     if ( argc != 0 ) {
-//         error_str = "Unknown arguments.";
-//         goto on_error;
-//     }
+    if ( !CallControl.av ) {
+        error_str = "ToxAV not supported!";
+        goto on_error;
+    }
 
-//     if ( !CallControl.av ) {
-//         error_str = "ToxAV not supported!";
-//         goto on_error;
-//     }
+    if ( !self->stb->connection ) {
+        error_str = "Friend is offline.";
+        goto on_error;
+    }
 
-//     if ( !self->stb->connection ) {
-//         error_str = "Friend is offline.";
-//         goto on_error;
-//     }
+    if ( !self->is_call ) {
+        error_str = "Not in call!";
+        goto on_error;
+    }
 
-//     if ( !self->is_call ) {
-//         error_str = "Not in call!";
-//         goto on_error;
-//     }
+    if ( this_call->vin_idx == -1 )
+        callback_video_starting(self->num);
+    else
+        callback_video_end(self->num);
 
-//     if ( this_call->vin_idx == -1 )
-//         callback_video_starting(self->num);
-//     else
-//         callback_video_end(self->num);
-
-//     return;
-// on_error:
-//     print_err (self, error_str);
+    return;
+on_error:
+    print_err (self, error_str);
 }
 
 void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -413,4 +412,12 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
     return;
     on_error:
     print_err (self, error_str);
+}
+
+void stop_video_stream(ToxWindow *self)
+{
+    Call *this_call = &CallControl.calls[self->num];
+
+    if (this_call && this_call->vin_idx != -1)
+        stop_video_transmission(this_call, self->num);
 }

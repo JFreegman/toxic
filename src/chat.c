@@ -49,7 +49,10 @@
 
 #ifdef AUDIO
     #include "audio_call.h"
-#endif /* AUDIO */
+#ifdef VIDEO
+    #include "video_call.h"
+#endif  /* VIDEO */
+#endif  /* AUDIO */
 
 extern char *DATA_FILE;
 extern FriendsList Friends;
@@ -103,6 +106,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/sdev"       },
     { "/mute"       },
     { "/sense"      },
+    { "/video"      },
 
 #endif /* AUDIO */
 };
@@ -123,14 +127,17 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
+#ifdef AUDIO
+#ifdef VIDEO
+    stop_video_stream(self);
+#endif  /* VIDEO */
+    stop_current_call(self);
+#endif  /* AUDIO */
+
     kill_all_file_transfers_friend(m, self->num);
     log_disable(ctx->log);
     line_info_cleanup(ctx->hst);
     cqueue_cleanup(ctx->cqueue);
-
-#ifdef AUDIO
-    stop_current_call(self);
-#endif
 
     delwin(ctx->linewin);
     delwin(ctx->history);
