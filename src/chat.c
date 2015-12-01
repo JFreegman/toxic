@@ -66,7 +66,7 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS 30
+#define AC_NUM_CHAT_COMMANDS 31
 #else
 #define AC_NUM_CHAT_COMMANDS 23
 #endif /* AUDIO */
