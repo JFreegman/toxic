@@ -200,6 +200,7 @@ static void init_term(void)
     cbreak();
     keypad(stdscr, 1);
     noecho();
+    nonl();
     timeout(100);
 
     if (has_colors()) {

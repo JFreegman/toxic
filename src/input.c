@@ -42,9 +42,12 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
 {
     ChatContext *ctx = self->chatwin;
 
+    /* this is the only place we need to do this check */
+    if (key == '\n')
+        key = L'¶';
+
     int cur_len = wcwidth(key);
 
-    /* this is the only place we need to do this check */
     if (cur_len == -1) {
         sound_notify(self, notif_error, 0, NULL);
         return;
