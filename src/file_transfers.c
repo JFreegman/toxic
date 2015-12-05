@@ -40,6 +40,7 @@ extern FriendsList Friends;
 
 /* Checks for timed out file transfers and closes them. */
 #define CHECK_FILE_TIMEOUT_INTERAVAL 5
+
 void check_file_transfer_timeouts(Tox *m)
 {
     char msg[MAX_STR_SIZE];
@@ -79,46 +80,47 @@ void check_file_transfer_timeouts(Tox *m)
 }
 
 /* creates initial progress line that will be updated during file transfer.
-   Assumes progline is of size MAX_STR_SIZE */
+   Assumes progline has room for at least MAX_STR_SIZE bytes */
 void init_progress_bar(char *progline)
 {
-    strcpy(progline, "0.0 B/s [");
+    strcpy(progline, "0% [");
     int i;
 
     for (i = 0; i < NUM_PROG_MARKS; ++i)
         strcat(progline, "-");
 
-    strcat(progline, "] 0%");
+    strcat(progline, "] 0.0 B/s");
 }
 
-/* prints a progress bar for file transfers.
-   if friendnum is -1 we're sending the file, otherwise we're receiving.  */
+/* prints a progress bar for file transfers. */
 void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t line_id)
 {
     if (bps < 0 || pct_done < 0 || pct_done > 100)
         return;
 
-    char msg[MAX_STR_SIZE];
-    bytes_convert_str(msg, sizeof(msg), bps);
-    strcat(msg, "/s [");
+    char pct_str[24];
+    snprintf(pct_str, sizeof(pct_str), "%.1f%%", pct_done);
 
+    char bps_str[24];
+    bytes_convert_str(bps_str, sizeof(bps_str), bps);
+
+    char prog_line[NUM_PROG_MARKS + 1] = {0};
     int n = pct_done / (100 / NUM_PROG_MARKS);
     int i, j;
 
     for (i = 0; i < n; ++i)
-        strcat(msg, "#");
+        strcat(prog_line, "=");
 
-    for (j = i; j < NUM_PROG_MARKS; ++j)
-        strcat(msg, "-");
+    if (pct_done < 100)
+        strcpy(prog_line + n, ">");
 
-    strcat(msg, "] ");
+    for (j = i; j < NUM_PROG_MARKS - 1; ++j)
+        strcat(prog_line, "-");
 
-    char pctstr[16];
-    const char *frmt = pct_done == 100 ? "%.f%%" : "%.1f%%";
-    snprintf(pctstr, sizeof(pctstr), frmt, pct_done);
-    strcat(msg, pctstr);
+    char full_line[strlen(pct_str) + NUM_PROG_MARKS + strlen(bps_str) + 7];
+    snprintf(full_line, sizeof(full_line), "%s [%s] %s/s", pct_str, prog_line, bps_str);
 
-    line_info_set(self, line_id, msg);
+    line_info_set(self, line_id, full_line);
 }
 
 static void refresh_progress_helper(ToxWindow *self, Tox *m, struct FileTransfer *ft)
