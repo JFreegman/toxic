@@ -822,11 +822,6 @@ on_error:
 
 void stop_current_call(ToxWindow* self)
 {
-    Call *this_call = &CallControl.calls[self->num];
-
-    if ( !this_call )
-        return;
-
     if ( CallControl.pending_call ) {
         toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
         callback_call_canceled(self->num);
