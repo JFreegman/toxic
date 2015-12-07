@@ -181,10 +181,33 @@ static void exit_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum, const cha
     close_groupchat(self, m, groupnum);
 }
 
+/* Returns true if a group with groupnumber exists in the groupchats array */
+static bool groupnumber_valid(uint32_t groupnumber)
+{
+    size_t i;
+
+    for (i = 0; i < max_groupchat_index; ++i) {
+        if (groupchats[i].active && groupchats[i].groupnumber == groupnumber)
+            return true;
+    }
+
+    return false;
+}
+
+/* Creates a new toxic groupchat window associated with groupnumber.
+ *
+ * Returns 0 on success.
+ * Returns -1 on general failure.
+ * Returns -2 if the groupnumber is already in use. This usually means that the client has
+ * been kicked and needs to close the chat window before opening a new one.
+ */
 int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t length)
 {
     if (groupnum > MAX_GROUPCHAT_NUM)
         return -1;
+
+    if (groupnumber_valid(groupnum))
+        return -2;
 
     ToxWindow self = new_group_chat(m, groupnum, groupname, length);
 
@@ -464,7 +487,7 @@ static void group_onAction(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peer_id,
                                      TOX_MESSAGE_TYPE type, const char *msg, size_t len)
 {
-    if (self->num != groupnum)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     groupchat_update_last_seen(groupnum, peer_id);
@@ -511,7 +534,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum,
 static void groupchat_onGroupPrivateMessage(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peer_id,
                                             const char *msg, size_t len)
 {
-    if (self->num != groupnum)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     groupchat_update_last_seen(groupnum, peer_id);
@@ -540,7 +563,7 @@ static void groupchat_onGroupTopicChange(ToxWindow *self, Tox *m, uint32_t group
 {
     ChatContext *ctx = self->chatwin;
 
-    if (self->num != groupnum)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     groupchat_update_last_seen(groupnum, peer_id);
@@ -561,7 +584,7 @@ static void groupchat_onGroupPeerLimit(ToxWindow *self, Tox *m, uint32_t groupnu
 {
     ChatContext *ctx = self->chatwin;
 
-    if (self->num != groupnumber)
+    if (self->num != groupnumber || !groupnumber_valid(groupnumber))
         return;
 
     char timefrmt[TIME_STR_SIZE];
@@ -578,7 +601,7 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t grou
 {
     ChatContext *ctx = self->chatwin;
 
-    if (self->num != groupnumber)
+    if (self->num != groupnumber || !groupnumber_valid(groupnumber))
         return;
 
     const char *state_str = state == TOX_GROUP_PRIVACY_STATE_PUBLIC ? "public" : "private";
@@ -598,7 +621,7 @@ static void groupchat_onGroupPassword(ToxWindow *self, Tox *m, uint32_t groupnum
 {
     ChatContext *ctx = self->chatwin;
 
-    if (self->num != groupnumber)
+    if (self->num != groupnumber || !groupnumber_valid(groupnumber))
         return;
 
     char timefrmt[TIME_STR_SIZE];
@@ -649,7 +672,7 @@ static int realloc_peer_list(uint32_t groupnum, uint32_t n)
 
 static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peer_id)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     GroupChat *chat = &groupchats[groupnum];
@@ -704,7 +727,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum
 static void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peer_id,
                                       const char *partmessage, size_t len)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     GroupChat *chat = &groupchats[groupnum];
@@ -775,7 +798,7 @@ static void groupchat_set_group_name(ToxWindow *self, Tox *m, uint32_t groupnum)
 
 static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     groupchat_set_group_name(self, m, groupnum);
@@ -812,7 +835,7 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum
 
 static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, uint32_t groupnum, TOX_GROUP_JOIN_FAIL type)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     const char *msg = NULL;
@@ -841,7 +864,7 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, uint32_t groupnum
 static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t src_peer_id,
                                         uint32_t tgt_peer_id, TOX_GROUP_MOD_EVENT type)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     GroupChat *chat = &groupchats[groupnum];
@@ -895,7 +918,7 @@ static void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupn
 static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peer_id,
                                         const char *newnick, size_t len)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     GroupChat *chat = &groupchats[groupnum];
@@ -926,7 +949,7 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, uint32_t groupn
 static void groupchat_onGroupStatusChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peer_id,
                                           TOX_USER_STATUS status)
 {
-    if (groupnum != self->num)
+    if (self->num != groupnum || !groupnumber_valid(groupnum))
         return;
 
     int peer_index = get_peer_index(groupnum, peer_id);

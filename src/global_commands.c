@@ -369,10 +369,14 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (init_groupchat_win(m, groupnum, name, len) == -1) {
+    int init = init_groupchat_win(m, groupnum, name, len);
+
+    if (init == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_leave(m, groupnum, NULL, 0, NULL);
-        return;
+    } else if (init == -2) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You have been kicked from a group. Close the window and try again.");
+        tox_group_leave(m, groupnum, NULL, 0, NULL);
     }
 }
 
@@ -434,10 +438,14 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    if (init_groupchat_win(m, groupnum, NULL, 0) == -1) {
+    int init = init_groupchat_win(m, groupnum, NULL, 0);
+
+    if (init == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_leave(m, groupnum, NULL, 0, NULL);
-        return;
+    } else if (init == -2) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You have been kicked from a group. Close the window and try again.");
+        tox_group_leave(m, groupnum, NULL, 0, NULL);
     }
 }
 
