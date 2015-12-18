@@ -99,11 +99,6 @@ char *get_user_config_dir(void)
 
 # endif /* __APPLE__ */
 
-    if (!file_exists(user_config_dir)) {
-        free(user_config_dir);
-        return NULL;
-    }
-
     return user_config_dir;
 }
 
