@@ -1177,25 +1177,6 @@ static void init_default_data_files(void)
     free(user_config_dir);
 }
 
-#define REC_TOX_DO_LOOPS_PER_SEC 25
-
-/* Adjusts usleep value so that tox_do runs close to the recommended number of times per second */
-static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, uint64_t cur_time, useconds_t msleepval)
-{
-    useconds_t new_sleep = MAX(msleepval, 3);
-    ++(*loopcount);
-
-    if (*looptimer == cur_time)
-        return new_sleep;
-
-    if (*loopcount != REC_TOX_DO_LOOPS_PER_SEC)
-        new_sleep *= (double) *loopcount / REC_TOX_DO_LOOPS_PER_SEC;
-
-    *looptimer = cur_time;
-    *loopcount = 0;
-    return new_sleep;
-}
-
 // this doesn't do anything (yet)
 #ifdef X11
 void DnD_callback(const char* asdv, DropType dt)
@@ -1345,7 +1326,7 @@ int main(int argc, char **argv)
             last_save = cur_time;
         }
 
-        msleepval = optimal_msleepval(&looptimer, &loopcount, cur_time, msleepval);
+        msleepval = tox_iteration_interval(m);
         usleep(msleepval);
     }
 
