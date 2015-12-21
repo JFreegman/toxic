@@ -1308,9 +1308,6 @@ int main(int argc, char **argv)
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
     uint64_t last_save = (uint64_t) time(NULL);
-    uint64_t looptimer = last_save;
-    useconds_t msleepval = 40000;
-    uint64_t loopcount = 0;
 
     while (true) {
         do_toxic(m, prompt);
@@ -1326,8 +1323,7 @@ int main(int argc, char **argv)
             last_save = cur_time;
         }
 
-        msleepval = tox_iteration_interval(m);
-        usleep(msleepval);
+        usleep(tox_iteration_interval(m));
     }
 
     return 0;
