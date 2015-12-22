@@ -1323,7 +1323,7 @@ int main(int argc, char **argv)
             last_save = cur_time;
         }
 
-        usleep(tox_iteration_interval(m));
+        usleep(tox_iteration_interval(m) * 1000);
     }
 
     return 0;
