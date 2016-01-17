@@ -189,6 +189,9 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (x2 <= 0 || y2 <= 0)
         return;
 
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
     /* ignore non-menu related input if active */
     if (self->help->active) {
         help_onKey(self, key);

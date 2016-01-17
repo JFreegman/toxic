@@ -892,6 +892,9 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (y2 <= 0 || x2 <= 0)
         return;
 
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
     if (self->help->active) {
         help_onKey(self, key);
         return;

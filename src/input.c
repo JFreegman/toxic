@@ -262,6 +262,10 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
             force_refresh(self->chatwin->history);
             break;
 
+        case T_KEY_C_T:
+            self->chatwin->pastemode ^= 1;
+            break;
+
         default:
             match = false;
             break;
@@ -277,7 +281,6 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
 
         match = true;
     }
-
 
     return match;
 }

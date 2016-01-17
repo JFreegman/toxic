@@ -237,6 +237,7 @@ struct ChatContext {
 #endif
 
     uint8_t self_is_typing;
+    uint8_t pastemode; /* whether to translate \r to \n */
 
     WINDOW *history;
     WINDOW *linewin;

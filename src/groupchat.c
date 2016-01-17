@@ -571,6 +571,9 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
     if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
         return;
