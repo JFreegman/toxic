@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <termios.h>
+#include <ctype.h>
 
 #include <tox/tox.h>
 #include <tox/toxencryptsave.h>
@@ -472,6 +473,45 @@ static int password_prompt(char *buf, int size)
     return len;
 }
 
+/* Get the password from the eval command.
+ * return length of password on success, 0 on failure
+ */
+static int password_eval(char *buf, int size)
+{
+    buf[0] = '\0';
+
+    /* Run password_eval command */
+    FILE *f = popen(user_settings->password_eval, "r");
+    if (f == NULL) {
+        fprintf(stderr, "Executing password_eval failed\n");
+        return 0;
+    }
+
+    /* Get output from command */
+    char *ret = fgets(buf, size, f);
+    if (ret == NULL) {
+        fprintf(stderr, "Reading password from password_eval command failed\n");
+        pclose(f);
+        return 0;
+    }
+
+    /* Get exit status */
+    int status = pclose(f);
+    if (status != 0) {
+        fprintf(stderr, "password_eval command returned error %d\n", status);
+        return 0;
+    }
+
+    /* Removez whitespace or \n at end */
+    int i, len = strlen(buf);
+    for (i = len - 1; i > 0 && isspace(buf[i]); i--) {
+        buf[i] = 0;
+        len--;
+    }
+
+    return len;
+}
+
 /* Ask user if they would like to encrypt the data file and set password */
 static void first_time_encrypt(const char *msg)
 {
@@ -693,14 +733,21 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 user_password.data_is_encrypted = true;
 
             size_t pwlen = 0;
-            system("clear");   // TODO: is this portable?
-            printf("Enter password (q to quit) ");
+            int pweval = user_settings->password_eval[0];
+            if (!pweval) {
+                system("clear");   // TODO: is this portable?
+                printf("Enter password (q to quit) ");
+            }
 
             size_t plain_len = len - TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
             char plain[plain_len];
 
             while (true) {
-                pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
+                if (pweval) {
+                    pwlen = password_eval(user_password.pass, sizeof(user_password.pass));
+                } else {
+                    pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
+                }
                 user_password.len = pwlen;
 
                 if (strcasecmp(user_password.pass, "q") == 0) {
@@ -712,6 +759,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                     system("clear");
                     sleep(1);
                     printf("Invalid password. Try again. ");
+                    pweval = 0;
                     continue;
                 }
 
@@ -736,6 +784,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                     system("clear");
                     sleep(1);
                     printf("Invalid password. Try again. ");
+                    pweval = 0;
                 } else {
                     fclose(fp);
                     exit_toxic_err("tox_pass_decrypt() failed", pwerr);

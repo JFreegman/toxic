@@ -30,6 +30,8 @@
 /* Represents line_* hints max strlen */
 #define LINE_HINT_MAX 3
 
+#define PASSWORD_EVAL_MAX 512
+
 /* holds user setting values */
 struct user_settings {
     int autolog;           /* boolean */
@@ -53,6 +55,7 @@ struct user_settings {
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
     char avatar_path[PATH_MAX];
+    char password_eval[PASSWORD_EVAL_MAX];
 
     int key_next_tab;
     int key_prev_tab;
