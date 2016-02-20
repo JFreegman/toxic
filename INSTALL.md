@@ -28,9 +28,11 @@
 #### OS X Notes
 Using [Homebrew](http://brew.sh):
 ```
-brew install openal-soft freealut libconfig
+brew install openal-soft freealut libconfig libnotify
 brew install https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
-brew install https://raw.githubusercontent.com/Homebrew/homebrew-x11/master/libnotify.rb
+brew install --HEAD libtoxcore
+brew install https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/toxic.rb
+brew install --HEAD toxic
 ```
 
 You can omit `libnotify` if you intend to build without desktop notifications enabled.
