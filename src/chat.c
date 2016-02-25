@@ -215,6 +215,10 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, nick, num);
 
+    if (user_settings->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
+        return;
+    }
+
     if (connection_status != TOX_CONNECTION_NONE && statusbar->connection == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = user_settings->show_typing_other == SHOW_TYPING_ON
                                       ? tox_friend_get_typing(m, num, NULL) : false;

@@ -383,6 +383,10 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
     get_time_str(timefrmt, sizeof(timefrmt));
     const char *msg;
 
+    if (user_settings->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
+        return;
+    }
+
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
         line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);

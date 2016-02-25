@@ -57,6 +57,7 @@ static struct ui_strings {
     const char* show_typing_self;
     const char* show_typing_other;
     const char* show_welcome_msg;
+    const char* show_connection_msg;
 
     const char* line_join;
     const char* line_quit;
@@ -78,6 +79,7 @@ static struct ui_strings {
     "show_typing_self",
     "show_typing_other",
     "show_welcome_msg",
+    "show_connection_msg",
     "line_join",
     "line_quit",
     "line_alert",
@@ -99,6 +101,7 @@ static void ui_defaults(struct user_settings* settings)
     settings->show_typing_self = SHOW_TYPING_ON;
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
+    settings->show_connection_msg = SHOW_CONNECTION_MSG_ON;
 
     snprintf(settings->line_join, LINE_HINT_MAX + 1, "%s", LINE_JOIN);
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
@@ -311,6 +314,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
         config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
         config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
+        config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &s->show_connection_msg);
 
         if ( config_setting_lookup_string(setting, ui_strings.line_join, &str) ) {
             snprintf(s->line_join, sizeof(s->line_join), "%s", str);

@@ -46,6 +46,7 @@ struct user_settings {
     int show_typing_self;  /* boolean */
     int show_typing_other; /* boolean */
     int show_welcome_msg;  /* boolean */
+    int show_connection_msg;  /* boolean */
 
     char line_join[LINE_HINT_MAX + 1];
     char line_quit[LINE_HINT_MAX + 1];
@@ -96,6 +97,9 @@ enum {
 
     SHOW_WELCOME_MSG_OFF = 0,
     SHOW_WELCOME_MSG_ON = 1,
+
+    SHOW_CONNECTION_MSG_OFF = 0,
+    SHOW_CONNECTION_MSG_ON = 1,
 
     DFLT_HST_SIZE = 700,
 
