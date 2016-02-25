@@ -38,47 +38,6 @@ extern FriendsList Friends;
 /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
 #define NUM_PROG_MARKS 50
 
-/* Checks for timed out file transfers and closes them. */
-#define CHECK_FILE_TIMEOUT_INTERAVAL 5
-
-void check_file_transfer_timeouts(Tox *m)
-{
-    char msg[MAX_STR_SIZE];
-    static uint64_t last_check = 0;
-
-    if (!timed_out(last_check, CHECK_FILE_TIMEOUT_INTERAVAL))
-        return;
-
-    last_check = get_unix_time();
-
-    size_t i, j;
-
-    for (i = 0; i < Friends.max_idx; ++i) {
-        if (!Friends.list[i].active)
-            continue;
-
-        for (j = 0; j < MAX_FILES; ++j) {
-            struct FileTransfer *ft_send = &Friends.list[i].file_sender[j];
-
-            if (ft_send->state > FILE_TRANSFER_PAUSED) {
-                if (timed_out(ft_send->last_keep_alive, TIMEOUT_FILESENDER)) {
-                    snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", ft_send->file_name);
-                    close_file_transfer(ft_send->window, m, ft_send, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
-                }
-            }
-
-            struct FileTransfer *ft_recv = &Friends.list[i].file_receiver[j];
-
-            if (ft_recv->state > FILE_TRANSFER_PAUSED) {
-                if (timed_out(ft_recv->last_keep_alive, TIMEOUT_FILESENDER)) {
-                    snprintf(msg, sizeof(msg), "File transfer for '%s' timed out.", ft_recv->file_name);
-                    close_file_transfer(ft_recv->window, m, ft_recv, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
-                }
-            }
-        }
-    }
-}
-
 /* creates initial progress line that will be updated during file transfer.
    Assumes progline has room for at least MAX_STR_SIZE bytes */
 void init_progress_bar(char *progline)

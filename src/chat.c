@@ -774,33 +774,6 @@ void chat_onEnd (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onRequestTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
-{
-    if (!self || self->num != friend_number)
-        return;
-
-    self->is_call = false;
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No answer!");
-
-#ifdef SOUND_NOTIFY
-    stop_sound(self->ringing_sound);
-#endif /* SOUND_NOTIFY */
-}
-
-void chat_onPeerTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
-{
-    if (!self || self->num != friend_number)
-        return;
-
-    self->is_call = false;
-    kill_infobox(self);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer disconnected; call ended!");
-
-#ifdef SOUND_NOTIFY
-    stop_sound(self->ringing_sound);
-#endif /* SOUND_NOTIFY */
-}
-
 static void init_infobox(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;

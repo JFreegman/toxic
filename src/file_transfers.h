@@ -34,7 +34,6 @@
 #define GiB 1073741824    /* 1024^3 */
 
 #define MAX_FILES 32
-#define TIMEOUT_FILESENDER 120
 
 typedef enum FILE_TRANSFER_STATE {
     FILE_TRANSFER_INACTIVE,
@@ -67,9 +66,6 @@ struct FileTransfer {
     uint32_t line_id;
     uint8_t  file_id[TOX_FILE_ID_LENGTH];
 };
-
-/* Checks for timed out file transfers and closes them. */
-void check_file_transfer_timeouts(Tox *m);
 
 /* creates initial progress line that will be updated during file transfer.
    progline must be at lesat MAX_STR_SIZE bytes */
