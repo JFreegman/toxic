@@ -68,6 +68,7 @@ struct user_settings {
     int key_peer_list_up;
     int key_peer_list_down;
     int key_toggle_peerlist;
+    int key_toggle_pastemode;
 
     int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
     char mplex_away_note [TOX_MAX_STATUS_MESSAGE_LENGTH];

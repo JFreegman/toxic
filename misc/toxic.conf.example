@@ -101,5 +101,6 @@ keys = {
   peer_list_up="Ctrl+[";
   peer_list_down="Ctrl+]";
   toggle_peerlist="Ctrl+b";
+  toggle_paste_mode="Ctrl+T";
 };
 

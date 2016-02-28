@@ -262,10 +262,6 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
             force_refresh(self->chatwin->history);
             break;
 
-        case T_KEY_C_T:
-            self->chatwin->pastemode ^= 1;
-            break;
-
         default:
             match = false;
             break;
@@ -273,13 +269,18 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
 
     /* TODO: this special case is ugly.
        maybe convert entire function to if/else and make them all customizable keys? */
-    if (!match && key == user_settings->key_toggle_peerlist) {
-        if (self->is_groupchat) {
-            self->show_peerlist ^= 1;
-            redraw_groupchat_win(self);
+    if (!match) {
+        if (key == user_settings->key_toggle_peerlist) {
+            if (self->is_groupchat) {
+                self->show_peerlist ^= 1;
+                redraw_groupchat_win(self);
+            }
+            match = true;
         }
-
-        match = true;
+        else if (key == user_settings->key_toggle_pastemode) {
+            self->chatwin->pastemode ^= 1;
+            match = true;
+        }
     }
 
     return match;

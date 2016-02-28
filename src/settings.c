@@ -127,6 +127,7 @@ static const struct keys_strings {
     const char* peer_list_up;
     const char* peer_list_down;
     const char* toggle_peerlist;
+    const char* toggle_pastemode;
 } key_strings = {
     "keys",
     "next_tab",
@@ -139,6 +140,7 @@ static const struct keys_strings {
     "peer_list_up",
     "peer_list_down",
     "toggle_peerlist",
+    "toggle_paste_mode",
 };
 
 /* defines from toxic.h */
@@ -154,6 +156,7 @@ static void key_defaults(struct user_settings* settings)
     settings->key_peer_list_up = T_KEY_C_LB;
     settings->key_peer_list_down = T_KEY_C_RB;
     settings->key_toggle_peerlist = T_KEY_C_B;
+    settings->key_toggle_pastemode = T_KEY_C_T;
 }
 
 static const struct tox_strings {
@@ -399,6 +402,8 @@ int settings_load(struct user_settings *s, const char *patharg)
             s->key_peer_list_down = key_parse(&tmp);
         if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
             s->key_toggle_peerlist = key_parse(&tmp);
+        if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp))
+            s->key_toggle_pastemode = key_parse(&tmp);
     }
 
 #ifdef AUDIO
