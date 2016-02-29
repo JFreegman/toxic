@@ -323,17 +323,27 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
-                if (line->msg[0] == '>')
-                    wattron(win, COLOR_PAIR(GREEN));
-                else if (line->msg[0] == '<')
-                    wattron(win, COLOR_PAIR(RED));
+                char* msg = line->msg;
+                while (msg)
+                {
+                    char* line = strsep(&msg, "\n");
 
-                wprintw(win, "%s", line->msg);
+                    if (line[0] == '>')
+                        wattron(win, COLOR_PAIR(GREEN));
+                    else if (line[0] == '<')
+                        wattron(win, COLOR_PAIR(RED));
 
-                if (line->msg[0] == '>')
-                    wattroff(win, COLOR_PAIR(GREEN));
-                else if (line->msg[0] == '<')
-                    wattroff(win, COLOR_PAIR(RED));
+                    wprintw(win, "%s%c", line, msg ? '\n' : '\0');
+
+                    if (line[0] == '>')
+                        wattroff(win, COLOR_PAIR(GREEN));
+                    else if (line[0] == '<')
+                        wattroff(win, COLOR_PAIR(RED));
+
+                    // change the \0 set by strsep back to \n
+                    if (msg)
+                        msg[-1] = '\n';
+                }
 
                 if (type == OUT_MSG && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
                     wattron(win, COLOR_PAIR(RED));
