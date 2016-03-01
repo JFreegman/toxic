@@ -571,7 +571,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
-    if (ltr) {    /* char is printable */
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
+    if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
         return;
     }
@@ -615,30 +618,34 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     } else if (key == user_settings->key_peer_list_up) {
         if (groupchats[self->num].side_pos > 0)
             --groupchats[self->num].side_pos;
-    } else if (key == '\n') {
+    } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
-        char line[MAX_STR_SIZE];
-
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
-
-        if (!string_is_empty(line))
+        if (!wstring_is_empty(ctx->line))
+        {
             add_line_to_hist(ctx);
 
-        if (line[0] == '/') {
-            if (strcmp(line, "/close") == 0) {
-                close_groupchat(self, m, self->num);
-                return;
-            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                send_group_action(self, ctx, m, line + strlen("/me "));
+            wstrsubst(ctx->line, L'¶', L'\n');
+
+            char line[MAX_STR_SIZE];
+
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+                memset(&line, 0, sizeof(line));
+
+            if (line[0] == '/') {
+                if (strcmp(line, "/close") == 0) {
+                    close_groupchat(self, m, self->num);
+                    return;
+                } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
+                    send_group_action(self, ctx, m, line + strlen("/me "));
+                } else {
+                    execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
+                }
             } else {
-                execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
-            }
-        } else if (!string_is_empty(line)) {
-            if (tox_group_message_send(m, self->num, (uint8_t *) line, strlen(line)) == -1) {
-                const char *errmsg = " * Failed to send message.";
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
+                if (tox_group_message_send(m, self->num, (uint8_t *) line, strlen(line)) == -1) {
+                    const char *errmsg = " * Failed to send message.";
+                    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, errmsg);
+                }
             }
         }
 

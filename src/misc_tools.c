@@ -176,6 +176,15 @@ int string_is_empty(const char *string)
     return string[0] == '\0';
 }
 
+/* Returns 1 if the string is empty, 0 otherwise */
+int wstring_is_empty(const wchar_t *string)
+{
+    if (!string)
+        return true;
+
+    return string[0] == L'\0';
+}
+
 /* convert a multibyte string to a wide character string and puts in buf. */
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
 {

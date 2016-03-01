@@ -757,7 +757,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
 
     switch (key) {
-        case '\n':
+        case '\r':
             if (blocklist_view)
                 break;
 

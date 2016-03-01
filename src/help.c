@@ -245,7 +245,9 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
     wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
     wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n");
-    wprintw(win, "  Ctrl+B                    : Toggle the groupchat peerlist\n\n");
+    wprintw(win, "  Ctrl+B                    : Toggle the groupchat peerlist\n");
+    wprintw(win, "  Ctrl+J                    : Insert new line\n");
+    wprintw(win, "  Ctrl+T                    : Toggle paste mode\n\n");
     wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
 
     help_draw_bottom_menu(win);
@@ -335,7 +337,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'k':
-            help_init_window(self, 13, 80);
+            help_init_window(self, 15, 80);
             self->help->type = HELP_KEYS;
             break;
 

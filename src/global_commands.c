@@ -36,6 +36,7 @@
 #include "avatars.h"
 #include "name_lookup.h"
 #include "qr_code.h"
+#include "toxic_strings.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -513,11 +514,12 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    /* remove opening and closing quotes */
+    /* remove opening and closing quotes and replace linebreaks with spaces */
     char msg[MAX_STR_SIZE];
     snprintf(msg, sizeof(msg), "%s", &argv[1][1]);
     int len = strlen(msg) - 1;
     msg[len] = '\0';
+    strsubst(msg, '\n', ' ');
 
     prompt_update_statusmessage(prompt, m, msg);
 }

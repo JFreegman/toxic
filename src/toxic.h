@@ -70,6 +70,7 @@
 #define T_KEY_C_L        0x0C     /* ctrl-l */
 #define T_KEY_C_W        0x17     /* ctrl-w */
 #define T_KEY_C_B        0x02     /* ctrl-b */
+#define T_KEY_C_T        0x14     /* ctrl-t */
 #define T_KEY_TAB        0x09     /* TAB key */
 
 #define ONLINE_CHAR "*"

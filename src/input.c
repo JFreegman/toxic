@@ -42,9 +42,12 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
 {
     ChatContext *ctx = self->chatwin;
 
+    /* this is the only place we need to do this check */
+    if (key == '\n')
+        key = L'¶';
+
     int cur_len = wcwidth(key);
 
-    /* this is the only place we need to do this check */
     if (cur_len == -1) {
         sound_notify(self, notif_error, 0, NULL);
         return;
@@ -266,15 +269,19 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
 
     /* TODO: this special case is ugly.
        maybe convert entire function to if/else and make them all customizable keys? */
-    if (!match && key == user_settings->key_toggle_peerlist) {
-        if (self->is_groupchat) {
-            self->show_peerlist ^= 1;
-            redraw_groupchat_win(self);
+    if (!match) {
+        if (key == user_settings->key_toggle_peerlist) {
+            if (self->is_groupchat) {
+                self->show_peerlist ^= 1;
+                redraw_groupchat_win(self);
+            }
+            match = true;
         }
-
-        match = true;
+        else if (key == user_settings->key_toggle_pastemode) {
+            self->chatwin->pastemode ^= 1;
+            match = true;
+        }
     }
-
 
     return match;
 }

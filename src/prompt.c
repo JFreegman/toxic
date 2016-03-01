@@ -189,13 +189,16 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (x2 <= 0 || y2 <= 0)
         return;
 
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
     /* ignore non-menu related input if active */
     if (self->help->active) {
         help_onKey(self, key);
         return;
     }
 
-    if (ltr) {    /* char is printable */
+    if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
         return;
     }
@@ -232,19 +235,22 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         } else {
             sound_notify(self, notif_error, 0, NULL);
         }
-    } else if (key == '\n') {
+    } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
-        char line[MAX_STR_SIZE] = {0};
-
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
-
-        if (!string_is_empty(line))
+        if (!wstring_is_empty(ctx->line))
+        {
             add_line_to_hist(ctx);
+            wstrsubst(ctx->line, L'¶', L'\n');
 
-        line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
-        execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
+            char line[MAX_STR_SIZE] = {0};
+
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+                memset(&line, 0, sizeof(line));
+
+            line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
+            execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
+        }
 
         wclear(ctx->linewin);
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);

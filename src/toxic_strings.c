@@ -166,19 +166,19 @@ void reset_buf(ChatContext *ctx)
     ctx->start = 0;
 }
 
-/* Removes trailing spaces from line. */
+/* Removes trailing spaces and newlines from line. */
 void rm_trailing_spaces_buf(ChatContext *ctx)
 {
     if (ctx->len <= 0)
         return;
 
-    if (ctx->line[ctx->len - 1] != ' ')
+    if (ctx->line[ctx->len - 1] != ' ' && ctx->line[ctx->len - 1] != L'¶')
         return;
 
     int i;
 
     for (i = ctx->len - 1; i >= 0; --i) {
-        if (ctx->line[i] != ' ')
+        if (ctx->line[i] != ' ' && ctx->line[i] != L'¶')
             break;
     }
 
@@ -241,4 +241,20 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     wmemcpy(ctx->line, hst_line, h_len + 1);
     ctx->pos = h_len;
     ctx->len = h_len;
+}
+
+void strsubst(char* str, char old, char new)
+{
+    int i;
+    for (i = 0; str[i] != '\0'; ++i)
+        if (str[i] == old)
+           str[i] = new;
+}
+
+void wstrsubst(wchar_t* str, wchar_t old, wchar_t new)
+{
+    int i;
+    for (i = 0; str[i] != L'\0'; ++i)
+        if (str[i] == old)
+           str[i] = new;
 }

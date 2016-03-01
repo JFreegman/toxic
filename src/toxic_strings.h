@@ -66,4 +66,8 @@ void add_line_to_hist(ChatContext *ctx);
    resets line if at end of history */
 void fetch_hist_item(ChatContext *ctx, int key_dir);
 
+/* Substitutes all occurrences of old with new. */
+void strsubst(char *str, char old, char new);
+void wstrsubst(wchar_t *str, wchar_t old, wchar_t new);
+
 #endif /* #define TOXIC_STRINGS_H */
