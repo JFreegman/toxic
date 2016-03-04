@@ -219,6 +219,8 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
         return;
     }
 
+    statusbar->connection = connection_status;
+
     if (connection_status != TOX_CONNECTION_NONE && statusbar->connection == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = user_settings->show_typing_other == SHOW_TYPING_ON
                                       ? tox_friend_get_typing(m, num, NULL) : false;
@@ -239,8 +241,6 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
     }
-
-    statusbar->connection = connection_status;
 }
 
 static void chat_onTypingChange(ToxWindow *self, Tox *m, uint32_t num, bool is_typing)
