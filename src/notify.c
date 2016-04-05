@@ -580,7 +580,6 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
     alDeleteSources(1, &actives[id].source);
     alDeleteBuffers(1,&actives[id].buffer);
 
-
     alGenSources(1, &actives[id].source);
     alGenBuffers(1, &actives[id].buffer);
     actives[id].buffer = alutCreateBufferFromFile(Control.sounds[notif]);

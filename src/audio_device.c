@@ -357,7 +357,8 @@ DeviceError register_device_callback( int32_t friend_number, uint32_t device_idx
     return de_None;
 }
 
-inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels)
+inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t sample_count, uint8_t channels,
+                               uint32_t sample_rate)
 {
     if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
 
@@ -386,7 +387,7 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_
     }
 
 
-    alBufferData(bufid, device->sound_mode, data, length * 2 * channels, device->sample_rate);
+    alBufferData(bufid, channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, data, sample_count * 2 * channels, sample_rate);
     alSourceQueueBuffers(device->source, 1, &bufid);
 
     ALint state;
