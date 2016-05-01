@@ -90,6 +90,7 @@ sounds = {
 
 // Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN (case insensitive)
 // Note: All printable keys register as input
+// Note2: Ctrl+M does not work
 keys = {
   next_tab="Ctrl+P";
   prev_tab="Ctrl+O";

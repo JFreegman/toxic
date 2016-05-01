@@ -230,11 +230,11 @@ static const struct sound_strings {
 };
 #endif
 
-static int key_parse(const char** bind){
+static int key_parse(const char **bind) {
     int len = strlen(*bind);
 
     if (len > 5) {
-        if(strncasecmp(*bind, "ctrl+", 5) == 0)
+        if(strncasecmp(*bind, "ctrl+", 5) == 0 && toupper(bind[0][5]) != 'M')   /* ctrl+m cannot be used */
             return toupper(bind[0][5]) - 'A' + 1;
     }
 
@@ -245,6 +245,14 @@ static int key_parse(const char** bind){
         return len == 6 ? KEY_PPAGE : KEY_NPAGE;
 
     return -1;
+}
+
+static void set_key_binding(int *key, const char **bind) {
+    int code = key_parse(bind);
+
+    if (code != -1) {
+        *key = code;
+    }
 }
 
 int settings_load(struct user_settings *s, const char *patharg)
@@ -383,27 +391,27 @@ int settings_load(struct user_settings *s, const char *patharg)
     if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
         const char* tmp = NULL;
         if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
-            s->key_next_tab = key_parse(&tmp);
+            set_key_binding(&s->key_next_tab, &tmp);
         if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
-            s->key_prev_tab = key_parse(&tmp);
+            set_key_binding(&s->key_prev_tab, &tmp);
         if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
-            s->key_scroll_line_up = key_parse(&tmp);
+            set_key_binding(&s->key_scroll_line_up, &tmp);
         if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
-            s->key_scroll_line_down= key_parse(&tmp);
+            set_key_binding(&s->key_scroll_line_down, &tmp);
         if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
-            s->key_half_page_up = key_parse(&tmp);
+            set_key_binding(&s->key_half_page_up, &tmp);
         if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
-            s->key_half_page_down = key_parse(&tmp);
+            set_key_binding(&s->key_half_page_down, &tmp);
         if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
-            s->key_page_bottom = key_parse(&tmp);
+            set_key_binding(&s->key_page_bottom, &tmp);
         if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
-            s->key_peer_list_up = key_parse(&tmp);
+            set_key_binding(&s->key_peer_list_up, &tmp);
         if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
-            s->key_peer_list_down = key_parse(&tmp);
+            set_key_binding(&s->key_peer_list_down, &tmp);
         if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
-            s->key_toggle_peerlist = key_parse(&tmp);
+            set_key_binding(&s->key_toggle_peerlist, &tmp);
         if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp))
-            s->key_toggle_pastemode = key_parse(&tmp);
+            set_key_binding(&s->key_toggle_pastemode, &tmp);
     }
 
 #ifdef AUDIO
