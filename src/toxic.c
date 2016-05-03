@@ -584,25 +584,36 @@ static void first_time_encrypt(const char *msg)
 #define TEMP_PROFILE_EXT ".tmp"
 int store_data(Tox *m, const char *path)
 {
-    if (path == NULL)
+    if (path == NULL) {
         return -1;
+    }
 
     char temp_path[strlen(path) + strlen(TEMP_PROFILE_EXT) + 1];
     snprintf(temp_path, sizeof(temp_path), "%s%s", path, TEMP_PROFILE_EXT);
 
     FILE *fp = fopen(temp_path, "wb");
 
-    if (fp == NULL)
+    if (fp == NULL) {
         return -1;
+    }
 
     size_t data_len = tox_get_savedata_size(m);
-    char data[data_len];
+    char *data = malloc(data_len * sizeof(char));
+
+    if (data == NULL) {
+        return -1;
+    }
 
     tox_get_savedata(m, (uint8_t *) data);
 
     if (user_password.data_is_encrypted && !arg_opts.unencrypt_data) {
         size_t enc_len = data_len + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
-        char enc_data[enc_len];
+        char *enc_data = malloc(enc_len * sizeof(char));
+
+        if (enc_data == NULL) {
+            free(data);
+            return -1;
+        }
 
         TOX_ERR_ENCRYPTION err;
         tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) user_password.pass, user_password.len,
@@ -611,26 +622,33 @@ int store_data(Tox *m, const char *path)
         if (err != TOX_ERR_ENCRYPTION_OK) {
             fprintf(stderr, "tox_pass_encrypt() failed with error %d\n", err);
             fclose(fp);
+            free(data);
+            free(enc_data);
             return -1;
         }
 
         if (fwrite(enc_data, enc_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
+            free(data);
+            free(enc_data);
             return -1;
         }
     } else {  /* data will not be encrypted */
         if (fwrite(data, data_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
+            free(data);
             return -1;
         }
     }
 
     fclose(fp);
+    free(data);
 
-    if (rename(temp_path, path) != 0)
+    if (rename(temp_path, path) != 0) {
         return -1;
+    }
 
     return 0;
 }
