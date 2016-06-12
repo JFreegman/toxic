@@ -22,7 +22,7 @@
 
 /*
  * You can have multiple sources (Input devices) but only one output device.
- * Pass buffers to output device via write(); 
+ * Pass buffers to output device via write();
  * Read from running input device(s) via select()/callback combo.
  */
 
@@ -82,7 +82,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx
 DeviceError close_device(DeviceType type, uint32_t device_idx);
 
 /* Write data to device */
-DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels);
+DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels, uint32_t sample_rate);
 
 void print_devices(ToxWindow* self, DeviceType type);
 void get_primary_device_name(DeviceType type, char *buf, int size);

@@ -57,6 +57,7 @@ static struct ui_strings {
     const char* show_typing_self;
     const char* show_typing_other;
     const char* show_welcome_msg;
+    const char* show_connection_msg;
 
     const char* line_join;
     const char* line_quit;
@@ -79,6 +80,7 @@ static struct ui_strings {
     "show_typing_self",
     "show_typing_other",
     "show_welcome_msg",
+    "show_connection_msg",
     "line_join",
     "line_quit",
     "line_alert",
@@ -101,6 +103,7 @@ static void ui_defaults(struct user_settings* settings)
     settings->show_typing_self = SHOW_TYPING_ON;
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
+    settings->show_connection_msg = SHOW_CONNECTION_MSG_ON;
 
     snprintf(settings->line_join, LINE_HINT_MAX + 1, "%s", LINE_JOIN);
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
@@ -127,6 +130,7 @@ static const struct keys_strings {
     const char* peer_list_up;
     const char* peer_list_down;
     const char* toggle_peerlist;
+    const char* toggle_pastemode;
 } key_strings = {
     "keys",
     "next_tab",
@@ -139,6 +143,7 @@ static const struct keys_strings {
     "peer_list_up",
     "peer_list_down",
     "toggle_peerlist",
+    "toggle_paste_mode",
 };
 
 /* defines from toxic.h */
@@ -154,6 +159,7 @@ static void key_defaults(struct user_settings* settings)
     settings->key_peer_list_up = T_KEY_C_LB;
     settings->key_peer_list_down = T_KEY_C_RB;
     settings->key_toggle_peerlist = T_KEY_C_B;
+    settings->key_toggle_pastemode = T_KEY_C_T;
 }
 
 static const struct tox_strings {
@@ -161,11 +167,13 @@ static const struct tox_strings {
     const char* download_path;
     const char* chatlogs_path;
     const char* avatar_path;
+    const char* password_eval;
 } tox_strings = {
     "tox",
     "download_path",
     "chatlogs_path",
     "avatar_path",
+    "password_eval",
 };
 
 static void tox_defaults(struct user_settings* settings)
@@ -173,6 +181,7 @@ static void tox_defaults(struct user_settings* settings)
     strcpy(settings->download_path, "");
     strcpy(settings->chatlogs_path, "");
     strcpy(settings->avatar_path, "");
+    strcpy(settings->password_eval, "");
 }
 
 #ifdef AUDIO
@@ -224,11 +233,11 @@ static const struct sound_strings {
 };
 #endif
 
-static int key_parse(const char** bind){
+static int key_parse(const char **bind) {
     int len = strlen(*bind);
 
     if (len > 5) {
-        if(strncasecmp(*bind, "ctrl+", 5) == 0)
+        if(strncasecmp(*bind, "ctrl+", 5) == 0 && toupper(bind[0][5]) != 'M')   /* ctrl+m cannot be used */
             return toupper(bind[0][5]) - 'A' + 1;
     }
 
@@ -239,6 +248,14 @@ static int key_parse(const char** bind){
         return len == 6 ? KEY_PPAGE : KEY_NPAGE;
 
     return -1;
+}
+
+static void set_key_binding(int *key, const char **bind) {
+    int code = key_parse(bind);
+
+    if (code != -1) {
+        *key = code;
+    }
 }
 
 int settings_load(struct user_settings *s, const char *patharg)
@@ -311,6 +328,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
         config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
         config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
+        config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &s->show_connection_msg);
 
         if ( config_setting_lookup_string(setting, ui_strings.line_join, &str) ) {
             snprintf(s->line_join, sizeof(s->line_join), "%s", str);
@@ -365,31 +383,41 @@ int settings_load(struct user_settings *s, const char *patharg)
             if (len >= sizeof(s->avatar_path))
                 s->avatar_path[0] = '\0';
         }
+
+        if ( config_setting_lookup_string(setting, tox_strings.password_eval, &str) ) {
+            snprintf(s->password_eval, sizeof(s->password_eval), "%s", str);
+            int len = strlen(str);
+
+            if (len >= sizeof(s->password_eval))
+                s->password_eval[0] = '\0';
+        }
     }
 
     /* keys */
     if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
         const char* tmp = NULL;
         if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
-            s->key_next_tab = key_parse(&tmp);
+            set_key_binding(&s->key_next_tab, &tmp);
         if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
-            s->key_prev_tab = key_parse(&tmp);
+            set_key_binding(&s->key_prev_tab, &tmp);
         if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
-            s->key_scroll_line_up = key_parse(&tmp);
+            set_key_binding(&s->key_scroll_line_up, &tmp);
         if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
-            s->key_scroll_line_down= key_parse(&tmp);
+            set_key_binding(&s->key_scroll_line_down, &tmp);
         if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
-            s->key_half_page_up = key_parse(&tmp);
+            set_key_binding(&s->key_half_page_up, &tmp);
         if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
-            s->key_half_page_down = key_parse(&tmp);
+            set_key_binding(&s->key_half_page_down, &tmp);
         if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
-            s->key_page_bottom = key_parse(&tmp);
+            set_key_binding(&s->key_page_bottom, &tmp);
         if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
-            s->key_peer_list_up = key_parse(&tmp);
+            set_key_binding(&s->key_peer_list_up, &tmp);
         if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
-            s->key_peer_list_down = key_parse(&tmp);
+            set_key_binding(&s->key_peer_list_down, &tmp);
         if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
-            s->key_toggle_peerlist = key_parse(&tmp);
+            set_key_binding(&s->key_toggle_peerlist, &tmp);
+        if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp))
+            set_key_binding(&s->key_toggle_pastemode, &tmp);
     }
 
 #ifdef AUDIO

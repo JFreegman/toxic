@@ -1090,7 +1090,10 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
-    if (ltr) {    /* char is printable */
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
+    if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
         return;
     }
@@ -1133,40 +1136,43 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     } else if (key == user_settings->key_peer_list_up) {
         if (chat->side_pos > 0)
             --chat->side_pos;
-    } else if (key == '\n') {
+    } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
-        char line[MAX_STR_SIZE];
-
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
-
-        if (!string_is_empty(line))
+        if (!wstring_is_empty(ctx->line)) {
             add_line_to_hist(ctx);
 
-        if (line[0] == '/') {
-            if (strncmp(line, "/close", strlen("/close")) == 0) {
-                int offset = 6;
+            wstrsubst(ctx->line, L'¶', L'\n');
 
-                if (line[offset] != '\0')
-                    ++offset;
+            char line[MAX_STR_SIZE];
 
-                exit_groupchat(self, m, self->num, line + offset, ctx->len - offset);
-                return;
-            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                send_group_message(self, m, self->num, line + 4, TOX_MESSAGE_TYPE_ACTION);
-            } else if (strncmp(line, "/whisper ", strlen("/whisper ")) == 0) {
-                send_group_prvt_message(self, m, self->num, line + 9, ctx->len - 9);
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+                memset(&line, 0, sizeof(line));
+
+            if (line[0] == '/') {
+                if (strncmp(line, "/close", strlen("/close")) == 0) {
+                    int offset = 6;
+
+                    if (line[offset] != '\0')
+                        ++offset;
+
+                    exit_groupchat(self, m, self->num, line + offset, ctx->len - offset);
+                    return;
+                } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
+                    send_group_message(self, m, self->num, line + 4, TOX_MESSAGE_TYPE_ACTION);
+                } else if (strncmp(line, "/whisper ", strlen("/whisper ")) == 0) {
+                    send_group_prvt_message(self, m, self->num, line + 9, ctx->len - 9);
+                } else {
+                    execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
+                }
             } else {
-                execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
+                send_group_message(self, m, self->num, line, TOX_MESSAGE_TYPE_NORMAL);
             }
-        } else if (!string_is_empty(line)) {
-            send_group_message(self, m, self->num, line, TOX_MESSAGE_TYPE_NORMAL);
-        }
 
-        wclear(ctx->linewin);
-        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
-        reset_buf(ctx);
+            wclear(ctx->linewin);
+            wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+            reset_buf(ctx);
+        }
     }
 }
 

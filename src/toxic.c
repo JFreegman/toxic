@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <termios.h>
+#include <ctype.h>
 
 #include <tox/tox.h>
 #include <tox/toxencryptsave.h>
@@ -200,6 +201,7 @@ static void init_term(void)
     cbreak();
     keypad(stdscr, 1);
     noecho();
+    nonl();
     timeout(100);
 
     if (has_colors()) {
@@ -484,6 +486,45 @@ static int password_prompt(char *buf, int size)
     return len;
 }
 
+/* Get the password from the eval command.
+ * return length of password on success, 0 on failure
+ */
+static int password_eval(char *buf, int size)
+{
+    buf[0] = '\0';
+
+    /* Run password_eval command */
+    FILE *f = popen(user_settings->password_eval, "r");
+    if (f == NULL) {
+        fprintf(stderr, "Executing password_eval failed\n");
+        return 0;
+    }
+
+    /* Get output from command */
+    char *ret = fgets(buf, size, f);
+    if (ret == NULL) {
+        fprintf(stderr, "Reading password from password_eval command failed\n");
+        pclose(f);
+        return 0;
+    }
+
+    /* Get exit status */
+    int status = pclose(f);
+    if (status != 0) {
+        fprintf(stderr, "password_eval command returned error %d\n", status);
+        return 0;
+    }
+
+    /* Removez whitespace or \n at end */
+    int i, len = strlen(buf);
+    for (i = len - 1; i > 0 && isspace(buf[i]); i--) {
+        buf[i] = 0;
+        len--;
+    }
+
+    return len;
+}
+
 /* Ask user if they would like to encrypt the data file and set password */
 static void first_time_encrypt(const char *msg)
 {
@@ -555,25 +596,36 @@ static void first_time_encrypt(const char *msg)
 #define TEMP_PROFILE_EXT ".tmp"
 int store_data(Tox *m, const char *path)
 {
-    if (path == NULL)
+    if (path == NULL) {
         return -1;
+    }
 
     char temp_path[strlen(path) + strlen(TEMP_PROFILE_EXT) + 1];
     snprintf(temp_path, sizeof(temp_path), "%s%s", path, TEMP_PROFILE_EXT);
 
     FILE *fp = fopen(temp_path, "wb");
 
-    if (fp == NULL)
+    if (fp == NULL) {
         return -1;
+    }
 
     size_t data_len = tox_get_savedata_size(m);
-    char data[data_len];
+    char *data = malloc(data_len * sizeof(char));
+
+    if (data == NULL) {
+        return -1;
+    }
 
     tox_get_savedata(m, (uint8_t *) data);
 
     if (user_password.data_is_encrypted && !arg_opts.unencrypt_data) {
         size_t enc_len = data_len + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
-        char enc_data[enc_len];
+        char *enc_data = malloc(enc_len * sizeof(char));
+
+        if (enc_data == NULL) {
+            free(data);
+            return -1;
+        }
 
         TOX_ERR_ENCRYPTION err;
         tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) user_password.pass, user_password.len,
@@ -582,26 +634,33 @@ int store_data(Tox *m, const char *path)
         if (err != TOX_ERR_ENCRYPTION_OK) {
             fprintf(stderr, "tox_pass_encrypt() failed with error %d\n", err);
             fclose(fp);
+            free(data);
+            free(enc_data);
             return -1;
         }
 
         if (fwrite(enc_data, enc_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
+            free(data);
+            free(enc_data);
             return -1;
         }
     } else {  /* data will not be encrypted */
         if (fwrite(data, data_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
+            free(data);
             return -1;
         }
     }
 
     fclose(fp);
+    free(data);
 
-    if (rename(temp_path, path) != 0)
+    if (rename(temp_path, path) != 0) {
         return -1;
+    }
 
     return 0;
 }
@@ -714,14 +773,21 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 user_password.data_is_encrypted = true;
 
             size_t pwlen = 0;
-            system("clear");   // TODO: is this portable?
-            printf("Enter password (q to quit) ");
+            int pweval = user_settings->password_eval[0];
+            if (!pweval) {
+                system("clear");   // TODO: is this portable?
+                printf("Enter password (q to quit) ");
+            }
 
             size_t plain_len = len - TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
             char plain[plain_len];
 
             while (true) {
-                pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
+                if (pweval) {
+                    pwlen = password_eval(user_password.pass, sizeof(user_password.pass));
+                } else {
+                    pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
+                }
                 user_password.len = pwlen;
 
                 if (strcasecmp(user_password.pass, "q") == 0) {
@@ -733,6 +799,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                     system("clear");
                     sleep(1);
                     printf("Invalid password. Try again. ");
+                    pweval = 0;
                     continue;
                 }
 
@@ -757,6 +824,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                     system("clear");
                     sleep(1);
                     printf("Invalid password. Try again. ");
+                    pweval = 0;
                 } else {
                     fclose(fp);
                     exit_toxic_err("tox_pass_decrypt() failed", pwerr);
@@ -859,7 +927,6 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
 
     tox_iterate(m);
     do_bootstrap(m);
-    check_file_transfer_timeouts(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -1198,25 +1265,6 @@ static void init_default_data_files(void)
     free(user_config_dir);
 }
 
-#define REC_TOX_DO_LOOPS_PER_SEC 25
-
-/* Adjusts usleep value so that tox_do runs close to the recommended number of times per second */
-static useconds_t optimal_msleepval(uint64_t *looptimer, uint64_t *loopcount, uint64_t cur_time, useconds_t msleepval)
-{
-    useconds_t new_sleep = MAX(msleepval, 3);
-    ++(*loopcount);
-
-    if (*looptimer == cur_time)
-        return new_sleep;
-
-    if (*loopcount != REC_TOX_DO_LOOPS_PER_SEC)
-        new_sleep *= (double) *loopcount / REC_TOX_DO_LOOPS_PER_SEC;
-
-    *looptimer = cur_time;
-    *loopcount = 0;
-    return new_sleep;
-}
-
 // this doesn't do anything (yet)
 #ifdef X11
 void DnD_callback(const char* asdv, DropType dt)
@@ -1350,9 +1398,6 @@ int main(int argc, char **argv)
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
     uint64_t last_save = (uint64_t) time(NULL);
-    uint64_t looptimer = last_save;
-    useconds_t msleepval = 40000;
-    uint64_t loopcount = 0;
 
     while (true) {
         do_toxic(m, prompt);
@@ -1368,8 +1413,7 @@ int main(int argc, char **argv)
             last_save = cur_time;
         }
 
-        msleepval = optimal_msleepval(&looptimer, &loopcount, cur_time, msleepval);
-        usleep(msleepval);
+        usleep(tox_iteration_interval(m) * 1000);
     }
 
     return 0;

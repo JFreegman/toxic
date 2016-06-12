@@ -103,7 +103,8 @@ void callback_call_canceled ( uint32_t friend_number );
 void callback_call_rejected ( uint32_t friend_number );
 void callback_call_ended    ( uint32_t friend_number );
 
-void write_device_callback( uint32_t friend_number, const int16_t* PCM, uint16_t size );
+void write_device_callback( uint32_t friend_number, const int16_t* PCM, uint16_t sample_count, uint8_t channels,
+                            uint32_t sample_rate );
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -120,9 +121,9 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallControl.av = toxav_new(tox, &error);
 
     CallControl.audio_enabled = true;
-    CallControl.audio_bit_rate = 48;
+    CallControl.audio_bit_rate = 64;
     CallControl.audio_sample_rate = 48000;
-    CallControl.audio_frame_duration = 10;
+    CallControl.audio_frame_duration = 20;
     CallControl.audio_channels = 1;
 
 #ifndef VIDEO
@@ -180,10 +181,11 @@ void read_device_callback(const int16_t* captured, uint32_t size, void* data)
     {}
 }
 
-void write_device_callback(uint32_t friend_number, const int16_t* PCM, uint16_t size)
+void write_device_callback(uint32_t friend_number, const int16_t* PCM, uint16_t sample_count, uint8_t channels,
+                           uint32_t sample_rate)
 {
     if ( CallControl.calls[friend_number].ttas )
-        write_out(CallControl.calls[friend_number].out_idx, PCM, size, CallControl.audio_channels);
+        write_out(CallControl.calls[friend_number].out_idx, PCM, sample_count, channels, sample_rate);
 }
 
 int start_transmission(ToxWindow *self, Call *call)
@@ -328,7 +330,7 @@ void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number,
                                     int16_t const *pcm, size_t sample_count,
                                     uint8_t channels, uint32_t sampling_rate, void *user_data)
 {
-    write_device_callback(friend_number, pcm, frame_size);
+    write_device_callback(friend_number, pcm, sample_count, channels, sampling_rate);
 }
 
 void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,

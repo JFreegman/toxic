@@ -29,6 +29,9 @@ ui = {
   // true to show the welcome message on startup
   show_welcome_msg=true;
 
+  // true to show friend connection change messages on the home screen
+  show_connection_msg=true;
+
   // maximum lines for chat window history
   history_size=700;
 
@@ -90,6 +93,7 @@ sounds = {
 
 // Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN (case insensitive)
 // Note: All printable keys register as input
+// Note2: Ctrl+M does not work
 keys = {
   next_tab="Ctrl+P";
   prev_tab="Ctrl+O";
@@ -101,5 +105,6 @@ keys = {
   peer_list_up="Ctrl+[";
   peer_list_down="Ctrl+]";
   toggle_peerlist="Ctrl+b";
+  toggle_paste_mode="Ctrl+T";
 };
 

@@ -216,7 +216,14 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, nick, num);
 
-    if (connection_status != TOX_CONNECTION_NONE && statusbar->connection == TOX_CONNECTION_NONE) {
+    TOX_CONNECTION prev_status = statusbar->connection;
+    statusbar->connection = connection_status;
+
+    if (user_settings->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
+        return;
+    }
+
+    if (prev_status == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = user_settings->show_typing_other == SHOW_TYPING_ON
                                       ? tox_friend_get_typing(m, num, NULL) : false;
         chat_resume_file_senders(self, m, num);
@@ -236,8 +243,6 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
     }
-
-    statusbar->connection = connection_status;
 }
 
 static void chat_onTypingChange(ToxWindow *self, Tox *m, uint32_t num, bool is_typing)
@@ -764,33 +769,6 @@ void chat_onEnd (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onRequestTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
-{
-    if (!self || self->num != friend_number)
-        return;
-
-    self->is_call = false;
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No answer!");
-
-#ifdef SOUND_NOTIFY
-    stop_sound(self->ringing_sound);
-#endif /* SOUND_NOTIFY */
-}
-
-void chat_onPeerTimeout (ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
-{
-    if (!self || self->num != friend_number)
-        return;
-
-    self->is_call = false;
-    kill_infobox(self);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer disconnected; call ended!");
-
-#ifdef SOUND_NOTIFY
-    stop_sound(self->ringing_sound);
-#endif /* SOUND_NOTIFY */
-}
-
 static void init_infobox(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
@@ -899,7 +877,6 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
-
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
@@ -910,12 +887,15 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (y2 <= 0 || x2 <= 0)
         return;
 
+    if (ctx->pastemode && key == '\r')
+        key = '\n';
+
     if (self->help->active) {
         help_onKey(self, key);
         return;
     }
 
-    if (ltr) {    /* char is printable */
+    if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
 
         if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->connection != TOX_CONNECTION_NONE)
@@ -957,38 +937,42 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             sound_notify(self, notif_error, 0, NULL);
         }
 
-    } else if (key == '\n') {
+    } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
-        char line[MAX_STR_SIZE];
-
-        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
-            memset(&line, 0, sizeof(line));
-
-        if (!string_is_empty(line))
+        if (!wstring_is_empty(ctx->line))
+        {
             add_line_to_hist(ctx);
 
-        if (line[0] == '/') {
-            if (strcmp(line, "/close") == 0) {
-                kill_chat_window(self, m);
-                return;
-            } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                send_action(self, ctx, m, line + strlen("/me "));
+            wstrsubst(ctx->line, L'¶', L'\n');
+
+            char line[MAX_STR_SIZE] = {0};
+
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+                memset(&line, 0, sizeof(line));
+
+            if (line[0] == '/') {
+                if (strcmp(line, "/close") == 0) {
+                    kill_chat_window(self, m);
+                    return;
+                } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
+                    send_action(self, ctx, m, line + strlen("/me "));
+                } else {
+                    execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
+                }
             } else {
-                execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
+                char selfname[TOX_MAX_NAME_LENGTH];
+                tox_self_get_name(m, (uint8_t *) selfname);
+
+                size_t len = tox_self_get_name_size(m);
+                selfname[len] = '\0';
+
+                char timefrmt[TIME_STR_SIZE];
+                get_time_str(timefrmt, sizeof(timefrmt));
+
+                line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
+                cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, ctx->hst->line_end->id + 1);
             }
-        } else if (!string_is_empty(line)) {
-            char selfname[TOX_MAX_NAME_LENGTH];
-            tox_self_get_name(m, (uint8_t *) selfname);
-
-            size_t len = tox_self_get_name_size(m);
-            selfname[len] = '\0';
-
-            char timefrmt[TIME_STR_SIZE];
-            get_time_str(timefrmt, sizeof(timefrmt));
-
-            line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
-            cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, ctx->hst->line_end->id + 1);
         }
 
         wclear(ctx->linewin);

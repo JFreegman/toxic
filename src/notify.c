@@ -234,17 +234,17 @@ void* do_playing(void* _p)
         }
 
         bool has_looping = false;
+        bool test_active_notify = false;
         int i;
 
         for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
 
             if (actives[i].looping) has_looping = true;
-
-            if (actives[i].active && !actives[i].looping
-                #ifdef BOX_NOTIFY
-                    && !actives[i].box
-                #endif
-            ) {
+            test_active_notify = actives[i].active && !actives[i].looping;
+            #ifdef BOX_NOTIFY
+                test_active_notify = test_active_notify && !actives[i].box;
+            #endif
+            if (test_active_notify) {
                 if(actives[i].id_indicator)
                     *actives[i].id_indicator = -1;    /* reset indicator value */
 
@@ -579,7 +579,6 @@ int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id)
     alSourceStop(actives[id].source);
     alDeleteSources(1, &actives[id].source);
     alDeleteBuffers(1,&actives[id].buffer);
-
 
     alGenSources(1, &actives[id].source);
     alGenBuffers(1, &actives[id].buffer);

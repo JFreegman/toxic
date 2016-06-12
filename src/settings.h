@@ -30,6 +30,8 @@
 /* Represents line_* hints max strlen */
 #define LINE_HINT_MAX 3
 
+#define PASSWORD_EVAL_MAX 512
+
 /* holds user setting values */
 struct user_settings {
     int autolog;           /* boolean */
@@ -44,6 +46,7 @@ struct user_settings {
     int show_typing_self;  /* boolean */
     int show_typing_other; /* boolean */
     int show_welcome_msg;  /* boolean */
+    int show_connection_msg;  /* boolean */
 
     char line_join[LINE_HINT_MAX + 1];
     char line_quit[LINE_HINT_MAX + 1];
@@ -54,6 +57,7 @@ struct user_settings {
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
     char avatar_path[PATH_MAX];
+    char password_eval[PASSWORD_EVAL_MAX];
 
     int key_next_tab;
     int key_prev_tab;
@@ -65,6 +69,7 @@ struct user_settings {
     int key_peer_list_up;
     int key_peer_list_down;
     int key_toggle_peerlist;
+    int key_toggle_pastemode;
 
     int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
     char mplex_away_note [TOX_MAX_STATUS_MESSAGE_LENGTH];
@@ -94,6 +99,9 @@ enum {
 
     SHOW_WELCOME_MSG_OFF = 0,
     SHOW_WELCOME_MSG_ON = 1,
+
+    SHOW_CONNECTION_MSG_OFF = 0,
+    SHOW_CONNECTION_MSG_ON = 1,
 
     DFLT_HST_SIZE = 700,
 

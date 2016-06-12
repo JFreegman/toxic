@@ -53,12 +53,14 @@ static void print_matches(ToxWindow *self, Tox *m, const void *list, int n_items
 }
 
 /* puts match in match buffer. if more than one match, add first n chars that are identical.
-   e.g. if matches contains: [foo, foobar, foe] we put fo in matches. */
-static void get_str_match(ToxWindow *self, char *match, char (*matches)[MAX_STR_SIZE], int n)
+ * e.g. if matches contains: [foo, foobar, foe] we put fo in match.
+ *
+ * Returns the length of the match.
+ */
+static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char (*matches)[MAX_STR_SIZE], int n)
 {
     if (n == 1) {
-        strcpy(match, matches[0]);
-        return;
+        return snprintf(match, match_sz, "%s", matches[0]);
     }
 
     int i;
@@ -71,14 +73,14 @@ static void get_str_match(ToxWindow *self, char *match, char (*matches)[MAX_STR_
             char ch2 = matches[j][i];
 
             if (ch1 != ch2 || !ch1) {
-                strcpy(match, matches[0]);
+                snprintf(match, match_sz, "%s", matches[0]);
                 match[i] = '\0';
-                return;
+                return i;
             }
         }
     }
 
-    strcpy(match, matches[0]);
+    return snprintf(match, match_sz, "%s", matches[0]);
 }
 
 /* looks for all instances in list that begin with the last entered word in line according to pos,
@@ -164,8 +166,11 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
         print_matches(self, NULL, matches, n_matches, MAX_STR_SIZE);
 
     char match[MAX_STR_SIZE];
-    get_str_match(self, match, matches, n_matches);
-    size_t match_len = strlen(match);
+    size_t match_len = get_str_match(self, match, sizeof(match), matches, n_matches);
+
+    if (match_len == 0) {
+        return 0;
+    }
 
     if (dir_search) {
         if (n_matches == 1)
@@ -180,15 +185,15 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     int n_endchrs = strlen(endchrs);
     int strt = ctx->pos - s_len;
     int diff = match_len - s_len + n_endchrs;
-
     if (ctx->len + diff >= MAX_STR_SIZE)
         return -1;
 
     char tmpend[MAX_STR_SIZE];
     snprintf(tmpend, sizeof(tmpend), "%s", &ubuf[ctx->pos]);
 
-    if (match_len + n_endchrs + strlen(tmpend) >= sizeof(ubuf))
+    if (match_len + n_endchrs + strlen(tmpend) >= sizeof(ubuf)) {
         return -1;
+    }
 
     strcpy(&ubuf[strt], match);
     strcpy(&ubuf[strt + match_len], endchrs);
@@ -197,8 +202,9 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     /* convert to widechar and copy back to original buf */
     wchar_t newbuf[MAX_STR_SIZE];
 
-    if (mbs_to_wcs_buf(newbuf, ubuf, sizeof(newbuf) / sizeof(wchar_t)) == -1)
+    if (mbs_to_wcs_buf(newbuf, ubuf, sizeof(newbuf) / sizeof(wchar_t)) == -1) {
         return -1;
+    }
 
     wcscpy(ctx->line, newbuf);
 

@@ -36,6 +36,7 @@
 #include "avatars.h"
 #include "name_lookup.h"
 #include "qr_code.h"
+#include "toxic_strings.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
