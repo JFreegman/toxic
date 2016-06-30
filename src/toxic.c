@@ -646,6 +646,8 @@ int store_data(Tox *m, const char *path)
             free(enc_data);
             return -1;
         }
+
+        free(enc_data);
     } else {  /* data will not be encrypted */
         if (fwrite(data, data_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
