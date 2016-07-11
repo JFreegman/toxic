@@ -228,7 +228,7 @@ int stop_transmission(Call *call, uint32_t friend_number)
     if ( call->ttas ) {
         TOXAV_ERR_CALL_CONTROL error = TOXAV_ERR_CALL_CONTROL_OK;
 
-        if ( CallControl.call_state != TOXAV_FRIEND_CALL_STATE_FINISHED )
+        if ( CallControl.call_state > TOXAV_FRIEND_CALL_STATE_FINISHED )
             toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
 
         if ( error == TOXAV_ERR_CALL_CONTROL_OK ) {
