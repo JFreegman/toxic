@@ -85,27 +85,7 @@ Time format string for logging enclosed by double quotes\&. See
 .PP
 \fBalerts\fR
 .RS 4
-Enable or disable terminal alerts on events\&. true or false
-.RE
-.PP
-\fBbeep_on_message\fR
-.RS 4
-Beep when receiving a message\&. true or false
-.RE
-.PP
-\fBbeep_on_filetrans\fR
-.RS 4
-Beep when receiving a filetransfer\&. true or false
-.RE
-.PP
-\fBbeep_on_filetrans_accept\fR
-.RS 4
-Beep when a filetransfer was accepted\&. true or false
-.RE
-.PP
-\fBbeep_on_invite\fR
-.RS 4
-Beep when receiving a group/call invite\&. true or false
+Enable or disable acoustic alerts on events\&. true or false
 .RE
 .PP
 \fBnative_colors\fR
@@ -171,6 +151,30 @@ Set user status when attaching and detaching from GNU screen or tmux\&. true or 
 \fBmplex_away_note\fR
 .RS 4
 Status message to set when status is set to away due to screen/tmux detach\&. When attaching, the status message is set back to the original value\&.
+.RE
+.PP
+The following options control whether to output a terminal bell on certain events\&.
+.br
+Some terminals mark the window as urgent when a bell is received\&. Urgent windows are usually highlighted in the taskbar and some window managers even provide shortcuts to jump to the next urgent window\&. These options don't affect the "alerts" option\&.
+.PP
+\fBbell_on_message\fR
+.RS 4
+Enable/Disable the terminal bell when receiving a message\&. true or false
+.RE
+.PP
+\fBbell_on_filetrans\fR
+.RS 4
+Enable/Disable the terminal bell when receiving a filetransfer\&. true or false
+.RE
+.PP
+\fBbell_on_filetrans_accept\fR
+.RS 4
+Enable/Disable the terminal bell when a filetransfer was accepted\&. true or false
+.RE
+.PP
+\fBbell_on_invite\fR
+.RS 4
+Enable/Disable the terminal bell when receiving a group/call invite\&. true or false
 .RE
 .RE
 .PP

@@ -5,20 +5,20 @@ ui = {
   // true to enable timestamps, false to disable
   timestamps=true;
 
-  // true to enable terminal alerts on messages, false to disable
+  // true to enable acoustic alerts on messages, false to disable
   alerts=true;
 
-  // Beep when receiving a message
-  beep_on_message=true
+  // Output a bell when receiving a message (see manpage)
+  bell_on_message=true
 
-  // Beep when receiving a filetransfer
-  beep_on_filetrans=true
+  // Output a bell when receiving a filetransfer (see manpage)
+  bell_on_filetrans=true
 
-  // Don't beep when a filetransfer was accepted
-  beep_on_filetrans_accept=false
+  // Don't output a bell when a filetransfer was accepted (see manpage)
+  bell_on_filetrans_accept=false
 
-  // Beep when receiving a group/call invite
-  beep_on_invite=true
+  // Output a bell when receiving a group/call invite (see manpage)
+  bell_on_invite=true
 
   // true to use native terminal colours, false to use toxic default colour theme
   native_colors=false;
