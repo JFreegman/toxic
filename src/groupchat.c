@@ -258,7 +258,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, int groupnum, int 
 
     /* Only play sound if mentioned by someone else */
     if (strcasestr(msg, selfnick) && strcmp(selfnick, nick)) {
-        sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
+        sound_notify(self, generic_message, NT_WNDALERT_0 | user_settings->bell_on_message, NULL);
 
         if (self->active_box != -1)
             box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
@@ -296,7 +296,7 @@ static void groupchat_onGroupAction(ToxWindow *self, Tox *m, int groupnum, int p
     selfnick[n_len] = '\0';
 
     if (strcasestr(action, selfnick)) {
-        sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
+        sound_notify(self, generic_message, NT_WNDALERT_0 | user_settings->bell_on_message, NULL);
 
         if (self->active_box != -1)
             box_silent_notify2(self, NT_NOFOCUS, self->active_box, "* %s %s", nick, action );

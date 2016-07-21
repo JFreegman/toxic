@@ -5,8 +5,20 @@ ui = {
   // true to enable timestamps, false to disable
   timestamps=true;
 
-  // true to enable terminal alerts on messages, false to disable
+  // true to enable acoustic alerts on messages, false to disable
   alerts=true;
+
+  // Output a bell when receiving a message (see manpage)
+  bell_on_message=true
+
+  // Output a bell when receiving a filetransfer (see manpage)
+  bell_on_filetrans=true
+
+  // Don't output a bell when a filetransfer was accepted (see manpage)
+  bell_on_filetrans_accept=false
+
+  // Output a bell when receiving a group/call invite (see manpage)
+  bell_on_invite=true
 
   // true to use native terminal colours, false to use toxic default colour theme
   native_colors=false;

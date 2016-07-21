@@ -160,9 +160,11 @@ static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const cha
     write_to_log(msg, nick, ctx->log, false);
 
     if (self->active_box != -1)
-        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "%s", msg);
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                self->active_box, "%s", msg);
     else
-        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, nick, "%s", msg);
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                &self->active_box, nick, "%s", msg);
 }
 
 static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char *action, size_t len,
@@ -174,9 +176,11 @@ static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char
     write_to_log(action, nick, ctx->log, true);
 
     if (self->active_box != -1)
-        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                self->active_box, "* %s %s", nick, action );
     else
-        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action );
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                &self->active_box, self->name, "* %s %s", nick, action );
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TYPE type, const char *msg, size_t len)
@@ -454,7 +458,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
                 char progline[MAX_STR_SIZE];
                 init_progress_bar(progline);
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-                sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
+                sound_notify(self, silent, NT_NOFOCUS | user_settings->bell_on_filetrans_accept | NT_WNDALERT_2, NULL);
                 ft->line_id = self->chatwin->hst->line_end->id + 2;
             } else if (ft->state == FILE_TRANSFER_PAUSED) {    /* transfer is resumed */
                 ft->state = FILE_TRANSFER_STARTED;
@@ -596,11 +600,11 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     tox_file_get_file_id(m, friendnum, filenum, ft->file_id, NULL);
 
     if (self->active_box != -1)
-        box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box,
-                    "Incoming file: %s", filename );
+        box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
+                self->active_box, "Incoming file: %s", filename );
     else
-        box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, &self->active_box, self->name,
-                    "Incoming file: %s", filename );
+        box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
+                &self->active_box, self->name, "Incoming file: %s", filename );
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t type, const char *group_pub_key,
@@ -623,7 +627,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     Friends.list[friendnumber].group_invite.length = length;
     Friends.list[friendnumber].group_invite.type = type;
 
-    sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
+    sound_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, NULL);
 
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
@@ -651,7 +655,7 @@ void chat_onInvite (ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Incoming audio call! Type: \"/answer\" or \"/reject\"");
 
     if (self->ringing_sound == -1)
-        sound_notify(self, call_incoming, NT_LOOP, &self->ringing_sound);
+        sound_notify(self, call_incoming, NT_LOOP | user_settings->bell_on_invite, &self->ringing_sound);
 
     if (self->active_box != -1)
         box_silent_notify2(self, NT_NOFOCUS | NT_WNDALERT_0, self->active_box, "Incoming audio call!");
