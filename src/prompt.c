@@ -369,7 +369,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
-    wrefresh(self->window);
+    wnoutrefresh(self->window);
 
     if (self->help->active)
         help_onDraw(self);
