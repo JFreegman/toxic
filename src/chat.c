@@ -862,7 +862,7 @@ static void draw_infobox(ToxWindow *self)
     wprintw(infobox->win, "%.2f\n", infobox->vad_lvl);
 
     wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
-    wrefresh(infobox->win);
+    wnoutrefresh(infobox->win);
 }
 
 #endif /* AUDIO */
@@ -1104,12 +1104,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
-    wrefresh(self->window);
+    wnoutrefresh(self->window);
 
 #ifdef AUDIO
     if (ctx->infobox.active) {
         draw_infobox(self);
-        wrefresh(self->window);
     }
 #endif
 
