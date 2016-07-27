@@ -471,6 +471,11 @@ static void draw_window_tab(ToxWindow *toxwin)
 
 static void draw_bar(void)
 {
+    int y,x;
+
+    // save current cursor position
+    getyx(active_window->window, y, x);
+
     attron(COLOR_PAIR(BLUE));
     mvhline(LINES - 2, 0, '_', COLS);
     attroff(COLOR_PAIR(BLUE));
@@ -508,6 +513,9 @@ static void draw_bar(void)
             attroff(A_BOLD);
     }
 
+    // restore cursor position after drawing
+    move(y, x);
+
     refresh();
 }
 
@@ -525,6 +533,7 @@ void draw_active_window(Tox *m)
 
     touchwin(a->window);
     a->onDraw(a, m);
+    wrefresh(a->window);
 
     /* Handle input */
     bool ltr;
