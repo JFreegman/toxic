@@ -533,6 +533,7 @@ void draw_active_window(Tox *m)
 
     touchwin(a->window);
     a->onDraw(a, m);
+    wrefresh(a->window);
 
     /* Handle input */
     bool ltr;
