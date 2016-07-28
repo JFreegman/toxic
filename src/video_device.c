@@ -362,7 +362,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-        if( -1 == xioctl(device->fd, VIDIOC_G_FMT, &fmt) ) {
+        if( -1 == xioctl(device->fd, VIDIOC_S_FMT, &fmt) ) {
             close(device->fd);
             free(device);
             unlock;
