@@ -113,7 +113,11 @@ DeviceError init_devices()
     }
 
     size[output] = 0;
-    if ( (stringed_device_list = alcGetString(NULL, ALC_DEVICE_SPECIFIER)) ) {
+    if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") != AL_FALSE)
+        stringed_device_list = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+    else
+        stringed_device_list = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+    if (stringed_device_list) {
         ddevice_names[output] = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
 
         for ( ; *stringed_device_list && size[output] < MAX_DEVICES; ++size[output] ) {
