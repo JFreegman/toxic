@@ -60,6 +60,7 @@
 #include "execute.h"
 #include "term_mplex.h"
 #include "name_lookup.h"
+#include "bootstrap.h"
 
 #ifdef X11
     #include "xtra.h"
@@ -278,153 +279,6 @@ static void print_init_messages(ToxWindow *toxwin)
 
     for (i = 0; i < init_messages.num; ++i)
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
-}
-
-#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
-#define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
-#define MAXNODES 50
-#define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
-
-static struct toxNodes {
-    int lines;
-    char nodes[MAXNODES][NODELEN];
-    uint16_t ports[MAXNODES];
-    char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
-} toxNodes;
-
-static int load_nodelist(const char *filename)
-{
-    if (!filename)
-        return 1;
-
-    FILE *fp = fopen(filename, "r");
-
-    if (fp == NULL)
-        return 1;
-
-    char line[MAX_NODE_LINE];
-
-    while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
-        size_t line_len = strlen(line);
-
-        if (line_len >= MIN_NODE_LINE && line_len <= MAX_NODE_LINE) {
-            const char *name = strtok(line, " ");
-            const char *port_str = strtok(NULL, " ");
-            const char *key_ascii = strtok(NULL, " ");
-
-            if (name == NULL || port_str == NULL || key_ascii == NULL)
-                continue;
-
-            long int port = strtol(port_str, NULL, 10);
-
-            if (port <= 0 || port > MAX_PORT_RANGE)
-                continue;
-
-            size_t key_len = strlen(key_ascii);
-            size_t name_len = strlen(name);
-
-            if (key_len < TOX_PUBLIC_KEY_SIZE * 2 || name_len >= NODELEN)
-                continue;
-
-            snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
-            toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
-            toxNodes.ports[toxNodes.lines] = port;
-
-            /* remove possible trailing newline from key string */
-            char real_ascii_key[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-            memcpy(real_ascii_key, key_ascii, TOX_PUBLIC_KEY_SIZE * 2);
-            key_len = TOX_PUBLIC_KEY_SIZE * 2;
-            real_ascii_key[key_len] = '\0';
-
-            if (hex_string_to_bin(real_ascii_key, key_len, toxNodes.keys[toxNodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
-                continue;
-
-            toxNodes.lines++;
-        }
-    }
-
-    fclose(fp);
-
-    if (toxNodes.lines < 1)
-        return 1;
-
-    return 0;
-}
-
-/* Bootstraps and adds as TCP relay.
- * Returns 0 if both actions are successful.
- * Returns -1 otherwise.
- */
-int init_connection_helper(Tox *m, int line)
-{
-    TOX_ERR_BOOTSTRAP err;
-    tox_bootstrap(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], &err);
-
-    if (err != TOX_ERR_BOOTSTRAP_OK) {
-        fprintf(stderr, "Failed to bootstrap %s:%d\n", toxNodes.nodes[line], toxNodes.ports[line]);
-        return -1;
-    }
-
-    tox_add_tcp_relay(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], &err);
-
-    if (err != TOX_ERR_BOOTSTRAP_OK) {
-        fprintf(stderr, "Failed to add TCP relay %s:%d\n", toxNodes.nodes[line], toxNodes.ports[line]);
-        return -1;
-    }
-
-    return 0;
-}
-
-/* Connects to a random DHT node listed in the DHTnodes file
- *
- * return codes:
- * 0: success
- * 1: failed to open node file
- * 2: no line of sufficient length in node file
- * 3: failed to resolve name to IP
- * 4: nodelist file contains no acceptable line
- */
-static bool srvlist_loaded = false;
-
-#define NUM_INIT_NODES 5
-
-int init_connection(Tox *m)
-{
-    if (toxNodes.lines > 0) { /* already loaded nodelist */
-        init_connection_helper(m, rand() % toxNodes.lines);
-        return 0;
-    }
-
-    /* only once:
-     * - load the nodelist
-     * - connect to "everyone" inside
-     */
-    if (!srvlist_loaded) {
-        srvlist_loaded = true;
-        int res;
-
-        if (!arg_opts.nodes_path[0])
-            res = load_nodelist(PACKAGE_DATADIR "/DHTnodes");
-        else
-            res = load_nodelist(arg_opts.nodes_path);
-
-        if (res != 0)
-            return res;
-
-        res = 3;
-        int i;
-        int n = MIN(NUM_INIT_NODES, toxNodes.lines);
-
-        for (i = 0; i < n; ++i) {
-            if (init_connection_helper(m, rand() % toxNodes.lines) == 0)
-                res = 0;
-        }
-
-        return res;
-    }
-
-    /* empty nodelist file */
-    return 4;
 }
 
 static void load_friendlist(Tox *m)
@@ -873,30 +727,7 @@ static Tox *load_toxic(char *data_path)
     return m;
 }
 
-#define TRY_BOOTSTRAP_INTERVAL 5
-static uint64_t last_bootstrap_time = 0;
-
-static void do_bootstrap(Tox *m)
-{
-    static int conn_err = 0;
-
-    if (!timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL))
-        return;
-
-    if (tox_self_get_connection_status(m) != TOX_CONNECTION_NONE)
-        return;
-
-    if (conn_err != 0)
-        return;
-
-    last_bootstrap_time = get_unix_time();
-    conn_err = init_connection(m);
-
-    if (conn_err != 0)
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Auto-connect failed with error code %d", conn_err);
-}
-
-static void do_toxic(Tox *m, ToxWindow *prompt)
+static void do_toxic(Tox *m)
 {
     pthread_mutex_lock(&Winthread.lock);
     update_unix_time();
@@ -907,7 +738,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     }
 
     tox_iterate(m);
-    do_bootstrap(m);
+    do_tox_connection(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -1280,9 +1111,6 @@ int main(int argc, char **argv)
 
     bool datafile_exists = file_exists(DATA_FILE);
 
-    if (datafile_exists)
-        last_bootstrap_time = get_unix_time();
-
     if (!datafile_exists && !arg_opts.unencrypt_data)
         first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
     else if (arg_opts.encrypt_data)
@@ -1300,14 +1128,21 @@ int main(int argc, char **argv)
     if (settings_load(user_settings, p) == -1)
          queue_init_message("Failed to load user settings");
 
+    int nodelist_ret = load_DHT_nodelist();
+
+    if (nodelist_ret != 0) {
+        queue_init_message("DHT nodelist failed to load (error %d). You can still connect manually with the /connect command.", nodelist_ret);
+    }
+
     int nameserver_ret = name_lookup_init();
 
-    if (nameserver_ret == -1)
+    if (nameserver_ret == -1) {
         queue_init_message("curl failed to initialize; name lookup service is disabled.");
-    else if (nameserver_ret == -2)
+    } else if (nameserver_ret == -2) {
         queue_init_message("Name lookup server list could not be found.");
-    else if (nameserver_ret == -3)
+    } else if (nameserver_ret == -3) {
         queue_init_message("Name lookup server list does not contain any valid entries.");
+    }
 
 #ifdef X11
     if (init_xtra(DnD_callback) == -1)
@@ -1379,7 +1214,7 @@ int main(int argc, char **argv)
     uint64_t last_save = (uint64_t) time(NULL);
 
     while (true) {
-        do_toxic(m, prompt);
+        do_toxic(m);
 
         uint64_t cur_time = get_unix_time();
 
