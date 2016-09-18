@@ -89,8 +89,7 @@ int load_DHT_nodelist(void)
         /* Extract IPv4 address */
         const char *ip_start = strstr(line_start, IPV4_JSON_VALUE);
 
-        // TODO: These strlen() calls are very inefficient. Should probably keep track of length manually.
-        if (ip_start == NULL || strlen(ip_start) < IPV4_JSON_VALUE_LEN) {
+        if (ip_start == NULL) {
             continue;
         }
 
@@ -108,7 +107,7 @@ int load_DHT_nodelist(void)
         /* Extract port */
         const char *port_start = strstr(ip_start, PORT_JSON_VALUE);
 
-        if (!port_start || strlen(port_start) < PORT_JSON_VALUE_LEN) {
+        if (!port_start) {
             continue;
         }
 
@@ -131,7 +130,7 @@ int load_DHT_nodelist(void)
         /* Extract key */
         const char *key_start = strstr(port_start, KEY_JSON_VALUE);
 
-        if (!key_start || strlen(key_start) < KEY_JSON_VALUE_LEN) {
+        if (!key_start) {
             continue;
         }
 
