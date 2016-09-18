@@ -1,7 +1,7 @@
 /*  bootstrap.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2016 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -37,11 +37,23 @@ extern struct arg_opts arg_opts;
 /* Time to wait between bootstrap attempts */
 #define TRY_BOOTSTRAP_INTERVAL 5
 
+#define IPv4_MAX_SIZE 64
+#define PORT_MAX_SIZE 5
 
-#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
-#define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
+#define IPV4_JSON_VALUE "\"ipv4\":\""
+#define IPV4_JSON_VALUE_LEN (sizeof(IPV4_JSON_VALUE) - 1)
+
+#define PORT_JSON_VALUE "\"port\":"
+#define PORT_JSON_VALUE_LEN (sizeof(PORT_JSON_VALUE) - 1)
+
+#define KEY_JSON_VALUE "\"public_key\":\""
+#define KEY_JSON_VALUE_LEN (sizeof(KEY_JSON_VALUE) - 1)
+
+#define MIN_NODE_LINE  50   /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
+#define MAX_NODE_LINE  300  /* Max number of chars in a sever line (name + port + key) */
 #define MAXNODES 50
 #define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
+#define MAX_NODELIST_SIZE (1024 * MAXNODES)
 
 static struct toxNodes {
     size_t lines;
@@ -50,67 +62,104 @@ static struct toxNodes {
     char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
 } toxNodes;
 
-/* Load the DHT nodelist to memory.
+/* Load the DHT nodelist to memory from json formatted nodes file obtained at https://nodes.tox.chat/json.
  *
  * Return 0 on success.
  * Return -1 if nodelist file cannot be opened.
- * Return -2 if nodelist file does not contain any valid node entries.
+ * Return -2 if nodelist file cannot be parsed.
+ * Return -3 if nodelist file does not contain any valid node entries.
  */
 int load_DHT_nodelist(void)
 {
-
     const char *filename = !arg_opts.nodes_path[0] ? PACKAGE_DATADIR "/DHTnodes" : arg_opts.nodes_path;
-
     FILE *fp = fopen(filename, "r");
 
     if (fp == NULL)
         return -1;
 
-    char line[MAX_NODE_LINE];
+    char line[MAX_NODELIST_SIZE];
 
-    while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
-        size_t line_len = strlen(line);
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        return -2;
+    }
 
-        if (line_len >= MIN_NODE_LINE && line_len <= MAX_NODE_LINE) {
-            const char *name = strtok(line, " ");
-            const char *port_str = strtok(NULL, " ");
-            const char *key_ascii = strtok(NULL, " ");
+    const char *line_start = line;
 
-            if (name == NULL || port_str == NULL || key_ascii == NULL)
-                continue;
+    while ((line_start = strstr(line_start + 1, IPV4_JSON_VALUE)) && toxNodes.lines < MAXNODES) {
+        /* Extract IPv4 address */
+        const char *ip_start = strstr(line_start, IPV4_JSON_VALUE);
 
-            long int port = strtol(port_str, NULL, 10);
-
-            if (port <= 0 || port > MAX_PORT_RANGE)
-                continue;
-
-            size_t key_len = strlen(key_ascii);
-            size_t name_len = strlen(name);
-
-            if (key_len < TOX_PUBLIC_KEY_SIZE * 2 || name_len >= NODELEN)
-                continue;
-
-            snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
-            toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
-            toxNodes.ports[toxNodes.lines] = port;
-
-            /* remove possible trailing newline from key string */
-            char real_ascii_key[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-            memcpy(real_ascii_key, key_ascii, TOX_PUBLIC_KEY_SIZE * 2);
-            key_len = TOX_PUBLIC_KEY_SIZE * 2;
-            real_ascii_key[key_len] = '\0';
-
-            if (hex_string_to_bin(real_ascii_key, key_len, toxNodes.keys[toxNodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
-                continue;
-
-            toxNodes.lines++;
+        // TODO: These strlen() calls are very inefficient. Should probably keep track of length manually.
+        if (ip_start == NULL || strlen(ip_start) < IPV4_JSON_VALUE_LEN) {
+            continue;
         }
+
+        ip_start += IPV4_JSON_VALUE_LEN;
+        int ip_len = char_find(0, ip_start, '"');
+
+        if (ip_len == 0 || ip_len > IPv4_MAX_SIZE) {
+            continue;
+        }
+
+        char ipv4_string[ip_len + 1];
+        memcpy(ipv4_string, ip_start, ip_len);
+        ipv4_string[ip_len] = 0;
+
+        /* Extract port */
+        const char *port_start = strstr(ip_start, PORT_JSON_VALUE);
+
+        if (!port_start || strlen(port_start) < PORT_JSON_VALUE_LEN) {
+            continue;
+        }
+
+        port_start += PORT_JSON_VALUE_LEN;
+        int port_len = char_find(0, port_start, ',');
+
+        if (port_len == 0 || port_len > PORT_MAX_SIZE) {
+            continue;
+        }
+
+        char port_string[port_len + 1];
+        memcpy(port_string, port_start, port_len);
+        port_string[port_len] = 0;
+
+        long int port = strtol(port_string, NULL, 10);
+
+        if (port <= 0 || port > MAX_PORT_RANGE)
+            continue;
+
+        /* Extract key */
+        const char *key_start = strstr(port_start, KEY_JSON_VALUE);
+
+        if (!key_start || strlen(key_start) < KEY_JSON_VALUE_LEN) {
+            continue;
+        }
+
+        key_start += KEY_JSON_VALUE_LEN;
+        int key_len = char_find(0, key_start, '"');
+
+        if (key_len != TOX_PUBLIC_KEY_SIZE * 2) {
+            continue;
+        }
+
+        char key_string[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+        memcpy(key_string, key_start, TOX_PUBLIC_KEY_SIZE * 2);
+        key_string[TOX_PUBLIC_KEY_SIZE * 2] = 0;
+
+        /* Add IP-Port-Key to nodes list */
+        snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", ipv4_string);
+        toxNodes.ports[toxNodes.lines] = port;
+
+        if (hex_string_to_bin(key_string, key_len, toxNodes.keys[toxNodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
+            continue;
+
+        toxNodes.lines++;
     }
 
     fclose(fp);
 
     if (toxNodes.lines == 0)
-        return -2;
+        return -3;
 
     return 0;
 }
