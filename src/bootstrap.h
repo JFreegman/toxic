@@ -23,11 +23,12 @@
 /* Manages connection to the Tox DHT network. */
 void do_tox_connection(Tox *m);
 
-/* Load the DHT nodelist to memory from json formatted nodes file obtained attempts https://nodes.tox.chat/json.
+/* Load the DHT nodeslist to memory from json encoded nodes file obtained at NODES_LIST_URL.
+ * TODO: Parse json using a proper library?
  *
  * Return 0 on success.
- * Return -1 if nodelist file cannot be opened.
- * Return -2 if nodelist file cannot be parsed.
- * Return -3 if nodelist file does not contain any valid node entries.
+ * Return -1 if nodeslist file cannot be opened or created.
+ * Return -2 if nodeslist file cannot be parsed.
+ * Return -3 if nodeslist file does not contain any valid node entries.
  */
-int load_DHT_nodelist(void);
+int load_DHT_nodeslist(void);

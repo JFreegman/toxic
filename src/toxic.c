@@ -41,6 +41,7 @@
 #include <termios.h>
 #include <ctype.h>
 
+#include <curl/curl.h>
 #include <tox/tox.h>
 #include <tox/toxencryptsave.h>
 
@@ -164,7 +165,7 @@ void exit_toxic_success(Tox *m)
     free_global_data();
     tox_kill(m);
     endwin();
-    name_lookup_cleanup();
+    curl_global_cleanup();
 
 #ifdef X11
     /* We have to terminate xtra last coz reasons
@@ -455,6 +456,7 @@ int store_data(Tox *m, const char *path)
     char *data = malloc(data_len * sizeof(char));
 
     if (data == NULL) {
+        fclose(fp);
         return -1;
     }
 
@@ -465,6 +467,7 @@ int store_data(Tox *m, const char *path)
         char *enc_data = malloc(enc_len * sizeof(char));
 
         if (enc_data == NULL) {
+            fclose(fp);
             free(data);
             return -1;
         }
@@ -580,14 +583,14 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
         if (len == 0) {
             fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
 
         char data[len];
 
         if (fread(data, sizeof(data), 1, fp) != 1) {
             fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
 
         bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
@@ -595,7 +598,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted) {
             fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_ENCRYPT);
+            exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
         }
 
         if (arg_opts.unencrypt_data && is_encrypted)
@@ -681,7 +684,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         fclose(fp);
     } else {   /* Data file does not/should not exist */
         if (file_exists(data_path))
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
 
         tox_opts->savedata_type = TOX_SAVEDATA_TYPE_NONE;
 
@@ -691,7 +694,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
             return NULL;
 
         if (store_data(m, data_path) == -1)
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
     }
 
     return m;
@@ -920,10 +923,6 @@ static void parse_args(int argc, char *argv[])
 
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
-
-                if (!file_exists(arg_opts.nodes_path))
-                    queue_init_message("DHTnodes file not found");
-
                 break;
 
             case 'o':
@@ -1092,6 +1091,7 @@ void DnD_callback(const char* asdv, DropType dt)
 
 int main(int argc, char **argv)
 {
+    update_unix_time();
     parse_args(argc, argv);
 
     /* Use the -b flag to enable stderr */
@@ -1125,16 +1125,12 @@ int main(int argc, char **argv)
 
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
-    if (settings_load(user_settings, p) == -1)
+    if (settings_load(user_settings, p) == -1) {
          queue_init_message("Failed to load user settings");
-
-    int nodelist_ret = load_DHT_nodelist();
-
-    if (nodelist_ret != 0) {
-        queue_init_message("DHT nodelist failed to load (error %d). You can still connect manually with the /connect command.", nodelist_ret);
     }
 
-    int nameserver_ret = name_lookup_init();
+    int curl_init = curl_global_init(CURL_GLOBAL_ALL);
+    int nameserver_ret = name_lookup_init(curl_init);
 
     if (nameserver_ret == -1) {
         queue_init_message("curl failed to initialize; name lookup service is disabled.");
@@ -1142,6 +1138,12 @@ int main(int argc, char **argv)
         queue_init_message("Name lookup server list could not be found.");
     } else if (nameserver_ret == -3) {
         queue_init_message("Name lookup server list does not contain any valid entries.");
+    }
+
+    int nodeslist_ret = load_DHT_nodeslist();
+
+    if (nodeslist_ret != 0) {
+        queue_init_message("DHT nodeslist failed to load (error %d)\n", nodeslist_ret);
     }
 
 #ifdef X11

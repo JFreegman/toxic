@@ -33,7 +33,7 @@
 #include "configdir.h"
 #include "misc_tools.h"
 
-/* get the user's home directory */
+/* get the user's home directory. */
 void get_home_dir(char *home, int size)
 {
     struct passwd pwd;
@@ -102,8 +102,10 @@ char *get_user_config_dir(void)
     return user_config_dir;
 }
 
-/*
- * Creates the config and chatlog directories.
+/* Creates the config and chatlog directories.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
  */
 int create_user_config_dirs(char *path)
 {
