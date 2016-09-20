@@ -74,9 +74,9 @@ int set_curl_proxy(CURL *c_handle, const char *proxy_address, uint16_t port, uin
  * Returns number of bytes received from http request on success (don't change this).
  * Returns 0 if data exceeds buffer size.
  */
-size_t write_lookup_data(void *data, size_t size, size_t nmemb, void *user_pointer)
+size_t curl_cb_write_data(void *data, size_t size, size_t nmemb, void *user_pointer)
 {
-    struct Recv_Data *recv_data = (struct Recv_Data *) user_pointer;
+    struct Recv_Curl_Data *recv_data = (struct Recv_Curl_Data *) user_pointer;
 
     size_t length = size * nmemb;
     size_t total_size = length + recv_data->length;

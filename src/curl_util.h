@@ -27,7 +27,7 @@
 #define MAX_RECV_CURL_DATA_SIZE 32767
 
 /* Holds data received from curl lookup */
-struct Recv_Data {
+struct Recv_Curl_Data {
     char data[MAX_RECV_CURL_DATA_SIZE + 1];   /* Data received from curl write data callback */
     size_t length;  /* Total number of bytes written to data buffer (doesn't include null) */
 };
@@ -47,4 +47,4 @@ int set_curl_proxy(CURL *c_handle, const char *proxy_address, uint16_t port, uin
  *
  * Returns size of bytes written to the data buffer.
  */
-size_t write_lookup_data(void *data, size_t size, size_t nmemb, void *user_pointer);
+size_t curl_cb_write_data(void *data, size_t size, size_t nmemb, void *user_pointer);

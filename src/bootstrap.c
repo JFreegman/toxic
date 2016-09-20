@@ -33,9 +33,10 @@
 #include "misc_tools.h"
 #include "configdir.h"
 #include "curl_util.h"
-
+#include "settings.h"
 
 extern struct arg_opts arg_opts;
+extern struct user_settings *user_settings;
 
 /* URL that we get the JSON encoded nodes list from. */
 #define NODES_LIST_URL "https://nodes.tox.chat/json"
@@ -47,9 +48,6 @@ extern struct arg_opts arg_opts;
 
 /* Number of nodes to bootstrap to per try */
 #define NUM_BOOTSTRAP_NODES 5
-
-/* How often we should update the nodeslist file. */
-#define NODELIST_UPDATE_TIMEOUT (60*24*30)
 
 #define IPv4_MAX_SIZE 64
 #define PORT_MAX_SIZE 5
@@ -72,12 +70,12 @@ extern struct arg_opts arg_opts;
 #define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
 #define MAX_NODELIST_SIZE (1024 * MAXNODES)
 
-static struct toxNodes {
+static struct DHT_Nodes {
     size_t lines;
     char nodes[MAXNODES][NODELEN];
     uint16_t ports[MAXNODES];
     char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
-} toxNodes;
+} Nodes;
 
 
 /* Return true if nodeslist pointed to by fp needs to be updated.
@@ -86,6 +84,10 @@ static struct toxNodes {
  */
 static bool nodeslist_needs_update(const char *nodes_path)
 {
+    if (user_settings->nodeslist_update_freq <= 0) {
+        return false;
+    }
+
     FILE *fp = fopen(nodes_path, "r+");
 
     if (fp == NULL) {
@@ -111,7 +113,7 @@ static bool nodeslist_needs_update(const char *nodes_path)
     last_scan_val += LAST_SCAN_JSON_VALUE_LEN;
     long long int last_scan = strtoll(last_scan_val, NULL, 10);
 
-    if (timed_out(last_scan, NODELIST_UPDATE_TIMEOUT)) {
+    if (timed_out(last_scan, user_settings->nodeslist_update_freq * 24 * 60 * 60)) {
         return true;
     }
 
@@ -123,7 +125,7 @@ static bool nodeslist_needs_update(const char *nodes_path)
  * Return 0 on success.
  * Return -1 on failure.
  */
-static int curl_fetch_nodes_JSON(struct Recv_Data *recv_data)
+static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
 {
     CURL *c_handle = curl_easy_init();
 
@@ -137,7 +139,7 @@ static int curl_fetch_nodes_JSON(struct Recv_Data *recv_data)
 
     curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(c_handle, CURLOPT_URL, NODES_LIST_URL);
-    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, write_lookup_data);
+    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
     curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     curl_easy_setopt(c_handle, CURLOPT_HTTPGET, 1L);
@@ -202,8 +204,8 @@ static int update_DHT_nodeslist(const char *nodes_path)
         return -1;
     }
 
-    struct Recv_Data recv_data;
-    memset(&recv_data, 0, sizeof(struct Recv_Data));
+    struct Recv_Curl_Data recv_data;
+    memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
 
     if (curl_fetch_nodes_JSON(&recv_data) == -1) {
         fclose(fp);
@@ -276,7 +278,7 @@ int load_DHT_nodeslist(void)
 
     const char *line_start = line;
 
-    while ((line_start = strstr(line_start + 1, IPV4_JSON_VALUE)) && toxNodes.lines < MAXNODES) {
+    while ((line_start = strstr(line_start + 1, IPV4_JSON_VALUE)) && Nodes.lines < MAXNODES) {
         /* Extract IPv4 address */
         const char *ip_start = strstr(line_start, IPV4_JSON_VALUE);
 
@@ -338,19 +340,19 @@ int load_DHT_nodeslist(void)
         key_string[TOX_PUBLIC_KEY_SIZE * 2] = 0;
 
         /* Add entry to nodes list */
-        snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", ipv4_string);
-        toxNodes.ports[toxNodes.lines] = port;
+        snprintf(Nodes.nodes[Nodes.lines], sizeof(Nodes.nodes[Nodes.lines]), "%s", ipv4_string);
+        Nodes.ports[Nodes.lines] = port;
 
-        if (hex_string_to_bin(key_string, key_len, toxNodes.keys[toxNodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
+        if (hex_string_to_bin(key_string, key_len, Nodes.keys[Nodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
             continue;
 
-        toxNodes.lines++;
+        Nodes.lines++;
     }
 
     /* If nodeslist does not contain any valid entries we set the last_scan value
      * to 0 so that it will fetch a new list the next time this function is called.
      */
-    if (toxNodes.lines == 0) {
+    if (Nodes.lines == 0) {
         const char *s = "{\"last_scan\":0}";
         rewind(fp);
         fwrite(s, strlen(s), 1, fp);  // Not much we can do if it fails
@@ -365,26 +367,26 @@ int load_DHT_nodeslist(void)
 /* Connects to NUM_BOOTSTRAP_NODES random DHT nodes listed in the DHTnodes file. */
 static void DHT_bootstrap(Tox *m)
 {
-    if (toxNodes.lines == 0) {
+    if (Nodes.lines == 0) {
         return;
     }
 
     size_t i;
 
     for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
-        size_t node = rand() % toxNodes.lines;
+        size_t node = rand() % Nodes.lines;
 
         TOX_ERR_BOOTSTRAP err;
-        tox_bootstrap(m, toxNodes.nodes[node], toxNodes.ports[node], (uint8_t *) toxNodes.keys[node], &err);
+        tox_bootstrap(m, Nodes.nodes[node], Nodes.ports[node], (uint8_t *) Nodes.keys[node], &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
-            fprintf(stderr, "Failed to bootstrap %s:%d\n", toxNodes.nodes[node], toxNodes.ports[node]);
+            fprintf(stderr, "Failed to bootstrap %s:%d\n", Nodes.nodes[node], Nodes.ports[node]);
         }
 
-        tox_add_tcp_relay(m, toxNodes.nodes[node], toxNodes.ports[node], (uint8_t *) toxNodes.keys[node], &err);
+        tox_add_tcp_relay(m, Nodes.nodes[node], Nodes.ports[node], (uint8_t *) Nodes.keys[node], &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
-            fprintf(stderr, "Failed to add TCP relay %s:%d\n", toxNodes.nodes[node], toxNodes.ports[node]);
+            fprintf(stderr, "Failed to add TCP relay %s:%d\n", Nodes.nodes[node], Nodes.ports[node]);
         }
     }
 }

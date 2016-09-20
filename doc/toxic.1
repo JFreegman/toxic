@@ -82,7 +82,8 @@ Show help message
 .RS 4
 Use specified
 \fInodes\-file\fR
-for DHT bootstrap nodes, instead of the default
+for DHT bootstrap nodes instead of
+\fI~/\&.config/tox/DHTnodes\&.json\fR
 .RE
 .PP
 \-o, \-\-noconnect
@@ -124,7 +125,8 @@ Unencrypt a data file\&. A warning will appear if this option is used with a dat
 ~/\&.config/tox/DHTnodes\&.json
 .RS 4
 Default location for list of DHT bootstrap nodes (list obtained from
-https://nodes\&.tox\&.chat)\&. This list is automatically updated every 30 days\&.
+https://nodes\&.tox\&.chat)\&. This list is automatically updated\&. See
+\fBtoxic\&.conf\fR(5) for details on controlling the update frequency\&.
 .RE
 .PP
 ~/\&.config/tox/toxic_profile\&.tox

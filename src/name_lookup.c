@@ -192,7 +192,7 @@ static bool get_domain_match(char *pubkey, char *out_domain, size_t out_domain_s
  * Returns -1 on failure.
  */
 #define ID_PREFIX "\"tox_id\": \""
-static int process_response(struct Recv_Data *recv_data)
+static int process_response(struct Recv_Curl_Data *recv_data)
 {
     size_t prefix_size = strlen(ID_PREFIX);
 
@@ -248,8 +248,8 @@ void *lookup_thread_func(void *data)
         kill_lookup_thread();
     }
 
-    struct Recv_Data recv_data;
-    memset(&recv_data, 0, sizeof(struct Recv_Data));
+    struct Recv_Curl_Data recv_data;
+    memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
 
     char post_data[MAX_STR_SIZE];
     snprintf(post_data, sizeof(post_data), "{\"action\": 3, \"name\": \"%s\"}", name);
@@ -261,7 +261,7 @@ void *lookup_thread_func(void *data)
 
     curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
-    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, write_lookup_data);
+    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
     curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, &recv_data);
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
