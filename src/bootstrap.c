@@ -40,7 +40,7 @@ extern struct arg_opts arg_opts;
 /* URL that we get the JSON encoded nodes list from. */
 #define NODES_LIST_URL "https://nodes.tox.chat/json"
 
-#define DEFAULT_NODES_FILENAME "DHTnodes"
+#define DEFAULT_NODES_FILENAME "DHTnodes.json"
 
 /* Time to wait between bootstrap attempts */
 #define TRY_BOOTSTRAP_INTERVAL 5
