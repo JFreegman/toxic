@@ -1143,7 +1143,7 @@ int main(int argc, char **argv)
     int nodeslist_ret = load_DHT_nodeslist();
 
     if (nodeslist_ret != 0) {
-        queue_init_message("DHT nodeslist failed to load (error %d)\n", nodeslist_ret);
+        queue_init_message("DHT nodeslist failed to load (error %d)", nodeslist_ret);
     }
 
 #ifdef X11

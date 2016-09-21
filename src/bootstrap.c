@@ -49,33 +49,50 @@ extern struct user_settings *user_settings;
 /* Number of nodes to bootstrap to per try */
 #define NUM_BOOTSTRAP_NODES 5
 
-#define IPv4_MAX_SIZE 64
+/* Number of seconds since last successful ping before we consider a node offline */
+#define NODE_OFFLINE_TIMOUT (60*60*24*2)
+
+#define IP_MAX_SIZE 45
 #define PORT_MAX_SIZE 5
 
-#define LAST_SCAN_JSON_VALUE "\"last_scan\":"
-#define LAST_SCAN_JSON_VALUE_LEN (sizeof(LAST_SCAN_JSON_VALUE) - 1)
+#define LAST_SCAN_JSON_KEY "\"last_scan\":"
+#define LAST_SCAN_JSON_KEY_LEN (sizeof(LAST_SCAN_JSON_KEY) - 1)
 
-#define IPV4_JSON_VALUE "\"ipv4\":\""
-#define IPV4_JSON_VALUE_LEN (sizeof(IPV4_JSON_VALUE) - 1)
+#define IPV4_JSON_KEY "\"ipv4\":\""
+#define IPV4_JSON_KEY_LEN (sizeof(IPV4_JSON_KEY) - 1)
 
-#define PORT_JSON_VALUE "\"port\":"
-#define PORT_JSON_VALUE_LEN (sizeof(PORT_JSON_VALUE) - 1)
+#define PORT_JSON_KEY "\"port\":"
+#define PORT_JSON_KEY_LEN (sizeof(PORT_JSON_KEY) - 1)
 
-#define KEY_JSON_VALUE "\"public_key\":\""
-#define KEY_JSON_VALUE_LEN (sizeof(KEY_JSON_VALUE) - 1)
+#define PK_JSON_KEY "\"public_key\":\""
+#define PK_JSON_KEY_LEN (sizeof(PK_JSON_KEY) - 1)
 
-#define MIN_NODE_LINE  50   /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
-#define MAX_NODE_LINE  300  /* Max number of chars in a sever line (name + port + key) */
+#define LAST_PING_JSON_KEY "\"last_ping\":"
+#define LAST_PING_JSON_KEY_LEN (sizeof(LAST_PING_JSON_KEY) - 1)
+
+/* Maximum allowable size of the nodes list */
+#define MAX_NODELIST_SIZE (MAX_RECV_CURL_DATA_SIZE)
+
 #define MAXNODES 50
-#define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
-#define MAX_NODELIST_SIZE (1024 * MAXNODES)
+struct Node {
+    char ip4[IP_MAX_SIZE + 1];
+    char ip6[IP_MAX_SIZE + 1];
+    char key[TOX_PUBLIC_KEY_SIZE];
+    uint16_t port;
+};
 
 static struct DHT_Nodes {
-    size_t lines;
-    char nodes[MAXNODES][NODELEN];
-    uint16_t ports[MAXNODES];
-    char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
+    struct Node list[MAXNODES];
+    size_t count;
+    uint64_t last_updated;
 } Nodes;
+
+
+/* Determine if a node is offline by comparing the age of the nodeslist
+ * to the last time the node was successfully pinged.
+ */
+#define NODE_IS_OFFLINE(last_scan, last_ping) ((last_ping + NODE_OFFLINE_TIMOUT) <= (last_ping))
+
 
 /* Return true if nodeslist pointed to by fp needs to be updated.
  * This will be the case if the file is empty, has an invalid format,
@@ -94,7 +111,7 @@ static bool nodeslist_needs_update(const char *nodes_path)
     }
 
     /* last_scan value should be at beginning of file */
-    char line[LAST_SCAN_JSON_VALUE_LEN + 32];
+    char line[LAST_SCAN_JSON_KEY_LEN + 32];
 
     if (fgets(line, sizeof(line), fp) == NULL) {
         fclose(fp);
@@ -103,14 +120,15 @@ static bool nodeslist_needs_update(const char *nodes_path)
 
     fclose(fp);
 
-    const char *last_scan_val = strstr(line, LAST_SCAN_JSON_VALUE);
+    const char *last_scan_val = strstr(line, LAST_SCAN_JSON_KEY);
 
     if (last_scan_val == NULL) {
         return true;
     }
 
-    last_scan_val += LAST_SCAN_JSON_VALUE_LEN;
+    last_scan_val += LAST_SCAN_JSON_KEY_LEN;
     long long int last_scan = strtoll(last_scan_val, NULL, 10);
+    Nodes.last_updated = last_scan;
 
     if (timed_out(last_scan, user_settings->nodeslist_update_freq * 24 * 60 * 60)) {
         return true;
@@ -268,7 +286,7 @@ int load_DHT_nodeslist(void)
         fprintf(stderr, "update_DHT_nodeslist() failed with error %d\n", update_err);
     }
 
-    char line[MAX_NODELIST_SIZE];
+    char line[MAX_NODELIST_SIZE + 1];
 
     if (fgets(line, sizeof(line), fp) == NULL) {
         fclose(fp);
@@ -277,18 +295,18 @@ int load_DHT_nodeslist(void)
 
     const char *line_start = line;
 
-    while ((line_start = strstr(line_start + 1, IPV4_JSON_VALUE)) && Nodes.lines < MAXNODES) {
+    while ((line_start = strstr(line_start + 1, IPV4_JSON_KEY)) && Nodes.count < MAXNODES) {
         /* Extract IPv4 address */
-        const char *ip_start = strstr(line_start, IPV4_JSON_VALUE);
+        const char *ip_start = strstr(line_start, IPV4_JSON_KEY);
 
         if (ip_start == NULL) {
             continue;
         }
 
-        ip_start += IPV4_JSON_VALUE_LEN;
+        ip_start += IPV4_JSON_KEY_LEN;
         int ip_len = char_find(0, ip_start, '"');
 
-        if (ip_len == 0 || ip_len > IPv4_MAX_SIZE) {
+        if (ip_len == 0 || ip_len > IP_MAX_SIZE) {
             continue;
         }
 
@@ -302,13 +320,13 @@ int load_DHT_nodeslist(void)
         }
 
         /* Extract port */
-        const char *port_start = strstr(ip_start, PORT_JSON_VALUE);
+        const char *port_start = strstr(ip_start, PORT_JSON_KEY);
 
         if (!port_start) {
             continue;
         }
 
-        port_start += PORT_JSON_VALUE_LEN;
+        port_start += PORT_JSON_KEY_LEN;
         int port_len = char_find(0, port_start, ',');
 
         if (port_len == 0 || port_len > PORT_MAX_SIZE) {
@@ -326,13 +344,13 @@ int load_DHT_nodeslist(void)
         }
 
         /* Extract key */
-        const char *key_start = strstr(port_start, KEY_JSON_VALUE);
+        const char *key_start = strstr(port_start, PK_JSON_KEY);
 
         if (!key_start) {
             continue;
         }
 
-        key_start += KEY_JSON_VALUE_LEN;
+        key_start += PK_JSON_KEY_LEN;
         int key_len = char_find(0, key_start, '"');
 
         if (key_len != TOX_PUBLIC_KEY_SIZE * 2) {
@@ -343,20 +361,33 @@ int load_DHT_nodeslist(void)
         memcpy(key_string, key_start, TOX_PUBLIC_KEY_SIZE * 2);
         key_string[TOX_PUBLIC_KEY_SIZE * 2] = 0;
 
-        /* Add entry to nodes list */
-        snprintf(Nodes.nodes[Nodes.lines], sizeof(Nodes.nodes[Nodes.lines]), "%s", ipv4_string);
-        Nodes.ports[Nodes.lines] = port;
+        /* Check last pinged value and ignore nodes that appear offline */
+        const char *last_pinged_str = strstr(key_start, LAST_PING_JSON_KEY);
 
-        if (hex_string_to_bin(key_string, key_len, Nodes.keys[Nodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
+        if (!last_pinged_str) {
             continue;
+        }
 
-        Nodes.lines++;
+        last_pinged_str += LAST_PING_JSON_KEY_LEN;
+        long long int last_pinged = strtoll(last_pinged_str, NULL, 10);
+
+        if (last_pinged <= 0 || NODE_IS_OFFLINE(Nodes.last_scan, last_pinged)) {
+            continue;
+        }
+
+        /* Add entry to nodes list */
+        size_t idx = Nodes.count++;
+        snprintf(Nodes.list[idx].ip4, sizeof(Nodes.list[idx].ip4), "%s", ipv4_string);
+        Nodes.list[idx].port = port;
+
+        if (hex_string_to_bin(key_string, key_len, Nodes.list[idx].key, TOX_PUBLIC_KEY_SIZE) == -1)
+            continue;
     }
 
     /* If nodeslist does not contain any valid entries we set the last_scan value
      * to 0 so that it will fetch a new list the next time this function is called.
      */
-    if (Nodes.lines == 0) {
+    if (Nodes.count == 0) {
         const char *s = "{\"last_scan\":0}";
         rewind(fp);
         fwrite(s, strlen(s), 1, fp);  // Not much we can do if it fails
@@ -371,26 +402,26 @@ int load_DHT_nodeslist(void)
 /* Connects to NUM_BOOTSTRAP_NODES random DHT nodes listed in the DHTnodes file. */
 static void DHT_bootstrap(Tox *m)
 {
-    if (Nodes.lines == 0) {
+    if (Nodes.count == 0) {
         return;
     }
 
     size_t i;
 
     for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
-        size_t node = rand() % Nodes.lines;
+        size_t node = rand() % Nodes.count;
 
         TOX_ERR_BOOTSTRAP err;
-        tox_bootstrap(m, Nodes.nodes[node], Nodes.ports[node], (uint8_t *) Nodes.keys[node], &err);
+        tox_bootstrap(m, Nodes.list[node].ip4, Nodes.list[node].port, (uint8_t *) Nodes.list[node].key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
-            fprintf(stderr, "Failed to bootstrap %s:%d\n", Nodes.nodes[node], Nodes.ports[node]);
+            fprintf(stderr, "Failed to bootstrap %s:%d\n", Nodes.list[node].ip4, Nodes.list[node].port);
         }
 
-        tox_add_tcp_relay(m, Nodes.nodes[node], Nodes.ports[node], (uint8_t *) Nodes.keys[node], &err);
+        tox_add_tcp_relay(m, Nodes.list[node].ip4, Nodes.list[node].port, (uint8_t *) Nodes.list[node].key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
-            fprintf(stderr, "Failed to add TCP relay %s:%d\n", Nodes.nodes[node], Nodes.ports[node]);
+            fprintf(stderr, "Failed to add TCP relay %s:%d\n", Nodes.list[node].ip4, Nodes.list[node].port);
         }
     }
 }
