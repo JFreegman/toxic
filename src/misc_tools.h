@@ -161,4 +161,7 @@ int check_file_signature(const char *signature, size_t size, FILE *fp);
 /* sets window title in tab bar. */
 void set_window_title(ToxWindow *self, const char *title, int len);
 
+/* Return true if address appears to be a valid ipv4 address. */
+bool is_ip4_address(const char *address);
+
 #endif /* #define MISC_TOOLS_H */

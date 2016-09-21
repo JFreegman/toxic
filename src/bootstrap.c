@@ -77,7 +77,6 @@ static struct DHT_Nodes {
     char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
 } Nodes;
 
-
 /* Return true if nodeslist pointed to by fp needs to be updated.
  * This will be the case if the file is empty, has an invalid format,
  * or if the file is older than the given timeout.
@@ -296,6 +295,11 @@ int load_DHT_nodeslist(void)
         char ipv4_string[ip_len + 1];
         memcpy(ipv4_string, ip_start, ip_len);
         ipv4_string[ip_len] = 0;
+
+        /* ignore domains because we don't want toxcore doing DNS requests during bootstrap. */
+        if (!is_ip4_address(ipv4_string)) {
+            continue;
+        }
 
         /* Extract port */
         const char *port_start = strstr(ip_start, PORT_JSON_VALUE);

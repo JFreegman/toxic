@@ -26,7 +26,9 @@
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
+
 #include <sys/stat.h>
+#include <arpa/inet.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -477,4 +479,11 @@ void set_window_title(ToxWindow *self, const char *title, int len)
     }
 
     snprintf(self->name, sizeof(self->name), "%s", cpy);
+}
+
+/* Return true if address appears to be a valid ipv4 address. */
+bool is_ip4_address(const char *address)
+{
+    struct sockaddr_in s_addr;
+    return inet_pton(AF_INET, address, &(s_addr.sin_addr)) != 0;
 }
