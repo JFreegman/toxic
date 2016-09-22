@@ -236,7 +236,10 @@ VideoDeviceError init_video_devices()
 VideoDeviceError terminate_video_devices()
 {
     /* Cleanup if needed */
+    lock;
     video_thread_running = false;
+    unlock;
+
     usleep(20000);
 
     int i;
@@ -614,16 +617,19 @@ void* video_thread_poll (void* arg) // TODO: maybe use thread for every input so
     (void)arg;
     uint32_t i;
 
-    while (video_thread_running)
-    {
+    while (1) {
+        lock;
+        if (!video_thread_running) {
+            unlock;
+            break;
+        }
+        unlock;
+
         if ( video_thread_paused ) usleep(10000); /* Wait for unpause. */
-        else
-        {
-            for (i = 0; i < size[vdt_input]; ++i)
-             {
+        else {
+            for (i = 0; i < size[vdt_input]; ++i) {
                 lock;
-                if ( video_devices_running[vdt_input][i] != NULL )
-                {
+                if ( video_devices_running[vdt_input][i] != NULL ) {
                     /* Obtain frame image data from device buffers */
                     VideoDevice* device = video_devices_running[vdt_input][i];
                     uint16_t video_width = device->video_width;

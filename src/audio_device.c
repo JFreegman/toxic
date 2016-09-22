@@ -321,9 +321,6 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     running[type][device_idx] = NULL;
 
     if ( !device->ref_count ) {
-
-//         printf("Closed device ");
-
         if (type == input) {
             if ( !alcCaptureCloseDevice(device->dhndl) ) rc = de_AlError;
         }
@@ -414,23 +411,26 @@ void* thread_poll (void* arg) // TODO: maybe use thread for every input source
     int32_t sample = 0;
 
 
-    while (true)
+    while (1)
     {
         lock;
         if (!thread_running) {
             unlock;
             break;
         }
+
+        bool paused = thread_paused;
         unlock;
 
-        if (thread_paused) usleep(10000); /* Wait for unpause. */
-        else
-        {
-            for (i = 0; i < size[input]; ++i)
-            {
+         /* Wait for unpause. */
+        if (paused) {
+            usleep(10000);
+        }
+
+        else {
+            for (i = 0; i < size[input]; ++i) {
                 lock;
-                if (running[input][i] != NULL)
-                {
+                if (running[input][i] != NULL) {
                     alcGetIntegerv(running[input][i]->dhndl, ALC_CAPTURE_SAMPLES, sizeof(int32_t), &sample);
 
                     int f_size = (running[input][i]->sample_rate * running[input][i]->frame_duration / 1000);

@@ -79,7 +79,7 @@ extern struct Winthread Winthread;
 #define MAX_NODELIST_SIZE (MAX_RECV_CURL_DATA_SIZE)
 
 
-struct Thread_Data {
+static struct Thread_Data {
     pthread_t tid;
     pthread_attr_t attr;
     pthread_mutex_t lock;

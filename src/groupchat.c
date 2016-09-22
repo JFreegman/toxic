@@ -683,7 +683,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
 
+        pthread_mutex_lock(&Winthread.lock);
         int num_peers = groupchats[self->num].num_peers;
+        pthread_mutex_unlock(&Winthread.lock);
 
         wmove(ctx->sidebar, 0, 1);
         wattron(ctx->sidebar, A_BOLD);
@@ -698,12 +700,19 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
         for (i = 0; i < num_peers && i < maxlines; ++i) {
             wmove(ctx->sidebar, i + 2, 1);
+
+            pthread_mutex_lock(&Winthread.lock);
             int peer = i + groupchats[self->num].side_pos;
+            pthread_mutex_unlock(&Winthread.lock);
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
             int maxlen = SIDEBAR_WIDTH - 2;
+
+            pthread_mutex_lock(&Winthread.lock);
             memcpy(tmpnck, &groupchats[self->num].peer_names[peer * TOX_MAX_NAME_LENGTH], maxlen);
+            pthread_mutex_unlock(&Winthread.lock);
+
             tmpnck[maxlen] = '\0';
 
             wprintw(ctx->sidebar, "%s\n", tmpnck);
