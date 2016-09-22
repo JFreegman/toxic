@@ -1140,12 +1140,6 @@ int main(int argc, char **argv)
         queue_init_message("Name lookup server list does not contain any valid entries.");
     }
 
-    int nodeslist_ret = load_DHT_nodeslist();
-
-    if (nodeslist_ret != 0) {
-        queue_init_message("DHT nodeslist failed to load (error %d)", nodeslist_ret);
-    }
-
 #ifdef X11
     if (init_xtra(DnD_callback) == -1)
         queue_init_message("X failed to initialize");
@@ -1172,7 +1166,6 @@ int main(int argc, char **argv)
     /* thread for message queue */
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-
 
 #ifdef AUDIO
 
@@ -1201,6 +1194,12 @@ int main(int argc, char **argv)
     /* screen/tmux auto-away timer */
     if (init_mplex_away_timer(m) == -1)
         queue_init_message("Failed to init mplex auto-away.");
+
+    int nodeslist_ret = load_DHT_nodeslist();
+
+    if (nodeslist_ret != 0) {
+        queue_init_message("DHT nodeslist failed to load (error %d)", nodeslist_ret);
+    }
 
     pthread_mutex_lock(&Winthread.lock);
     print_init_messages(prompt);

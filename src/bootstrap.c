@@ -37,6 +37,7 @@
 
 extern struct arg_opts arg_opts;
 extern struct user_settings *user_settings;
+extern struct Winthread Winthread;
 
 /* URL that we get the JSON encoded nodes list from. */
 #define NODES_LIST_URL "https://nodes.tox.chat/json"
@@ -77,7 +78,15 @@ extern struct user_settings *user_settings;
 /* Maximum allowable size of the nodes list */
 #define MAX_NODELIST_SIZE (MAX_RECV_CURL_DATA_SIZE)
 
-#define MAXNODES 50
+
+struct Thread_Data {
+    pthread_t tid;
+    pthread_attr_t attr;
+    pthread_mutex_t lock;
+    volatile bool active;
+} thread_data;
+
+#define MAX_NODES 50
 struct Node {
     char ip4[IP_MAX_SIZE + 1];
     bool have_ip4;
@@ -90,7 +99,7 @@ struct Node {
 };
 
 static struct DHT_Nodes {
-    struct Node list[MAXNODES];
+    struct Node list[MAX_NODES];
     size_t count;
     uint64_t last_updated;
 } Nodes;
@@ -100,7 +109,6 @@ static struct DHT_Nodes {
  * to the last time the node was successfully pinged.
  */
 #define NODE_IS_OFFLINE(last_scan, last_ping) ((last_ping + NODE_OFFLINE_TIMOUT) <= (last_ping))
-
 
 /* Return true if nodeslist pointed to by fp needs to be updated.
  * This will be the case if the file is empty, has an invalid format,
@@ -134,11 +142,17 @@ static bool nodeslist_needs_update(const char *nodes_path)
         return true;
     }
 
-    last_scan_val += LAST_SCAN_JSON_KEY_LEN;
-    long long int last_scan = strtoll(last_scan_val, NULL, 10);
-    Nodes.last_updated = last_scan;
+    long long int last_scan = strtoll(last_scan_val + LAST_SCAN_JSON_KEY_LEN, NULL, 10);
 
-    if (timed_out(last_scan, user_settings->nodeslist_update_freq * 24 * 60 * 60)) {
+    pthread_mutex_lock(&thread_data.lock);
+    Nodes.last_updated = last_scan;
+    pthread_mutex_unlock(&thread_data.lock);
+
+    pthread_mutex_lock(&Winthread.lock);
+    bool is_timeout = timed_out(last_scan, user_settings->nodeslist_update_freq * 24 * 60 * 60);
+    pthread_mutex_unlock(&Winthread.lock);
+
+    if (is_timeout) {
         return true;
     }
 
@@ -158,6 +172,8 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
         return -1;
     }
 
+    int err = -1;
+
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "charsets: utf-8");
@@ -173,21 +189,21 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
 
     if (proxy_ret != 0) {
         fprintf(stderr, "set_curl_proxy() failed with error %d\n", proxy_ret);
-        return -1;
+        goto on_exit;
     }
 
     int ret = curl_easy_setopt(c_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     if (ret != CURLE_OK) {
         fprintf(stderr, "TLSv1.2 could not be set (libcurl error %d)", ret);
-        return -1;
+        goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, TLS_CIPHER_SUITE_LIST);
 
     if (ret != CURLE_OK) {
         fprintf(stderr, "Failed to set TLS cipher list (libcurl error %d)", ret);
-        return -1;
+        goto on_exit;
     }
 
     ret = curl_easy_perform(c_handle);
@@ -201,11 +217,16 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
 
         if (ret != CURLE_OK) {
             fprintf(stderr, "HTTPS lookup error (libcurl error %d)\n", ret);
-            return -1;
+            goto on_exit;
         }
     }
 
-    return 0;
+    err = 0;
+
+on_exit:
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(c_handle);
+    return err;
 }
 
 /* Attempts to update the DHT nodeslist.
@@ -401,15 +422,8 @@ static int extract_node(const char *line, struct Node *node)
     return 0;
 }
 
-/* Load the DHT nodeslist to memory from json encoded nodes file obtained at NODES_LIST_URL.
- * TODO: Parse json using a proper library?
- *
- * Return 0 on success.
- * Return -1 if nodeslist file cannot be opened or created.
- * Return -2 if nodeslist file cannot be parsed.
- * Return -3 if nodeslist file does not contain any valid node entries.
- */
-int load_DHT_nodeslist(void)
+/* Loads the DHT nodeslist to memory from json encoded nodes file. */
+void *load_nodeslist_thread(void *data)
 {
     char nodes_path[PATH_MAX];
     get_nodeslist_path(nodes_path, sizeof(nodes_path));
@@ -418,10 +432,12 @@ int load_DHT_nodeslist(void)
 
     if (!file_exists(nodes_path)) {
         if ((fp = fopen(nodes_path, "w+")) == NULL) {
-            return -1;
+            fprintf(stderr, "nodeslist load error: failed to create file '%s'\n", nodes_path);
+            goto on_exit;
         }
     } else if ((fp = fopen(nodes_path, "r+")) == NULL) {
-        return -1;
+        fprintf(stderr, "nodeslist load error: failed to open file '%s'\n", nodes_path);
+        goto on_exit;
     }
 
     int update_err = update_DHT_nodeslist(nodes_path);
@@ -434,45 +450,103 @@ int load_DHT_nodeslist(void)
 
     if (fgets(line, sizeof(line), fp) == NULL) {
         fclose(fp);
-        return -2;
+        fprintf(stderr, "nodeslist load error: file empty.\n");
+        goto on_exit;
     }
 
+    size_t idx = 0;
     const char *line_start = line;
 
-    while ((line_start = strstr(line_start + 1, IPV4_JSON_KEY)) && Nodes.count < MAXNODES) {
-        size_t idx = Nodes.count;
+    while ((line_start = strstr(line_start + 1, IPV4_JSON_KEY))) {
+        pthread_mutex_lock(&thread_data.lock);
+        idx = Nodes.count;
+
+        if (idx >= MAX_NODES) {
+            pthread_mutex_unlock(&thread_data.lock);
+            break;
+        }
 
         if (extract_node(line_start, &Nodes.list[idx]) == 0) {
             ++Nodes.count;
         }
+
+        pthread_mutex_unlock(&thread_data.lock);
     }
 
     /* If nodeslist does not contain any valid entries we set the last_scan value
      * to 0 so that it will fetch a new list the next time this function is called.
      */
-    if (Nodes.count == 0) {
+    if (idx == 0) {
         const char *s = "{\"last_scan\":0}";
         rewind(fp);
         fwrite(s, strlen(s), 1, fp);  // Not much we can do if it fails
         fclose(fp);
-        return -3;
+        fprintf(stderr, "nodeslist load error: List did not contain any valid entries.\n");
+        goto on_exit;
     }
 
     fclose(fp);
+
+on_exit:
+    thread_data.active = false;
+    pthread_attr_destroy(&thread_data.attr);
+    pthread_exit(0);
+}
+
+/* Creates a new thread that will load the DHT nodeslist to memory
+ * from json encoded nodes file obtained at NODES_LIST_URL. Only one
+ * thread may run at a time.
+ *
+ * Return 0 on success.
+ * Return -1 if a thread is already active.
+ * Return -2 if mutex fails to init.
+ * Return -3 if pthread attribute fails to init.
+ * Return -4 if pthread fails to set detached state.
+ * Return -5 if thread creation fails.
+ */
+int load_DHT_nodeslist(void)
+{
+    if (thread_data.active) {
+        return -1;
+    }
+
+    if (pthread_mutex_init(&thread_data.lock, NULL) != 0) {
+        return -2;
+    }
+
+    if (pthread_attr_init(&thread_data.attr) != 0) {
+        return -3;
+    }
+
+    if (pthread_attr_setdetachstate(&thread_data.attr, PTHREAD_CREATE_DETACHED) != 0) {
+        return -4;
+    }
+
+    thread_data.active = true;
+    if (pthread_create(&thread_data.tid, &thread_data.attr, load_nodeslist_thread, NULL) != 0) {
+        thread_data.active = false;
+        return -5;
+    }
+
     return 0;
 }
 
 /* Connects to NUM_BOOTSTRAP_NODES random DHT nodes listed in the DHTnodes file. */
 static void DHT_bootstrap(Tox *m)
 {
-    if (Nodes.count == 0) {
+    pthread_mutex_lock(&thread_data.lock);
+    size_t num_nodes = Nodes.count;
+    pthread_mutex_unlock(&thread_data.lock);
+
+    if (num_nodes == 0) {
         return;
     }
 
     size_t i;
 
+    pthread_mutex_lock(&thread_data.lock);
+
     for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
-        TOX_ERR_BOOTSTRAP err;
         struct Node *node = &Nodes.list[rand() % Nodes.count];
         const char *addr = node->have_ip4 ? node->ip4 : node->ip6;
 
@@ -480,6 +554,7 @@ static void DHT_bootstrap(Tox *m)
             continue;
         }
 
+        TOX_ERR_BOOTSTRAP err;
         tox_bootstrap(m, addr, node->port, (uint8_t *) node->key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
@@ -492,6 +567,8 @@ static void DHT_bootstrap(Tox *m)
             fprintf(stderr, "Failed to add TCP relay %s:%d\n", addr, node->port);
         }
     }
+
+    pthread_mutex_unlock(&thread_data.lock);
 }
 
 /* Manages connection to the Tox DHT network. */

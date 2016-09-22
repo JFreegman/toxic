@@ -26,13 +26,16 @@
 /* Manages connection to the Tox DHT network. */
 void do_tox_connection(Tox *m);
 
-/* Load the DHT nodeslist to memory from json encoded nodes file obtained at NODES_LIST_URL.
- * TODO: Parse json using a proper library?
+/* Creates a new thread that will load the DHT nodeslist to memory
+ * from json encoded nodes file obtained at NODES_LIST_URL. Only one
+ * thread may run at a time.
  *
  * Return 0 on success.
- * Return -1 if nodeslist file cannot be opened or created.
- * Return -2 if nodeslist file cannot be parsed.
- * Return -3 if nodeslist file does not contain any valid node entries.
+ * Return -1 if a thread is already active.
+ * Return -2 if mutex fails to init.
+ * Return -3 if pthread attribute fails to init.
+ * Return -4 if pthread fails to set detached state.
+ * Return -5 if thread creation fails.
  */
 int load_DHT_nodeslist(void);
 

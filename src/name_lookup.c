@@ -33,7 +33,7 @@
 #include "curl_util.h"
 
 extern struct arg_opts arg_opts;
-extern struct Winthread Winthread;;
+extern struct Winthread Winthread;
 
 #define NAMESERVER_API_PATH "api"
 #define SERVER_KEY_SIZE 32
@@ -53,8 +53,8 @@ static struct thread_data {
     char    id_bin[TOX_ADDRESS_SIZE];
     char    addr[MAX_STR_SIZE];
     char    msg[MAX_STR_SIZE];
-    bool    busy;
     bool    disabled;
+    volatile bool busy;
 } t_data;
 
 static struct lookup_thread {
@@ -234,7 +234,7 @@ void *lookup_thread_func(void *data)
 
     if (!get_domain_match(nameserver_key, real_domain, sizeof(real_domain), input_domain)) {
         if (!strcasecmp(input_domain, "utox.org"))
-            lookup_error(self, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic");
+            lookup_error(self, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic.");
         else
             lookup_error(self, "Name server domain not found.");
 
