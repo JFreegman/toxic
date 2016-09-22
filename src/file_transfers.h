@@ -61,8 +61,8 @@ struct FileTransfer {
     size_t   index;
     uint64_t file_size;
     uint64_t position;
-    uint64_t last_line_progress;   /* The last time we updated the progress bar */
-    uint64_t last_keep_alive;  /* The last time we sent or received data */
+    time_t   last_line_progress;   /* The last time we updated the progress bar */
+    time_t   last_keep_alive;  /* The last time we sent or received data */
     uint32_t line_id;
     uint8_t  file_id[TOX_FILE_ID_LENGTH];
 };

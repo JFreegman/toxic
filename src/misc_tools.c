@@ -39,8 +39,6 @@
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
 
-static uint64_t current_unix_time;
-
 void hst_to_net(uint8_t *num, uint16_t numbytes)
 {
 #ifndef WORDS_BIGENDIAN
@@ -56,19 +54,13 @@ void hst_to_net(uint8_t *num, uint16_t numbytes)
     return;
 }
 
-/* Note: The time functions are not thread safe */
-void update_unix_time(void)
+time_t get_unix_time(void)
 {
-    current_unix_time = (uint64_t) time(NULL);
-}
-
-uint64_t get_unix_time(void)
-{
-    return current_unix_time;
+    return time(NULL);
 }
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t timeout)
+int timed_out(time_t timestamp, time_t timeout)
 {
     return timestamp + timeout <= get_unix_time();
 }
@@ -77,7 +69,7 @@ int timed_out(uint64_t timestamp, uint64_t timeout)
 struct tm *get_time(void)
 {
     struct tm *timeinfo;
-    uint64_t t = get_unix_time();
+    time_t t = get_unix_time();
     timeinfo = localtime((const time_t*) &t);
     return timeinfo;
 }
@@ -95,7 +87,7 @@ void get_time_str(char *buf, int bufsize)
 }
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs)
+void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
 {
     if (!secs)
         return;

@@ -387,7 +387,7 @@ struct group_add_thrd {
     ToxWindow *self;
     int peernum;
     int groupnum;
-    uint64_t timestamp;
+    time_t timestamp;
     pthread_t tid;
     pthread_attr_t attr;
 };

@@ -314,7 +314,7 @@ static void sort_blocklist_index(void)
     qsort(Blocked.index, Blocked.num_blocked, sizeof(uint32_t), index_name_cmp_block);
 }
 
-static void update_friend_last_online(uint32_t num, uint64_t timestamp)
+static void update_friend_last_online(uint32_t num, time_t timestamp)
 {
     Friends.list[num].last_online.last_on = timestamp;
     Friends.list[num].last_online.tm = *localtime((const time_t*)&timestamp);
@@ -439,7 +439,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
             fprintf(stderr, "tox_friend_get_public_key failed (error %d)\n", pkerr);
 
         TOX_ERR_FRIEND_GET_LAST_ONLINE loerr;
-        uint64_t t = tox_friend_get_last_online(m, num, &loerr);
+        time_t t = tox_friend_get_last_online(m, num, &loerr);
 
         if (loerr != TOX_ERR_FRIEND_GET_LAST_ONLINE_OK)
             t = 0;
@@ -910,7 +910,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         return;
     }
 
-    uint64_t cur_time = time(NULL);
+    time_t cur_time = get_unix_time();
     struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
 
     wattron(self->window, A_BOLD);
@@ -1047,7 +1047,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     wattroff(self->window, COLOR_PAIR(BLUE));
 
                 pthread_mutex_lock(&Winthread.lock);
-                uint64_t last_seen = Friends.list[f].last_online.last_on;
+                time_t last_seen = Friends.list[f].last_online.last_on;
                 pthread_mutex_unlock(&Winthread.lock);
 
                 if (last_seen != 0) {

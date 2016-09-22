@@ -64,7 +64,7 @@ typedef struct {
     uint8_t type;
     int num_peers;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
-    uint64_t start_time;
+    time_t start_time;
     uint8_t  *peer_names;
     uint8_t  *oldpeer_names;
     uint16_t *peer_name_lengths;

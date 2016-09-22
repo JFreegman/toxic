@@ -50,7 +50,7 @@ struct line_info {
     char name1[TOXIC_MAX_NAME_LENGTH + 1];
     char name2[TOXIC_MAX_NAME_LENGTH + 1];
     char msg[MAX_LINE_INFO_MSG_SIZE];
-    uint64_t timestamp;
+    time_t timestamp;
     uint8_t type;
     uint8_t bold;
     uint8_t colour;

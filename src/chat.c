@@ -825,7 +825,7 @@ static void draw_infobox(ToxWindow *self)
     if (x2 < INFOBOX_WIDTH || y2 < INFOBOX_HEIGHT)
         return;
 
-    uint64_t curtime = get_unix_time();
+    time_t curtime = get_unix_time();
 
     /* update elapsed time string once per second */
     if (curtime > infobox->lastupdate)

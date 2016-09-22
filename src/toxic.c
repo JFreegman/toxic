@@ -733,7 +733,6 @@ static Tox *load_toxic(char *data_path)
 static void do_toxic(Tox *m)
 {
     pthread_mutex_lock(&Winthread.lock);
-    update_unix_time();
 
     if (arg_opts.no_connect) {
         pthread_mutex_unlock(&Winthread.lock);
@@ -1091,7 +1090,6 @@ void DnD_callback(const char* asdv, DropType dt)
 
 int main(int argc, char **argv)
 {
-    update_unix_time();
     parse_args(argc, argv);
 
     /* Use the -b flag to enable stderr */
@@ -1212,12 +1210,12 @@ int main(int argc, char **argv)
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
-    uint64_t last_save = (uint64_t) time(NULL);
+    time_t last_save = get_unix_time();
 
     while (true) {
         do_toxic(m);
 
-        uint64_t cur_time = get_unix_time();
+        time_t cur_time = get_unix_time();
 
         if (timed_out(last_save, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);

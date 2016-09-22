@@ -101,7 +101,7 @@ struct Node {
 static struct DHT_Nodes {
     struct Node list[MAX_NODES];
     size_t count;
-    uint64_t last_updated;
+    time_t last_updated;
 } Nodes;
 
 
@@ -574,7 +574,7 @@ static void DHT_bootstrap(Tox *m)
 /* Manages connection to the Tox DHT network. */
 void do_tox_connection(Tox *m)
 {
-    static uint64_t last_bootstrap_time = 0;
+    static time_t last_bootstrap_time = 0;
     bool connected = tox_self_get_connection_status(m) != TOX_CONNECTION_NONE;
 
     if (!connected && timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL)) {

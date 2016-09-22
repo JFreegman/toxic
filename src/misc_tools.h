@@ -61,19 +61,16 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr);
 int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size);
 
 /* get the current unix time (not thread safe) */
-uint64_t get_unix_time(void);
+time_t get_unix_time(void);
 
 /* Puts the current time in buf in the format of [HH:mm:ss] (not thread safe) */
 void get_time_str(char *buf, int bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs);
+void get_elapsed_time_str(char *buf, int bufsize, time_t secs);
 
 /* get the current local time (not thread safe) */
 struct tm *get_time(void);
-
-/* updates current unix time (should be run once per do_toxic loop) */
-void update_unix_time(void);
 
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string);
@@ -91,7 +88,7 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n);
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t timeout);
+int timed_out(time_t timestamp, time_t timeout);
 
 /* Colours the window tab according to type. Beeps if is_beep is true */
 void alert_window(ToxWindow *self, int type, bool is_beep);
