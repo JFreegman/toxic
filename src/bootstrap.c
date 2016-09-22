@@ -53,6 +53,7 @@ extern struct user_settings *user_settings;
 #define NODE_OFFLINE_TIMOUT (60*60*24*2)
 
 #define IP_MAX_SIZE 45
+#define IP_MIN_SIZE 7
 #define PORT_MAX_SIZE 5
 
 #define LAST_SCAN_JSON_KEY "\"last_scan\":"
@@ -60,6 +61,9 @@ extern struct user_settings *user_settings;
 
 #define IPV4_JSON_KEY "\"ipv4\":\""
 #define IPV4_JSON_KEY_LEN (sizeof(IPV4_JSON_KEY) - 1)
+
+#define IPV6_JSON_KEY "\"ipv6\":\""
+#define IPV6_JSON_KEY_LEN (sizeof(IPV6_JSON_KEY) - 1)
 
 #define PORT_JSON_KEY "\"port\":"
 #define PORT_JSON_KEY_LEN (sizeof(PORT_JSON_KEY) - 1)
@@ -76,7 +80,11 @@ extern struct user_settings *user_settings;
 #define MAXNODES 50
 struct Node {
     char ip4[IP_MAX_SIZE + 1];
+    bool have_ip4;
+
     char ip6[IP_MAX_SIZE + 1];
+    bool have_ip6;
+
     char key[TOX_PUBLIC_KEY_SIZE];
     uint16_t port;
 };
@@ -257,6 +265,142 @@ static void get_nodeslist_path(char *buf, size_t buf_size)
     }
 }
 
+/* Return true if json encoded string s contains a valid IP address and puts address in ip_buf.
+ *
+ * ip_type should be set to 1 for ipv4 address, or 0 for ipv6 addresses.
+ * ip_buf must have room for at least IP_MAX_SIZE + 1 bytes.
+ */
+static bool extract_val_ip(const char *s, char *ip_buf, unsigned short int ip_type)
+{
+    int ip_len = char_find(0, s, '"');
+
+    if (ip_len < IP_MIN_SIZE || ip_len > IP_MAX_SIZE) {
+        return false;
+    }
+
+    memcpy(ip_buf, s, ip_len);
+    ip_buf[ip_len] = 0;
+
+    return (ip_type == 1) ? is_ip4_address(ip_buf) : is_ip6_address(ip_buf);
+}
+
+/* Extracts the port from json encoded string s.
+ *
+ * Return port number on success.
+ * Return 0 on failure.
+ */
+static uint16_t extract_val_port(const char *s)
+{
+    long int port = strtol(s, NULL, 10);
+    return (port > 0 && port <= MAX_PORT_RANGE) ? port : 0;
+}
+
+/* Extracts the last pinged value from json encoded string s.
+ *
+ * Return timestamp on success.
+ * Return -1 on failure.
+ */
+static long long int extract_val_last_pinged(const char *s)
+{
+    long long int last_pinged = strtoll(s, NULL, 10);
+    return (last_pinged <= 0) ? -1 : last_pinged;
+}
+
+/* Extracts DHT public key from json encoded string s and puts key in key_buf.
+ * key_buf must have room for at least TOX_PUBLIC_KEY_SIZE * 2 + 1 bytes.
+ *
+ * Return number of bytes copied to key_buf on success.
+ * Return -1 on failure.
+ */
+static int extract_val_pk(const char *s, char *key_buf)
+{
+
+    int key_len = char_find(0, s, '"');
+
+    if (key_len != TOX_PUBLIC_KEY_SIZE * 2) {
+        return -1;
+    }
+
+    memcpy(key_buf, s, key_len);
+    key_buf[key_len] = 0;
+
+    return key_len;
+}
+
+/* Extracts values from json formatted string, validats them, and puts them in node.
+ *
+ * Return 0 on success.
+ * Return -1 if line is empty.
+ * Return -2 if line does not appear to be a valid nodes list entry.
+ * Return -3 if node appears to be offline.
+ * Return -4 if entry does not contain either a valid ipv4 or ipv6 address.
+ * Return -5 if port value is invalid.
+ * Return -6 if public key is invalid.
+ */
+static int extract_node(const char *line, struct Node *node)
+{
+    if (!line) {
+        return -1;
+    }
+
+    const char *ip4_start = strstr(line, IPV4_JSON_KEY);
+    const char *ip6_start = strstr(line, IPV6_JSON_KEY);
+    const char *port_start = strstr(line, PORT_JSON_KEY);
+    const char *key_start = strstr(line, PK_JSON_KEY);
+    const char *last_pinged_str = strstr(line, LAST_PING_JSON_KEY);
+
+    if (!ip4_start || !ip6_start || !port_start || !key_start || !last_pinged_str) {
+        return -2;
+    }
+
+    long long int last_pinged = extract_val_last_pinged(last_pinged_str + LAST_PING_JSON_KEY_LEN);
+
+    if (last_pinged <= 0 || NODE_IS_OFFLINE(Nodes.last_scan, last_pinged)) {
+        return -3;
+    }
+
+    char ip4_string[IP_MAX_SIZE + 1];
+    bool have_ip4 = extract_val_ip(ip4_start + IPV4_JSON_KEY_LEN, ip4_string, 1);
+
+    char ip6_string[IP_MAX_SIZE + 1];
+    bool have_ip6 = extract_val_ip(ip6_start + IPV6_JSON_KEY_LEN, ip6_string, 0);
+
+    if (!have_ip6 && !have_ip4) {
+        return -4;
+    }
+
+    uint16_t port = extract_val_port(port_start + PORT_JSON_KEY_LEN);
+
+    if (port == 0) {
+        return -5;
+    }
+
+    char key_string[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    int key_len = extract_val_pk(key_start + PK_JSON_KEY_LEN, key_string);
+
+    if (key_len == -1) {
+        return -6;
+    }
+
+    if (hex_string_to_bin(key_string, key_len, node->key, TOX_PUBLIC_KEY_SIZE) == -1) {
+        return -6;
+    }
+
+    if (have_ip4) {
+        snprintf(node->ip4, sizeof(node->ip4), "%s", ip4_string);
+        node->have_ip4 = true;
+    }
+
+    if (have_ip6) {
+        snprintf(node->ip6, sizeof(node->ip6), "%s", ip6_string);
+        node->have_ip6 = true;
+    }
+
+    node->port = port;
+
+    return 0;
+}
+
 /* Load the DHT nodeslist to memory from json encoded nodes file obtained at NODES_LIST_URL.
  * TODO: Parse json using a proper library?
  *
@@ -296,92 +440,11 @@ int load_DHT_nodeslist(void)
     const char *line_start = line;
 
     while ((line_start = strstr(line_start + 1, IPV4_JSON_KEY)) && Nodes.count < MAXNODES) {
-        /* Extract IPv4 address */
-        const char *ip_start = strstr(line_start, IPV4_JSON_KEY);
+        size_t idx = Nodes.count;
 
-        if (ip_start == NULL) {
-            continue;
+        if (extract_node(line_start, &Nodes.list[idx]) == 0) {
+            ++Nodes.count;
         }
-
-        ip_start += IPV4_JSON_KEY_LEN;
-        int ip_len = char_find(0, ip_start, '"');
-
-        if (ip_len == 0 || ip_len > IP_MAX_SIZE) {
-            continue;
-        }
-
-        char ipv4_string[ip_len + 1];
-        memcpy(ipv4_string, ip_start, ip_len);
-        ipv4_string[ip_len] = 0;
-
-        /* ignore domains because we don't want toxcore doing DNS requests during bootstrap. */
-        if (!is_ip4_address(ipv4_string)) {
-            continue;
-        }
-
-        /* Extract port */
-        const char *port_start = strstr(ip_start, PORT_JSON_KEY);
-
-        if (!port_start) {
-            continue;
-        }
-
-        port_start += PORT_JSON_KEY_LEN;
-        int port_len = char_find(0, port_start, ',');
-
-        if (port_len == 0 || port_len > PORT_MAX_SIZE) {
-            continue;
-        }
-
-        char port_string[port_len + 1];
-        memcpy(port_string, port_start, port_len);
-        port_string[port_len] = 0;
-
-        long int port = strtol(port_string, NULL, 10);
-
-        if (port <= 0 || port > MAX_PORT_RANGE) {
-            continue;
-        }
-
-        /* Extract key */
-        const char *key_start = strstr(port_start, PK_JSON_KEY);
-
-        if (!key_start) {
-            continue;
-        }
-
-        key_start += PK_JSON_KEY_LEN;
-        int key_len = char_find(0, key_start, '"');
-
-        if (key_len != TOX_PUBLIC_KEY_SIZE * 2) {
-            continue;
-        }
-
-        char key_string[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-        memcpy(key_string, key_start, TOX_PUBLIC_KEY_SIZE * 2);
-        key_string[TOX_PUBLIC_KEY_SIZE * 2] = 0;
-
-        /* Check last pinged value and ignore nodes that appear offline */
-        const char *last_pinged_str = strstr(key_start, LAST_PING_JSON_KEY);
-
-        if (!last_pinged_str) {
-            continue;
-        }
-
-        last_pinged_str += LAST_PING_JSON_KEY_LEN;
-        long long int last_pinged = strtoll(last_pinged_str, NULL, 10);
-
-        if (last_pinged <= 0 || NODE_IS_OFFLINE(Nodes.last_scan, last_pinged)) {
-            continue;
-        }
-
-        /* Add entry to nodes list */
-        size_t idx = Nodes.count++;
-        snprintf(Nodes.list[idx].ip4, sizeof(Nodes.list[idx].ip4), "%s", ipv4_string);
-        Nodes.list[idx].port = port;
-
-        if (hex_string_to_bin(key_string, key_len, Nodes.list[idx].key, TOX_PUBLIC_KEY_SIZE) == -1)
-            continue;
     }
 
     /* If nodeslist does not contain any valid entries we set the last_scan value
@@ -409,19 +472,24 @@ static void DHT_bootstrap(Tox *m)
     size_t i;
 
     for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
-        size_t node = rand() % Nodes.count;
-
         TOX_ERR_BOOTSTRAP err;
-        tox_bootstrap(m, Nodes.list[node].ip4, Nodes.list[node].port, (uint8_t *) Nodes.list[node].key, &err);
+        struct Node *node = &Nodes.list[rand() % Nodes.count];
+        const char *addr = node->have_ip4 ? node->ip4 : node->ip6;
 
-        if (err != TOX_ERR_BOOTSTRAP_OK) {
-            fprintf(stderr, "Failed to bootstrap %s:%d\n", Nodes.list[node].ip4, Nodes.list[node].port);
+        if (!addr) {
+            continue;
         }
 
-        tox_add_tcp_relay(m, Nodes.list[node].ip4, Nodes.list[node].port, (uint8_t *) Nodes.list[node].key, &err);
+        tox_bootstrap(m, addr, node->port, (uint8_t *) node->key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
-            fprintf(stderr, "Failed to add TCP relay %s:%d\n", Nodes.list[node].ip4, Nodes.list[node].port);
+            fprintf(stderr, "Failed to bootstrap %s:%d\n", addr, node->port);
+        }
+
+        tox_add_tcp_relay(m, addr, node->port, (uint8_t *) node->key, &err);
+
+        if (err != TOX_ERR_BOOTSTRAP_OK) {
+            fprintf(stderr, "Failed to add TCP relay %s:%d\n", addr, node->port);
         }
     }
 }

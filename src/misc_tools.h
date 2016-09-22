@@ -164,4 +164,13 @@ void set_window_title(ToxWindow *self, const char *title, int len);
 /* Return true if address appears to be a valid ipv4 address. */
 bool is_ip4_address(const char *address);
 
+/* Return true if address roughly appears to be a valid ipv6 address.
+ *
+ * TODO: Improve this function (inet_pton behaves strangely with ipv6).
+ * for now the only guarantee is that it won't return true if the
+ * address is a domain or ipv4 address, and should only be used if you're
+ * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
+ */
+bool is_ip6_address(const char *address);
+
 #endif /* #define MISC_TOOLS_H */

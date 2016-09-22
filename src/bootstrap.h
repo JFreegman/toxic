@@ -20,6 +20,9 @@
  *
  */
 
+#ifndef BOOTSTRAP_H
+#define BOOTSTRAP_H
+
 /* Manages connection to the Tox DHT network. */
 void do_tox_connection(Tox *m);
 
@@ -32,3 +35,5 @@ void do_tox_connection(Tox *m);
  * Return -3 if nodeslist file does not contain any valid node entries.
  */
 int load_DHT_nodeslist(void);
+
+#endif  /* BOOTSTRAP_H */

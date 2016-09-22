@@ -20,6 +20,9 @@
  *
  */
 
+#ifndef CURL_UTIL_H
+#define CURL_UTIL_H
+
 /* List based on Mozilla's recommended configurations for modern browsers */
 #define TLS_CIPHER_SUITE_LIST "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK"
 
@@ -48,3 +51,5 @@ int set_curl_proxy(CURL *c_handle, const char *proxy_address, uint16_t port, uin
  * Returns size of bytes written to the data buffer.
  */
 size_t curl_cb_write_data(void *data, size_t size, size_t nmemb, void *user_pointer);
+
+#endif  /* CURL_UTIL_H */
