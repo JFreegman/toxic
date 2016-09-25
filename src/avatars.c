@@ -55,6 +55,7 @@ int avatar_send(Tox *m, uint32_t friendnum)
     TOX_ERR_FILE_SEND err;
     uint32_t filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
                                      NULL, (uint8_t *) Avatar.name, Avatar.name_len, &err);
+
     if (Avatar.size == 0)
         return 0;
 
@@ -150,6 +151,7 @@ void on_avatar_file_control(Tox *m, struct FileTransfer *ft, TOX_FILE_CONTROL co
             } else if (ft->state == FILE_TRANSFER_PAUSED) {
                 ft->state = FILE_TRANSFER_STARTED;
             }
+
             break;
 
         case TOX_FILE_CONTROL_PAUSE:

@@ -25,10 +25,10 @@
 #include <limits.h>
 
 #ifdef __APPLE__
-    #include <sys/types.h>
-    #include <sys/dir.h>
+#include <sys/types.h>
+#include <sys/dir.h>
 #else
-    #include <dirent.h>
+#include <dirent.h>
 #endif /* ifdef __APPLE__ */
 
 #include "windows.h"
@@ -108,7 +108,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
 
     /* TODO: generalize this */
     bool dir_search =    !strncmp(ubuf, "/sendfile", strlen("/sendfile"))
-                      || !strncmp(ubuf, "/avatar", strlen("/avatar"));
+                         || !strncmp(ubuf, "/avatar", strlen("/avatar"));
 
     /* isolate substring from space behind pos to pos */
     char tmp[MAX_STR_SIZE];
@@ -185,6 +185,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     int n_endchrs = strlen(endchrs);
     int strt = ctx->pos - s_len;
     int diff = match_len - s_len + n_endchrs;
+
     if (ctx->len + diff >= MAX_STR_SIZE)
         return -1;
 
@@ -288,7 +289,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 
     while ((entry = readdir(dp)) && dircount < MAX_DIRS) {
         if (strncmp(entry->d_name, b_name, b_name_len) == 0
-                                && strcmp(".", entry->d_name) && strcmp("..", entry->d_name)) {
+                && strcmp(".", entry->d_name) && strcmp("..", entry->d_name)) {
             snprintf(dirnames[dircount], sizeof(dirnames[dircount]), "%s", entry->d_name);
             ++dircount;
         }

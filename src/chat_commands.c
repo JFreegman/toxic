@@ -100,8 +100,9 @@ void cmd_groupaccept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     TOX_ERR_GROUP_INVITE_ACCEPT err;
     uint32_t groupnumber = tox_group_invite_accept(m, Friends.list[self->num].group_invite.data,
-                                                   Friends.list[self->num].group_invite.length,
-                                                   (uint8_t *) passwd, passwd_len, &err);
+                           Friends.list[self->num].group_invite.length,
+                           (uint8_t *) passwd, passwd_len, &err);
+
     if (err != TOX_ERR_GROUP_INVITE_ACCEPT_OK) {
         if (err == TOX_ERR_GROUP_INVITE_ACCEPT_TOO_LONG)
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to joing group: Password too long.");
@@ -133,6 +134,7 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     }
 
     TOX_ERR_GROUP_INVITE_FRIEND err;
+
     if (!tox_group_invite_friend(m, groupnum, self->num, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d).", err);
         return;
@@ -192,6 +194,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     return;
 
 on_recv_error:
+
     switch (err) {
         case TOX_ERR_FILE_CONTROL_FRIEND_NOT_FOUND:
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
@@ -260,7 +263,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     TOX_ERR_FILE_SEND err;
     uint32_t filenum = tox_file_send(m, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
-                                    (uint8_t *) file_name, namelen, &err);
+                                     (uint8_t *) file_name, namelen, &err);
 
     if (err != TOX_ERR_FILE_SEND_OK)
         goto on_send_error;
@@ -284,6 +287,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     return;
 
 on_send_error:
+
     switch (err) {
         case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND:
             errmsg = "File transfer failed: Invalid friend.";

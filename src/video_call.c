@@ -40,13 +40,13 @@
 #define default_video_bit_rate 5000
 
 void receive_video_frame_cb( ToxAV *av, uint32_t friend_number,
-                                    uint16_t width, uint16_t height,
-                                    uint8_t const *y, uint8_t const *u, uint8_t const *v,
-                                    int32_t ystride, int32_t ustride, int32_t vstride,
-                                    void *user_data );
+                             uint16_t width, uint16_t height,
+                             uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                             int32_t ystride, int32_t ustride, int32_t vstride,
+                             void *user_data );
 
 void video_bit_rate_status_cb( ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
-                                    uint32_t video_bit_rate, void *user_data);
+                               uint32_t video_bit_rate, void *user_data);
 
 static void print_err (ToxWindow *self, const char *error_str)
 {
@@ -82,22 +82,24 @@ ToxAV *init_video(ToxWindow *self, Tox *tox)
 void terminate_video()
 {
     int i;
+
     for (i = 0; i < MAX_CALLS; ++i) {
-        Call* this_call = &CallControl.calls[i];
+        Call *this_call = &CallControl.calls[i];
 
         stop_video_transmission(this_call, i);
 
-        if( this_call->vout_idx != -1 )
+        if ( this_call->vout_idx != -1 )
             close_video_device(vdt_output, this_call->vout_idx);
     }
 
     terminate_video_devices();
 }
 
-void read_video_device_callback(int16_t width, int16_t height, const uint8_t* y, const uint8_t* u, const uint8_t* v, void* data)
+void read_video_device_callback(int16_t width, int16_t height, const uint8_t *y, const uint8_t *u, const uint8_t *v,
+                                void *data)
 {
-    uint32_t friend_number = *((uint32_t*)data); /* TODO: Or pass an array of call_idx's */
-    Call* this_call = &CallControl.calls[friend_number];
+    uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
+    Call *this_call = &CallControl.calls[friend_number];
     TOXAV_ERR_SEND_FRAME error;
 
     /* Drop frame if video sending is disabled */
@@ -117,9 +119,9 @@ void read_video_device_callback(int16_t width, int16_t height, const uint8_t* y,
 }
 
 void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_t height,
-                                           uint8_t const *y, uint8_t const *u, uint8_t const *v,
-                                           int32_t ystride, int32_t ustride, int32_t vstride,
-                                           void *user_data)
+                                 uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                                 int32_t ystride, int32_t ustride, int32_t vstride,
+                                 void *user_data)
 {
     write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
@@ -175,16 +177,16 @@ int stop_video_transmission(Call *call, int friend_number)
  * Callbacks
  */
 void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
-                                    uint16_t width, uint16_t height,
-                                    uint8_t const *y, uint8_t const *u, uint8_t const *v,
-                                    int32_t ystride, int32_t ustride, int32_t vstride,
-                                    void *user_data)
+                            uint16_t width, uint16_t height,
+                            uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                            int32_t ystride, int32_t ustride, int32_t vstride,
+                            void *user_data)
 {
     write_video_device_callback(friend_number, width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
 void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate,
-                                      uint32_t video_bit_rate, void *user_data)
+                              uint32_t video_bit_rate, void *user_data)
 {
     CallControl.video_bit_rate = video_bit_rate;
     toxav_bit_rate_set(CallControl.av, friend_number, -1, CallControl.video_bit_rate, NULL);
@@ -192,7 +194,7 @@ void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
 
 void callback_recv_video_starting(uint32_t friend_number)
 {
-    Call* this_call = &CallControl.calls[friend_number];
+    Call *this_call = &CallControl.calls[friend_number];
 
     if ( this_call->vout_idx != -1 )
         return;
@@ -201,21 +203,22 @@ void callback_recv_video_starting(uint32_t friend_number)
 }
 void callback_recv_video_end(uint32_t friend_number)
 {
-    Call* this_call = &CallControl.calls[friend_number];
+    Call *this_call = &CallControl.calls[friend_number];
 
     close_video_device(vdt_output, this_call->vout_idx);
     this_call->vout_idx = -1;
 }
 void callback_video_starting(uint32_t friend_number)
 {
-    ToxWindow* windows = CallControl.prompt;
-    Call* this_call = &CallControl.calls[friend_number];
+    ToxWindow *windows = CallControl.prompt;
+    Call *this_call = &CallControl.calls[friend_number];
 
     TOXAV_ERR_CALL_CONTROL error = TOXAV_ERR_CALL_CONTROL_OK;
     toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
 
     if (error == TOXAV_ERR_CALL_CONTROL_OK) {
         size_t i;
+
         for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
             if ( windows[i].is_call && windows[i].num == friend_number ) {
                 if ( 0 != start_video_transmission(&windows[i], CallControl.av, this_call) ) {
@@ -244,7 +247,7 @@ void callback_video_end(uint32_t friend_number)
 void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
-    Call* this_call = &CallControl.calls[self->num];
+    Call *this_call = &CallControl.calls[self->num];
 
     if ( argc != 0 ) {
         error_str = "Unknown arguments.";
@@ -387,18 +390,18 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
     }
 
     if ( video_selection_valid(type, selection) == vde_InvalidSelection ) {
-        error_str="Invalid selection!";
+        error_str = "Invalid selection!";
         goto on_error;
     }
 
     /* If call is active, change device */
     if ( self->is_call ) {
-        Call* this_call = &CallControl.calls[self->num];
+        Call *this_call = &CallControl.calls[self->num];
+
         if ( this_call->ttas ) {
 
             if ( type == vdt_output ) {
-            }
-            else {
+            } else {
                 /* TODO: check for failure */
                 close_video_device(vdt_input, this_call->vin_idx);
                 open_video_device(vdt_input, selection, &this_call->vin_idx);
@@ -410,7 +413,7 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
     self->video_device_selection[type] = selection;
 
     return;
-    on_error:
+on_error:
     print_err (self, error_str);
 }
 

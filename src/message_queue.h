@@ -29,7 +29,7 @@ struct cqueue_msg {
     int line_id;
     uint8_t type;
     uint32_t receipt;
-    uint64_t last_send_try;
+    time_t last_send_try;
     struct cqueue_msg *next;
     struct cqueue_msg *prev;
 };

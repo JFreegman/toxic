@@ -1,5 +1,5 @@
 # Version
-TOXIC_VERSION = 0.7.0
+TOXIC_VERSION = 0.7.1
 REV = $(shell git rev-list HEAD --count 2>/dev/null || echo -n "error")
 ifneq (, $(findstring error, $(REV)))
     VERSION = $(TOXIC_VERSION)
@@ -16,7 +16,7 @@ MISC_DIR = $(BASE_DIR)/misc
 
 # Project files
 MANFILES = toxic.1 toxic.conf.5
-DATAFILES = DHTnodes nameservers toxic.conf.example
+DATAFILES = nameservers toxic.conf.example
 DESKFILE = toxic.desktop
 SNDFILES = ToxicContactOnline.wav ToxicContactOffline.wav ToxicError.wav
 SNDFILES += ToxicRecvMessage.wav ToxicOutgoingCall.wav ToxicIncomingCall.wav

@@ -11,10 +11,10 @@ CFLAGS += '-DPACKAGE_DATADIR="$(abspath $(DATADIR))"'
 CFLAGS += $(USER_CFLAGS)
 LDFLAGS = $(USER_LDFLAGS)
 
-OBJ = chat.o chat_commands.o configdir.o execute.o file_transfers.o notify.o
-OBJ += friendlist.o global_commands.o groupchat.o line_info.o input.o help.o autocomplete.o
-OBJ += log.o misc_tools.o prompt.o settings.o toxic.o toxic_strings.o windows.o message_queue.o
-OBJ += group_commands.o term_mplex.o avatars.o name_lookup.o qr_code.o
+OBJ = autocomplete.o avatars.o bootstrap.o chat.o chat_commands.o configdir.o curl_util.o execute.o
+OBJ += file_transfers.o friendlist.o global_commands.o group_commands.o groupchat.o help.o input.o
+OBJ += line_info.o log.o message_queue.o misc_tools.o name_lookup.o notify.o prompt.o qr_code.o settings.o
+OBJ += term_mplex.o toxic.o toxic_strings.o windows.o
 
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)

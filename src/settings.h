@@ -37,6 +37,12 @@ struct user_settings {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
 
+    /* boolean (is set to NT_BEEP or 0 after loading) */
+    int bell_on_message;
+    int bell_on_filetrans;
+    int bell_on_filetrans_accept;
+    int bell_on_invite;
+
     int timestamps;        /* boolean */
     char timestamp_format[TIME_STR_SIZE];
     char log_timestamp_format[TIME_STR_SIZE];
@@ -47,6 +53,7 @@ struct user_settings {
     int show_typing_other; /* boolean */
     int show_welcome_msg;  /* boolean */
     int show_connection_msg;  /* boolean */
+    int nodeslist_update_freq;  /* int (<= 0 to disable updates) */
 
     char line_join[LINE_HINT_MAX + 1];
     char line_quit[LINE_HINT_MAX + 1];

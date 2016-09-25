@@ -41,6 +41,7 @@
 #include <termios.h>
 #include <ctype.h>
 
+#include <curl/curl.h>
 #include <tox/tox.h>
 #include <tox/toxencryptsave.h>
 
@@ -61,9 +62,10 @@
 #include "execute.h"
 #include "term_mplex.h"
 #include "name_lookup.h"
+#include "bootstrap.h"
 
 #ifdef X11
-    #include "xtra.h"
+#include "xtra.h"
 #endif
 
 #ifdef AUDIO
@@ -75,7 +77,7 @@ ToxAV *av;
 #endif /* AUDIO */
 
 #ifndef PACKAGE_DATADIR
-    #define PACKAGE_DATADIR "."
+#define PACKAGE_DATADIR "."
 #endif
 
 /* Export for use in Callbacks */
@@ -164,7 +166,7 @@ void exit_toxic_success(Tox *m)
     free_global_data();
     tox_kill(m);
     endwin();
-    name_lookup_cleanup();
+    curl_global_cleanup();
 
 #ifdef X11
     /* We have to terminate xtra last coz reasons
@@ -281,153 +283,6 @@ static void print_init_messages(ToxWindow *toxwin)
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
 }
 
-#define MIN_NODE_LINE  50 /* IP: 7 + port: 5 + key: 38 + spaces: 2 = 70. ! (& e.g. tox.chat = 8) */
-#define MAX_NODE_LINE  256 /* Approx max number of chars in a sever line (name + port + key) */
-#define MAXNODES 50
-#define NODELEN (MAX_NODE_LINE - TOX_PUBLIC_KEY_SIZE - 7)
-
-static struct toxNodes {
-    int lines;
-    char nodes[MAXNODES][NODELEN];
-    uint16_t ports[MAXNODES];
-    char keys[MAXNODES][TOX_PUBLIC_KEY_SIZE];
-} toxNodes;
-
-static int load_nodelist(const char *filename)
-{
-    if (!filename)
-        return 1;
-
-    FILE *fp = fopen(filename, "r");
-
-    if (fp == NULL)
-        return 1;
-
-    char line[MAX_NODE_LINE];
-
-    while (fgets(line, sizeof(line), fp) && toxNodes.lines < MAXNODES) {
-        size_t line_len = strlen(line);
-
-        if (line_len >= MIN_NODE_LINE && line_len <= MAX_NODE_LINE) {
-            const char *name = strtok(line, " ");
-            const char *port_str = strtok(NULL, " ");
-            const char *key_ascii = strtok(NULL, " ");
-
-            if (name == NULL || port_str == NULL || key_ascii == NULL)
-                continue;
-
-            long int port = strtol(port_str, NULL, 10);
-
-            if (port <= 0 || port > MAX_PORT_RANGE)
-                continue;
-
-            size_t key_len = strlen(key_ascii);
-            size_t name_len = strlen(name);
-
-            if (key_len < TOX_PUBLIC_KEY_SIZE * 2 || name_len >= NODELEN)
-                continue;
-
-            snprintf(toxNodes.nodes[toxNodes.lines], sizeof(toxNodes.nodes[toxNodes.lines]), "%s", name);
-            toxNodes.nodes[toxNodes.lines][NODELEN - 1] = 0;
-            toxNodes.ports[toxNodes.lines] = port;
-
-            /* remove possible trailing newline from key string */
-            char real_ascii_key[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-            memcpy(real_ascii_key, key_ascii, TOX_PUBLIC_KEY_SIZE * 2);
-            key_len = TOX_PUBLIC_KEY_SIZE * 2;
-            real_ascii_key[key_len] = '\0';
-
-            if (hex_string_to_bin(real_ascii_key, key_len, toxNodes.keys[toxNodes.lines], TOX_PUBLIC_KEY_SIZE) == -1)
-                continue;
-
-            toxNodes.lines++;
-        }
-    }
-
-    fclose(fp);
-
-    if (toxNodes.lines < 1)
-        return 1;
-
-    return 0;
-}
-
-/* Bootstraps and adds as TCP relay.
- * Returns 0 if both actions are successful.
- * Returns -1 otherwise.
- */
-int init_connection_helper(Tox *m, int line)
-{
-    TOX_ERR_BOOTSTRAP err;
-    tox_bootstrap(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], &err);
-
-    if (err != TOX_ERR_BOOTSTRAP_OK) {
-        fprintf(stderr, "Failed to bootstrap %s:%d\n", toxNodes.nodes[line], toxNodes.ports[line]);
-        return -1;
-    }
-
-    tox_add_tcp_relay(m, toxNodes.nodes[line], toxNodes.ports[line], (uint8_t *) toxNodes.keys[line], &err);
-
-    if (err != TOX_ERR_BOOTSTRAP_OK) {
-        fprintf(stderr, "Failed to add TCP relay %s:%d\n", toxNodes.nodes[line], toxNodes.ports[line]);
-        return -1;
-    }
-
-    return 0;
-}
-
-/* Connects to a random DHT node listed in the DHTnodes file
- *
- * return codes:
- * 0: success
- * 1: failed to open node file
- * 2: no line of sufficient length in node file
- * 3: failed to resolve name to IP
- * 4: nodelist file contains no acceptable line
- */
-static bool srvlist_loaded = false;
-
-#define NUM_INIT_NODES 5
-
-int init_connection(Tox *m)
-{
-    if (toxNodes.lines > 0) { /* already loaded nodelist */
-        init_connection_helper(m, rand() % toxNodes.lines);
-        return 0;
-    }
-
-    /* only once:
-     * - load the nodelist
-     * - connect to "everyone" inside
-     */
-    if (!srvlist_loaded) {
-        srvlist_loaded = true;
-        int res;
-
-        if (!arg_opts.nodes_path[0])
-            res = load_nodelist(PACKAGE_DATADIR "/DHTnodes");
-        else
-            res = load_nodelist(arg_opts.nodes_path);
-
-        if (res != 0)
-            return res;
-
-        res = 3;
-        int i;
-        int n = MIN(NUM_INIT_NODES, toxNodes.lines);
-
-        for (i = 0; i < n; ++i) {
-            if (init_connection_helper(m, rand() % toxNodes.lines) == 0)
-                res = 0;
-        }
-
-        return res;
-    }
-
-    /* empty nodelist file */
-    return 4;
-}
-
 static void load_groups(Tox *m)
 {
     size_t i;
@@ -477,8 +332,10 @@ static int password_prompt(char *buf, int size)
     /* eat overflowed stdin and return error */
     if (buf[--len] != '\n') {
         int ch;
+
         while ((ch = getchar()) != '\n' && ch > 0)
             ;
+
         return 0;
     }
 
@@ -495,6 +352,7 @@ static int password_eval(char *buf, int size)
 
     /* Run password_eval command */
     FILE *f = popen(user_settings->password_eval, "r");
+
     if (f == NULL) {
         fprintf(stderr, "Executing password_eval failed\n");
         return 0;
@@ -502,6 +360,7 @@ static int password_eval(char *buf, int size)
 
     /* Get output from command */
     char *ret = fgets(buf, size, f);
+
     if (ret == NULL) {
         fprintf(stderr, "Reading password from password_eval command failed\n");
         pclose(f);
@@ -510,6 +369,7 @@ static int password_eval(char *buf, int size)
 
     /* Get exit status */
     int status = pclose(f);
+
     if (status != 0) {
         fprintf(stderr, "password_eval command returned error %d\n", status);
         return 0;
@@ -517,6 +377,7 @@ static int password_eval(char *buf, int size)
 
     /* Removez whitespace or \n at end */
     int i, len = strlen(buf);
+
     for (i = len - 1; i > 0 && isspace(buf[i]); i--) {
         buf[i] = 0;
         len--;
@@ -535,7 +396,7 @@ static void first_time_encrypt(const char *msg)
         printf("%s ", msg);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
-            || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
+                || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
             break;
 
     } while (fgets(ch, sizeof(ch), stdin));
@@ -613,6 +474,7 @@ int store_data(Tox *m, const char *path)
     char *data = malloc(data_len * sizeof(char));
 
     if (data == NULL) {
+        fclose(fp);
         return -1;
     }
 
@@ -623,6 +485,7 @@ int store_data(Tox *m, const char *path)
         char *enc_data = malloc(enc_len * sizeof(char));
 
         if (enc_data == NULL) {
+            fclose(fp);
             free(data);
             return -1;
         }
@@ -747,14 +610,14 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
         if (len == 0) {
             fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
 
         char data[len];
 
         if (fread(data, sizeof(data), 1, fp) != 1) {
             fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
 
         bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
@@ -762,7 +625,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted) {
             fclose(fp);
-            exit_toxic_err("failed in load_toxic", FATALERR_ENCRYPT);
+            exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
         }
 
         if (arg_opts.unencrypt_data && is_encrypted)
@@ -776,6 +639,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
             size_t pwlen = 0;
             int pweval = user_settings->password_eval[0];
+
             if (!pweval) {
                 system("clear");   // TODO: is this portable?
                 printf("Enter password (q to quit) ");
@@ -790,6 +654,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 } else {
                     pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
                 }
+
                 user_password.len = pwlen;
 
                 if (strcasecmp(user_password.pass, "q") == 0) {
@@ -848,7 +713,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         fclose(fp);
     } else {   /* Data file does not/should not exist */
         if (file_exists(data_path))
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
 
         tox_opts->savedata_type = TOX_SAVEDATA_TYPE_NONE;
 
@@ -858,7 +723,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
             return NULL;
 
         if (store_data(m, data_path) == -1)
-            exit_toxic_err("failed in load_toxic", FATALERR_FILEOP);
+            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
     }
 
     return m;
@@ -894,33 +759,9 @@ static Tox *load_toxic(char *data_path)
     return m;
 }
 
-#define TRY_BOOTSTRAP_INTERVAL 5
-static uint64_t last_bootstrap_time = 0;
-
-static void do_bootstrap(Tox *m)
-{
-    static int conn_err = 0;
-
-    if (!timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL))
-        return;
-
-    if (tox_self_get_connection_status(m) != TOX_CONNECTION_NONE)
-        return;
-
-    if (conn_err != 0)
-        return;
-
-    last_bootstrap_time = get_unix_time();
-    conn_err = init_connection(m);
-
-    if (conn_err != 0)
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Auto-connect failed with error code %d", conn_err);
-}
-
-static void do_toxic(Tox *m, ToxWindow *prompt)
+static void do_toxic(Tox *m)
 {
     pthread_mutex_lock(&Winthread.lock);
-    update_unix_time();
 
     if (arg_opts.no_connect) {
         pthread_mutex_unlock(&Winthread.lock);
@@ -928,7 +769,7 @@ static void do_toxic(Tox *m, ToxWindow *prompt)
     }
 
     tox_iterate(m);
-    do_bootstrap(m);
+    do_tox_connection(m);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -973,7 +814,7 @@ void *thread_cqueue(void *data)
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat
-                && tox_friend_get_connection_status(m, toxwin->num, NULL) != TOX_CONNECTION_NONE)
+                    && tox_friend_get_connection_status(m, toxwin->num, NULL) != TOX_CONNECTION_NONE)
                 cqueue_try_send(toxwin, m);
         }
 
@@ -1110,10 +951,6 @@ static void parse_args(int argc, char *argv[])
 
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
-
-                if (!file_exists(arg_opts.nodes_path))
-                    queue_init_message("DHTnodes file not found");
-
                 break;
 
             case 'o':
@@ -1125,10 +962,10 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.proxy_type = TOX_PROXY_TYPE_SOCKS5;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
-                if (++optind > argc || argv[optind-1][0] == '-')
+                if (++optind > argc || argv[optind - 1][0] == '-')
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
 
-                port = strtol(argv[optind-1], NULL, 10);
+                port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE)
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
@@ -1140,10 +977,10 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
-                if (++optind > argc || argv[optind-1][0] == '-')
+                if (++optind > argc || argv[optind - 1][0] == '-')
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
 
-                port = strtol(argv[optind-1], NULL, 10);
+                port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE)
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
@@ -1269,7 +1106,7 @@ static void init_default_data_files(void)
 
 // this doesn't do anything (yet)
 #ifdef X11
-void DnD_callback(const char* asdv, DropType dt)
+void DnD_callback(const char *asdv, DropType dt)
 {
     // if (dt != DT_plain)
     //     return;
@@ -1282,7 +1119,6 @@ void DnD_callback(const char* asdv, DropType dt)
 
 int main(int argc, char **argv)
 {
-    update_unix_time();
     parse_args(argc, argv);
 
     /* Use the -b flag to enable stderr */
@@ -1302,9 +1138,6 @@ int main(int argc, char **argv)
 
     bool datafile_exists = file_exists(DATA_FILE);
 
-    if (datafile_exists)
-        last_bootstrap_time = get_unix_time();
-
     if (!datafile_exists && !arg_opts.unencrypt_data)
         first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
     else if (arg_opts.encrypt_data)
@@ -1319,21 +1152,26 @@ int main(int argc, char **argv)
 
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
-    if (settings_load(user_settings, p) == -1)
-         queue_init_message("Failed to load user settings");
+    if (settings_load(user_settings, p) == -1) {
+        queue_init_message("Failed to load user settings");
+    }
 
-    int nameserver_ret = name_lookup_init();
+    int curl_init = curl_global_init(CURL_GLOBAL_ALL);
+    int nameserver_ret = name_lookup_init(curl_init);
 
-    if (nameserver_ret == -1)
+    if (nameserver_ret == -1) {
         queue_init_message("curl failed to initialize; name lookup service is disabled.");
-    else if (nameserver_ret == -2)
+    } else if (nameserver_ret == -2) {
         queue_init_message("Name lookup server list could not be found.");
-    else if (nameserver_ret == -3)
+    } else if (nameserver_ret == -3) {
         queue_init_message("Name lookup server list does not contain any valid entries.");
+    }
 
 #ifdef X11
+
     if (init_xtra(DnD_callback) == -1)
         queue_init_message("X failed to initialize");
+
 #endif
 
     Tox *m = load_toxic(DATA_FILE);
@@ -1358,7 +1196,6 @@ int main(int argc, char **argv)
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
 
-
 #ifdef AUDIO
 
     av = init_audio(prompt, m);
@@ -1376,6 +1213,7 @@ int main(int argc, char **argv)
     set_primary_device(output, user_settings->audio_out_dev);
 
 #elif SOUND_NOTIFY
+
     if ( init_devices() == de_InternalError )
         queue_init_message("Failed to init audio devices");
 
@@ -1386,6 +1224,12 @@ int main(int argc, char **argv)
     /* screen/tmux auto-away timer */
     if (init_mplex_away_timer(m) == -1)
         queue_init_message("Failed to init mplex auto-away.");
+
+    int nodeslist_ret = load_DHT_nodeslist();
+
+    if (nodeslist_ret != 0) {
+        queue_init_message("DHT nodeslist failed to load (error %d)", nodeslist_ret);
+    }
 
     pthread_mutex_lock(&Winthread.lock);
     load_groups(m);
@@ -1399,17 +1243,19 @@ int main(int argc, char **argv)
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
-    uint64_t last_save = (uint64_t) time(NULL);
+    time_t last_save = get_unix_time();
 
     while (true) {
-        do_toxic(m, prompt);
+        do_toxic(m);
 
-        uint64_t cur_time = get_unix_time();
+        time_t cur_time = get_unix_time();
 
         if (timed_out(last_save, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
+
             if (store_data(m, DATA_FILE) != 0)
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
+
             pthread_mutex_unlock(&Winthread.lock);
 
             last_save = cur_time;

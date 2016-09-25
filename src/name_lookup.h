@@ -29,8 +29,7 @@
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int name_lookup_init(void);
-void name_lookup_cleanup(void);
+int name_lookup_init(int curl_init_status);
 
 int name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message);
 

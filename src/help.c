@@ -323,7 +323,7 @@ static void help_draw_contacts(ToxWindow *self)
 
 void help_onKey(ToxWindow *self, wint_t key)
 {
-    switch(key) {
+    switch (key) {
         case 'x':
         case T_KEY_ESC:
             help_exit(self);
@@ -377,7 +377,7 @@ void help_onDraw(ToxWindow *self)
 {
     curs_set(0);
 
-    switch(self->help->type) {
+    switch (self->help->type) {
         case HELP_MENU:
             help_draw_menu(self);
             return;

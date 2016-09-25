@@ -61,22 +61,19 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr);
 int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size);
 
 /* get the current unix time (not thread safe) */
-uint64_t get_unix_time(void);
+time_t get_unix_time(void);
 
 /* Puts the current time in buf in the format of [HH:mm:ss] (not thread safe) */
 void get_time_str(char *buf, int bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs);
+void get_elapsed_time_str(char *buf, int bufsize, time_t secs);
 
 /* Converts seconds to string in format H hours, m minutes, s seconds */
 void get_elapsed_time_str_2(char *buf, int bufsize, uint64_t secs);
 
 /* get the current local time (not thread safe) */
 struct tm *get_time(void);
-
-/* updates current unix time (should be run once per do_toxic loop) */
-void update_unix_time(void);
 
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string);
@@ -94,7 +91,7 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n);
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t timeout);
+int timed_out(time_t timestamp, time_t timeout);
 
 /* Colours the window tab according to type. Beeps if is_beep is true */
 void alert_window(ToxWindow *self, int type, bool is_beep);
@@ -140,11 +137,11 @@ int get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, int groupnum);
 size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length);
 
 /* returns index of the first instance of ch in s starting at idx.
-   returns length of s if char not found */
+   returns length of s if char not found or 0 if s is NULL. */
 int char_find(int idx, const char *s, char ch);
 
-/* returns index of the last instance of ch in s
-   returns 0 if char not found */
+/* returns index of the last instance of ch in s starting at len.
+   returns 0 if char not found or s is NULL (skips 0th index). */
 int char_rfind(const char *s, char ch, int len);
 
 /* Converts bytes to appropriate unit and puts in buf as a string */
@@ -164,5 +161,17 @@ int check_file_signature(const char *signature, size_t size, FILE *fp);
 
 /* sets window title in tab bar. */
 void set_window_title(ToxWindow *self, const char *title, int len);
+
+/* Return true if address appears to be a valid ipv4 address. */
+bool is_ip4_address(const char *address);
+
+/* Return true if address roughly appears to be a valid ipv6 address.
+ *
+ * TODO: Improve this function (inet_pton behaves strangely with ipv6).
+ * for now the only guarantee is that it won't return true if the
+ * address is a domain or ipv4 address, and should only be used if you're
+ * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
+ */
+bool is_ip6_address(const char *address);
 
 #endif /* #define MISC_TOOLS_H */

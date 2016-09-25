@@ -2,12 +2,12 @@
 .\"     Title: toxic
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 2015-12-07
+.\"      Date: 2016-09-20
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC" "1" "2015\-12\-07" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC" "1" "2016\-09\-20" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -82,8 +82,8 @@ Show help message
 .RS 4
 Use specified
 \fInodes\-file\fR
-for DHT bootstrap nodes, instead of
-\fI__DATADIR__/DHTnodes\fR
+for DHT bootstrap nodes instead of
+\fI~/\&.config/tox/DHTnodes\&.json\fR
 .RE
 .PP
 \-o, \-\-noconnect
@@ -122,9 +122,11 @@ Unencrypt a data file\&. A warning will appear if this option is used with a dat
 .RE
 .SH "FILES"
 .PP
-__DATADIR__/DHTnodes
+~/\&.config/tox/DHTnodes\&.json
 .RS 4
-Default list of DHT bootstrap nodes\&.
+Default location for list of DHT bootstrap nodes (list obtained from
+https://nodes\&.tox\&.chat)\&. This list is automatically updated\&. See
+\fBtoxic\&.conf\fR(5) for details on controlling the update frequency\&.
 .RE
 .PP
 ~/\&.config/tox/toxic_profile\&.tox

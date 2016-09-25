@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h> /* for u_char */
 #include <curl/curl.h>
 
 #include "toxic.h"
@@ -31,18 +30,16 @@
 #include "global_commands.h"
 #include "misc_tools.h"
 #include "configdir.h"
+#include "curl_util.h"
 
 extern struct arg_opts arg_opts;
-extern struct Winthread Winthread;;
+extern struct Winthread Winthread;
 
 #define NAMESERVER_API_PATH "api"
 #define SERVER_KEY_SIZE 32
 #define MAX_SERVERS 50
 #define MAX_DOMAIN_SIZE 32
 #define MAX_SERVER_LINE MAX_DOMAIN_SIZE + (SERVER_KEY_SIZE * 2) + 3
-
-/* List based on Mozilla's recommended configurations for modern browsers */
-#define TLS_CIPHER_SUITE_LIST "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK"
 
 struct Nameservers {
     int     lines;
@@ -56,8 +53,8 @@ static struct thread_data {
     char    id_bin[TOX_ADDRESS_SIZE];
     char    addr[MAX_STR_SIZE];
     char    msg[MAX_STR_SIZE];
-    bool    busy;
     bool    disabled;
+    volatile bool busy;
 } t_data;
 
 static struct lookup_thread {
@@ -189,40 +186,17 @@ static bool get_domain_match(char *pubkey, char *out_domain, size_t out_domain_s
     return false;
 }
 
-#define MAX_RECV_LOOKUP_DATA_SIZE 1024
-
-/* Holds raw data received from name server */
-struct Recv_Data {
-    char data[MAX_RECV_LOOKUP_DATA_SIZE];
-    size_t size;
-};
-
-size_t write_lookup_data(void *data, size_t size, size_t nmemb, void *user_pointer)
-{
-    struct Recv_Data *recv_data = (struct Recv_Data *) user_pointer;
-    size_t real_size = size * nmemb;
-
-    if (real_size >= MAX_RECV_LOOKUP_DATA_SIZE)
-        return 0;
-
-    memcpy(&recv_data->data, data, real_size);
-    recv_data->size = real_size;
-    recv_data->data[real_size] = '\0';
-
-    return real_size;
-}
-
 /* Converts Tox ID string contained in recv_data to binary format and puts it in thread's ID buffer.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
 #define ID_PREFIX "\"tox_id\": \""
-static int process_response(struct Recv_Data *recv_data)
+static int process_response(struct Recv_Curl_Data *recv_data)
 {
     size_t prefix_size = strlen(ID_PREFIX);
 
-    if (recv_data->size < TOX_ADDRESS_SIZE * 2 + prefix_size)
+    if (recv_data->length < TOX_ADDRESS_SIZE * 2 + prefix_size)
         return -1;
 
     const char *IDstart = strstr(recv_data->data, ID_PREFIX);
@@ -239,47 +213,6 @@ static int process_response(struct Recv_Data *recv_data)
 
     if (hex_string_to_bin(ID_string, strlen(ID_string), t_data.id_bin, sizeof(t_data.id_bin)) == -1)
         return -1;
-
-    return 0;
-}
-
-/* Sets proxy info for given CURL handler.
- *
- * Returns 0 on success or if no proxy is set by the client.
- * Returns -1 on failure.
- */
-static int set_lookup_proxy(ToxWindow *self, CURL *c_handle, const char *proxy_address, uint16_t port, uint8_t proxy_type)
-{
-    if (proxy_type == TOX_PROXY_TYPE_NONE)
-        return 0;
-
-    if (proxy_address == NULL || port == 0) {
-        lookup_error(self, "Unknown proxy error");
-        return -1;
-    }
-
-    int ret = curl_easy_setopt(c_handle, CURLOPT_PROXYPORT, (long) port);
-
-    if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set proxy port (libcurl error %d)", ret);
-        return -1;
-    }
-
-    long int type = proxy_type == TOX_PROXY_TYPE_SOCKS5 ? CURLPROXY_SOCKS5_HOSTNAME : CURLPROXY_HTTP;
-
-    ret = curl_easy_setopt(c_handle, CURLOPT_PROXYTYPE, type);
-
-    if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set proxy type (libcurl error %d)", ret);
-        return -1;
-    }
-
-    ret = curl_easy_setopt(c_handle, CURLOPT_PROXY, proxy_address);
-
-    if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set proxy (libcurl error %d)", ret);
-        return -1;
-    }
 
     return 0;
 }
@@ -301,7 +234,7 @@ void *lookup_thread_func(void *data)
 
     if (!get_domain_match(nameserver_key, real_domain, sizeof(real_domain), input_domain)) {
         if (!strcasecmp(input_domain, "utox.org"))
-            lookup_error(self, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic");
+            lookup_error(self, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic.");
         else
             lookup_error(self, "Name server domain not found.");
 
@@ -315,26 +248,38 @@ void *lookup_thread_func(void *data)
         kill_lookup_thread();
     }
 
-    struct Recv_Data recv_data;
-    memset(&recv_data, 0, sizeof(struct Recv_Data));
+    struct Recv_Curl_Data recv_data;
+
+    memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
 
     char post_data[MAX_STR_SIZE];
+
     snprintf(post_data, sizeof(post_data), "{\"action\": 3, \"name\": \"%s\"}", name);
 
     struct curl_slist *headers = NULL;
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
+
     headers = curl_slist_append(headers, "charsets: utf-8");
 
     curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
+
     curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
-    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, write_lookup_data);
+
+    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
+
     curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, &recv_data);
+
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 
-    if (set_lookup_proxy(self, c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type) == -1)
+    int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
+
+    if (proxy_ret != 0) {
+        lookup_error(self, "Failed to set proxy (error %d)\n");
         goto on_exit;
+    }
 
     int ret = curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
@@ -437,9 +382,9 @@ void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
  * Returns -2 if the nameserver list cannot be found.
  * Returns -3 if the nameserver list does not contain any valid entries.
  */
-int name_lookup_init(void)
+int name_lookup_init(int curl_init_status)
 {
-    if (curl_global_init(CURL_GLOBAL_ALL) != 0) {
+    if (curl_init_status != 0) {
         t_data.disabled = true;
         return -1;
     }
@@ -453,9 +398,4 @@ int name_lookup_init(void)
     }
 
     return 0;
-}
-
-void name_lookup_cleanup(void)
-{
-    curl_global_cleanup();
 }

@@ -48,9 +48,9 @@
 #include "message_queue.h"
 
 #ifdef AUDIO
-    #include "audio_call.h"
+#include "audio_call.h"
 #ifdef VIDEO
-    #include "video_call.h"
+#include "video_call.h"
 #endif  /* VIDEO */
 #endif  /* AUDIO */
 
@@ -153,7 +153,7 @@ void kill_chat_window(ToxWindow *self, Tox *m)
 }
 
 static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const char *msg, size_t len,
-                               const char *nick, const char *timefrmt)
+                                const char *nick, const char *timefrmt)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -161,9 +161,11 @@ static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const cha
     write_to_log(msg, nick, ctx->log, false);
 
     if (self->active_box != -1)
-        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "%s", msg);
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                    self->active_box, "%s", msg);
     else
-        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, nick, "%s", msg);
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                   &self->active_box, nick, "%s", msg);
 }
 
 static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char *action, size_t len,
@@ -175,9 +177,11 @@ static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char
     write_to_log(action, nick, ctx->log, true);
 
     if (self->active_box != -1)
-        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, self->active_box, "* %s %s", nick, action );
+        box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                    self->active_box, "* %s %s", nick, action );
     else
-        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS, &self->active_box, self->name, "* %s %s", nick, action );
+        box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
+                   &self->active_box, self->name, "* %s %s", nick, action );
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TYPE type, const char *msg, size_t len)
@@ -451,11 +455,11 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
             if (ft->state == FILE_TRANSFER_PENDING) {
                 ft->state = FILE_TRANSFER_STARTED;
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
-                                                                      ft->index, ft->file_name);
+                              ft->index, ft->file_name);
                 char progline[MAX_STR_SIZE];
                 init_progress_bar(progline);
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-                sound_notify(self, silent, NT_NOFOCUS | NT_BEEP | NT_WNDALERT_2, NULL);
+                sound_notify(self, silent, NT_NOFOCUS | user_settings->bell_on_filetrans_accept | NT_WNDALERT_2, NULL);
                 ft->line_id = self->chatwin->hst->line_end->id + 2;
             } else if (ft->state == FILE_TRANSFER_PAUSED) {    /* transfer is resumed */
                 ft->state = FILE_TRANSFER_STARTED;
@@ -463,10 +467,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
 
             break;
         }
+
         case TOX_FILE_CONTROL_PAUSE: {
             ft->state = FILE_TRANSFER_PAUSED;
             break;
         }
+
         case TOX_FILE_CONTROL_CANCEL: {
             snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", ft->file_name);
             close_file_transfer(self, m, ft, -1, msg, notif_error);
@@ -597,11 +603,11 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     tox_file_get_file_id(m, friendnum, filenum, ft->file_id, NULL);
 
     if (self->active_box != -1)
-        box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, self->active_box,
-                    "Incoming file: %s", filename );
+        box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
+                    self->active_box, "Incoming file: %s", filename );
     else
-        box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS, &self->active_box, self->name,
-                    "Incoming file: %s", filename );
+        box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
+                   &self->active_box, self->name, "Incoming file: %s", filename );
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, uint32_t friendnumber, const char *invite_data,
@@ -617,7 +623,7 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, uint32_t friendnumber, c
     memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
     Friends.list[friendnumber].group_invite.length = length;
 
-    sound_notify(self, generic_message, NT_WNDALERT_2, NULL);
+    sound_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, NULL);
 
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
@@ -645,7 +651,7 @@ void chat_onInvite (ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Incoming audio call! Type: \"/answer\" or \"/reject\"");
 
     if (self->ringing_sound == -1)
-        sound_notify(self, call_incoming, NT_LOOP, &self->ringing_sound);
+        sound_notify(self, call_incoming, NT_LOOP | user_settings->bell_on_invite, &self->ringing_sound);
 
     if (self->active_box != -1)
         box_silent_notify2(self, NT_NOFOCUS | NT_WNDALERT_0, self->active_box, "Incoming audio call!");
@@ -661,8 +667,10 @@ void chat_onRinging (ToxWindow *self, ToxAV *av, uint32_t friend_number, int sta
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ringing...type \"/hangup\" to cancel it.");
 
 #ifdef SOUND_NOTIFY
+
     if (self->ringing_sound == -1)
         sound_notify(self, call_outgoing, NT_LOOP, &self->ringing_sound);
+
 #endif /* SOUND_NOTIFY */
 }
 
@@ -815,7 +823,7 @@ static void draw_infobox(ToxWindow *self)
     if (x2 < INFOBOX_WIDTH || y2 < INFOBOX_HEIGHT)
         return;
 
-    uint64_t curtime = get_unix_time();
+    time_t curtime = get_unix_time();
 
     /* update elapsed time string once per second */
     if (curtime > infobox->lastupdate)
@@ -852,7 +860,7 @@ static void draw_infobox(ToxWindow *self)
     wprintw(infobox->win, "%.2f\n", infobox->vad_lvl);
 
     wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
-    wrefresh(infobox->win);
+    wnoutrefresh(infobox->win);
 }
 
 #endif /* AUDIO */
@@ -917,11 +925,11 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             diff = dir_match(self, m, ctx->line, L"/sendfile");
         } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/avatar");
-        } else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0){
+        } else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
             const char status_cmd_list[3][8] = {
-              {"online"},
-              {"away"},
-              {"busy"},
+                {"online"},
+                {"away"},
+                {"busy"},
             };
             diff = complete_line(self, status_cmd_list, 3, 8);
         } else {
@@ -940,8 +948,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
-        if (!wstring_is_empty(ctx->line))
-        {
+        if (!wstring_is_empty(ctx->line)) {
             add_line_to_hist(ctx);
 
             wstrsubst(ctx->line, L'¶', L'\n');
@@ -1019,9 +1026,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             case TOX_USER_STATUS_NONE:
                 colour = GREEN;
                 break;
+
             case TOX_USER_STATUS_AWAY:
                 colour = YELLOW;
                 break;
+
             case TOX_USER_STATUS_BUSY:
                 colour = RED;
                 break;
@@ -1094,13 +1103,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
-    wrefresh(self->window);
+    wnoutrefresh(self->window);
 
 #ifdef AUDIO
+
     if (ctx->infobox.active) {
         draw_infobox(self);
-        wrefresh(self->window);
     }
+
 #endif
 
     if (self->help->active)

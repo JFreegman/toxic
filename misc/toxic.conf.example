@@ -5,8 +5,20 @@ ui = {
   // true to enable timestamps, false to disable
   timestamps=true;
 
-  // true to enable terminal alerts on messages, false to disable
+  // true to enable acoustic alerts on messages, false to disable
   alerts=true;
+
+  // Output a bell when receiving a message (see manpage)
+  bell_on_message=true
+
+  // Output a bell when receiving a filetransfer (see manpage)
+  bell_on_filetrans=true
+
+  // Don't output a bell when a filetransfer was accepted (see manpage)
+  bell_on_filetrans_accept=false
+
+  // Output a bell when receiving a group/call invite (see manpage)
+  bell_on_invite=true
 
   // true to use native terminal colours, false to use toxic default colour theme
   native_colors=false;
@@ -17,7 +29,7 @@ ui = {
   // 24 or 12 hour time
   time_format=24;
 
-  // timestamp format string according to date/strftime format. Overrides time_format setting
+  // Timestamp format string according to date/strftime format. Overrides time_format setting
   timestamp_format="%H:%M:%S";
 
   // true to show you when others are typing a message in 1-on-1 chats
@@ -31,6 +43,9 @@ ui = {
 
   // true to show friend connection change messages on the home screen
   show_connection_msg=true;
+
+  // How often in days to update the DHT nodes list. (0 to disable updates)
+  nodeslist_update_freq=7;
 
   // maximum lines for chat window history
   history_size=700;
@@ -92,8 +107,7 @@ sounds = {
 };
 
 // Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN (case insensitive)
-// Note: All printable keys register as input
-// Note2: Ctrl+M does not work
+// Note: Ctrl+M does not work
 keys = {
   next_tab="Ctrl+P";
   prev_tab="Ctrl+O";

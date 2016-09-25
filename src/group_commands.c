@@ -70,6 +70,7 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     TOX_ERR_GROUP_TOGGLE_IGNORE err;
+
     if (!tox_group_toggle_ignore(m, self->num, peer_id, true, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to ignore %s (error %d).", nick, err);
         return;
@@ -99,12 +100,15 @@ static void cmd_kickban_helper(ToxWindow *self, Tox *m, const char *nick, bool s
         case TOX_ERR_GROUP_MOD_REMOVE_PEER_OK: {
             return;
         }
+
         case TOX_ERR_GROUP_MOD_REMOVE_PEER_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to %s %s.", type_str, nick);
             return;
         }
+
         default: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to %s %s from the group (error %d).", type_str, nick, err);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to %s %s from the group (error %d).", type_str, nick,
+                          err);
             return;
         }
     }
@@ -173,8 +177,11 @@ void cmd_ban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             }
 
             struct tm tm_set = *localtime((const time_t *) &time_set);
+
             char time_str[64];
+
             strftime(time_str, sizeof(time_str), "%e %b %Y %H:%M:%S%p", &tm_set);
+
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "ID %d : %s [Set:%s]", id, nick, time_str);
         }
 
@@ -206,14 +213,17 @@ void cmd_unban(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban list entry with id %d has been removed.", ban_id);
             return;
         }
+
         case TOX_ERR_GROUP_MOD_REMOVE_BAN_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to unban peers.");
             return;
         }
+
         case TOX_ERR_GROUP_MOD_REMOVE_BAN_FAIL_ACTION: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Ban ID does not exist.");
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to remove ban list entry (error %d).", err);
             return;
@@ -243,14 +253,17 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
             return;
         }
+
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to promote moderators.");
             return;
         }
+
         case TOX_ERR_GROUP_MOD_SET_ROLE_ASSIGNMENT: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "This peer is already a moderator.");
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to promote peer to moderator (error %d).", err);
             return;
@@ -285,12 +298,15 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
             return;
         }
+
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Nice try.");
             return;
         }
+
         default: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to revoke moderator powers from %s (error %d).", nick, err);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,  "Failed to revoke moderator powers from %s (error %d).", nick,
+                          err);
             return;
         }
     }
@@ -302,9 +318,10 @@ void cmd_mykey(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     char pk[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
 
     TOX_ERR_GROUP_SELF_QUERY err;
+
     if (!tox_group_self_get_public_key(m, self->num, (uint8_t *) pk, &err)) {
-         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch your public key (error %d)", err);
-         return;
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch your public key (error %d)", err);
+        return;
     }
 
     size_t i;
@@ -337,16 +354,21 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password has been set to %s.", passwd);
             else
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password has been unset.");
+
             return;
         }
+
         case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_TOO_LONG: {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password length must not exceed %d.", TOX_GROUP_MAX_PASSWORD_SIZE);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password length must not exceed %d.",
+                          TOX_GROUP_MAX_PASSWORD_SIZE);
             return;
         }
+
         case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the password.");
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set password (error %d).", err);
             return;
@@ -386,10 +408,12 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Peer limit has been set to %d.", maxpeers);
             return;
         }
+
         case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the peer limit.");
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set the peer limit (error %d).", err);
             return;
@@ -423,7 +447,8 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    privacy_state = strcasecmp(pstate_str, "private") == 0 ? TOX_GROUP_PRIVACY_STATE_PRIVATE : TOX_GROUP_PRIVACY_STATE_PUBLIC;
+    privacy_state = strcasecmp(pstate_str,
+                               "private") == 0 ? TOX_GROUP_PRIVACY_STATE_PRIVATE : TOX_GROUP_PRIVACY_STATE_PUBLIC;
 
     TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE err;
     tox_group_founder_set_privacy_state(m, self->num, privacy_state, &err);
@@ -433,10 +458,12 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Privacy state has been set to %s.", pstate_str);
             return;
         }
+
         case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the privacy state.");
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error setting privacy state (error %d).", err);
             return;
@@ -466,10 +493,12 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
             return;
         }
+
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to silence %s.", nick);
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to silence %s (error %d).", nick, err);
             return;
@@ -504,10 +533,12 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
             return;
         }
+
         case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to unsilence %s.", nick);
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to unsilence %s (error %d).", nick, err);
             return;
@@ -518,6 +549,7 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     TOX_ERR_GROUP_RECONNECT err;
+
     if (!tox_group_reconnect(m, self->num, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to rejoin group (error %d).", err);
         return;
@@ -564,14 +596,17 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
             /* handled below switch */
             break;
         }
+
         case TOX_ERR_GROUP_TOPIC_SET_TOO_LONG: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Topic length must not exceed %d.", TOX_GROUP_MAX_TOPIC_LENGTH);
             return;
         }
+
         case TOX_ERR_GROUP_TOPIC_SET_PERMISSIONS: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the topic.");
             return;
         }
+
         default: {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set the topic (error %d).", err);
             return;
@@ -586,8 +621,8 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     char selfnick[sn_len];
 
     if (!tox_group_self_get_name(m, self->num, (uint8_t *) selfnick, &sn_err)) {
-         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve your own name (error %d).", sn_err);
-         return;
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve your own name (error %d).", sn_err);
+        return;
     }
 
     selfnick[sn_len] = '\0';
@@ -615,6 +650,7 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     TOX_ERR_GROUP_TOGGLE_IGNORE err;
+
     if (!tox_group_toggle_ignore(m, self->num, peer_id, false, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to unignore %s (error %d).", nick, err);
         return;

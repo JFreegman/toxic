@@ -31,13 +31,16 @@
 #endif /* __OBJC__ */
 
 #define RELEASE_CHK(func, obj) if ((obj))\
- 	func((obj));
+    func((obj));
 
 void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *rgb, uint16_t width, uint16_t height);
 
 #ifdef __OBJC__
-@interface OSXVideo : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate>
-- (instancetype)initWithDeviceNames:(char **)device_names AmtDevices:(int *)size;
+@interface OSXVideo :
+NSObject <AVCaptureVideoDataOutputSampleBufferDelegate>
+- (instancetype)initWithDeviceNames:
+(char **)device_names AmtDevices:
+(int *)size;
 @end
 #endif /* __OBJC__ */
 

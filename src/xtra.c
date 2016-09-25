@@ -57,8 +57,7 @@ struct _Xtra {
     Atom expecting_type;
 } Xtra;
 
-typedef struct _Property
-{
+typedef struct _Property {
     unsigned char *data;
     int            read_format;
     unsigned long  read_num;
@@ -97,21 +96,23 @@ Property read_property(Window s, Atom p)
 Atom get_dnd_type(long *a, int l)
 {
     int i = 0;
+
     for (; i < l; i ++) {
         if (a[i] != XtraNil) return a[i]; /* Get first valid */
     }
+
     return XtraNil;
 }
 
 /* TODO maybe support only certain types in the future */
-static void handle_xdnd_enter(XClientMessageEvent* e)
+static void handle_xdnd_enter(XClientMessageEvent *e)
 {
     Xtra.handling_version = (e->data.l[1] >> 24);
 
     if ((e->data.l[1] & 1)) {
         // Fetch the list of possible conversions
         Property p = read_property(e->data.l[0], XdndTypeList);
-        Xtra.expecting_type = get_dnd_type((long*)p.data, p.read_num);
+        Xtra.expecting_type = get_dnd_type((long *)p.data, p.read_num);
         XFree(p.data);
     } else {
         // Use the available list
@@ -119,7 +120,7 @@ static void handle_xdnd_enter(XClientMessageEvent* e)
     }
 }
 
-static void handle_xdnd_position(XClientMessageEvent* e)
+static void handle_xdnd_position(XClientMessageEvent *e)
 {
     XEvent ev = {
         .xclient = {
@@ -143,7 +144,7 @@ static void handle_xdnd_position(XClientMessageEvent* e)
     XFlush(Xtra.display);
 }
 
-static void handle_xdnd_drop(XClientMessageEvent* e)
+static void handle_xdnd_drop(XClientMessageEvent *e)
 {
     /* Not expecting any type */
     if (Xtra.expecting_type == XtraNil) {
@@ -172,7 +173,7 @@ static void handle_xdnd_drop(XClientMessageEvent* e)
     }
 }
 
-static void handle_xdnd_selection(XSelectionEvent* e)
+static void handle_xdnd_selection(XSelectionEvent *e)
 {
     /* DnD succesfully finished, send finished and call callback */
     XEvent ev = {
@@ -199,12 +200,12 @@ static void handle_xdnd_selection(XSelectionEvent* e)
 
 
     /* Call callback for every entry */
-    if (Xtra.on_drop && p.read_num)
-    {
+    if (Xtra.on_drop && p.read_num) {
         char *sptr;
         char *str = strtok_r((char *) p.data, "\n\r", &sptr);
 
         if (str) Xtra.on_drop(str, dt);
+
         while ((str = strtok_r(NULL, "\n\r", &sptr)))
             Xtra.on_drop(str, dt);
     }
@@ -212,7 +213,7 @@ static void handle_xdnd_selection(XSelectionEvent* e)
     if (p.data) XFree(p.data);
 }
 
-void *event_loop(void* p)
+void *event_loop(void *p)
 {
     /* Handle events like a real nigga */
 
@@ -221,30 +222,27 @@ void *event_loop(void* p)
     XEvent event;
     int pending;
 
-    while (Xtra.display)
-    {
+    while (Xtra.display) {
         /* NEEDMOEVENTSFODEMPROGRAMS */
 
         XLockDisplay(Xtra.display);
-        if((pending = XPending(Xtra.display))) XNextEvent(Xtra.display, &event);
 
-        if (!pending)
-        {
+        if ((pending = XPending(Xtra.display))) XNextEvent(Xtra.display, &event);
+
+        if (!pending) {
             XUnlockDisplay(Xtra.display);
             usleep(10000);
             continue;
         }
 
-        if (event.type == ClientMessage)
-        {
+        if (event.type == ClientMessage) {
             Atom type = event.xclient.message_type;
 
             if      (type == XdndEnter)         handle_xdnd_enter(&event.xclient);
             else if (type == XdndPosition)      handle_xdnd_position(&event.xclient);
             else if (type == XdndDrop)          handle_xdnd_drop(&event.xclient);
             else if (type == XtraTerminate)     break;
-        }
-        else if (event.type == SelectionNotify) handle_xdnd_selection(&event.xselection);
+        } else if (event.type == SelectionNotify) handle_xdnd_selection(&event.xselection);
         /* AINNOBODYCANHANDLEDEMEVENTS*/
         else XSendEvent(Xtra.display, Xtra.terminal_window, 0, 0, &event);
 
@@ -256,6 +254,7 @@ void *event_loop(void* p)
      * otherwise HEWUSAGUDBOI happens
      */
     if (Xtra.display) XCloseDisplay(Xtra.display);
+
     return (Xtra.display = NULL);
 }
 
@@ -267,6 +266,7 @@ int init_xtra(drop_callback d)
     else Xtra.on_drop = d;
 
     XInitThreads();
+
     if ( !(Xtra.display = XOpenDisplay(NULL))) return -1;
 
     Xtra.terminal_window = focused_window_id();
@@ -274,7 +274,7 @@ int init_xtra(drop_callback d)
     /* OSX: if focused window is 0, it means toxic is ran from
      * native terminal and not X11 terminal window, silently exit */
     if (!Xtra.terminal_window)
-      return 0;
+        return 0;
 
     {
         /* Create an invisible window which will act as proxy for the DnD operation. */
@@ -300,15 +300,15 @@ int init_xtra(drop_callback d)
                      &root, &x, &y, &wht, &hht, &b, &d);
 
         if (! (Xtra.proxy_window = XCreateWindow
-                        (Xtra.display, Xtra.terminal_window,       /* Parent */
-                         0, 0,                                     /* Position */
-                         wht, hht,                                 /* Width + height */
-                         0,                                        /* Border width */
-                         CopyFromParent,                           /* Depth */
-                         InputOnly,                                /* Class */
-                         CopyFromParent,                           /* Visual */
-                         CWEventMask | CWCursor,                   /* Value mask */
-                         &attr)) )                                 /* Attributes for value mask */
+                                   (Xtra.display, Xtra.terminal_window,       /* Parent */
+                                    0, 0,                                     /* Position */
+                                    wht, hht,                                 /* Width + height */
+                                    0,                                        /* Border width */
+                                    CopyFromParent,                           /* Depth */
+                                    InputOnly,                                /* Class */
+                                    CopyFromParent,                           /* Visual */
+                                    CWEventMask | CWCursor,                   /* Value mask */
+                                    &attr)) )                                 /* Attributes for value mask */
             return -1;
     }
 
@@ -335,9 +335,10 @@ int init_xtra(drop_callback d)
                     XA_ATOM,
                     32,
                     PropModeReplace,
-                    (unsigned char*)&XdndVersion, 1);
+                    (unsigned char *)&XdndVersion, 1);
 
     pthread_t id;
+
     if (pthread_create(&id, NULL, event_loop, NULL) != 0)
         return -1;
 

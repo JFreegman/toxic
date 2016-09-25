@@ -52,8 +52,7 @@ extern struct Winthread Winthread;
 #define PATH_SEP_S "/"
 #define PATH_SEP_C '/'
 
-typedef enum
-{
+typedef enum {
     MPLEX_NONE,
     MPLEX_SCREEN,
     MPLEX_TMUX,
@@ -97,13 +96,14 @@ static char *read_into_dyn_buffer (FILE *stream)
     char *dyn_buffer = NULL;
     int dyn_buffer_size = 1; /* account for the \0 */
 
-    while ((input_ptr = fgets (buffer, BUFFER_SIZE, stream)) != NULL)
-    {
+    while ((input_ptr = fgets (buffer, BUFFER_SIZE, stream)) != NULL) {
         int length = dyn_buffer_size + strlen (input_ptr);
+
         if (dyn_buffer)
-            dyn_buffer = (char*) realloc (dyn_buffer, length);
+            dyn_buffer = (char *) realloc (dyn_buffer, length);
         else
-            dyn_buffer = (char*) malloc (length);
+            dyn_buffer = (char *) malloc (length);
+
         strcpy (dyn_buffer + dyn_buffer_size - 1, input_ptr);
         dyn_buffer_size = length;
     }
@@ -116,26 +116,29 @@ static char *extract_socket_path (const char *info)
     const char *search_str = " Socket";
     const char *pos = strstr (info, search_str);
     char *end = NULL;
-    char* path = NULL;
+    char *path = NULL;
 
     if (!pos)
         return NULL;
 
     pos += strlen (search_str);
     pos = strchr (pos, PATH_SEP_C);
+
     if (!pos)
         return NULL;
 
     end = strchr (pos, '\n');
+
     if (!end)
         return NULL;
 
     *end = '\0';
     end = strrchr (pos, '.');
+
     if (!end)
         return NULL;
 
-    path = (char*) malloc (end - pos + 1);
+    path = (char *) malloc (end - pos + 1);
     *end = '\0';
     return strcpy (path, pos);
 }
@@ -147,14 +150,17 @@ static int detect_gnu_screen ()
     char *dyn_buffer = NULL;
 
     socket_name = getenv ("STY");
+
     if (!socket_name)
         goto nomplex;
 
     session_info_stream = popen ("env LC_ALL=C screen -ls", "r");
+
     if (!session_info_stream)
         goto nomplex;
 
     dyn_buffer = read_into_dyn_buffer (session_info_stream);
+
     if (!dyn_buffer)
         goto nomplex;
 
@@ -162,6 +168,7 @@ static int detect_gnu_screen ()
     session_info_stream = NULL;
 
     socket_path = extract_socket_path (dyn_buffer);
+
     if (!socket_path)
         goto nomplex;
 
@@ -181,23 +188,29 @@ static int detect_gnu_screen ()
     return 1;
 
 nomplex:
+
     if (session_info_stream)
         pclose (session_info_stream);
+
     if (dyn_buffer)
         free (dyn_buffer);
+
     if (socket_path)
         free(socket_path);
+
     return 0;
 }
 
 static int detect_tmux ()
 {
     char *tmux_env = getenv ("TMUX"), *pos;
+
     if (!tmux_env)
         return 0;
 
     /* find second separator */
     pos = strrchr (tmux_env, ',');
+
     if (!pos)
         return 0;
 
@@ -230,6 +243,7 @@ static int gnu_screen_is_detached ()
         return 0;
 
     struct stat sb;
+
     if (stat (mplex_data, &sb) != 0)
         return 0;
 
@@ -257,10 +271,12 @@ static int tmux_is_detached ()
     const int numstr_len = strlen (mplex_data);
 
     session_info_stream = popen ("env LC_ALL=C tmux list-sessions", "r");
+
     if (!session_info_stream)
         goto fail;
 
     dyn_buffer = read_into_dyn_buffer (session_info_stream);
+
     if (!dyn_buffer)
         goto fail;
 
@@ -268,7 +284,7 @@ static int tmux_is_detached ()
     session_info_stream = NULL;
 
     /* prepare search string, for finding the current session's entry */
-    search_str = (char*) malloc (numstr_len + 4);
+    search_str = (char *) malloc (numstr_len + 4);
     search_str[0] = '\n';
     strcpy (search_str + 1, mplex_data);
     strcat (search_str, ": ");
@@ -295,12 +311,16 @@ static int tmux_is_detached ()
     return attached_pos == NULL  ||  attached_pos > nl_pos;
 
 fail:
+
     if (session_info_stream)
         pclose (session_info_stream);
+
     if (dyn_buffer)
         free (dyn_buffer);
+
     if (search_str)
         free (search_str);
+
     return 0;
 }
 
@@ -332,26 +352,21 @@ static void mplex_timer_handler (Tox *m)
     current_status = tox_self_get_status (m);
     pthread_mutex_unlock (&Winthread.lock);
 
-    if (auto_away_active && current_status == TOX_USER_STATUS_AWAY && !detached)
-    {
+    if (auto_away_active && current_status == TOX_USER_STATUS_AWAY && !detached) {
         auto_away_active = false;
         new_status = prev_status;
         new_note = prev_note;
-    }
-    else
-    if (current_status == TOX_USER_STATUS_NONE && detached)
-    {
+    } else if (current_status == TOX_USER_STATUS_NONE && detached) {
         auto_away_active = true;
         prev_status = current_status;
         new_status = TOX_USER_STATUS_AWAY;
         pthread_mutex_lock (&Winthread.lock);
         size_t slen = tox_self_get_status_message_size(m);
-        tox_self_get_status_message (m, (uint8_t*) prev_note);
+        tox_self_get_status_message (m, (uint8_t *) prev_note);
         prev_note[slen] = '\0';
         pthread_mutex_unlock (&Winthread.lock);
         new_note = user_settings->mplex_away_note;
-    }
-    else
+    } else
         return;
 
     char argv[3][MAX_STR_SIZE];

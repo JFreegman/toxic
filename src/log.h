@@ -25,7 +25,7 @@
 
 struct chatlog {
     FILE *file;
-    uint64_t lastwrite;
+    time_t lastwrite;
     char path[MAX_STR_SIZE];
     bool log_on;    /* specific to current chat window */
 };

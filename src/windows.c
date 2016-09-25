@@ -230,7 +230,7 @@ void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peer_id, const ui
 }
 
 void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peer_id, const uint8_t *topic, size_t length,
-                          void *userdata)
+                           void *userdata)
 {
     char data[MAX_STR_SIZE + 1];
     length = copy_tox_str(data, sizeof(data), (const char *) topic, length);
@@ -550,10 +550,12 @@ void on_window_resize(void)
         }
 
 #ifdef AUDIO
+
         if (w->chatwin->infobox.active) {
             delwin(w->chatwin->infobox.win);
             w->chatwin->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
         }
+
 #endif   /* AUDIO */
 
         scrollok(w->chatwin->history, 0);
@@ -563,19 +565,28 @@ void on_window_resize(void)
 static void draw_window_tab(ToxWindow *toxwin)
 {
     pthread_mutex_lock(&Winthread.lock);
+
     if (toxwin->alert != WINDOW_ALERT_NONE) attron(COLOR_PAIR(toxwin->alert));
+
     pthread_mutex_unlock(&Winthread.lock);
 
     clrtoeol();
     printw(" [%s]", toxwin->name);
 
     pthread_mutex_lock(&Winthread.lock);
+
     if (toxwin->alert != WINDOW_ALERT_NONE) attroff(COLOR_PAIR(toxwin->alert));
+
     pthread_mutex_unlock(&Winthread.lock);
 }
 
 static void draw_bar(void)
 {
+    int y, x;
+
+    // save current cursor position
+    getyx(active_window->window, y, x);
+
     attron(COLOR_PAIR(BLUE));
     mvhline(LINES - 2, 0, '_', COLS);
     attroff(COLOR_PAIR(BLUE));
@@ -613,6 +624,9 @@ static void draw_bar(void)
             attroff(A_BOLD);
     }
 
+    // restore cursor position after drawing
+    move(y, x);
+
     refresh();
 }
 
@@ -630,6 +644,7 @@ void draw_active_window(Tox *m)
 
     touchwin(a->window);
     a->onDraw(a, m);
+    wrefresh(a->window);
 
     /* Handle input */
     bool ltr;

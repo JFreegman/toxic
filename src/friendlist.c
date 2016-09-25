@@ -314,10 +314,10 @@ static void sort_blocklist_index(void)
     qsort(Blocked.index, Blocked.num_blocked, sizeof(uint32_t), index_name_cmp_block);
 }
 
-static void update_friend_last_online(uint32_t num, uint64_t timestamp)
+static void update_friend_last_online(uint32_t num, time_t timestamp)
 {
     Friends.list[num].last_online.last_on = timestamp;
-    Friends.list[num].last_online.tm = *localtime((const time_t*)&timestamp);
+    Friends.list[num].last_online.tm = *localtime((const time_t *)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
     const char *t = user_settings->timestamp_format;
@@ -439,7 +439,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
             fprintf(stderr, "tox_friend_get_public_key failed (error %d)\n", pkerr);
 
         TOX_ERR_FRIEND_GET_LAST_ONLINE loerr;
-        uint64_t t = tox_friend_get_last_online(m, num, &loerr);
+        time_t t = tox_friend_get_last_online(m, num, &loerr);
 
         if (loerr != TOX_ERR_FRIEND_GET_LAST_ONLINE_OK)
             t = 0;
@@ -537,7 +537,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, uint32_t num, cons
     get_nick_truncate(m, nick, num);
 
     line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
-                 "* Group chat invite from %s failed: too many windows are open.", nick);
+                  "* Group chat invite from %s failed: too many windows are open.", nick);
 
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
@@ -559,6 +559,7 @@ static void select_friend(ToxWindow *self, wint_t key, int *selected, int num)
 static void delete_friend(Tox *m, uint32_t f_num)
 {
     TOX_ERR_FRIEND_DELETE err;
+
     if (tox_friend_delete(m, f_num, &err) != true) {
         fprintf(stderr, "tox_friend_delete failed with error %d\n", err);
         return;
@@ -641,10 +642,12 @@ static void draw_del_popup(void)
     wattron(PendingDelete.popup, A_BOLD);
 
     pthread_mutex_lock(&Winthread.lock);
+
     if (blocklist_view == 0)
         wprintw(PendingDelete.popup, "%s", Friends.list[PendingDelete.num].name);
     else
         wprintw(PendingDelete.popup, "%s", Blocked.list[PendingDelete.num].name);
+
     pthread_mutex_unlock(&Winthread.lock);
 
     wattroff(PendingDelete.popup, A_BOLD);
@@ -795,6 +798,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 block_friend(m, f);
             else
                 unblock_friend(m, f);
+
             break;
 
         case KEY_RIGHT:
@@ -807,6 +811,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 select_friend(self, key, &Friends.num_selected, Friends.num_friends);
             else
                 select_friend(self, key, &Blocked.num_selected, Blocked.num_blocked);
+
             break;
     }
 }
@@ -906,7 +911,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         return;
     }
 
-    uint64_t cur_time = time(NULL);
+    time_t cur_time = get_unix_time();
     struct tm cur_loc_tm = *localtime((const time_t *) &cur_time);
 
     wattron(self->window, A_BOLD);
@@ -966,9 +971,11 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     case TOX_USER_STATUS_NONE:
                         colour = GREEN;
                         break;
+
                     case TOX_USER_STATUS_AWAY:
                         colour = YELLOW;
                         break;
+
                     case TOX_USER_STATUS_BUSY:
                         colour = RED;
                         break;
@@ -1043,16 +1050,16 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
                     wattroff(self->window, COLOR_PAIR(BLUE));
 
                 pthread_mutex_lock(&Winthread.lock);
-                uint64_t last_seen = Friends.list[f].last_online.last_on;
+                time_t last_seen = Friends.list[f].last_online.last_on;
                 pthread_mutex_unlock(&Winthread.lock);
 
                 if (last_seen != 0) {
                     pthread_mutex_lock(&Winthread.lock);
 
                     int day_dist = (
-                            cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
-                        + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
-                    );
+                                       cur_loc_tm.tm_yday - Friends.list[f].last_online.tm.tm_yday
+                                       + ((cur_loc_tm.tm_year - Friends.list[f].last_online.tm.tm_year) * 365)
+                                   );
                     const char *hourmin = Friends.list[f].last_online.hour_min_str;
 
                     pthread_mutex_unlock(&Winthread.lock);
@@ -1108,7 +1115,8 @@ void disable_chatwin(uint32_t f_num)
 static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
     assert(0);
-    if( friend_number >= Friends.max_idx)
+
+    if ( friend_number >= Friends.max_idx)
         return;
 
     assert(0);
@@ -1116,7 +1124,7 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
 
     if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
-            if(state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
+            if (state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
                 Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
                 set_active_window(Friends.list[friend_number].chatwin);
             }

@@ -52,11 +52,11 @@ typedef enum DeviceError {
     de_AlError = -9,
 } DeviceError;
 
-typedef void (*DataHandleCallback) (const int16_t*, uint32_t size, void* data);
+typedef void (*DataHandleCallback) (const int16_t *, uint32_t size, void *data);
 
 
 #ifdef AUDIO
-DeviceError init_devices(ToxAV* av);
+DeviceError init_devices(ToxAV *av);
 #else
 DeviceError init_devices();
 #endif /* AUDIO */
@@ -64,8 +64,9 @@ DeviceError init_devices();
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
-DeviceError register_device_callback(int32_t friend_number, uint32_t device_idx, DataHandleCallback callback, void* data, bool enable_VAD);
-void* get_device_callback_data(uint32_t device_idx);
+DeviceError register_device_callback(int32_t friend_number, uint32_t device_idx, DataHandleCallback callback,
+                                     void *data, bool enable_VAD);
+void *get_device_callback_data(uint32_t device_idx);
 
 /* toggle device mute */
 DeviceError device_mute(DeviceType type, uint32_t device_idx);
@@ -75,16 +76,19 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
 #endif
 
 DeviceError set_primary_device(DeviceType type, int32_t selection);
-DeviceError open_primary_device(DeviceType type, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+DeviceError open_primary_device(DeviceType type, uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration,
+                                uint8_t channels);
 /* Start device */
-DeviceError open_device(DeviceType type, int32_t selection, uint32_t* device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx, uint32_t sample_rate,
+                        uint32_t frame_duration, uint8_t channels);
 /* Stop device */
 DeviceError close_device(DeviceType type, uint32_t device_idx);
 
 /* Write data to device */
-DeviceError write_out(uint32_t device_idx, const int16_t* data, uint32_t length, uint8_t channels, uint32_t sample_rate);
+DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t length, uint8_t channels,
+                      uint32_t sample_rate);
 
-void print_devices(ToxWindow* self, DeviceType type);
+void print_devices(ToxWindow *self, DeviceType type);
 void get_primary_device_name(DeviceType type, char *buf, int size);
 
 DeviceError selection_valid(DeviceType type, int32_t selection);

@@ -26,8 +26,7 @@
 #include <inttypes.h>
 #include "windows.h"
 
-typedef enum _Notification
-{
+typedef enum _Notification {
     silent = -1,
     notif_error,
     self_log_in,
@@ -63,18 +62,19 @@ typedef enum _Flags {
 int init_notify(int login_cooldown, int notification_timeout);
 void terminate_notify();
 
-int sound_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator);
-int sound_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id);
+int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indicator);
+int sound_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id);
 
 void stop_sound(int id);
 
-int box_notify(ToxWindow* self, Notification notif, uint64_t flags, int* id_indicator, const char* title, const char* format, ...);
-int box_notify2(ToxWindow* self, Notification notif, uint64_t flags, int id, const char* format, ...);
-int box_silent_notify(ToxWindow* self, uint64_t flags, int* id_indicator, const char* title, const char* format, ...);
-int box_silent_notify2(ToxWindow* self, uint64_t flags, int id, const char* format, ...);
+int box_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indicator, const char *title,
+               const char *format, ...);
+int box_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id, const char *format, ...);
+int box_silent_notify(ToxWindow *self, uint64_t flags, int *id_indicator, const char *title, const char *format, ...);
+int box_silent_notify2(ToxWindow *self, uint64_t flags, int id, const char *format, ...);
 
 #ifdef SOUND_NOTIFY
-int set_sound(Notification sound, const char* value);
+int set_sound(Notification sound, const char *value);
 #endif /* SOUND_NOTIFY */
 
 #endif /* NOTIFY_H */

@@ -26,7 +26,9 @@
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
+
 #include <sys/stat.h>
+#include <arpa/inet.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -36,8 +38,6 @@
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
-
-static uint64_t current_unix_time;
 
 void hst_to_net(uint8_t *num, uint16_t numbytes)
 {
@@ -54,19 +54,13 @@ void hst_to_net(uint8_t *num, uint16_t numbytes)
     return;
 }
 
-/* Note: The time functions are not thread safe */
-void update_unix_time(void)
+time_t get_unix_time(void)
 {
-    current_unix_time = (uint64_t) time(NULL);
-}
-
-uint64_t get_unix_time(void)
-{
-    return current_unix_time;
+    return time(NULL);
 }
 
 /* Returns 1 if connection has timed out, 0 otherwise */
-int timed_out(uint64_t timestamp, uint64_t timeout)
+int timed_out(time_t timestamp, time_t timeout)
 {
     return timestamp + timeout <= get_unix_time();
 }
@@ -75,8 +69,8 @@ int timed_out(uint64_t timestamp, uint64_t timeout)
 struct tm *get_time(void)
 {
     struct tm *timeinfo;
-    uint64_t t = get_unix_time();
-    timeinfo = localtime((const time_t*) &t);
+    time_t t = get_unix_time();
+    timeinfo = localtime((const time_t *) &t);
     return timeinfo;
 }
 
@@ -93,7 +87,7 @@ void get_time_str(char *buf, int bufsize)
 }
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(char *buf, int bufsize, uint64_t secs)
+void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
 {
     if (!secs)
         return;
@@ -180,7 +174,7 @@ int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_
     size_t i;
 
     for (i = 0; i < TOX_ADDRESS_SIZE; ++i)
-        snprintf(&output[i*2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
+        snprintf(&output[i * 2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
 
     return 0;
 }
@@ -211,7 +205,7 @@ int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = mbstowcs(buf, string, n)) == (size_t) -1)
+    if ((len = mbstowcs(buf, string, n)) == (size_t) - 1)
         return -1;
 
     return len;
@@ -225,7 +219,7 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = wcstombs(buf, string, n)) == (size_t) -1)
+    if ((len = wcstombs(buf, string, n)) == (size_t) - 1)
         return -1;
 
     return len;
@@ -252,11 +246,11 @@ int valid_nick(const char *nick)
 
     for (i = 0; nick[i]; ++i) {
         if ((nick[i] == ' ' && nick[i + 1] == ' ')
-            || nick[i] == '/'
-            || nick[i] == '\n'
-            || nick[i] == '\t'
-            || nick[i] == '\v'
-            || nick[i] == '\r')
+                || nick[i] == '/'
+                || nick[i] == '\n'
+                || nick[i] == '\t'
+                || nick[i] == '\v'
+                || nick[i] == '\r')
 
             return 0;
     }
@@ -398,9 +392,13 @@ size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length)
 }
 
 /* returns index of the first instance of ch in s starting at idx.
-   returns length of s if char not found */
+   returns length of s if char not found or 0 if s is NULL. */
 int char_find(int idx, const char *s, char ch)
 {
+    if (!s) {
+        return 0;
+    }
+
     int i = idx;
 
     for (i = idx; s[i]; ++i) {
@@ -412,9 +410,13 @@ int char_find(int idx, const char *s, char ch)
 }
 
 /* returns index of the last instance of ch in s starting at len.
-   returns 0 if char not found (skips 0th index). */
+   returns 0 if char not found or s is NULL (skips 0th index). */
 int char_rfind(const char *s, char ch, int len)
 {
+    if (!s) {
+        return 0;
+    }
+
     int i = 0;
 
     for (i = len; i > 0; --i) {
@@ -500,4 +502,37 @@ void set_window_title(ToxWindow *self, const char *title, int len)
     }
 
     snprintf(self->name, sizeof(self->name), "%s", cpy);
+}
+
+/* Return true if address appears to be a valid ipv4 address. */
+bool is_ip4_address(const char *address)
+{
+    struct sockaddr_in s_addr;
+    return inet_pton(AF_INET, address, &(s_addr.sin_addr)) != 0;
+}
+
+/* Return true if address roughly appears to be a valid ipv6 address.
+ *
+ * TODO: Improve this function (inet_pton behaves strangely with ipv6).
+ * for now the only guarantee is that it won't return true if the
+ * address is a domain or ipv4 address, and should only be used if you're
+ * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
+ */
+bool is_ip6_address(const char *address)
+{
+    size_t i;
+    size_t num_colons = 0;
+    char ch = 0;
+
+    for (i = 0; (ch = address[i]); ++i) {
+        if (ch == '.') {
+            return false;
+        }
+
+        if (ch == ':') {
+            ++num_colons;
+        }
+    }
+
+    return num_colons > 1 && num_colons < 8;
 }

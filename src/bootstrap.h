@@ -1,7 +1,7 @@
-/*  xtra.h
+/*  bootstrap.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2016 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -20,22 +20,23 @@
  *
  */
 
-#ifndef XTRA_H
-#define XTRA_H
+#ifndef BOOTSTRAP_H
+#define BOOTSTRAP_H
 
-/* NOTE: If no xlib present don't compile */
+/* Manages connection to the Tox DHT network. */
+void do_tox_connection(Tox *m);
 
-typedef enum {
-    DT_plain,
-    DT_file_list
-}
-DropType;
+/* Creates a new thread that will load the DHT nodeslist to memory
+ * from json encoded nodes file obtained at NODES_LIST_URL. Only one
+ * thread may run at a time.
+ *
+ * Return 0 on success.
+ * Return -1 if a thread is already active.
+ * Return -2 if mutex fails to init.
+ * Return -3 if pthread attribute fails to init.
+ * Return -4 if pthread fails to set detached state.
+ * Return -5 if thread creation fails.
+ */
+int load_DHT_nodeslist(void);
 
-typedef void (*drop_callback) (const char *, DropType);
-
-int               init_xtra(drop_callback d);
-void              terminate_xtra();
-long unsigned int focused_window_id();
-int               is_focused(); /* returns bool */
-
-#endif /* XTRA_H */
+#endif  /* BOOTSTRAP_H */

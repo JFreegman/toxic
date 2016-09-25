@@ -163,7 +163,7 @@ struct ToxWindow {
 #ifdef VIDEO
 
     int video_device_selection[2]; /* -1 if not set, if set uses these selections instead of primary video device */
-    
+
 #endif /* VIDEO */
 
 #endif /* AUDIO */
@@ -214,8 +214,8 @@ struct infobox {
     bool hide;
     bool active;
 
-    uint64_t lastupdate;
-    uint64_t starttime;
+    time_t lastupdate;
+    time_t starttime;
     char timestr[TIME_STR_SIZE];
 
     WINDOW *win;
