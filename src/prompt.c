@@ -214,11 +214,11 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0)
                 diff = dir_match(self, m, ctx->line, L"/avatar");
-            else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0){
+            else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
                 const char status_cmd_list[3][8] = {
-                  {"online"},
-                  {"away"},
-                  {"busy"},
+                    {"online"},
+                    {"away"},
+                    {"busy"},
                 };
                 diff = complete_line(self, status_cmd_list, 3, 8);
             } else
@@ -238,8 +238,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
-        if (!wstring_is_empty(ctx->line))
-        {
+        if (!wstring_is_empty(ctx->line)) {
             add_line_to_hist(ctx);
             wstrsubst(ctx->line, L'¶', L'\n');
 
@@ -301,10 +300,12 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
                 status_text = "Online";
                 colour = GREEN;
                 break;
+
             case TOX_USER_STATUS_AWAY:
                 status_text = "Away";
                 colour = YELLOW;
                 break;
+
             case TOX_USER_STATUS_BUSY:
                 status_text = "Busy";
                 colour = RED;
@@ -335,7 +336,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
         pthread_mutex_lock(&Winthread.lock);
         size_t slen = tox_self_get_status_message_size(m);
-        tox_self_get_status_message (m, (uint8_t*) statusmsg);
+        tox_self_get_status_message (m, (uint8_t *) statusmsg);
         statusmsg[slen] = '\0';
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
@@ -404,8 +405,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
         else
             box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
                        "Toxic", "%s has come online", nick );
-    }
-    else if (connection_status == TOX_CONNECTION_NONE) {
+    } else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);

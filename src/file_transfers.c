@@ -136,7 +136,7 @@ struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filen
  * Returns NULL on failure.
  */
 struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,
-                                                    FILE_TRANSFER_DIRECTION direction)
+        FILE_TRANSFER_DIRECTION direction)
 {
     if (direction != FILE_TRANSFER_RECV && direction != FILE_TRANSFER_SEND)
         return NULL;
@@ -145,8 +145,8 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t
 
     for (i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft = direction == FILE_TRANSFER_SEND ?
-                                              &Friends.list[friendnum].file_sender[i] :
-                                              &Friends.list[friendnum].file_receiver[i];
+                                          &Friends.list[friendnum].file_sender[i] :
+                                          &Friends.list[friendnum].file_receiver[i];
 
         if (ft->state != FILE_TRANSFER_INACTIVE && ft->index == index)
             return ft;

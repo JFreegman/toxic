@@ -28,10 +28,10 @@
 typedef enum {
     DT_plain,
     DT_file_list
-} 
+}
 DropType;
 
-typedef void (*drop_callback) (const char*, DropType);
+typedef void (*drop_callback) (const char *, DropType);
 
 int               init_xtra(drop_callback d);
 void              terminate_xtra();

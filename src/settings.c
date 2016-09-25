@@ -32,45 +32,45 @@
 #include "misc_tools.h"
 
 #ifdef AUDIO
-    #include "audio_device.h"
+#include "audio_device.h"
 #endif /* AUDIO */
 
 #include "settings.h"
 #include "line_info.h"
 
 #ifndef PACKAGE_DATADIR
-    #define PACKAGE_DATADIR "."
+#define PACKAGE_DATADIR "."
 #endif
 
 #define NO_SOUND "silent"
 
 static struct ui_strings {
-    const char* self;
-    const char* timestamps;
-    const char* time_format;
-    const char* timestamp_format;
-    const char* log_timestamp_format;
-    const char* alerts;
-    const char* bell_on_message;
-    const char* bell_on_filetrans;
-    const char* bell_on_filetrans_accept;
-    const char* bell_on_invite;
-    const char* native_colors;
-    const char* autolog;
-    const char* history_size;
-    const char* show_typing_self;
-    const char* show_typing_other;
-    const char* show_welcome_msg;
-    const char* show_connection_msg;
-    const char* nodeslist_update_freq;
+    const char *self;
+    const char *timestamps;
+    const char *time_format;
+    const char *timestamp_format;
+    const char *log_timestamp_format;
+    const char *alerts;
+    const char *bell_on_message;
+    const char *bell_on_filetrans;
+    const char *bell_on_filetrans_accept;
+    const char *bell_on_invite;
+    const char *native_colors;
+    const char *autolog;
+    const char *history_size;
+    const char *show_typing_self;
+    const char *show_typing_other;
+    const char *show_welcome_msg;
+    const char *show_connection_msg;
+    const char *nodeslist_update_freq;
 
-    const char* line_join;
-    const char* line_quit;
-    const char* line_alert;
-    const char* line_normal;
+    const char *line_join;
+    const char *line_quit;
+    const char *line_alert;
+    const char *line_normal;
 
-    const char* mplex_away;
-    const char* mplex_away_note;
+    const char *mplex_away;
+    const char *mplex_away_note;
 } ui_strings = {
     "ui",
     "timestamps",
@@ -98,7 +98,7 @@ static struct ui_strings {
     "mplex_away_note",
 };
 
-static void ui_defaults(struct user_settings* settings)
+static void ui_defaults(struct user_settings *settings)
 {
     settings->timestamps = TIMESTAMPS_ON;
     snprintf(settings->timestamp_format, sizeof(settings->timestamp_format), "%s", TIMESTAMP_DEFAULT);
@@ -131,18 +131,18 @@ static void ui_defaults(struct user_settings* settings)
 }
 
 static const struct keys_strings {
-    const char* self;
-    const char* next_tab;
-    const char* prev_tab;
-    const char* scroll_line_up;
-    const char* scroll_line_down;
-    const char* half_page_up;
-    const char* half_page_down;
-    const char* page_bottom;
-    const char* peer_list_up;
-    const char* peer_list_down;
-    const char* toggle_peerlist;
-    const char* toggle_pastemode;
+    const char *self;
+    const char *next_tab;
+    const char *prev_tab;
+    const char *scroll_line_up;
+    const char *scroll_line_down;
+    const char *half_page_up;
+    const char *half_page_down;
+    const char *page_bottom;
+    const char *peer_list_up;
+    const char *peer_list_down;
+    const char *toggle_peerlist;
+    const char *toggle_pastemode;
 } key_strings = {
     "keys",
     "next_tab",
@@ -159,7 +159,7 @@ static const struct keys_strings {
 };
 
 /* defines from toxic.h */
-static void key_defaults(struct user_settings* settings)
+static void key_defaults(struct user_settings *settings)
 {
     settings->key_next_tab = T_KEY_NEXT;
     settings->key_prev_tab = T_KEY_PREV;
@@ -175,11 +175,11 @@ static void key_defaults(struct user_settings* settings)
 }
 
 static const struct tox_strings {
-    const char* self;
-    const char* download_path;
-    const char* chatlogs_path;
-    const char* avatar_path;
-    const char* password_eval;
+    const char *self;
+    const char *download_path;
+    const char *chatlogs_path;
+    const char *avatar_path;
+    const char *password_eval;
 } tox_strings = {
     "tox",
     "download_path",
@@ -188,7 +188,7 @@ static const struct tox_strings {
     "password_eval",
 };
 
-static void tox_defaults(struct user_settings* settings)
+static void tox_defaults(struct user_settings *settings)
 {
     strcpy(settings->download_path, "");
     strcpy(settings->chatlogs_path, "");
@@ -198,10 +198,10 @@ static void tox_defaults(struct user_settings* settings)
 
 #ifdef AUDIO
 static const struct audio_strings {
-    const char* self;
-    const char* input_device;
-    const char* output_device;
-    const char* VAD_treshold;
+    const char *self;
+    const char *input_device;
+    const char *output_device;
+    const char *VAD_treshold;
 } audio_strings = {
     "audio",
     "input_device",
@@ -209,7 +209,7 @@ static const struct audio_strings {
     "VAD_treshold",
 };
 
-static void audio_defaults(struct user_settings* settings)
+static void audio_defaults(struct user_settings *settings)
 {
     settings->audio_in_dev = 0;
     settings->audio_out_dev = 0;
@@ -219,17 +219,17 @@ static void audio_defaults(struct user_settings* settings)
 
 #ifdef SOUND_NOTIFY
 static const struct sound_strings {
-    const char* self;
-    const char* notif_error;
-    const char* self_log_in;
-    const char* self_log_out;
-    const char* user_log_in;
-    const char* user_log_out;
-    const char* call_incoming;
-    const char* call_outgoing;
-    const char* generic_message;
-    const char* transfer_pending;
-    const char* transfer_completed;
+    const char *self;
+    const char *notif_error;
+    const char *self_log_in;
+    const char *self_log_out;
+    const char *user_log_in;
+    const char *user_log_out;
+    const char *call_incoming;
+    const char *call_outgoing;
+    const char *generic_message;
+    const char *transfer_pending;
+    const char *transfer_completed;
 } sound_strings = {
     "sounds",
     "notif_error",
@@ -245,11 +245,12 @@ static const struct sound_strings {
 };
 #endif
 
-static int key_parse(const char **bind) {
+static int key_parse(const char **bind)
+{
     int len = strlen(*bind);
 
     if (len > 5) {
-        if(strncasecmp(*bind, "ctrl+", 5) == 0 && toupper(bind[0][5]) != 'M')   /* ctrl+m cannot be used */
+        if (strncasecmp(*bind, "ctrl+", 5) == 0 && toupper(bind[0][5]) != 'M')  /* ctrl+m cannot be used */
             return toupper(bind[0][5]) - 'A' + 1;
     }
 
@@ -262,7 +263,8 @@ static int key_parse(const char **bind) {
     return -1;
 }
 
-static void set_key_binding(int *key, const char **bind) {
+static void set_key_binding(int *key, const char **bind)
+{
     int code = key_parse(bind);
 
     if (code != -1) {
@@ -318,6 +320,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.timestamps, &s->timestamps);
 
         int time = 24;
+
         if ( config_setting_lookup_int(setting, ui_strings.time_format, &time) ) {
             if (time == 12) {
                 snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M:%S %p");
@@ -338,12 +341,15 @@ int settings_load(struct user_settings *s, const char *patharg)
         if (config_setting_lookup_bool(setting, ui_strings.bell_on_message, &s->bell_on_message)) {
             s->bell_on_message = s->bell_on_message ? NT_BEEP : 0;
         }
+
         if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans, &s->bell_on_filetrans)) {
             s->bell_on_filetrans = s->bell_on_filetrans ? NT_BEEP : 0;
         }
+
         if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans_accept, &s->bell_on_filetrans_accept)) {
             s->bell_on_filetrans_accept = s->bell_on_filetrans_accept ? NT_BEEP : 0;
         }
+
         if (config_setting_lookup_bool(setting, ui_strings.bell_on_invite, &s->bell_on_invite)) {
             s->bell_on_invite = s->bell_on_invite ? NT_BEEP : 0;
         }
@@ -361,12 +367,15 @@ int settings_load(struct user_settings *s, const char *patharg)
         if ( config_setting_lookup_string(setting, ui_strings.line_join, &str) ) {
             snprintf(s->line_join, sizeof(s->line_join), "%s", str);
         }
+
         if ( config_setting_lookup_string(setting, ui_strings.line_quit, &str) ) {
             snprintf(s->line_quit, sizeof(s->line_quit), "%s", str);
         }
+
         if ( config_setting_lookup_string(setting, ui_strings.line_alert, &str) ) {
             snprintf(s->line_alert, sizeof(s->line_alert), "%s", str);
         }
+
         if ( config_setting_lookup_string(setting, ui_strings.line_normal, &str) ) {
             snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
         }
@@ -420,32 +429,44 @@ int settings_load(struct user_settings *s, const char *patharg)
 
     /* keys */
     if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
-        const char* tmp = NULL;
+        const char *tmp = NULL;
+
         if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
             set_key_binding(&s->key_next_tab, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
             set_key_binding(&s->key_prev_tab, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
             set_key_binding(&s->key_scroll_line_up, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
             set_key_binding(&s->key_scroll_line_down, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
             set_key_binding(&s->key_half_page_up, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
             set_key_binding(&s->key_half_page_down, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
             set_key_binding(&s->key_page_bottom, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
             set_key_binding(&s->key_peer_list_up, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
             set_key_binding(&s->key_peer_list_down, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
             set_key_binding(&s->key_toggle_peerlist, &tmp);
+
         if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp))
             set_key_binding(&s->key_toggle_pastemode, &tmp);
     }
 
 #ifdef AUDIO
+
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
         s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
@@ -455,9 +476,11 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         config_setting_lookup_float(setting, audio_strings.VAD_treshold, &s->VAD_treshold);
     }
+
 #endif
 
 #ifdef SOUND_NOTIFY
+
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
         if ( (config_setting_lookup_string(setting, sound_strings.notif_error, &str) != CONFIG_TRUE) ||
                 !set_sound(notif_error, str) ) {
@@ -506,8 +529,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             if (str && strcasecmp(str, NO_SOUND) != 0)
                 set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/ToxicTransferComplete.wav");
         }
-    }
-    else {
+    } else {
         set_sound(notif_error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
         set_sound(user_log_in, PACKAGE_DATADIR "/sounds/ToxicContactOnline.wav");
         set_sound(user_log_out, PACKAGE_DATADIR "/sounds/ToxicContactOffline.wav");
@@ -517,6 +539,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/ToxicTransferStart.wav");
         set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/ToxicTransferComplete.wav");
     }
+
 #endif
 
     config_destroy(cfg);

@@ -275,9 +275,9 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
                 self->show_peerlist ^= 1;
                 redraw_groupchat_win(self);
             }
+
             match = true;
-        }
-        else if (key == user_settings->key_toggle_pastemode) {
+        } else if (key == user_settings->key_toggle_pastemode) {
             self->chatwin->pastemode ^= 1;
             match = true;
         }

@@ -251,6 +251,7 @@ static int update_DHT_nodeslist(const char *nodes_path)
     }
 
     struct Recv_Curl_Data recv_data;
+
     memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
 
     if (curl_fetch_nodes_JSON(&recv_data) == -1) {
@@ -523,6 +524,7 @@ int load_DHT_nodeslist(void)
     }
 
     thread_data.active = true;
+
     if (pthread_create(&thread_data.tid, &thread_data.attr, load_nodeslist_thread, NULL) != 0) {
         thread_data.active = false;
         return -5;

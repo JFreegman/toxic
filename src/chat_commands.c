@@ -120,11 +120,12 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
     if (type == TOX_GROUPCHAT_TYPE_TEXT)
         groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
-/*#ifdef AUDIO
-    else
-        groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
-                                           NULL, NULL);
-#endif*/
+
+    /*#ifdef AUDIO
+        else
+            groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
+                                               NULL, NULL);
+    #endif*/
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
@@ -190,6 +191,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     return;
 
 on_recv_error:
+
     switch (err) {
         case TOX_ERR_FILE_CONTROL_FRIEND_NOT_FOUND:
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
@@ -258,7 +260,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     TOX_ERR_FILE_SEND err;
     uint32_t filenum = tox_file_send(m, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
-                                    (uint8_t *) file_name, namelen, &err);
+                                     (uint8_t *) file_name, namelen, &err);
 
     if (err != TOX_ERR_FILE_SEND_OK)
         goto on_send_error;
@@ -282,6 +284,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     return;
 
 on_send_error:
+
     switch (err) {
         case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND:
             errmsg = "File transfer failed: Invalid friend.";

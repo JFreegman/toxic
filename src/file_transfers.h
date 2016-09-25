@@ -87,7 +87,7 @@ struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filen
  * Returns NULL on failure.
  */
 struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,
-                                                    FILE_TRANSFER_DIRECTION direction);
+        FILE_TRANSFER_DIRECTION direction);
 
 /* Initializes an unused file transfer and returns its pointer.
  * Returns NULL on failure.

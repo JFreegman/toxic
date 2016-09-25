@@ -136,13 +136,13 @@ int del_word_buf(ChatContext *ctx)
     int i = ctx->pos, count = 0;
 
     /* traverse past empty space */
-    while (i > 0 && ctx->line[i-1] == L' ') {
+    while (i > 0 && ctx->line[i - 1] == L' ') {
         ++count;
         --i;
     }
 
     /* traverse past last entered word */
-    while (i > 0 && ctx->line[i-1] != L' ') {
+    while (i > 0 && ctx->line[i - 1] != L' ') {
         ++count;
         --i;
     }
@@ -243,18 +243,20 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     ctx->len = h_len;
 }
 
-void strsubst(char* str, char old, char new)
+void strsubst(char *str, char old, char new)
 {
     int i;
+
     for (i = 0; str[i] != '\0'; ++i)
         if (str[i] == old)
-           str[i] = new;
+            str[i] = new;
 }
 
-void wstrsubst(wchar_t* str, wchar_t old, wchar_t new)
+void wstrsubst(wchar_t *str, wchar_t old, wchar_t new)
 {
     int i;
+
     for (i = 0; str[i] != L'\0'; ++i)
         if (str[i] == old)
-           str[i] = new;
+            str[i] = new;
 }

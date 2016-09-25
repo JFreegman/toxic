@@ -130,7 +130,8 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
             break;
 
         case TOX_ERR_FRIEND_ADD_NULL:
-        /* fallthrough */
+
+            /* fallthrough */
         default:
             errmsg = "Faile to add friend: Unknown error.";
             break;
@@ -260,6 +261,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     char key_binary[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+
     if (hex_string_to_bin(ascii_key, strlen(ascii_key), key_binary, TOX_PUBLIC_KEY_SIZE) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid key.");
         return;
@@ -281,6 +283,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         case TOX_ERR_BOOTSTRAP_NULL:
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Bootstrap failed.");
             break;
+
         default:
             break;
     }
@@ -345,10 +348,11 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     if (type == TOX_GROUPCHAT_TYPE_TEXT)
         groupnum = tox_add_groupchat(m);
-/*#ifdef AUDIO
-    else
-        groupnum = toxav_add_av_groupchat(m, NULL, NULL);
-#endif*/
+
+    /*#ifdef AUDIO
+        else
+            groupnum = toxav_add_av_groupchat(m, NULL, NULL);
+    #endif*/
 
     if (groupnum == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
@@ -543,8 +547,10 @@ void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your new Tox ID is:");
     cmd_myid(window, self, m, 0, NULL);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Any services that relied on your old ID will need to be updated manually.");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "If you ever want your old Tox ID back, type '/nospam %X'", old_nospam);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+                  "Any services that relied on your old ID will need to be updated manually.");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "If you ever want your old Tox ID back, type '/nospam %X'",
+                  old_nospam);
 }
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

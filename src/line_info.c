@@ -158,13 +158,15 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
     /* for type-specific formatting in print function */
     switch (type) {
         case IN_ACTION:
-        /* fallthrough */
+
+            /* fallthrough */
         case OUT_ACTION:
             len += strlen(user_settings->line_normal) + 2;
             break;
 
         case IN_MSG:
-        /* fallthrough */
+
+            /* fallthrough */
         case OUT_MSG:
             len += strlen(user_settings->line_normal) + 3;
             break;
@@ -304,9 +306,11 @@ void line_info_print(ToxWindow *self)
 
         switch (type) {
             case OUT_MSG:
-            /* fallthrough */
+
+                /* fallthrough */
             case OUT_MSG_READ:
-            /* fallthrough */
+
+                /* fallthrough */
             case IN_MSG:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
@@ -323,10 +327,10 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
-                char* msg = line->msg;
-                while (msg)
-                {
-                    char* line = strsep(&msg, "\n");
+                char *msg = line->msg;
+
+                while (msg) {
+                    char *line = strsep(&msg, "\n");
 
                     if (line[0] == '>')
                         wattron(win, COLOR_PAIR(GREEN));
@@ -360,9 +364,11 @@ void line_info_print(ToxWindow *self)
                 break;
 
             case OUT_ACTION_READ:
-            /* fallthrough */
+
+                /* fallthrough */
             case OUT_ACTION:
-            /* fallthrough */
+
+                /* fallthrough */
             case IN_ACTION:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
@@ -548,20 +554,15 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
 
     if (key == user_settings->key_half_page_up) {
         line_info_page_up(self, hst);
-    }
-    else if (key == user_settings->key_half_page_down) {
+    } else if (key == user_settings->key_half_page_down) {
         line_info_page_down(self, hst);
-    }
-    else if (key == user_settings->key_scroll_line_up) {
+    } else if (key == user_settings->key_scroll_line_up) {
         line_info_scroll_up(hst);
-    }
-    else if (key == user_settings->key_scroll_line_down) {
+    } else if (key == user_settings->key_scroll_line_down) {
         line_info_scroll_down(hst);
-    }
-    else if (key == user_settings->key_page_bottom) {
+    } else if (key == user_settings->key_page_bottom) {
         line_info_reset_start(self, hst);
-    }
-    else {
+    } else {
         match = false;
     }
 

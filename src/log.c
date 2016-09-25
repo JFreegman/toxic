@@ -262,6 +262,7 @@ int rename_logfile(char *src, char *dest, const char *selfkey, const char *other
     return 0;
 
 on_error:
+
     if (log_on)
         log_enable(src, selfkey, otherkey, log, LOG_CHAT);
 

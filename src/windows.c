@@ -445,10 +445,12 @@ void on_window_resize(void)
         }
 
 #ifdef AUDIO
+
         if (w->chatwin->infobox.active) {
             delwin(w->chatwin->infobox.win);
             w->chatwin->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
         }
+
 #endif   /* AUDIO */
 
         scrollok(w->chatwin->history, 0);
@@ -458,20 +460,24 @@ void on_window_resize(void)
 static void draw_window_tab(ToxWindow *toxwin)
 {
     pthread_mutex_lock(&Winthread.lock);
+
     if (toxwin->alert != WINDOW_ALERT_NONE) attron(COLOR_PAIR(toxwin->alert));
+
     pthread_mutex_unlock(&Winthread.lock);
 
     clrtoeol();
     printw(" [%s]", toxwin->name);
 
     pthread_mutex_lock(&Winthread.lock);
+
     if (toxwin->alert != WINDOW_ALERT_NONE) attroff(COLOR_PAIR(toxwin->alert));
+
     pthread_mutex_unlock(&Winthread.lock);
 }
 
 static void draw_bar(void)
 {
-    int y,x;
+    int y, x;
 
     // save current cursor position
     getyx(active_window->window, y, x);

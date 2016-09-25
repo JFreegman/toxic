@@ -49,7 +49,7 @@ void reset_buf(ChatContext *ctx);
    Return 0 on success, -1 if yank buffer is empty or too long */
 int yank_buf(ChatContext *ctx);
 
-/* Deletes all characters from line starting at pos and going backwards 
+/* Deletes all characters from line starting at pos and going backwards
    until we find a space or run out of characters.
    Return 0 on success, -1 if no line or already at the beginning */
 int del_word_buf(ChatContext *ctx);

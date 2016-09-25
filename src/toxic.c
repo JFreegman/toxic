@@ -64,7 +64,7 @@
 #include "bootstrap.h"
 
 #ifdef X11
-    #include "xtra.h"
+#include "xtra.h"
 #endif
 
 #ifdef AUDIO
@@ -76,7 +76,7 @@ ToxAV *av;
 #endif /* AUDIO */
 
 #ifndef PACKAGE_DATADIR
-    #define PACKAGE_DATADIR "."
+#define PACKAGE_DATADIR "."
 #endif
 
 /* Export for use in Callbacks */
@@ -320,8 +320,10 @@ static int password_prompt(char *buf, int size)
     /* eat overflowed stdin and return error */
     if (buf[--len] != '\n') {
         int ch;
+
         while ((ch = getchar()) != '\n' && ch > 0)
             ;
+
         return 0;
     }
 
@@ -338,6 +340,7 @@ static int password_eval(char *buf, int size)
 
     /* Run password_eval command */
     FILE *f = popen(user_settings->password_eval, "r");
+
     if (f == NULL) {
         fprintf(stderr, "Executing password_eval failed\n");
         return 0;
@@ -345,6 +348,7 @@ static int password_eval(char *buf, int size)
 
     /* Get output from command */
     char *ret = fgets(buf, size, f);
+
     if (ret == NULL) {
         fprintf(stderr, "Reading password from password_eval command failed\n");
         pclose(f);
@@ -353,6 +357,7 @@ static int password_eval(char *buf, int size)
 
     /* Get exit status */
     int status = pclose(f);
+
     if (status != 0) {
         fprintf(stderr, "password_eval command returned error %d\n", status);
         return 0;
@@ -360,6 +365,7 @@ static int password_eval(char *buf, int size)
 
     /* Removez whitespace or \n at end */
     int i, len = strlen(buf);
+
     for (i = len - 1; i > 0 && isspace(buf[i]); i--) {
         buf[i] = 0;
         len--;
@@ -378,7 +384,7 @@ static void first_time_encrypt(const char *msg)
         printf("%s ", msg);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
-            || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
+                || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
             break;
 
     } while (fgets(ch, sizeof(ch), stdin));
@@ -612,6 +618,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
             size_t pwlen = 0;
             int pweval = user_settings->password_eval[0];
+
             if (!pweval) {
                 system("clear");   // TODO: is this portable?
                 printf("Enter password (q to quit) ");
@@ -626,6 +633,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 } else {
                     pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
                 }
+
                 user_password.len = pwlen;
 
                 if (strcasecmp(user_password.pass, "q") == 0) {
@@ -785,7 +793,7 @@ void *thread_cqueue(void *data)
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat
-                && tox_friend_get_connection_status(m, toxwin->num, NULL) != TOX_CONNECTION_NONE)
+                    && tox_friend_get_connection_status(m, toxwin->num, NULL) != TOX_CONNECTION_NONE)
                 cqueue_try_send(toxwin, m);
         }
 
@@ -933,10 +941,10 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.proxy_type = TOX_PROXY_TYPE_SOCKS5;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
-                if (++optind > argc || argv[optind-1][0] == '-')
+                if (++optind > argc || argv[optind - 1][0] == '-')
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
 
-                port = strtol(argv[optind-1], NULL, 10);
+                port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE)
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
@@ -948,10 +956,10 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
-                if (++optind > argc || argv[optind-1][0] == '-')
+                if (++optind > argc || argv[optind - 1][0] == '-')
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
 
-                port = strtol(argv[optind-1], NULL, 10);
+                port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE)
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
@@ -1077,7 +1085,7 @@ static void init_default_data_files(void)
 
 // this doesn't do anything (yet)
 #ifdef X11
-void DnD_callback(const char* asdv, DropType dt)
+void DnD_callback(const char *asdv, DropType dt)
 {
     // if (dt != DT_plain)
     //     return;
@@ -1124,7 +1132,7 @@ int main(int argc, char **argv)
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
     if (settings_load(user_settings, p) == -1) {
-         queue_init_message("Failed to load user settings");
+        queue_init_message("Failed to load user settings");
     }
 
     int curl_init = curl_global_init(CURL_GLOBAL_ALL);
@@ -1139,8 +1147,10 @@ int main(int argc, char **argv)
     }
 
 #ifdef X11
+
     if (init_xtra(DnD_callback) == -1)
         queue_init_message("X failed to initialize");
+
 #endif
 
     Tox *m = load_toxic(DATA_FILE);
@@ -1182,6 +1192,7 @@ int main(int argc, char **argv)
     set_primary_device(output, user_settings->audio_out_dev);
 
 #elif SOUND_NOTIFY
+
     if ( init_devices() == de_InternalError )
         queue_init_message("Failed to init audio devices");
 
@@ -1219,8 +1230,10 @@ int main(int argc, char **argv)
 
         if (timed_out(last_save, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
+
             if (store_data(m, DATA_FILE) != 0)
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
+
             pthread_mutex_unlock(&Winthread.lock);
 
             last_save = cur_time;

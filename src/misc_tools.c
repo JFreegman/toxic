@@ -70,7 +70,7 @@ struct tm *get_time(void)
 {
     struct tm *timeinfo;
     time_t t = get_unix_time();
-    timeinfo = localtime((const time_t*) &t);
+    timeinfo = localtime((const time_t *) &t);
     return timeinfo;
 }
 
@@ -156,7 +156,7 @@ int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_
     size_t i;
 
     for (i = 0; i < TOX_ADDRESS_SIZE; ++i)
-        snprintf(&output[i*2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
+        snprintf(&output[i * 2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
 
     return 0;
 }
@@ -187,7 +187,7 @@ int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = mbstowcs(buf, string, n)) == (size_t) -1)
+    if ((len = mbstowcs(buf, string, n)) == (size_t) - 1)
         return -1;
 
     return len;
@@ -201,7 +201,7 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
     if (n < len)
         return -1;
 
-    if ((len = wcstombs(buf, string, n)) == (size_t) -1)
+    if ((len = wcstombs(buf, string, n)) == (size_t) - 1)
         return -1;
 
     return len;
@@ -228,11 +228,11 @@ int valid_nick(const char *nick)
 
     for (i = 0; nick[i]; ++i) {
         if ((nick[i] == ' ' && nick[i + 1] == ' ')
-            || nick[i] == '/'
-            || nick[i] == '\n'
-            || nick[i] == '\t'
-            || nick[i] == '\v'
-            || nick[i] == '\r')
+                || nick[i] == '/'
+                || nick[i] == '\n'
+                || nick[i] == '\t'
+                || nick[i] == '\v'
+                || nick[i] == '\r')
 
             return 0;
     }

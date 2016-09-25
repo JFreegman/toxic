@@ -249,21 +249,29 @@ void *lookup_thread_func(void *data)
     }
 
     struct Recv_Curl_Data recv_data;
+
     memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
 
     char post_data[MAX_STR_SIZE];
+
     snprintf(post_data, sizeof(post_data), "{\"action\": 3, \"name\": \"%s\"}", name);
 
     struct curl_slist *headers = NULL;
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
+
     headers = curl_slist_append(headers, "charsets: utf-8");
 
     curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
+
     curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
+
     curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
+
     curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, &recv_data);
+
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
     curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 
     int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);

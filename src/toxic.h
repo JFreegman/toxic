@@ -107,7 +107,8 @@ int store_data(Tox *m, const char *path);
 /* callbacks */
 void on_request(Tox *m, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata);
 void on_connectionchange(Tox *m, uint32_t friendnumber, TOX_CONNECTION status, void *userdata);
-void on_message(Tox *m, uint32_t friendnumber, TOX_MESSAGE_TYPE type, const uint8_t *string, size_t length, void *userdata);
+void on_message(Tox *m, uint32_t friendnumber, TOX_MESSAGE_TYPE type, const uint8_t *string, size_t length,
+                void *userdata);
 void on_action(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
 void on_nickchange(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
 void on_statuschange(Tox *m, uint32_t friendnumber, TOX_USER_STATUS status, void *userdata);
@@ -115,10 +116,13 @@ void on_statusmessagechange(Tox *m, uint32_t friendnumber, const uint8_t *string
 void on_friendadded(Tox *m, uint32_t friendnumber, bool sort);
 void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length, void *userdata);
 void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length, void *userdata);
+void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
+                    void *userdata);
 void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length, void *userdata);
-void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length, void *userdata);
+void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length,
+                          void *userdata);
+void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
+                           void *userdata);
 void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, const uint8_t *data,
                         size_t length, void *userdata);
 void on_file_control (Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control, void *userdata);
