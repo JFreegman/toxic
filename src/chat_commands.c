@@ -128,6 +128,7 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     int groupnum = atoi(argv[1]);
 
+
     if (groupnum == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
         return;

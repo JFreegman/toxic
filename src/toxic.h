@@ -116,6 +116,12 @@ void on_statusmessagechange(Tox *m, uint32_t friendnumber, const uint8_t *string
 void on_friendadded(Tox *m, uint32_t friendnumber, bool sort);
 void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
                            void *userdata);
+void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
+                    void *userdata);
+void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length,
+                          void *userdata);
+void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
+                           void *userdata);
 void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, const uint8_t *data,
                         size_t length, void *userdata);
 void on_file_control (Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control, void *userdata);

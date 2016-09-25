@@ -239,6 +239,7 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, const char *groupname, size_t 
                 return -1;
             }
 
+
             groupchat_onGroupPeerJoin(&self, m, groupnum, peer_id);
 
             return 0;
