@@ -1201,9 +1201,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         return;
 
     ChatContext *ctx = self->chatwin;
-    GroupChat *chat = &groupchats[self->num];
 
     pthread_mutex_lock(&Winthread.lock);
+    GroupChat *chat = &groupchats[self->num];
     line_info_print(self);
     pthread_mutex_unlock(&Winthread.lock);
 
@@ -1221,12 +1221,13 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
 
-        pthread_mutex_lock(&Winthread.lock);
-        pthread_mutex_unlock(&Winthread.lock);
-
         wmove(ctx->sidebar, 0, 1);
         wattron(ctx->sidebar, A_BOLD);
+
+        pthread_mutex_lock(&Winthread.lock);
         wprintw(ctx->sidebar, "Peers: %d\n", chat->num_peers);
+        pthread_mutex_unlock(&Winthread.lock);
+
         wattroff(ctx->sidebar, A_BOLD);
 
         mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
@@ -1235,21 +1236,28 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
         uint32_t i, offset = 0;
 
-        for (i = 0; i < chat->max_idx && i < maxlines; ++i) {
-            if (!chat->peer_list[i].active)
+        pthread_mutex_lock(&Winthread.lock);
+        uint32_t max_idx = chat->max_idx;
+        pthread_mutex_unlock(&Winthread.lock);
+
+        for (i = 0; i < max_idx && i < maxlines; ++i) {
+            pthread_mutex_lock(&Winthread.lock);
+
+            if (!chat->peer_list[i].active) {
+                pthread_mutex_unlock(&Winthread.lock);
                 continue;
+            }
 
             wmove(ctx->sidebar, offset + 2, 1);
-            int p = i + chat->side_pos;
 
+            int p = i + chat->side_pos;
             int maxlen_offset = chat->peer_list[p].role == TOX_GROUP_ROLE_USER ? 2 : 3;
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
             int maxlen = SIDEBAR_WIDTH - maxlen_offset;
+
             memcpy(tmpnck, chat->peer_list[p].name, maxlen);
-            pthread_mutex_lock(&Winthread.lock);
-            pthread_mutex_unlock(&Winthread.lock);
 
             tmpnck[maxlen] = '\0';
 
@@ -1275,6 +1283,8 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
                 rolecolour = MAGENTA;
             }
 
+            pthread_mutex_unlock(&Winthread.lock);
+
             wattron(ctx->sidebar, COLOR_PAIR(rolecolour) | A_BOLD);
             wprintw(ctx->sidebar, "%s", rolesig);
             wattroff(ctx->sidebar, COLOR_PAIR(rolecolour) | A_BOLD);
@@ -1285,8 +1295,6 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
             ++offset;
         }
-
-        pthread_mutex_unlock(&Winthread.lock);
     }
 
     int y, x;

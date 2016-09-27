@@ -632,9 +632,8 @@ static void draw_bar(void)
 
 void draw_active_window(Tox *m)
 {
-    ToxWindow *a = active_window;
-
     pthread_mutex_lock(&Winthread.lock);
+    ToxWindow *a = active_window;
     a->alert = WINDOW_ALERT_NONE;
     pthread_mutex_unlock(&Winthread.lock);
 
