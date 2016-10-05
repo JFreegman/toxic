@@ -105,7 +105,7 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
 int ID_to_QRcode_png(const char *tox_id, const char *outfile)
 {
     static FILE *fp;
-    unsigned char *row, *p;
+    unsigned char *p;
     unsigned char black[4] = {0, 0, 0, 255};
     size_t x, y, xx, yy, real_width;
     size_t margin = BORDER_LEN;
@@ -116,31 +116,40 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
 
     fp = fopen(outfile, "wb");
 
-    if (fp == NULL)
+    if (fp == NULL) {
         return -1;
+    }
 
     QRcode *qr_obj = QRcode_encodeString(tox_id, 0, QR_ECLEVEL_L, QR_MODE_8, 0);
 
-    if (qr_obj == NULL)
+    if (qr_obj == NULL) {
+        fclose(fp);
         return -1;
+    }
 
     real_width = (qr_obj->width + margin * 2) * size;
-    row = malloc(real_width * 4);
-
-    if (row == NULL)
-        return -1;
+    size_t row_size = real_width * 4;
+    unsigned char row[row_size];
 
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
-    if (png_ptr == NULL)
+    if (png_ptr == NULL) {
+        fclose(fp);
+        QRcode_free(qr_obj);
         return -1;
+    }
 
     info_ptr = png_create_info_struct(png_ptr);
 
-    if (info_ptr == NULL)
+    if (info_ptr == NULL) {
+        fclose(fp);
+        QRcode_free(qr_obj);
         return -1;
+    }
 
     if (setjmp(png_jmpbuf(png_ptr))) {
+        fclose(fp);
+        QRcode_free(qr_obj);
         png_destroy_write_struct(&png_ptr, &info_ptr);
         return -1;
     }
@@ -154,40 +163,44 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
     png_write_info(png_ptr, info_ptr);
 
     /* top margin */
-    memset(row, 0xff, real_width * 4);
+    memset(row, 0xff, row_size);
 
-    for (y = 0; y < margin * size; y++)
+    for (y = 0; y < margin * size; y++) {
         png_write_row(png_ptr, row);
+    }
 
     /* data */
     p = qr_obj->data;
 
     for (y = 0; y < qr_obj->width; y++) {
-        memset(row, 0xff, real_width * 4);
+        memset(row, 0xff, row_size);
 
         for (x = 0; x < qr_obj->width; x++) {
-            for (xx = 0; xx < size; xx++)
-                if (*p & 1)
+            for (xx = 0; xx < size; xx++) {
+                if (*p & 1) {
                     memcpy(&row[((margin + x) * size + xx) * 4], black, 4);
+                }
+            }
 
             p++;
         }
 
-        for (yy = 0; yy < size; yy++)
+        for (yy = 0; yy < size; yy++) {
             png_write_row(png_ptr, row);
+        }
     }
 
     /* bottom margin */
-    memset(row, 0xff, real_width * 4);
+    memset(row, 0xff, row_size);
 
-    for (y = 0; y < margin * size; y++)
+    for (y = 0; y < margin * size; y++) {
         png_write_row(png_ptr, row);
+    }
 
     png_write_end(png_ptr, info_ptr);
     png_destroy_write_struct(&png_ptr, &info_ptr);
 
     fclose(fp);
-    free(row);
     QRcode_free(qr_obj);
 
     return 0;
