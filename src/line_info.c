@@ -159,14 +159,14 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
     switch (type) {
         case IN_ACTION:
 
-            /* fallthrough */
+        /* fallthrough */
         case OUT_ACTION:
             len += strlen(user_settings->line_normal) + 2;
             break;
 
         case IN_MSG:
 
-            /* fallthrough */
+        /* fallthrough */
         case OUT_MSG:
             len += strlen(user_settings->line_normal) + 3;
             break;
@@ -307,10 +307,10 @@ void line_info_print(ToxWindow *self)
         switch (type) {
             case OUT_MSG:
 
-                /* fallthrough */
+            /* fallthrough */
             case OUT_MSG_READ:
 
-                /* fallthrough */
+            /* fallthrough */
             case IN_MSG:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
@@ -365,10 +365,10 @@ void line_info_print(ToxWindow *self)
 
             case OUT_ACTION_READ:
 
-                /* fallthrough */
+            /* fallthrough */
             case OUT_ACTION:
 
-                /* fallthrough */
+            /* fallthrough */
             case IN_ACTION:
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
