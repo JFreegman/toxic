@@ -28,18 +28,25 @@
 #include "windows.h"
 #include "qr_code.h"
 
+#ifdef QRPNG
+#include <png.h>
+#define INCHES_PER_METER (100.0/2.54)
+#endif /* QRPNG */
+
 #define BORDER_LEN 1
 #define CHAR_1 "\342\226\210"
 #define CHAR_2 "\342\226\204"
 #define CHAR_3 "\342\226\200"
 
-/* Converts a tox ID string into a QRcode and prints it to the given file stream.
+/* Converts a tox ID string into a QRcode and prints it into the given filename.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int ID_to_QRcode(const char *tox_id, FILE *fp)
+int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
 {
+    FILE *fp = fopen(outfile, "wb");
+
     if (fp == NULL)
         return -1;
 
@@ -83,7 +90,106 @@ int ID_to_QRcode(const char *tox_id, FILE *fp)
         fprintf(fp, "\n");
     }
 
+    fclose(fp);
     QRcode_free(qr_obj);
 
     return 0;
 }
+
+#ifdef QRPNG
+/* Converts a tox ID string into a QRcode and prints it into the given filename as png.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int ID_to_QRcode_png(const char *tox_id, const char *outfile)
+{
+    static FILE *fp;
+    unsigned char *row, *p;
+    unsigned char black[4] = {0, 0, 0, 255};
+    size_t x, y, xx, yy, real_width;
+    size_t margin = BORDER_LEN;
+    size_t size = 5;
+    size_t dpi = 72;
+    png_structp png_ptr;
+    png_infop info_ptr;
+
+    fp = fopen(outfile, "wb");
+
+    if (fp == NULL)
+        return -1;
+
+    QRcode *qr_obj = QRcode_encodeString(tox_id, 0, QR_ECLEVEL_L, QR_MODE_8, 0);
+
+    if (qr_obj == NULL)
+        return -1;
+
+    real_width = (qr_obj->width + margin * 2) * size;
+    row = malloc(real_width * 4);
+
+    if (row == NULL)
+        return -1;
+
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+    if (png_ptr == NULL)
+        return -1;
+
+    info_ptr = png_create_info_struct(png_ptr);
+
+    if (info_ptr == NULL)
+        return -1;
+
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        return -1;
+    }
+
+    png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, real_width, real_width, 8,
+                 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_set_pHYs(png_ptr, info_ptr, dpi * INCHES_PER_METER,
+                 dpi * INCHES_PER_METER, PNG_RESOLUTION_METER);
+    png_write_info(png_ptr, info_ptr);
+
+    /* top margin */
+    memset(row, 0xff, real_width * 4);
+
+    for (y = 0; y < margin * size; y++)
+        png_write_row(png_ptr, row);
+
+    /* data */
+    p = qr_obj->data;
+
+    for (y = 0; y < qr_obj->width; y++) {
+        memset(row, 0xff, real_width * 4);
+
+        for (x = 0; x < qr_obj->width; x++) {
+            for (xx = 0; xx < size; xx++)
+                if (*p & 1)
+                    memcpy(&row[((margin + x) * size + xx) * 4], black, 4);
+
+            p++;
+        }
+
+        for (yy = 0; yy < size; yy++)
+            png_write_row(png_ptr, row);
+    }
+
+    /* bottom margin */
+    memset(row, 0xff, real_width * 4);
+
+    for (y = 0; y < margin * size; y++)
+        png_write_row(png_ptr, row);
+
+    png_write_end(png_ptr, info_ptr);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+
+    fclose(fp);
+    free(row);
+    QRcode_free(qr_obj);
+
+    return 0;
+}
+#endif /* QRPNG */

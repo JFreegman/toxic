@@ -131,7 +131,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 
         case TOX_ERR_FRIEND_ADD_NULL:
 
-            /* fallthrough */
+        /* fallthrough */
         default:
             errmsg = "Faile to add friend: Unknown error.";
             break;
@@ -452,25 +452,42 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     char dir[data_file_len + 1];
     size_t dir_len = get_base_dir(DATA_FILE, data_file_len, dir);
 
-    char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1];
-    snprintf(qr_path, sizeof(qr_path), "%s%s%s", dir, nick, QRCODE_FILENAME_EXT);
+#ifdef QRPNG
 
-    FILE *output = fopen(qr_path, "wb");
+    if (argc == 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Required 'txt' or 'png'");
+        return;
+    } else if (!strcmp(argv[1], "txt")) {
 
-    if (output == NULL) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+#endif /* QRPNG */
+        char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1];
+        snprintf(qr_path, sizeof(qr_path), "%s%s%s", dir, nick, QRCODE_FILENAME_EXT);
+
+        if (ID_to_QRcode_txt(id_string, qr_path) == -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+            return;
+        }
+
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "QR code has been printed to the file '%s'", qr_path);
+
+#ifdef QRPNG
+    } else if (!strcmp(argv[1], "png")) {
+        char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT_PNG) + 1];
+        snprintf(qr_path, sizeof(qr_path), "%s%s%s", dir, nick, QRCODE_FILENAME_EXT_PNG);
+
+        if (ID_to_QRcode_png(id_string, qr_path) == -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+            return;
+        }
+
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "QR code has been printed to the file '%s'", qr_path);
+
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown option '%s' -- Required 'txt' or 'png'", argv[1]);
         return;
     }
 
-    if (ID_to_QRcode(id_string, output) == -1) {
-        fclose(output);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
-        return;
-    }
-
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "QR code has been printed to the file '%s'", qr_path);
-
-    fclose(output);
+#endif /* QRPNG */
 }
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

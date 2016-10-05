@@ -145,8 +145,8 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t
 
     for (i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft = direction == FILE_TRANSFER_SEND ?
-                                          &Friends.list[friendnum].file_sender[i] :
-                                          &Friends.list[friendnum].file_receiver[i];
+                                      &Friends.list[friendnum].file_sender[i] :
+                                      &Friends.list[friendnum].file_receiver[i];
 
         if (ft->state != FILE_TRANSFER_INACTIVE && ft->index == index)
             return ft;

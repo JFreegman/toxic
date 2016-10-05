@@ -34,6 +34,12 @@ ifneq ($(DESK_NOTIFY), disabled)
     -include $(CHECKS_DIR)/desktop_notifications.mk
 endif
 
+# Check if we want build QR exported as PNG support
+QR_PNG = $(shell if [ -z "$(DISABLE_QRPNG)" ] || [ "$(DISABLE_QRPNG)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(QR_PNG), disabled)
+    -include $(CHECKS_DIR)/qr_png.mk
+endif
+
 # Check if we can build Toxic
 CHECK_LIBS = $(shell $(PKG_CONFIG) --exists $(LIBS) || echo -n "error")
 ifneq ($(CHECK_LIBS), error)

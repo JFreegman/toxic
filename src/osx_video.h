@@ -37,10 +37,10 @@ void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
 
 #ifdef __OBJC__
 @interface OSXVideo :
-NSObject <AVCaptureVideoDataOutputSampleBufferDelegate>
+    NSObject <AVCaptureVideoDataOutputSampleBufferDelegate>
 - (instancetype)initWithDeviceNames:
-(char **)device_names AmtDevices:
-(int *)size;
+    (char **)device_names AmtDevices:
+    (int *)size;
 @end
 #endif /* __OBJC__ */
 
