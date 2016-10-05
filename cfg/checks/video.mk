@@ -8,13 +8,13 @@ else
 endif
 
 # Check if we can build video support
-CHECK_VIDEO_LIBS = $(shell pkg-config --exists $(VIDEO_LIBS) || echo -n "error")
+CHECK_VIDEO_LIBS = $(shell $(PKG_CONFIG) --exists $(VIDEO_LIBS) || echo -n "error")
 ifneq ($(CHECK_VIDEO_LIBS), error)
     LIBS += $(VIDEO_LIBS)
     CFLAGS += $(VIDEO_CFLAGS)
     OBJ += $(VIDEO_OBJ)
 else ifneq ($(MAKECMDGOALS), clean)
-    MISSING_VIDEO_LIBS = $(shell for lib in $(VIDEO_LIBS) ; do if ! pkg-config --exists $$lib ; then echo $$lib ; fi ; done)
+    MISSING_VIDEO_LIBS = $(shell for lib in $(VIDEO_LIBS) ; do if ! $(PKG_CONFIG) --exists $$lib ; then echo $$lib ; fi ; done)
     $(warning WARNING -- Toxic will be compiled without video support)
     $(warning WARNING -- You will need these libraries for video support)
     $(warning WARNING -- $(MISSING_VIDEO_LIBS))
