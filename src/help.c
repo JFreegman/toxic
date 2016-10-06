@@ -159,7 +159,11 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
+#ifdef QRPNG
+    wprintw(win, "  /myqr <txt> or <png>       : Print your Tox ID's QR code to a file.\n");
+#else
     wprintw(win, "  /myqr                      : Print your Tox ID's QR code to a file.\n");
+#endif /* QRPNG */
     wprintw(win, "  /clear                     : Clear window history\n");
     wprintw(win, "  /close                     : Close the current chat window\n");
     wprintw(win, "  /quit or /exit             : Exit Toxic\n");

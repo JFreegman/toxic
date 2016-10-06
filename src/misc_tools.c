@@ -26,9 +26,13 @@
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
-
-#include <sys/stat.h>
+#if defined(__FreeBSD__)
+#include <netinet/in.h>
+#include <sys/socket.h>
+#else
 #include <arpa/inet.h>
+#endif
+#include <sys/stat.h>
 
 #include "toxic.h"
 #include "windows.h"
