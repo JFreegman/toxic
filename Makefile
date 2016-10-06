@@ -60,7 +60,7 @@ all: $(BUILD_DIR)/toxic
 
 $(BUILD_DIR)/toxic: $(OBJ)
 	@echo "  LD    $(@:$(BUILD_DIR)/%=%)"
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/toxic $(OBJ) $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/toxic $(OBJ) $(LDFLAGS)
 
 $(BUILD_DIR)/osx_video.o: $(SRC_DIR)/$(OSX_VIDEO)
 	@echo "  CC    $(@:$(BUILD_DIR)/)osx_video.o"
