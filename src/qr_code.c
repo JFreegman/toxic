@@ -31,6 +31,8 @@
 #ifdef QRPNG
 #include <png.h>
 #define INCHES_PER_METER (100.0/2.54)
+#define DPI 72
+#define SQUARE_SIZE 5
 #endif /* QRPNG */
 
 #define BORDER_LEN 1
@@ -52,8 +54,10 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
 
     QRcode *qr_obj = QRcode_encodeString(tox_id, 0, QR_ECLEVEL_L, QR_MODE_8, 0);
 
-    if (qr_obj == NULL)
+    if (qr_obj == NULL) {
+        fclose(fp);
         return -1;
+    }
 
     size_t width = qr_obj->width;
     size_t i, j;
@@ -108,9 +112,6 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
     unsigned char *p;
     unsigned char black[4] = {0, 0, 0, 255};
     size_t x, y, xx, yy, real_width;
-    size_t margin = BORDER_LEN;
-    size_t size = 5;
-    size_t dpi = 72;
     png_structp png_ptr;
     png_infop info_ptr;
 
@@ -127,7 +128,7 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
         return -1;
     }
 
-    real_width = (qr_obj->width + margin * 2) * size;
+    real_width = (qr_obj->width + BORDER_LEN * 2) * SQUARE_SIZE;
     size_t row_size = real_width * 4;
     unsigned char row[row_size];
 
@@ -158,14 +159,14 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
     png_set_IHDR(png_ptr, info_ptr, real_width, real_width, 8,
                  PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-    png_set_pHYs(png_ptr, info_ptr, dpi * INCHES_PER_METER,
-                 dpi * INCHES_PER_METER, PNG_RESOLUTION_METER);
+    png_set_pHYs(png_ptr, info_ptr, DPI * INCHES_PER_METER,
+                 DPI * INCHES_PER_METER, PNG_RESOLUTION_METER);
     png_write_info(png_ptr, info_ptr);
 
     /* top margin */
     memset(row, 0xff, row_size);
 
-    for (y = 0; y < margin * size; y++) {
+    for (y = 0; y < BORDER_LEN * SQUARE_SIZE; y++) {
         png_write_row(png_ptr, row);
     }
 
@@ -176,16 +177,16 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
         memset(row, 0xff, row_size);
 
         for (x = 0; x < qr_obj->width; x++) {
-            for (xx = 0; xx < size; xx++) {
+            for (xx = 0; xx < SQUARE_SIZE; xx++) {
                 if (*p & 1) {
-                    memcpy(&row[((margin + x) * size + xx) * 4], black, 4);
+                    memcpy(&row[((BORDER_LEN + x) * SQUARE_SIZE + xx) * 4], black, 4);
                 }
             }
 
             p++;
         }
 
-        for (yy = 0; yy < size; yy++) {
+        for (yy = 0; yy < SQUARE_SIZE; yy++) {
             png_write_row(png_ptr, row);
         }
     }
@@ -193,7 +194,7 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
     /* bottom margin */
     memset(row, 0xff, row_size);
 
-    for (y = 0; y < margin * size; y++) {
+    for (y = 0; y < BORDER_LEN * SQUARE_SIZE; y++) {
         png_write_row(png_ptr, row);
     }
 
