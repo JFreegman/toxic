@@ -54,8 +54,10 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
 
     QRcode *qr_obj = QRcode_encodeString(tox_id, 0, QR_ECLEVEL_L, QR_MODE_8, 0);
 
-    if (qr_obj == NULL)
+    if (qr_obj == NULL) {
+        fclose(fp);
         return -1;
+    }
 
     size_t width = qr_obj->width;
     size_t i, j;
