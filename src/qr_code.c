@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <qrencode.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "toxic.h"
 #include "windows.h"
