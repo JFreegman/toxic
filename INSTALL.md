@@ -29,8 +29,8 @@
 Using [Homebrew](http://brew.sh):
 ```
 brew install openal-soft freealut libconfig
-brew install https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
-brew install https://raw.githubusercontent.com/Homebrew/homebrew-x11/master/libnotify.rb
+brew install --HEAD https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
+brew install libnotify
 ```
 
 You can omit `libnotify` if you intend to build without desktop notifications enabled.
