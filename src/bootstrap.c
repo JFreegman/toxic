@@ -477,7 +477,7 @@ void *load_nodeslist_thread(void *data)
     /* If nodeslist does not contain any valid entries we set the last_scan value
      * to 0 so that it will fetch a new list the next time this function is called.
      */
-    if (idx == 0) {
+    if (Nodes.count == 0) {
         const char *s = "{\"last_scan\":0}";
         rewind(fp);
         fwrite(s, strlen(s), 1, fp);  // Not much we can do if it fails
