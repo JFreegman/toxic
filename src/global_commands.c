@@ -336,32 +336,31 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     uint8_t type;
 
     if (!strcasecmp(argv[1], "audio"))
-        type = TOX_GROUPCHAT_TYPE_AV;
+        type = TOX_CONFERENCE_TYPE_AV;
     else if (!strcasecmp(argv[1], "text"))
-        type = TOX_GROUPCHAT_TYPE_TEXT;
+        type = TOX_CONFERENCE_TYPE_TEXT;
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid group types are: text | audio");
         return;
     }
 
-    int groupnum = -1;
+    if (type != TOX_CONFERENCE_TYPE_TEXT) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio groups.");
+        return;
+    }
 
-    if (type == TOX_GROUPCHAT_TYPE_TEXT)
-        groupnum = tox_add_groupchat(m);
+    TOX_ERR_CONFERENCE_NEW err;
 
-    /*#ifdef AUDIO
-        else
-            groupnum = toxav_add_av_groupchat(m, NULL, NULL);
-    #endif*/
+    uint32_t groupnum = tox_conference_new(m, &err);
 
-    if (groupnum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
+    if (err != TOX_ERR_CONFERENCE_NEW_OK) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);
         return;
     }
 
     if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_del_groupchat(m, groupnum);
+        tox_conference_delete(m, groupnum, NULL);
         return;
     }
 

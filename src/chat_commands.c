@@ -92,8 +92,10 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    if (tox_invite_friend(m, self->num, groupnum) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group.");
+    TOX_ERR_CONFERENCE_INVITE err;
+
+    if (!tox_conference_invite(m, self->num, groupnum, &err)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d)", err);
         return;
     }
 
@@ -116,25 +118,23 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    int groupnum = -1;
+    if (type != TOX_CONFERENCE_TYPE_TEXT) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio groups.");
+        return;
+    }
 
-    if (type == TOX_GROUPCHAT_TYPE_TEXT)
-        groupnum = tox_join_groupchat(m, self->num, (uint8_t *) groupkey, length);
+    TOX_ERR_CONFERENCE_JOIN err;
 
-    /*#ifdef AUDIO
-        else
-            groupnum = toxav_join_av_groupchat(m, self->num, (uint8_t *) groupkey, length,
-                                               NULL, NULL);
-    #endif*/
+    uint32_t groupnum = tox_conference_join(m, self->num, (uint8_t *) groupkey, length, &err);
 
-    if (groupnum == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize.");
+    if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);
         return;
     }
 
     if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_del_groupchat(m, groupnum);
+        tox_conference_delete(m, groupnum, NULL);
         return;
     }
 

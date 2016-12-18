@@ -114,12 +114,13 @@ void on_nickchange(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t 
 void on_statuschange(Tox *m, uint32_t friendnumber, TOX_USER_STATUS status, void *userdata);
 void on_statusmessagechange(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
 void on_friendadded(Tox *m, uint32_t friendnumber, bool sort);
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length, void *userdata);
-void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length, void *userdata);
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
-                    void *userdata);
-void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata);
-void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length,
+void on_groupmessage(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+                     const uint8_t *message, size_t length, void *userdata);
+void on_groupinvite(Tox *m, uint32_t friendnumber, TOX_CONFERENCE_TYPE type, const uint8_t *group_pub_key,
+                    size_t length, void *userdata);
+void on_group_namelistchange(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_CONFERENCE_STATE_CHANGE change,
+                             void *userdata);
+void on_group_titlechange(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *title, size_t length,
                           void *userdata);
 void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
                            void *userdata);

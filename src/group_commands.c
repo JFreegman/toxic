@@ -30,17 +30,24 @@
 
 void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    TOX_ERR_CONFERENCE_TITLE err;
     char title[MAX_STR_SIZE];
 
     if (argc < 1) {
-        int tlen = tox_group_get_title(m, self->num, (uint8_t *) title, TOX_MAX_NAME_LENGTH);
+        size_t tlen = tox_conference_get_title_size(m, self->num, &err);
 
-        if (tlen != -1) {
-            title[tlen] = '\0';
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
-        } else {
+        if (err != TOX_ERR_CONFERENCE_TITLE_OK) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
+            return;
         }
+
+        if (!tox_conference_get_title(m, self->num, (uint8_t *) title, &err)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
+            return;
+        }
+
+        title[tlen] = '\0';
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
 
         return;
     }
@@ -55,8 +62,8 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     int len = strlen(title) - 1;
     title[len] = '\0';
 
-    if (tox_group_set_title(m, self->num, (uint8_t *) title, len) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title.");
+    if (!tox_conference_set_title(m, self->num, (uint8_t *) title, len, &err)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title (error %d)", err);
         return;
     }
 

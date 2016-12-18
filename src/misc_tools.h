@@ -126,7 +126,7 @@ void str_to_lower(char *str);
 size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum);
 
 /* same as get_nick_truncate but for groupchats */
-int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum);
+int get_group_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t groupnum);
 
 /* copies data to msg buffer.
    returns length of msg, which will be no larger than size-1 */

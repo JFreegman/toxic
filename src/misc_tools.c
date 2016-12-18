@@ -323,34 +323,52 @@ void str_to_lower(char *str)
    Returns nick len */
 size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum)
 {
-    size_t len = tox_friend_get_name_size(m, friendnum, NULL);
+    TOX_ERR_FRIEND_QUERY err;
+    size_t len = tox_friend_get_name_size(m, friendnum, &err);
 
-    if (len == 0) {
-        strcpy(buf, UNKNOWN_NAME);
-        len = strlen(UNKNOWN_NAME);
+    if (err != TOX_ERR_FRIEND_QUERY_OK) {
+        goto on_error;
     } else {
-        tox_friend_get_name(m, friendnum, (uint8_t *) buf, NULL);
+        if (!tox_friend_get_name(m, friendnum, (uint8_t *) buf, NULL)) {
+            goto on_error;
+        }
     }
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     filter_str(buf, len);
     return len;
+
+on_error:
+    strcpy(buf, UNKNOWN_NAME);
+    len = strlen(UNKNOWN_NAME);
+    buf[len] = '\0';
+    return len;
 }
 
 /* same as get_nick_truncate but for groupchats */
-int get_group_nick_truncate(Tox *m, char *buf, int peernum, int groupnum)
+int get_group_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t groupnum)
 {
-    int len = tox_group_peername(m, groupnum, peernum, (uint8_t *) buf);
+    TOX_ERR_CONFERENCE_PEER_QUERY err;
+    size_t len = tox_conference_peer_get_name_size(m, groupnum, peernum, &err);
 
-    if (len == -1) {
-        strcpy(buf, UNKNOWN_NAME);
-        len = strlen(UNKNOWN_NAME);
+    if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
+        goto on_error;
+    } else {
+        if (!tox_conference_peer_get_name(m, groupnum, peernum, (uint8_t *) buf, NULL)) {
+            goto on_error;
+        }
     }
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     filter_str(buf, len);
+    return len;
+
+on_error:
+    strcpy(buf, UNKNOWN_NAME);
+    len = strlen(UNKNOWN_NAME);
+    buf[len] = '\0';
     return len;
 }
 

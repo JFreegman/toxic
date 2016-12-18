@@ -151,8 +151,8 @@ void on_friendadded(Tox *m, uint32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *message, uint16_t length,
-                     void *userdata)
+void on_groupmessage(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+                     const uint8_t *message, size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
@@ -161,26 +161,12 @@ void on_groupmessage(Tox *m, int groupnumber, int peernumber, const uint8_t *mes
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupMessage != NULL)
-            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, msg, length);
+            windows[i].onGroupMessage(&windows[i], m, groupnumber, peernumber, type, msg, length);
     }
 }
 
-void on_groupaction(Tox *m, int groupnumber, int peernumber, const uint8_t *action, uint16_t length,
-                    void *userdata)
-{
-    char msg[MAX_STR_SIZE + 1];
-    length = copy_tox_str(msg, sizeof(msg), (const char *) action, length);
-
-    size_t i;
-
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i].onGroupAction != NULL)
-            windows[i].onGroupAction(&windows[i], m, groupnumber, peernumber, msg, length);
-    }
-}
-
-void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *group_pub_key, uint16_t length,
-                    void *userdata)
+void on_groupinvite(Tox *m, uint32_t friendnumber, TOX_CONFERENCE_TYPE type, const uint8_t *group_pub_key,
+                    size_t length, void *userdata)
 {
     size_t i;
 
@@ -190,7 +176,8 @@ void on_groupinvite(Tox *m, int32_t friendnumber, uint8_t type, const uint8_t *g
     }
 }
 
-void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t change, void *userdata)
+void on_group_namelistchange(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_CONFERENCE_STATE_CHANGE change,
+                             void *userdata)
 {
     size_t i;
 
@@ -200,7 +187,7 @@ void on_group_namelistchange(Tox *m, int groupnumber, int peernumber, uint8_t ch
     }
 }
 
-void on_group_titlechange(Tox *m, int groupnumber, int peernumber, const uint8_t *title, uint8_t length,
+void on_group_titlechange(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *title, size_t length,
                           void *userdata)
 {
     char data[MAX_STR_SIZE + 1];
