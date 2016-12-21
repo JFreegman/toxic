@@ -3,7 +3,7 @@
        src="https://scan.coverity.com/projects/4975/badge.svg"/>
 </a>
 
-Toxic is a [Tox](https://tox.chat)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/irungentoo/toxcore), and is now available as a standalone application.
+Toxic is a [Tox](https://tox.chat)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/toktok/c-toxcore), and is now available as a standalone application.
 
 [![Toxic Screenshot](https://i.imgur.com/san99Z2.png "Home Screen")](https://i.imgur.com/san99Z2.png)
 
