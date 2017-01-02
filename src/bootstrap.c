@@ -441,10 +441,12 @@ void *load_nodeslist_thread(void *data)
         goto on_exit;
     }
 
-    int update_err = update_DHT_nodeslist(nodes_path);
+    if (!arg_opts.no_nodes_update) {
+        int update_err = update_DHT_nodeslist(nodes_path);
 
-    if (update_err < 0) {
-        fprintf(stderr, "update_DHT_nodeslist() failed with error %d\n", update_err);
+        if (update_err < 0) {
+            fprintf(stderr, "update_DHT_nodeslist() failed with error %d\n", update_err);
+        }
     }
 
     char line[MAX_NODELIST_SIZE + 1];

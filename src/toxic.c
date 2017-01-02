@@ -828,6 +828,7 @@ static void print_usage(void)
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
+    fprintf(stderr, "  -N, --no-nodes-update    Do not automatically update the DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
     fprintf(stderr, "  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]\n");
     fprintf(stderr, "  -P, --HTTP-proxy         Use HTTP proxy: Requires [IP] [port]\n");
@@ -857,6 +858,7 @@ static void parse_args(int argc, char *argv[])
         {"config", required_argument, 0, 'c'},
         {"encrypt-data", no_argument, 0, 'e'},
         {"nodes", required_argument, 0, 'n'},
+        {"no-nodes-update", no_argument, 0, 'N'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
         {"namelist", required_argument, 0, 'r'},
@@ -868,7 +870,7 @@ static void parse_args(int argc, char *argv[])
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotuxc:f:n:r:p:P:T:";
+    const char *opts_str = "4bdehotuxNc:f:n:r:p:P:T:";
     int opt, indexptr;
     long int port = 0;
 
@@ -929,6 +931,11 @@ static void parse_args(int argc, char *argv[])
 
             case 'n':
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
+                break;
+
+            case 'N':
+                arg_opts.no_nodes_update = 1;
+                queue_init_message("Not updating the DHTnodes file");
                 break;
 
             case 'o':
