@@ -835,6 +835,13 @@ static void print_usage(void)
     fprintf(stderr, "  -t, --force-tcp          Force toxic to use a TCP connection (use with proxies)\n");
     fprintf(stderr, "  -T, --tcp-server         Act as a TCP relay server: Requires [port]\n");
     fprintf(stderr, "  -u, --unencrypt-data     Unencrypt an encrypted data file\n");
+    fprintf(stderr, "  -v, --version            Print the version\n");
+}
+
+static void print_version(void)
+{
+    fprintf(stderr, "Toxic version %s\n", TOXICVER);
+    fprintf(stderr, "Toxcore version %d.%d.%d\n", tox_version_major(), tox_version_minor(), tox_version_patch());
 }
 
 static void set_default_opts(void)
@@ -865,10 +872,11 @@ static void parse_args(int argc, char *argv[])
         {"SOCKS5-proxy", required_argument, 0, 'p'},
         {"HTTP-proxy", required_argument, 0, 'P'},
         {"unencrypt-data", no_argument, 0, 'u'},
+        {"version", no_argument, 0, 'v'},
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotuxc:f:n:r:p:P:T:";
+    const char *opts_str = "4bdehotuxvc:f:n:r:p:P:T:";
     int opt, indexptr;
     long int port = 0;
 
@@ -991,6 +999,9 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.unencrypt_data = 1;
                 break;
 
+            case 'v':
+                print_version();
+                exit(EXIT_SUCCESS);
             case 'h':
             default:
                 print_usage();
