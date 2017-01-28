@@ -382,6 +382,7 @@ static void first_time_encrypt(const char *msg)
     do {
         system("clear");
         printf("%s ", msg);
+	fflush(stdout);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
                 || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
@@ -402,6 +403,7 @@ static void first_time_encrypt(const char *msg)
         printf("Enter a new password (must be at least %d characters) ", MIN_PASSWORD_LEN);
 
         while (valid_password == false) {
+     	    fflush(stdout); // Flush all before user input
             len = password_prompt(user_password.pass, sizeof(user_password.pass));
             user_password.len = len;
 
@@ -627,6 +629,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
             char plain[plain_len];
 
             while (true) {
+	        fflush(stdout); // Flush before prompts so the user sees the question/message
                 if (pweval) {
                     pwlen = password_eval(user_password.pass, sizeof(user_password.pass));
                 } else {
