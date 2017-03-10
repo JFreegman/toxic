@@ -214,8 +214,8 @@ static int detect_tmux ()
     if (!pos)
         return 0;
 
-    /* store the session number string for later use */
-    snprintf (mplex_data, sizeof(mplex_data), "%s", pos + 1);
+    /* store the session id for later use */
+    snprintf (mplex_data, sizeof(mplex_data), "$%s", pos + 1);
     mplex = MPLEX_TMUX;
     return 1;
 }
@@ -252,14 +252,8 @@ static int gnu_screen_is_detached ()
 }
 
 /* Detects tmux attached/detached by getting session data and finding the
-   current session's entry. An attached entry ends with "(attached)". Example:
-
-    $ tmux list-sessions
-    0: 1 windows (created Mon Mar  2 21:48:29 2015) [80x23] (attached)
-    1: 2 windows (created Mon Mar  2 21:48:43 2015) [80x23]
-
-    In this example, session 0 is attached and session 1 is detached.
-*/
+   current session's entry.
+ */
 static int tmux_is_detached ()
 {
     if (mplex != MPLEX_TMUX)
@@ -267,10 +261,12 @@ static int tmux_is_detached ()
 
     FILE *session_info_stream = NULL;
     char *dyn_buffer = NULL, *search_str = NULL;
-    char *entry_pos, *nl_pos, *attached_pos;
+    char *entry_pos;
+    int detached;
     const int numstr_len = strlen (mplex_data);
 
-    session_info_stream = popen ("env LC_ALL=C tmux list-sessions", "r");
+    /* get the number of attached clients for each session */
+    session_info_stream = popen ("tmux list-sessions -F \"#{session_id} #{session_attached}\"", "r");
 
     if (!session_info_stream)
         goto fail;
@@ -284,13 +280,12 @@ static int tmux_is_detached ()
     session_info_stream = NULL;
 
     /* prepare search string, for finding the current session's entry */
-    search_str = (char *) malloc (numstr_len + 4);
+    search_str = (char *) malloc (numstr_len + 2);
     search_str[0] = '\n';
     strcpy (search_str + 1, mplex_data);
-    strcat (search_str, ": ");
 
     /* do the search */
-    if (strncmp (dyn_buffer, search_str + 1, numstr_len + 2) == 0)
+    if (strncmp (dyn_buffer, search_str + 1, numstr_len) == 0)
         entry_pos = dyn_buffer;
     else
         entry_pos = strstr (dyn_buffer, search_str);
@@ -298,9 +293,8 @@ static int tmux_is_detached ()
     if (! entry_pos)
         goto fail;
 
-    /* find the next \n and look for the "(attached)" before it */
-    nl_pos = strchr (entry_pos + 1, '\n');
-    attached_pos = strstr (entry_pos + 1, "(attached)\n");
+    entry_pos = strchr (entry_pos, ' ') + 1;
+    detached = strncmp (entry_pos, "0\n", 2) == 0;
 
     free (search_str);
     search_str = NULL;
@@ -308,7 +302,7 @@ static int tmux_is_detached ()
     free (dyn_buffer);
     dyn_buffer = NULL;
 
-    return attached_pos == NULL  ||  attached_pos > nl_pos;
+    return detached;
 
 fail:
 
