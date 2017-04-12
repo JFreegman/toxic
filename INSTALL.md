@@ -1,13 +1,12 @@
 # Installation
-* [Dependencies](#deps)
-  * [OS X Notes](#deps_osx)
+* [Dependencies](#dependencies)
+  * [OS X Notes](#os-x-notes)
 * [Compiling](#compiling)
-  * [Documentation](#docs)
+  * [Documentation](#documentation)
 * [Notes](#notes)
-  * [Compilation variables](#comp_vars)
+  * [Compilation variables](#compilation-variables)
   * [Packaging](#packaging)
 
-<a name="deps" />
 ## Dependencies
 | Name                                                 | Needed by                  | Debian package      |
 |------------------------------------------------------|----------------------------|---------------------|
@@ -22,9 +21,9 @@
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
 | [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       |
 | [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc            |
-<sup>1</sup>: see [Documentation](#docs)
 
-<a name="deps_osx" />
+<sup>1</sup>: see [Documentation](#documentation)
+
 #### OS X Notes
 Using [Homebrew](http://brew.sh):
 ```
@@ -35,23 +34,19 @@ brew install libnotify
 
 You can omit `libnotify` if you intend to build without desktop notifications enabled.
 
-<a name="Compiling">
 ## Compiling
 ```
 make PREFIX="/where/to/install"
 sudo make install PREFIX="/where/to/install"
 ```
 
-<a name="docs" />
 #### Documentation
 Run `make doc` in the build directory after editing the asciidoc files to regenerate the manpages.<br />
 **NOTE FOR DEVELOPERS**: asciidoc files and generated manpages will need to be commited together.<br />
 **NOTE FOR EVERYONE**: [asciidoc](http://asciidoc.org/index.html) (and this step) is only required for regenerating manpages when you modify them.
 
-<a name="notes" />
 ## Notes
 
-<a name="comp_vars" />
 #### Compilation variables
 * You can add specific flags to the Makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
 * You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
@@ -61,10 +56,8 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
   * `DISABLE_SOUND_NOTIFY=1` → build toxic without sound notifications support
   * `DISABLE_DESKTOP_NOTIFY=1` → build toxic without desktop notifications support
 
-<a name="packaging" />
 #### Packaging
 * For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
 * `DESTDIR=""` can be used in addition to `PREFIX=""`:
   * `DESTDIR=""` is meant to specify a directory where to store installed files (ex: "/tmp/build/pkg")
   * `PREFIX=""` is meant to specify a prefix directory for binaries and data files (ex: "/usr/local")
-
