@@ -23,7 +23,7 @@
 #ifndef AVATARS_H
 #define AVATARS_H
 
-#define MAX_AVATAR_FILE_SIZE 65536
+#define MAX_AVATAR_FILE_SIZE 262144
 
 /* Sends avatar to friendnum.
  *
