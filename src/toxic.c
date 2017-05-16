@@ -1221,7 +1221,7 @@ int main(int argc, char **argv)
 
 #ifdef PYTHON
 
-    init_python();
+    init_python(m);
 
 #endif /* PYTHON */
 

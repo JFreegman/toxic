@@ -6,11 +6,8 @@ PYTHON_OBJ = api.o python_api.o
 # Check if we can build Python scripting support
 CHECK_PYTHON_LIBS = $(shell $(PKG_CONFIG) --exists $(PYTHON_LIBS) || echo -n "error")
 ifneq ($(CHECK_PYTHON_LIBS), error)
-    # LIBS += $(PYTHON_LIBS)
-
-    # Unwise hacks... You will pay for this.
     LDFLAGS += $(shell python3-config --ldflags)
-    CFLAGS += $(PYTHON_CFLAGS) $(shell python3-config --cflags)
+    CFLAGS += $(PYTHON_CFLAGS) $(shell python3-config --includes)
     OBJ += $(PYTHON_OBJ)
 else ifneq ($(MAKECMDGOALS), clean)
     MISSING_AUDIO_LIBS = $(shell for lib in $(PYTHON_LIBS) ; do if ! $(PKG_CONFIG) --exists $$lib ; then echo $$lib ; fi ; done)

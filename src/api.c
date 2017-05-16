@@ -20,24 +20,74 @@
  *
  */
 
+#include <stdint.h>
+
+#include <tox/tox.h>
+
+#include "execute.h"
+#include "friendlist.h"
 #include "line_info.h"
 #include "python_api.h"
 #include "windows.h"
 
-extern ToxWindow *prompt;
+Tox              *user_tox;
+static WINDOW    *cur_window;
+static ToxWindow *self_window;
+
+extern FriendsList Friends;
 
 void api_display(const char * const msg)
 {
     if (msg == NULL)
         return;
 
-    line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self_window, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
+
+FriendsList api_get_friendslist(void)
+{
+    return Friends;
+}
+
+char *api_get_nick(void)
+{
+    size_t   len  = tox_self_get_name_size(user_tox);
+    uint8_t *name = malloc(len + 1);
+    if (name == NULL)
+        return NULL;
+    tox_self_get_name(user_tox, name);
+    return (char *) name;
+}
+
+TOX_USER_STATUS api_get_status(void)
+{
+    return tox_self_get_status(user_tox);
+}
+
+char *api_get_status_message(void)
+{
+    size_t   len    = tox_self_get_status_message_size(user_tox);
+    uint8_t *status = malloc(len + 1);
+    if (status == NULL)
+        return NULL;
+    tox_self_get_status_message(user_tox, status);
+    return (char *) status;
+}
+
+void api_execute(const char *input, int mode)
+{
+    execute(cur_window, self_window, user_tox, input, mode);
+}
+
+/* TODO: Register command */
 
 void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     FILE       *fp;
     const char *error_str;
+
+    cur_window  = window;
+    self_window = self;
 
     if ( argc != 1 ) {
         if ( argc < 1 ) error_str = "Path must be specified!";

@@ -27,7 +27,7 @@
 
 PyMODINIT_FUNC PyInit_toxic_api(void);
 void terminate_python(void);
-void init_python(void);
+void init_python(Tox *m);
 void run_python(FILE *fp, char *path);
 
 #endif /* #define PYTHON_API_H */

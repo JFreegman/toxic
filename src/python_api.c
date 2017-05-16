@@ -24,19 +24,71 @@
 
 #include "api.h"
 
+extern Tox *user_tox;
+
 static PyObject *python_api_display(PyObject *self, PyObject *args)
 {
     const char *msg;
     if (!PyArg_ParseTuple(args, "s", &msg))
         return NULL;
-
     api_display(msg);
+    return Py_None;
+}
 
-    Py_RETURN_NONE;
+static PyObject *python_api_get_nick(PyObject *self, PyObject *args)
+{
+    char     *name;
+    PyObject *ret;
+    if (!PyArg_ParseTuple(args, ""))
+        return NULL;
+    name = api_get_nick();
+    if (name == NULL)
+        return NULL;
+    ret  = Py_BuildValue("s", name);
+    free(name);
+    return ret;
+}
+
+static PyObject *python_api_get_status(PyObject *self, PyObject *args)
+{
+    TOX_USER_STATUS  status;
+    PyObject        *ret;
+    if (!PyArg_ParseTuple(args, ""))
+        return NULL;
+    status = api_get_status();
+    ret    = Py_BuildValue("i", status);
+    return ret;
+}
+
+static PyObject *python_api_get_status_message(PyObject *self, PyObject *args)
+{
+    char     *status;
+    PyObject *ret;
+    if (!PyArg_ParseTuple(args, ""))
+        return NULL;
+    status = api_get_status_message();
+    if (status == NULL)
+        return NULL;
+    ret    = Py_BuildValue("s", status);
+    free(status);
+    return ret;
+}
+
+static PyObject *python_api_execute(PyObject *self, PyObject *args)
+{
+    int         mode;
+    const char *command;
+    if (!PyArg_ParseTuple(args, "si", &command, &mode))
+        return NULL;
+    api_execute(command, mode);
+    return Py_None;
 }
 
 static PyMethodDef ToxicApiMethods[] = {
     {"display", python_api_display, METH_VARARGS, "Display a message to the primary prompt"},
+    {"get_nick", python_api_get_nick, METH_VARARGS, "Return the user's current nickname"},
+    {"get_status_message", python_api_get_status_message, METH_VARARGS, "Return the user's current status message"},
+    {"execute", python_api_execute, METH_VARARGS, "Execute a command like `/nick`"},
     {NULL, NULL, 0, NULL},
 };
 
@@ -58,11 +110,14 @@ void terminate_python(void)
     Py_FinalizeEx();
 }
 
-void init_python(void)
+void init_python(Tox *m)
 {
+    wchar_t *program = Py_DecodeLocale("toxic", NULL);
+    user_tox = m;
     PyImport_AppendInittab("toxic_api", PyInit_toxic_api);
-    /* TODO: Set Python program name. */
+    Py_SetProgramName(program);
     Py_Initialize();
+    PyMem_RawFree(program);
 }
 
 void run_python(FILE *fp, char *path)

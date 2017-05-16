@@ -23,8 +23,14 @@
 #ifndef API_H
 #define API_H
 
+#include "friendlist.h"
 #include "windows.h"
 
 void api_display(const char * const msg);
+FriendsList api_get_friendslist(void);
+char *api_get_nick(void);
+TOX_USER_STATUS api_get_status(void);
+char *api_get_status_message(void);
+void api_execute(const char *input, int mode);
 
 #endif /* #define API_H */
