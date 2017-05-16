@@ -185,6 +185,14 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /svdev <type> <id>         : Set active video device\n");
 #endif /* VIDEO */
 
+#ifdef PYTHON
+    wattron(win, A_BOLD);
+    wprintw(win, "\n Scripting:\n");
+    wattroff(win, A_BOLD);
+
+    wprintw(win, "  /run <path>                : Load and run the script at path\n");
+#endif /* PYTHON */
+
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
@@ -302,6 +310,7 @@ static void help_draw_contacts(ToxWindow *self)
 
 void help_onKey(ToxWindow *self, wint_t key)
 {
+    int height;
     switch (key) {
         case 'x':
         case T_KEY_ESC:
@@ -320,13 +329,16 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'g':
+            height = 22;
 #ifdef VIDEO
-            help_init_window(self, 30, 80);
+            height += 8;
 #elif AUDIO
-            help_init_window(self, 26, 80);
-#else
-            help_init_window(self, 22, 80);
+            height += 4;
 #endif
+#ifdef PYTHON
+            height += 2;
+#endif
+            help_init_window(self, height, 80);
             self->help->type = HELP_GLOBAL;
             break;
 

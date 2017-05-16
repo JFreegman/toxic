@@ -40,6 +40,12 @@ ifneq ($(QR_PNG), disabled)
     -include $(CHECKS_DIR)/qr_png.mk
 endif
 
+# Check if we want build Python scripting support
+PYTHON = $(shell if [ -z "$(DISABLE_PYTHON)" ] || [ "$(DISABLE_PYTHON)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(PYTHON), disabled)
+    -include $(CHECKS_DIR)/python.mk
+endif
+
 # Check if we can build Toxic
 CHECK_LIBS = $(shell $(PKG_CONFIG) --exists $(LIBS) || echo -n "error")
 ifneq ($(CHECK_LIBS), error)

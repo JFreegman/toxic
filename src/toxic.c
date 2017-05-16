@@ -75,6 +75,10 @@
 ToxAV *av;
 #endif /* AUDIO */
 
+#ifdef PYTHON
+#include "python_api.h"
+#endif
+
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
 #endif
@@ -161,6 +165,10 @@ void exit_toxic_success(Tox *m)
 #endif /* VIDEO */
     terminate_audio();
 #endif /* AUDIO */
+
+#ifdef PYTHON
+    terminate_python();
+#endif /* PYTHON */
 
     free_global_data();
     tox_kill(m);
@@ -1210,6 +1218,12 @@ int main(int argc, char **argv)
         queue_init_message("Failed to init audio devices");
 
 #endif /* AUDIO */
+
+#ifdef PYTHON
+
+    init_python();
+
+#endif /* PYTHON */
 
     init_notify(60, 3000);
 

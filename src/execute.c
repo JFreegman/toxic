@@ -67,6 +67,9 @@ static struct cmd_func global_commands[] = {
     { "/lsvdev",    cmd_list_video_devices },
     { "/svdev" ,    cmd_change_video_device },
 #endif /* VIDEO */
+#ifdef PYTHON
+    { "/run",       cmd_run           },
+#endif /* PYTHON */
     { NULL,         NULL              },
 };
 
