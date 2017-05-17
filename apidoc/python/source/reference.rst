@@ -31,9 +31,9 @@ State
 
 .. function:: get_status()
 
-   Return the user's current status. 0 indicates online and available, 1 indicates away, and 2 indicates busy.
+   Return a string representing the user's current status. Can be either "online", "away", or "busy".
 
-   :rtype: int
+   :rtype: string
 
 .. function:: get_status_message()
 

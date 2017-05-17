@@ -64,14 +64,25 @@ static PyObject *python_api_get_nick(PyObject *self, PyObject *args)
 
 static PyObject *python_api_get_status(PyObject *self, PyObject *args)
 {
-    TOX_USER_STATUS  status;
     PyObject        *ret;
 
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
 
-    status = api_get_status();
-    ret    = Py_BuildValue("i", status);
+    switch (api_get_status()) {
+        case TOX_USER_STATUS_NONE:
+            ret = Py_BuildValue("s", "online");
+            break;
+
+        case TOX_USER_STATUS_AWAY:
+            ret = Py_BuildValue("s", "away");
+            break;
+
+        case TOX_USER_STATUS_BUSY:
+            ret = Py_BuildValue("s", "busy");
+            break;
+    }
+
     return ret;
 }
 

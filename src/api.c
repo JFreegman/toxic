@@ -82,6 +82,7 @@ char *api_get_status_message(void)
         return NULL;
 
     tox_self_get_status_message(user_tox, status);
+    status[len] = '\0';
     return (char *) status;
 }
 
@@ -92,12 +93,13 @@ void api_send(const char *msg)
 
     char *name = api_get_nick();
     char  timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
     self_window = get_active_window();
+    get_time_str(timefrmt, sizeof(timefrmt));
+
     line_info_add(self_window, timefrmt, name, NULL, OUT_MSG, 0, 0, "%s", msg);
-    free(name);
     cqueue_add(self_window->chatwin->cqueue, msg, strlen(msg), OUT_MSG,
                self_window->chatwin->hst->line_end->id + 1);
+    free(name);
 }
 
 void api_execute(const char *input, int mode)
