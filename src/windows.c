@@ -584,6 +584,12 @@ ToxWindow *get_window_ptr(int i)
     return toxwin;
 }
 
+/* returns a pointer to the currently open ToxWindow. */
+ToxWindow *get_active_window(void)
+{
+    return active_window;
+}
+
 void force_refresh(WINDOW *w)
 {
     wclear(w);

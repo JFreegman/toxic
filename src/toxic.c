@@ -76,6 +76,7 @@ ToxAV *av;
 #endif /* AUDIO */
 
 #ifdef PYTHON
+#include "api.h"
 #include "python_api.h"
 #endif
 
@@ -1222,6 +1223,7 @@ int main(int argc, char **argv)
 #ifdef PYTHON
 
     init_python(m);
+    invoke_autoruns(prompt->chatwin->history, prompt);
 
 #endif /* PYTHON */
 

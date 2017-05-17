@@ -33,6 +33,9 @@ typedef enum {
     HELP_GROUP,
     HELP_KEYS,
     HELP_CONTACTS,
+#ifdef PYTHON
+    HELP_PLUGIN,
+#endif
 } HELP_TYPES;
 
 void help_onDraw(ToxWindow *self);

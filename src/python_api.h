@@ -1,7 +1,7 @@
 /*  python_api.h
  *
  *
- *  Copyright (C) 2017 Toxic All Rights Reserved.
+ *  Copyright (C) 2017 Jakob Kreuze <jakob@memeware.net>
  *
  *  This file is part of Toxic.
  *
@@ -29,5 +29,9 @@ PyMODINIT_FUNC PyInit_toxic_api(void);
 void terminate_python(void);
 void init_python(Tox *m);
 void run_python(FILE *fp, char *path);
+int do_python_command(int num_args, char (*args)[MAX_STR_SIZE]);
+int python_num_registered_handlers(void);
+int python_help_max_width(void);
+void python_draw_handler_help(WINDOW *win);
 
 #endif /* #define PYTHON_API_H */

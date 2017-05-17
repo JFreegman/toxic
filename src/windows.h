@@ -259,6 +259,7 @@ void kill_all_windows(Tox *m);    /* should only be called on shutdown */
 void on_window_resize(void);
 void force_refresh(WINDOW *w);
 ToxWindow *get_window_ptr(int i);
+ToxWindow *get_active_window(void);
 
 /* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */

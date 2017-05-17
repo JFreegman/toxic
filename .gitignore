@@ -16,3 +16,4 @@ stamp-h1
 build/toxic
 build/*.o
 build/*.d
+apidoc/python/build
