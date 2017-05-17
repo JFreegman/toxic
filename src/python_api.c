@@ -36,8 +36,10 @@ struct python_registered_func {
 static PyObject *python_api_display(PyObject *self, PyObject *args)
 {
     const char *msg;
+
     if (!PyArg_ParseTuple(args, "s", &msg))
         return NULL;
+
     api_display(msg);
     return Py_None;
 }
@@ -46,11 +48,15 @@ static PyObject *python_api_get_nick(PyObject *self, PyObject *args)
 {
     char     *name;
     PyObject *ret;
+
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
+
     name = api_get_nick();
+
     if (name == NULL)
         return NULL;
+
     ret  = Py_BuildValue("s", name);
     free(name);
     return ret;
@@ -60,8 +66,10 @@ static PyObject *python_api_get_status(PyObject *self, PyObject *args)
 {
     TOX_USER_STATUS  status;
     PyObject        *ret;
+
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
+
     status = api_get_status();
     ret    = Py_BuildValue("i", status);
     return ret;
@@ -71,11 +79,15 @@ static PyObject *python_api_get_status_message(PyObject *self, PyObject *args)
 {
     char     *status;
     PyObject *ret;
+
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
+
     status = api_get_status_message();
+
     if (status == NULL)
         return NULL;
+
     ret    = Py_BuildValue("s", status);
     free(status);
     return ret;
@@ -87,25 +99,32 @@ static PyObject *python_api_get_all_friends(PyObject *self, PyObject *args)
     FriendsList  friends;
     PyObject    *cur, *ret;
     char         pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
+
     friends = api_get_friendslist();
     ret     = PyList_New(0);
+
     for (i = 0; i < friends.num_friends; i++) {
         for (ii = 0; ii < TOX_PUBLIC_KEY_SIZE; ii++)
             snprintf(pubkey_buf + ii * 2, 3, "%02X", friends.list[i].pub_key[ii] & 0xff);
+
         pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2] = '\0';
         cur = Py_BuildValue("(s,s)", friends.list[i].name, pubkey_buf);
         PyList_Append(ret, cur);
     }
+
     return ret;
 }
 
 static PyObject *python_api_send(PyObject *self, PyObject *args)
 {
     const char *msg;
+
     if (!PyArg_ParseTuple(args, "s", &msg))
         return NULL;
+
     api_send(msg);
     return Py_None;
 }
@@ -114,8 +133,10 @@ static PyObject *python_api_execute(PyObject *self, PyObject *args)
 {
     int         mode;
     const char *command;
+
     if (!PyArg_ParseTuple(args, "si", &command, &mode))
         return NULL;
+
     api_execute(command, mode);
     return Py_None;
 }
@@ -126,16 +147,20 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
     size_t      command_len, help_len;
     const char *command, *help;
     PyObject   *callback;
+
     if (!PyArg_ParseTuple(args, "ssO:register_command", &command, &help, &callback))
         return NULL;
+
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "Parameter must be callable");
         return NULL;
     }
+
     if (command[0] != '/') {
         PyErr_SetString(PyExc_TypeError, "Command must be prefixed with a '/'");
         return NULL;
     }
+
     for (cur = &python_commands; ; cur = cur->next) {
         if (cur->name != NULL && !strcmp(command, cur->name)) {
             Py_XDECREF(cur->callback);
@@ -143,26 +168,34 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
             cur->callback = callback;
             break;
         }
+
         if (cur->next == NULL) {
             Py_XINCREF(callback);
             cur->next = malloc(sizeof(struct python_registered_func));
+
             if (cur->next == NULL)
                 return PyErr_NoMemory();
+
             command_len     = strlen(command);
             cur->next->name = malloc(command_len + 1);
+
             if (cur->next->name == NULL)
                 return PyErr_NoMemory();
+
             strncpy(cur->next->name, command, command_len + 1);
             help_len        = strlen(help);
             cur->next->help = malloc(help_len + 1);
+
             if (cur->next->help == NULL)
                 return PyErr_NoMemory();
+
             strncpy(cur->next->help, help, help_len + 1);
             cur->next->callback = callback;
             cur->next->next     = NULL;
             break;
         }
     }
+
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -195,14 +228,17 @@ PyMODINIT_FUNC PyInit_toxic_api(void)
 void terminate_python(void)
 {
     struct python_registered_func *cur, *old;
+
     if (python_commands.name != NULL)
         free(python_commands.name);
+
     for (cur = python_commands.next; cur != NULL;) {
         old = cur;
         cur = cur->next;
         free(old->name);
         free(old);
     }
+
     Py_FinalizeEx();
 }
 
@@ -226,19 +262,26 @@ int do_python_command(int num_args, char (*args)[MAX_STR_SIZE])
     int i;
     PyObject *callback_args, *args_strings;
     struct python_registered_func *cur;
+
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
         if (cur->name == NULL)
             continue;
+
         if (!strcmp(args[0], cur->name)) {
             args_strings = PyList_New(0);
+
             for (i = 1; i < num_args; i++)
                 PyList_Append(args_strings, Py_BuildValue("s", args[i]));
+
             callback_args = PyTuple_Pack(1, args_strings);
+
             if (PyObject_CallObject(cur->callback, callback_args) == NULL)
                 api_display("Exception raised in callback function");
+
             return 0;
         }
     }
+
     return 1;
 }
 
@@ -246,10 +289,12 @@ int python_num_registered_handlers(void)
 {
     int n = 0;
     struct python_registered_func *cur;
+
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
         if (cur->name != NULL)
             n++;
     }
+
     return n;
 }
 
@@ -258,12 +303,14 @@ int python_help_max_width(void)
     size_t tmp;
     int    max = 0;
     struct python_registered_func *cur;
+
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
         if (cur->name != NULL) {
             tmp = strlen(cur->help);
             max = tmp > max ? tmp : max;
         }
     }
+
     max = max > 50 ? 50 : max;
     return 37 + max;
 }
@@ -271,6 +318,7 @@ int python_help_max_width(void)
 void python_draw_handler_help(WINDOW *win)
 {
     struct python_registered_func *cur;
+
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
         if (cur->name != NULL)
             wprintw(win, "  %-29s: %.50s\n", cur->name, cur->help);

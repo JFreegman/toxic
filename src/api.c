@@ -41,10 +41,11 @@ static ToxWindow *self_window;
 extern FriendsList Friends;
 extern struct user_settings *user_settings;
 
-void api_display(const char * const msg)
+void api_display(const char *const msg)
 {
     if (msg == NULL)
         return;
+
     self_window = get_active_window();
     line_info_add(self_window, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
@@ -58,8 +59,10 @@ char *api_get_nick(void)
 {
     size_t   len  = tox_self_get_name_size(user_tox);
     uint8_t *name = malloc(len + 1);
+
     if (name == NULL)
         return NULL;
+
     tox_self_get_name(user_tox, name);
     name[len] = '\0';
     return (char *) name;
@@ -74,8 +77,10 @@ char *api_get_status_message(void)
 {
     size_t   len    = tox_self_get_status_message_size(user_tox);
     uint8_t *status = malloc(len + 1);
+
     if (status == NULL)
         return NULL;
+
     tox_self_get_status_message(user_tox, status);
     return (char *) status;
 }
@@ -84,6 +89,7 @@ void api_send(const char *msg)
 {
     if (msg == NULL || self_window->chatwin->cqueue == NULL)
         return;
+
     char *name = api_get_nick();
     char  timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -137,12 +143,14 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 
     fp = fopen(argv[1], "r");
+
     if ( fp == NULL ) {
         error_str = "Path does not exist!";
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;
     }
+
     run_python(fp, argv[1]);
     fclose(fp);
 }
@@ -154,6 +162,7 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
     size_t  path_len;
     DIR    *d = opendir(user_settings->autorun_path);
     FILE   *fp;
+
     if (d == NULL)
         return;
 
@@ -162,14 +171,18 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
 
     while ((dir = readdir(d)) != NULL) {
         path_len = strlen(dir->d_name);
+
         if (!strcmp(dir->d_name + path_len - 3, ".py")) {
             snprintf(abspath_buf, PATH_MAX + 1, "%s%s", user_settings->autorun_path, dir->d_name);
             fp = fopen(abspath_buf, "r");
+
             if (fp == NULL)
                 continue;
+
             run_python(fp, abspath_buf);
             fclose(fp);
         }
     }
+
     closedir(d);
 }

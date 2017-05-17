@@ -26,7 +26,7 @@
 #include "friendlist.h"
 #include "windows.h"
 
-void api_display(const char * const msg);
+void api_display(const char *const msg);
 FriendsList api_get_friendslist(void);
 char *api_get_nick(void);
 TOX_USER_STATUS api_get_status(void);
