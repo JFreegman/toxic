@@ -104,9 +104,16 @@ static struct user_password {
     int len;
 } user_password;
 
+static time_t last_signal_time;
+
 static void catch_SIGINT(int sig)
 {
-    Winthread.sig_exit_toxic = 1;
+    time_t cur_time = get_unix_time();
+    if (difftime(cur_time, last_signal_time) <= 1) {
+        Winthread.sig_exit_toxic = 1;
+    } else {
+        last_signal_time = cur_time;
+    }
 }
 
 static void catch_SIGSEGV(int sig)
