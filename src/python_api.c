@@ -250,7 +250,7 @@ void terminate_python(void)
         free(old);
     }
 
-    Py_FinalizeEx();
+    Py_Finalize();
 }
 
 void init_python(Tox *m)

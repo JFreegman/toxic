@@ -160,13 +160,16 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 void invoke_autoruns(WINDOW *window, ToxWindow *self)
 {
     struct dirent *dir;
-    char    abspath_buf[PATH_MAX + 1];
+    char    abspath_buf[PATH_MAX + 1], err_buf[PATH_MAX + 1];
     size_t  path_len;
     DIR    *d = opendir(user_settings->autorun_path);
     FILE   *fp;
 
-    if (d == NULL)
+    if (d == NULL) {
+        snprintf(err_buf, PATH_MAX + 1, "Autorun path does not exist: %s", user_settings->autorun_path);
+        api_display(err_buf);
         return;
+    }
 
     cur_window  = window;
     self_window = self;
@@ -178,8 +181,11 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
             snprintf(abspath_buf, PATH_MAX + 1, "%s%s", user_settings->autorun_path, dir->d_name);
             fp = fopen(abspath_buf, "r");
 
-            if (fp == NULL)
+            if (fp == NULL) {
+                snprintf(err_buf, PATH_MAX + 1, "Invalid path: %s", abspath_buf);
+                api_display(err_buf);
                 continue;
+            }
 
             run_python(fp, abspath_buf);
             fclose(fp);
