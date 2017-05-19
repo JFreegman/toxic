@@ -93,6 +93,10 @@ void api_send(const char *msg)
 
     char *name = api_get_nick();
     char  timefrmt[TIME_STR_SIZE];
+
+    if (name == NULL)
+        return;
+
     self_window = get_active_window();
     get_time_str(timefrmt, sizeof(timefrmt));
 

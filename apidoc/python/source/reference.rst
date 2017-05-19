@@ -52,7 +52,7 @@ Commands
 ========
 .. function:: execute(command, class)
 
-   Execute the given command, where a class of 0 indicates a global command, 1 indicates a chat command, and 2 indicates a groupchat command.
+   Executes the given command. The API exports three constants for the class parameter; GLOBAL_COMMAND, CHAT_COMMAND, and GROUPCHAT_COMMAND.
 
    :param command: The command to execute.
    :type command: string

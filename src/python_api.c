@@ -23,6 +23,7 @@
 #include <Python.h>
 
 #include "api.h"
+#include "execute.h"
 
 extern Tox       *user_tox;
 
@@ -163,7 +164,7 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
         return NULL;
 
     if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "Parameter must be callable");
+        PyErr_SetString(PyExc_TypeError, "Calback parameter must be callable");
         return NULL;
     }
 
@@ -233,7 +234,17 @@ static struct PyModuleDef toxic_api_module = {
 
 PyMODINIT_FUNC PyInit_toxic_api(void)
 {
-    return PyModule_Create(&toxic_api_module);
+    PyObject *m = PyModule_Create(&toxic_api_module);
+    PyObject *global_command_const    = Py_BuildValue("i", GLOBAL_COMMAND_MODE);
+    PyObject *chat_command_const      = Py_BuildValue("i", CHAT_COMMAND_MODE);
+    PyObject *groupchat_command_const = Py_BuildValue("i", GROUPCHAT_COMMAND_MODE);
+    PyObject_SetAttrString(m, "GLOBAL_COMMAND",    global_command_const);
+    PyObject_SetAttrString(m, "CHAT_COMMAND",      chat_command_const);
+    PyObject_SetAttrString(m, "GROUPCHAT_COMMAND", groupchat_command_const);
+    Py_DECREF(global_command_const);
+    Py_DECREF(chat_command_const);
+    Py_DECREF(groupchat_command_const);
+    return m;
 }
 
 void terminate_python(void)
