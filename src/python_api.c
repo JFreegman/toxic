@@ -27,7 +27,7 @@
 
 extern Tox       *user_tox;
 
-struct python_registered_func {
+static struct python_registered_func {
     char     *name;
     char     *help;
     PyObject *callback;
