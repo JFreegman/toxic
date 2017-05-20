@@ -20,6 +20,7 @@
 | [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       |
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
 | [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       |
+| [Python 3](http://www.python.org/)                   | PYTHON                     | python3-dev         |
 | [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc            |
 
 <sup>1</sup>: see [Documentation](#documentation)
@@ -27,7 +28,7 @@
 #### OS X Notes
 Using [Homebrew](http://brew.sh):
 ```
-brew install openal-soft freealut libconfig
+brew install openal-soft freealut libconfig python3
 brew install --HEAD https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
 brew install libnotify
 ```
@@ -55,6 +56,7 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
   * `DISABLE_AV=1` → build toxic without audio call support
   * `DISABLE_SOUND_NOTIFY=1` → build toxic without sound notifications support
   * `DISABLE_DESKTOP_NOTIFY=1` → build toxic without desktop notifications support
+  * `DISABLE_PYTHON=1` → build toxic without Python scripting support
 
 #### Packaging
 * For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files

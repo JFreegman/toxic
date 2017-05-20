@@ -266,12 +266,9 @@ void terminate_python(void)
 
 void init_python(Tox *m)
 {
-    wchar_t *program = Py_DecodeLocale("toxic", NULL);
     user_tox = m;
     PyImport_AppendInittab("toxic_api", PyInit_toxic_api);
-    Py_SetProgramName(program);
     Py_Initialize();
-    PyMem_RawFree(program);
 }
 
 void run_python(FILE *fp, char *path)
