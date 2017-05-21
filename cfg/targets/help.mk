@@ -15,7 +15,7 @@ help:
 	@echo "  DISABLE_SOUND_NOTIFY:   Set to \"1\" to force building without sound notification support"
 	@echo "  DISABLE_DESKTOP_NOTIFY: Set to \"1\" to force building without desktop notifications support"
 	@echo "  DISABLE_QRPNG:          Set to \"1\" to force building without QR exported as PNG support"
-	@echo "  DISABLE_PYTHON:         Set to \"1\" to force building without Python scripting support"
+	@echo "  ENABLE_PYTHON:          Set to \"1\" to enable building with Python scripting support"
 	@echo "  USER_CFLAGS:            Add custom flags to default CFLAGS"
 	@echo "  USER_LDFLAGS:           Add custom flags to default LDFLAGS"
 	@echo "  PREFIX:                 Specify a prefix directory for binaries, data files,... (default is \"$(abspath $(PREFIX))\")"

@@ -41,7 +41,7 @@ ifneq ($(QR_PNG), disabled)
 endif
 
 # Check if we want build Python scripting support
-PYTHON = $(shell if [ -z "$(DISABLE_PYTHON)" ] || [ "$(DISABLE_PYTHON)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+PYTHON = $(shell if [ -z "$(ENABLE_PYTHON)" ] || [ "$(ENABLE_PYTHON)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
 ifneq ($(PYTHON), disabled)
     -include $(CHECKS_DIR)/python.mk
 endif
