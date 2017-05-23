@@ -169,8 +169,13 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
     struct dirent *dir;
     char    abspath_buf[PATH_MAX + 1], err_buf[PATH_MAX + 1];
     size_t  path_len;
-    DIR    *d = opendir(user_settings->autorun_path);
+    DIR    *d;
     FILE   *fp;
+
+    if (user_settings->autorun_path[0] == '\0')
+        return;
+
+    d = opendir(user_settings->autorun_path);
 
     if (d == NULL) {
         snprintf(err_buf, PATH_MAX + 1, "Autorun path does not exist: %s", user_settings->autorun_path);

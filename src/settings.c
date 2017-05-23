@@ -195,6 +195,7 @@ static void tox_defaults(struct user_settings *settings)
     strcpy(settings->download_path, "");
     strcpy(settings->chatlogs_path, "");
     strcpy(settings->avatar_path, "");
+    strcpy(settings->autorun_path, "");
     strcpy(settings->password_eval, "");
 }
 
@@ -421,6 +422,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         }
 
 #ifdef PYTHON
+
         if ( config_setting_lookup_string(setting, tox_strings.autorun_path, &str) ) {
             snprintf(s->autorun_path, sizeof(s->autorun_path), "%s", str);
             int len = strlen(str);
@@ -430,6 +432,7 @@ int settings_load(struct user_settings *s, const char *patharg)
             else if (s->autorun_path[len - 1] != '/')
                 strcat(&s->autorun_path[len - 1], "/");
         }
+
 #endif
 
         if ( config_setting_lookup_string(setting, tox_strings.password_eval, &str) ) {
