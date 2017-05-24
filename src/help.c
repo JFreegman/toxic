@@ -26,8 +26,13 @@
 #include "toxic.h"
 #include "help.h"
 #include "misc_tools.h"
+#include "api.h"
 
+#ifdef PYTHON
+#define HELP_MENU_HEIGHT 10
+#else
 #define HELP_MENU_HEIGHT 9
+#endif /* PYTHON */
 #define HELP_MENU_WIDTH 26
 
 void help_init_menu(ToxWindow *self)
@@ -94,6 +99,13 @@ static void help_draw_menu(ToxWindow *self)
     wprintw(win, "r");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "oup commands\n");
+
+#ifdef PYTHON
+    wattron(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, " p");
+    wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, "lugin commands\n");
+#endif /* PYTHON */
 
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, " f");
@@ -184,6 +196,14 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /lsvdev <type>             : List video devices where type: in|out\n");
     wprintw(win, "  /svdev <type> <id>         : Set active video device\n");
 #endif /* VIDEO */
+
+#ifdef PYTHON
+    wattron(win, A_BOLD);
+    wprintw(win, "\n Scripting:\n");
+    wattroff(win, A_BOLD);
+
+    wprintw(win, "  /run <path>                : Load and run the script at path\n");
+#endif /* PYTHON */
 
     help_draw_bottom_menu(win);
 
@@ -278,6 +298,26 @@ static void help_draw_group(ToxWindow *self)
     wrefresh(win);
 }
 
+#ifdef PYTHON
+static void help_draw_plugin(ToxWindow *self)
+{
+    WINDOW *win = self->help->win;
+
+    wmove(win, 1, 1);
+
+    wattron(win, A_BOLD | COLOR_PAIR(RED));
+    wprintw(win, "Plugin commands:\n");
+    wattroff(win, A_BOLD | COLOR_PAIR(RED));
+
+    draw_handler_help(win);
+
+    help_draw_bottom_menu(win);
+
+    box(win, ACS_VLINE, ACS_HLINE);
+    wrefresh(win);
+}
+#endif
+
 static void help_draw_contacts(ToxWindow *self)
 {
     WINDOW *win = self->help->win;
@@ -302,6 +342,7 @@ static void help_draw_contacts(ToxWindow *self)
 
 void help_onKey(ToxWindow *self, wint_t key)
 {
+    int height;
     switch (key) {
         case 'x':
         case T_KEY_ESC:
@@ -320,13 +361,16 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'g':
+            height = 22;
 #ifdef VIDEO
-            help_init_window(self, 30, 80);
+            height += 8;
 #elif AUDIO
-            help_init_window(self, 26, 80);
-#else
-            help_init_window(self, 22, 80);
+            height += 4;
 #endif
+#ifdef PYTHON
+            height += 2;
+#endif
+            help_init_window(self, height, 80);
             self->help->type = HELP_GLOBAL;
             break;
 
@@ -334,6 +378,13 @@ void help_onKey(ToxWindow *self, wint_t key)
             help_init_window(self, 6, 80);
             self->help->type = HELP_GROUP;
             break;
+
+#ifdef PYTHON
+        case 'p':
+            help_init_window(self, 4 + num_registered_handlers(), help_max_width());
+            self->help->type = HELP_PLUGIN;
+            break;
+#endif
 
         case 'f':
             help_init_window(self, 10, 80);
@@ -380,5 +431,11 @@ void help_onDraw(ToxWindow *self)
         case HELP_GROUP:
             help_draw_group(self);
             break;
+
+#ifdef PYTHON
+        case HELP_PLUGIN:
+            help_draw_plugin(self);
+            break;
+#endif /* PYTHON */
     }
 }

@@ -65,8 +65,12 @@ static void init_infobox(ToxWindow *self);
 static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
-#ifdef AUDIO
+#if defined(AUDIO) && defined(PYTHON)
+#define AC_NUM_CHAT_COMMANDS 31
+#elif AUDIO
 #define AC_NUM_CHAT_COMMANDS 30
+#elif PYTHON
+#define AC_NUM_CHAT_COMMANDS 23
 #else
 #define AC_NUM_CHAT_COMMANDS 22
 #endif /* AUDIO */
@@ -108,6 +112,12 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/video"      },
 
 #endif /* AUDIO */
+
+#ifdef PYTHON
+
+    { "/run"        },
+
+#endif /* PYTHON */
 };
 
 static void set_self_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
@@ -931,7 +941,15 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             diff = dir_match(self, m, ctx->line, L"/sendfile");
         } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/avatar");
-        } else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
+        }
+
+#ifdef PYTHON
+        else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
+            diff = dir_match(self, m, ctx->line, L"/run");
+        }
+#endif
+
+        else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
             const char status_cmd_list[3][8] = {
                 {"online"},
                 {"away"},

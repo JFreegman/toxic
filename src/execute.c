@@ -33,6 +33,7 @@
 #include "line_info.h"
 #include "misc_tools.h"
 #include "notify.h"
+#include "api.h"
 
 struct cmd_func {
     const char *name;
@@ -67,6 +68,9 @@ static struct cmd_func global_commands[] = {
     { "/lsvdev",    cmd_list_video_devices },
     { "/svdev" ,    cmd_change_video_device },
 #endif /* VIDEO */
+#ifdef PYTHON
+    { "/run",       cmd_run           },
+#endif /* PYTHON */
     { NULL,         NULL              },
 };
 
@@ -192,6 +196,11 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
 
     if (do_command(w, self, m, num_args, global_commands, args) == 0)
         return;
+
+#ifdef PYTHON
+    if (do_plugin_command(num_args, args) == 0)
+        return;
+#endif
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");
 }

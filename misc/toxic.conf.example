@@ -87,6 +87,9 @@ tox = {
   // Path for your avatar (file must be a .png and cannot exceed 64 KiB)
   // avatar_path="/home/USERNAME/Pictures/youravatar.png";
 
+  // Path for scripts that should be run on startup
+  // autorun_path="/home/USERNAME/toxic_scripts/";
+
   // Path for chatlogs
   // chatlogs_path="/home/USERNAME/toxic_chatlogs/";
 };
@@ -118,4 +121,3 @@ keys = {
   toggle_peerlist="Ctrl+b";
   toggle_paste_mode="Ctrl+T";
 };
-

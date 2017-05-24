@@ -1,7 +1,7 @@
-/*  help.h
+/*  api.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2017 Jakob Kreuze <jakob@memeware.net>
  *
  *  This file is part of Toxic.
  *
@@ -20,26 +20,23 @@
  *
  */
 
-#ifndef HELP_H
-#define HELP_H
+#ifndef API_H
+#define API_H
 
-#include "toxic.h"
+#include "friendlist.h"
 #include "windows.h"
 
-typedef enum {
-    HELP_MENU,
-    HELP_GLOBAL,
-    HELP_CHAT,
-    HELP_GROUP,
-    HELP_KEYS,
-    HELP_CONTACTS,
-#ifdef PYTHON
-    HELP_PLUGIN,
-#endif
-} HELP_TYPES;
+void api_display(const char *const msg);
+FriendsList api_get_friendslist(void);
+char *api_get_nick(void);
+TOX_USER_STATUS api_get_status(void);
+char *api_get_status_message(void);
+void api_send(const char *msg);
+void api_execute(const char *input, int mode);
+int do_plugin_command(int num_args, char (*args)[MAX_STR_SIZE]);
+int num_registered_handlers(void);
+int help_max_width(void);
+void draw_handler_help(WINDOW *win);
+void invoke_autoruns(WINDOW *w, ToxWindow *self);
 
-void help_onDraw(ToxWindow *self);
-void help_init_menu(ToxWindow *self);
-void help_onKey(ToxWindow *self, wint_t key);
-
-#endif /* #define HELP_H */
+#endif /* #define API_H */

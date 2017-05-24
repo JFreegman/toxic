@@ -69,8 +69,12 @@ static int max_groupchat_index = 0;
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
-#ifdef AUDIO
+#if defined(AUDIO) && defined(PYTHON)
+#define AC_NUM_GROUP_COMMANDS 25
+#elif AUDIO
 #define AC_NUM_GROUP_COMMANDS 24
+#elif PYTHON
+#define AC_NUM_GROUP_COMMANDS 21
 #else
 #define AC_NUM_GROUP_COMMANDS 20
 #endif /* AUDIO */
@@ -97,6 +101,12 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/requests"   },
     { "/status"     },
     { "/title"      },
+
+#ifdef PYTHON
+
+    { "/run"        },
+
+#endif /* PYTHON */
 };
 
 int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type)
@@ -543,7 +553,15 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                                      TOX_MAX_NAME_LENGTH);
             } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
-            } else {
+            }
+
+#ifdef PYTHON
+            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
+                diff = dir_match(self, m, ctx->line, L"/run");
+            }
+#endif
+
+            else {
                 diff = complete_line(self, group_cmd_list, AC_NUM_GROUP_COMMANDS, MAX_CMDNAME_SIZE);
             }
 

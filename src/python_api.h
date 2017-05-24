@@ -1,7 +1,7 @@
-/*  help.h
+/*  python_api.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2017 Jakob Kreuze <jakob@memeware.net>
  *
  *  This file is part of Toxic.
  *
@@ -20,26 +20,18 @@
  *
  */
 
-#ifndef HELP_H
-#define HELP_H
+#ifndef PYTHON_API_H
+#define PYTHON_API_H
 
-#include "toxic.h"
-#include "windows.h"
+#include <Python.h>
 
-typedef enum {
-    HELP_MENU,
-    HELP_GLOBAL,
-    HELP_CHAT,
-    HELP_GROUP,
-    HELP_KEYS,
-    HELP_CONTACTS,
-#ifdef PYTHON
-    HELP_PLUGIN,
-#endif
-} HELP_TYPES;
+PyMODINIT_FUNC PyInit_toxic_api(void);
+void terminate_python(void);
+void init_python(Tox *m);
+void run_python(FILE *fp, char *path);
+int do_python_command(int num_args, char (*args)[MAX_STR_SIZE]);
+int python_num_registered_handlers(void);
+int python_help_max_width(void);
+void python_draw_handler_help(WINDOW *win);
 
-void help_onDraw(ToxWindow *self);
-void help_init_menu(ToxWindow *self);
-void help_onKey(ToxWindow *self, wint_t key);
-
-#endif /* #define HELP_H */
+#endif /* #define PYTHON_API_H */

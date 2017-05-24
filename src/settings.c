@@ -179,12 +179,14 @@ static const struct tox_strings {
     const char *download_path;
     const char *chatlogs_path;
     const char *avatar_path;
+    const char *autorun_path;
     const char *password_eval;
 } tox_strings = {
     "tox",
     "download_path",
     "chatlogs_path",
     "avatar_path",
+    "autorun_path",
     "password_eval",
 };
 
@@ -193,6 +195,7 @@ static void tox_defaults(struct user_settings *settings)
     strcpy(settings->download_path, "");
     strcpy(settings->chatlogs_path, "");
     strcpy(settings->avatar_path, "");
+    strcpy(settings->autorun_path, "");
     strcpy(settings->password_eval, "");
 }
 
@@ -417,6 +420,20 @@ int settings_load(struct user_settings *s, const char *patharg)
             if (len >= sizeof(s->avatar_path))
                 s->avatar_path[0] = '\0';
         }
+
+#ifdef PYTHON
+
+        if ( config_setting_lookup_string(setting, tox_strings.autorun_path, &str) ) {
+            snprintf(s->autorun_path, sizeof(s->autorun_path), "%s", str);
+            int len = strlen(str);
+
+            if (len >= sizeof(s->autorun_path) - 2)
+                s->autorun_path[0] = '\0';
+            else if (s->autorun_path[len - 1] != '/')
+                strcat(&s->autorun_path[len - 1], "/");
+        }
+
+#endif
 
         if ( config_setting_lookup_string(setting, tox_strings.password_eval, &str) ) {
             snprintf(s->password_eval, sizeof(s->password_eval), "%s", str);

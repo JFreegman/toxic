@@ -49,10 +49,16 @@ extern struct Winthread Winthread;
 
 extern FriendsList Friends;
 FriendRequests FrndRequests;
-#ifdef VIDEO
+#if defined(PYTHON) && defined(VIDEO)
+#define AC_NUM_GLOB_COMMANDS 23
+#elif defined(PYTHON) && defined(AUDIO)
+#define AC_NUM_GLOB_COMMANDS 21
+#elif VIDEO
 #define AC_NUM_GLOB_COMMANDS 22
 #elif AUDIO
 #define AC_NUM_GLOB_COMMANDS 20
+#elif PYTHON
+#define AC_NUM_GLOB_COMMANDS 19
 #else
 #define AC_NUM_GLOB_COMMANDS 18
 #endif
@@ -91,6 +97,12 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/svdev"       },
 
 #endif /* VIDEO */
+
+#ifdef PYTHON
+
+    { "/run"         },
+
+#endif /* PYTHON */
 
 };
 
@@ -214,6 +226,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0)
                 diff = dir_match(self, m, ctx->line, L"/avatar");
+
+#ifdef PYTHON
+            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0)
+                diff = dir_match(self, m, ctx->line, L"/run");
+#endif
+
             else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
                 const char status_cmd_list[3][8] = {
                     {"online"},

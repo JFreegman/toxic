@@ -63,6 +63,7 @@ struct user_settings {
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
     char avatar_path[PATH_MAX];
+    char autorun_path[PATH_MAX];
     char password_eval[PASSWORD_EVAL_MAX];
 
     int key_next_tab;
