@@ -24,6 +24,7 @@ def send_fortune(args):
 
     if count < 0 or count > 20:
         toxic_api.display("Argument is too large!")
+        return
 
     name = toxic_api.get_nick()
 
