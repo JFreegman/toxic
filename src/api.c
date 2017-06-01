@@ -103,9 +103,8 @@ void api_send(const char *msg)
 
     strncpy((char *) self_window->chatwin->line, msg, sizeof(self_window->chatwin->line));
     add_line_to_hist(self_window->chatwin);
-    line_info_add(self_window, timefrmt, name, NULL, OUT_MSG, 0, 0, "%s", msg);
-    cqueue_add(self_window->chatwin->cqueue, msg, strlen(msg), OUT_MSG,
-               self_window->chatwin->hst->line_end->id + 1);
+    int id = line_info_add(self_window, timefrmt, name, NULL, OUT_MSG, 0, 0, "%s", msg);
+    cqueue_add(self_window->chatwin->cqueue, msg, strlen(msg), OUT_MSG, id);
     free(name);
 }
 

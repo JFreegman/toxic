@@ -895,8 +895,8 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
-    line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION, 0, 0, "%s", action);
-    cqueue_add(ctx->cqueue, action, strlen(action), OUT_ACTION, ctx->hst->line_end->id + 1);
+    int id = line_info_add(self, timefrmt, selfname, NULL, OUT_ACTION, 0, 0, "%s", action);
+    cqueue_add(ctx->cqueue, action, strlen(action), OUT_ACTION, id);
 }
 
 static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
@@ -947,6 +947,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/run");
         }
+
 #endif
 
         else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
@@ -1001,8 +1002,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 char timefrmt[TIME_STR_SIZE];
                 get_time_str(timefrmt, sizeof(timefrmt));
 
-                line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
-                cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, ctx->hst->line_end->id + 1);
+                int id = line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
+                cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, id);
             }
         }
 

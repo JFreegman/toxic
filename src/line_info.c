@@ -129,17 +129,21 @@ static struct line_info *line_info_ret_queue(struct history *hst)
     return line;
 }
 
-/* creates new line_info line and puts it in the queue. */
-void line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
-                   uint8_t bold, uint8_t colour, const char *msg, ...)
+/* creates new line_info line and puts it in the queue.
+ *
+ * Returns the id of the new line.
+ * Returns -1 on failure.
+ */
+int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
+                  uint8_t bold, uint8_t colour, const char *msg, ...)
 {
     if (!self)
-        return;
+        return -1;
 
     struct history *hst = self->chatwin->hst;
 
     if (hst->queue_sz >= MAX_LINE_INFO_QUEUE)
-        return;
+        return -1;
 
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
@@ -222,6 +226,7 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
         len += strlen(new_line->name2);
     }
 
+    new_line->id = hst->line_end->id + 1 + hst->queue_sz;
     new_line->len = len;
     new_line->type = type;
     new_line->bold = bold;
@@ -230,6 +235,8 @@ void line_info_add(ToxWindow *self, const char *timestr, const char *name1, cons
     new_line->timestamp = get_unix_time();
 
     hst->queue[hst->queue_sz++] = new_line;
+
+    return new_line->id;
 }
 
 /* adds a single queue item to hst if possible. only called once per call to line_info_print() */
@@ -244,10 +251,10 @@ static void line_info_check_queue(ToxWindow *self)
     if (hst->start_id > user_settings->history_size)
         line_info_root_fwd(hst);
 
-    line->id = hst->line_end->id + 1;
     line->prev = hst->line_end;
     hst->line_end->next = line;
     hst->line_end = line;
+    hst->line_end->id = line->id;
 
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);

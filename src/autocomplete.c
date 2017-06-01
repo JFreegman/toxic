@@ -110,9 +110,9 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     bool dir_search =    !strncmp(ubuf, "/sendfile", strlen("/sendfile"))
                          || !strncmp(ubuf, "/avatar", strlen("/avatar"));
 
-    #ifdef PYTHON
+#ifdef PYTHON
     dir_search = dir_search || !strncmp(ubuf, "/run", strlen("/run"));
-    #endif
+#endif
 
     /* isolate substring from space behind pos to pos */
     char tmp[MAX_STR_SIZE];

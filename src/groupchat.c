@@ -265,7 +265,8 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum,
     write_to_log(msg, nick, ctx->log, false);
 }
 
-static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum, const char *title,
+static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
+        const char *title,
         size_t length)
 {
     ChatContext *ctx = self->chatwin;
@@ -388,7 +389,7 @@ void *group_add_wait(void *data)
 }
 
 static void groupchat_onGroupNamelistChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
-                                            TOX_CONFERENCE_STATE_CHANGE change)
+        TOX_CONFERENCE_STATE_CHANGE change)
 {
     if (self->num != groupnum)
         return;
@@ -559,6 +560,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/run");
             }
+
 #endif
 
             else {

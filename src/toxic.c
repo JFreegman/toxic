@@ -114,6 +114,7 @@ static time_t last_signal_time;
 static void catch_SIGINT(int sig)
 {
     time_t cur_time = get_unix_time();
+
     if (difftime(cur_time, last_signal_time) <= 1) {
         Winthread.sig_exit_toxic = 1;
     } else {
@@ -398,7 +399,7 @@ static void first_time_encrypt(const char *msg)
     do {
         system("clear");
         printf("%s ", msg);
-	fflush(stdout);
+        fflush(stdout);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
                 || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
@@ -419,7 +420,7 @@ static void first_time_encrypt(const char *msg)
         printf("Enter a new password (must be at least %d characters) ", MIN_PASSWORD_LEN);
 
         while (valid_password == false) {
-     	    fflush(stdout); // Flush all before user input
+            fflush(stdout); // Flush all before user input
             len = password_prompt(user_password.pass, sizeof(user_password.pass));
             user_password.len = len;
 
@@ -645,7 +646,8 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
             char plain[plain_len];
 
             while (true) {
-	        fflush(stdout); // Flush before prompts so the user sees the question/message
+                fflush(stdout); // Flush before prompts so the user sees the question/message
+
                 if (pweval) {
                     pwlen = password_eval(user_password.pass, sizeof(user_password.pass));
                 } else {
@@ -1021,6 +1023,7 @@ static void parse_args(int argc, char *argv[])
             case 'v':
                 print_version();
                 exit(EXIT_SUCCESS);
+
             case 'h':
             default:
                 print_usage();

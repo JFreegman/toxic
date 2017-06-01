@@ -343,6 +343,7 @@ static void help_draw_contacts(ToxWindow *self)
 void help_onKey(ToxWindow *self, wint_t key)
 {
     int height;
+
     switch (key) {
         case 'x':
         case T_KEY_ESC:
@@ -380,6 +381,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
 #ifdef PYTHON
+
         case 'p':
             help_init_window(self, 4 + num_registered_handlers(), help_max_width());
             self->help->type = HELP_PLUGIN;
@@ -433,6 +435,7 @@ void help_onDraw(ToxWindow *self)
             break;
 
 #ifdef PYTHON
+
         case HELP_PLUGIN:
             help_draw_plugin(self);
             break;

@@ -42,8 +42,12 @@ void cqueue_cleanup(struct chat_queue *q)
     free(q);
 }
 
-void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type, uint32_t line_id)
+void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type, int line_id)
 {
+    if (line_id < 0) {
+        return;
+    }
+
     struct cqueue_msg *new_m = malloc(sizeof(struct cqueue_msg));
 
     if (new_m == NULL)

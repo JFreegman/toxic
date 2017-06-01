@@ -198,8 +198,10 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
         return;
 
 #ifdef PYTHON
+
     if (do_plugin_command(num_args, args) == 0)
         return;
+
 #endif
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");

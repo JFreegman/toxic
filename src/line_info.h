@@ -74,9 +74,13 @@ struct history {
     int queue_sz;
 };
 
-/* creates new line_info line and puts it in the queue. */
-void line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
-                   uint8_t bold, uint8_t colour, const char *msg, ...);
+/* creates new line_info line and puts it in the queue.
+ *
+ * Returns the id of the new line.
+ * Returns -1 on failure.
+ */
+int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
+                  uint8_t bold, uint8_t colour, const char *msg, ...);
 
 /* Prints a section of history starting at line_start */
 void line_info_print(ToxWindow *self);
