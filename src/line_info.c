@@ -226,7 +226,7 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
         len += strlen(new_line->name2);
     }
 
-    new_line->id = hst->line_end->id + 1 + hst->queue_sz;
+    new_line->id = (hst->line_end->id + 1 + hst->queue_sz) % INT_MAX;
     new_line->len = len;
     new_line->type = type;
     new_line->bold = bold;
