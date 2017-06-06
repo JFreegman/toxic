@@ -26,7 +26,10 @@
 #include "toxic.h"
 #include "help.h"
 #include "misc_tools.h"
+
+#ifdef PYTHON
 #include "api.h"
+#endif /* PYTHON */
 
 #ifdef PYTHON
 #define HELP_MENU_HEIGHT 10

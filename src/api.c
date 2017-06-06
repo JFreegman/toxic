@@ -30,10 +30,13 @@
 #include "line_info.h"
 #include "message_queue.h"
 #include "misc_tools.h"
-#include "python_api.h"
 #include "settings.h"
 #include "toxic_strings.h"
 #include "windows.h"
+
+#ifdef PYTHON
+#include "python_api.h"
+#endif /* PYTHON */
 
 Tox              *user_tox;
 static WINDOW    *cur_window;

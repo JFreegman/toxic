@@ -20,9 +20,11 @@
  *
  */
 
+#ifdef PYTHON
 #include <Python.h>
-
 #include "api.h"
+#endif /* PYTHON */
+
 #include "execute.h"
 
 extern Tox       *user_tox;

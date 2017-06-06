@@ -23,7 +23,9 @@
 #ifndef PYTHON_API_H
 #define PYTHON_API_H
 
+#ifdef PYTHON
 #include <Python.h>
+#endif /* PYTHON */
 
 PyMODINIT_FUNC PyInit_toxic_api(void);
 void terminate_python(void);
