@@ -395,7 +395,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         help_onDraw(self);
 }
 
-static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum , TOX_CONNECTION connection_status)
+static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum, TOX_CONNECTION connection_status)
 {
     ChatContext *ctx = self->chatwin;
 

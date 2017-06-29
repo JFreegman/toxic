@@ -66,9 +66,9 @@ static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
 #if defined(AUDIO) && defined(PYTHON)
-#define AC_NUM_CHAT_COMMANDS 31
+#define AC_NUM_CHAT_COMMANDS 32
 #elif AUDIO
-#define AC_NUM_CHAT_COMMANDS 30
+#define AC_NUM_CHAT_COMMANDS 31
 #elif PYTHON
 #define AC_NUM_CHAT_COMMANDS 23
 #else
@@ -110,6 +110,7 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/mute"       },
     { "/sense"      },
     { "/video"      },
+    { "/bitrate"    },
 
 #endif /* AUDIO */
 

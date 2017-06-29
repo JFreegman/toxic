@@ -66,7 +66,7 @@ static struct cmd_func global_commands[] = {
 #endif /* AUDIO */
 #ifdef VIDEO
     { "/lsvdev",    cmd_list_video_devices },
-    { "/svdev" ,    cmd_change_video_device },
+    { "/svdev",    cmd_change_video_device },
 #endif /* VIDEO */
 #ifdef PYTHON
     { "/run",       cmd_run           },
@@ -87,6 +87,7 @@ static struct cmd_func chat_commands[] = {
     { "/hangup",    cmd_hangup      },
     { "/mute",      cmd_mute        },
     { "/sense",     cmd_sense       },
+    { "/bitrate",   cmd_bitrate     },
 #endif /* AUDIO */
 #ifdef VIDEO
     { "/video",     cmd_video       },

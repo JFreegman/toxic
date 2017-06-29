@@ -342,6 +342,7 @@ void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
                               uint32_t video_bit_rate, void *user_data)
 {
     CallControl.audio_bit_rate = audio_bit_rate;
+    toxav_bit_rate_set(av, friend_number, audio_bit_rate, video_bit_rate, user_data);
 }
 
 void callback_recv_invite(Tox *m, uint32_t friend_number)
@@ -387,7 +388,7 @@ void callback_recv_starting(uint32_t friend_number)
             windows[i].onStarting(&windows[i], CallControl.av, friend_number, CallControl.call_state);
 
             if ( 0 != start_transmission(&windows[i], &CallControl.calls[friend_number]) ) /* YEAH! */
-                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0 , "Error starting transmission!");
+                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
 
             return;
         }
@@ -834,6 +835,55 @@ on_error:
     print_err (self, error_str);
 }
 
+void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    char *error_str;
+
+    if ( argc != 1 ) {
+        error_str = "Must have value!";
+        goto on_error;
+    }
+
+    if ( self->is_call == false ) {
+        error_str = "Must be in a call";
+        goto on_error;
+    }
+
+    const uint32_t bitrate = strtol(argv[1], NULL, 10);
+
+    TOXAV_ERR_BIT_RATE_SET error;
+    audio_bit_rate_status_cb(CallControl.av, self->num, bitrate, -1, &error);
+
+    if (error != TOXAV_ERR_BIT_RATE_SET_OK) {
+        switch (error) {
+            case TOXAV_ERR_BIT_RATE_SET_SYNC:
+                error_str = "Syncronization error occured";
+                break;
+
+            case TOXAV_ERR_BIT_RATE_SET_INVALID_AUDIO_BIT_RATE:
+                error_str = "Invalid audio bit rate value (valid is 6-510)";
+                break;
+
+            case TOXAV_ERR_BIT_RATE_SET_FRIEND_NOT_FOUND:
+                error_str = "Friend not found";
+                break;
+
+            case TOXAV_ERR_BIT_RATE_SET_FRIEND_NOT_IN_CALL:
+                error_str = "Friend is not in the call";
+                break;
+
+            default:
+                error_str = "Unknown error";
+        }
+
+        goto on_error;
+    }
+
+    return;
+
+on_error:
+    print_err (self, error_str);
+}
 
 void stop_current_call(ToxWindow *self)
 {
