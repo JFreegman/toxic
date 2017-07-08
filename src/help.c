@@ -242,6 +242,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /sdev <type> <id>          : Change active device\n");
     wprintw(win, "  /mute <type>               : Mute active device if in call\n");
     wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n");
+    wprintw(win, "  /bitrate <n>               : Set the audio encoding bitrate\n");
 #endif /* AUDIO */
 
 #ifdef VIDEO
@@ -355,9 +356,9 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case 'c':
 #ifdef VIDEO
-            help_init_window(self, 22, 80);
+            help_init_window(self, 23, 80);
 #elif AUDIO
-            help_init_window(self, 19, 80);
+            help_init_window(self, 20, 80);
 #else
             help_init_window(self, 10, 80);
 #endif

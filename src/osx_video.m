@@ -208,10 +208,10 @@ void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t 
     // TODO possibly get a better pixel format
     if (_shouldMangleDimensions) {
         [_linkerVideo setVideoSettings: @ {
-(id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
-(id)kCVPixelBufferWidthKey: @640,
-(id)kCVPixelBufferHeightKey: @480
-        }];
+             (id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
+             (id)kCVPixelBufferWidthKey: @640,
+             (id)kCVPixelBufferHeightKey: @480
+                     }];
     } else {
         [_linkerVideo setVideoSettings: @ {(id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)}];
     }

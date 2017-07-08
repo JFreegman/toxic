@@ -358,7 +358,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 #if defined(__linux__) || defined(__FreeBSD__)
         /* Open selected device */
         char device_address[] = "/dev/videoXX";
-        snprintf(device_address + 10 , sizeof(device_address) - 10, "%i", selection);
+        snprintf(device_address + 10, sizeof(device_address) - 10, "%i", selection);
 
         device->fd = open(device_address, O_RDWR);
 
