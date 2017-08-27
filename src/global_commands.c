@@ -655,6 +655,9 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         msg[len] = '\0';
 
         prompt_update_statusmessage(prompt, m, msg);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s: \"%s\".", status_str, msg);
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s.", status_str);
     }
 
 finish:
