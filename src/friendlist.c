@@ -153,10 +153,14 @@ static int save_blocklist(char *path)
         }
 
         if (Blocked.list[i].active) {
+            if (Blocked.list[i].namelength > TOXIC_MAX_NAME_LENGTH) {
+                continue;
+            }
+
             BlockedFriend tmp;
             memset(&tmp, 0, sizeof(BlockedFriend));
             tmp.namelength = htons(Blocked.list[i].namelength);
-            memcpy(tmp.name, Blocked.list[i].name, Blocked.list[i].namelength + 1);
+            memcpy(tmp.name, Blocked.list[i].name, Blocked.list[i].namelength + 1);  // Include null byte
             memcpy(tmp.pub_key, Blocked.list[i].pub_key, TOX_PUBLIC_KEY_SIZE);
 
             uint8_t lastonline[sizeof(uint64_t)];
@@ -250,10 +254,15 @@ int load_blocklist(char *path)
         memset(&Blocked.list[i], 0, sizeof(BlockedFriend));
 
         memcpy(&tmp, data + i * sizeof(BlockedFriend), sizeof(BlockedFriend));
+        Blocked.list[i].namelength = ntohs(tmp.namelength);
+
+        if (Blocked.list[i].namelength > TOXIC_MAX_NAME_LENGTH) {
+            continue;
+        }
+
         Blocked.list[i].active = true;
         Blocked.list[i].num = i;
-        Blocked.list[i].namelength = MIN(TOXIC_MAX_NAME_LENGTH, ntohs(tmp.namelength));
-        memcpy(Blocked.list[i].name, tmp.name, Blocked.list[i].namelength + 1);
+        memcpy(Blocked.list[i].name, tmp.name, Blocked.list[i].namelength + 1);   // copy null byte
         memcpy(Blocked.list[i].pub_key, tmp.pub_key, TOX_PUBLIC_KEY_SIZE);
 
         uint8_t lastonline[sizeof(uint64_t)];

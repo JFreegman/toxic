@@ -44,7 +44,7 @@ struct GroupChatInvite {
 
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    int namelength;
+    uint16_t namelength;
     char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
     size_t statusmsg_len;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
@@ -65,7 +65,7 @@ typedef struct {
 
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    int namelength;
+    uint16_t namelength;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
     uint32_t num;
     bool active;
