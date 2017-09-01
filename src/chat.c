@@ -561,7 +561,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     bytes_convert_str(sizestr, sizeof(sizestr), file_size);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)", filename, sizestr);
 
-    char file_path[MAX_STR_SIZE];
+    char file_path[PATH_MAX + name_length + 1];
     size_t path_len = name_length;
 
     /* use specified download path in config if possible */

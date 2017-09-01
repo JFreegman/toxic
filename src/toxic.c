@@ -578,7 +578,7 @@ static void init_tox_options(struct Tox_Options *tox_opts)
         tox_opts->proxy_host = arg_opts.proxy_address;
         const char *ps = tox_opts->proxy_type == TOX_PROXY_TYPE_SOCKS5 ? "SOCKS5" : "HTTP";
 
-        char tmp[48];
+        char tmp[sizeof(arg_opts.proxy_address) + MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), "Using %s proxy %s : %d", ps, arg_opts.proxy_address, arg_opts.proxy_port);
         queue_init_message("%s", tmp);
     }
@@ -1256,7 +1256,7 @@ int main(int argc, char **argv)
     cleanup_init_messages();
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
-    char avatarstr[MAX_STR_SIZE];
+    char avatarstr[PATH_MAX + 11];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
