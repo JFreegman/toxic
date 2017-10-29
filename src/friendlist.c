@@ -666,7 +666,7 @@ static void draw_del_popup(void)
     wattroff(PendingDelete.popup, A_BOLD);
     wprintw(PendingDelete.popup, "? y/n");
 
-    wrefresh(PendingDelete.popup);
+    wnoutrefresh(PendingDelete.popup);
 }
 
 /* deletes contact from blocked list */
@@ -895,7 +895,7 @@ static void blocklist_onDraw(ToxWindow *self, Tox *m, int y2, int x2)
             wprintw(self->window, "%02X", Blocked.list[selected_num].pub_key[i] & 0xff);
     }
 
-    wrefresh(self->window);
+    wnoutrefresh(self->window);
     draw_del_popup();
 
     if (self->help->active)
@@ -1112,7 +1112,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             wprintw(self->window, "%02X", Friends.list[selected_num].pub_key[i] & 0xff);
     }
 
-    wrefresh(self->window);
+    wnoutrefresh(self->window);
     draw_del_popup();
 
     if (self->help->active)
