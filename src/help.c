@@ -127,7 +127,7 @@ static void help_draw_menu(ToxWindow *self)
     wprintw(win, "it menu\n");
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 static void help_draw_bottom_menu(WINDOW *win)
@@ -211,7 +211,7 @@ static void help_draw_global(ToxWindow *self)
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 static void help_draw_chat(ToxWindow *self)
@@ -255,7 +255,7 @@ static void help_draw_chat(ToxWindow *self)
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 static void help_draw_keys(ToxWindow *self)
@@ -281,7 +281,7 @@ static void help_draw_keys(ToxWindow *self)
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 static void help_draw_group(ToxWindow *self)
@@ -299,7 +299,7 @@ static void help_draw_group(ToxWindow *self)
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 #ifdef PYTHON
@@ -318,7 +318,7 @@ static void help_draw_plugin(ToxWindow *self)
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 #endif
 
@@ -341,7 +341,7 @@ static void help_draw_contacts(ToxWindow *self)
     help_draw_bottom_menu(win);
 
     box(win, ACS_VLINE, ACS_HLINE);
-    wrefresh(win);
+    wnoutrefresh(win);
 }
 
 void help_onKey(ToxWindow *self, wint_t key)
@@ -411,8 +411,6 @@ void help_onKey(ToxWindow *self, wint_t key)
 
 void help_onDraw(ToxWindow *self)
 {
-    curs_set(0);
-
     switch (self->help->type) {
         case HELP_MENU:
             help_draw_menu(self);
