@@ -61,6 +61,7 @@ DeviceError init_devices(ToxAV *av);
 DeviceError init_devices();
 #endif /* AUDIO */
 
+void get_devices_names();
 DeviceError terminate_devices();
 
 /* Callback handles ready data from INPUT device */
