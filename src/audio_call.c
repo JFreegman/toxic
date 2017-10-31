@@ -633,6 +633,9 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         return;
     }
 
+    // Refresh device list.
+    get_devices_names();
+
     print_devices(self, type);
 
     return;

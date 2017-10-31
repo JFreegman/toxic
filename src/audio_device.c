@@ -100,34 +100,7 @@ DeviceError init_devices(ToxAV *av_)
 DeviceError init_devices()
 #endif /* AUDIO */
 {
-    const char *stringed_device_list;
-
-    size[input] = 0;
-
-    if ( (stringed_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER)) ) {
-        ddevice_names[input] = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
-
-        for ( ; *stringed_device_list && size[input] < MAX_DEVICES; ++size[input] ) {
-            devices_names[input][size[input]] = stringed_device_list;
-            stringed_device_list += strlen( stringed_device_list ) + 1;
-        }
-    }
-
-    size[output] = 0;
-
-    if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") != AL_FALSE)
-        stringed_device_list = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
-    else
-        stringed_device_list = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
-
-    if (stringed_device_list) {
-        ddevice_names[output] = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-
-        for ( ; *stringed_device_list && size[output] < MAX_DEVICES; ++size[output] ) {
-            devices_names[output][size[output]] = stringed_device_list;
-            stringed_device_list += strlen( stringed_device_list ) + 1;
-        }
-    }
+    get_devices_names();
 
     // Start poll thread
     if (pthread_mutex_init(&mutex, NULL) != 0)
@@ -158,6 +131,38 @@ DeviceError terminate_devices()
         return (DeviceError) de_InternalError;
 
     return (DeviceError) de_None;
+}
+
+void get_devices_names() {
+
+    const char *stringed_device_list;
+
+    size[input] = 0;
+
+    if ( (stringed_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER)) ) {
+        ddevice_names[input] = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
+
+        for ( ; *stringed_device_list && size[input] < MAX_DEVICES; ++size[input] ) {
+            devices_names[input][size[input]] = stringed_device_list;
+            stringed_device_list += strlen( stringed_device_list ) + 1;
+        }
+    }
+
+    size[output] = 0;
+
+    if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") != AL_FALSE)
+        stringed_device_list = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+    else
+        stringed_device_list = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+
+    if (stringed_device_list) {
+        ddevice_names[output] = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+
+        for ( ; *stringed_device_list && size[output] < MAX_DEVICES; ++size[output] ) {
+            devices_names[output][size[output]] = stringed_device_list;
+            stringed_device_list += strlen( stringed_device_list ) + 1;
+        }
+    }
 }
 
 DeviceError device_mute(DeviceType type, uint32_t device_idx)
