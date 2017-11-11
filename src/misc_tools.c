@@ -29,9 +29,8 @@
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <netinet/in.h>
 #include <sys/socket.h>
-#else
-#include <arpa/inet.h>
 #endif
+#include <arpa/inet.h>
 #include <sys/stat.h>
 
 #include "toxic.h"
