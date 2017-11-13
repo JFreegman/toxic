@@ -35,7 +35,7 @@ install: $(BUILD_DIR)/toxic
 		mv temp_file $$file ;\
 		sed -e 's:__DATADIR__:'$(abspath $(DATADIR))':g' $$file > temp_file && \
 		mv temp_file $$file ;\
-		gzip -f -9 $$file ;\
+		gzip -f -n -9 $$file ;\
 	done
 
 .PHONY: install
