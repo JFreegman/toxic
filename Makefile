@@ -30,6 +30,9 @@ endif
 ifeq ($(UNAME_S), OpenBSD)
     -include $(CFG_DIR)/systems/FreeBSD.mk
 endif
+ifeq ($(UNAME_S), NetBSD)
+    -include $(CFG_DIR)/systems/FreeBSD.mk
+endif
 ifeq ($(UNAME_S), Darwin)
     -include $(CFG_DIR)/systems/Darwin.mk
 endif
