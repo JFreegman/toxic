@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <locale.h>
 #include <string.h>
