@@ -26,10 +26,8 @@
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
-#if SYSTEM == BSD
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif /* BSD! */
 #include <arpa/inet.h>
 #include <sys/stat.h>
 
