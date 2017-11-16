@@ -26,10 +26,10 @@
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
-#if SYSTEM == BSD
+#if !defined(__linux__) && !defined(__OSX__)
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif /* BSD! */
+#endif /* POSIX */
 #include <arpa/inet.h>
 #include <sys/stat.h>
 
