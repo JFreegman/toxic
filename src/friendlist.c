@@ -466,6 +466,10 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
         if (sort)
             sort_friendlist_index();
 
+#ifdef AUDIO
+        init_friend_AV(i);
+#endif
+
         return;
     }
 }
@@ -604,6 +608,10 @@ static void delete_friend(Tox *m, uint32_t f_num)
 
     Friends.max_idx = i;
     realloc_friends(i);
+
+#ifdef AUDIO
+    del_friend_AV(i);
+#endif
 
     /* make sure num_selected stays within Friends.num_friends range */
     if (Friends.num_friends && Friends.num_selected == Friends.num_friends)
