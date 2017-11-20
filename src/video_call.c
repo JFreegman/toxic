@@ -83,7 +83,7 @@ void terminate_video()
 {
     int i;
 
-    for (i = 0; i < MAX_CALLS; ++i) {
+    for (i = 0; i < CallControl.max_calls; ++i) {
         Call *this_call = &CallControl.calls[i];
 
         stop_video_transmission(this_call, i);

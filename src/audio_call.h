@@ -27,8 +27,6 @@
 
 #include "audio_device.h"
 
-#define MAX_CALLS 10
-
 typedef enum _AudioError {
     ae_None = 0,
     ae_StartingCaptureDevice = 1 << 0,
@@ -65,7 +63,9 @@ struct CallControl {
     ToxAV *av;
     ToxWindow *prompt;
 
-    Call calls[MAX_CALLS];
+    Call *calls;
+    uint32_t max_calls;
+
     uint32_t call_state;
     bool pending_call;
     bool audio_enabled;
@@ -89,5 +89,7 @@ void terminate_audio();
 int start_transmission(ToxWindow *self, Call *call);
 int stop_transmission(Call *call, uint32_t friend_number);
 void stop_current_call(ToxWindow *self);
+void init_friend_AV(uint32_t index);
+void del_friend_AV(uint32_t index);
 
 #endif /* AUDIO_CALL_H */

@@ -133,8 +133,6 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallControl.video_frame_duration = 0;
 #endif /* VIDEO */
 
-    memset(CallControl.calls, 0, sizeof(CallControl.calls));
-
     if ( !CallControl.av ) {
         CallControl.audio_errors |= ae_StartingCoreAudio;
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init ToxAV");
@@ -160,7 +158,7 @@ void terminate_audio()
 {
     int i;
 
-    for (i = 0; i < MAX_CALLS; ++i)
+    for (i = 0; i < CallControl.max_calls; ++i)
         stop_transmission(&CallControl.calls[i], i);
 
     if ( CallControl.av )
@@ -899,4 +897,48 @@ void stop_current_call(ToxWindow *self)
     }
 
     CallControl.pending_call = false;
+}
+
+/**
+ * Reallocates the Calls list according to n.
+ */
+static void realloc_calls(uint32_t n)
+{
+    if (n <= 0) {
+        free(CallControl.calls);
+        CallControl.calls = NULL;
+        return;
+    }
+
+    Call *temp = realloc(CallControl.calls, n * sizeof(Call));
+
+    if (temp == NULL) {
+        exit_toxic_err("failed in realloc_calls", FATALERR_MEMORY);
+    }
+
+    CallControl.calls = temp;
+}
+
+/**
+ * Inits the call structure for a given friend. Called when a friend is added to the friends list.
+ * Index must be equivalent to the friend's friendlist index.
+ */
+void init_friend_AV(uint32_t index)
+{
+    realloc_calls(CallControl.max_calls + 1);
+    memset(&CallControl.calls[CallControl.max_calls], 0, sizeof(Call));
+
+    if (index == CallControl.max_calls) {
+        ++CallControl.max_calls;
+    }
+}
+
+/**
+ * Deletes the call structure for a given friend. Called when a friend is deleted from the friends list.
+ * Index must be equivalent to the friend's friendlist index.
+ */
+void del_friend_AV(uint32_t index)
+{
+    realloc_calls(index);
+    CallControl.max_calls = index;
 }
