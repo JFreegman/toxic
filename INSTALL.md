@@ -11,7 +11,7 @@
 | Name                                                 | Needed by                  | Debian package      | OpenBSD package | FreeBSD package |
 |------------------------------------------------------|----------------------------|---------------------|-----------------|-----------------|
 | [Tox Core](https://github.com/toktok/c-toxcore)      | BASE                       | *None*              | *None*          | tox             |
-| [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    | *Build-in base* | ncurses         |
+| [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    | *Built-in base* | ncurses         |
 | [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       | libconfig       | libconfig       |
 | [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                | gmake           | gmake           |
 | [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev| curl            | curl            |
