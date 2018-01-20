@@ -88,7 +88,7 @@ struct user_settings {
 #endif
 };
 
-enum {
+enum settings_values {
     AUTOLOG_OFF = 0,
     AUTOLOG_ON = 1,
 
@@ -114,7 +114,7 @@ enum {
 
     MPLEX_OFF = 0,
     MPLEX_ON = 1,
-} settings_values;
+};
 
 #define LINE_JOIN    "-->"
 #define LINE_QUIT    "<--"

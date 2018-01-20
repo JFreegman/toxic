@@ -67,7 +67,7 @@ static PyObject *python_api_get_nick(PyObject *self, PyObject *args)
 
 static PyObject *python_api_get_status(PyObject *self, PyObject *args)
 {
-    PyObject        *ret;
+    PyObject        *ret = NULL;
 
     if (!PyArg_ParseTuple(args, ""))
         return NULL;

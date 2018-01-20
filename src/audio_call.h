@@ -79,9 +79,9 @@ struct CallControl {
     uint32_t video_bit_rate;
     int32_t video_frame_duration;
 
-} CallControl;
+};
 
-struct CallControl CallControl;
+extern struct CallControl CallControl;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAV *init_audio(ToxWindow *self, Tox *tox);

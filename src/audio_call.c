@@ -56,6 +56,7 @@
 #endif
 
 extern FriendsList Friends;
+struct CallControl CallControl;
 
 #define cbend pthread_exit(NULL)
 
