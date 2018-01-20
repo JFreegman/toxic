@@ -862,7 +862,7 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
                 break;
 
             case TOXAV_ERR_BIT_RATE_SET_INVALID_BIT_RATE:
-                error_str = "Invalid AV bit rate value (valid is 6-510)";
+                error_str = "Invalid audio bit rate value (valid is 6-510)";
                 break;
 
             case TOXAV_ERR_BIT_RATE_SET_FRIEND_NOT_FOUND:
