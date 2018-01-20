@@ -108,7 +108,10 @@ static struct DHT_Nodes {
 /* Determine if a node is offline by comparing the age of the nodeslist
  * to the last time the node was successfully pinged.
  */
-#define NODE_IS_OFFLINE(last_scan, last_ping) ((last_ping + NODE_OFFLINE_TIMOUT) <= (last_ping))
+static bool node_is_offline(unsigned long long int last_ping)
+{
+    return last_ping + NODE_OFFLINE_TIMOUT <= last_ping;
+}
 
 /* Return true if nodeslist pointed to by fp needs to be updated.
  * This will be the case if the file is empty, has an invalid format,
@@ -377,7 +380,7 @@ static int extract_node(const char *line, struct Node *node)
 
     long long int last_pinged = extract_val_last_pinged(last_pinged_str + LAST_PING_JSON_KEY_LEN);
 
-    if (last_pinged <= 0 || NODE_IS_OFFLINE(Nodes.last_scan, last_pinged)) {
+    if (last_pinged <= 0 || node_is_offline(last_pinged)) {
         return -3;
     }
 

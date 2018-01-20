@@ -31,7 +31,7 @@
 #define MAX_LINE_INFO_QUEUE 1024
 #define MAX_LINE_INFO_MSG_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* needs extra room for log loading */
 
-enum {
+typedef enum {
     SYS_MSG,
     IN_MSG,
     OUT_MSG,

@@ -42,7 +42,7 @@
 #define CHATBOX_HEIGHT 2
 
 /* Curses foreground colours (background is black) */
-enum {
+typedef enum {
     WHITE,
     GREEN,
     CYAN,

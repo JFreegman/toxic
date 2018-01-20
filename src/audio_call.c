@@ -56,6 +56,7 @@
 #endif
 
 extern FriendsList Friends;
+struct CallControl CallControl;
 
 #define cbend pthread_exit(NULL)
 
@@ -934,8 +935,8 @@ void init_friend_AV(uint32_t index)
 }
 
 /**
- * Deletes the call structure for a given friend. Called when a friend is deleted from the friends list.
- * Index must be equivalent to the friend's friendlist index.
+ * Deletes a call structure from the Calls list. Called when a friend is deleted from the friends list.
+ * Index must be equivalent to the size of the Calls list.
  */
 void del_friend_AV(uint32_t index)
 {

@@ -30,7 +30,7 @@ struct chatlog {
     bool log_on;    /* specific to current chat window */
 };
 
-enum {
+typedef enum {
     LOG_GROUP,
     LOG_PROMPT,
     LOG_CHAT,
