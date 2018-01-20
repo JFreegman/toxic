@@ -563,30 +563,30 @@ static void init_tox_options(struct Tox_Options *tox_opts)
 {
     tox_options_default(tox_opts);
 
-    tox_opts->ipv6_enabled = !arg_opts.use_ipv4;
-    tox_opts->udp_enabled = !arg_opts.force_tcp;
-    tox_opts->proxy_type = arg_opts.proxy_type;
-    tox_opts->tcp_port = arg_opts.tcp_port;
+    tox_options_set_ipv6_enabled(tox_opts, !arg_opts.use_ipv4);
+    tox_options_set_udp_enabled(tox_opts, !arg_opts.force_tcp);
+    tox_options_set_proxy_type(tox_opts, arg_opts.proxy_type);
+    tox_options_set_tcp_port(tox_opts, arg_opts.tcp_port);
 
-    if (!tox_opts->ipv6_enabled)
+    if (!tox_options_get_ipv6_enabled(tox_opts))
         queue_init_message("Forcing IPv4 connection");
 
-    if (tox_opts->tcp_port)
-        queue_init_message("TCP relaying enabled on port %d", tox_opts->tcp_port);
+    if (tox_options_get_tcp_port(tox_opts))
+        queue_init_message("TCP relaying enabled on port %d", tox_options_get_tcp_port(tox_opts));
 
-    if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE) {
-        tox_opts->proxy_port = arg_opts.proxy_port;
-        tox_opts->proxy_host = arg_opts.proxy_address;
-        const char *ps = tox_opts->proxy_type == TOX_PROXY_TYPE_SOCKS5 ? "SOCKS5" : "HTTP";
+    if (tox_options_get_proxy_type(tox_opts) != TOX_PROXY_TYPE_NONE) {
+        tox_options_set_proxy_port(tox_opts, arg_opts.proxy_port);
+        tox_options_set_proxy_host(tox_opts, arg_opts.proxy_address);
+        const char *ps = tox_options_get_proxy_type(tox_opts) == TOX_PROXY_TYPE_SOCKS5 ? "SOCKS5" : "HTTP";
 
         char tmp[sizeof(arg_opts.proxy_address) + MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), "Using %s proxy %s : %d", ps, arg_opts.proxy_address, arg_opts.proxy_port);
         queue_init_message("%s", tmp);
     }
 
-    if (!tox_opts->udp_enabled) {
+    if (!tox_options_get_udp_enabled(tox_opts)) {
         queue_init_message("UDP disabled");
-    } else if (tox_opts->proxy_type != TOX_PROXY_TYPE_NONE) {
+    } else if (tox_options_get_proxy_type(tox_opts) != TOX_PROXY_TYPE_NONE) {
         const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
         queue_init_message("%s", msg);
         msg = "Use the -t option to disable UDP.";
@@ -675,9 +675,8 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                                  (uint8_t *) plain, &pwerr);
 
                 if (pwerr == TOX_ERR_DECRYPTION_OK) {
-                    tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
-                    tox_opts->savedata_data = (uint8_t *) plain;
-                    tox_opts->savedata_length = plain_len;
+                    tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_TOX_SAVE);
+                    tox_options_set_savedata_data(tox_opts, (uint8_t *) plain, plain_len);
 
                     m = tox_new(tox_opts, new_err);
 
@@ -698,9 +697,8 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
                 }
             }
         } else {   /* data is not encrypted */
-            tox_opts->savedata_type = TOX_SAVEDATA_TYPE_TOX_SAVE;
-            tox_opts->savedata_data = (uint8_t *) data;
-            tox_opts->savedata_length = len;
+            tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_TOX_SAVE);
+            tox_options_set_savedata_data(tox_opts, (uint8_t *) data, len);
 
             m = tox_new(tox_opts, new_err);
 
@@ -715,7 +713,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
         if (file_exists(data_path))
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
 
-        tox_opts->savedata_type = TOX_SAVEDATA_TYPE_NONE;
+        tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_NONE);
 
         m = tox_new(tox_opts, new_err);
 
@@ -731,16 +729,19 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
 static Tox *load_toxic(char *data_path)
 {
-    struct Tox_Options tox_opts;
-    init_tox_options(&tox_opts);
+    TOX_ERR_OPTIONS_NEW options_new_err;
+    struct Tox_Options *tox_opts = tox_options_new(&options_new_err);
+    if (!tox_opts)
+        exit_toxic_err("tox_options_new returned fatal error", options_new_err);
+    init_tox_options(tox_opts);
 
     TOX_ERR_NEW new_err;
-    Tox *m = load_tox(data_path, &tox_opts, &new_err);
+    Tox *m = load_tox(data_path, tox_opts, &new_err);
 
-    if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_opts.ipv6_enabled) {
+    if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_options_get_ipv6_enabled(tox_opts)) {
         queue_init_message("Falling back to ipv4");
-        tox_opts.ipv6_enabled = false;
-        m = load_tox(data_path, &tox_opts, &new_err);
+        tox_options_set_ipv6_enabled(tox_opts, false);
+        m = load_tox(data_path, tox_opts, &new_err);
     }
 
     if (!m)
@@ -756,6 +757,7 @@ static Tox *load_toxic(char *data_path)
     if (tox_self_get_name_size(m) == 0)
         tox_self_set_name(m, (uint8_t *) "Toxic User", strlen("Toxic User"), NULL);
 
+    tox_options_free(tox_opts);
     return m;
 }
 
