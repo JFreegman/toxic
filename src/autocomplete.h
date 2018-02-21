@@ -31,7 +31,7 @@
    in the list, and size is the size of each item in the list.
 
    Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ToxWindow *self, const void *list, int n_items, int size);
+int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size);
 
 /*  attempts to match /command "<incomplete-dir>" line to matching directories.
 

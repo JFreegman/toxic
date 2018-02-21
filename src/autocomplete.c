@@ -38,16 +38,18 @@
 #include "execute.h"
 #include "configdir.h"
 
-static void print_matches(ToxWindow *self, Tox *m, const void *list, int n_items, int size)
+static void print_matches(ToxWindow *self, Tox *m, const void *list, size_t n_items, size_t size)
 {
-    if (m)
+    if (m) {
         execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
+    }
 
     const char *L = (char *) list;
     int i;
 
-    for (i = 0; i < n_items; ++i)
+    for (i = 0; i < n_items; ++i) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", &L[i * size]);
+    }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");   /* formatting */
 }
@@ -91,7 +93,7 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char 
    in the list, and size is the size of each item in the list.
 
    Returns the difference between the old len and new len of line on success, -1 if error */
-int complete_line(ToxWindow *self, const void *list, int n_items, int size)
+int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -148,7 +150,7 @@ int complete_line(ToxWindow *self, const void *list, int n_items, int size)
     }
 
     int s_len = strlen(sub);
-    int n_matches = 0;
+    size_t n_matches = 0;
     char matches[n_items][MAX_STR_SIZE];
     int i = 0;
 
@@ -287,7 +289,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     if (dp == NULL)
         return -1;
 
-    char dirnames[MAX_DIRS][NAME_MAX + 1];
+    char dirnames[MAX_DIRS][NAME_MAX+1];
     struct dirent *entry;
     int dircount = 0;
 
@@ -305,9 +307,9 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
         return -1;
 
     if (dircount > 1) {
-        qsort(dirnames, dircount, NAME_MAX, qsort_strcasecmp_hlpr);
-        print_matches(self, m, dirnames, dircount, NAME_MAX);
+        qsort(dirnames, dircount, NAME_MAX + 1, qsort_strcasecmp_hlpr);
+        print_matches(self, m, dirnames, dircount, NAME_MAX + 1);
     }
 
-    return complete_line(self, dirnames, dircount, NAME_MAX);
+    return complete_line(self, dirnames, dircount, NAME_MAX + 1);
 }
