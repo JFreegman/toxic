@@ -189,11 +189,15 @@ void on_group_namelistchange(Tox *m, uint32_t groupnumber, void *userdata)
 void on_group_peernamechange(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *name,
                              size_t length, void *userdata)
 {
+    char nick[TOXIC_MAX_NAME_LENGTH + 1];
+    length = copy_tox_str(nick, sizeof(nick), (const char *) name, length);
+    filter_str(nick, length);
+
     size_t i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].onGroupPeerNameChange != NULL)
-            windows[i].onGroupPeerNameChange(&windows[i], m, groupnumber, peernumber, (char *) name, length);
+            windows[i].onGroupPeerNameChange(&windows[i], m, groupnumber, peernumber, nick, length);
     }
 }
 

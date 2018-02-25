@@ -404,7 +404,37 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
 static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
                                             const char *name, size_t length)
 {
-    // TODO: this is dumb because toxcore is dumb so make it not dumb pls
+    if (self->num != groupnum) {
+        return;
+    }
+
+    GroupChat *chat = &groupchats[groupnum];
+
+    if (!chat) {
+        return;
+    }
+
+    size_t i;
+
+    for (i = 0; i < chat->max_idx; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        // Test against default tox name to prevent nick change spam on initial join (TODO: this is disgusting)
+        if (peer->active && peer->peernumber == peernum && strcmp(peer->name, "Tox User")) {
+            ChatContext *ctx = self->chatwin;
+            char timefrmt[TIME_STR_SIZE];
+            get_time_str(timefrmt, sizeof(timefrmt));
+
+            char tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
+            snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (char *) name);
+
+            write_to_log(tmp_event, peer->name, ctx->log, true);
+            line_info_add(self, timefrmt, peer->name, (char *) name, NAME_CHANGE, 0, 0, " is now known as ");
+
+            break;
+        }
+    }
+
     groupchat_onGroupNameListChange(self, m, groupnum);
 }
 
