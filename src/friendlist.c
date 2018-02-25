@@ -1163,6 +1163,18 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
 }
 #endif /* AUDIO */
 
+/* Returns a friend's status */
+TOX_USER_STATUS get_friend_status(uint32_t friendnumber)
+{
+    return Friends.list[friendnumber].status;
+}
+
+/* Returns a friend's connection status */
+TOX_CONNECTION get_friend_connection_status(uint32_t friendnumber)
+{
+    return Friends.list[friendnumber].connection_status;
+}
+
 ToxWindow new_friendlist(void)
 {
     ToxWindow ret;

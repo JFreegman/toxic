@@ -34,6 +34,7 @@
 #include "configdir.h"
 #include "curl_util.h"
 #include "settings.h"
+#include "prompt.h"
 
 extern struct arg_opts arg_opts;
 extern struct user_settings *user_settings;
@@ -580,7 +581,7 @@ static void DHT_bootstrap(Tox *m)
 void do_tox_connection(Tox *m)
 {
     static time_t last_bootstrap_time = 0;
-    bool connected = tox_self_get_connection_status(m) != TOX_CONNECTION_NONE;
+    bool connected = prompt_selfConnectionStatus() != TOX_CONNECTION_NONE;
 
     if (!connected && timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL)) {
         DHT_bootstrap(m);

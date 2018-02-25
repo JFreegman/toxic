@@ -238,8 +238,6 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
     }
 
     if (prev_status == TOX_CONNECTION_NONE) {
-        Friends.list[num].is_typing = user_settings->show_typing_other == SHOW_TYPING_ON
-                                      ? tox_friend_get_typing(m, num, NULL) : false;
         chat_resume_file_senders(self, m, num);
 
         msg = "has come online";
@@ -1160,9 +1158,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
-
-    statusbar->status = tox_friend_get_status(m, self->num, NULL);
-    statusbar->connection = tox_friend_get_connection_status(m, self->num, NULL);
+    statusbar->status = get_friend_status(self->num);
+    statusbar->connection = get_friend_connection_status(self->num);
 
     char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
     tox_friend_get_status_message(m, self->num, (uint8_t *) statusmsg, NULL);

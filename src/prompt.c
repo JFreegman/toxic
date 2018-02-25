@@ -163,6 +163,13 @@ void prompt_update_status(ToxWindow *prompt, TOX_USER_STATUS status)
     statusbar->status = status;
 }
 
+/* Returns our own connection status */
+TOX_CONNECTION prompt_selfConnectionStatus(void)
+{
+    StatusBar *statusbar = prompt->stb;
+    return statusbar->connection;
+}
+
 /* Adds friend request to pending friend requests.
    Returns request number on success, -1 if queue is full. */
 static int add_friend_request(const char *public_key, const char *data)

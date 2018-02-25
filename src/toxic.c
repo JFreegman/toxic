@@ -52,6 +52,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
+#include "groupchat.h"
 #include "file_transfers.h"
 #include "line_info.h"
 #include "settings.h"
@@ -305,10 +306,40 @@ static void load_friendlist(Tox *m)
     size_t i;
     size_t numfriends = tox_self_get_friend_list_size(m);
 
-    for (i = 0; i < numfriends; ++i)
+    for (i = 0; i < numfriends; ++i) {
         friendlist_onFriendAdded(NULL, m, i, false);
+    }
 
     sort_friendlist_index();
+}
+
+static void load_groups(ToxWindow *prompt, Tox *m)
+{
+    size_t i;
+    size_t num_chats = tox_conference_get_chatlist_size(m);
+    uint32_t chatlist[num_chats];
+
+    for (i = 0; i < num_chats; ++i) {
+        uint32_t groupnum = chatlist[i];
+
+        if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
+            tox_conference_delete(m, groupnum, NULL);
+            continue;
+        }
+
+        TOX_ERR_CONFERENCE_GET_TYPE err;
+        TOX_CONFERENCE_TYPE type = tox_conference_get_type(m, groupnum, &err);
+
+        if (err != TOX_ERR_CONFERENCE_GET_TYPE_OK) {
+            tox_conference_delete(m, groupnum, NULL);
+            continue;
+        }
+
+        if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
+            tox_conference_delete(m, groupnum, NULL);
+            continue;
+        }
+    }
 }
 
 /* return length of password on success, 0 on failure */
@@ -551,7 +582,8 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_friend_read_receipt(m, on_read_receipt);
     tox_callback_conference_invite(m, on_groupinvite);
     tox_callback_conference_message(m, on_groupmessage);
-    tox_callback_conference_namelist_change(m, on_group_namelistchange);
+    tox_callback_conference_peer_list_changed(m, on_group_namelistchange);
+    tox_callback_conference_peer_name(m, on_group_peernamechange);
     tox_callback_conference_title(m, on_group_titlechange);
     tox_callback_file_recv(m, on_file_recv);
     tox_callback_file_chunk_request(m, on_file_chunk_request);
@@ -816,7 +848,7 @@ void *thread_cqueue(void *data)
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat
-                    && tox_friend_get_connection_status(m, toxwin->num, NULL) != TOX_CONNECTION_NONE)
+                    && get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE)
                 cqueue_try_send(toxwin, m);
         }
 
@@ -1198,6 +1230,7 @@ int main(int argc, char **argv)
 
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m);
+    load_groups(prompt, m);
 
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0)

@@ -118,8 +118,9 @@ void on_groupmessage(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESS
                      const uint8_t *message, size_t length, void *userdata);
 void on_groupinvite(Tox *m, uint32_t friendnumber, TOX_CONFERENCE_TYPE type, const uint8_t *group_pub_key,
                     size_t length, void *userdata);
-void on_group_namelistchange(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_CONFERENCE_STATE_CHANGE change,
-                             void *userdata);
+void on_group_namelistchange(Tox *m, uint32_t groupnumber, void *userdata);
+void on_group_peernamechange(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *name,
+                             size_t length, void *userdata);
 void on_group_titlechange(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *title, size_t length,
                           void *userdata);
 void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,

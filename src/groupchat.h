@@ -31,20 +31,31 @@
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
 #define GROUP_EVENT_WAIT 3
 
+typedef struct GroupPeer {
+    bool       active;
+    char       name[TOX_MAX_NAME_LENGTH];
+    size_t     name_length;
+    uint32_t   peernumber;
+} GroupPeer;
+
 typedef struct {
     int chatwin;
     bool active;
     uint8_t type;
-    uint32_t num_peers;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     time_t start_time;
-    uint8_t  *peer_names;
-    uint8_t  *oldpeer_names;
-    uint16_t *peer_name_lengths;
-    uint16_t *oldpeer_name_lengths;
+
+    GroupPeer *peer_list;
+    size_t max_idx;
+
+    char *name_list;
+    size_t num_peers;
+
 } GroupChat;
 
-void close_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum);
+/* Frees all Toxic associated data structures for a groupchat (does not call tox_conference_delete() ) */
+void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum);
+
 int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type);
 
 /* destroys and re-creates groupchat window with or without the peerlist */

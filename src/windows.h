@@ -123,7 +123,8 @@ struct ToxWindow {
     void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
     void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
-    void(*onGroupNamelistChange)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_CONFERENCE_STATE_CHANGE);
+    void(*onGroupNameListChange)(ToxWindow *, Tox *, uint32_t);
+    void(*onGroupPeerNameChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupTitleChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
     void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
