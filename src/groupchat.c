@@ -174,7 +174,6 @@ static void delete_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
     tox_conference_delete(m, groupnum, NULL);
     free_groupchat(self, m, groupnum);
-
 }
 
 /* destroys and re-creates groupchat window with or without the peerlist */
@@ -310,7 +309,7 @@ static void group_update_name_list(uint32_t groupnum)
         }
     }
 
-  //  sort_peerlist(groupnum);
+    qsort(chat->name_list, count, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 }
 
 /* Reallocates groupnum's peer list. Increase is true if the list needs to grow.
@@ -400,7 +399,6 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
 
     chat->max_idx = num_peers;
     update_peer_list(m, groupnum, num_peers);
-    //qsort(groupchats[groupnum].name_list, groupchats[groupnum].num_peers, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 }
 
 static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
