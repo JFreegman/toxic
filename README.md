@@ -3,13 +3,12 @@
        src="https://scan.coverity.com/projects/4975/badge.svg"/>
 </a>
 
-Toxic is a [Tox](https://tox.chat)-based instant messenging client which formerly resided in the [Tox core repository](https://github.com/toktok/c-toxcore), and is now available as a standalone application.
+Toxic is a [Tox](https://tox.chat)-based instant messenging and video chat client.
 
 [![Toxic Screenshot](https://i.imgur.com/san99Z2.png "Home Screen")](https://i.imgur.com/san99Z2.png)
 
 ## Installation
-[Use our repositories](https://wiki.tox.chat/binaries#other_linux)<br />
-[Compile it yourself](/INSTALL.md)
+[See the install instructions](/INSTALL.md)
 
 ## Settings
 Running Toxic for the first time creates an empty file called toxic.conf in your home configuration directory ("~/.config/tox" for Linux users). Adding options to this file allows you to enable auto-logging, change the time format (12/24 hour), and much more.
