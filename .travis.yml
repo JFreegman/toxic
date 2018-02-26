@@ -1,0 +1,31 @@
+language: python
+python: nightly
+
+addons:
+  apt:
+    packages:
+    - libalut-dev
+    - libconfig-dev
+    - libnotify-dev
+    - libopenal-dev
+    - libopus-dev
+    - libqrencode-dev
+    - libvpx-dev
+
+cache:
+  directories:
+  - $HOME/cache
+
+install:
+# Where to find libraries.
+- export LD_LIBRARY_PATH=$HOME/cache/usr/lib
+- export PKG_CONFIG_PATH=$HOME/cache/usr/lib/pkgconfig
+# c-sodium
+- git clone --depth=1 --branch=stable https://github.com/jedisct1/libsodium
+- test -f $HOME/cache/usr/lib/libsodium.so || (cd libsodium && ./configure --prefix=$HOME/cache/usr && make install -j$(nproc))
+# c-toxcore
+- git clone --depth=1 https://github.com/TokTok/c-toxcore
+- test -f $HOME/cache/usr/lib/libtoxcore.so || (cd c-toxcore && cmake -B_build -H. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/cache/usr && make -C_build install -j$(nproc))
+
+script:
+- make ENABLE_PYTHON=1

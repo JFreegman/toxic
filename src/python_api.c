@@ -23,7 +23,6 @@
 #ifdef PYTHON
 #include <Python.h>
 #include "api.h"
-#endif /* PYTHON */
 
 #include "execute.h"
 
@@ -345,3 +344,4 @@ void python_draw_handler_help(WINDOW *win)
             wprintw(win, "  %-29s: %.50s\n", cur->name, cur->help);
     }
 }
+#endif /* PYTHON */

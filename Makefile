@@ -3,7 +3,7 @@ CFG_DIR = $(BASE_DIR)/cfg
 
 -include $(CFG_DIR)/global_vars.mk
 
-LIBS = libtoxcore ncursesw libconfig libqrencode
+LIBS = toxcore ncursesw libconfig libqrencode
 
 CFLAGS = -std=gnu99 -pthread -Wall -g -fstack-protector-all
 CFLAGS += '-DTOXICVER="$(VERSION)"' -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED -D_FILE_OFFSET_BITS=64

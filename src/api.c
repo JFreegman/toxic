@@ -36,7 +36,6 @@
 
 #ifdef PYTHON
 #include "python_api.h"
-#endif /* PYTHON */
 
 Tox              *user_tox;
 static WINDOW    *cur_window;
@@ -208,3 +207,4 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
 
     closedir(d);
 }
+#endif /* PYTHON */
