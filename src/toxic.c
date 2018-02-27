@@ -319,6 +319,10 @@ static void load_groups(ToxWindow *prompt, Tox *m)
     size_t num_chats = tox_conference_get_chatlist_size(m);
     uint32_t chatlist[num_chats];
 
+    if (num_chats) {
+        tox_conference_get_chatlist(m, chatlist);
+    }
+
     for (i = 0; i < num_chats; ++i) {
         uint32_t groupnum = chatlist[i];
 
