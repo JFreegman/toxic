@@ -16,7 +16,6 @@
 | [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                |
 | [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev|
 | [libqrencode](https://fukuchi.org/works/qrencode/)   | BASE                       | libqrencode-dev     |
-| [Tox Core AV](https://github.com/toktok/c-toxcore)   | AUDIO                      | *None*              |
 | [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       |
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
 | [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       |
