@@ -8,20 +8,20 @@
   * [Packaging](#packaging)
 
 ## Dependencies
-| Name                                                 | Needed by                  | Debian package      |
-|------------------------------------------------------|----------------------------|---------------------|
-| [Tox Core](https://github.com/toktok/c-toxcore)      | BASE                       | *None*              |
-| [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    |
-| [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       |
-| [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                |
-| [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev|
-| [libqrencode](https://fukuchi.org/works/qrencode/)   | BASE                       | libqrencode-dev     |
-| [Tox Core AV](https://github.com/toktok/c-toxcore)   | AUDIO                      | *None*              |
-| [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       |
-| [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
-| [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       |
-| [Python 3](http://www.python.org/)                   | PYTHON                     | python3-dev         |
-| [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc            |
+| Name                                                 | Needed by                  | Debian package      | OpenBSD package | FreeBSD package |
+|------------------------------------------------------|----------------------------|---------------------|-----------------|-----------------|
+| [Tox Core](https://github.com/toktok/c-toxcore)      | BASE                       | *None*              | *None*          | tox             |
+| [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    | *Built-in base* | ncurses         |
+| [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       | libconfig       | libconfig       |
+| [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                | gmake           | gmake           |
+| [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev| curl            | curl            |
+| [libqrencode](https://fukuchi.org/works/qrencode/)   | BASE                       | libqrencode-dev     | libqrencode     | libqrencode     |
+| [Tox Core AV](https://github.com/toktok/c-toxcore)   | AUDIO                      | *None*              | *None*          | tox             |
+| [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       | openal          | openal-soft     |
+| [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         | freealut        | freealut        |
+| [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       | libnotify       | libnotify       |
+| [Python 3](http://www.python.org/)                   | PYTHON                     | python3-dev         | python--%3.6    | python36        |
+| [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc            | asciidoc        | asciidoc        |
 
 <sup>1</sup>: see [Documentation](#documentation)
 
@@ -35,10 +35,22 @@ brew install libnotify
 
 You can omit `libnotify` if you intend to build without desktop notifications enabled.
 
-## Compiling
+## Compiling at GNU/Linux
 ```
-make PREFIX="/where/to/install"
-sudo make install PREFIX="/where/to/install"
+$ make PREFIX="/where/to/install"
+$ sudo make install PREFIX="/where/to/install"
+or
+# make install PREFIX="/where/to/install"
+```
+
+## Compiling at BSD
+```
+$ gmake PREFIX="/where/to/install"
+$ doas gmake install PREFIX="/where/to/install"
+or
+$ sudo gmake install PREFIX="/where/to/install"
+or
+# gmake install PREFIX="/where/to/install"
 ```
 
 #### Documentation
