@@ -186,8 +186,10 @@ VideoDeviceError init_video_devices()
     size[vdt_input] = 0;
 
 #if defined(__OSX__)
-    if( osx_video_init((char**)video_devices_names[vdt_input], &size[vdt_input]) != 0 )
+
+    if ( osx_video_init((char **)video_devices_names[vdt_input], &size[vdt_input]) != 0 )
         return vde_InternalError;
+
 #else /* not __OSX__*/
 
     for (; size[vdt_input] <= MAX_DEVICES; ++size[vdt_input]) {
@@ -358,11 +360,13 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         video_thread_paused = true;
 
 #if defined(__OSX__)
+
         if ( osx_video_open_device(selection, &device->video_width, &device->video_height) != 0 ) {
             free(device);
             unlock;
             return vde_FailedStart;
         }
+
 #else /* not __OSX__*/
         /* Open selected device */
         char device_address[] = "/dev/videoXX";
@@ -667,10 +671,12 @@ void *video_thread_poll (void *arg) // TODO: maybe use thread for every input so
                     uint8_t *v = device->input.planes[2];
 
 #if defined(__OSX__)
+
                     if ( osx_video_read_device(y, u, v, &video_width, &video_height) != 0 ) {
                         unlock;
                         continue;
                     }
+
 #else /* not __OSX__*/
                     struct v4l2_buffer buf;
                     memset(&(buf), 0, sizeof(buf));

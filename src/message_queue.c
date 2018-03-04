@@ -133,7 +133,7 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
     }
 }
 
-#define CQUEUE_TRY_SEND_INTERVAL 60
+#define CQUEUE_TRY_SEND_INTERVAL 10
 
 /* Tries to send the oldest unsent message in queue. */
 void cqueue_try_send(ToxWindow *self, Tox *m)
@@ -141,18 +141,15 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
     struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
 
-    if (!msg)
+    if (!msg) {
         return;
+    }
 
-    if (msg->receipt != 0 && !timed_out(msg->last_send_try, CQUEUE_TRY_SEND_INTERVAL))
+    if (msg->receipt != 0 && !timed_out(msg->last_send_try, CQUEUE_TRY_SEND_INTERVAL)) {
         return;
-
-    uint32_t receipt = 0;
+    }
 
     TOX_MESSAGE_TYPE type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
-    receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, NULL);
-
+    msg->receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, NULL);
     msg->last_send_try = get_unix_time();
-    msg->receipt = receipt;
-    return;
 }

@@ -767,8 +767,10 @@ static Tox *load_toxic(char *data_path)
 {
     TOX_ERR_OPTIONS_NEW options_new_err;
     struct Tox_Options *tox_opts = tox_options_new(&options_new_err);
+
     if (!tox_opts)
         exit_toxic_err("tox_options_new returned fatal error", options_new_err);
+
     init_tox_options(tox_opts);
 
     TOX_ERR_NEW new_err;

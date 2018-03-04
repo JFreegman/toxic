@@ -133,7 +133,8 @@ DeviceError terminate_devices()
     return (DeviceError) de_None;
 }
 
-void get_devices_names() {
+void get_devices_names()
+{
 
     const char *stringed_device_list;
 
@@ -487,7 +488,8 @@ void print_devices(ToxWindow *self, DeviceType type)
     int i;
 
     for (i = 0; i < size[type]; ++i) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, i == primary_device[type] ? 1 : 0, 0, "%d: %s", i, devices_names[type][i]);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, i == primary_device[type] ? 1 : 0, 0, "%d: %s", i,
+                      devices_names[type][i]);
     }
 
     return;

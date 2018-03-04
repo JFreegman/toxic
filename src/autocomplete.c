@@ -289,7 +289,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     if (dp == NULL)
         return -1;
 
-    char dirnames[MAX_DIRS][NAME_MAX+1];
+    char dirnames[MAX_DIRS][NAME_MAX + 1];
     struct dirent *entry;
     int dircount = 0;
 

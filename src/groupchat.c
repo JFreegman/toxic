@@ -402,7 +402,7 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
 }
 
 static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
-                                            const char *name, size_t length)
+        const char *name, size_t length)
 {
     if (self->num != groupnum) {
         return;
