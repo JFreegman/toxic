@@ -27,9 +27,11 @@
 #### OS X Notes
 Using [Homebrew](http://brew.sh):
 ```
-brew install openal-soft freealut libconfig
+brew install curl qrencode openal-soft freealut libconfig libpng
 brew install --HEAD https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
 brew install libnotify
+export PKG_CONFIG_PATH=/usr/local/opt/openal-soft/lib/pkgconfig
+make
 ```
 
 You can omit `libnotify` if you intend to build without desktop notifications enabled.
