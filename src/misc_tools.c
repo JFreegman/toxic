@@ -84,7 +84,10 @@ void get_time_str(char *buf, int bufsize)
     }
 
     const char *t = user_settings->timestamp_format;
-    strftime(buf, bufsize, t, get_time());
+
+    if (strftime(buf, bufsize, t, get_time()) == 0) {
+        strftime(buf, bufsize, TIMESTAMP_DEFAULT, get_time());
+    }
 }
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
