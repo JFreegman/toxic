@@ -420,7 +420,7 @@ static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t gr
         GroupPeer *peer = &chat->peer_list[i];
 
         // Test against default tox name to prevent nick change spam on initial join (TODO: this is disgusting)
-        if (peer->active && peer->peernumber == peernum && strcmp(peer->name, "Tox User")) {
+        if (peer->active && peer->peernumber == peernum && peer->name_length > 0) {
             ChatContext *ctx = self->chatwin;
             char timefrmt[TIME_STR_SIZE];
             get_time_str(timefrmt, sizeof(timefrmt));
