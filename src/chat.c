@@ -65,15 +65,22 @@ static void init_infobox(ToxWindow *self);
 static void kill_infobox(ToxWindow *self);
 #endif  /* AUDIO */
 
-#if defined(AUDIO) && defined(PYTHON)
-#define AC_NUM_CHAT_COMMANDS 32
-#elif AUDIO
-#define AC_NUM_CHAT_COMMANDS 31
-#elif PYTHON
-#define AC_NUM_CHAT_COMMANDS 23
+#ifdef AUDIO
+#define AC_NUM_CHAT_COMMANDS_AUDIO 9
 #else
-#define AC_NUM_CHAT_COMMANDS 22
+#define AC_NUM_CHAT_COMMANDS_AUDIO 0
 #endif /* AUDIO */
+#ifdef PYTHON
+#define AC_NUM_CHAT_COMMANDS_PYTHON 1
+#else
+#define AC_NUM_CHAT_COMMANDS_PYTHON 0
+#endif /* PYTHON */
+#ifdef QRCODE
+#define AC_NUM_CHAT_COMMANDS_QRCODE 1
+#else
+#define AC_NUM_CHAT_COMMANDS_QRCODE 0
+#endif /* QRCODE */
+#define AC_NUM_CHAT_COMMANDS (21 + AC_NUM_CHAT_COMMANDS_AUDIO + AC_NUM_CHAT_COMMANDS_PYTHON + AC_NUM_CHAT_COMMANDS_QRCODE)
 
 /* Array of chat command names used for tab completion. */
 static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -91,7 +98,9 @@ static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/join"       },
     { "/log"        },
     { "/myid"       },
+#ifdef QRCODE
     { "/myqr"       },
+#endif /* QRCODE */
     { "/nick"       },
     { "/note"       },
     { "/nospam"     },

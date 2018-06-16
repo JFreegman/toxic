@@ -49,19 +49,27 @@ extern struct Winthread Winthread;
 
 extern FriendsList Friends;
 FriendRequests FrndRequests;
-#if defined(PYTHON) && defined(VIDEO)
-#define AC_NUM_GLOB_COMMANDS 23
-#elif defined(PYTHON) && defined(AUDIO)
-#define AC_NUM_GLOB_COMMANDS 21
-#elif VIDEO
-#define AC_NUM_GLOB_COMMANDS 22
-#elif AUDIO
-#define AC_NUM_GLOB_COMMANDS 20
-#elif PYTHON
-#define AC_NUM_GLOB_COMMANDS 19
+#ifdef AUDIO
+#define AC_NUM_GLOB_COMMANDS_AUDIO 2
 #else
-#define AC_NUM_GLOB_COMMANDS 18
-#endif
+#define AC_NUM_GLOB_COMMANDS_AUDIO 0
+#endif /* AUDIO */
+#ifdef VIDEO
+#define AC_NUM_GLOB_COMMANDS_VIDEO 2
+#else
+#define AC_NUM_GLOB_COMMANDS_VIDEO 0
+#endif /* VIDEO */
+#ifdef PYTHON
+#define AC_NUM_GLOB_COMMANDS_PYTHON 1
+#else
+#define AC_NUM_GLOB_COMMANDS_PYTHON 0
+#endif /* PYTHON */
+#ifdef QRCODE
+#define AC_NUM_GLOB_COMMANDS_QRCODE 1
+#else
+#define AC_NUM_GLOB_COMMANDS_QRCODE 0
+#endif /* QRCODE */
+#define AC_NUM_GLOB_COMMANDS (17 + AC_NUM_GLOB_COMMANDS_AUDIO + AC_NUM_GLOB_COMMANDS_VIDEO + AC_NUM_GLOB_COMMANDS_PYTHON + AC_NUM_GLOB_COMMANDS_QRCODE)
 
 /* Array of global command names used for tab completion. */
 static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -76,7 +84,9 @@ static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/help"       },
     { "/log"        },
     { "/myid"       },
+#ifdef QRCODE
     { "/myqr"       },
+#endif /* QRCODE */
     { "/nick"       },
     { "/note"       },
     { "/nospam"     },

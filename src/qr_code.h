@@ -23,6 +23,8 @@
 #ifndef QR_CODE
 #define QR_CODE
 
+#ifdef QRCODE
+
 #define QRCODE_FILENAME_EXT ".QRcode"
 
 /* Converts a tox ID string into a QRcode and prints it into the given filename.
@@ -41,5 +43,7 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile);
  */
 int ID_to_QRcode_png(const char *tox_id, const char *outfile);
 #endif /* QRPNG */
+
+#endif /* QRCODE */
 
 #endif /* QR_CODE */
