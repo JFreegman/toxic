@@ -173,11 +173,13 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /group <type>              : Create a group chat where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
+#ifdef QRCODE
 #ifdef QRPNG
     wprintw(win, "  /myqr <txt> or <png>       : Print your Tox ID's QR code to a file.\n");
 #else
     wprintw(win, "  /myqr                      : Print your Tox ID's QR code to a file.\n");
 #endif /* QRPNG */
+#endif /* QRCODE */
     wprintw(win, "  /clear                     : Clear window history\n");
     wprintw(win, "  /close                     : Close the current chat window\n");
     wprintw(win, "  /quit or /exit             : Exit Toxic\n");

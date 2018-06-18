@@ -431,6 +431,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", id_string);
 }
 
+#ifdef QRCODE
 void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char id_string[TOX_ADDRESS_SIZE * 2 + 1];
@@ -488,6 +489,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 #endif /* QRPNG */
 }
+#endif /* QRCODE */
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {

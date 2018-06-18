@@ -20,6 +20,8 @@
  *
  */
 
+#ifdef QRCODE
+
 #include <stdlib.h>
 #include <qrencode.h>
 #include <stdbool.h>
@@ -208,3 +210,5 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
     return 0;
 }
 #endif /* QRPNG */
+
+#endif /* QRCODE */

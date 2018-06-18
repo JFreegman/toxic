@@ -69,15 +69,17 @@ static int max_groupchat_index = 0;
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
-#if defined(AUDIO) && defined(PYTHON)
-#define AC_NUM_GROUP_COMMANDS 25
-#elif AUDIO
-#define AC_NUM_GROUP_COMMANDS 24
-#elif PYTHON
-#define AC_NUM_GROUP_COMMANDS 21
+#ifdef PYTHON
+#define AC_NUM_GROUP_COMMANDS_PYTHON 1
 #else
-#define AC_NUM_GROUP_COMMANDS 20
-#endif /* AUDIO */
+#define AC_NUM_GROUP_COMMANDS_PYTHON 0
+#endif /* PYTHON */
+#ifdef QRCODE
+#define AC_NUM_GROUP_COMMANDS_QRCODE 1
+#else
+#define AC_NUM_GROUP_COMMANDS_QRCODE 0
+#endif /* QRCODE */
+#define AC_NUM_GROUP_COMMANDS (19 + AC_NUM_GROUP_COMMANDS_PYTHON + AC_NUM_GROUP_COMMANDS_QRCODE)
 
 /* Array of groupchat command names used for tab completion. */
 static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
@@ -93,7 +95,9 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
     { "/help"       },
     { "/log"        },
     { "/myid"       },
+#ifdef QRCODE
     { "/myqr"       },
+#endif /* QRCODE */
     { "/nick"       },
     { "/note"       },
     { "/nospam"     },

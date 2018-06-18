@@ -52,7 +52,9 @@ static struct cmd_func global_commands[] = {
     { "/help",      cmd_prompt_help   },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
+#ifdef QRCODE
     { "/myqr",      cmd_myqr          },
+#endif /* QRCODE */
     { "/nick",      cmd_nick          },
     { "/note",      cmd_note          },
     { "/nospam",    cmd_nospam        },
