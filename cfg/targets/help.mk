@@ -14,6 +14,7 @@ help:
 	@echo "  DISABLE_AV:             Set to \"1\" to force building without audio call support"
 	@echo "  DISABLE_SOUND_NOTIFY:   Set to \"1\" to force building without sound notification support"
 	@echo "  DISABLE_DESKTOP_NOTIFY: Set to \"1\" to force building without desktop notifications support"
+	@echo "  DISABLE_QRCODE:         Set to \"1\" to force building without QR export support"
 	@echo "  DISABLE_QRPNG:          Set to \"1\" to force building without QR exported as PNG support"
 	@echo "  ENABLE_PYTHON:          Set to \"1\" to enable building with Python scripting support"
 	@echo "  USER_CFLAGS:            Add custom flags to default CFLAGS"
