@@ -31,6 +31,8 @@
 #include "friendlist.h"
 #include "chat.h"
 
+#ifdef AUDIO
+
 #ifdef VIDEO
 #include "video_call.h"
 #endif /* VIDEO */
@@ -942,3 +944,5 @@ void del_friend_AV(uint32_t index)
     realloc_calls(index);
     CallControl.max_calls = index;
 }
+
+#endif

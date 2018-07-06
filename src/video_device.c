@@ -55,6 +55,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#ifdef VIDEO
+
 #define inline__ inline __attribute__((always_inline))
 
 extern struct user_settings *user_settings;
@@ -96,9 +98,7 @@ static int size[2];                        /* Size of above containers */
 VideoDevice *video_devices_running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
 uint32_t primary_video_device[2];          /* Primary device */
 
-#ifdef VIDEO
 static ToxAV *av = NULL;
-#endif /* VIDEO */
 
 /* q_mutex */
 #define lock pthread_mutex_lock(&video_mutex);
@@ -827,3 +827,5 @@ VideoDeviceError video_selection_valid(VideoDeviceType type, int32_t selection)
 {
     return (size[type] <= selection || selection < 0) ? vde_InvalidSelection : vde_None;
 }
+
+#endif /* VIDEO */
