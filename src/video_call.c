@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef VIDEO
+
 #define default_video_bit_rate 5000
 
 void receive_video_frame_cb( ToxAV *av, uint32_t friend_number,
@@ -422,3 +424,5 @@ void stop_video_stream(ToxWindow *self)
     if (this_call && this_call->vin_idx != -1)
         stop_video_transmission(this_call, self->num);
 }
+
+#endif
