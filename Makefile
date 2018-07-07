@@ -5,7 +5,7 @@ CFG_DIR = $(BASE_DIR)/cfg
 
 LIBS = toxcore ncursesw libconfig 
 
-CFLAGS = -std=gnu99 -pthread -Wall -g -fstack-protector-all -fsanitize=address 
+CFLAGS = -std=gnu99 -pthread -Wall -g -fstack-protector-all 
 CFLAGS += '-DTOXICVER="$(VERSION)"' -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED -D_FILE_OFFSET_BITS=64
 CFLAGS += '-DPACKAGE_DATADIR="$(abspath $(DATADIR))"'
 CFLAGS += $(USER_CFLAGS)
