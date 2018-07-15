@@ -11,7 +11,6 @@ cc_binary(
         "-DVIDEO",
     ],
     linkopts = [
-        "-lconfig",
         "-lncurses",
         "-lopenal",
         "-lX11",
@@ -19,6 +18,7 @@ cc_binary(
     deps = [
         "//c-toxcore",
         "@curl",
+        "@libconfig",
         "@libqrencode",
         "@libvpx",
         "@python3//:python",
