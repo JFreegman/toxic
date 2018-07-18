@@ -382,8 +382,8 @@ static int password_prompt(char *buf, int size)
     if (buf[--len] != '\n') {
         int ch;
 
-        while ((ch = getchar()) != '\n' && ch > 0)
-            ;
+        while ((ch = getchar()) != '\n' && ch > 0) {
+        }
 
         return 0;
     }

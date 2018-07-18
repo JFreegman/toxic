@@ -180,12 +180,13 @@ static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const cha
     line_info_add(self, timefrmt, nick, NULL, IN_MSG, 0, 0, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
 
-    if (self->active_box != -1)
+    if (self->active_box != -1) {
         box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
                     self->active_box, "%s", msg);
-    else
+    } else {
         box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
                    &self->active_box, nick, "%s", msg);
+    }
 }
 
 static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char *action, size_t len,
@@ -196,12 +197,13 @@ static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char
     line_info_add(self, timefrmt, nick, NULL, IN_ACTION, 0, 0, "%s", action);
     write_to_log(action, nick, ctx->log, true);
 
-    if (self->active_box != -1)
+    if (self->active_box != -1) {
         box_notify2(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
                     self->active_box, "* %s %s", nick, action);
-    else
+    } else {
         box_notify(self, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | user_settings->bell_on_message,
                    &self->active_box, self->name, "* %s %s", nick, action);
+    }
 }
 
 static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TYPE type, const char *msg, size_t len)
@@ -648,12 +650,13 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
     tox_file_get_file_id(m, friendnum, filenum, ft->file_id, NULL);
 
-    if (self->active_box != -1)
+    if (self->active_box != -1) {
         box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
                     self->active_box, "Incoming file: %s", filename);
-    else
+    } else {
         box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
                    &self->active_box, self->name, "Incoming file: %s", filename);
+    }
 }
 
 static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t type, const char *group_pub_key,

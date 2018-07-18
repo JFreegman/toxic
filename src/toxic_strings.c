@@ -261,18 +261,20 @@ void strsubst(char *str, char old, char new)
 {
     int i;
 
-    for (i = 0; str[i] != '\0'; ++i)
+    for (i = 0; str[i] != '\0'; ++i) {
         if (str[i] == old) {
             str[i] = new;
         }
+    }
 }
 
 void wstrsubst(wchar_t *str, wchar_t old, wchar_t new)
 {
     int i;
 
-    for (i = 0; str[i] != L'\0'; ++i)
+    for (i = 0; str[i] != L'\0'; ++i) {
         if (str[i] == old) {
             str[i] = new;
         }
+    }
 }
