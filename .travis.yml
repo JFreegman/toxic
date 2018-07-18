@@ -4,6 +4,7 @@ python: nightly
 addons:
   apt:
     packages:
+    - astyle
     - libalut-dev
     - libconfig-dev
     - libnotify-dev
@@ -21,11 +22,15 @@ install:
 - export LD_LIBRARY_PATH=$HOME/cache/usr/lib
 - export PKG_CONFIG_PATH=$HOME/cache/usr/lib/pkgconfig
 # c-sodium
-- git clone --depth=1 --branch=stable https://github.com/jedisct1/libsodium
-- test -f $HOME/cache/usr/lib/libsodium.so || (cd libsodium && ./configure --prefix=$HOME/cache/usr && make install -j$(nproc))
+- git clone --depth=1 --branch=stable https://github.com/jedisct1/libsodium ../libsodium
+- test -f $HOME/cache/usr/lib/libsodium.so || (cd ../libsodium && ./configure --prefix=$HOME/cache/usr && make install -j$(nproc))
 # c-toxcore
-- git clone --depth=1 https://github.com/TokTok/c-toxcore
-- test -f $HOME/cache/usr/lib/libtoxcore.so || (cd c-toxcore && cmake -B_build -H. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/cache/usr && make -C_build install -j$(nproc))
+- git clone --depth=1 https://github.com/TokTok/c-toxcore ../c-toxcore
+- test -f $HOME/cache/usr/lib/libtoxcore.so || (cd ../c-toxcore && cmake -B_build -H. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/cache/usr && make -C_build install -j$(nproc))
+# astyle
+- wget -O ../astyle.tar.gz https://deb.debian.org/debian/pool/main/a/astyle/astyle_2.06.orig.tar.gz
+- test -f $HOME/cache/astyle/build/gcc/bin/astyle || (tar -xf ../astyle.tar.gz -C "$HOME/cache" && make -C "$HOME/cache/astyle/build/gcc" -j2)
 
 script:
-- make ENABLE_PYTHON=1
+- $HOME/cache/astyle/build/gcc/bin/astyle --options=astylerc $(find . -name "*.[ch]")
+- make ENABLE_PYTHON=1 -j2
