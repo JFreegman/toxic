@@ -40,14 +40,16 @@
 
 void help_init_menu(ToxWindow *self)
 {
-    if (self->help->win)
+    if (self->help->win) {
         delwin(self->help->win);
+    }
 
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    if (y2 < HELP_MENU_HEIGHT || x2 < HELP_MENU_WIDTH)
+    if (y2 < HELP_MENU_HEIGHT || x2 < HELP_MENU_WIDTH) {
         return;
+    }
 
     self->help->win = newwin(HELP_MENU_HEIGHT, HELP_MENU_WIDTH, 3, 3);
     self->help->active = true;
@@ -62,14 +64,16 @@ static void help_exit(ToxWindow *self)
 
 static void help_init_window(ToxWindow *self, int height, int width)
 {
-    if (self->help->win)
+    if (self->help->win) {
         delwin(self->help->win);
+    }
 
     int y2, x2;
     getmaxyx(stdscr, y2, x2);
 
-    if (y2 <= 0 || x2 <= 0)
+    if (y2 <= 0 || x2 <= 0) {
         return;
+    }
 
     height = MIN(height, y2);
     width = MIN(width, x2);

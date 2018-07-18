@@ -175,8 +175,9 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     TOX_ERR_FILE_CONTROL err;
     tox_file_control(m, self->num, ft->filenum, TOX_FILE_CONTROL_RESUME, &err);
 
-    if (err != TOX_ERR_FILE_CONTROL_OK)
+    if (err != TOX_ERR_FILE_CONTROL_OK) {
         goto on_recv_error;
+    }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%d] as: '%s'", idx, ft->file_path);
 
@@ -262,8 +263,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint32_t filenum = tox_file_send(m, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
                                      (uint8_t *) file_name, namelen, &err);
 
-    if (err != TOX_ERR_FILE_SEND_OK)
+    if (err != TOX_ERR_FILE_SEND_OK) {
         goto on_send_error;
+    }
 
     struct FileTransfer *ft = new_file_transfer(self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
 

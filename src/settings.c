@@ -124,10 +124,10 @@ static void ui_defaults(struct user_settings *settings)
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
 
     settings->mplex_away = MPLEX_ON;
-    snprintf (settings->mplex_away_note,
-              sizeof (settings->mplex_away_note),
-              "%s",
-              MPLEX_AWAY_NOTE);
+    snprintf(settings->mplex_away_note,
+             sizeof(settings->mplex_away_note),
+             "%s",
+             MPLEX_AWAY_NOTE);
 }
 
 static const struct keys_strings {
@@ -253,15 +253,18 @@ static int key_parse(const char **bind)
     int len = strlen(*bind);
 
     if (len > 5) {
-        if (strncasecmp(*bind, "ctrl+", 5) == 0 && toupper(bind[0][5]) != 'M')  /* ctrl+m cannot be used */
+        if (strncasecmp(*bind, "ctrl+", 5) == 0 && toupper(bind[0][5]) != 'M') { /* ctrl+m cannot be used */
             return toupper(bind[0][5]) - 'A' + 1;
+        }
     }
 
-    if (strncasecmp(*bind, "tab", 3) == 0)
+    if (strncasecmp(*bind, "tab", 3) == 0) {
         return T_KEY_TAB;
+    }
 
-    if (strncasecmp(*bind, "page", 4) == 0)
+    if (strncasecmp(*bind, "page", 4) == 0) {
         return len == 6 ? KEY_PPAGE : KEY_NPAGE;
+    }
 
     return -1;
 }
@@ -304,8 +307,9 @@ int settings_load(struct user_settings *s, const char *patharg)
         if (!file_exists(path)) {
             FILE *fp = fopen(path, "w");
 
-            if (fp == NULL)
+            if (fp == NULL) {
                 return -1;
+            }
 
             fclose(fp);
         }
@@ -324,18 +328,18 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         int time = 24;
 
-        if ( config_setting_lookup_int(setting, ui_strings.time_format, &time) ) {
+        if (config_setting_lookup_int(setting, ui_strings.time_format, &time)) {
             if (time == 12) {
                 snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M:%S %p");
                 snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M:%S %p]");
             }
         }
 
-        if ( config_setting_lookup_string(setting, ui_strings.timestamp_format, &str) ) {
+        if (config_setting_lookup_string(setting, ui_strings.timestamp_format, &str)) {
             snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", str);
         }
 
-        if ( config_setting_lookup_string(setting, ui_strings.log_timestamp_format, &str) ) {
+        if (config_setting_lookup_string(setting, ui_strings.log_timestamp_format, &str)) {
             snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", str);
         }
 
@@ -367,80 +371,85 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
         config_setting_lookup_int(setting, ui_strings.nodeslist_update_freq, &s->nodeslist_update_freq);
 
-        if ( config_setting_lookup_string(setting, ui_strings.line_join, &str) ) {
+        if (config_setting_lookup_string(setting, ui_strings.line_join, &str)) {
             snprintf(s->line_join, sizeof(s->line_join), "%s", str);
         }
 
-        if ( config_setting_lookup_string(setting, ui_strings.line_quit, &str) ) {
+        if (config_setting_lookup_string(setting, ui_strings.line_quit, &str)) {
             snprintf(s->line_quit, sizeof(s->line_quit), "%s", str);
         }
 
-        if ( config_setting_lookup_string(setting, ui_strings.line_alert, &str) ) {
+        if (config_setting_lookup_string(setting, ui_strings.line_alert, &str)) {
             snprintf(s->line_alert, sizeof(s->line_alert), "%s", str);
         }
 
-        if ( config_setting_lookup_string(setting, ui_strings.line_normal, &str) ) {
+        if (config_setting_lookup_string(setting, ui_strings.line_normal, &str)) {
             snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
         }
 
-        config_setting_lookup_bool (setting, ui_strings.mplex_away, &s->mplex_away);
+        config_setting_lookup_bool(setting, ui_strings.mplex_away, &s->mplex_away);
 
-        if (config_setting_lookup_string (setting, ui_strings.mplex_away_note, &str)) {
-            snprintf (s->mplex_away_note, sizeof (s->mplex_away_note), "%s", str);
+        if (config_setting_lookup_string(setting, ui_strings.mplex_away_note, &str)) {
+            snprintf(s->mplex_away_note, sizeof(s->mplex_away_note), "%s", str);
         }
     }
 
     /* paths */
     if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
-        if ( config_setting_lookup_string(setting, tox_strings.download_path, &str) ) {
+        if (config_setting_lookup_string(setting, tox_strings.download_path, &str)) {
             snprintf(s->download_path, sizeof(s->download_path), "%s", str);
             int len = strlen(s->download_path);
 
             /* make sure path ends with a '/' */
-            if (len >= sizeof(s->download_path) - 2)
+            if (len >= sizeof(s->download_path) - 2) {
                 s->download_path[0] = '\0';
-            else if (s->download_path[len - 1] != '/')
+            } else if (s->download_path[len - 1] != '/') {
                 strcat(&s->download_path[len - 1], "/");
+            }
         }
 
-        if ( config_setting_lookup_string(setting, tox_strings.chatlogs_path, &str) ) {
+        if (config_setting_lookup_string(setting, tox_strings.chatlogs_path, &str)) {
             snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
             int len = strlen(s->chatlogs_path);
 
-            if (len >= sizeof(s->chatlogs_path) - 2)
+            if (len >= sizeof(s->chatlogs_path) - 2) {
                 s->chatlogs_path[0] = '\0';
-            else if (s->chatlogs_path[len - 1] != '/')
+            } else if (s->chatlogs_path[len - 1] != '/') {
                 strcat(&s->chatlogs_path[len - 1], "/");
+            }
         }
 
-        if ( config_setting_lookup_string(setting, tox_strings.avatar_path, &str) ) {
+        if (config_setting_lookup_string(setting, tox_strings.avatar_path, &str)) {
             snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
             int len = strlen(str);
 
-            if (len >= sizeof(s->avatar_path))
+            if (len >= sizeof(s->avatar_path)) {
                 s->avatar_path[0] = '\0';
+            }
         }
 
 #ifdef PYTHON
 
-        if ( config_setting_lookup_string(setting, tox_strings.autorun_path, &str) ) {
+        if (config_setting_lookup_string(setting, tox_strings.autorun_path, &str)) {
             snprintf(s->autorun_path, sizeof(s->autorun_path), "%s", str);
             int len = strlen(str);
 
-            if (len >= sizeof(s->autorun_path) - 2)
+            if (len >= sizeof(s->autorun_path) - 2) {
                 s->autorun_path[0] = '\0';
-            else if (s->autorun_path[len - 1] != '/')
+            } else if (s->autorun_path[len - 1] != '/') {
                 strcat(&s->autorun_path[len - 1], "/");
+            }
         }
 
 #endif
 
-        if ( config_setting_lookup_string(setting, tox_strings.password_eval, &str) ) {
+        if (config_setting_lookup_string(setting, tox_strings.password_eval, &str)) {
             snprintf(s->password_eval, sizeof(s->password_eval), "%s", str);
             int len = strlen(str);
 
-            if (len >= sizeof(s->password_eval))
+            if (len >= sizeof(s->password_eval)) {
                 s->password_eval[0] = '\0';
+            }
         }
     }
 
@@ -448,38 +457,49 @@ int settings_load(struct user_settings *s, const char *patharg)
     if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
         const char *tmp = NULL;
 
-        if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) {
             set_key_binding(&s->key_next_tab, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) {
             set_key_binding(&s->key_prev_tab, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) {
             set_key_binding(&s->key_scroll_line_up, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) {
             set_key_binding(&s->key_scroll_line_down, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) {
             set_key_binding(&s->key_half_page_up, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) {
             set_key_binding(&s->key_half_page_down, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) {
             set_key_binding(&s->key_page_bottom, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) {
             set_key_binding(&s->key_peer_list_up, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) {
             set_key_binding(&s->key_peer_list_down, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp)) {
             set_key_binding(&s->key_toggle_peerlist, &tmp);
+        }
 
-        if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp))
+        if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp)) {
             set_key_binding(&s->key_toggle_pastemode, &tmp);
+        }
     }
 
 #ifdef AUDIO
@@ -499,52 +519,60 @@ int settings_load(struct user_settings *s, const char *patharg)
 #ifdef SOUND_NOTIFY
 
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
-        if ( (config_setting_lookup_string(setting, sound_strings.notif_error, &str) != CONFIG_TRUE) ||
-                !set_sound(notif_error, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if ((config_setting_lookup_string(setting, sound_strings.notif_error, &str) != CONFIG_TRUE) ||
+                !set_sound(notif_error, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(notif_error, PACKAGE_DATADIR "/sounds/ToxicError.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.user_log_in, &str) ||
-                !set_sound(user_log_in, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.user_log_in, &str) ||
+                !set_sound(user_log_in, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(user_log_in, PACKAGE_DATADIR "/sounds/ToxicContactOnline.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.user_log_out, &str) ||
-                !set_sound(user_log_out, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.user_log_out, &str) ||
+                !set_sound(user_log_out, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(user_log_out, PACKAGE_DATADIR "/sounds/ToxicContactOffline.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.call_incoming, &str) ||
-                !set_sound(call_incoming, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.call_incoming, &str) ||
+                !set_sound(call_incoming, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(call_incoming, PACKAGE_DATADIR "/sounds/ToxicIncomingCall.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ||
-                !set_sound(call_outgoing, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.call_outgoing, &str) ||
+                !set_sound(call_outgoing, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(call_outgoing, PACKAGE_DATADIR "/sounds/ToxicOutgoingCall.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.generic_message, &str) ||
-                !set_sound(generic_message, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.generic_message, &str) ||
+                !set_sound(generic_message, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(generic_message, PACKAGE_DATADIR "/sounds/ToxicRecvMessage.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.transfer_pending, &str) ||
-                !set_sound(transfer_pending, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.transfer_pending, &str) ||
+                !set_sound(transfer_pending, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/ToxicTransferStart.wav");
+            }
         }
 
-        if ( !config_setting_lookup_string(setting, sound_strings.transfer_completed, &str) ||
-                !set_sound(transfer_completed, str) ) {
-            if (str && strcasecmp(str, NO_SOUND) != 0)
+        if (!config_setting_lookup_string(setting, sound_strings.transfer_completed, &str) ||
+                !set_sound(transfer_completed, str)) {
+            if (str && strcasecmp(str, NO_SOUND) != 0) {
                 set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/ToxicTransferComplete.wav");
+            }
         }
     } else {
         set_sound(notif_error, PACKAGE_DATADIR "/sounds/ToxicError.wav");

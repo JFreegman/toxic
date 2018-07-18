@@ -46,8 +46,9 @@ extern struct user_settings *user_settings;
 
 void api_display(const char *const msg)
 {
-    if (msg == NULL)
+    if (msg == NULL) {
         return;
+    }
 
     self_window = get_active_window();
     line_info_add(self_window, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
@@ -63,8 +64,9 @@ char *api_get_nick(void)
     size_t   len  = tox_self_get_name_size(user_tox);
     uint8_t *name = malloc(len + 1);
 
-    if (name == NULL)
+    if (name == NULL) {
         return NULL;
+    }
 
     tox_self_get_name(user_tox, name);
     name[len] = '\0';
@@ -81,8 +83,9 @@ char *api_get_status_message(void)
     size_t   len    = tox_self_get_status_message_size(user_tox);
     uint8_t *status = malloc(len + 1);
 
-    if (status == NULL)
+    if (status == NULL) {
         return NULL;
+    }
 
     tox_self_get_status_message(user_tox, status);
     status[len] = '\0';
@@ -91,14 +94,16 @@ char *api_get_status_message(void)
 
 void api_send(const char *msg)
 {
-    if (msg == NULL || self_window->chatwin->cqueue == NULL)
+    if (msg == NULL || self_window->chatwin->cqueue == NULL) {
         return;
+    }
 
     char *name = api_get_nick();
     char  timefrmt[TIME_STR_SIZE];
 
-    if (name == NULL)
+    if (name == NULL) {
         return;
+    }
 
     self_window = get_active_window();
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -144,9 +149,12 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     cur_window  = window;
     self_window = self;
 
-    if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Path must be specified!";
-        else error_str = "Only one argument allowed!";
+    if (argc != 1) {
+        if (argc < 1) {
+            error_str = "Path must be specified!";
+        } else {
+            error_str = "Only one argument allowed!";
+        }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;
@@ -154,7 +162,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     fp = fopen(argv[1], "r");
 
-    if ( fp == NULL ) {
+    if (fp == NULL) {
         error_str = "Path does not exist!";
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
@@ -173,8 +181,9 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
     DIR    *d;
     FILE   *fp;
 
-    if (user_settings->autorun_path[0] == '\0')
+    if (user_settings->autorun_path[0] == '\0') {
         return;
+    }
 
     d = opendir(user_settings->autorun_path);
 

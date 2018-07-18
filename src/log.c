@@ -45,8 +45,9 @@ extern struct user_settings *user_settings;
    Returns 0 on success, -1 if the path is too long */
 static int get_log_path(char *dest, int destsize, char *name, const char *selfkey, const char *otherkey, int logtype)
 {
-    if (!valid_nick(name))
+    if (!valid_nick(name)) {
         name = UNKNOWN_NAME;
+    }
 
     const char *namedash = logtype == LOG_PROMPT ? "" : "-";
     const char *set_path = user_settings->chatlogs_path;
@@ -85,10 +86,11 @@ static int get_log_path(char *dest, int destsize, char *name, const char *selfke
         return -1;
     }
 
-    if (!string_is_empty(set_path))
+    if (!string_is_empty(set_path)) {
         snprintf(dest, destsize, "%s%s-%s%s%s.log", set_path, self_id, name, namedash, other_id);
-    else
+    } else {
         snprintf(dest, destsize, "%s%s%s-%s%s%s.log", user_config_dir, LOGDIR, self_id, name, namedash, other_id);
+    }
 
     free(user_config_dir);
 
@@ -98,19 +100,22 @@ static int get_log_path(char *dest, int destsize, char *name, const char *selfke
 /* Opens log file or creates a new one */
 static int init_logging_session(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)
 {
-    if (selfkey == NULL || (logtype == LOG_CHAT && otherkey == NULL))
+    if (selfkey == NULL || (logtype == LOG_CHAT && otherkey == NULL)) {
         return -1;
+    }
 
     char log_path[MAX_STR_SIZE];
 
-    if (get_log_path(log_path, sizeof(log_path), name, selfkey, otherkey, logtype) == -1)
+    if (get_log_path(log_path, sizeof(log_path), name, selfkey, otherkey, logtype) == -1) {
         return -1;
+    }
 
     log->file = fopen(log_path, "a+");
     snprintf(log->path, sizeof(log->path), "%s", log_path);
 
-    if (log->file == NULL)
+    if (log->file == NULL) {
         return -1;
+    }
 
     return 0;
 }
@@ -119,8 +124,9 @@ static int init_logging_session(char *name, const char *selfkey, const char *oth
 
 void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event)
 {
-    if (!log->log_on)
+    if (!log->log_on) {
         return;
+    }
 
     if (log->file == NULL) {
         log->log_on = false;
@@ -129,10 +135,11 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
 
     char name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
 
-    if (event)
+    if (event) {
         snprintf(name_frmt, sizeof(name_frmt), "* %s", name);
-    else
+    } else {
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
+    }
 
     const char *t = user_settings->log_timestamp_format;
     char s[MAX_STR_SIZE];
@@ -147,8 +154,9 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
 
 void log_disable(struct chatlog *log)
 {
-    if (log->file != NULL)
+    if (log->file != NULL) {
         fclose(log->file);
+    }
 
     memset(log, 0, sizeof(struct chatlog));
 }
@@ -157,8 +165,9 @@ int log_enable(char *name, const char *selfkey, const char *otherkey, struct cha
 {
     log->log_on = true;
 
-    if (log->file != NULL)
+    if (log->file != NULL) {
         return 0;
+    }
 
     if (init_logging_session(name, selfkey, otherkey, log, logtype) == -1) {
         log_disable(log);
@@ -171,18 +180,21 @@ int log_enable(char *name, const char *selfkey, const char *otherkey, struct cha
 /* Loads previous history from chat log */
 void load_chat_history(ToxWindow *self, struct chatlog *log)
 {
-    if (log->file == NULL)
+    if (log->file == NULL) {
         return;
+    }
 
     off_t sz = file_size(log->path);
 
-    if (sz <= 0)
+    if (sz <= 0) {
         return;
+    }
 
     char *hstbuf = malloc(sz + 1);
 
-    if (hstbuf == NULL)
+    if (hstbuf == NULL) {
         exit_toxic_err("failed in load_chat_history", FATALERR_MEMORY);
+    }
 
     if (fseek(log->file, 0L, SEEK_SET) == -1) {
         free(hstbuf);
@@ -204,8 +216,9 @@ void load_chat_history(ToxWindow *self, struct chatlog *log)
 
     /* start at end and backtrace L lines or to the beginning of buffer */
     for (start = sz - 1; start >= 0 && count < L; --start) {
-        if (hstbuf[start] == '\n')
+        if (hstbuf[start] == '\n') {
             ++count;
+        }
     }
 
     const char *line = strtok(&hstbuf[start + 1], "\n");
@@ -238,33 +251,40 @@ int rename_logfile(char *src, char *dest, const char *selfkey, const char *other
         log_on = log->log_on;
     }
 
-    if (log_on)
+    if (log_on) {
         log_disable(log);
+    }
 
     char newpath[MAX_STR_SIZE];
     char oldpath[MAX_STR_SIZE];
 
-    if (get_log_path(oldpath, sizeof(oldpath), src, selfkey, otherkey, LOG_CHAT) == -1)
+    if (get_log_path(oldpath, sizeof(oldpath), src, selfkey, otherkey, LOG_CHAT) == -1) {
         goto on_error;
+    }
 
-    if (!file_exists(oldpath))
+    if (!file_exists(oldpath)) {
         return 0;
+    }
 
-    if (get_log_path(newpath, sizeof(newpath), dest, selfkey, otherkey, LOG_CHAT) == -1)
+    if (get_log_path(newpath, sizeof(newpath), dest, selfkey, otherkey, LOG_CHAT) == -1) {
         goto on_error;
+    }
 
-    if (rename(oldpath, newpath) != 0)
+    if (rename(oldpath, newpath) != 0) {
         goto on_error;
+    }
 
-    if (log_on)
+    if (log_on) {
         log_enable(dest, selfkey, otherkey, log, LOG_CHAT);
+    }
 
     return 0;
 
 on_error:
 
-    if (log_on)
+    if (log_on) {
         log_enable(src, selfkey, otherkey, log, LOG_CHAT);
+    }
 
     return -1;
 }

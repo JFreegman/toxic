@@ -97,16 +97,18 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len || ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE)
+    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len || ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE) {
         return -1;
+    }
 
     const char *L = (char *) list;
     const char *endchrs = " ";
     char ubuf[MAX_STR_SIZE];
 
     /* work with multibyte string copy of buf for simplicity */
-    if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1)
+    if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1) {
         return -1;
+    }
 
     /* TODO: generalize this */
     bool dir_search =    !strncmp(ubuf, "/sendfile", strlen("/sendfile"))
@@ -124,14 +126,16 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     const char *s = dir_search ? strchr(tmp, '\"') : strrchr(tmp, ' ');
     char *sub = calloc(1, strlen(ubuf) + 1);
 
-    if (sub == NULL)
+    if (sub == NULL) {
         exit_toxic_err("failed in complete_line", FATALERR_MEMORY);
+    }
 
     if (!s && !dir_search) {
         strcpy(sub, tmp);
 
-        if (sub[0] != '/')
+        if (sub[0] != '/') {
             endchrs = ": ";
+        }
     } else if (s) {
         strcpy(sub, &s[1]);
 
@@ -139,8 +143,9 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
             int sub_len = strlen(sub);
             int si = char_rfind(sub, '/', sub_len);
 
-            if (si || *sub == '/')
+            if (si || *sub == '/') {
                 memmove(sub, &sub[si + 1], sub_len - si);
+            }
         }
     }
 
@@ -159,17 +164,20 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
         char str[MAX_CMDNAME_SIZE + 1];
         snprintf(str, sizeof(str), "%s", &L[i * size]);
 
-        if (strncasecmp(str, sub, s_len) == 0)
+        if (strncasecmp(str, sub, s_len) == 0) {
             strcpy(matches[n_matches++], str);
+        }
     }
 
     free(sub);
 
-    if (!n_matches)
+    if (!n_matches) {
         return -1;
+    }
 
-    if (!dir_search && n_matches > 1)
+    if (!dir_search && n_matches > 1) {
         print_matches(self, NULL, matches, n_matches, MAX_STR_SIZE);
+    }
 
     char match[MAX_STR_SIZE];
     size_t match_len = get_str_match(self, match, sizeof(match), matches, n_matches);
@@ -179,10 +187,11 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     }
 
     if (dir_search) {
-        if (n_matches == 1)
+        if (n_matches == 1) {
             endchrs = char_rfind(match, '.', match_len) ? "\"" : "/";
-        else
+        } else {
             endchrs = "";
+        }
     } else if (n_matches > 1) {
         endchrs = "";
     }
@@ -192,8 +201,9 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     int strt = ctx->pos - s_len;
     int diff = match_len - s_len + n_endchrs;
 
-    if (ctx->len + diff >= MAX_STR_SIZE)
+    if (ctx->len + diff >= MAX_STR_SIZE) {
         return -1;
+    }
 
     char tmpend[MAX_STR_SIZE];
     snprintf(tmpend, sizeof(tmpend), "%s", &ubuf[ctx->pos]);
@@ -235,13 +245,15 @@ static void complt_home_dir(ToxWindow *self, char *path, int pathsize, const cha
 
     wchar_t wline[MAX_STR_SIZE];
 
-    if (mbs_to_wcs_buf(wline, newline, sizeof(wline) / sizeof(wchar_t)) == -1)
+    if (mbs_to_wcs_buf(wline, newline, sizeof(wline) / sizeof(wchar_t)) == -1) {
         return;
+    }
 
     int newlen = wcslen(wline);
 
-    if (ctx->len + newlen >= MAX_STR_SIZE)
+    if (ctx->len + newlen >= MAX_STR_SIZE) {
         return;
+    }
 
     wmemcpy(ctx->line, wline, newlen + 1);
     ctx->pos = newlen;
@@ -261,14 +273,17 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     char b_cmd[MAX_STR_SIZE];
     const wchar_t *tmpline = &line[wcslen(cmd) + 2];   /* start after "/command \"" */
 
-    if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1)
+    if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1) {
         return -1;
+    }
 
-    if (wcs_to_mbs_buf(b_cmd, cmd, sizeof(b_cmd)) == -1)
+    if (wcs_to_mbs_buf(b_cmd, cmd, sizeof(b_cmd)) == -1) {
         return -1;
+    }
 
-    if (b_path[0] == '~')
+    if (b_path[0] == '~') {
         complt_home_dir(self, b_path, sizeof(b_path), b_cmd, strlen(b_cmd) + 2);
+    }
 
     int si = char_rfind(b_path, '/', strlen(b_path));
 
@@ -286,8 +301,9 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     int b_name_len = strlen(b_name);
     DIR *dp = opendir(b_path);
 
-    if (dp == NULL)
+    if (dp == NULL) {
         return -1;
+    }
 
     char dirnames[MAX_DIRS][NAME_MAX + 1];
     struct dirent *entry;
@@ -303,8 +319,9 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 
     closedir(dp);
 
-    if (dircount == 0)
+    if (dircount == 0) {
         return -1;
+    }
 
     if (dircount > 1) {
         qsort(dirnames, dircount, NAME_MAX + 1, qsort_strcasecmp_hlpr);

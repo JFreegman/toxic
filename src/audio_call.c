@@ -73,44 +73,46 @@ static int set_call(Call *call, bool start)
     call->vout_idx = -1;
 #endif /* VIDEO */
 
-    if ( start ) {
+    if (start) {
         call->ttas = true;
 
-        if ( pthread_mutex_init(&call->mutex, NULL) != 0 )
+        if (pthread_mutex_init(&call->mutex, NULL) != 0) {
             return -1;
+        }
     } else {
         call->ttid = 0;
 
-        if ( pthread_mutex_destroy(&call->mutex) != 0 )
+        if (pthread_mutex_destroy(&call->mutex) != 0) {
             return -1;
+        }
     }
 
     return 0;
 }
 
-void call_cb                 ( ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
-                               void *user_data );
-void callstate_cb            ( ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data );
-void receive_audio_frame_cb  ( ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
-                               uint8_t channels, uint32_t sampling_rate, void *user_data );
-void receive_video_frame_cb  ( ToxAV *av, uint32_t friend_number,
-                               uint16_t width, uint16_t height,
-                               uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
-                               int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride, void *user_data );
+void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
+             void *user_data);
+void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data);
+void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
+                            uint8_t channels, uint32_t sampling_rate, void *user_data);
+void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
+                            uint16_t width, uint16_t height,
+                            uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
+                            int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride, void *user_data);
 
-void callback_recv_invite   ( Tox *m, uint32_t friend_number );
-void callback_recv_ringing  ( uint32_t friend_number );
-void callback_recv_starting ( uint32_t friend_number );
-void callback_recv_ending   ( uint32_t friend_number );
-void callback_call_started  ( uint32_t friend_number );
-void callback_call_canceled ( uint32_t friend_number );
-void callback_call_rejected ( uint32_t friend_number );
-void callback_call_ended    ( uint32_t friend_number );
+void callback_recv_invite(Tox *m, uint32_t friend_number);
+void callback_recv_ringing(uint32_t friend_number);
+void callback_recv_starting(uint32_t friend_number);
+void callback_recv_ending(uint32_t friend_number);
+void callback_call_started(uint32_t friend_number);
+void callback_call_canceled(uint32_t friend_number);
+void callback_call_rejected(uint32_t friend_number);
+void callback_call_ended(uint32_t friend_number);
 
-void write_device_callback( uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
-                            uint32_t sample_rate );
+void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
+                           uint32_t sample_rate);
 
-static void print_err (ToxWindow *self, const char *error_str)
+static void print_err(ToxWindow *self, const char *error_str)
 {
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
@@ -136,14 +138,14 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallControl.video_frame_duration = 0;
 #endif /* VIDEO */
 
-    if ( !CallControl.av ) {
+    if (!CallControl.av) {
         CallControl.audio_errors |= ae_StartingCoreAudio;
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init ToxAV");
 
         return NULL;
     }
 
-    if ( init_devices(CallControl.av) == de_InternalError ) {
+    if (init_devices(CallControl.av) == de_InternalError) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
         toxav_kill(CallControl.av);
 
@@ -161,11 +163,13 @@ void terminate_audio()
 {
     int i;
 
-    for (i = 0; i < CallControl.max_calls; ++i)
+    for (i = 0; i < CallControl.max_calls; ++i) {
         stop_transmission(&CallControl.calls[i], i);
+    }
 
-    if ( CallControl.av )
+    if (CallControl.av) {
         toxav_kill(CallControl.av);
+    }
 
     terminate_devices();
 }
@@ -177,48 +181,54 @@ void read_device_callback(const int16_t *captured, uint32_t size, void *data)
     int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
                            ((int64_t) CallControl.audio_frame_duration) / 1000;
 
-    if ( sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number,
+    if (sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number,
             captured, sample_count,
             CallControl.audio_channels,
-            CallControl.audio_sample_rate, &error) == false ) {
+            CallControl.audio_sample_rate, &error) == false) {
     }
 }
 
 void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
                            uint32_t sample_rate)
 {
-    if ( CallControl.calls[friend_number].ttas )
+    if (CallControl.calls[friend_number].ttas) {
         write_out(CallControl.calls[friend_number].out_idx, PCM, sample_count, channels, sample_rate);
+    }
 }
 
 int start_transmission(ToxWindow *self, Call *call)
 {
-    if ( !self || !CallControl.av ) {
+    if (!self || !CallControl.av) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare transmission");
         return -1;
     }
 
-    if (set_call(call, true) == -1)
+    if (set_call(call, true) == -1) {
         return -1;
+    }
 
     DeviceError error = open_primary_device(input, &call->in_idx,
                                             CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels);
 
-    if ( error != de_None ) {
-        if ( error == de_FailedStart)
+    if (error != de_None) {
+        if (error == de_FailedStart) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to start input device");
+        }
 
-        if ( error == de_InternalError )
+        if (error == de_InternalError) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening input device");
+        }
     }
 
-    if ( register_device_callback(self->num, call->in_idx,
-                                  read_device_callback, &self->num, true) != de_None)
+    if (register_device_callback(self->num, call->in_idx,
+                                 read_device_callback, &self->num, true) != de_None)
         /* Set VAD as true for all; TODO: Make it more dynamic */
+    {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
+    }
 
-    if ( open_primary_device(output, &call->out_idx,
-                             CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels) != de_None ) {
+    if (open_primary_device(output, &call->out_idx,
+                            CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels) != de_None) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
         call->has_output = 0;
     }
@@ -228,23 +238,27 @@ int start_transmission(ToxWindow *self, Call *call)
 
 int stop_transmission(Call *call, uint32_t friend_number)
 {
-    if ( call->ttas ) {
+    if (call->ttas) {
         TOXAV_ERR_CALL_CONTROL error = TOXAV_ERR_CALL_CONTROL_OK;
 
-        if ( CallControl.call_state > TOXAV_FRIEND_CALL_STATE_FINISHED )
+        if (CallControl.call_state > TOXAV_FRIEND_CALL_STATE_FINISHED) {
             toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
+        }
 
-        if ( error == TOXAV_ERR_CALL_CONTROL_OK ) {
+        if (error == TOXAV_ERR_CALL_CONTROL_OK) {
             call->ttas = false;
 
-            if ( call->in_idx != -1 )
+            if (call->in_idx != -1) {
                 close_device(input, call->in_idx);
+            }
 
-            if ( call->out_idx != -1 )
+            if (call->out_idx != -1) {
                 close_device(output, call->out_idx);
+            }
 
-            if ( set_call(call, false) == -1 )
+            if (set_call(call, false) == -1) {
                 return -1;
+            }
 
             return 0;
         } else {
@@ -277,8 +291,8 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
 {
     CallControl.call_state = state;
 
-    switch ( state ) {
-        case ( TOXAV_FRIEND_CALL_STATE_ERROR ):
+    switch (state) {
+        case (TOXAV_FRIEND_CALL_STATE_ERROR):
             line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
 
 #ifdef VIDEO
@@ -291,11 +305,12 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
 
             break;
 
-        case ( TOXAV_FRIEND_CALL_STATE_FINISHED ):
-            if ( CallControl.pending_call )
+        case (TOXAV_FRIEND_CALL_STATE_FINISHED):
+            if (CallControl.pending_call) {
                 callback_call_rejected(friend_number);
-            else
+            } else {
                 callback_call_ended(friend_number);
+            }
 
 #ifdef VIDEO
             callback_recv_video_end(friend_number);
@@ -311,7 +326,7 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
             break;
 
         default:
-            if ( CallControl.pending_call ) {
+            if (CallControl.pending_call) {
                 /* Start answered call */
                 callback_call_started(friend_number);
                 CallControl.pending_call = false;
@@ -320,10 +335,11 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
 #ifdef VIDEO
 
                 /* Handle receiving client video call states */
-                if ( state & TOXAV_FRIEND_CALL_STATE_SENDING_V )
+                if (state & TOXAV_FRIEND_CALL_STATE_SENDING_V) {
                     callback_recv_video_starting(friend_number);
-                else if ( state & ~TOXAV_FRIEND_CALL_STATE_SENDING_V )
+                } else if (state & ~TOXAV_FRIEND_CALL_STATE_SENDING_V) {
                     callback_recv_video_end(friend_number);
+                }
 
 #endif /* VIDEO */
             }
@@ -347,12 +363,14 @@ void audio_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t audio_
 
 void callback_recv_invite(Tox *m, uint32_t friend_number)
 {
-    if (friend_number >= Friends.max_idx)
+    if (friend_number >= Friends.max_idx) {
         return;
+    }
 
     if (Friends.list[friend_number].chatwin == -1) {
-        if (get_num_active_windows() >= MAX_WINDOWS_NUM)
+        if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
             return;
+        }
 
         Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
     }
@@ -384,11 +402,12 @@ void callback_recv_starting(uint32_t friend_number)
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if ( windows[i].onStarting != NULL && windows[i].num == friend_number ) {
+        if (windows[i].onStarting != NULL && windows[i].num == friend_number) {
             windows[i].onStarting(&windows[i], CallControl.av, friend_number, CallControl.call_state);
 
-            if ( 0 != start_transmission(&windows[i], &CallControl.calls[friend_number]) ) /* YEAH! */
+            if (0 != start_transmission(&windows[i], &CallControl.calls[friend_number])) { /* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
+            }
 
             return;
         }
@@ -412,10 +431,10 @@ void callback_call_started(uint32_t friend_number)
     int i;
 
     for (i = 0; i < MAX_WINDOWS_NUM; ++i)
-        if ( windows[i].onStart != NULL && windows[i].num == friend_number ) {
+        if (windows[i].onStart != NULL && windows[i].num == friend_number) {
             windows[i].onStart(&windows[i], CallControl.av, friend_number, CallControl.call_state);
 
-            if ( 0 != start_transmission(&windows[i], &CallControl.calls[friend_number]) ) {/* YEAH! */
+            if (0 != start_transmission(&windows[i], &CallControl.calls[friend_number])) {  /* YEAH! */
                 line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                 return;
             }
@@ -468,34 +487,40 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     TOXAV_ERR_CALL error;
     const char *error_str;
 
-    if ( argc != 0 ) {
+    if (argc != 0) {
         error_str = "Unknown arguments.";
         goto on_error;
     }
 
-    if ( !CallControl.av ) {
+    if (!CallControl.av) {
         error_str = "ToxAV not supported!";
         goto on_error;
     }
 
-    if ( !self->stb->connection ) {
+    if (!self->stb->connection) {
         error_str = "Friend is offline.";
         goto on_error;
     }
 
-    if ( CallControl.pending_call ) {
+    if (CallControl.pending_call) {
         error_str = "Already a pending call!";
         goto on_error;
     }
 
     toxav_call(CallControl.av, self->num, CallControl.audio_bit_rate, CallControl.video_bit_rate, &error);
 
-    if ( error != TOXAV_ERR_CALL_OK ) {
-        if ( error == TOXAV_ERR_CALL_FRIEND_ALREADY_IN_CALL ) error_str = "Already in a call!";
-        else if ( error == TOXAV_ERR_CALL_MALLOC ) error_str = "Memory allocation issue";
-        else if ( error == TOXAV_ERR_CALL_FRIEND_NOT_FOUND ) error_str = "Friend number invalid";
-        else if ( error == TOXAV_ERR_CALL_FRIEND_NOT_CONNECTED ) error_str = "Friend is valid but not currently connected";
-        else error_str = "Internal error!";
+    if (error != TOXAV_ERR_CALL_OK) {
+        if (error == TOXAV_ERR_CALL_FRIEND_ALREADY_IN_CALL) {
+            error_str = "Already in a call!";
+        } else if (error == TOXAV_ERR_CALL_MALLOC) {
+            error_str = "Memory allocation issue";
+        } else if (error == TOXAV_ERR_CALL_FRIEND_NOT_FOUND) {
+            error_str = "Friend number invalid";
+        } else if (error == TOXAV_ERR_CALL_FRIEND_NOT_CONNECTED) {
+            error_str = "Friend is valid but not currently connected";
+        } else {
+            error_str = "Internal error!";
+        }
 
         goto on_error;
     }
@@ -513,29 +538,35 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     TOXAV_ERR_ANSWER error;
     const char *error_str;
 
-    if ( argc != 0 ) {
+    if (argc != 0) {
         error_str = "Unknown arguments.";
         goto on_error;
     }
 
-    if ( !CallControl.av ) {
+    if (!CallControl.av) {
         error_str = "Audio not supported!";
         goto on_error;
     }
 
-    if ( !CallControl.pending_call ) {
+    if (!CallControl.pending_call) {
         error_str = "No incoming call!";
         goto on_error;
     }
 
     toxav_answer(CallControl.av, self->num, CallControl.audio_bit_rate, CallControl.video_bit_rate, &error);
 
-    if ( error != TOXAV_ERR_ANSWER_OK ) {
-        if ( error == TOXAV_ERR_ANSWER_FRIEND_NOT_CALLING ) error_str = "No incoming call!";
-        else if ( error == TOXAV_ERR_ANSWER_CODEC_INITIALIZATION ) error_str = "Failed to initialize codecs!";
-        else if ( error == TOXAV_ERR_ANSWER_FRIEND_NOT_FOUND ) error_str = "Friend not found!";
-        else if ( error == TOXAV_ERR_ANSWER_INVALID_BIT_RATE ) error_str = "Invalid bit rate!";
-        else error_str = "Internal error!";
+    if (error != TOXAV_ERR_ANSWER_OK) {
+        if (error == TOXAV_ERR_ANSWER_FRIEND_NOT_CALLING) {
+            error_str = "No incoming call!";
+        } else if (error == TOXAV_ERR_ANSWER_CODEC_INITIALIZATION) {
+            error_str = "Failed to initialize codecs!";
+        } else if (error == TOXAV_ERR_ANSWER_FRIEND_NOT_FOUND) {
+            error_str = "Friend not found!";
+        } else if (error == TOXAV_ERR_ANSWER_INVALID_BIT_RATE) {
+            error_str = "Invalid bit rate!";
+        } else {
+            error_str = "Internal error!";
+        }
 
         goto on_error;
     }
@@ -546,24 +577,24 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     return;
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
 
-    if ( argc != 0 ) {
+    if (argc != 0) {
         error_str = "Unknown arguments.";
         goto on_error;
     }
 
-    if ( !CallControl.av ) {
+    if (!CallControl.av) {
         error_str = "Audio not supported!";
         goto on_error;
     }
 
-    if ( !CallControl.pending_call ) {
+    if (!CallControl.pending_call) {
         error_str = "No incoming call!";
         goto on_error;
     }
@@ -577,24 +608,24 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     return;
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str = NULL;
 
-    if ( !CallControl.av ) {
+    if (!CallControl.av) {
         error_str = "Audio not supported!";
         goto on_error;
     }
 
-    if ( argc != 0 ) {
+    if (argc != 0) {
         error_str = "Unknown arguments.";
         goto on_error;
     }
 
-    if ( !self->is_call && !CallControl.pending_call ) {
+    if (!self->is_call && !CallControl.pending_call) {
         error_str = "Not in a call.";
         goto on_error;
     }
@@ -606,27 +637,32 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     stop_current_call(self);
     return;
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
 
-    if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else error_str = "Only one argument allowed!";
+    if (argc != 1) {
+        if (argc < 1) {
+            error_str = "Type must be specified!";
+        } else {
+            error_str = "Only one argument allowed!";
+        }
 
         goto on_error;
     }
 
     DeviceType type;
 
-    if ( strcasecmp(argv[1], "in") == 0 ) /* Input devices */
+    if (strcasecmp(argv[1], "in") == 0) { /* Input devices */
         type = input;
+    }
 
-    else if ( strcasecmp(argv[1], "out") == 0 ) /* Output devices */
+    else if (strcasecmp(argv[1], "out") == 0) { /* Output devices */
         type = output;
+    }
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -640,7 +676,7 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
 
     return;
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 /* This changes primary device only */
@@ -648,21 +684,27 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
 {
     const char *error_str;
 
-    if ( argc != 2 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else if ( argc < 2 ) error_str = "Must have id!";
-        else error_str = "Only two arguments allowed!";
+    if (argc != 2) {
+        if (argc < 1) {
+            error_str = "Type must be specified!";
+        } else if (argc < 2) {
+            error_str = "Must have id!";
+        } else {
+            error_str = "Only two arguments allowed!";
+        }
 
         goto on_error;
     }
 
     DeviceType type;
 
-    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+    if (strcmp(argv[1], "in") == 0) { /* Input devices */
         type = input;
+    }
 
-    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+    else if (strcmp(argv[1], "out") == 0) { /* Output devices */
         type = output;
+    }
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -673,40 +715,46 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     char *end;
     long int selection = strtol(argv[2], &end, 10);
 
-    if ( *end ) {
+    if (*end) {
         error_str = "Invalid input";
         goto on_error;
     }
 
-    if ( set_primary_device(type, selection) == de_InvalidSelection ) {
+    if (set_primary_device(type, selection) == de_InvalidSelection) {
         error_str = "Invalid selection!";
         goto on_error;
     }
 
     return;
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
 
-    if ( argc != 2 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else if ( argc < 2 ) error_str = "Must have id!";
-        else error_str = "Only two arguments allowed!";
+    if (argc != 2) {
+        if (argc < 1) {
+            error_str = "Type must be specified!";
+        } else if (argc < 2) {
+            error_str = "Must have id!";
+        } else {
+            error_str = "Only two arguments allowed!";
+        }
 
         goto on_error;
     }
 
     DeviceType type;
 
-    if ( strcmp(argv[1], "in") == 0 ) /* Input devices */
+    if (strcmp(argv[1], "in") == 0) { /* Input devices */
         type = input;
+    }
 
-    else if ( strcmp(argv[1], "out") == 0 ) /* Output devices */
+    else if (strcmp(argv[1], "out") == 0) { /* Output devices */
         type = output;
+    }
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -717,24 +765,24 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     char *end;
     long int selection = strtol(argv[2], &end, 10);
 
-    if ( *end ) {
+    if (*end) {
         error_str = "Invalid input";
         goto on_error;
     }
 
-    if ( selection_valid(type, selection) == de_InvalidSelection ) {
+    if (selection_valid(type, selection) == de_InvalidSelection) {
         error_str = "Invalid selection!";
         goto on_error;
     }
 
     /* If call is active, change device */
-    if ( self->is_call ) {
+    if (self->is_call) {
         Call *this_call = &CallControl.calls[self->num];
 
-        if ( this_call->ttas ) {
+        if (this_call->ttas) {
 
 
-            if ( type == output ) {
+            if (type == output) {
                 pthread_mutex_lock(&this_call->mutex);
                 close_device(output, this_call->out_idx);
                 this_call->has_output = open_device(output, selection, &this_call->out_idx,
@@ -756,27 +804,32 @@ void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
     return;
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
 
-    if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Type must be specified!";
-        else error_str = "Only two arguments allowed!";
+    if (argc != 1) {
+        if (argc < 1) {
+            error_str = "Type must be specified!";
+        } else {
+            error_str = "Only two arguments allowed!";
+        }
 
         goto on_error;
     }
 
     DeviceType type;
 
-    if ( strcasecmp(argv[1], "in") == 0 ) /* Input devices */
+    if (strcasecmp(argv[1], "in") == 0) { /* Input devices */
         type = input;
+    }
 
-    else if ( strcasecmp(argv[1], "out") == 0 ) /* Output devices */
+    else if (strcasecmp(argv[1], "out") == 0) { /* Output devices */
         type = output;
+    }
 
     else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
@@ -785,12 +838,12 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 
     /* If call is active, use this_call values */
-    if ( self->is_call ) {
+    if (self->is_call) {
         Call *this_call = &CallControl.calls[self->num];
 
         pthread_mutex_lock(&this_call->mutex);
 
-        if ( type == input ) {
+        if (type == input) {
             device_mute(type, this_call->in_idx);
             self->chatwin->infobox.in_is_muted ^= 1;
         } else {
@@ -804,16 +857,19 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     return;
 
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *error_str;
 
-    if ( argc != 1 ) {
-        if ( argc < 1 ) error_str = "Must have value!";
-        else error_str = "Only two arguments allowed!";
+    if (argc != 1) {
+        if (argc < 1) {
+            error_str = "Must have value!";
+        } else {
+            error_str = "Only two arguments allowed!";
+        }
 
         goto on_error;
     }
@@ -821,13 +877,13 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     char *end;
     float value = strtof(argv[1], &end);
 
-    if ( *end ) {
+    if (*end) {
         error_str = "Invalid input";
         goto on_error;
     }
 
     /* Call must be active */
-    if ( self->is_call ) {
+    if (self->is_call) {
         device_set_VAD_treshold(CallControl.calls[self->num].in_idx, value);
         self->chatwin->infobox.vad_lvl = value;
     }
@@ -835,19 +891,19 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     return;
 
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     char *error_str;
 
-    if ( argc != 1 ) {
+    if (argc != 1) {
         error_str = "Must have value!";
         goto on_error;
     }
 
-    if ( self->is_call == false ) {
+    if (self->is_call == false) {
         error_str = "Must be in a call";
         goto on_error;
     }
@@ -885,12 +941,12 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     return;
 
 on_error:
-    print_err (self, error_str);
+    print_err(self, error_str);
 }
 
 void stop_current_call(ToxWindow *self)
 {
-    if ( CallControl.pending_call ) {
+    if (CallControl.pending_call) {
         toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
         callback_call_canceled(self->num);
     } else {

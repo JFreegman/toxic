@@ -103,13 +103,15 @@ DeviceError init_devices()
     get_devices_names();
 
     // Start poll thread
-    if (pthread_mutex_init(&mutex, NULL) != 0)
+    if (pthread_mutex_init(&mutex, NULL) != 0) {
         return de_InternalError;
+    }
 
     pthread_t thread_id;
 
-    if ( pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0)
+    if (pthread_create(&thread_id, NULL, thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0) {
         return de_InternalError;
+    }
 
 #ifdef AUDIO
     av = av_;
@@ -127,8 +129,9 @@ DeviceError terminate_devices()
 
     usleep(20000);
 
-    if (pthread_mutex_destroy(&mutex) != 0)
+    if (pthread_mutex_destroy(&mutex) != 0) {
         return (DeviceError) de_InternalError;
+    }
 
     return (DeviceError) de_None;
 }
@@ -140,35 +143,38 @@ void get_devices_names()
 
     size[input] = 0;
 
-    if ( (stringed_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER)) ) {
+    if ((stringed_device_list = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER))) {
         ddevice_names[input] = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
 
-        for ( ; *stringed_device_list && size[input] < MAX_DEVICES; ++size[input] ) {
+        for (; *stringed_device_list && size[input] < MAX_DEVICES; ++size[input]) {
             devices_names[input][size[input]] = stringed_device_list;
-            stringed_device_list += strlen( stringed_device_list ) + 1;
+            stringed_device_list += strlen(stringed_device_list) + 1;
         }
     }
 
     size[output] = 0;
 
-    if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") != AL_FALSE)
+    if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") != AL_FALSE) {
         stringed_device_list = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
-    else
+    } else {
         stringed_device_list = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+    }
 
     if (stringed_device_list) {
         ddevice_names[output] = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
 
-        for ( ; *stringed_device_list && size[output] < MAX_DEVICES; ++size[output] ) {
+        for (; *stringed_device_list && size[output] < MAX_DEVICES; ++size[output]) {
             devices_names[output][size[output]] = stringed_device_list;
-            stringed_device_list += strlen( stringed_device_list ) + 1;
+            stringed_device_list += strlen(stringed_device_list) + 1;
         }
     }
 }
 
 DeviceError device_mute(DeviceType type, uint32_t device_idx)
 {
-    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
+    if (device_idx >= MAX_DEVICES) {
+        return de_InvalidSelection;
+    }
 
     lock;
 
@@ -188,7 +194,9 @@ DeviceError device_mute(DeviceType type, uint32_t device_idx)
 #ifdef AUDIO
 DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
 {
-    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
+    if (device_idx >= MAX_DEVICES) {
+        return de_InvalidSelection;
+    }
 
     lock;
 
@@ -209,7 +217,9 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
 
 DeviceError set_primary_device(DeviceType type, int32_t selection)
 {
-    if (size[type] <= selection || selection < 0) return de_InvalidSelection;
+    if (size[type] <= selection || selection < 0) {
+        return de_InvalidSelection;
+    }
 
     primary_device[type] = selection;
 
@@ -231,9 +241,13 @@ void get_primary_device_name(DeviceType type, char *buf, int size)
 DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx, uint32_t sample_rate,
                         uint32_t frame_duration, uint8_t channels)
 {
-    if (size[type] <= selection || selection < 0) return de_InvalidSelection;
+    if (size[type] <= selection || selection < 0) {
+        return de_InvalidSelection;
+    }
 
-    if (channels != 1 && channels != 2) return de_UnsupportedMode;
+    if (channels != 1 && channels != 2) {
+        return de_UnsupportedMode;
+    }
 
     lock;
 
@@ -246,10 +260,12 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx
     if (i == MAX_DEVICES) {
         unlock;
         return de_AllDevicesBusy;
-    } else *device_idx = i;
+    } else {
+        *device_idx = i;
+    }
 
     for (i = 0; i < MAX_DEVICES; i ++) { /* Check if any device has the same selection */
-        if ( running[type][i] && running[type][i]->selection == selection ) {
+        if (running[type][i] && running[type][i]->selection == selection) {
 //             printf("a%d-%d:%p ", selection, i, running[type][i]->dhndl);
 
             running[type][*device_idx] = running[type][i];
@@ -282,7 +298,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx
     } else {
         device->dhndl = alcOpenDevice(devices_names[type][selection]);
 
-        if ( !device->dhndl ) {
+        if (!device->dhndl) {
             free(device);
             running[type][*device_idx] = NULL;
             unlock;
@@ -299,7 +315,7 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx
         uint16_t zeros[frame_size];
         memset(zeros, 0, frame_size * 2);
 
-        for ( i = 0; i < OPENAL_BUFS; ++i ) {
+        for (i = 0; i < OPENAL_BUFS; ++i) {
             alBufferData(device->buffers[i], device->sound_mode, zeros, frame_size * 2, sample_rate);
         }
 
@@ -325,7 +341,9 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx
 
 DeviceError close_device(DeviceType type, uint32_t device_idx)
 {
-    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
+    if (device_idx >= MAX_DEVICES) {
+        return de_InvalidSelection;
+    }
 
     lock;
     Device *device = running[type][device_idx];
@@ -338,34 +356,45 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
 
     running[type][device_idx] = NULL;
 
-    if ( !device->ref_count ) {
+    if (!device->ref_count) {
         if (type == input) {
-            if ( !alcCaptureCloseDevice(device->dhndl) ) rc = de_AlError;
+            if (!alcCaptureCloseDevice(device->dhndl)) {
+                rc = de_AlError;
+            }
         } else {
-            if (alcGetCurrentContext() != device->ctx) alcMakeContextCurrent(device->ctx);
+            if (alcGetCurrentContext() != device->ctx) {
+                alcMakeContextCurrent(device->ctx);
+            }
 
             alDeleteSources(1, &device->source);
             alDeleteBuffers(OPENAL_BUFS, device->buffers);
 
             alcMakeContextCurrent(NULL);
 
-            if ( device->ctx ) alcDestroyContext(device->ctx);
+            if (device->ctx) {
+                alcDestroyContext(device->ctx);
+            }
 
-            if ( !alcCloseDevice(device->dhndl) ) rc = de_AlError;
+            if (!alcCloseDevice(device->dhndl)) {
+                rc = de_AlError;
+            }
         }
 
         free(device);
-    } else device->ref_count--;
+    } else {
+        device->ref_count--;
+    }
 
     unlock;
     return rc;
 }
 
-DeviceError register_device_callback( int32_t friend_number, uint32_t device_idx, DataHandleCallback callback,
-                                      void *data, bool enable_VAD)
+DeviceError register_device_callback(int32_t friend_number, uint32_t device_idx, DataHandleCallback callback,
+                                     void *data, bool enable_VAD)
 {
-    if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL)
+    if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) {
         return de_InvalidSelection;
+    }
 
     lock;
     running[input][device_idx]->cb = callback;
@@ -380,11 +409,15 @@ DeviceError register_device_callback( int32_t friend_number, uint32_t device_idx
 inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t sample_count, uint8_t channels,
                                uint32_t sample_rate)
 {
-    if (device_idx >= MAX_DEVICES) return de_InvalidSelection;
+    if (device_idx >= MAX_DEVICES) {
+        return de_InvalidSelection;
+    }
 
     Device *device = running[output][device_idx];
 
-    if (!device || device->muted) return de_DeviceNotActive;
+    if (!device || device->muted) {
+        return de_DeviceNotActive;
+    }
 
     pthread_mutex_lock(device->mutex);
 
@@ -399,8 +432,9 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_
         alSourceUnqueueBuffers(device->source, processed, bufids);
         alDeleteBuffers(processed - 1, bufids + 1);
         bufid = bufids[0];
-    } else if (queued < 16) alGenBuffers(1, &bufid);
-    else {
+    } else if (queued < 16) {
+        alGenBuffers(1, &bufid);
+    } else {
         pthread_mutex_unlock(device->mutex);
         return de_Busy;
     }
@@ -413,14 +447,16 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_
     ALint state;
     alGetSourcei(device->source, AL_SOURCE_STATE, &state);
 
-    if (state != AL_PLAYING) alSourcePlay(device->source);
+    if (state != AL_PLAYING) {
+        alSourcePlay(device->source);
+    }
 
 
     pthread_mutex_unlock(device->mutex);
     return de_None;
 }
 
-void *thread_poll (void *arg) // TODO: maybe use thread for every input source
+void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
 {
     /*
      * NOTE: We only need to poll input devices for data.
@@ -470,7 +506,9 @@ void *thread_poll (void *arg) // TODO: maybe use thread for every input source
                         continue;
                     }
 
-                    if ( device->cb ) device->cb(frame, f_size, device->cb_data);
+                    if (device->cb) {
+                        device->cb(frame, f_size, device->cb_data);
+                    }
                 }
 
                 unlock;
@@ -502,8 +540,9 @@ DeviceError selection_valid(DeviceType type, int32_t selection)
 
 void *get_device_callback_data(uint32_t device_idx)
 {
-    if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL)
+    if (size[input] <= device_idx || !running[input][device_idx] || running[input][device_idx]->dhndl == NULL) {
         return NULL;
+    }
 
     return running[input][device_idx]->cb_data;
 }

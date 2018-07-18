@@ -229,8 +229,9 @@ static void init_term(void)
         start_color();
 
         if (user_settings->colour_theme == NATIVE_COLS) {
-            if (assume_default_colors(-1, -1) == OK)
+            if (assume_default_colors(-1, -1) == OK) {
                 bg_color = -1;
+            }
         }
 
         init_pair(0, COLOR_WHITE, COLOR_BLACK);
@@ -267,13 +268,15 @@ static void queue_init_message(const char *msg, ...)
 
     char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
 
-    if (new_msgs == NULL)
+    if (new_msgs == NULL) {
         exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
+    }
 
     new_msgs[i] = malloc(MAX_STR_SIZE);
 
-    if (new_msgs[i] == NULL)
+    if (new_msgs[i] == NULL) {
         exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
+    }
 
     snprintf(new_msgs[i], MAX_STR_SIZE, "%s", frmt_msg);
     init_messages.msgs = new_msgs;
@@ -282,13 +285,15 @@ static void queue_init_message(const char *msg, ...)
 /* called after messages have been printed to prompt and are no longer needed */
 static void cleanup_init_messages(void)
 {
-    if (init_messages.num <= 0)
+    if (init_messages.num <= 0) {
         return;
+    }
 
     int i;
 
-    for (i = 0; i < init_messages.num; ++i)
+    for (i = 0; i < init_messages.num; ++i) {
         free(init_messages.msgs[i]);
+    }
 
     free(init_messages.msgs);
 }
@@ -297,8 +302,9 @@ static void print_init_messages(ToxWindow *toxwin)
 {
     int i;
 
-    for (i = 0; i < init_messages.num; ++i)
+    for (i = 0; i < init_messages.num; ++i) {
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
+    }
 }
 
 static void load_friendlist(Tox *m)
@@ -358,8 +364,9 @@ static int password_prompt(char *buf, int size)
     nflags.c_lflag &= ~ECHO;
     nflags.c_lflag |= ECHONL;
 
-    if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0)
+    if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0) {
         return 0;
+    }
 
     const char *p = fgets(buf, size, stdin);
     int len = strlen(buf);
@@ -367,8 +374,9 @@ static int password_prompt(char *buf, int size)
     /* re-enable terminal echo */
     tcsetattr(fileno(stdin), TCSANOW, &oflags);
 
-    if (p == NULL || len <= 1)
+    if (p == NULL || len <= 1) {
         return 0;
+    }
 
     /* eat overflowed stdin and return error */
     if (buf[--len] != '\n') {
@@ -438,15 +446,17 @@ static void first_time_encrypt(const char *msg)
         fflush(stdout);
 
         if (!strcasecmp(ch, "y\n") || !strcasecmp(ch, "n\n") || !strcasecmp(ch, "yes\n")
-                || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n"))
+                || !strcasecmp(ch, "no\n") || !strcasecmp(ch, "q\n")) {
             break;
+        }
 
     } while (fgets(ch, sizeof(ch), stdin));
 
     printf("\n");
 
-    if (ch[0] == 'q' || ch[0] == 'Q')
+    if (ch[0] == 'q' || ch[0] == 'Q') {
         exit(0);
+    }
 
     if (ch[0] == 'y' || ch[0] == 'Y') {
         int len = 0;
@@ -460,8 +470,9 @@ static void first_time_encrypt(const char *msg)
             len = password_prompt(user_password.pass, sizeof(user_password.pass));
             user_password.len = len;
 
-            if (strcasecmp(user_password.pass, "q") == 0)
+            if (strcasecmp(user_password.pass, "q") == 0) {
                 exit(0);
+            }
 
             if (string_is_empty(passconfirm) && (len < MIN_PASSWORD_LEN || len > MAX_PASSWORD_LEN)) {
                 printf("Password must be between %d and %d characters long. ", MIN_PASSWORD_LEN, MAX_PASSWORD_LEN);
@@ -604,11 +615,13 @@ static void init_tox_options(struct Tox_Options *tox_opts)
     tox_options_set_proxy_type(tox_opts, arg_opts.proxy_type);
     tox_options_set_tcp_port(tox_opts, arg_opts.tcp_port);
 
-    if (!tox_options_get_ipv6_enabled(tox_opts))
+    if (!tox_options_get_ipv6_enabled(tox_opts)) {
         queue_init_message("Forcing IPv4 connection");
+    }
 
-    if (tox_options_get_tcp_port(tox_opts))
+    if (tox_options_get_tcp_port(tox_opts)) {
         queue_init_message("TCP relaying enabled on port %d", tox_options_get_tcp_port(tox_opts));
+    }
 
     if (tox_options_get_proxy_type(tox_opts) != TOX_PROXY_TYPE_NONE) {
         tox_options_set_proxy_port(tox_opts, arg_opts.proxy_port);
@@ -662,14 +675,16 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
             exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
         }
 
-        if (arg_opts.unencrypt_data && is_encrypted)
+        if (arg_opts.unencrypt_data && is_encrypted) {
             queue_init_message("Data file '%s' has been unencrypted", data_path);
-        else if (arg_opts.unencrypt_data)
+        } else if (arg_opts.unencrypt_data) {
             queue_init_message("Warning: passed --unencrypt-data option with unencrypted data file '%s'", data_path);
+        }
 
         if (is_encrypted) {
-            if (!arg_opts.unencrypt_data)
+            if (!arg_opts.unencrypt_data) {
                 user_password.data_is_encrypted = true;
+            }
 
             size_t pwlen = 0;
             int pweval = user_settings->password_eval[0];
@@ -746,18 +761,21 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
         fclose(fp);
     } else {   /* Data file does not/should not exist */
-        if (file_exists(data_path))
+        if (file_exists(data_path)) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+        }
 
         tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_NONE);
 
         m = tox_new(tox_opts, new_err);
 
-        if (m == NULL)
+        if (m == NULL) {
             return NULL;
+        }
 
-        if (store_data(m, data_path) == -1)
+        if (store_data(m, data_path) == -1) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+        }
     }
 
     return m;
@@ -768,8 +786,9 @@ static Tox *load_toxic(char *data_path)
     TOX_ERR_OPTIONS_NEW options_new_err;
     struct Tox_Options *tox_opts = tox_options_new(&options_new_err);
 
-    if (!tox_opts)
+    if (!tox_opts) {
         exit_toxic_err("tox_options_new returned fatal error", options_new_err);
+    }
 
     init_tox_options(tox_opts);
 
@@ -782,18 +801,21 @@ static Tox *load_toxic(char *data_path)
         m = load_tox(data_path, tox_opts, &new_err);
     }
 
-    if (!m)
+    if (!m) {
         exit_toxic_err("tox_new returned fatal error", new_err);
+    }
 
-    if (new_err != TOX_ERR_NEW_OK)
+    if (new_err != TOX_ERR_NEW_OK) {
         queue_init_message("tox_new returned non-fatal error %d", new_err);
+    }
 
     init_tox_callbacks(m);
     load_friendlist(m);
     load_blocklist(BLOCK_FILE);
 
-    if (tox_self_get_name_size(m) == 0)
+    if (tox_self_get_name_size(m) == 0) {
         tox_self_set_name(m, (uint8_t *) "Toxic User", strlen("Toxic User"), NULL);
+    }
 
     tox_options_free(tox_opts);
     return m;
@@ -854,8 +876,9 @@ void *thread_cqueue(void *data)
             ToxWindow *toxwin = get_window_ptr(i);
 
             if (toxwin != NULL && toxwin->is_chat
-                    && get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE)
+                    && get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE) {
                 cqueue_try_send(toxwin, m);
+            }
         }
 
         pthread_mutex_unlock(&Winthread.lock);
@@ -956,8 +979,9 @@ static void parse_args(int argc, char *argv[])
             case 'c':
                 snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
 
-                if (!file_exists(arg_opts.config_path))
+                if (!file_exists(arg_opts.config_path)) {
                     queue_init_message("Config file not found");
+                }
 
                 break;
 
@@ -973,22 +997,26 @@ static void parse_args(int argc, char *argv[])
             case 'f':
                 arg_opts.use_custom_data = 1;
 
-                if (DATA_FILE)
+                if (DATA_FILE) {
                     free(DATA_FILE);
+                }
 
-                if (BLOCK_FILE)
+                if (BLOCK_FILE) {
                     free(BLOCK_FILE);
+                }
 
                 DATA_FILE = malloc(strlen(optarg) + 1);
                 strcpy(DATA_FILE, optarg);
 
-                if (DATA_FILE == NULL)
+                if (DATA_FILE == NULL) {
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+                }
 
                 BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
-                if (BLOCK_FILE == NULL)
+                if (BLOCK_FILE == NULL) {
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+                }
 
                 strcpy(BLOCK_FILE, optarg);
                 strcat(BLOCK_FILE, "-blocklist");
@@ -1010,13 +1038,15 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.proxy_type = TOX_PROXY_TYPE_SOCKS5;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
-                if (++optind > argc || argv[optind - 1][0] == '-')
+                if (++optind > argc || argv[optind - 1][0] == '-') {
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
+                }
 
                 port = strtol(argv[optind - 1], NULL, 10);
 
-                if (port <= 0 || port > MAX_PORT_RANGE)
+                if (port <= 0 || port > MAX_PORT_RANGE) {
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
+                }
 
                 arg_opts.proxy_port = port;
                 break;
@@ -1025,13 +1055,15 @@ static void parse_args(int argc, char *argv[])
                 arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
-                if (++optind > argc || argv[optind - 1][0] == '-')
+                if (++optind > argc || argv[optind - 1][0] == '-') {
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
+                }
 
                 port = strtol(argv[optind - 1], NULL, 10);
 
-                if (port <= 0 || port > MAX_PORT_RANGE)
+                if (port <= 0 || port > MAX_PORT_RANGE) {
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
+                }
 
                 arg_opts.proxy_port = port;
                 break;
@@ -1039,8 +1071,9 @@ static void parse_args(int argc, char *argv[])
             case 'r':
                 snprintf(arg_opts.nameserver_path, sizeof(arg_opts.nameserver_path), "%s", optarg);
 
-                if (!file_exists(arg_opts.nameserver_path))
+                if (!file_exists(arg_opts.nameserver_path)) {
                     queue_init_message("nameserver list not found");
+                }
 
                 break;
 
@@ -1051,8 +1084,9 @@ static void parse_args(int argc, char *argv[])
             case 'T':
                 port = strtol(optarg, NULL, 10);
 
-                if (port <= 0 || port > MAX_PORT_RANGE)
+                if (port <= 0 || port > MAX_PORT_RANGE) {
                     port = 14191;
+                }
 
                 arg_opts.tcp_port = port;
                 break;
@@ -1085,28 +1119,34 @@ static int rename_old_profile(const char *user_config_dir)
     char old_data_file[strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_NAME) + 1];
     snprintf(old_data_file, sizeof(old_data_file), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_NAME);
 
-    if (!file_exists(old_data_file))
+    if (!file_exists(old_data_file)) {
         return 0;
+    }
 
-    if (file_exists(DATA_FILE))
+    if (file_exists(DATA_FILE)) {
         return 0;
+    }
 
-    if (rename(old_data_file, DATA_FILE) != 0)
+    if (rename(old_data_file, DATA_FILE) != 0) {
         return -1;
+    }
 
     queue_init_message("Data file has been moved to %s", DATA_FILE);
 
     char old_data_blocklist[strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_BLOCKLIST_NAME) + 1];
     snprintf(old_data_blocklist, sizeof(old_data_blocklist), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
 
-    if (!file_exists(old_data_blocklist))
+    if (!file_exists(old_data_blocklist)) {
         return 0;
+    }
 
-    if (file_exists(BLOCK_FILE))
+    if (file_exists(BLOCK_FILE)) {
         return 0;
+    }
 
-    if (rename(old_data_blocklist, BLOCK_FILE) != 0)
+    if (rename(old_data_blocklist, BLOCK_FILE) != 0) {
         return -1;
+    }
 
     return 0;
 }
@@ -1117,13 +1157,15 @@ static int rename_old_profile(const char *user_config_dir)
  */
 static void init_default_data_files(void)
 {
-    if (arg_opts.use_custom_data)
+    if (arg_opts.use_custom_data) {
         return;
+    }
 
     char *user_config_dir = get_user_config_dir();
 
-    if (user_config_dir == NULL)
+    if (user_config_dir == NULL) {
         exit_toxic_err("failed in init_default_data_files()", FATALERR_FILEOP);
+    }
 
     int config_err = create_user_config_dirs(user_config_dir);
 
@@ -1131,14 +1173,16 @@ static void init_default_data_files(void)
         DATA_FILE = strdup(DATANAME);
         BLOCK_FILE = strdup(BLOCKNAME);
 
-        if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+        if (DATA_FILE == NULL || BLOCK_FILE == NULL) {
             exit_toxic_err("failed in init_default_data_files()", FATALERR_MEMORY);
+        }
     } else {
         DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
         BLOCK_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
 
-        if (DATA_FILE == NULL || BLOCK_FILE == NULL)
+        if (DATA_FILE == NULL || BLOCK_FILE == NULL) {
             exit_toxic_err("failed in init_default_data_files()", FATALERR_MEMORY);
+        }
 
         strcpy(DATA_FILE, user_config_dir);
         strcat(DATA_FILE, CONFIGDIR);
@@ -1150,8 +1194,9 @@ static void init_default_data_files(void)
     }
 
     /* For backwards compatibility with old toxic profile names. TODO: remove this some day */
-    if (rename_old_profile(user_config_dir) == -1)
+    if (rename_old_profile(user_config_dir) == -1) {
         queue_init_message("Warning: Profile backwards compatibility failed.");
+    }
 
     free(user_config_dir);
 }
@@ -1174,8 +1219,9 @@ int main(int argc, char **argv)
     parse_args(argc, argv);
 
     /* Use the -b flag to enable stderr */
-    if (!arg_opts.debug)
+    if (!arg_opts.debug) {
         freopen("/dev/null", "w", stderr);
+    }
 
     if (arg_opts.encrypt_data && arg_opts.unencrypt_data) {
         arg_opts.encrypt_data = 0;
@@ -1190,17 +1236,19 @@ int main(int argc, char **argv)
 
     bool datafile_exists = file_exists(DATA_FILE);
 
-    if (!datafile_exists && !arg_opts.unencrypt_data)
+    if (!datafile_exists && !arg_opts.unencrypt_data) {
         first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
-    else if (arg_opts.encrypt_data)
+    } else if (arg_opts.encrypt_data) {
         first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
+    }
 
 
     /* init user_settings struct and load settings from conf file */
     user_settings = calloc(1, sizeof(struct user_settings));
 
-    if (user_settings == NULL)
+    if (user_settings == NULL) {
         exit_toxic_err("failed in main", FATALERR_MEMORY);
+    }
 
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
@@ -1221,15 +1269,17 @@ int main(int argc, char **argv)
 
 #ifdef X11
 
-    if (init_xtra(DnD_callback) == -1)
+    if (init_xtra(DnD_callback) == -1) {
         queue_init_message("X failed to initialize");
+    }
 
 #endif
 
     Tox *m = load_toxic(DATA_FILE);
 
-    if (arg_opts.encrypt_data && !datafile_exists)
+    if (arg_opts.encrypt_data && !datafile_exists) {
         arg_opts.encrypt_data = 0;
+    }
 
 
     init_term();
@@ -1239,15 +1289,18 @@ int main(int argc, char **argv)
     load_groups(prompt, m);
 
     /* thread for ncurses stuff */
-    if (pthread_mutex_init(&Winthread.lock, NULL) != 0)
+    if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
+    }
 
-    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0)
+    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0) {
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+    }
 
     /* thread for message queue */
-    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0)
+    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0) {
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+    }
 
 #ifdef AUDIO
 
@@ -1259,16 +1312,18 @@ int main(int argc, char **argv)
 #endif /* VIDEO */
 
     /* AV thread */
-    if (pthread_create(&av_thread.tid, NULL, thread_av, (void *) av) != 0)
+    if (pthread_create(&av_thread.tid, NULL, thread_av, (void *) av) != 0) {
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+    }
 
     set_primary_device(input, user_settings->audio_in_dev);
     set_primary_device(output, user_settings->audio_out_dev);
 
 #elif SOUND_NOTIFY
 
-    if ( init_devices() == de_InternalError )
+    if (init_devices() == de_InternalError) {
         queue_init_message("Failed to init audio devices");
+    }
 
 #endif /* AUDIO */
 
@@ -1282,8 +1337,9 @@ int main(int argc, char **argv)
     init_notify(60, 3000);
 
     /* screen/tmux auto-away timer */
-    if (init_mplex_away_timer(m) == -1)
+    if (init_mplex_away_timer(m) == -1) {
         queue_init_message("Failed to init mplex auto-away.");
+    }
 
     int nodeslist_ret = load_DHT_nodeslist();
 
@@ -1312,8 +1368,9 @@ int main(int argc, char **argv)
         if (timed_out(last_save, AUTOSAVE_FREQ)) {
             pthread_mutex_lock(&Winthread.lock);
 
-            if (store_data(m, DATA_FILE) != 0)
+            if (store_data(m, DATA_FILE) != 0) {
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
+            }
 
             pthread_mutex_unlock(&Winthread.lock);
 

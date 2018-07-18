@@ -33,8 +33,9 @@
 /* Adds char to line at pos. Return 0 on success, -1 if line buffer is full */
 int add_char_to_buf(ChatContext *ctx, wint_t ch)
 {
-    if (ctx->len >= MAX_STR_SIZE - 1)
+    if (ctx->len >= MAX_STR_SIZE - 1) {
         return -1;
+    }
 
     wmemmove(&ctx->line[ctx->pos + 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     ctx->line[ctx->pos++] = ch;
@@ -46,8 +47,9 @@ int add_char_to_buf(ChatContext *ctx, wint_t ch)
 /* Deletes the character before pos. Return 0 on success, -1 if nothing to delete */
 int del_char_buf_bck(ChatContext *ctx)
 {
-    if (ctx->pos <= 0)
+    if (ctx->pos <= 0) {
         return -1;
+    }
 
     wmemmove(&ctx->line[ctx->pos - 1], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     --ctx->pos;
@@ -59,8 +61,9 @@ int del_char_buf_bck(ChatContext *ctx)
 /* Deletes the character at pos. Return 0 on success, -1 if nothing to delete. */
 int del_char_buf_frnt(ChatContext *ctx)
 {
-    if (ctx->pos >= ctx->len)
+    if (ctx->pos >= ctx->len) {
         return -1;
+    }
 
     wmemmove(&ctx->line[ctx->pos], &ctx->line[ctx->pos + 1], ctx->len - ctx->pos - 1);
     ctx->line[--ctx->len] = L'\0';
@@ -72,8 +75,9 @@ int del_char_buf_frnt(ChatContext *ctx)
    Return 0 on success, -1 if noting to discard. */
 int discard_buf(ChatContext *ctx)
 {
-    if (ctx->pos <= 0)
+    if (ctx->pos <= 0) {
         return -1;
+    }
 
     ctx->yank_len = ctx->pos;
     wmemcpy(ctx->yank, ctx->line, ctx->yank_len);
@@ -92,8 +96,9 @@ int discard_buf(ChatContext *ctx)
    Return 0 on success, -1 if nothing to kill. */
 int kill_buf(ChatContext *ctx)
 {
-    if (ctx->len <= ctx->pos)
+    if (ctx->len <= ctx->pos) {
         return -1;
+    }
 
     ctx->yank_len = ctx->len - ctx->pos;
     wmemcpy(ctx->yank, &ctx->line[ctx->pos], ctx->yank_len);
@@ -109,11 +114,13 @@ int kill_buf(ChatContext *ctx)
    Return 0 on success, -1 if yank buffer is empty or too long */
 int yank_buf(ChatContext *ctx)
 {
-    if (!ctx->yank[0])
+    if (!ctx->yank[0]) {
         return -1;
+    }
 
-    if (ctx->yank_len + ctx->len >= MAX_STR_SIZE)
+    if (ctx->yank_len + ctx->len >= MAX_STR_SIZE) {
         return -1;
+    }
 
     wmemmove(&ctx->line[ctx->pos + ctx->yank_len], &ctx->line[ctx->pos], ctx->len - ctx->pos);
     wmemcpy(&ctx->line[ctx->pos], ctx->yank, ctx->yank_len);
@@ -130,8 +137,9 @@ int yank_buf(ChatContext *ctx)
    Return 0 on success, -1 if nothing to delete */
 int del_word_buf(ChatContext *ctx)
 {
-    if (ctx->len == 0 || ctx->pos == 0)
+    if (ctx->len == 0 || ctx->pos == 0) {
         return -1;
+    }
 
     int i = ctx->pos, count = 0;
 
@@ -169,17 +177,20 @@ void reset_buf(ChatContext *ctx)
 /* Removes trailing spaces and newlines from line. */
 void rm_trailing_spaces_buf(ChatContext *ctx)
 {
-    if (ctx->len <= 0)
+    if (ctx->len <= 0) {
         return;
+    }
 
-    if (ctx->line[ctx->len - 1] != ' ' && ctx->line[ctx->len - 1] != L'¶')
+    if (ctx->line[ctx->len - 1] != ' ' && ctx->line[ctx->len - 1] != L'¶') {
         return;
+    }
 
     int i;
 
     for (i = ctx->len - 1; i >= 0; --i) {
-        if (ctx->line[i] != ' ' && ctx->line[i] != L'¶')
+        if (ctx->line[i] != ' ' && ctx->line[i] != L'¶') {
             break;
+        }
     }
 
     ctx->len = i + 1;
@@ -195,8 +206,9 @@ static void shift_hist_back(ChatContext *ctx)
     int i;
     int n = MAX_LINE_HIST - HIST_PURGE;
 
-    for (i = 0; i < n; ++i)
+    for (i = 0; i < n; ++i) {
         wmemcpy(ctx->ln_history[i], ctx->ln_history[i + HIST_PURGE], MAX_STR_SIZE);
+    }
 
     ctx->hst_tot = n;
 }
@@ -204,11 +216,13 @@ static void shift_hist_back(ChatContext *ctx)
 /* adds a line to the ln_history buffer at hst_pos and sets hst_pos to end of history. */
 void add_line_to_hist(ChatContext *ctx)
 {
-    if (ctx->len >= MAX_STR_SIZE)
+    if (ctx->len >= MAX_STR_SIZE) {
         return;
+    }
 
-    if (ctx->hst_tot >= MAX_LINE_HIST)
+    if (ctx->hst_tot >= MAX_LINE_HIST) {
         shift_hist_back(ctx);
+    }
 
     ++ctx->hst_tot;
     ctx->hst_pos = ctx->hst_tot;
@@ -248,8 +262,9 @@ void strsubst(char *str, char old, char new)
     int i;
 
     for (i = 0; str[i] != '\0'; ++i)
-        if (str[i] == old)
+        if (str[i] == old) {
             str[i] = new;
+        }
 }
 
 void wstrsubst(wchar_t *str, wchar_t old, wchar_t new)
@@ -257,6 +272,7 @@ void wstrsubst(wchar_t *str, wchar_t old, wchar_t new)
     int i;
 
     for (i = 0; str[i] != L'\0'; ++i)
-        if (str[i] == old)
+        if (str[i] == old) {
             str[i] = new;
+        }
 }

@@ -56,8 +56,9 @@ int avatar_send(Tox *m, uint32_t friendnum)
     uint32_t filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
                                      NULL, (uint8_t *) Avatar.name, Avatar.name_len, &err);
 
-    if (Avatar.size == 0)
+    if (Avatar.size == 0) {
         return 0;
+    }
 
     if (err != TOX_ERR_FILE_SEND_OK) {
         fprintf(stderr, "tox_file_send failed for friendnumber %d (error %d)\n", friendnum, err);
@@ -66,13 +67,15 @@ int avatar_send(Tox *m, uint32_t friendnum)
 
     struct FileTransfer *ft = new_file_transfer(NULL, friendnum, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_AVATAR);
 
-    if (!ft)
+    if (!ft) {
         return -1;
+    }
 
     ft->file = fopen(Avatar.path, "r");
 
-    if (ft->file == NULL)
+    if (ft->file == NULL) {
         return -1;
+    }
 
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", Avatar.name);
     ft->file_size = Avatar.size;
@@ -86,8 +89,9 @@ static void avatar_send_all(Tox *m)
     size_t i;
 
     for (i = 0; i < Friends.max_idx; ++i) {
-        if (Friends.list[i].connection_status != TOX_CONNECTION_NONE)
+        if (Friends.list[i].connection_status != TOX_CONNECTION_NONE) {
             avatar_send(m, Friends.list[i].num);
+        }
     }
 }
 
@@ -98,13 +102,15 @@ static void avatar_send_all(Tox *m)
  */
 int avatar_set(Tox *m, const char *path, size_t path_len)
 {
-    if (path_len == 0 || path_len >= sizeof(Avatar.path))
+    if (path_len == 0 || path_len >= sizeof(Avatar.path)) {
         return -1;
+    }
 
     FILE *fp = fopen(path, "rb");
 
-    if (fp == NULL)
+    if (fp == NULL) {
         return -1;
+    }
 
     char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
@@ -117,8 +123,9 @@ int avatar_set(Tox *m, const char *path, size_t path_len)
 
     off_t size = file_size(path);
 
-    if (size == 0 || size > MAX_AVATAR_FILE_SIZE)
+    if (size == 0 || size > MAX_AVATAR_FILE_SIZE) {
         return -1;
+    }
 
     get_file_name(Avatar.name, sizeof(Avatar.name), path);
     Avatar.name_len = strlen(Avatar.name);
@@ -166,8 +173,9 @@ void on_avatar_file_control(Tox *m, struct FileTransfer *ft, TOX_FILE_CONTROL co
 
 void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position, size_t length)
 {
-    if (ft->state != FILE_TRANSFER_STARTED)
+    if (ft->state != FILE_TRANSFER_STARTED) {
         return;
+    }
 
     if (length == 0) {
         close_file_transfer(NULL, m, ft, -1, NULL, silent);
@@ -199,8 +207,9 @@ void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position,
     TOX_ERR_FILE_SEND_CHUNK err;
     tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
 
-    if (err != TOX_ERR_FILE_SEND_CHUNK_OK)
+    if (err != TOX_ERR_FILE_SEND_CHUNK_OK) {
         fprintf(stderr, "tox_file_send_chunk failed in avatar callback (error %d)\n", err);
+    }
 
     ft->position += send_length;
     ft->last_keep_alive = get_unix_time();

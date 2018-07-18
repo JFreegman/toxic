@@ -52,7 +52,7 @@ typedef enum DeviceError {
     de_AlError = -9,
 } DeviceError;
 
-typedef void (*DataHandleCallback) (const int16_t *, uint32_t size, void *data);
+typedef void (*DataHandleCallback)(const int16_t *, uint32_t size, void *data);
 
 
 #ifdef AUDIO

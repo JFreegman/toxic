@@ -96,8 +96,8 @@ typedef enum _FATAL_ERRS {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
-void lock_status ();
-void unlock_status ();
+void lock_status();
+void unlock_status();
 
 void exit_toxic_success(Tox *m);
 void exit_toxic_err(const char *errmsg, int errcode);
@@ -127,7 +127,7 @@ void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, u
                            void *userdata);
 void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, const uint8_t *data,
                         size_t length, void *userdata);
-void on_file_control (Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control, void *userdata);
+void on_file_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control, void *userdata);
 void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
                   const uint8_t *filename, size_t filename_length, void *userdata);
 void on_typing_change(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata);

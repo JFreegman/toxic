@@ -36,8 +36,9 @@
  */
 int set_curl_proxy(CURL *c_handle, const char *proxy_address, uint16_t port, uint8_t proxy_type)
 {
-    if (proxy_type == TOX_PROXY_TYPE_NONE)
+    if (proxy_type == TOX_PROXY_TYPE_NONE) {
         return 0;
+    }
 
     if (proxy_address == NULL || port == 0) {
         return -1;

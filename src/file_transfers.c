@@ -45,8 +45,9 @@ void init_progress_bar(char *progline)
     strcpy(progline, "0% [");
     int i;
 
-    for (i = 0; i < NUM_PROG_MARKS; ++i)
+    for (i = 0; i < NUM_PROG_MARKS; ++i) {
         strcat(progline, "-");
+    }
 
     strcat(progline, "] 0.0 B/s");
 }
@@ -54,8 +55,9 @@ void init_progress_bar(char *progline)
 /* prints a progress bar for file transfers. */
 void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t line_id)
 {
-    if (bps < 0 || pct_done < 0 || pct_done > 100)
+    if (bps < 0 || pct_done < 0 || pct_done > 100) {
         return;
+    }
 
     char pct_str[24];
     snprintf(pct_str, sizeof(pct_str), "%.1f%%", pct_done);
@@ -67,14 +69,17 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
     int n = pct_done / (100 / NUM_PROG_MARKS);
     int i, j;
 
-    for (i = 0; i < n; ++i)
+    for (i = 0; i < n; ++i) {
         strcat(prog_line, "=");
+    }
 
-    if (pct_done < 100)
+    if (pct_done < 100) {
         strcpy(prog_line + n, ">");
+    }
 
-    for (j = i; j < NUM_PROG_MARKS - 1; ++j)
+    for (j = i; j < NUM_PROG_MARKS - 1; ++j) {
         strcat(prog_line, "-");
+    }
 
     char full_line[strlen(pct_str) + NUM_PROG_MARKS + strlen(bps_str) + 7];
     snprintf(full_line, sizeof(full_line), "%s [%s] %s/s", pct_str, prog_line, bps_str);
@@ -84,12 +89,14 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
 
 static void refresh_progress_helper(ToxWindow *self, Tox *m, struct FileTransfer *ft)
 {
-    if (ft->state == FILE_TRANSFER_INACTIVE)
+    if (ft->state == FILE_TRANSFER_INACTIVE) {
         return;
+    }
 
     /* Timeout must be set to 1 second to show correct bytes per second */
-    if (!timed_out(ft->last_line_progress, 1))
+    if (!timed_out(ft->last_line_progress, 1)) {
         return;
+    }
 
     double remain = ft->file_size - ft->position;
     double pct_done = remain > 0 ? (1 - (remain / ft->file_size)) * 100 : 100;
@@ -120,13 +127,15 @@ struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filen
     for (i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft_send = &Friends.list[friendnum].file_sender[i];
 
-        if (ft_send->state != FILE_TRANSFER_INACTIVE && ft_send->filenum == filenum)
+        if (ft_send->state != FILE_TRANSFER_INACTIVE && ft_send->filenum == filenum) {
             return ft_send;
+        }
 
         struct FileTransfer *ft_recv = &Friends.list[friendnum].file_receiver[i];
 
-        if (ft_recv->state != FILE_TRANSFER_INACTIVE && ft_recv->filenum == filenum)
+        if (ft_recv->state != FILE_TRANSFER_INACTIVE && ft_recv->filenum == filenum) {
             return ft_recv;
+        }
     }
 
     return NULL;
@@ -138,8 +147,9 @@ struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filen
 struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,
         FILE_TRANSFER_DIRECTION direction)
 {
-    if (direction != FILE_TRANSFER_RECV && direction != FILE_TRANSFER_SEND)
+    if (direction != FILE_TRANSFER_RECV && direction != FILE_TRANSFER_SEND) {
         return NULL;
+    }
 
     size_t i;
 
@@ -148,8 +158,9 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t
                                       &Friends.list[friendnum].file_sender[i] :
                                       &Friends.list[friendnum].file_receiver[i];
 
-        if (ft->state != FILE_TRANSFER_INACTIVE && ft->index == index)
+        if (ft->state != FILE_TRANSFER_INACTIVE && ft->index == index) {
             return ft;
+        }
     }
 
     return NULL;
@@ -215,11 +226,13 @@ static struct FileTransfer *new_file_receiver(ToxWindow *window, uint32_t friend
 struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnum, uint32_t filenum,
                                        FILE_TRANSFER_DIRECTION direction, uint8_t type)
 {
-    if (direction == FILE_TRANSFER_RECV)
+    if (direction == FILE_TRANSFER_RECV) {
         return new_file_receiver(window, friendnum, filenum, type);
+    }
 
-    if (direction == FILE_TRANSFER_SEND)
+    if (direction == FILE_TRANSFER_SEND) {
         return new_file_sender(window, friendnum, filenum, type);
+    }
 
     return NULL;
 }
@@ -233,23 +246,28 @@ struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnum, ui
 void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int CTRL, const char *message,
                          Notification sound_type)
 {
-    if (!ft)
+    if (!ft) {
         return;
+    }
 
-    if (ft->state == FILE_TRANSFER_INACTIVE)
+    if (ft->state == FILE_TRANSFER_INACTIVE) {
         return;
+    }
 
-    if (ft->file)
+    if (ft->file) {
         fclose(ft->file);
+    }
 
-    if (CTRL >= 0)
+    if (CTRL >= 0) {
         tox_file_control(m, ft->friendnum, ft->filenum, (TOX_FILE_CONTROL) CTRL, NULL);
+    }
 
     if (message && self) {
-        if (self->active_box != -1 && sound_type != silent)
+        if (self->active_box != -1 && sound_type != silent) {
             box_notify2(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", message);
-        else
+        } else {
             box_notify(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);
+        }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
     }
@@ -272,6 +290,7 @@ void kill_all_file_transfers(Tox *m)
 {
     size_t i;
 
-    for (i = 0; i < Friends.max_idx; ++i)
+    for (i = 0; i < Friends.max_idx; ++i) {
         kill_all_file_transfers_friend(m, Friends.list[i].num);
+    }
 }

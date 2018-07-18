@@ -76,7 +76,9 @@ Property read_property(Window s, Atom p)
 
     /* Keep trying to read the property until there are no bytes unread */
     do {
-        if (data) XFree(data);
+        if (data) {
+            XFree(data);
+        }
 
         XGetWindowProperty(Xtra.display, s,
                            p, 0,
@@ -98,7 +100,9 @@ Atom get_dnd_type(long *a, int l)
     int i = 0;
 
     for (; i < l; i ++) {
-        if (a[i] != XtraNil) return a[i]; /* Get first valid */
+        if (a[i] != XtraNil) {
+            return a[i];    /* Get first valid */
+        }
     }
 
     return XtraNil;
@@ -193,10 +197,11 @@ static void handle_xdnd_selection(XSelectionEvent *e)
     Property p = read_property(Xtra.proxy_window, XdndSelection);
     DropType dt;
 
-    if (strcmp(XGetAtomName(Xtra.display, p.read_type), "text/uri-list") == 0)
+    if (strcmp(XGetAtomName(Xtra.display, p.read_type), "text/uri-list") == 0) {
         dt = DT_file_list;
-    else /* text/uri-list */
+    } else { /* text/uri-list */
         dt = DT_plain;
+    }
 
 
     /* Call callback for every entry */
@@ -204,13 +209,18 @@ static void handle_xdnd_selection(XSelectionEvent *e)
         char *sptr;
         char *str = strtok_r((char *) p.data, "\n\r", &sptr);
 
-        if (str) Xtra.on_drop(str, dt);
-
-        while ((str = strtok_r(NULL, "\n\r", &sptr)))
+        if (str) {
             Xtra.on_drop(str, dt);
+        }
+
+        while ((str = strtok_r(NULL, "\n\r", &sptr))) {
+            Xtra.on_drop(str, dt);
+        }
     }
 
-    if (p.data) XFree(p.data);
+    if (p.data) {
+        XFree(p.data);
+    }
 }
 
 void *event_loop(void *p)
@@ -227,7 +237,9 @@ void *event_loop(void *p)
 
         XLockDisplay(Xtra.display);
 
-        if ((pending = XPending(Xtra.display))) XNextEvent(Xtra.display, &event);
+        if ((pending = XPending(Xtra.display))) {
+            XNextEvent(Xtra.display, &event);
+        }
 
         if (!pending) {
             XUnlockDisplay(Xtra.display);
@@ -238,13 +250,22 @@ void *event_loop(void *p)
         if (event.type == ClientMessage) {
             Atom type = event.xclient.message_type;
 
-            if      (type == XdndEnter)         handle_xdnd_enter(&event.xclient);
-            else if (type == XdndPosition)      handle_xdnd_position(&event.xclient);
-            else if (type == XdndDrop)          handle_xdnd_drop(&event.xclient);
-            else if (type == XtraTerminate)     break;
-        } else if (event.type == SelectionNotify) handle_xdnd_selection(&event.xselection);
+            if (type == XdndEnter) {
+                handle_xdnd_enter(&event.xclient);
+            } else if (type == XdndPosition) {
+                handle_xdnd_position(&event.xclient);
+            } else if (type == XdndDrop) {
+                handle_xdnd_drop(&event.xclient);
+            } else if (type == XtraTerminate) {
+                break;
+            }
+        } else if (event.type == SelectionNotify) {
+            handle_xdnd_selection(&event.xselection);
+        }
         /* AINNOBODYCANHANDLEDEMEVENTS*/
-        else XSendEvent(Xtra.display, Xtra.terminal_window, 0, 0, &event);
+        else {
+            XSendEvent(Xtra.display, Xtra.terminal_window, 0, 0, &event);
+        }
 
         XUnlockDisplay(Xtra.display);
     }
@@ -253,7 +274,9 @@ void *event_loop(void *p)
      * Please call xtra_terminate() at exit
      * otherwise HEWUSAGUDBOI happens
      */
-    if (Xtra.display) XCloseDisplay(Xtra.display);
+    if (Xtra.display) {
+        XCloseDisplay(Xtra.display);
+    }
 
     return (Xtra.display = NULL);
 }
@@ -262,19 +285,25 @@ int init_xtra(drop_callback d)
 {
     memset(&Xtra, 0, sizeof(Xtra));
 
-    if (!d) return -1;
-    else Xtra.on_drop = d;
+    if (!d) {
+        return -1;
+    } else {
+        Xtra.on_drop = d;
+    }
 
     XInitThreads();
 
-    if ( !(Xtra.display = XOpenDisplay(NULL))) return -1;
+    if (!(Xtra.display = XOpenDisplay(NULL))) {
+        return -1;
+    }
 
     Xtra.terminal_window = focused_window_id();
 
     /* OSX: if focused window is 0, it means toxic is ran from
      * native terminal and not X11 terminal window, silently exit */
-    if (!Xtra.terminal_window)
+    if (!Xtra.terminal_window) {
         return 0;
+    }
 
     {
         /* Create an invisible window which will act as proxy for the DnD operation. */
@@ -299,17 +328,18 @@ int init_xtra(drop_callback d)
                      XDefaultRootWindow(Xtra.display),
                      &root, &x, &y, &wht, &hht, &b, &d);
 
-        if (! (Xtra.proxy_window = XCreateWindow
-                                   (Xtra.display, Xtra.terminal_window,       /* Parent */
-                                    0, 0,                                     /* Position */
-                                    wht, hht,                                 /* Width + height */
-                                    0,                                        /* Border width */
-                                    CopyFromParent,                           /* Depth */
-                                    InputOnly,                                /* Class */
-                                    CopyFromParent,                           /* Visual */
-                                    CWEventMask | CWCursor,                   /* Value mask */
-                                    &attr)) )                                 /* Attributes for value mask */
+        if (!(Xtra.proxy_window = XCreateWindow
+                                  (Xtra.display, Xtra.terminal_window,       /* Parent */
+                                   0, 0,                                     /* Position */
+                                   wht, hht,                                 /* Width + height */
+                                   0,                                        /* Border width */
+                                   CopyFromParent,                           /* Depth */
+                                   InputOnly,                                /* Class */
+                                   CopyFromParent,                           /* Visual */
+                                   CWEventMask | CWCursor,                   /* Value mask */
+                                   &attr))) {                                /* Attributes for value mask */
             return -1;
+        }
     }
 
     XMapWindow(Xtra.display, Xtra.proxy_window);   /* Show window (sandwich) */
@@ -339,8 +369,9 @@ int init_xtra(drop_callback d)
 
     pthread_t id;
 
-    if (pthread_create(&id, NULL, event_loop, NULL) != 0)
+    if (pthread_create(&id, NULL, event_loop, NULL) != 0) {
         return -1;
+    }
 
     pthread_detach(id);
 
@@ -349,7 +380,9 @@ int init_xtra(drop_callback d)
 
 void terminate_xtra()
 {
-    if (!Xtra.display || !Xtra.terminal_window) return;
+    if (!Xtra.display || !Xtra.terminal_window) {
+        return;
+    }
 
     XEvent terminate = {
         .xclient = {
@@ -369,7 +402,9 @@ void terminate_xtra()
 
 long unsigned int focused_window_id()
 {
-    if (!Xtra.display) return 0;
+    if (!Xtra.display) {
+        return 0;
+    }
 
     Window focus;
     int revert;

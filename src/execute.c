@@ -113,8 +113,9 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
 {
     char *cmd = strdup(input);
 
-    if (cmd == NULL)
+    if (cmd == NULL) {
         exit_toxic_err("failed in parse_command", FATALERR_MEMORY);
+    }
 
     int num_args = 0;
     int i = 0;    /* index of last char in an argument */
@@ -140,8 +141,9 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
         memcpy(args[num_args], cmd, i + qt_ofst);
         args[num_args++][i + qt_ofst] = '\0';
 
-        if (cmd[i] == '\0')    /* no more args */
+        if (cmd[i] == '\0') {  /* no more args */
             break;
+        }
 
         char tmp[MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), "%s", &cmd[i + 1]);
@@ -170,14 +172,16 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct c
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
 {
-    if (string_is_empty(input))
+    if (string_is_empty(input)) {
         return;
+    }
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE];
     int num_args = parse_command(w, self, input, args);
 
-    if (num_args == -1)
+    if (num_args == -1) {
         return;
+    }
 
     /* Try to match input command to command functions. If non-global command mode is specified,
        try specified mode's commands first, then upon failure try global commands.
@@ -185,25 +189,29 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
        Note: Global commands must come last in case of duplicate command names */
     switch (mode) {
         case CHAT_COMMAND_MODE:
-            if (do_command(w, self, m, num_args, chat_commands, args) == 0)
+            if (do_command(w, self, m, num_args, chat_commands, args) == 0) {
                 return;
+            }
 
             break;
 
         case GROUPCHAT_COMMAND_MODE:
-            if (do_command(w, self, m, num_args, group_commands, args) == 0)
+            if (do_command(w, self, m, num_args, group_commands, args) == 0) {
                 return;
+            }
 
             break;
     }
 
-    if (do_command(w, self, m, num_args, global_commands, args) == 0)
+    if (do_command(w, self, m, num_args, global_commands, args) == 0) {
         return;
+    }
 
 #ifdef PYTHON
 
-    if (do_plugin_command(num_args, args) == 0)
+    if (do_plugin_command(num_args, args) == 0) {
         return;
+    }
 
 #endif
 

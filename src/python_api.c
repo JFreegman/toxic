@@ -39,8 +39,9 @@ static PyObject *python_api_display(PyObject *self, PyObject *args)
 {
     const char *msg;
 
-    if (!PyArg_ParseTuple(args, "s", &msg))
+    if (!PyArg_ParseTuple(args, "s", &msg)) {
         return NULL;
+    }
 
     api_display(msg);
     return Py_None;
@@ -51,13 +52,15 @@ static PyObject *python_api_get_nick(PyObject *self, PyObject *args)
     char     *name;
     PyObject *ret;
 
-    if (!PyArg_ParseTuple(args, ""))
+    if (!PyArg_ParseTuple(args, "")) {
         return NULL;
+    }
 
     name = api_get_nick();
 
-    if (name == NULL)
+    if (name == NULL) {
         return NULL;
+    }
 
     ret  = Py_BuildValue("s", name);
     free(name);
@@ -68,8 +71,9 @@ static PyObject *python_api_get_status(PyObject *self, PyObject *args)
 {
     PyObject        *ret = NULL;
 
-    if (!PyArg_ParseTuple(args, ""))
+    if (!PyArg_ParseTuple(args, "")) {
         return NULL;
+    }
 
     switch (api_get_status()) {
         case TOX_USER_STATUS_NONE:
@@ -93,13 +97,15 @@ static PyObject *python_api_get_status_message(PyObject *self, PyObject *args)
     char     *status;
     PyObject *ret;
 
-    if (!PyArg_ParseTuple(args, ""))
+    if (!PyArg_ParseTuple(args, "")) {
         return NULL;
+    }
 
     status = api_get_status_message();
 
-    if (status == NULL)
+    if (status == NULL) {
         return NULL;
+    }
 
     ret    = Py_BuildValue("s", status);
     free(status);
@@ -113,15 +119,17 @@ static PyObject *python_api_get_all_friends(PyObject *self, PyObject *args)
     PyObject    *cur, *ret;
     char         pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2 + 1];
 
-    if (!PyArg_ParseTuple(args, ""))
+    if (!PyArg_ParseTuple(args, "")) {
         return NULL;
+    }
 
     friends = api_get_friendslist();
     ret     = PyList_New(0);
 
     for (i = 0; i < friends.num_friends; i++) {
-        for (ii = 0; ii < TOX_PUBLIC_KEY_SIZE; ii++)
+        for (ii = 0; ii < TOX_PUBLIC_KEY_SIZE; ii++) {
             snprintf(pubkey_buf + ii * 2, 3, "%02X", friends.list[i].pub_key[ii] & 0xff);
+        }
 
         pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2] = '\0';
         cur = Py_BuildValue("(s,s)", friends.list[i].name, pubkey_buf);
@@ -135,8 +143,9 @@ static PyObject *python_api_send(PyObject *self, PyObject *args)
 {
     const char *msg;
 
-    if (!PyArg_ParseTuple(args, "s", &msg))
+    if (!PyArg_ParseTuple(args, "s", &msg)) {
         return NULL;
+    }
 
     api_send(msg);
     return Py_None;
@@ -147,8 +156,9 @@ static PyObject *python_api_execute(PyObject *self, PyObject *args)
     int         mode;
     const char *command;
 
-    if (!PyArg_ParseTuple(args, "si", &command, &mode))
+    if (!PyArg_ParseTuple(args, "si", &command, &mode)) {
         return NULL;
+    }
 
     api_execute(command, mode);
     return Py_None;
@@ -161,8 +171,9 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
     const char *command, *help;
     PyObject   *callback;
 
-    if (!PyArg_ParseTuple(args, "ssO:register_command", &command, &help, &callback))
+    if (!PyArg_ParseTuple(args, "ssO:register_command", &command, &help, &callback)) {
         return NULL;
+    }
 
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "Calback parameter must be callable");
@@ -186,21 +197,24 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
             Py_XINCREF(callback);
             cur->next = malloc(sizeof(struct python_registered_func));
 
-            if (cur->next == NULL)
+            if (cur->next == NULL) {
                 return PyErr_NoMemory();
+            }
 
             command_len     = strlen(command);
             cur->next->name = malloc(command_len + 1);
 
-            if (cur->next->name == NULL)
+            if (cur->next->name == NULL) {
                 return PyErr_NoMemory();
+            }
 
             strncpy(cur->next->name, command, command_len + 1);
             help_len        = strlen(help);
             cur->next->help = malloc(help_len + 1);
 
-            if (cur->next->help == NULL)
+            if (cur->next->help == NULL) {
                 return PyErr_NoMemory();
+            }
 
             strncpy(cur->next->help, help, help_len + 1);
             cur->next->callback = callback;
@@ -252,8 +266,9 @@ void terminate_python(void)
 {
     struct python_registered_func *cur, *old;
 
-    if (python_commands.name != NULL)
+    if (python_commands.name != NULL) {
         free(python_commands.name);
+    }
 
     for (cur = python_commands.next; cur != NULL;) {
         old = cur;
@@ -284,19 +299,22 @@ int do_python_command(int num_args, char (*args)[MAX_STR_SIZE])
     struct python_registered_func *cur;
 
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
-        if (cur->name == NULL)
+        if (cur->name == NULL) {
             continue;
+        }
 
         if (!strcmp(args[0], cur->name)) {
             args_strings = PyList_New(0);
 
-            for (i = 1; i < num_args; i++)
+            for (i = 1; i < num_args; i++) {
                 PyList_Append(args_strings, Py_BuildValue("s", args[i]));
+            }
 
             callback_args = PyTuple_Pack(1, args_strings);
 
-            if (PyObject_CallObject(cur->callback, callback_args) == NULL)
+            if (PyObject_CallObject(cur->callback, callback_args) == NULL) {
                 api_display("Exception raised in callback function");
+            }
 
             return 0;
         }
@@ -311,8 +329,9 @@ int python_num_registered_handlers(void)
     struct python_registered_func *cur;
 
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
-        if (cur->name != NULL)
+        if (cur->name != NULL) {
             n++;
+        }
     }
 
     return n;
@@ -340,8 +359,9 @@ void python_draw_handler_help(WINDOW *win)
     struct python_registered_func *cur;
 
     for (cur = &python_commands; cur != NULL; cur = cur->next) {
-        if (cur->name != NULL)
+        if (cur->name != NULL) {
             wprintw(win, "  %-29s: %.50s\n", cur->name, cur->help);
+        }
     }
 }
 #endif /* PYTHON */

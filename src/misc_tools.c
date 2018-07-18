@@ -93,19 +93,21 @@ void get_time_str(char *buf, int bufsize)
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
 void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
 {
-    if (!secs)
+    if (!secs) {
         return;
+    }
 
     long int seconds = secs % 60;
     long int minutes = (secs % 3600) / 60;
     long int hours = secs / 3600;
 
-    if (!minutes && !hours)
+    if (!minutes && !hours) {
         snprintf(buf, bufsize, "%.2ld", seconds);
-    else if (!hours)
+    } else if (!hours) {
         snprintf(buf, bufsize, "%ld:%.2ld", minutes, seconds);
-    else
+    } else {
         snprintf(buf, bufsize, "%ld:%.2ld:%.2ld", hours, minutes, seconds);
+    }
 }
 
 /*
@@ -117,8 +119,9 @@ void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
  */
 int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size_t output_size)
 {
-    if (output_size == 0 || hex_len != output_size * 2)
+    if (output_size == 0 || hex_len != output_size * 2) {
         return -1;
+    }
 
     for (size_t i = 0; i < output_size; ++i) {
         sscanf(hex_string, "%2hhx", &output[i]);
@@ -130,8 +133,9 @@ int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size
 
 int hex_string_to_bytes(char *buf, int size, const char *keystr)
 {
-    if (size % 2 != 0)
+    if (size % 2 != 0) {
         return -1;
+    }
 
     int i, res;
     const char *pos = keystr;
@@ -140,8 +144,9 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
         res = sscanf(pos, "%2hhx", &buf[i]);
         pos += 2;
 
-        if (res == EOF || res < 1)
+        if (res == EOF || res < 1) {
             return -1;
+        }
     }
 
     return 0;
@@ -154,13 +159,15 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
  */
 int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size)
 {
-    if (bin_id_size != TOX_ADDRESS_SIZE || output_size < (TOX_ADDRESS_SIZE * 2 + 1))
+    if (bin_id_size != TOX_ADDRESS_SIZE || output_size < (TOX_ADDRESS_SIZE * 2 + 1)) {
         return -1;
+    }
 
     size_t i;
 
-    for (i = 0; i < TOX_ADDRESS_SIZE; ++i)
+    for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
         snprintf(&output[i * 2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
+    }
 
     return 0;
 }
@@ -168,8 +175,9 @@ int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string)
 {
-    if (!string)
+    if (!string) {
         return true;
+    }
 
     return string[0] == '\0';
 }
@@ -177,8 +185,9 @@ int string_is_empty(const char *string)
 /* Returns 1 if the string is empty, 0 otherwise */
 int wstring_is_empty(const wchar_t *string)
 {
-    if (!string)
+    if (!string) {
         return true;
+    }
 
     return string[0] == L'\0';
 }
@@ -188,11 +197,13 @@ int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
 {
     size_t len = mbstowcs(NULL, string, 0) + 1;
 
-    if (n < len)
+    if (n < len) {
         return -1;
+    }
 
-    if ((len = mbstowcs(buf, string, n)) == (size_t) - 1)
+    if ((len = mbstowcs(buf, string, n)) == (size_t) - 1) {
         return -1;
+    }
 
     return len;
 }
@@ -202,11 +213,13 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
 {
     size_t len = wcstombs(NULL, string, 0) + 1;
 
-    if (n < len)
+    if (n < len) {
         return -1;
+    }
 
-    if ((len = wcstombs(buf, string, n)) == (size_t) - 1)
+    if ((len = wcstombs(buf, string, n)) == (size_t) - 1) {
         return -1;
+    }
 
     return len;
 }
@@ -225,8 +238,9 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2)
       - must not contain a newline or tab seqeunce */
 int valid_nick(const char *nick)
 {
-    if (!nick[0] || nick[0] == ' ')
+    if (!nick[0] || nick[0] == ' ') {
         return 0;
+    }
 
     int i;
 
@@ -238,7 +252,9 @@ int valid_nick(const char *nick)
                 || nick[i] == '\v'
                 || nick[i] == '\r')
 
+        {
             return 0;
+        }
     }
 
     return 1;
@@ -250,8 +266,9 @@ void filter_str(char *str, size_t len)
     size_t i;
 
     for (i = 0; i < len; ++i) {
-        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v' || str[i] == '\0')
+        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v' || str[i] == '\0') {
             str[i] = ' ';
+        }
     }
 }
 
@@ -263,22 +280,26 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     int len = strlen(pathname) - 1;
     char *path = strdup(pathname);
 
-    if (path == NULL)
+    if (path == NULL) {
         exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+    }
 
-    while (len >= 0 && pathname[len] == '/')
+    while (len >= 0 && pathname[len] == '/') {
         path[len--] = '\0';
+    }
 
     char *finalname = strdup(path);
 
-    if (finalname == NULL)
+    if (finalname == NULL) {
         exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+    }
 
     const char *basenm = strrchr(path, '/');
 
     if (basenm != NULL) {
-        if (basenm[1])
+        if (basenm[1]) {
             strcpy(finalname, &basenm[1]);
+        }
     }
 
     snprintf(namebuf, bufsize, "%s", finalname);
@@ -295,13 +316,15 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
  */
 size_t get_base_dir(const char *path, size_t path_len, char *dir)
 {
-    if (path_len == 0 || path == NULL)
+    if (path_len == 0 || path == NULL) {
         return 0;
+    }
 
     size_t dir_len = char_rfind(path, '/', path_len);
 
-    if (dir_len != 0 && dir_len < path_len)
-        ++dir_len;  /* Leave trailing slash */
+    if (dir_len != 0 && dir_len < path_len) {
+        ++dir_len;    /* Leave trailing slash */
+    }
 
     memcpy(dir, path, dir_len);
     dir[dir_len] = '\0';
@@ -314,8 +337,9 @@ void str_to_lower(char *str)
 {
     int i;
 
-    for (i = 0; str[i]; ++i)
+    for (i = 0; str[i]; ++i) {
         str[i] = tolower(str[i]);
+    }
 }
 
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
@@ -401,8 +425,9 @@ int char_find(int idx, const char *s, char ch)
     int i = idx;
 
     for (i = idx; s[i]; ++i) {
-        if (s[i] == ch)
+        if (s[i] == ch) {
             break;
+        }
     }
 
     return i;
@@ -419,8 +444,9 @@ int char_rfind(const char *s, char ch, int len)
     int i = 0;
 
     for (i = len; i > 0; --i) {
-        if (s[i] == ch)
+        if (s[i] == ch) {
             break;
+        }
     }
 
     return i;
@@ -460,8 +486,9 @@ off_t file_size(const char *path)
 {
     struct stat st;
 
-    if (stat(path, &st) == -1)
+    if (stat(path, &st) == -1) {
         return 0;
+    }
 
     return st.st_size;
 }
@@ -474,13 +501,15 @@ int check_file_signature(const char *signature, size_t size, FILE *fp)
 {
     char buf[size];
 
-    if (fread(buf, size, 1, fp) != 1)
+    if (fread(buf, size, 1, fp) != 1) {
         return -1;
+    }
 
     int ret = memcmp(signature, buf, size);
 
-    if (fseek(fp, 0L, SEEK_SET) == -1)
+    if (fseek(fp, 0L, SEEK_SET) == -1) {
         return -1;
+    }
 
     return ret == 0 ? 0 : 1;
 }
@@ -490,10 +519,11 @@ void set_window_title(ToxWindow *self, const char *title, int len)
 {
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
 
-    if (self->is_groupchat)   /* keep groupnumber in title */
+    if (self->is_groupchat) { /* keep groupnumber in title */
         snprintf(cpy, sizeof(cpy), "%d %s", self->num, title);
-    else
+    } else {
         snprintf(cpy, sizeof(cpy), "%s", title);
+    }
 
     if (len > MAX_WINDOW_NAME_LENGTH) {
         strcpy(&cpy[MAX_WINDOW_NAME_LENGTH - 3], "...");

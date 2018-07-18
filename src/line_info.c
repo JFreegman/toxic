@@ -40,8 +40,9 @@ void line_info_init(struct history *hst)
 {
     hst->line_root = calloc(1, sizeof(struct line_info));
 
-    if (hst->line_root == NULL)
+    if (hst->line_root == NULL) {
         exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
+    }
 
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
@@ -53,8 +54,9 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
     struct line_info *line = hst->line_end;
 
-    if (line->prev == NULL)
+    if (line->prev == NULL) {
         return;
+    }
 
     int y2, x2;
     getmaxyx(self->window, y2, x2);
@@ -88,8 +90,9 @@ void line_info_cleanup(struct history *hst)
     int i;
 
     for (i = 0; i < hst->queue_sz; ++i) {
-        if (hst->queue[i])
+        if (hst->queue[i]) {
             free(hst->queue[i]);
+        }
     }
 
     free(hst);
@@ -114,15 +117,17 @@ static void line_info_root_fwd(struct history *hst)
 /* returns ptr to queue item 0 and removes it from queue. Returns NULL if queue is empty. */
 static struct line_info *line_info_ret_queue(struct history *hst)
 {
-    if (hst->queue_sz <= 0)
+    if (hst->queue_sz <= 0) {
         return NULL;
+    }
 
     struct line_info *line = hst->queue[0];
 
     int i;
 
-    for (i = 0; i < hst->queue_sz; ++i)
+    for (i = 0; i < hst->queue_sz; ++i) {
         hst->queue[i] = hst->queue[i + 1];
+    }
 
     --hst->queue_sz;
 
@@ -137,18 +142,21 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
                   uint8_t bold, uint8_t colour, const char *msg, ...)
 {
-    if (!self)
+    if (!self) {
         return -1;
+    }
 
     struct history *hst = self->chatwin->hst;
 
-    if (hst->queue_sz >= MAX_LINE_INFO_QUEUE)
+    if (hst->queue_sz >= MAX_LINE_INFO_QUEUE) {
         return -1;
+    }
 
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
-    if (new_line == NULL)
+    if (new_line == NULL) {
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
+    }
 
     char frmt_msg[MAX_LINE_INFO_MSG_SIZE] = {0};
 
@@ -206,8 +214,9 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
         int i;
 
         for (i = 0; frmt_msg[i]; ++i) {
-            if (frmt_msg[i] == '\n')
+            if (frmt_msg[i] == '\n') {
                 ++new_line->newlines;
+            }
         }
     }
 
@@ -245,11 +254,13 @@ static void line_info_check_queue(ToxWindow *self)
     struct history *hst = self->chatwin->hst;
     struct line_info *line = line_info_ret_queue(hst);
 
-    if (line == NULL)
+    if (line == NULL) {
         return;
+    }
 
-    if (hst->start_id > user_settings->history_size)
+    if (hst->start_id > user_settings->history_size) {
         line_info_root_fwd(hst);
+    }
 
     line->prev = hst->line_end;
     hst->line_end->next = line;
@@ -261,8 +272,9 @@ static void line_info_check_queue(ToxWindow *self)
     getyx(self->chatwin->history, y, x);
     (void) x;
 
-    if (x2 <= SIDEBAR_WIDTH)
+    if (x2 <= SIDEBAR_WIDTH) {
         return;
+    }
 
     int offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
     int lines = 1 + line->newlines + (line->len / (x2 - offst));
@@ -284,8 +296,9 @@ void line_info_print(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx == NULL)
+    if (ctx == NULL) {
         return;
+    }
 
     struct history *hst = ctx->hst;
 
@@ -293,19 +306,25 @@ void line_info_print(ToxWindow *self)
     line_info_check_queue(self);
 
     WINDOW *win = ctx->history;
+
     wclear(win);
+
     int y2, x2;
+
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= SIDEBAR_WIDTH)
+    if (x2 <= SIDEBAR_WIDTH) {
         return;
+    }
 
-    if (self->is_groupchat)
+    if (self->is_groupchat) {
         wmove(win, 0, 0);
-    else
+    } else {
         wmove(win, 2, 0);
+    }
 
     struct line_info *line = hst->line_start->next;
+
     int numlines = 0;
 
     while (line && numlines++ <= y2) {
@@ -325,10 +344,11 @@ void line_info_print(ToxWindow *self)
 
                 int nameclr = GREEN;
 
-                if (line->colour)
+                if (line->colour) {
                     nameclr = line->colour;
-                else if (type == IN_MSG)
+                } else if (type == IN_MSG) {
                     nameclr = CYAN;
+                }
 
                 wattron(win, COLOR_PAIR(nameclr));
                 wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
@@ -339,21 +359,24 @@ void line_info_print(ToxWindow *self)
                 while (msg) {
                     char *line = strsep(&msg, "\n");
 
-                    if (line[0] == '>')
+                    if (line[0] == '>') {
                         wattron(win, COLOR_PAIR(GREEN));
-                    else if (line[0] == '<')
+                    } else if (line[0] == '<') {
                         wattron(win, COLOR_PAIR(RED));
+                    }
 
                     wprintw(win, "%s%c", line, msg ? '\n' : '\0');
 
-                    if (line[0] == '>')
+                    if (line[0] == '>') {
                         wattroff(win, COLOR_PAIR(GREEN));
-                    else if (line[0] == '<')
+                    } else if (line[0] == '<') {
                         wattroff(win, COLOR_PAIR(RED));
+                    }
 
                     // change the \0 set by strsep back to \n
-                    if (msg)
+                    if (msg) {
                         msg[-1] = '\n';
+                    }
                 }
 
                 if (type == OUT_MSG && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
@@ -406,19 +429,23 @@ void line_info_print(ToxWindow *self)
                     wattroff(win, COLOR_PAIR(BLUE));
                 }
 
-                if (line->bold)
+                if (line->bold) {
                     wattron(win, A_BOLD);
+                }
 
-                if (line->colour)
+                if (line->colour) {
                     wattron(win, COLOR_PAIR(line->colour));
+                }
 
                 wprintw(win, "%s\n", line->msg);
 
-                if (line->bold)
+                if (line->bold) {
                     wattroff(win, A_BOLD);
+                }
 
-                if (line->colour)
+                if (line->colour) {
                     wattroff(win, COLOR_PAIR(line->colour));
+                }
 
                 break;
 
@@ -427,8 +454,9 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "$ ");
                 wattroff(win, COLOR_PAIR(GREEN));
 
-                if (line->msg[0])
+                if (line->msg[0]) {
                     wprintw(win, "%s", line->msg);
+                }
 
                 wprintw(win, "\n");
                 break;
@@ -492,8 +520,9 @@ void line_info_print(ToxWindow *self)
     }
 
     /* keep calling until queue is empty */
-    if (hst->queue_sz > 0)
+    if (hst->queue_sz > 0) {
         line_info_print(self);
+    }
 }
 
 /* puts msg in specified line_info msg buffer */
@@ -518,16 +547,20 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 
 static void line_info_scroll_up(struct history *hst)
 {
-    if (hst->line_start->prev)
+    if (hst->line_start->prev) {
         hst->line_start = hst->line_start->prev;
-    else sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+    } else {
+        sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+    }
 }
 
 static void line_info_scroll_down(struct history *hst)
 {
-    if (hst->line_start->next)
+    if (hst->line_start->next) {
         hst->line_start = hst->line_start->next;
-    else sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+    } else {
+        sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+    }
 }
 
 static void line_info_page_up(ToxWindow *self, struct history *hst)
@@ -538,8 +571,9 @@ static void line_info_page_up(ToxWindow *self, struct history *hst)
     int jump_dist = y2 / 2;
     int i;
 
-    for (i = 0; i < jump_dist && hst->line_start->prev; ++i)
+    for (i = 0; i < jump_dist && hst->line_start->prev; ++i) {
         hst->line_start = hst->line_start->prev;
+    }
 }
 
 static void line_info_page_down(ToxWindow *self, struct history *hst)
@@ -550,8 +584,9 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
     int jump_dist = y2 / 2;
     int i;
 
-    for (i = 0; i < jump_dist && hst->line_start->next; ++i)
+    for (i = 0; i < jump_dist && hst->line_start->next; ++i) {
         hst->line_start = hst->line_start->next;
+    }
 }
 
 bool line_info_onKey(ToxWindow *self, wint_t key)

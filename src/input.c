@@ -43,8 +43,9 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
     ChatContext *ctx = self->chatwin;
 
     /* this is the only place we need to do this check */
-    if (key == '\n')
+    if (key == '\n') {
         key = L'¶';
+    }
 
     int cur_len = wcwidth(key);
 
@@ -77,17 +78,19 @@ static void input_backspace(ToxWindow *self, int x, int mx_x)
     int cur_len = ctx->pos > 0 ? wcwidth(ctx->line[ctx->pos - 1]) : 0;
     int s_len = ctx->start > 0 ? wcwidth(ctx->line[ctx->start - 1]) : 0;
 
-    if (ctx->start && (x >= mx_x - cur_len))
+    if (ctx->start && (x >= mx_x - cur_len)) {
         ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
-    else if (ctx->start)
+    } else if (ctx->start) {
         ctx->start = MAX(0, ctx->start - cur_len);
+    }
 }
 
 /* delete a char via delete key from input field and buffer */
 static void input_delete(ToxWindow *self)
 {
-    if (del_char_buf_frnt(self->chatwin) == -1)
+    if (del_char_buf_frnt(self->chatwin) == -1) {
         sound_notify(self, notif_error, 0, NULL);
+    }
 }
 
 /* delete last typed word */
@@ -104,15 +107,17 @@ static void input_del_word(ToxWindow *self, int x, int mx_x)
 /* deletes entire line before cursor from input field and buffer */
 static void input_discard(ToxWindow *self)
 {
-    if (discard_buf(self->chatwin) == -1)
+    if (discard_buf(self->chatwin) == -1) {
         sound_notify(self, notif_error, 0, NULL);
+    }
 }
 
 /* deletes entire line after cursor from input field and buffer */
 static void input_kill(ChatContext *ctx)
 {
-    if (kill_buf(ctx) == -1)
+    if (kill_buf(ctx) == -1) {
         sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+    }
 }
 
 static void input_yank(ToxWindow *self, int x, int mx_x)
@@ -149,8 +154,9 @@ static void input_mv_home(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0)
+    if (ctx->pos <= 0) {
         return;
+    }
 
     ctx->pos = 0;
     ctx->start = 0;
@@ -161,18 +167,20 @@ static void input_mv_left(ToxWindow *self, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0)
+    if (ctx->pos <= 0) {
         return;
+    }
 
     int cur_len = ctx->pos > 0 ? wcwidth(ctx->line[ctx->pos - 1]) : 0;
     int s_len = ctx->start > 0 ? wcwidth(ctx->line[ctx->start - 1]) : 0;
 
     --ctx->pos;
 
-    if (ctx->start && (x >= mx_x - cur_len))
+    if (ctx->start && (x >= mx_x - cur_len)) {
         ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
-    else if (ctx->start)
+    } else if (ctx->start) {
         ctx->start = MAX(0, ctx->start - cur_len);
+    }
 }
 
 /* moves cursor/line position right in input field and buffer */
@@ -180,8 +188,9 @@ static void input_mv_right(ToxWindow *self, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos >= ctx->len)
+    if (ctx->pos >= ctx->len) {
         return;
+    }
 
     ++ctx->pos;
 

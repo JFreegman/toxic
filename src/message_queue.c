@@ -50,8 +50,9 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
 
     struct cqueue_msg *new_m = malloc(sizeof(struct cqueue_msg));
 
-    if (new_m == NULL)
+    if (new_m == NULL) {
         exit_toxic_err("failed in cqueue_message", FATALERR_MEMORY);
+    }
 
     snprintf(new_m->message, sizeof(new_m->message), "%s", msg);
     new_m->len = len;
@@ -118,8 +119,9 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
         struct cqueue_msg *next = msg->next;
 
         if (msg->prev == NULL) {    /* root */
-            if (next)
+            if (next) {
                 next->prev = NULL;
+            }
 
             free(msg);
             q->root = next;

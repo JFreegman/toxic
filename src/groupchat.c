@@ -132,8 +132,9 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
 
             set_active_window(groupchats[i].chatwin);
 
-            if (i == max_groupchat_index)
+            if (i == max_groupchat_index) {
                 ++max_groupchat_index;
+            }
 
             return 0;
         }
@@ -166,8 +167,9 @@ void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
     int i;
 
     for (i = max_groupchat_index; i > 0; --i) {
-        if (groupchats[i - 1].active)
+        if (groupchats[i - 1].active) {
             break;
+        }
     }
 
     max_groupchat_index = i;
@@ -193,8 +195,9 @@ void redraw_groupchat_win(ToxWindow *self)
     getmaxyx(stdscr, y2, x2);
     y2 -= 2;
 
-    if (y2 <= 0 || x2 <= 0)
+    if (y2 <= 0 || x2 <= 0) {
         return;
+    }
 
     if (ctx->sidebar) {
         delwin(ctx->sidebar);
@@ -222,8 +225,9 @@ void redraw_groupchat_win(ToxWindow *self)
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
                                      TOX_MESSAGE_TYPE type, const char *msg, size_t len)
 {
-    if (self->num != groupnum)
+    if (self->num != groupnum) {
         return;
+    }
 
     ChatContext *ctx = self->chatwin;
 
@@ -242,10 +246,11 @@ static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum,
     if (strcasestr(msg, selfnick) && strcmp(selfnick, nick)) {
         sound_notify(self, generic_message, NT_WNDALERT_0 | user_settings->bell_on_message, NULL);
 
-        if (self->active_box != -1)
+        if (self->active_box != -1) {
             box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
-        else
+        } else {
             box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+        }
 
         nick_clr = RED;
     } else {
@@ -265,8 +270,9 @@ static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, uint32_t group
 {
     ChatContext *ctx = self->chatwin;
 
-    if (self->num != groupnum)
+    if (self->num != groupnum) {
         return;
+    }
 
     set_window_title(self, title, length);
 
@@ -274,8 +280,9 @@ static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, uint32_t group
     get_time_str(timefrmt, sizeof(timefrmt));
 
     /* don't announce title when we join the room */
-    if (!timed_out(groupchats[self->num].start_time, GROUP_EVENT_WAIT))
+    if (!timed_out(groupchats[self->num].start_time, GROUP_EVENT_WAIT)) {
         return;
+    }
 
     char nick[TOX_MAX_NAME_LENGTH];
     get_group_nick_truncate(m, nick, peernum, groupnum);
@@ -383,11 +390,13 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
 
 static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
-    if (self->num != groupnum)
+    if (self->num != groupnum) {
         return;
+    }
 
-    if (groupnum > max_groupchat_index)
+    if (groupnum > max_groupchat_index) {
         return;
+    }
 
     GroupChat *chat = &groupchats[groupnum];
     TOX_ERR_CONFERENCE_PEER_QUERY err;
@@ -464,27 +473,31 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0 || y2 <= 0)
+    if (x2 <= 0 || y2 <= 0) {
         return;
+    }
 
     if (self->help->active) {
         help_onKey(self, key);
         return;
     }
 
-    if (ctx->pastemode && key == '\r')
+    if (ctx->pastemode && key == '\r') {
         key = '\n';
+    }
 
     if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, y, x2, y2);
         return;
     }
 
-    if (line_info_onKey(self, key))
+    if (line_info_onKey(self, key)) {
         return;
+    }
 
-    if (input_handle(self, key, x, y, x2, y2))
+    if (input_handle(self, key, x, y, x2, y2)) {
         return;
+    }
 
     if (key == '\t') {  /* TAB key: auto-completes peer name or command */
         if (ctx->len > 0) {
@@ -523,11 +536,13 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
         int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
-        if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L)
+        if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L) {
             ++groupchats[self->num].side_pos;
+        }
     } else if (key == user_settings->key_peer_list_up) {
-        if (groupchats[self->num].side_pos > 0)
+        if (groupchats[self->num].side_pos > 0) {
             --groupchats[self->num].side_pos;
+        }
     } else if (key == '\r') {
         rm_trailing_spaces_buf(ctx);
 
@@ -538,8 +553,9 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             char line[MAX_STR_SIZE];
 
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
                 memset(&line, 0, sizeof(line));
+            }
 
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
@@ -570,8 +586,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0 || y2 <= 0)
+    if (x2 <= 0 || y2 <= 0) {
         return;
+    }
 
     ChatContext *ctx = self->chatwin;
 
@@ -583,8 +600,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     curs_set(1);
 
-    if (ctx->len > 0)
+    if (ctx->len > 0) {
         mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
+    }
 
     wclear(ctx->sidebar);
     mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
@@ -637,8 +655,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     wnoutrefresh(self->window);
 
-    if (self->help->active)
+    if (self->help->active) {
         help_onDraw(self);
+    }
 }
 
 static void groupchat_onInit(ToxWindow *self, Tox *m)
@@ -646,8 +665,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0 || y2 <= 0)
+    if (x2 <= 0 || y2 <= 0) {
         exit_toxic_err("failed in groupchat_onInit", FATALERR_CURSES);
+    }
 
     ChatContext *ctx = self->chatwin;
 
@@ -658,8 +678,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     ctx->hst = calloc(1, sizeof(struct history));
     ctx->log = calloc(1, sizeof(struct chatlog));
 
-    if (ctx->log == NULL || ctx->hst == NULL)
+    if (ctx->log == NULL || ctx->hst == NULL) {
         exit_toxic_err("failed in groupchat_onInit", FATALERR_MEMORY);
+    }
 
     line_info_init(ctx->hst);
 
@@ -667,8 +688,9 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
         char myid[TOX_ADDRESS_SIZE];
         tox_self_get_address(m, (uint8_t *) myid);
 
-        if (log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP) == -1)
+        if (log_enable(self->name, myid, NULL, ctx->log, LOG_GROUP) == -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        }
     }
 
     execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
@@ -698,8 +720,9 @@ ToxWindow new_group_chat(Tox *m, uint32_t groupnum)
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     Help *help = calloc(1, sizeof(Help));
 
-    if (chatwin == NULL || help == NULL)
+    if (chatwin == NULL || help == NULL) {
         exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
+    }
 
     ret.chatwin = chatwin;
     ret.help = help;

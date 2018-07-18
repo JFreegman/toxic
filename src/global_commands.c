@@ -79,8 +79,9 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     int i;
 
     for (i = FrndRequests.max_idx; i > 0; --i) {
-        if (FrndRequests.request[i - 1].active)
+        if (FrndRequests.request[i - 1].active) {
             break;
+        }
     }
 
     FrndRequests.max_idx = i;
@@ -313,8 +314,9 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     int i;
 
     for (i = FrndRequests.max_idx; i > 0; --i) {
-        if (FrndRequests.request[i - 1].active)
+        if (FrndRequests.request[i - 1].active) {
             break;
+        }
     }
 
     FrndRequests.max_idx = i;
@@ -335,11 +337,11 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     uint8_t type;
 
-    if (!strcasecmp(argv[1], "audio"))
+    if (!strcasecmp(argv[1], "audio")) {
         type = TOX_CONFERENCE_TYPE_AV;
-    else if (!strcasecmp(argv[1], "text"))
+    } else if (!strcasecmp(argv[1], "text")) {
         type = TOX_CONFERENCE_TYPE_TEXT;
-    else {
+    } else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid group types are: text | audio");
         return;
     }
@@ -373,10 +375,11 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     struct chatlog *log = self->chatwin->log;
 
     if (argc == 0) {
-        if (log->log_on)
+        if (log->log_on) {
             msg = "Logging for this window is ON; type \"/log off\" to disable. (Logs are not encrypted)";
-        else
+        } else {
             msg = "Logging for this window is OFF; type \"/log on\" to enable.";
+        }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
@@ -403,8 +406,9 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
-        if (self->is_chat)
+        if (self->is_chat) {
             Friends.list[self->num].logging_on = false;
+        }
 
         log_disable(log);
 
@@ -592,8 +596,9 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     int count = 0;
 
     for (i = 0; i < FrndRequests.max_idx; ++i) {
-        if (!FrndRequests.request[i].active)
+        if (!FrndRequests.request[i].active) {
             continue;
+        }
 
         char id[TOX_PUBLIC_KEY_SIZE * 2 + 1] = {0};
 
@@ -606,8 +611,9 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d : %s", i, id);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", FrndRequests.request[i].msg);
 
-        if (++count < FrndRequests.num_requests)
+        if (++count < FrndRequests.num_requests) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+        }
     }
 }
 
@@ -616,7 +622,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     bool have_note = false;
     const char *errmsg;
 
-    lock_status ();
+    lock_status();
 
     if (argc >= 2) {
         have_note = true;
@@ -629,13 +635,13 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     const char *status_str = argv[1];
     TOX_USER_STATUS status;
 
-    if (!strcasecmp(status_str, "online"))
+    if (!strcasecmp(status_str, "online")) {
         status = TOX_USER_STATUS_NONE;
-    else if (!strcasecmp(status_str, "away"))
+    } else if (!strcasecmp(status_str, "away")) {
         status = TOX_USER_STATUS_AWAY;
-    else if (!strcasecmp(status_str, "busy"))
+    } else if (!strcasecmp(status_str, "busy")) {
         status = TOX_USER_STATUS_BUSY;
-    else {
+    } else {
         errmsg = "Invalid status. Valid statuses are: online, busy and away.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         goto finish;
@@ -663,5 +669,5 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
 finish:
-    unlock_status ();
+    unlock_status();
 }

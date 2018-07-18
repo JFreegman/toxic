@@ -52,8 +52,9 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
 {
     FILE *fp = fopen(outfile, "wb");
 
-    if (fp == NULL)
+    if (fp == NULL) {
         return -1;
+    }
 
     QRcode *qr_obj = QRcode_encodeString(tox_id, 0, QR_ECLEVEL_L, QR_MODE_8, 0);
 
@@ -65,14 +66,16 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
     size_t width = qr_obj->width;
     size_t i, j;
 
-    for (i = 0; i < width + BORDER_LEN * 2; ++i)
+    for (i = 0; i < width + BORDER_LEN * 2; ++i) {
         fprintf(fp, "%s", CHAR_1);
+    }
 
     fprintf(fp, "\n");
 
     for (i = 0; i < width; i += 2) {
-        for (j = 0; j < BORDER_LEN; ++j)
+        for (j = 0; j < BORDER_LEN; ++j) {
             fprintf(fp, "%s", CHAR_1);
+        }
 
         const unsigned char *row_1 = qr_obj->data + width * i;
         const unsigned char *row_2 = row_1 + width;
@@ -81,18 +84,20 @@ int ID_to_QRcode_txt(const char *tox_id, const char *outfile)
             bool x = row_1[j] & 1;
             bool y = (i + 1) < width ? (row_2[j] & 1) : false;
 
-            if (x && y)
+            if (x && y) {
                 fprintf(fp, " ");
-            else if (x)
+            } else if (x) {
                 fprintf(fp, "%s", CHAR_2);
-            else if (y)
+            } else if (y) {
                 fprintf(fp, "%s", CHAR_3);
-            else
+            } else {
                 fprintf(fp, "%s", CHAR_1);
+            }
         }
 
-        for (j = 0; j < BORDER_LEN; ++j)
+        for (j = 0; j < BORDER_LEN; ++j) {
             fprintf(fp, "%s", CHAR_1);
+        }
 
         fprintf(fp, "\n");
     }

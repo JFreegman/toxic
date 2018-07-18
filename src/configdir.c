@@ -48,8 +48,9 @@ void get_home_dir(char *home, int size)
     } else {
         hmstr = getenv("HOME");
 
-        if (hmstr == NULL)
+        if (hmstr == NULL) {
             return;
+        }
 
         snprintf(buf, sizeof(buf), "%s", hmstr);
         hmstr = buf;
@@ -77,8 +78,9 @@ char *get_user_config_dir(void)
     len = strlen(home) + strlen("/Library/Application Support") + 1;
     user_config_dir = malloc(len);
 
-    if (user_config_dir == NULL)
+    if (user_config_dir == NULL) {
         return NULL;
+    }
 
     snprintf(user_config_dir, len, "%s/Library/Application Support", home);
 # else /* __APPLE__ */
@@ -89,8 +91,9 @@ char *get_user_config_dir(void)
         len = strlen(home) + strlen("/.config") + 1;
         user_config_dir = malloc(len);
 
-        if (user_config_dir == NULL)
+        if (user_config_dir == NULL) {
             return NULL;
+        }
 
         snprintf(user_config_dir, len, "%s/.config", home);
     } else {
@@ -112,14 +115,16 @@ int create_user_config_dirs(char *path)
     struct stat buf;
     int mkdir_err = mkdir(path, 0700);
 
-    if (mkdir_err && (errno != EEXIST || stat(path, &buf) || !S_ISDIR(buf.st_mode)))
+    if (mkdir_err && (errno != EEXIST || stat(path, &buf) || !S_ISDIR(buf.st_mode))) {
         return -1;
+    }
 
     char *fullpath = malloc(strlen(path) + strlen(CONFIGDIR) + 1);
     char *logpath = malloc(strlen(path) + strlen(LOGDIR) + 1);
 
-    if (fullpath == NULL || logpath == NULL)
+    if (fullpath == NULL || logpath == NULL) {
         exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
+    }
 
     strcpy(fullpath, path);
     strcat(fullpath, CONFIGDIR);

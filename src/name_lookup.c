@@ -97,42 +97,49 @@ static int load_nameserver_list(const char *path)
 {
     FILE *fp = fopen(path, "r");
 
-    if (fp == NULL)
+    if (fp == NULL) {
         return -2;
+    }
 
     char line[MAX_SERVER_LINE];
 
     while (fgets(line, sizeof(line), fp) && Nameservers.lines < MAX_SERVERS) {
         int linelen = strlen(line);
 
-        if (linelen < SERVER_KEY_SIZE * 2 + 5)
+        if (linelen < SERVER_KEY_SIZE * 2 + 5) {
             continue;
+        }
 
-        if (line[linelen - 1] == '\n')
+        if (line[linelen - 1] == '\n') {
             line[--linelen] = '\0';
+        }
 
         const char *name = strtok(line, " ");
         const char *keystr = strtok(NULL, " ");
 
-        if (name == NULL || keystr == NULL)
+        if (name == NULL || keystr == NULL) {
             continue;
+        }
 
-        if (strlen(keystr) != SERVER_KEY_SIZE * 2)
+        if (strlen(keystr) != SERVER_KEY_SIZE * 2) {
             continue;
+        }
 
         snprintf(Nameservers.names[Nameservers.lines], sizeof(Nameservers.names[Nameservers.lines]), "%s", name);
         int res = hex_string_to_bytes(Nameservers.keys[Nameservers.lines], SERVER_KEY_SIZE, keystr);
 
-        if (res == -1)
+        if (res == -1) {
             continue;
+        }
 
         ++Nameservers.lines;
     }
 
     fclose(fp);
 
-    if (Nameservers.lines < 1)
+    if (Nameservers.lines < 1) {
         return -3;
+    }
 
     return 0;
 }
@@ -145,8 +152,9 @@ static int load_nameserver_list(const char *path)
  */
 static int parse_addr(const char *addr, char *namebuf, size_t namebuf_sz, char *dombuf, size_t dombuf_sz)
 {
-    if (strlen(addr) >= (MAX_STR_SIZE - strlen(NAMESERVER_API_PATH)))
+    if (strlen(addr) >= (MAX_STR_SIZE - strlen(NAMESERVER_API_PATH))) {
         return -1;
+    }
 
     char tmpaddr[MAX_STR_SIZE];
     char *tmpname = NULL;
@@ -156,8 +164,9 @@ static int parse_addr(const char *addr, char *namebuf, size_t namebuf_sz, char *
     tmpname = strtok(tmpaddr, "@");
     tmpdom = strtok(NULL, "");
 
-    if (tmpname == NULL || tmpdom == NULL)
+    if (tmpname == NULL || tmpdom == NULL) {
         return -1;
+    }
 
     str_to_lower(tmpdom);
     snprintf(namebuf, namebuf_sz, "%s", tmpname);
@@ -197,23 +206,27 @@ static int process_response(struct Recv_Curl_Data *recv_data)
 {
     size_t prefix_size = strlen(ID_PREFIX);
 
-    if (recv_data->length < TOX_ADDRESS_SIZE * 2 + prefix_size)
+    if (recv_data->length < TOX_ADDRESS_SIZE * 2 + prefix_size) {
         return -1;
+    }
 
     const char *IDstart = strstr(recv_data->data, ID_PREFIX);
 
-    if (IDstart == NULL)
+    if (IDstart == NULL) {
         return -1;
+    }
 
-    if (strlen(IDstart) < TOX_ADDRESS_SIZE * 2 + prefix_size)
+    if (strlen(IDstart) < TOX_ADDRESS_SIZE * 2 + prefix_size) {
         return -1;
+    }
 
     char ID_string[TOX_ADDRESS_SIZE * 2 + 1];
     memcpy(ID_string, IDstart + prefix_size, TOX_ADDRESS_SIZE * 2);
     ID_string[TOX_ADDRESS_SIZE * 2] = 0;
 
-    if (hex_string_to_bin(ID_string, strlen(ID_string), t_data.id_bin, sizeof(t_data.id_bin)) == -1)
+    if (hex_string_to_bin(ID_string, strlen(ID_string), t_data.id_bin, sizeof(t_data.id_bin)) == -1) {
         return -1;
+    }
 
     return 0;
 }
@@ -234,10 +247,11 @@ void *lookup_thread_func(void *data)
     char real_domain[MAX_DOMAIN_SIZE];
 
     if (!get_domain_match(nameserver_key, real_domain, sizeof(real_domain), input_domain)) {
-        if (!strcasecmp(input_domain, "utox.org"))
+        if (!strcasecmp(input_domain, "utox.org")) {
             lookup_error(self, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic.");
-        else
+        } else {
             lookup_error(self, "Name server domain not found.");
+        }
 
         kill_lookup_thread();
     }

@@ -162,8 +162,9 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     TOX_ERR_SET_INFO err;
     tox_self_set_status_message(m, (uint8_t *) statusmsg, len, &err);
 
-    if (err != TOX_ERR_SET_INFO_OK)
+    if (err != TOX_ERR_SET_INFO_OK) {
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
+    }
 }
 
 /* Updates own status in prompt statusbar */
@@ -184,8 +185,9 @@ TOX_CONNECTION prompt_selfConnectionStatus(void)
    Returns request number on success, -1 if queue is full. */
 static int add_friend_request(const char *public_key, const char *data)
 {
-    if (FrndRequests.max_idx >= MAX_FRIEND_REQUESTS)
+    if (FrndRequests.max_idx >= MAX_FRIEND_REQUESTS) {
         return -1;
+    }
 
     int i;
 
@@ -195,8 +197,9 @@ static int add_friend_request(const char *public_key, const char *data)
             memcpy(FrndRequests.request[i].key, public_key, TOX_PUBLIC_KEY_SIZE);
             snprintf(FrndRequests.request[i].msg, sizeof(FrndRequests.request[i].msg), "%s", data);
 
-            if (i == FrndRequests.max_idx)
+            if (i == FrndRequests.max_idx) {
                 ++FrndRequests.max_idx;
+            }
 
             ++FrndRequests.num_requests;
 
@@ -215,11 +218,13 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
-    if (x2 <= 0 || y2 <= 0)
+    if (x2 <= 0 || y2 <= 0) {
         return;
+    }
 
-    if (ctx->pastemode && key == '\r')
+    if (ctx->pastemode && key == '\r') {
         key = '\n';
+    }
 
     /* ignore non-menu related input if active */
     if (self->help->active) {
@@ -232,8 +237,9 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
-    if (line_info_onKey(self, key))
+    if (line_info_onKey(self, key)) {
         return;
+    }
 
     input_handle(self, key, x, y, x2, y2);
 
@@ -241,12 +247,14 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (ctx->len > 1 && ctx->line[0] == '/') {
             int diff = -1;
 
-            if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0)
+            if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
+            }
 
 #ifdef PYTHON
-            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0)
+            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/run");
+            }
 
 #endif
 
@@ -257,8 +265,9 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     {"busy"},
                 };
                 diff = complete_line(self, status_cmd_list, 3, 8);
-            } else
+            } else {
                 diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+            }
 
             if (diff != -1) {
                 if (x + diff > x2 - 1) {
@@ -280,8 +289,9 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             char line[MAX_STR_SIZE] = {0};
 
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1)
+            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
                 memset(&line, 0, sizeof(line));
+            }
 
             line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
             execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
@@ -298,8 +308,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
-    if (y2 <= 0 || x2 <= 0)
+    if (y2 <= 0 || x2 <= 0) {
         return;
+    }
 
     ChatContext *ctx = self->chatwin;
 
@@ -311,8 +322,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     curs_set(1);
 
-    if (ctx->len > 0)
+    if (ctx->len > 0) {
         mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
+    }
 
     StatusBar *statusbar = self->stb;
 
@@ -372,7 +384,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
         pthread_mutex_lock(&Winthread.lock);
         size_t slen = tox_self_get_status_message_size(m);
-        tox_self_get_status_message (m, (uint8_t *) statusmsg);
+        tox_self_get_status_message(m, (uint8_t *) statusmsg);
         statusmsg[slen] = '\0';
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
@@ -392,8 +404,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         statusbar->statusmsg_len = maxlen;
     }
 
-    if (statusbar->statusmsg[0])
+    if (statusbar->statusmsg[0]) {
         wprintw(statusbar->topline, " : %s", statusbar->statusmsg);
+    }
 
     pthread_mutex_unlock(&Winthread.lock);
 
@@ -408,8 +421,9 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     wnoutrefresh(self->window);
 
-    if (self->help->active)
+    if (self->help->active) {
         help_onDraw(self);
+    }
 }
 
 static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum, TOX_CONNECTION connection_status)
@@ -419,8 +433,9 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
     char nick[TOX_MAX_NAME_LENGTH] = {0};    /* stop removing this initiation */
     get_nick_truncate(m, nick, friendnum);
 
-    if (!nick[0])
+    if (!nick[0]) {
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
+    }
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
@@ -437,10 +452,10 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
 
         if (self->active_box != -1)
             box_notify2(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
-                        "%s has come online", nick );
+                        "%s has come online", nick);
         else
             box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
-                       "Toxic", "%s has come online", nick );
+                       "Toxic", "%s has come online", nick);
     } else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
@@ -448,10 +463,10 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
 
         if (self->active_box != -1)
             box_notify2(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
-                        "%s has gone offline", nick );
+                        "%s has gone offline", nick);
         else
             box_notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
-                       "Toxic", "%s has gone offline", nick );
+                       "Toxic", "%s has gone offline", nick);
     }
 }
 
@@ -482,8 +497,9 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
-    if (y2 <= 0 || x2 <= 0)
+    if (y2 <= 0 || x2 <= 0) {
         exit_toxic_err("failed in prompt_init_statusbar", FATALERR_CURSES);
+    }
 
     (void) y2;
 
@@ -542,8 +558,9 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     int y2, x2;
     getmaxyx(self->window, y2, x2);
 
-    if (y2 <= 0 || x2 <= 0)
+    if (y2 <= 0 || x2 <= 0) {
         exit_toxic_err("failed in prompt_onInit", FATALERR_CURSES);
+    }
 
     ChatContext *ctx = self->chatwin;
     ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
@@ -552,8 +569,9 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     ctx->log = calloc(1, sizeof(struct chatlog));
     ctx->hst = calloc(1, sizeof(struct history));
 
-    if (ctx->log == NULL || ctx->hst == NULL)
+    if (ctx->log == NULL || ctx->hst == NULL) {
         exit_toxic_err("failed in prompt_onInit", FATALERR_MEMORY);
+    }
 
     line_info_init(ctx->hst);
 
@@ -561,15 +579,17 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
         char myid[TOX_ADDRESS_SIZE];
         tox_self_get_address(m, (uint8_t *) myid);
 
-        if (log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT) == -1)
+        if (log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT) == -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        }
     }
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    if (user_settings->show_welcome_msg == SHOW_WELCOME_MSG_ON)
+    if (user_settings->show_welcome_msg == SHOW_WELCOME_MSG_ON) {
         print_welcome_msg(self);
+    }
 }
 
 ToxWindow new_prompt(void)
@@ -593,8 +613,9 @@ ToxWindow new_prompt(void)
     StatusBar *stb = calloc(1, sizeof(StatusBar));
     Help *help = calloc(1, sizeof(Help));
 
-    if (stb == NULL || chatwin == NULL || help == NULL)
+    if (stb == NULL || chatwin == NULL || help == NULL) {
         exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+    }
 
     ret.chatwin = chatwin;
     ret.stb = stb;

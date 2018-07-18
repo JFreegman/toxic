@@ -31,7 +31,7 @@ typedef enum {
 }
 DropType;
 
-typedef void (*drop_callback) (const char *, DropType);
+typedef void (*drop_callback)(const char *, DropType);
 
 int               init_xtra(drop_callback d);
 void              terminate_xtra();
