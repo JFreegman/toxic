@@ -51,7 +51,7 @@ void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
 void kill_prompt_window(ToxWindow *self);
 
 /* callback: Updates own connection status in prompt statusbar */
-void prompt_onSelfConnectionChange(Tox *m, TOX_CONNECTION connection_status, void *userdata);
+void on_self_connection_status(Tox *m, TOX_CONNECTION connection_status, void *userdata);
 
 /* Returns our own connection status */
 TOX_CONNECTION prompt_selfConnectionStatus(void);

@@ -41,13 +41,13 @@
 
 #define default_video_bit_rate 5000
 
-void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
+void on_video_receive_frame(ToxAV *av, uint32_t friend_number,
                             uint16_t width, uint16_t height,
                             uint8_t const *y, uint8_t const *u, uint8_t const *v,
                             int32_t ystride, int32_t ustride, int32_t vstride,
                             void *user_data);
 
-void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data);
+void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data);
 
 static void print_err(ToxWindow *self, const char *error_str)
 {
@@ -74,8 +74,8 @@ ToxAV *init_video(ToxWindow *self, Tox *tox)
         return NULL;
     }
 
-    toxav_callback_video_receive_frame(CallControl.av, receive_video_frame_cb, &CallControl);
-    toxav_callback_video_bit_rate(CallControl.av, video_bit_rate_status_cb, &CallControl);
+    toxav_callback_video_receive_frame(CallControl.av, on_video_receive_frame, &CallControl);
+    toxav_callback_video_bit_rate(CallControl.av, on_video_bit_rate, &CallControl);
 
     return CallControl.av;
 }
@@ -179,7 +179,7 @@ int stop_video_transmission(Call *call, int friend_number)
 /*
  * Callbacks
  */
-void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
+void on_video_receive_frame(ToxAV *av, uint32_t friend_number,
                             uint16_t width, uint16_t height,
                             uint8_t const *y, uint8_t const *u, uint8_t const *v,
                             int32_t ystride, int32_t ustride, int32_t vstride,
@@ -188,7 +188,7 @@ void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
     write_video_device_callback(friend_number, width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
-void video_bit_rate_status_cb(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data)
+void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data)
 {
     CallControl.video_bit_rate = video_bit_rate;
     toxav_video_set_bit_rate(CallControl.av, friend_number, CallControl.video_bit_rate, NULL);

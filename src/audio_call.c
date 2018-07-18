@@ -90,15 +90,11 @@ static int set_call(Call *call, bool start)
     return 0;
 }
 
-void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
+void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
              void *user_data);
-void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data);
-void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
+void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data);
+void on_audio_receive_frame(ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
                             uint8_t channels, uint32_t sampling_rate, void *user_data);
-void receive_video_frame_cb(ToxAV *av, uint32_t friend_number,
-                            uint16_t width, uint16_t height,
-                            uint8_t const *y, uint8_t const *u, uint8_t const *v, uint8_t const *a,
-                            int32_t ystride, int32_t ustride, int32_t vstride, int32_t astride, void *user_data);
 
 void callback_recv_invite(Tox *m, uint32_t friend_number);
 void callback_recv_ringing(uint32_t friend_number);
@@ -152,9 +148,9 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
         return CallControl.av = NULL;
     }
 
-    toxav_callback_call(CallControl.av, call_cb, tox);
-    toxav_callback_call_state(CallControl.av, callstate_cb, NULL);
-    toxav_callback_audio_receive_frame(CallControl.av, receive_audio_frame_cb, NULL);
+    toxav_callback_call(CallControl.av, on_call, tox);
+    toxav_callback_call_state(CallControl.av, on_call_state, NULL);
+    toxav_callback_audio_receive_frame(CallControl.av, on_audio_receive_frame, NULL);
 
     return CallControl.av;
 }
@@ -280,14 +276,14 @@ int stop_transmission(Call *call, uint32_t friend_number)
 /*
  * Callbacks
  */
-void call_cb(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data)
+void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data)
 {
     Tox *m = (Tox *) user_data;
     CallControl.pending_call = true;
     callback_recv_invite(m, friend_number);
 }
 
-void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
+void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
 {
     CallControl.call_state = state;
 
@@ -348,7 +344,7 @@ void callstate_cb(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_
     }
 }
 
-void receive_audio_frame_cb(ToxAV *av, uint32_t friend_number,
+void on_audio_receive_frame(ToxAV *av, uint32_t friend_number,
                             int16_t const *pcm, size_t sample_count,
                             uint8_t channels, uint32_t sampling_rate, void *user_data)
 {

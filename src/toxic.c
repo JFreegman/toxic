@@ -586,23 +586,23 @@ int store_data(Tox *m, const char *path)
 
 static void init_tox_callbacks(Tox *m)
 {
-    tox_callback_self_connection_status(m, prompt_onSelfConnectionChange);
-    tox_callback_friend_connection_status(m, on_connectionchange);
-    tox_callback_friend_typing(m, on_typing_change);
-    tox_callback_friend_request(m, on_request);
-    tox_callback_friend_message(m, on_message);
-    tox_callback_friend_name(m, on_nickchange);
-    tox_callback_friend_status(m, on_statuschange);
-    tox_callback_friend_status_message(m, on_statusmessagechange);
-    tox_callback_friend_read_receipt(m, on_read_receipt);
-    tox_callback_conference_invite(m, on_groupinvite);
-    tox_callback_conference_message(m, on_groupmessage);
-    tox_callback_conference_peer_list_changed(m, on_group_namelistchange);
-    tox_callback_conference_peer_name(m, on_group_peernamechange);
-    tox_callback_conference_title(m, on_group_titlechange);
+    tox_callback_self_connection_status(m, on_self_connection_status);
+    tox_callback_friend_connection_status(m, on_friend_connection_status);
+    tox_callback_friend_typing(m, on_friend_typing);
+    tox_callback_friend_request(m, on_friend_request);
+    tox_callback_friend_message(m, on_friend_message);
+    tox_callback_friend_name(m, on_friend_name);
+    tox_callback_friend_status(m, on_friend_status);
+    tox_callback_friend_status_message(m, on_friend_status_message);
+    tox_callback_friend_read_receipt(m, on_friend_read_receipt);
+    tox_callback_conference_invite(m, on_conference_invite);
+    tox_callback_conference_message(m, on_conference_message);
+    tox_callback_conference_peer_list_changed(m, on_conference_peer_list_changed);
+    tox_callback_conference_peer_name(m, on_conference_peer_name);
+    tox_callback_conference_title(m, on_conference_title);
     tox_callback_file_recv(m, on_file_recv);
     tox_callback_file_chunk_request(m, on_file_chunk_request);
-    tox_callback_file_recv_control(m, on_file_control);
+    tox_callback_file_recv_control(m, on_file_recv_control);
     tox_callback_file_recv_chunk(m, on_file_recv_chunk);
 }
 

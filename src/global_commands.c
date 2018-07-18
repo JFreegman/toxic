@@ -71,7 +71,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     } else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Friend request accepted.");
-        on_friendadded(m, friendnum, true);
+        on_friend_added(m, friendnum, true);
     }
 
     memset(&FrndRequests.request[req], 0, sizeof(struct friend_request));
@@ -127,7 +127,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 
         case TOX_ERR_FRIEND_ADD_OK:
             errmsg = "Friend request sent.";
-            on_friendadded(m, f_num, true);
+            on_friend_added(m, f_num, true);
             break;
 
         case TOX_ERR_FRIEND_ADD_NULL:
