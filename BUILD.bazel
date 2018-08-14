@@ -19,6 +19,6 @@ cc_binary(
         "@ncurses",
         "@openal",
         "@python3//:python",
-        "@x11//:X11",
+        "@x11",
     ],
 )
