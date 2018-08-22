@@ -23,7 +23,7 @@ SNDFILES += ToxicRecvMessage.wav ToxicOutgoingCall.wav ToxicIncomingCall.wav
 SNDFILES += ToxicTransferComplete.wav ToxicTransferStart.wav
 
 # Install directories
-PREFIX = /usr/local
+PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
 MANDIR = $(PREFIX)/share/man

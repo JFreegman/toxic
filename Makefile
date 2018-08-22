@@ -22,16 +22,16 @@ ifeq ($(UNAME_S), Linux)
     -include $(CFG_DIR)/systems/Linux.mk
 endif
 ifeq ($(UNAME_S), FreeBSD)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+    -include $(CFG_DIR)/systems/BSD.mk
 endif
 ifeq ($(UNAME_S), DragonFly)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+    -include $(CFG_DIR)/systems/BSD.mk
 endif
 ifeq ($(UNAME_S), OpenBSD)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+    -include $(CFG_DIR)/systems/BSD.mk
 endif
 ifeq ($(UNAME_S), NetBSD)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+    -include $(CFG_DIR)/systems/BSD.mk
 endif
 ifeq ($(UNAME_S), Darwin)
     -include $(CFG_DIR)/systems/Darwin.mk
