@@ -13,6 +13,7 @@ cc_binary(
         "-DPACKAGE_DATADIR='\"data\"'",
         "-DPYTHON",
         "-DVIDEO",
+        "-Wno-error=unused-result",
     ],
     deps = [
         "//c-toxcore",
