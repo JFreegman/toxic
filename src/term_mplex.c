@@ -80,12 +80,12 @@ static char prev_note [TOX_MAX_STATUS_MESSAGE_LENGTH] = "";
 static pthread_mutex_t status_lock;
 static pthread_t mplex_tid;
 
-void lock_status()
+void lock_status(void)
 {
     pthread_mutex_lock(&status_lock);
 }
 
-void unlock_status()
+void unlock_status(void)
 {
     pthread_mutex_unlock(&status_lock);
 }
@@ -148,7 +148,7 @@ static char *extract_socket_path(const char *info)
     return strcpy(path, pos);
 }
 
-static int detect_gnu_screen()
+static int detect_gnu_screen(void)
 {
     FILE *session_info_stream = NULL;
     char *socket_name = NULL, *socket_path = NULL;
@@ -214,7 +214,7 @@ nomplex:
     return 0;
 }
 
-static int detect_tmux()
+static int detect_tmux(void)
 {
     char *tmux_env = getenv("TMUX"), *pos;
 
@@ -243,7 +243,7 @@ static int detect_tmux()
    Returns 1 if present, 0 otherwise. This value can be used to determine
    whether an auto-away detection timer is needed.
  */
-static int detect_mplex()
+static int detect_mplex(void)
 {
     /* try screen, and if fails try tmux */
     return detect_gnu_screen() || detect_tmux();
@@ -252,7 +252,7 @@ static int detect_mplex()
 /* Detects gnu screen session attached/detached by examining permissions of
    the session's unix socket.
  */
-static int gnu_screen_is_detached()
+static int gnu_screen_is_detached(void)
 {
     if (mplex != MPLEX_SCREEN) {
         return 0;
@@ -271,7 +271,7 @@ static int gnu_screen_is_detached()
 /* Detects tmux attached/detached by getting session data and finding the
    current session's entry.
  */
-static int tmux_is_detached()
+static int tmux_is_detached(void)
 {
     if (mplex != MPLEX_TMUX) {
         return 0;
@@ -352,7 +352,7 @@ fail:
    sample its state and update away status according to attached/detached state
    of the mplex.
  */
-static int mplex_is_detached()
+static int mplex_is_detached(void)
 {
     return gnu_screen_is_detached()  ||  tmux_is_detached();
 }

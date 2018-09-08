@@ -131,14 +131,14 @@ static bool notifications_are_disabled(uint64_t flags)
 #endif
 }
 
-static void control_lock()
+static void control_lock(void)
 {
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
     pthread_mutex_lock(Control.poll_mutex);
 #endif
 }
 
-static void control_unlock()
+static void control_unlock(void)
 {
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
     pthread_mutex_unlock(Control.poll_mutex);
@@ -160,7 +160,7 @@ static bool device_opened = false;
 time_t last_opened_update = 0;
 
 /* Opens primary device. Returns true on succe*/
-void m_open_device()
+void m_open_device(void)
 {
     last_opened_update = get_unix_time();
 
@@ -174,7 +174,7 @@ void m_open_device()
     device_opened = true;
 }
 
-void m_close_device()
+void m_close_device(void)
 {
     if (!device_opened) {
         return;
@@ -186,7 +186,7 @@ void m_close_device()
 }
 
 /* Terminate all sounds but wait for them to finish first */
-void graceful_clear()
+void graceful_clear(void)
 {
     control_lock();
 
@@ -367,7 +367,7 @@ void *do_playing(void *_p)
     pthread_exit(NULL);
 }
 
-void graceful_clear()
+void graceful_clear(void)
 {
     int i;
     control_lock();
@@ -431,7 +431,7 @@ int init_notify(int login_cooldown, int notification_timeout)
     return 1;
 }
 
-void terminate_notify()
+void terminate_notify(void)
 {
 #if defined(SOUND_NOTIFY) || defined(BOX_NOTIFY)
     control_lock();

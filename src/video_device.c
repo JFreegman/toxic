@@ -250,7 +250,7 @@ VideoDeviceError init_video_devices()
     return (VideoDeviceError) vde_None;
 }
 
-VideoDeviceError terminate_video_devices()
+VideoDeviceError terminate_video_devices(void)
 {
     /* Cleanup if needed */
     lock;

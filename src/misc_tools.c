@@ -124,7 +124,7 @@ int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size
     }
 
     for (size_t i = 0; i < output_size; ++i) {
-        sscanf(hex_string, "%2hhx", &output[i]);
+        sscanf(hex_string, "%2hhx", (unsigned char *)&output[i]);
         hex_string += 2;
     }
 
@@ -141,7 +141,7 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
     const char *pos = keystr;
 
     for (i = 0; i < size; ++i) {
-        res = sscanf(pos, "%2hhx", &buf[i]);
+        res = sscanf(pos, "%2hhx", (unsigned char *)&buf[i]);
         pos += 2;
 
         if (res == EOF || res < 1) {

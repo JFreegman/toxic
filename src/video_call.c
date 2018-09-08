@@ -80,7 +80,7 @@ ToxAV *init_video(ToxWindow *self, Tox *tox)
     return CallControl.av;
 }
 
-void terminate_video()
+void terminate_video(void)
 {
     int i;
 

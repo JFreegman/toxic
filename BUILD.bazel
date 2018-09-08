@@ -12,6 +12,7 @@ cc_binary(
         "-DAUDIO",
         "-DPACKAGE_DATADIR='\"data\"'",
         "-DPYTHON",
+        "-DQRCODE",
         "-DVIDEO",
         "-Wno-error=unused-result",
     ],

@@ -378,7 +378,7 @@ int init_xtra(drop_callback d)
     return 0;
 }
 
-void terminate_xtra()
+void terminate_xtra(void)
 {
     if (!Xtra.display || !Xtra.terminal_window) {
         return;
@@ -400,7 +400,7 @@ void terminate_xtra()
     while (Xtra.display); /* Wait for termination */
 }
 
-long unsigned int focused_window_id()
+long unsigned int focused_window_id(void)
 {
     if (!Xtra.display) {
         return 0;
@@ -414,7 +414,7 @@ long unsigned int focused_window_id()
     return focus;
 }
 
-int is_focused()
+int is_focused(void)
 {
     return Xtra.proxy_window == focused_window_id() || Xtra.terminal_window == focused_window_id();
 }

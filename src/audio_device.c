@@ -97,7 +97,7 @@ void *thread_poll(void *);
 #ifdef AUDIO
 DeviceError init_devices(ToxAV *av_)
 #else
-DeviceError init_devices()
+DeviceError init_devices(void)
 #endif /* AUDIO */
 {
     get_devices_names();
@@ -120,7 +120,7 @@ DeviceError init_devices()
     return (DeviceError) de_None;
 }
 
-DeviceError terminate_devices()
+DeviceError terminate_devices(void)
 {
     /* Cleanup if needed */
     lock;
@@ -136,7 +136,7 @@ DeviceError terminate_devices()
     return (DeviceError) de_None;
 }
 
-void get_devices_names()
+void get_devices_names(void)
 {
 
     const char *stringed_device_list;

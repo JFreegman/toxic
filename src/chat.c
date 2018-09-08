@@ -219,11 +219,13 @@ static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TY
     get_time_str(timefrmt, sizeof(timefrmt));
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
-        return recv_message_helper(self, m, num, msg, len, nick, timefrmt);
+        recv_message_helper(self, m, num, msg, len, nick, timefrmt);
+        return;
     }
 
     if (type == TOX_MESSAGE_TYPE_ACTION) {
-        return recv_action_helper(self, m, num, msg, len, nick, timefrmt);
+        recv_action_helper(self, m, num, msg, len, nick, timefrmt);
+        return;
     }
 }
 

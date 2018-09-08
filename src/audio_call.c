@@ -155,7 +155,7 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     return CallControl.av;
 }
 
-void terminate_audio()
+void terminate_audio(void)
 {
     int i;
 
