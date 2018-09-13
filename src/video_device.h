@@ -51,10 +51,10 @@ typedef void (*VideoDataHandleCallback)(int16_t width, int16_t height, const uin
 #ifdef VIDEO
 VideoDeviceError init_video_devices(ToxAV *av);
 #else
-VideoDeviceError init_video_devices();
+VideoDeviceError init_video_devices(void);
 #endif /* VIDEO */
 
-VideoDeviceError terminate_video_devices();
+VideoDeviceError terminate_video_devices(void);
 
 /* Callback handles ready data from INPUT device */
 VideoDeviceError register_video_device_callback(int32_t call_idx, uint32_t device_idx, VideoDataHandleCallback callback,

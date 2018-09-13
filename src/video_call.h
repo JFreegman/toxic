@@ -31,7 +31,7 @@
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAV *init_video(ToxWindow *self, Tox *tox);
-void terminate_video();
+void terminate_video(void);
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call);
 int stop_video_transmission(Call *call, int friend_number);
 void stop_video_stream(ToxWindow *self);

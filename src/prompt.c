@@ -160,7 +160,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     statusbar->statusmsg_len = len;
 
     TOX_ERR_SET_INFO err;
-    tox_self_set_status_message(m, (uint8_t *) statusmsg, len, &err);
+    tox_self_set_status_message(m, (const uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK) {
         line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);

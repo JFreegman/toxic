@@ -439,10 +439,10 @@ static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t gr
             get_time_str(timefrmt, sizeof(timefrmt));
 
             char tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
-            snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (char *) name);
+            snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (const char *) name);
 
             write_to_log(tmp_event, peer->name, ctx->log, true);
-            line_info_add(self, timefrmt, peer->name, (char *) name, NAME_CHANGE, 0, 0, " is now known as ");
+            line_info_add(self, timefrmt, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
 
             break;
         }

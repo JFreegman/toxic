@@ -64,7 +64,7 @@
 
 extern struct user_settings *user_settings;
 
-struct Control {
+static struct Control {
     time_t cooldown;
     time_t notif_timeout;
 
@@ -79,7 +79,7 @@ struct Control {
 #endif /* SOUND_NOTIFY */
 } Control = {0};
 
-struct _ActiveNotifications {
+static struct _ActiveNotifications {
 #ifdef SOUND_NOTIFY
     uint32_t source;
     uint32_t buffer;

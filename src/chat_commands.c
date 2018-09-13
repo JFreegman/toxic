@@ -125,7 +125,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
     TOX_ERR_CONFERENCE_JOIN err;
 
-    uint32_t groupnum = tox_conference_join(m, self->num, (uint8_t *) groupkey, length, &err);
+    uint32_t groupnum = tox_conference_join(m, self->num, (const uint8_t *) groupkey, length, &err);
 
     if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);

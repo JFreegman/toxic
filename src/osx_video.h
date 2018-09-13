@@ -45,7 +45,7 @@ void bgrtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t *
 #endif /* __OBJC__ */
 
 int osx_video_init(char **device_names, int *size);
-void osx_video_release();
+void osx_video_release(void);
 /* Start device */
 int osx_video_open_device(uint32_t selection, uint16_t *width, uint16_t *height);
 /* Stop device */

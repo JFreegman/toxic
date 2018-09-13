@@ -591,7 +591,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
     return vde_None;
 }
 
-__inline VideoDeviceError write_video_out(uint16_t width, uint16_t height,
+VideoDeviceError write_video_out(uint16_t width, uint16_t height,
         uint8_t const *y, uint8_t const *u, uint8_t const *v,
         int32_t ystride, int32_t ustride, int32_t vstride,
         void *user_data)

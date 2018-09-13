@@ -41,7 +41,6 @@
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
 extern FriendsList Friends;
-extern FriendRequests FrndRequests;
 
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -94,7 +93,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
     const char *errmsg;
 
     TOX_ERR_FRIEND_ADD err;
-    uint32_t f_num = tox_friend_add(m, (uint8_t *) id_bin, (uint8_t *) msg, strlen(msg), &err);
+    uint32_t f_num = tox_friend_add(m, (const uint8_t *) id_bin, (const uint8_t *) msg, strlen(msg), &err);
 
     switch (err) {
         case TOX_ERR_FRIEND_ADD_TOO_LONG:

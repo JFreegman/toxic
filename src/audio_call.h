@@ -85,7 +85,7 @@ extern struct CallControl CallControl;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAV *init_audio(ToxWindow *self, Tox *tox);
-void terminate_audio();
+void terminate_audio(void);
 int start_transmission(ToxWindow *self, Call *call);
 int stop_transmission(Call *call, uint32_t friend_number);
 void stop_current_call(ToxWindow *self);

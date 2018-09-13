@@ -58,11 +58,11 @@ typedef void (*DataHandleCallback)(const int16_t *, uint32_t size, void *data);
 #ifdef AUDIO
 DeviceError init_devices(ToxAV *av);
 #else
-DeviceError init_devices();
+DeviceError init_devices(void);
 #endif /* AUDIO */
 
-void get_devices_names();
-DeviceError terminate_devices();
+void get_devices_names(void);
+DeviceError terminate_devices(void);
 
 /* Callback handles ready data from INPUT device */
 DeviceError register_device_callback(int32_t friend_number, uint32_t device_idx, DataHandleCallback callback,

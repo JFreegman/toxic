@@ -29,7 +29,7 @@
  */
 int init_mplex_away_timer(Tox *m);
 
-void lock_status();
-void unlock_status();
+void lock_status(void);
+void unlock_status(void);
 
 #endif /* #define TERM_MPLEX_H */

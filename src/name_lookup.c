@@ -42,7 +42,7 @@ extern struct Winthread Winthread;
 #define MAX_DOMAIN_SIZE 32
 #define MAX_SERVER_LINE MAX_DOMAIN_SIZE + (SERVER_KEY_SIZE * 2) + 3
 
-struct Nameservers {
+static struct Nameservers {
     int     lines;
     char    names[MAX_SERVERS][MAX_DOMAIN_SIZE];
     char    keys[MAX_SERVERS][SERVER_KEY_SIZE];

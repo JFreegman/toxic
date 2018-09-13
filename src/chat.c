@@ -936,7 +936,7 @@ static void draw_infobox(ToxWindow *self)
     wattron(infobox->win, A_BOLD);
     wprintw(infobox->win, " VAD level: ");
     wattroff(infobox->win, A_BOLD);
-    wprintw(infobox->win, "%.2f\n", infobox->vad_lvl);
+    wprintw(infobox->win, "%.2f\n", (double) infobox->vad_lvl);
 
     wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
     wnoutrefresh(infobox->win);
