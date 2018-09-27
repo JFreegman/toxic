@@ -47,7 +47,7 @@ static Atom XdndTypeList;
 static Atom XdndActionCopy;
 static Atom XdndFinished;
 
-struct _Xtra {
+struct Xtra {
     drop_callback on_drop;
     Display *display;
     Window terminal_window;
@@ -57,14 +57,14 @@ struct _Xtra {
     Atom expecting_type;
 } Xtra;
 
-typedef struct _Property {
+typedef struct Property {
     unsigned char *data;
     int            read_format;
     unsigned long  read_num;
     Atom           read_type;
 } Property;
 
-Property read_property(Window s, Atom p)
+static Property read_property(Window s, Atom p)
 {
     Atom read_type;
     int  read_format;
@@ -95,7 +95,7 @@ Property read_property(Window s, Atom p)
     return property;
 }
 
-Atom get_dnd_type(long *a, int l)
+static Atom get_dnd_type(long *a, int l)
 {
     int i = 0;
 
@@ -281,10 +281,27 @@ void *event_loop(void *p)
     return (Xtra.display = NULL);
 }
 
+static long unsigned int focused_window_id(void)
+{
+    if (!Xtra.display) {
+        return 0;
+    }
+
+    Window focus;
+    int revert;
+    XLockDisplay(Xtra.display);
+    XGetInputFocus(Xtra.display, &focus, &revert);
+    XUnlockDisplay(Xtra.display);
+    return focus;
+}
+
+int is_focused(void)
+{
+    return Xtra.proxy_window == focused_window_id() || Xtra.terminal_window == focused_window_id();
+}
+
 int init_xtra(drop_callback d)
 {
-    memset(&Xtra, 0, sizeof(Xtra));
-
     if (!d) {
         return -1;
     } else {
@@ -398,23 +415,4 @@ void terminate_xtra(void)
     XUnlockDisplay(Xtra.display);
 
     while (Xtra.display); /* Wait for termination */
-}
-
-long unsigned int focused_window_id(void)
-{
-    if (!Xtra.display) {
-        return 0;
-    }
-
-    Window focus;
-    int revert;
-    XLockDisplay(Xtra.display);
-    XGetInputFocus(Xtra.display, &focus, &revert);
-    XUnlockDisplay(Xtra.display);
-    return focus;
-}
-
-int is_focused(void)
-{
-    return Xtra.proxy_window == focused_window_id() || Xtra.terminal_window == focused_window_id();
 }

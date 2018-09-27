@@ -35,7 +35,6 @@ typedef void (*drop_callback)(const char *, DropType);
 
 int               init_xtra(drop_callback d);
 void              terminate_xtra(void);
-long unsigned int focused_window_id(void);
 int               is_focused(void); /* returns bool */
 
 #endif /* XTRA_H */
