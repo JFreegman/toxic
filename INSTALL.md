@@ -38,8 +38,8 @@ You can omit `libnotify` if you intend to build without desktop notifications en
 
 ## Compiling
 ```
-make PREFIX="/where/to/install"
-sudo make install PREFIX="/where/to/install"
+make
+sudo env PREFIX="/where/to/install" make install
 ```
 
 #### Documentation
@@ -50,8 +50,8 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
 ## Notes
 
 #### Compilation variables
-* You can add specific flags to the Makefile with `USER_CFLAGS=""` and/or `USER_LDFLAGS=""`
-* You can pass your own flags to the Makefile with `CFLAGS=""` and/or `LDFLAGS=""` (this will supersede the default ones)
+* You can add specific flags to the Makefile with `USER_CFLAGS=""` and `USER_LDFLAGS=""` passed as the arguments to make or as environment variables
+* You can use CFLAGS and LDFLAGS environment variables to add specific flags to the Makefile
 * Additional features are automatically enabled if all dependencies are found, but you can disable them by using special variables:
   * `DISABLE_X11=1` → build toxic without X11 support (needed for focus tracking)
   * `DISABLE_AV=1` → build toxic without audio call support

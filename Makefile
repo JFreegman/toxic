@@ -3,13 +3,15 @@ CFG_DIR = $(BASE_DIR)/cfg
 
 -include $(CFG_DIR)/global_vars.mk
 
-LIBS = toxcore ncursesw libconfig 
+LIBS = toxcore ncursesw libconfig libcurl
 
-CFLAGS = -std=gnu99 -pthread -Wall -g -fstack-protector-all 
+CFLAGS ?= -g
+CFLAGS += -std=gnu99 -pthread -Wall -fstack-protector-all
 CFLAGS += '-DTOXICVER="$(VERSION)"' -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED -D_FILE_OFFSET_BITS=64
 CFLAGS += '-DPACKAGE_DATADIR="$(abspath $(DATADIR))"'
-CFLAGS += $(USER_CFLAGS)
-LDFLAGS = $(USER_LDFLAGS)
+CFLAGS += ${USER_CFLAGS}
+LDFLAGS ?=
+LDFLAGS += ${USER_LDFLAGS}
 
 OBJ = autocomplete.o avatars.o bootstrap.o chat.o chat_commands.o configdir.o curl_util.o execute.o
 OBJ += file_transfers.o friendlist.o global_commands.o group_commands.o groupchat.o help.o input.o
@@ -19,25 +21,18 @@ OBJ += term_mplex.o toxic.o toxic_strings.o windows.o
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
-    -include $(CFG_DIR)/systems/Linux.mk
-endif
-ifeq ($(UNAME_S), FreeBSD)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
-endif
-ifeq ($(UNAME_S), DragonFly)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+LDFLAGS += -ldl -lrt
 endif
 ifeq ($(UNAME_S), OpenBSD)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+LIBS := $(filter-out ncursesw, $(LIBS))
+LDFLAGS += -lncursesw
 endif
 ifeq ($(UNAME_S), NetBSD)
-    -include $(CFG_DIR)/systems/FreeBSD.mk
+LIBS := $(filter-out ncursesw, $(LIBS))
+LDFLAGS += -lncursesw
 endif
 ifeq ($(UNAME_S), Darwin)
     -include $(CFG_DIR)/systems/Darwin.mk
-endif
-ifeq ($(UNAME_S), Solaris)
-    -include $(CFG_DIR)/systems/Solaris.mk
 endif
 
 # Check on which platform we are running

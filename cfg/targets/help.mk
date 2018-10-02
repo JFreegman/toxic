@@ -21,5 +21,15 @@ help:
 	@echo "  USER_LDFLAGS:           Add custom flags to default LDFLAGS"
 	@echo "  PREFIX:                 Specify a prefix directory for binaries, data files,... (default is \"$(abspath $(PREFIX))\")"
 	@echo "  DESTDIR:                Specify a directory where to store installed files (mainly for packaging purpose)"
+	@echo "  MANDIR:                 Specify a directory where to store man pages (default is \"$(abspath $(PREFIX)/share/man)\")"
+	@echo
+	@echo "-- Environment Variables --"
+	@echo "  CFLAGS:                 Add custom flags to default CFLAGS"
+	@echo "  LDFLAGS:                Add custom flags to default LDFLAGS"
+	@echo "  USER_CFLAGS:            Add custom flags to default CFLAGS"
+	@echo "  USER_LDFLAGS:           Add custom flags to default LDFLAGS"
+	@echo "  PREFIX:                 Specify a prefix directory for binaries, data files,... (default is \"$(abspath $(PREFIX))\")"
+	@echo "  DESTDIR:                Specify a directory where to store installed files (mainly for packaging purpose)"
+	@echo "  MANDIR:                 Specify a directory where to store man pages (default is \"$(abspath $(PREFIX)/share/man)\")"
 
 .PHONY: help
