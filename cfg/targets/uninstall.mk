@@ -16,7 +16,7 @@ uninstall:
 	
 	@echo "Removing man pages"
 	@for f in $(MANFILES) ; do \
-		section=$(abspath $(DESTDIR)/$(MANDIR))/man`echo $$f | rev | cut -d "." -f 1` ;\
+		section=$(abspath $(DESTDIR)/$(MANDIR))/man`echo $$f | sed "s/.*\.//"` ;\
 		file=$$section/$$f ;\
 		rm -f $$file $$file.gz ;\
 	done
