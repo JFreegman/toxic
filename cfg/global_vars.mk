@@ -26,7 +26,7 @@ SNDFILES += ToxicTransferComplete.wav ToxicTransferStart.wav
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/toxic
-MANDIR = $(PREFIX)/share/man
+MANDIR ?= $(PREFIX)/share/man
 APPDIR = $(PREFIX)/share/applications
 
 # Platform tools
