@@ -1285,7 +1285,7 @@ int main(int argc, char **argv)
     init_term();
 
     prompt = init_windows(m);
-    prompt_init_statusbar(prompt, m);
+    prompt_init_statusbar(prompt, m, !datafile_exists);
     load_groups(prompt, m);
 
     /* thread for ncurses stuff */

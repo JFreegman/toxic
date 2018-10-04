@@ -494,7 +494,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
-void prompt_init_statusbar(ToxWindow *self, Tox *m)
+void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
@@ -524,7 +524,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m)
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';
 
-    if (s_len == 0 || !strncmp(statusmsg, "Toxing on Toxic", strlen("Toxing on Toxic"))) {
+    if (first_time_run) {
         snprintf(statusmsg, sizeof(statusmsg), "Toxing on Toxic");
         s_len = strlen(statusmsg);
         statusmsg[s_len] = '\0';

@@ -45,7 +45,7 @@ extern FriendRequests FrndRequests;
 ToxWindow new_prompt(void);
 
 void prep_prompt_win(void);
-void prompt_init_statusbar(ToxWindow *self, Tox *m);
+void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run);
 void prompt_update_nick(ToxWindow *prompt, const char *nick);
 void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusmsg);
 void prompt_update_status(ToxWindow *prompt, TOX_USER_STATUS status);
