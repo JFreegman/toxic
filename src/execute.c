@@ -107,10 +107,60 @@ static struct cmd_func group_commands[] = {
     { NULL,         NULL            },
 };
 
+/* Special commands are commands that only take one argument even if it contains spaces */
+#define SPECIAL_COMMANDS 3
+static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
+    "/nick",
+    "/note",
+    "/title",
+};
+
+/* Returns true if input command is in the special_commands array. */
+static bool is_special_command(const char *input)
+{
+    int start = char_find(0, input, ' ');
+
+    int i;
+
+    for (i = 0; i < SPECIAL_COMMANDS; ++i) {
+        if (strncmp(input, special_commands[i], start) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/* Parses commands in the special_commands array. Unlike parse_command, this function
+ * does not split the input string at spaces.
+ *
+ * Returns number of arguments on success, returns -1 on failure
+ */
+static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
+{
+    int len = strlen(input);
+    int s = char_find(0, input, ' ');
+
+    if (s + 1 >= len) {
+        return -1;
+    }
+
+    memcpy(args[0], input, s);
+    args[0][s++] = '\0';    /* increment to remove space after /command */
+    memcpy(args[1], input + s, len - s);
+    args[1][len - s] = '\0';
+
+    return 2;
+}
+
 /* Parses input command and puts args into arg array.
    Returns number of arguments on success, -1 on failure. */
 static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
+    if (is_special_command(input)) {
+        return parse_special_command(w, self, input, args);
+    }
+
     char *cmd = strdup(input);
 
     if (cmd == NULL) {

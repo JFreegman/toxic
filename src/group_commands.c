@@ -52,15 +52,8 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title must be enclosed in quotes.");
-        return;
-    }
-
-    /* remove opening and closing quotes */
-    snprintf(title, sizeof(title), "%s", &argv[1][1]);
-    int len = strlen(title) - 1;
-    title[len] = '\0';
+    snprintf(title, sizeof(title), "%s", argv[1]);
+    int len = strlen(title);
 
     if (!tox_conference_set_title(m, self->num, (uint8_t *) title, len, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title (error %d)", err);
