@@ -99,7 +99,11 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len || ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE) {
+    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len) {
+        return -1;
+    }
+
+    if (ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE) {
         return -1;
     }
 

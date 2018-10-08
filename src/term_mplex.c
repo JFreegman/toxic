@@ -33,7 +33,7 @@
 
 #include <tox/tox.h>
 
-#include "global_commands.h"
+#include "execute.h"
 #include "windows.h"
 #include "term_mplex.h"
 #include "toxic.h"
@@ -390,15 +390,16 @@ static void mplex_timer_handler(Tox *m)
         return;
     }
 
-    char argv[3][MAX_STR_SIZE];
-    strcpy(argv[0], "/status");
-    strcpy(argv[1], (new_status == TOX_USER_STATUS_AWAY ? "away" :
-                     new_status == TOX_USER_STATUS_BUSY ? "busy" : "online"));
-    argv[2][0] = '\"';
-    strcpy(argv[2] + 1, new_note);
-    strcat(argv[2], "\"");
+    char status_str[MAX_STR_SIZE];
+    char note_str[MAX_STR_SIZE];
+    const char *status = new_status == TOX_USER_STATUS_AWAY ? "away" :
+                    new_status == TOX_USER_STATUS_BUSY ? "busy" : "online";
+    snprintf(status_str, sizeof(status_str), "/status %s", status);
+    snprintf(note_str, sizeof(status_str), "/note %s", new_note);
+
     pthread_mutex_lock(&Winthread.lock);
-    cmd_status(prompt->chatwin->history, prompt, m, 2, argv);
+    execute(prompt->chatwin->history, prompt, m, status_str, GLOBAL_COMMAND_MODE);
+    execute(prompt->chatwin->history, prompt, m, note_str, GLOBAL_COMMAND_MODE);
     pthread_mutex_unlock(&Winthread.lock);
 }
 

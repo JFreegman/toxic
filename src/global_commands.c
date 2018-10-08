@@ -592,14 +592,11 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    bool have_note = false;
     const char *errmsg;
 
     lock_status();
 
-    if (argc >= 2) {
-        have_note = true;
-    } else if (argc < 1) {
+    if (argc < 1) {
         errmsg = "Require a status. Statuses are: online, busy and away.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         goto finish;
@@ -622,24 +619,8 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     tox_self_set_status(m, status);
     prompt_update_status(prompt, status);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s.", status_str);
 
-    if (have_note) {
-        if (argv[2][0] != '\"') {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Note must be enclosed in quotes.");
-            goto finish;
-        }
-
-        /* remove opening and closing quotes */
-        char msg[MAX_STR_SIZE];
-        snprintf(msg, sizeof(msg), "%s", &argv[2][1]);
-        int len = strlen(msg) - 1;
-        msg[len] = '\0';
-
-        prompt_update_statusmessage(prompt, m, msg);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s: \"%s\".", status_str, msg);
-    } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s.", status_str);
-    }
 
 finish:
     unlock_status();

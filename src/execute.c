@@ -181,11 +181,10 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
     }
 
     int num_args = 0;
-    int i = 0;    // index of last char in an argument
 
     /* characters wrapped in double quotes count as one arg */
     while (num_args < MAX_NUM_ARGS) {
-        i = char_find(0, cmd, ' ');
+        int i = char_find(0, cmd, ' ');    // index of last char in an argument
         memcpy(args[num_args], cmd, i);
         args[num_args++][i] = '\0';
 
