@@ -326,7 +326,7 @@ static void help_draw_plugin(ToxWindow *self)
     box(win, ACS_VLINE, ACS_HLINE);
     wnoutrefresh(win);
 }
-#endif
+#endif /* PYTHON */
 
 static void help_draw_contacts(ToxWindow *self)
 {
@@ -396,7 +396,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             help_init_window(self, 4 + num_registered_handlers(), help_max_width());
             self->help->type = HELP_PLUGIN;
             break;
-#endif
+#endif /* PYTHON */
 
         case 'f':
             help_init_window(self, 10, 80);

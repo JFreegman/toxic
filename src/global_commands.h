@@ -60,6 +60,6 @@ void cmd_change_video_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv
 
 #ifdef PYTHON
 void cmd_run(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-#endif
+#endif /* PYTHON */
 
-#endif /* #define GLOBAL_COMMANDS_H */
+#endif /* GLOBAL_COMMANDS_H */

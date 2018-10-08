@@ -29,7 +29,7 @@
 #include <sys/dir.h>
 #else
 #include <dirent.h>
-#endif /* ifdef __APPLE__ */
+#endif /* __APPLE__ */
 
 #include "windows.h"
 #include "toxic.h"

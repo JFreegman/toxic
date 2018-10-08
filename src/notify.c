@@ -47,12 +47,12 @@
 /* compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
-#endif
-#endif
+#endif /* ALC_ALL_DEVICES_SPECIFIER */
+#endif /* __APPLE__ */
 #ifdef SOUND_NOTIFY
 #include <AL/alut.h> /* freealut packet */
-#endif
-#endif /* AUDIO */
+#endif /* SOUND_NOTIFY */
+#endif /* defined(AUDIO) || defined(SOUND_NOTIFY) */
 
 #ifdef BOX_NOTIFY
 #include <libnotify/notify.h>
@@ -84,7 +84,7 @@ static struct _ActiveNotifications {
     uint32_t source;
     uint32_t buffer;
     bool looping;
-#endif
+#endif /* SOUND_NOTIFY */
     bool active;
     int *id_indicator;
 #ifdef BOX_NOTIFY
@@ -93,7 +93,7 @@ static struct _ActiveNotifications {
     char title[64];
     size_t size;
     time_t n_timeout;
-#endif
+#endif /* BOX_NOTIFY */
 } actives[ACTIVE_NOTIFS_MAX];
 /**********************************************************************************/
 /**********************************************************************************/
@@ -203,7 +203,7 @@ void graceful_clear(void)
                     actives[i].box = NULL;
                 }
 
-#endif
+#endif /* BOX_NOTIFY */
 
                 if (actives[i].id_indicator) {
                     *actives[i].id_indicator = -1;    /* reset indicator value */
@@ -293,7 +293,7 @@ void *do_playing(void *_p)
                 }
             }
 
-#endif
+#endif /* BOX_NOTIFY */
         }
 
         /* device is opened and no activity in under DEVICE_COOLDOWN time, close device*/
@@ -388,7 +388,7 @@ void graceful_clear(void)
 
     control_unlock();
 }
-#endif
+#endif /* SOUND_NOTIFY */
 
 /**********************************************************************************/
 /**********************************************************************************/
@@ -420,7 +420,7 @@ int init_notify(int login_cooldown, int notification_timeout)
         return -1;
     }
 
-#endif
+#endif /* defined(SOUND_NOTIFY) || defined(BOX_NOTIFY) */
     Control.cooldown = time(NULL) + login_cooldown;
 
 
@@ -445,7 +445,7 @@ void terminate_notify(void)
     control_unlock();
 
     graceful_clear();
-#endif
+#endif /* defined(SOUND_NOTIFY) || defined(BOX_NOTIFY) */
 
 #ifdef SOUND_NOTIFY
     int i = 0;
@@ -534,20 +534,20 @@ void stop_sound(int id)
             notify_notification_close(actives[id].box, &ignore);
         }
 
-#endif
+#endif /* BOX_NOTIFY */
 
         if (actives[id].id_indicator) {
             *actives[id].id_indicator = -1;
         }
 
-//         alSourcei(actives[id].source, AL_LOOPING, false);
+        // alSourcei(actives[id].source, AL_LOOPING, false);
         alSourceStop(actives[id].source);
         alDeleteSources(1, &actives[id].source);
         alDeleteBuffers(1, &actives[id].buffer);
         memset(&actives[id], 0, sizeof(struct _ActiveNotifications));
     }
 }
-#endif
+#endif /* SOUND_NOTIFY */
 
 static int m_play_sound(Notification notif, uint64_t flags)
 {
@@ -562,12 +562,6 @@ static int m_play_sound(Notification notif, uint64_t flags)
     return -1;
 #endif /* SOUND_NOTIFY */
 }
-
-#ifdef BOX_NOTIFY
-void m_notify_action(NotifyNotification *box, char *action, void *data)
-{
-}
-#endif
 
 int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indicator)
 {
@@ -597,7 +591,7 @@ int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_in
         }
     }
 
-#endif
+#endif /* defined(BOX_NOTIFY) && !defined(SOUND_NOTIFY) */
 
     if (id_indicator && id != -1) {
         actives[id].id_indicator = id_indicator;
@@ -695,7 +689,7 @@ int box_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indi
         return -1;
     }
 
-#endif    /* SOUND_NOTIFY */
+#endif /* SOUND_NOTIFY */
 
     snprintf(actives[id].title, sizeof(actives[id].title), "%s", title);
 
@@ -725,7 +719,7 @@ int box_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indi
     return id;
 #else
     return sound_notify(self, notif, flags, id_indicator);
-#endif   /* BOX_NOTIFY */
+#endif /* BOX_NOTIFY */
 }
 
 int box_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id, const char *format, ...)
@@ -779,7 +773,7 @@ int box_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id, con
     return id;
 #else
     return sound_notify2(self, notif, flags, id);
-#endif
+#endif /* BOX_NOTIFY */
 }
 
 int box_silent_notify(ToxWindow *self, uint64_t flags, int *id_indicator, const char *title, const char *format, ...)
@@ -837,7 +831,7 @@ int box_silent_notify(ToxWindow *self, uint64_t flags, int *id_indicator, const 
     return id;
 #else
     return -1;
-#endif
+#endif /* BOX_NOTIFY */
 }
 
 int box_silent_notify2(ToxWindow *self, uint64_t flags, int id, const char *format, ...)
@@ -888,5 +882,5 @@ int box_silent_notify2(ToxWindow *self, uint64_t flags, int id, const char *form
     return id;
 #else
     return -1;
-#endif
+#endif /* BOX_NOTIFY */
 }

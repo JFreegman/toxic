@@ -42,4 +42,4 @@ void help_onDraw(ToxWindow *self);
 void help_init_menu(ToxWindow *self);
 void help_onKey(ToxWindow *self, wint_t key);
 
-#endif /* #define HELP_H */
+#endif /* HELP_H */

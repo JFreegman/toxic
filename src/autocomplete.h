@@ -39,4 +39,4 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     return diff between old len and new len of ctx->line, -1 if no matches or > 1 match */
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd);
 
-#endif  /* #define AUTOCOMPLETE_H */
+#endif /* AUTOCOMPLETE_H */

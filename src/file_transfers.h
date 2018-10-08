@@ -108,4 +108,4 @@ void kill_all_file_transfers_friend(Tox *m, uint32_t friendnum);
 
 void kill_all_file_transfers(Tox *m);
 
-#endif  /* #define FILE_TRANSFERS_H */
+#endif /* FILE_TRANSFERS_H */

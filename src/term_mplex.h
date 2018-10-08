@@ -24,12 +24,12 @@
 #define TERM_MPLEX_H
 
 /* Checks if Toxic runs inside a terminal multiplexer (GNU screen or tmux). If
-   yes, it initializes a timer which periodically checks the attached/detached
-   state of the terminal and updates away status accordingly.
+ * yes, it initializes a timer which periodically checks the attached/detached
+ * state of the terminal and updates away status accordingly.
  */
 int init_mplex_away_timer(Tox *m);
 
 void lock_status(void);
 void unlock_status(void);
 
-#endif /* #define TERM_MPLEX_H */
+#endif /* TERM_MPLEX_H */

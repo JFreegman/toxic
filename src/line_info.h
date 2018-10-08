@@ -100,4 +100,4 @@ void line_info_reset_start(ToxWindow *self, struct history *hst);
 void line_info_init(struct history *hst);
 bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */
 
-#endif /* #define LINE_INFO_H */
+#endif /* LINE_INFO_H */

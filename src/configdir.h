@@ -53,4 +53,4 @@ void get_home_dir(char *home, int size);
  */
 int create_user_config_dirs(char *path);
 
-#endif /* #define CONFIGDIR_H */
+#endif /* CONFIGDIR_H */

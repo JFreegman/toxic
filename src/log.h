@@ -56,4 +56,4 @@ void load_chat_history(ToxWindow *self, struct chatlog *log);
    Returns 0 on success or if no log exists, -1 on failure. */
 int rename_logfile(char *src, char *dest, const char *selfkey, const char *otherkey, int winnum);
 
-#endif /* #define LOG_H */
+#endif /* LOG_H */

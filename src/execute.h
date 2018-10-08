@@ -36,4 +36,4 @@ enum {
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode);
 
-#endif /* #define EXECUTE_H */
+#endif /* EXECUTE_H */

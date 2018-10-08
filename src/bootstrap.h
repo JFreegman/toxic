@@ -39,4 +39,4 @@ void do_tox_connection(Tox *m);
  */
 int load_DHT_nodeslist(void);
 
-#endif  /* BOOTSTRAP_H */
+#endif /* BOOTSTRAP_H */

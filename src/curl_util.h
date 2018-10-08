@@ -52,4 +52,4 @@ int set_curl_proxy(CURL *c_handle, const char *proxy_address, uint16_t port, uin
  */
 size_t curl_cb_write_data(void *data, size_t size, size_t nmemb, void *user_pointer);
 
-#endif  /* CURL_UTIL_H */
+#endif /* CURL_UTIL_H */

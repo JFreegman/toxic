@@ -38,8 +38,8 @@
 /* compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
-#endif  /* ALC_ALL_DEVICES_SPECIFIER */
-#endif  /* __APPLE__ */
+#endif /* ALC_ALL_DEVICES_SPECIFIER */
+#endif /* __APPLE__ */
 
 #include <stdbool.h>
 #include <string.h>

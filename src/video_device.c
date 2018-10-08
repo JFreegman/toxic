@@ -41,8 +41,8 @@
 #include <sys/videoio.h>
 #else
 #include <linux/videodev2.h>
-#endif
-#endif
+#endif /* defined(__OpenBSD__) || defined(__NetBSD__) */
+#endif /* __OSX__ */
 
 #include "line_info.h"
 #include "settings.h"

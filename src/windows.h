@@ -266,4 +266,4 @@ ToxWindow *get_active_window(void);
    call at least once per second */
 void refresh_inactive_windows(void);
 
-#endif  /* #define WINDOWS_H */
+#endif /* WINDOWS_H */

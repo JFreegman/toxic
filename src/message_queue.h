@@ -48,4 +48,4 @@ void cqueue_try_send(ToxWindow *self, Tox *m);
 /* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
 void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt);
 
-#endif  /* #define MESSAGE_QUEUE_H */
+#endif /* MESSAGE_QUEUE_H */

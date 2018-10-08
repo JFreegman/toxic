@@ -900,7 +900,7 @@ void *thread_av(void *data)
         usleep(toxav_iteration_interval(av) * 1000);
     }
 }
-#endif  /* AUDIO */
+#endif /* AUDIO */
 
 static void print_usage(void)
 {
@@ -1273,7 +1273,7 @@ int main(int argc, char **argv)
         queue_init_message("X failed to initialize");
     }
 
-#endif
+#endif /* X11 */
 
     Tox *m = load_toxic(DATA_FILE);
 

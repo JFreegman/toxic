@@ -41,9 +41,9 @@
 /* compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
-#endif  /* ALC_ALL_DEVICES_SPECIFIER */
-#endif  /* __APPLE__ */
-#endif  /* AUDIO */
+#endif /* ALC_ALL_DEVICES_SPECIFIER */
+#endif /* __APPLE__ */
+#endif /* AUDIO */
 
 #include "windows.h"
 #include "toxic.h"

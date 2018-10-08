@@ -39,4 +39,4 @@ int help_max_width(void);
 void draw_handler_help(WINDOW *win);
 void invoke_autoruns(WINDOW *w, ToxWindow *self);
 
-#endif /* #define API_H */
+#endif /* API_H */

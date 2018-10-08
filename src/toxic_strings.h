@@ -70,4 +70,4 @@ void fetch_hist_item(ChatContext *ctx, int key_dir);
 void strsubst(char *str, char old, char new);
 void wstrsubst(wchar_t *str, wchar_t old, wchar_t new);
 
-#endif /* #define TOXIC_STRINGS_H */
+#endif /* TOXIC_STRINGS_H */

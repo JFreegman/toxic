@@ -125,4 +125,5 @@ enum settings_values {
 #define MPLEX_AWAY_NOTE "Detached from screen"
 
 int settings_load(struct user_settings *s, const char *patharg);
-#endif /* #define SETTINGS_H */
+
+#endif /* SETTINGS_H */

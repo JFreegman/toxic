@@ -51,8 +51,8 @@
 #include "audio_call.h"
 #ifdef VIDEO
 #include "video_call.h"
-#endif  /* VIDEO */
-#endif  /* AUDIO */
+#endif /* VIDEO */
+#endif /* AUDIO */
 
 extern char *DATA_FILE;
 extern FriendsList Friends;
@@ -63,7 +63,7 @@ extern struct user_settings *user_settings;
 #ifdef AUDIO
 static void init_infobox(ToxWindow *self);
 static void kill_infobox(ToxWindow *self);
-#endif  /* AUDIO */
+#endif /* AUDIO */
 
 #ifdef AUDIO
 #define AC_NUM_CHAT_COMMANDS_AUDIO 9
@@ -150,9 +150,9 @@ void kill_chat_window(ToxWindow *self, Tox *m)
 #ifdef AUDIO
 #ifdef VIDEO
     stop_video_stream(self);
-#endif  /* VIDEO */
+#endif /* VIDEO */
     stop_current_call(self);
-#endif  /* AUDIO */
+#endif /* AUDIO */
 
     kill_all_file_transfers_friend(m, self->num);
     log_disable(ctx->log);

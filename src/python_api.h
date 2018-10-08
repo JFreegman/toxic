@@ -36,4 +36,4 @@ int python_num_registered_handlers(void);
 int python_help_max_width(void);
 void python_draw_handler_help(WINDOW *win);
 
-#endif /* #define PYTHON_API_H */
+#endif /* PYTHON_API_H */

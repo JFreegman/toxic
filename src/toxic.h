@@ -133,4 +133,4 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
 void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata);
 void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata);
 
-#endif  /* #define TOXIC_H */
+#endif /* TOXIC_H */

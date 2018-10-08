@@ -63,4 +63,4 @@ void redraw_groupchat_win(ToxWindow *self);
 
 ToxWindow new_group_chat(Tox *m, uint32_t groupnum);
 
-#endif /* #define GROUPCHAT_H */
+#endif /* GROUPCHAT_H */

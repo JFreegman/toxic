@@ -447,4 +447,4 @@ void stop_video_stream(ToxWindow *self)
     }
 }
 
-#endif
+#endif /* VIDEO */

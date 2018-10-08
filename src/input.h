@@ -30,4 +30,4 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_
    return true if key matches a function, false otherwise */
 bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y);
 
-#endif /* #define INPUT_H */
+#endif /* INPUT_H */

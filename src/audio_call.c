@@ -54,8 +54,8 @@
 /* compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
-#endif
-#endif
+#endif /* ALC_ALL_DEVICES_SPECIFIER */
+#endif /* __APPLE__ */
 
 extern FriendsList Friends;
 struct CallControl CallControl;
@@ -997,4 +997,4 @@ void del_friend_AV(uint32_t index)
     CallControl.max_calls = index;
 }
 
-#endif
+#endif /* AUDIO */

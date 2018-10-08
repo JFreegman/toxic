@@ -170,4 +170,4 @@ bool is_ip4_address(const char *address);
  */
 bool is_ip6_address(const char *address);
 
-#endif /* #define MISC_TOOLS_H */
+#endif /* MISC_TOOLS_H */
