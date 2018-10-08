@@ -5,7 +5,7 @@
   * [Documentation](#documentation)
 * [Notes](#notes)
   * [Compilation variables](#compilation-variables)
-  * [Packaging](#packaging)
+  * [Environment variables](#environment-variables)
 
 ## Dependencies
 | Name                                                 | Needed by                  | Debian package      |
@@ -39,29 +39,28 @@ You can omit `libnotify` if you intend to build without desktop notifications en
 ## Compiling
 ```
 make
-sudo env PREFIX="/where/to/install" make install
+sudo make install
 ```
 
 #### Documentation
 Run `make doc` in the build directory after editing the asciidoc files to regenerate the manpages.<br />
-**NOTE FOR DEVELOPERS**: asciidoc files and generated manpages will need to be commited together.<br />
-**NOTE FOR EVERYONE**: [asciidoc](http://asciidoc.org/index.html) (and this step) is only required for regenerating manpages when you modify them.
+**Note for developers**: asciidoc files and generated manpages will need to be committed together.<br />
+**Note for everyone**: [asciidoc](http://asciidoc.org/index.html) (and this step) is only required for regenerating manpages when you modify them.
 
 ## Notes
 
 #### Compilation variables
-* You can add specific flags to the Makefile with `USER_CFLAGS=""` and `USER_LDFLAGS=""` passed as the arguments to make or as environment variables
-* You can use CFLAGS and LDFLAGS environment variables to add specific flags to the Makefile
-* Additional features are automatically enabled if all dependencies are found, but you can disable them by using special variables:
-  * `DISABLE_X11=1` → build toxic without X11 support (needed for focus tracking)
-  * `DISABLE_AV=1` → build toxic without audio call support
-  * `DISABLE_SOUND_NOTIFY=1` → build toxic without sound notifications support
-  * `DISABLE_DESKTOP_NOTIFY=1` → build toxic without desktop notifications support
-* Features excluded from the default build must be explicitly enabled using special variables:
-  * `ENABLE_PYTHON=1` → build toxic with Python scripting support
+* You can add specific flags to the Makefile with `USER_CFLAGS=""` and `USER_LDFLAGS=""` passed as arguments to make, or as environment variables
+* Default compile options can be overridden by using special variables:
+  * `DISABLE_X11=1` → Disable X11 support (needed for focus tracking)
+  * `DISABLE_AV=1` → Disable audio call support
+  * `DISABLE_SOUND_NOTIFY=1` → Disable sound notifications support
+  * `DISABLE_DESKTOP_NOTIFY=1` → Disable desktop notifications support
+  * `ENABLE_PYTHON=1` → Build toxic with Python scripting support
 
-#### Packaging
-* For packaging purpose, you can use `DESTDIR=""` to specify a directory where to store installed files
-* `DESTDIR=""` can be used in addition to `PREFIX=""`:
-  * `DESTDIR=""` is meant to specify a directory where to store installed files (ex: "/tmp/build/pkg")
-  * `PREFIX=""` is meant to specify a prefix directory for binaries and data files (ex: "/usr/local")
+* `DESTDIR=""` Specifies the base install directory for binaries and data files (e.g.: DESTDIR="/tmp/build/pkg")
+
+#### Environment variables
+* You can use the `CFLAGS` and `LDFLAGS` environment variables to add specific flags to the Makefile
+* The `PREFIX` environment variable specifies a base install directory for binaries and data files. This is interchangeable with the `DESTDIR` variable, and is generally used by systems that have the `PREFIX` environment variable set by default.<br />
+**Note**: `sudo` does not preserve user environment variables by default on some systems. See the `sudoers` manual for more information.
