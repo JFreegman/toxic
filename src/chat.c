@@ -1005,14 +1005,14 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         int diff = -1;
 
         /* TODO: make this not suck */
-        if (wcsncmp(ctx->line, L"/sendfile \"", wcslen(L"/sendfile \"")) == 0) {
+        if (wcsncmp(ctx->line, L"/sendfile ", wcslen(L"/sendfile ")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/sendfile");
-        } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+        } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/avatar");
         }
 
 #ifdef PYTHON
-        else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
+        else if (wcsncmp(ctx->line, L"/run ", wcslen(L"/run ")) == 0) {
             diff = dir_match(self, m, ctx->line, L"/run");
         }
 

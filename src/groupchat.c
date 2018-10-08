@@ -507,12 +507,12 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (ctx->line[0] != L'/' || wcscmp(ctx->line, L"/me") == 0) {
                 diff = complete_line(self, groupchats[self->num].name_list, groupchats[self->num].num_peers,
                                      TOX_MAX_NAME_LENGTH);
-            } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+            } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
             }
 
 #ifdef PYTHON
-            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
+            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run ")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/run");
             }
 

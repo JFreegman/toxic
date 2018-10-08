@@ -86,13 +86,15 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char 
 }
 
 /* looks for all instances in list that begin with the last entered word in line according to pos,
-   then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
-
-   list is a pointer to the list of strings being compared, n_items is the number of items
-   in the list, and size is the size of each item in the list.
-
-   Returns the difference between the old len and new len of line on success, -1 if error */
+ * then fills line with the complete word. e.g. "Hello jo" would complete the line
+ * with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
+ *
+ * list is a pointer to the list of strings being compared, n_items is the number of items
+ * in the list, and size is the size of each item in the list.
+ *
+ * Returns the difference between the old len and new len of line on success.
+ * Returns -1 on error.
+ */
 int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size)
 {
     ChatContext *ctx = self->chatwin;
@@ -104,6 +106,7 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     const char *L = (char *) list;
     const char *endchrs = " ";
     char ubuf[MAX_STR_SIZE];
+    memset(ubuf, 0, sizeof(ubuf));
 
     /* work with multibyte string copy of buf for simplicity */
     if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1) {
@@ -123,7 +126,7 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[ctx->pos] = '\0';
 
-    const char *s = dir_search ? strchr(tmp, '\"') : strrchr(tmp, ' ');
+    const char *s = strrchr(tmp, ' ');
     char *sub = calloc(1, strlen(ubuf) + 1);
 
     if (sub == NULL) {
@@ -151,7 +154,7 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
 
     if (!sub[0]) {
         free(sub);
-        return -1;
+        return 0;
     }
 
     int s_len = strlen(sub);
@@ -188,7 +191,7 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
 
     if (dir_search) {
         if (n_matches == 1) {
-            endchrs = char_rfind(match, '.', match_len) ? "\"" : "/";
+            endchrs = char_rfind(match, '.', match_len) ? "" : "/";
         } else {
             endchrs = "";
         }
@@ -231,8 +234,8 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     return diff;
 }
 
-/* transforms a tab complete starting with the shorthand "~" into the full home directory.*/
-static void complt_home_dir(ToxWindow *self, char *path, int pathsize, const char *cmd, int cmdlen)
+/* Transforms a tab complete starting with the shorthand "~" into the full home directory. */
+static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const char *cmd, int cmdlen)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -240,8 +243,8 @@ static void complt_home_dir(ToxWindow *self, char *path, int pathsize, const cha
     get_home_dir(homedir, sizeof(homedir));
 
     char newline[MAX_STR_SIZE];
-    snprintf(newline, sizeof(newline), "%s \"%s%s", cmd, homedir, path + 1);
-    snprintf(path, pathsize, "%s", &newline[cmdlen]);
+    snprintf(newline, sizeof(newline), "%s %s%s", cmd, homedir, path + 1);
+    snprintf(path, pathsize, "%s", &newline[cmdlen-1]);
 
     wchar_t wline[MAX_STR_SIZE];
 
@@ -260,10 +263,13 @@ static void complt_home_dir(ToxWindow *self, char *path, int pathsize, const cha
     ctx->len = ctx->pos;
 }
 
-/*  attempts to match /command "<incomplete-dir>" line to matching directories.
-
-    if only one match, auto-complete line.
-    return diff between old len and new len of ctx->line, -1 if no matches or > 1 match */
+/* Attempts to match /command <incomplete-dir> line to matching directories.
+ *
+ * If only one match, auto-complete line.
+ *
+ * Returns diff between old len and new len of ctx->line.
+ * Returns -1 if no matches or > 1 match.
+ */
 #define MAX_DIRS 512
 
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
@@ -271,7 +277,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     char b_path[MAX_STR_SIZE];
     char b_name[MAX_STR_SIZE];
     char b_cmd[MAX_STR_SIZE];
-    const wchar_t *tmpline = &line[wcslen(cmd) + 2];   /* start after "/command \"" */
+    const wchar_t *tmpline = &line[wcslen(cmd) + 1];   /* start after "/command " */
 
     if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1) {
         return -1;
@@ -282,7 +288,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     }
 
     if (b_path[0] == '~') {
-        complt_home_dir(self, b_path, sizeof(b_path), b_cmd, strlen(b_cmd) + 2);
+        complete_home_dir(self, b_path, sizeof(b_path), b_cmd, strlen(b_cmd) + 2);
     }
 
     int si = char_rfind(b_path, '/', strlen(b_path));

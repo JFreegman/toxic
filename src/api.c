@@ -151,9 +151,9 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     if (argc != 1) {
         if (argc < 1) {
-            error_str = "Path must be specified!";
+            error_str = "Path must be specified.";
         } else {
-            error_str = "Only one argument allowed!";
+            error_str = "Only one argument allowed.";
         }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
@@ -163,7 +163,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     fp = fopen(argv[1], "r");
 
     if (fp == NULL) {
-        error_str = "Path does not exist!";
+        error_str = "Path does not exist.";
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;

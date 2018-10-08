@@ -481,6 +481,25 @@ bool file_exists(const char *path)
     return stat(path, &s) == 0;
 }
 
+/* Returns 0 if path points to a directory.
+ * Returns 1 if path points to a regular file.
+ * Returns -1 on any other result.
+ */
+int file_type(const char *path)
+{
+    struct stat s;
+    stat(path, &s);
+
+    switch (s.st_mode & S_IFMT) {
+        case S_IFDIR:
+            return 0;
+        case S_IFREG:
+            return 1;
+        default:
+            return -1;
+   }
+}
+
 /* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path)
 {

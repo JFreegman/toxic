@@ -167,7 +167,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     if ((ft->file = fopen(ft->file_path, "a")) == NULL) {
-        const char *msg =  "File transfer failed: Invalid file path.";
+        const char *msg =  "File transfer failed: Invalid download path.";
         close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
         return;
     }
@@ -225,16 +225,9 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File path must be enclosed in quotes.");
-        return;
-    }
-
-    /* remove opening and closing quotes */
     char path[MAX_STR_SIZE];
-    snprintf(path, sizeof(path), "%s", &argv[1][1]);
-    int path_len = strlen(path) - 1;
-    path[path_len] = '\0';
+    snprintf(path, sizeof(path), "%s", argv[1]);
+    int path_len = strlen(path);
 
     if (path_len >= MAX_STR_SIZE) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");

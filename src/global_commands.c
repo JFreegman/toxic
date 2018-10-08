@@ -201,21 +201,15 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    if (argc < 2 || strlen(argv[1]) < 3) {
+    if (argc != 1 || strlen(argv[1]) < 3) {
         avatar_unset(m);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar is not set.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar has been unset.");
         return;
     }
 
-    if (argv[1][0] != '\"') {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Path must be enclosed in quotes.");
-        return;
-    }
-
-    /* remove opening and closing quotes */
     char path[MAX_STR_SIZE];
-    snprintf(path, sizeof(path), "%s", &argv[1][1]);
-    int len = strlen(path) - 1;
+    snprintf(path, sizeof(path), "%s", argv[1]);
+    int len = strlen(path);
 
     if (len <= 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid path.");
@@ -502,16 +496,8 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     char nick[MAX_STR_SIZE];
-    size_t len = 0;
-
-    if (argv[1][0] == '\"') {    /* remove opening and closing quotes */
-        snprintf(nick, sizeof(nick), "%s", &argv[1][1]);
-        len = strlen(nick) - 1;
-        nick[len] = '\0';
-    } else {
-        snprintf(nick, sizeof(nick), "%s", argv[1]);
-        len = strlen(nick);
-    }
+    snprintf(nick, sizeof(nick), "%s", argv[1]);
+    size_t len = strlen(nick);
 
     if (!valid_nick(nick)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid name.");

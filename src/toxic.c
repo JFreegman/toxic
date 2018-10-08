@@ -1355,7 +1355,7 @@ int main(int argc, char **argv)
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[PATH_MAX + 11];
-    snprintf(avatarstr, sizeof(avatarstr), "/avatar \"%s\"", user_settings->avatar_path);
+    snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", user_settings->avatar_path);
     execute(prompt->chatwin->history, prompt, m, avatarstr, GLOBAL_COMMAND_MODE);
 
     time_t last_save = get_unix_time();

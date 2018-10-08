@@ -247,12 +247,12 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (ctx->len > 1 && ctx->line[0] == '/') {
             int diff = -1;
 
-            if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+            if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
             }
 
 #ifdef PYTHON
-            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run \"")) == 0) {
+            else if (wcsncmp(ctx->line, L"/run ", wcslen(L"/run ")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/run");
             }
 

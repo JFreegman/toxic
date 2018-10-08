@@ -107,23 +107,33 @@ static struct cmd_func group_commands[] = {
     { NULL,         NULL            },
 };
 
+
+#ifdef PYTHON
+#define SPECIAL_COMMANDS 6
+#else
+#define SPECIAL_COMMANDS 5
+#endif /* PYTHON */
+
 /* Special commands are commands that only take one argument even if it contains spaces */
-#define SPECIAL_COMMANDS 3
 static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
+    "/avatar",
     "/nick",
     "/note",
+#ifdef PYTHON
+    "/run",
+#endif /* PYTHON */
     "/title",
+    "/sendfile",
 };
 
 /* Returns true if input command is in the special_commands array. */
 static bool is_special_command(const char *input)
 {
-    int start = char_find(0, input, ' ');
-
+    int s = char_find(0, input, ' ');
     int i;
 
     for (i = 0; i < SPECIAL_COMMANDS; ++i) {
-        if (strncmp(input, special_commands[i], start) == 0) {
+        if (strncmp(input, special_commands[i], s) == 0) {
             return true;
         }
     }
@@ -134,19 +144,20 @@ static bool is_special_command(const char *input)
 /* Parses commands in the special_commands array. Unlike parse_command, this function
  * does not split the input string at spaces.
  *
- * Returns number of arguments on success, returns -1 on failure
+ * Returns the number of arguments.
  */
 static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
     int len = strlen(input);
     int s = char_find(0, input, ' ');
 
-    if (s + 1 >= len) {
-        return -1;
+    memcpy(args[0], input, s);
+    args[0][s++] = '\0';    // increment to remove space after "/command "
+
+    if (s >= len) {
+        return 1;  // No additional args
     }
 
-    memcpy(args[0], input, s);
-    args[0][s++] = '\0';    /* increment to remove space after /command */
     memcpy(args[1], input + s, len - s);
     args[1][len - s] = '\0';
 
@@ -154,7 +165,9 @@ static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, 
 }
 
 /* Parses input command and puts args into arg array.
-   Returns number of arguments on success, -1 on failure. */
+ *
+ * Returns the number of arguments.
+ */
 static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
 {
     if (is_special_command(input)) {
@@ -168,43 +181,32 @@ static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*a
     }
 
     int num_args = 0;
-    int i = 0;    /* index of last char in an argument */
+    int i = 0;    // index of last char in an argument
 
     /* characters wrapped in double quotes count as one arg */
     while (num_args < MAX_NUM_ARGS) {
-        int qt_ofst = 0;    /* set to 1 to offset index for quote char at end of arg */
+        i = char_find(0, cmd, ' ');
+        memcpy(args[num_args], cmd, i);
+        args[num_args++][i] = '\0';
 
-        if (*cmd == '\"') {
-            qt_ofst = 1;
-            i = char_find(1, cmd, '\"');
-
-            if (cmd[i] == '\0') {
-                const char *errmsg = "Invalid argument. Did you forget a closing \"?";
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
-                free(cmd);
-                return -1;
-            }
-        } else {
-            i = char_find(0, cmd, ' ');
-        }
-
-        memcpy(args[num_args], cmd, i + qt_ofst);
-        args[num_args++][i + qt_ofst] = '\0';
-
-        if (cmd[i] == '\0') {  /* no more args */
+        if (cmd[i] == '\0') {  // no more args
             break;
         }
 
         char tmp[MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), "%s", &cmd[i + 1]);
-        strcpy(cmd, tmp);    /* tmp will always fit inside cmd */
+        strcpy(cmd, tmp);    // tmp will always fit inside cmd
     }
 
     free(cmd);
     return num_args;
 }
 
-/* Matches command to respective function. Returns 0 on match, 1 on no match */
+/* Matches command to respective function.
+ *
+ * Returns 0 on match.
+ * Returns 1 on no match
+ */
 static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct cmd_func *commands,
                       char (*args)[MAX_STR_SIZE])
 {
@@ -229,14 +231,15 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
     char args[MAX_NUM_ARGS][MAX_STR_SIZE];
     int num_args = parse_command(w, self, input, args);
 
-    if (num_args == -1) {
+    if (num_args <= 0) {
         return;
     }
 
     /* Try to match input command to command functions. If non-global command mode is specified,
-       try specified mode's commands first, then upon failure try global commands.
-
-       Note: Global commands must come last in case of duplicate command names */
+     * try specified mode's commands first, then upon failure try global commands.
+     *
+     * Note: Global commands must come last in case of duplicate command names
+     */
     switch (mode) {
         case CHAT_COMMAND_MODE:
             if (do_command(w, self, m, num_args, chat_commands, args) == 0) {
