@@ -667,7 +667,7 @@ void kill_all_windows(Tox *m)
 {
     size_t i;
 
-    for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+    for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i].is_chat) {
             kill_chat_window(&windows[i], m);
         } else if (windows[i].is_groupchat) {
@@ -675,6 +675,7 @@ void kill_all_windows(Tox *m)
         }
     }
 
-    kill_prompt_window(prompt);
-    kill_friendlist();
+    /* TODO: use enum instead of magic indices */
+    kill_friendlist(&windows[1]);
+    kill_prompt_window(&windows[0]);
 }

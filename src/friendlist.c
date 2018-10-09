@@ -113,11 +113,9 @@ static void realloc_blocklist(int n)
     Blocked.index = b_idx;
 }
 
-void kill_friendlist(void)
+void kill_friendlist(ToxWindow *self)
 {
-    int i;
-
-    for (i = 0; i < Friends.max_idx; ++i) {
+    for (int i = 0; i < Friends.max_idx; ++i) {
         if (Friends.list[i].active && Friends.list[i].group_invite.key != NULL) {
             free(Friends.list[i].group_invite.key);
         }
@@ -125,6 +123,8 @@ void kill_friendlist(void)
 
     realloc_blocklist(0);
     realloc_friends(0);
+    free(self->help);
+    del_window(self);
 }
 
 /* Saves the blocklist to path. If there are no items in the blocklist the

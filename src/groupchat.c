@@ -113,6 +113,21 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* PYTHON */
 };
 
+static void kill_groupchat_window(ToxWindow *self)
+{
+    ChatContext *ctx = self->chatwin;
+
+    log_disable(ctx->log);
+    line_info_cleanup(ctx->hst);
+    delwin(ctx->linewin);
+    delwin(ctx->history);
+    delwin(ctx->sidebar);
+    free(ctx->log);
+    free(ctx);
+    free(self->help);
+    del_window(self);
+}
+
 int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type)
 {
     if (groupnum > MAX_GROUPCHAT_NUM) {
@@ -120,9 +135,8 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
     }
 
     ToxWindow self = new_group_chat(m, groupnum);
-    int i;
 
-    for (i = 0; i <= max_groupchat_index; ++i) {
+    for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
             groupchats[i].chatwin = add_window(m, self);
             groupchats[i].active = true;
@@ -140,22 +154,9 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
         }
     }
 
+    kill_groupchat_window(&self);
+
     return -1;
-}
-
-static void kill_groupchat_window(ToxWindow *self)
-{
-    ChatContext *ctx = self->chatwin;
-
-    log_disable(ctx->log);
-    line_info_cleanup(ctx->hst);
-    delwin(ctx->linewin);
-    delwin(ctx->history);
-    delwin(ctx->sidebar);
-    free(ctx->log);
-    free(ctx);
-    free(self->help);
-    del_window(self);
 }
 
 void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)

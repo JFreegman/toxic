@@ -85,7 +85,7 @@ ToxWindow new_friendlist(void);
 void disable_chatwin(uint32_t f_num);
 int get_friendnum(uint8_t *name);
 int load_blocklist(char *data);
-void kill_friendlist(void);
+void kill_friendlist(ToxWindow *self);
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort);
 Tox_User_Status get_friend_status(uint32_t friendnumber);
 Tox_Connection get_friend_connection_status(uint32_t friendnumber);
