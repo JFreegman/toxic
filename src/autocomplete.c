@@ -107,10 +107,9 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
         return -1;
     }
 
-    const char *L = (char *) list;
+    const char *L = (const char *) list;
     const char *endchrs = " ";
-    char ubuf[MAX_STR_SIZE];
-    memset(ubuf, 0, sizeof(ubuf));
+    char ubuf[MAX_STR_SIZE] = {0};
 
     /* work with multibyte string copy of buf for simplicity */
     if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1) {

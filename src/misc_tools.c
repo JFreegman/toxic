@@ -481,22 +481,25 @@ bool file_exists(const char *path)
     return stat(path, &s) == 0;
 }
 
-/* Returns 0 if path points to a directory.
- * Returns 1 if path points to a regular file.
- * Returns -1 on any other result.
+/*
+ * Checks the file type path points to and returns a File_Type enum value.
+ *
+ * Returns FILE_TYPE_DIRECTORY if path points to a directory.
+ * Returns FILE_TYPE_REGULAR if path points to a regular file.
+ * Returns FILE_TYPE_OTHER on any other result, including an invalid path.
  */
-int file_type(const char *path)
+File_Type file_type(const char *path)
 {
     struct stat s;
     stat(path, &s);
 
     switch (s.st_mode & S_IFMT) {
         case S_IFDIR:
-            return 0;
+            return FILE_TYPE_DIRECTORY;
         case S_IFREG:
-            return 1;
+            return FILE_TYPE_REGULAR;
         default:
-            return -1;
+            return FILE_TYPE_OTHER;
    }
 }
 

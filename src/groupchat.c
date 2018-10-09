@@ -512,7 +512,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             }
 
 #ifdef PYTHON
-            else if (wcsncmp(ctx->line, L"/run \"", wcslen(L"/run ")) == 0) {
+            else if (wcsncmp(ctx->line, L"/run ", wcslen(L"/run ")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/run");
             }
 

@@ -39,6 +39,14 @@
 #define net_to_host(x, y) hst_to_net(x, y)
 #endif
 
+typedef enum File_Type
+{
+   FILE_TYPE_REGULAR,
+   FILE_TYPE_DIRECTORY,
+   FILE_TYPE_OTHER,
+} File_Type;
+
+
 void hst_to_net(uint8_t *num, uint16_t numbytes);
 
 /*
@@ -146,11 +154,14 @@ void bytes_convert_str(char *buf, int size, uint64_t bytes);
 /* checks if a file exists. Returns true or false */
 bool file_exists(const char *path);
 
-/* Returns 0 if path points to a directory.
- * Returns 1 if path points to a regular file.
- * Returns -1 on any other result.
+/*
+ * Checks the file type path points to and returns a File_Type enum value.
+ *
+ * Returns FILE_TYPE_DIRECTORY if path points to a directory.
+ * Returns FILE_TYPE_REGULAR if path points to a regular file.
+ * Returns FILE_TYPE_OTHER on any other result, including an invalid path.
  */
-int file_type(const char *path);
+File_Type file_type(const char *path);
 
 /* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path);

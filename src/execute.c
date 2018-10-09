@@ -129,10 +129,9 @@ static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
 /* Returns true if input command is in the special_commands array. */
 static bool is_special_command(const char *input)
 {
-    int s = char_find(0, input, ' ');
-    int i;
+    const int s = char_find(0, input, ' ');
 
-    for (i = 0; i < SPECIAL_COMMANDS; ++i) {
+    for (int i = 0; i < SPECIAL_COMMANDS; ++i) {
         if (strncmp(input, special_commands[i], s) == 0) {
             return true;
         }
