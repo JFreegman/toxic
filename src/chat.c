@@ -1290,51 +1290,53 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_chat(Tox *m, uint32_t friendnum)
+ToxWindow *new_chat(Tox *m, uint32_t friendnum)
 {
-    ToxWindow ret;
-    memset(&ret, 0, sizeof(ret));
+    ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
-    ret.active = true;
-    ret.is_chat = true;
+    if (ret == NULL) {
+        exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
+    }
 
-    ret.onKey = &chat_onKey;
-    ret.onDraw = &chat_onDraw;
-    ret.onInit = &chat_onInit;
-    ret.onMessage = &chat_onMessage;
-    ret.onConnectionChange = &chat_onConnectionChange;
-    ret.onTypingChange = & chat_onTypingChange;
-    ret.onGroupInvite = &chat_onGroupInvite;
-    ret.onNickChange = &chat_onNickChange;
-    ret.onStatusChange = &chat_onStatusChange;
-    ret.onStatusMessageChange = &chat_onStatusMessageChange;
-    ret.onFileChunkRequest = &chat_onFileChunkRequest;
-    ret.onFileRecvChunk = &chat_onFileRecvChunk;
-    ret.onFileControl = &chat_onFileControl;
-    ret.onFileRecv = &chat_onFileRecv;
-    ret.onReadReceipt = &chat_onReadReceipt;
+    ret->is_chat = true;
+
+    ret->onKey = &chat_onKey;
+    ret->onDraw = &chat_onDraw;
+    ret->onInit = &chat_onInit;
+    ret->onMessage = &chat_onMessage;
+    ret->onConnectionChange = &chat_onConnectionChange;
+    ret->onTypingChange = & chat_onTypingChange;
+    ret->onGroupInvite = &chat_onGroupInvite;
+    ret->onNickChange = &chat_onNickChange;
+    ret->onStatusChange = &chat_onStatusChange;
+    ret->onStatusMessageChange = &chat_onStatusMessageChange;
+    ret->onFileChunkRequest = &chat_onFileChunkRequest;
+    ret->onFileRecvChunk = &chat_onFileRecvChunk;
+    ret->onFileControl = &chat_onFileControl;
+    ret->onFileRecv = &chat_onFileRecv;
+    ret->onReadReceipt = &chat_onReadReceipt;
 
 #ifdef AUDIO
-    ret.onInvite = &chat_onInvite;
-    ret.onRinging = &chat_onRinging;
-    ret.onStarting = &chat_onStarting;
-    ret.onEnding = &chat_onEnding;
-    ret.onError = &chat_onError;
-    ret.onStart = &chat_onStart;
-    ret.onCancel = &chat_onCancel;
-    ret.onReject = &chat_onReject;
-    ret.onEnd = &chat_onEnd;
+    ret->onInvite = &chat_onInvite;
+    ret->onRinging = &chat_onRinging;
+    ret->onStarting = &chat_onStarting;
+    ret->onEnding = &chat_onEnding;
+    ret->onError = &chat_onError;
+    ret->onStart = &chat_onStart;
+    ret->onCancel = &chat_onCancel;
+    ret->onReject = &chat_onReject;
+    ret->onEnd = &chat_onEnd;
 
-    ret.is_call = false;
-    ret.device_selection[0] = ret.device_selection[1] = -1;
-    ret.ringing_sound = -1;
+    ret->is_call = false;
+    ret->device_selection[0] = ret->device_selection[1] = -1;
+    ret->ringing_sound = -1;
 #endif /* AUDIO */
 
-    ret.active_box = -1;
+    ret->active_box = -1;
 
     char nick[TOX_MAX_NAME_LENGTH];
     size_t n_len = get_nick_truncate(m, nick, friendnum);
-    set_window_title(&ret, nick, n_len);
+    set_window_title(ret, nick, n_len);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
@@ -1344,11 +1346,11 @@ ToxWindow new_chat(Tox *m, uint32_t friendnum)
         exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
     }
 
-    ret.chatwin = chatwin;
-    ret.stb = stb;
-    ret.help = help;
+    ret->chatwin = chatwin;
+    ret->stb = stb;
+    ret->help = help;
 
-    ret.num = friendnum;
+    ret->num = friendnum;
 
     return ret;
 }

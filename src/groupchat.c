@@ -134,7 +134,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
         return -1;
     }
 
-    ToxWindow self = new_group_chat(m, groupnum);
+    ToxWindow *self = new_group_chat(m, groupnum);
 
     for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
@@ -144,7 +144,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
             groupchats[i].type = type;
             groupchats[i].start_time = get_unix_time();
 
-            set_active_window(groupchats[i].chatwin);
+            set_active_window_index(groupchats[i].chatwin);
 
             if (i == max_groupchat_index) {
                 ++max_groupchat_index;
@@ -154,7 +154,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
         }
     }
 
-    kill_groupchat_window(&self);
+    kill_groupchat_window(self);
 
     return -1;
 }
@@ -700,23 +700,25 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow new_group_chat(Tox *m, uint32_t groupnum)
+ToxWindow *new_group_chat(Tox *m, uint32_t groupnum)
 {
-    ToxWindow ret;
-    memset(&ret, 0, sizeof(ret));
+    ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
-    ret.active = true;
-    ret.is_groupchat = true;
+    if (ret == NULL) {
+        exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
+    }
 
-    ret.onKey = &groupchat_onKey;
-    ret.onDraw = &groupchat_onDraw;
-    ret.onInit = &groupchat_onInit;
-    ret.onGroupMessage = &groupchat_onGroupMessage;
-    ret.onGroupNameListChange = &groupchat_onGroupNameListChange;
-    ret.onGroupPeerNameChange = &groupchat_onGroupPeerNameChange;
-    ret.onGroupTitleChange = &groupchat_onGroupTitleChange;
+    ret->is_groupchat = true;
 
-    snprintf(ret.name, sizeof(ret.name), "Group %d", groupnum);
+    ret->onKey = &groupchat_onKey;
+    ret->onDraw = &groupchat_onDraw;
+    ret->onInit = &groupchat_onInit;
+    ret->onGroupMessage = &groupchat_onGroupMessage;
+    ret->onGroupNameListChange = &groupchat_onGroupNameListChange;
+    ret->onGroupPeerNameChange = &groupchat_onGroupPeerNameChange;
+    ret->onGroupTitleChange = &groupchat_onGroupTitleChange;
+
+    snprintf(ret->name, sizeof(ret->name), "Group %u", groupnum);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     Help *help = calloc(1, sizeof(Help));
@@ -725,12 +727,12 @@ ToxWindow new_group_chat(Tox *m, uint32_t groupnum)
         exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
     }
 
-    ret.chatwin = chatwin;
-    ret.help = help;
+    ret->chatwin = chatwin;
+    ret->help = help;
 
-    ret.num = groupnum;
-    ret.show_peerlist = true;
-    ret.active_box = -1;
+    ret->num = groupnum;
+    ret->show_peerlist = true;
+    ret->active_box = -1;
 
     return ret;
 }

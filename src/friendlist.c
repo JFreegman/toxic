@@ -115,7 +115,7 @@ static void realloc_blocklist(int n)
 
 void kill_friendlist(ToxWindow *self)
 {
-    for (int i = 0; i < Friends.max_idx; ++i) {
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
         if (Friends.list[i].active && Friends.list[i].group_invite.key != NULL) {
             free(Friends.list[i].group_invite.key);
         }
@@ -619,7 +619,7 @@ static void delete_friend(Tox *m, uint32_t f_num)
 
         if (toxwin != NULL) {
             kill_chat_window(toxwin, m);
-            set_active_window(1);   /* keep friendlist focused */
+            set_active_window_index(1);   /* keep friendlist focused */
         }
     }
 
@@ -844,10 +844,10 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             /* Jump to chat window if already open */
             if (Friends.list[f].chatwin != -1) {
-                set_active_window(Friends.list[f].chatwin);
+                set_active_window_index(Friends.list[f].chatwin);
             } else if (get_num_active_windows() < MAX_WINDOWS_NUM) {
                 Friends.list[f].chatwin = add_window(m, new_chat(m, Friends.list[f].num));
-                set_active_window(Friends.list[f].chatwin);
+                set_active_window_index(Friends.list[f].chatwin);
             } else {
                 const char *msg = "* Warning: Too many windows are open.";
                 line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, msg);
@@ -1209,7 +1209,7 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
             if (state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
                 Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
-                set_active_window(Friends.list[friend_number].chatwin);
+                set_active_window_index(Friends.list[friend_number].chatwin);
             }
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
@@ -1237,42 +1237,44 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber)
     return Friends.list[friendnumber].connection_status;
 }
 
-ToxWindow new_friendlist(void)
+ToxWindow *new_friendlist(void)
 {
-    ToxWindow ret;
-    memset(&ret, 0, sizeof(ret));
+    ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
-    ret.active = true;
-    ret.is_friendlist = true;
+    if (ret == NULL) {
+        exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
+    }
 
-    ret.onKey = &friendlist_onKey;
-    ret.onDraw = &friendlist_onDraw;
-    ret.onFriendAdded = &friendlist_onFriendAdded;
-    ret.onMessage = &friendlist_onMessage;
-    ret.onConnectionChange = &friendlist_onConnectionChange;
-    ret.onNickChange = &friendlist_onNickChange;
-    ret.onStatusChange = &friendlist_onStatusChange;
-    ret.onStatusMessageChange = &friendlist_onStatusMessageChange;
-    ret.onFileRecv = &friendlist_onFileRecv;
-    ret.onGroupInvite = &friendlist_onGroupInvite;
+    ret->is_friendlist = true;
+
+    ret->onKey = &friendlist_onKey;
+    ret->onDraw = &friendlist_onDraw;
+    ret->onFriendAdded = &friendlist_onFriendAdded;
+    ret->onMessage = &friendlist_onMessage;
+    ret->onConnectionChange = &friendlist_onConnectionChange;
+    ret->onNickChange = &friendlist_onNickChange;
+    ret->onStatusChange = &friendlist_onStatusChange;
+    ret->onStatusMessageChange = &friendlist_onStatusMessageChange;
+    ret->onFileRecv = &friendlist_onFileRecv;
+    ret->onGroupInvite = &friendlist_onGroupInvite;
 
 #ifdef AUDIO
-    ret.onInvite = &friendlist_onAV;
-    ret.onRinging = &friendlist_onAV;
-    ret.onStarting = &friendlist_onAV;
-    ret.onEnding = &friendlist_onAV;
-    ret.onError = &friendlist_onAV;
-    ret.onStart = &friendlist_onAV;
-    ret.onCancel = &friendlist_onAV;
-    ret.onReject = &friendlist_onAV;
-    ret.onEnd = &friendlist_onAV;
+    ret->onInvite = &friendlist_onAV;
+    ret->onRinging = &friendlist_onAV;
+    ret->onStarting = &friendlist_onAV;
+    ret->onEnding = &friendlist_onAV;
+    ret->onError = &friendlist_onAV;
+    ret->onStart = &friendlist_onAV;
+    ret->onCancel = &friendlist_onAV;
+    ret->onReject = &friendlist_onAV;
+    ret->onEnd = &friendlist_onAV;
 
-    ret.is_call = false;
-    ret.device_selection[0] = ret.device_selection[1] = -1;
+    ret->is_call = false;
+    ret->device_selection[0] = ret->device_selection[1] = -1;
 #endif /* AUDIO */
 
-    ret.num = -1;
-    ret.active_box = -1;
+    ret->num = -1;
+    ret->active_box = -1;
 
     Help *help = calloc(1, sizeof(Help));
 
@@ -1280,7 +1282,7 @@ ToxWindow new_friendlist(void)
         exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
     }
 
-    ret.help = help;
-    strcpy(ret.name, "contacts");
+    ret->help = help;
+    strcpy(ret->name, "contacts");
     return ret;
 }

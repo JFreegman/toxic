@@ -42,7 +42,7 @@ typedef struct {
 
 extern FriendRequests FrndRequests;
 
-ToxWindow new_prompt(void);
+ToxWindow *new_prompt(void);
 
 void prep_prompt_win(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run);

@@ -36,7 +36,7 @@
 
 #include "toxic.h"
 
-#define MAX_WINDOWS_NUM 32
+#define MAX_WINDOWS_NUM 16
 #define MAX_WINDOW_NAME_LENGTH 22
 #define CURS_Y_OFFSET 1    /* y-axis cursor offset for chat contexts */
 #define CHATBOX_HEIGHT 2
@@ -162,7 +162,7 @@ struct ToxWindow {
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     uint32_t num;    /* corresponds to friendnumber in chat windows */
-    bool active;
+    uint8_t index; /* This window's index in the windows array */
     int x;
 
     bool is_chat;
@@ -252,14 +252,14 @@ struct Help {
 
 ToxWindow *init_windows(Tox *m);
 void draw_active_window(Tox *m);
-int add_window(Tox *m, ToxWindow w);
+int add_window(Tox *m, ToxWindow *w);
 void del_window(ToxWindow *w);
-void set_active_window(int ch);
+void set_active_window_index(uint8_t index);
 int get_num_active_windows(void);
 void kill_all_windows(Tox *m);    /* should only be called on shutdown */
 void on_window_resize(void);
 void force_refresh(WINDOW *w);
-ToxWindow *get_window_ptr(int i);
+ToxWindow *get_window_ptr(size_t i);
 ToxWindow *get_active_window(void);
 
 /* refresh inactive windows to prevent scrolling bugs.

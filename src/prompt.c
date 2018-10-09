@@ -594,22 +594,24 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     }
 }
 
-ToxWindow new_prompt(void)
+ToxWindow *new_prompt(void)
 {
-    ToxWindow ret;
-    memset(&ret, 0, sizeof(ret));
+    ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
-    ret.num = -1;
-    ret.active = true;
-    ret.is_prompt = true;
+    if (ret == NULL) {
+        exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+    }
 
-    ret.onKey = &prompt_onKey;
-    ret.onDraw = &prompt_onDraw;
-    ret.onInit = &prompt_onInit;
-    ret.onConnectionChange = &prompt_onConnectionChange;
-    ret.onFriendRequest = &prompt_onFriendRequest;
+    ret->num = -1;
+    ret->is_prompt = true;
 
-    strcpy(ret.name, "home");
+    ret->onKey = &prompt_onKey;
+    ret->onDraw = &prompt_onDraw;
+    ret->onInit = &prompt_onInit;
+    ret->onConnectionChange = &prompt_onConnectionChange;
+    ret->onFriendRequest = &prompt_onFriendRequest;
+
+    strcpy(ret->name, "home");
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));
@@ -619,11 +621,11 @@ ToxWindow new_prompt(void)
         exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
     }
 
-    ret.chatwin = chatwin;
-    ret.stb = stb;
-    ret.help = help;
+    ret->chatwin = chatwin;
+    ret->stb = stb;
+    ret->help = help;
 
-    ret.active_box = -1;
+    ret->active_box = -1;
 
     return ret;
 }

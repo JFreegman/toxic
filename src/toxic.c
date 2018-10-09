@@ -1281,7 +1281,6 @@ int main(int argc, char **argv)
         arg_opts.encrypt_data = 0;
     }
 
-
     init_term();
 
     prompt = init_windows(m);

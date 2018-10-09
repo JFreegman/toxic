@@ -61,6 +61,6 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
 /* destroys and re-creates groupchat window with or without the peerlist */
 void redraw_groupchat_win(ToxWindow *self);
 
-ToxWindow new_group_chat(Tox *m, uint32_t groupnum);
+ToxWindow *new_group_chat(Tox *m, uint32_t groupnum);
 
 #endif /* GROUPCHAT_H */
