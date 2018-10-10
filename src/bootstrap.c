@@ -560,7 +560,7 @@ static void DHT_bootstrap(Tox *m)
             continue;
         }
 
-        TOX_ERR_BOOTSTRAP err;
+        Tox_Err_Bootstrap err;
         tox_bootstrap(m, addr, node->port, (uint8_t *) node->key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {

@@ -30,7 +30,7 @@
 
 void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    TOX_ERR_CONFERENCE_TITLE err;
+    Tox_Err_Conference_Title err;
     char title[MAX_STR_SIZE];
 
     if (argc < 1) {

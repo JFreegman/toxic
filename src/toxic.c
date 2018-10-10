@@ -337,8 +337,8 @@ static void load_groups(ToxWindow *prompt, Tox *m)
             continue;
         }
 
-        TOX_ERR_CONFERENCE_GET_TYPE err;
-        TOX_CONFERENCE_TYPE type = tox_conference_get_type(m, groupnum, &err);
+        Tox_Err_Conference_Get_Type err;
+        Tox_Conference_Type type = tox_conference_get_type(m, groupnum, &err);
 
         if (err != TOX_ERR_CONFERENCE_GET_TYPE_OK) {
             tox_conference_delete(m, groupnum, NULL);
@@ -646,7 +646,7 @@ static void init_tox_options(struct Tox_Options *tox_opts)
 /* Returns a new Tox object on success.
  * If object fails to initialize the toxic process will terminate.
  */
-static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW *new_err)
+static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New *new_err)
 {
     Tox *m = NULL;
 
@@ -783,7 +783,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, TOX_ERR_NEW 
 
 static Tox *load_toxic(char *data_path)
 {
-    TOX_ERR_OPTIONS_NEW options_new_err;
+    Tox_Err_Options_New options_new_err;
     struct Tox_Options *tox_opts = tox_options_new(&options_new_err);
 
     if (!tox_opts) {
@@ -792,7 +792,7 @@ static Tox *load_toxic(char *data_path)
 
     init_tox_options(tox_opts);
 
-    TOX_ERR_NEW new_err;
+    Tox_Err_New new_err;
     Tox *m = load_tox(data_path, tox_opts, &new_err);
 
     if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_options_get_ipv6_enabled(tox_opts)) {

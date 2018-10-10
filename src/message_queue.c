@@ -151,7 +151,7 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
         return;
     }
 
-    TOX_MESSAGE_TYPE type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
+    Tox_Message_Type type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
     msg->receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, NULL);
     msg->last_send_try = get_unix_time();
 }

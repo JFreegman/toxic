@@ -92,7 +92,7 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    TOX_ERR_CONFERENCE_INVITE err;
+    Tox_Err_Conference_Invite err;
 
     if (!tox_conference_invite(m, self->num, groupnum, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d)", err);
@@ -123,7 +123,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    TOX_ERR_CONFERENCE_JOIN err;
+    Tox_Err_Conference_Join err;
 
     uint32_t groupnum = tox_conference_join(m, self->num, (const uint8_t *) groupkey, length, &err);
 
@@ -172,7 +172,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    TOX_ERR_FILE_CONTROL err;
+    Tox_Err_File_Control err;
     tox_file_control(m, self->num, ft->filenum, TOX_FILE_CONTROL_RESUME, &err);
 
     if (err != TOX_ERR_FILE_CONTROL_OK) {
@@ -259,7 +259,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     char file_name[TOX_MAX_FILENAME_LENGTH];
     size_t namelen = get_file_name(file_name, sizeof(file_name), path);
 
-    TOX_ERR_FILE_SEND err;
+    Tox_Err_File_Send err;
     uint32_t filenum = tox_file_send(m, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
                                      (uint8_t *) file_name, namelen, &err);
 

@@ -116,19 +116,19 @@ struct ToxWindow {
     /* toxcore */
     void(*onFriendRequest)(ToxWindow *, Tox *, const char *, const char *, size_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, uint32_t, bool);
-    void(*onConnectionChange)(ToxWindow *, Tox *, uint32_t, TOX_CONNECTION);
-    void(*onMessage)(ToxWindow *, Tox *, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
+    void(*onConnectionChange)(ToxWindow *, Tox *, uint32_t, Tox_Connection);
+    void(*onMessage)(ToxWindow *, Tox *, uint32_t, Tox_Message_Type, const char *, size_t);
     void(*onNickChange)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
-    void(*onStatusChange)(ToxWindow *, Tox *, uint32_t, TOX_USER_STATUS);
+    void(*onStatusChange)(ToxWindow *, Tox *, uint32_t, Tox_User_Status);
     void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
-    void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
+    void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_Message_Type, const char *, size_t);
     void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
     void(*onGroupNameListChange)(ToxWindow *, Tox *, uint32_t);
     void(*onGroupPeerNameChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupTitleChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
     void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
-    void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_FILE_CONTROL);
+    void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_File_Control);
     void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
     void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
@@ -187,8 +187,8 @@ struct StatusBar {
     size_t statusmsg_len;
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     size_t nick_len;
-    TOX_USER_STATUS status;
-    TOX_CONNECTION connection;
+    Tox_User_Status status;
+    Tox_Connection connection;
 };
 
 #ifdef AUDIO

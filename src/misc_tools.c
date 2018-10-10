@@ -347,7 +347,7 @@ void str_to_lower(char *str)
    Returns nick len */
 size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum)
 {
-    TOX_ERR_FRIEND_QUERY err;
+    Tox_Err_Friend_Query err;
     size_t len = tox_friend_get_name_size(m, friendnum, &err);
 
     if (err != TOX_ERR_FRIEND_QUERY_OK) {
@@ -373,7 +373,7 @@ on_error:
 /* same as get_nick_truncate but for groupchats */
 int get_group_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t groupnum)
 {
-    TOX_ERR_CONFERENCE_PEER_QUERY err;
+    Tox_Err_Conference_Peer_Query err;
     size_t len = tox_conference_peer_get_name_size(m, groupnum, peernum, &err);
 
     if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {

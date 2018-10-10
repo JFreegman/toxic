@@ -51,10 +51,10 @@ typedef struct {
     uint32_t num;
     int chatwin;
     bool active;
-    TOX_CONNECTION connection_status;
+    Tox_Connection connection_status;
     bool is_typing;
     bool logging_on;    /* saves preference for friend irrespective of global settings */
-    TOX_USER_STATUS status;
+    Tox_User_Status status;
 
     struct LastOnline last_online;
     struct GroupChatInvite group_invite;
@@ -87,8 +87,8 @@ int get_friendnum(uint8_t *name);
 int load_blocklist(char *data);
 void kill_friendlist(void);
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort);
-TOX_USER_STATUS get_friend_status(uint32_t friendnumber);
-TOX_CONNECTION get_friend_connection_status(uint32_t friendnumber);
+Tox_User_Status get_friend_status(uint32_t friendnumber);
+Tox_Connection get_friend_connection_status(uint32_t friendnumber);
 
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void);

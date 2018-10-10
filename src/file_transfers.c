@@ -259,7 +259,7 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
     }
 
     if (CTRL >= 0) {
-        tox_file_control(m, ft->friendnum, ft->filenum, (TOX_FILE_CONTROL) CTRL, NULL);
+        tox_file_control(m, ft->friendnum, ft->filenum, (Tox_File_Control) CTRL, NULL);
     }
 
     if (message && self) {

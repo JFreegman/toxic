@@ -137,7 +137,7 @@ void kill_prompt_window(ToxWindow *self)
 }
 
 /* callback: Updates own connection status in prompt statusbar */
-void on_self_connection_status(Tox *m, TOX_CONNECTION connection_status, void *userdata)
+void on_self_connection_status(Tox *m, Tox_Connection connection_status, void *userdata)
 {
     StatusBar *statusbar = prompt->stb;
     statusbar->connection = connection_status;
@@ -159,7 +159,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     size_t len = strlen(statusbar->statusmsg);
     statusbar->statusmsg_len = len;
 
-    TOX_ERR_SET_INFO err;
+    Tox_Err_Set_Info err;
     tox_self_set_status_message(m, (const uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK) {
@@ -168,14 +168,14 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
 }
 
 /* Updates own status in prompt statusbar */
-void prompt_update_status(ToxWindow *prompt, TOX_USER_STATUS status)
+void prompt_update_status(ToxWindow *prompt, Tox_User_Status status)
 {
     StatusBar *statusbar = prompt->stb;
     statusbar->status = status;
 }
 
 /* Returns our own connection status */
-TOX_CONNECTION prompt_selfConnectionStatus(void)
+Tox_Connection prompt_selfConnectionStatus(void)
 {
     StatusBar *statusbar = prompt->stb;
     return statusbar->connection;
@@ -332,7 +332,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     wmove(statusbar->topline, 0, 0);
 
     pthread_mutex_lock(&Winthread.lock);
-    TOX_CONNECTION connection = statusbar->connection;
+    Tox_Connection connection = statusbar->connection;
     pthread_mutex_unlock(&Winthread.lock);
 
     if (connection != TOX_CONNECTION_NONE) {
@@ -340,7 +340,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         const char *status_text = "ERROR";
 
         pthread_mutex_lock(&Winthread.lock);
-        TOX_USER_STATUS status = statusbar->status;
+        Tox_User_Status status = statusbar->status;
         pthread_mutex_unlock(&Winthread.lock);
 
         switch (status) {
@@ -426,7 +426,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 }
 
-static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum, TOX_CONNECTION connection_status)
+static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum, Tox_Connection connection_status)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -519,7 +519,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
     size_t s_len = tox_self_get_status_message_size(m);
     tox_self_get_status_message(m, (uint8_t *) statusmsg);
 
-    TOX_USER_STATUS status = tox_self_get_status(m);
+    Tox_User_Status status = tox_self_get_status(m);
 
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';

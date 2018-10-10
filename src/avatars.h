@@ -47,6 +47,6 @@ int avatar_set(Tox *m, const char *path, size_t length);
 void avatar_unset(Tox *m);
 
 void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position, size_t length);
-void on_avatar_file_control(Tox *m, struct FileTransfer *ft, TOX_FILE_CONTROL control);
+void on_avatar_file_control(Tox *m, struct FileTransfer *ft, Tox_File_Control control);
 
 #endif /* AVATARS_H */

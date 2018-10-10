@@ -62,7 +62,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    TOX_ERR_FRIEND_ADD err;
+    Tox_Err_Friend_Add err;
     uint32_t friendnum = tox_friend_add_norequest(m, FrndRequests.request[req].key, &err);
 
     if (err != TOX_ERR_FRIEND_ADD_OK) {
@@ -92,7 +92,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 {
     const char *errmsg;
 
-    TOX_ERR_FRIEND_ADD err;
+    Tox_Err_Friend_Add err;
     uint32_t f_num = tox_friend_add(m, (const uint8_t *) id_bin, (const uint8_t *) msg, strlen(msg), &err);
 
     switch (err) {
@@ -267,7 +267,7 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    TOX_ERR_BOOTSTRAP err;
+    Tox_Err_Bootstrap err;
     tox_bootstrap(m, ip, port, (uint8_t *) key_binary, &err);
     tox_add_tcp_relay(m, ip, port, (uint8_t *) key_binary, &err);
 
@@ -350,7 +350,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    TOX_ERR_CONFERENCE_NEW err;
+    Tox_Err_Conference_New err;
 
     uint32_t groupnum = tox_conference_new(m, &err);
 
@@ -632,7 +632,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     const char *status_str = argv[1];
-    TOX_USER_STATUS status;
+    Tox_User_Status status;
 
     if (!strcasecmp(status_str, "online")) {
         status = TOX_USER_STATUS_NONE;

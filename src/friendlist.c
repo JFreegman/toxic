@@ -341,7 +341,7 @@ static void update_friend_last_online(uint32_t num, time_t timestamp)
              &Friends.list[num].last_online.tm);
 }
 
-static void friendlist_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TYPE type, const char *str,
+static void friendlist_onMessage(ToxWindow *self, Tox *m, uint32_t num, Tox_Message_Type type, const char *str,
                                  size_t length)
 {
     if (num >= Friends.max_idx) {
@@ -368,7 +368,7 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESS
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
 
-static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_CONNECTION connection_status)
+static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_Connection connection_status)
 {
     if (num >= Friends.max_idx) {
         return;
@@ -417,7 +417,7 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const
     sort_friendlist_index();
 }
 
-static void friendlist_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, TOX_USER_STATUS status)
+static void friendlist_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, Tox_User_Status status)
 {
     if (num >= Friends.max_idx) {
         return;
@@ -457,14 +457,14 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
         Friends.list[i].status = TOX_USER_STATUS_NONE;
         Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
 
-        TOX_ERR_FRIEND_GET_PUBLIC_KEY pkerr;
+        Tox_Err_Friend_Get_Public_Key pkerr;
         tox_friend_get_public_key(m, num, (uint8_t *) Friends.list[i].pub_key, &pkerr);
 
         if (pkerr != TOX_ERR_FRIEND_GET_PUBLIC_KEY_OK) {
             fprintf(stderr, "tox_friend_get_public_key failed (error %d)\n", pkerr);
         }
 
-        TOX_ERR_FRIEND_GET_LAST_ONLINE loerr;
+        Tox_Err_Friend_Get_Last_Online loerr;
         time_t t = tox_friend_get_last_online(m, num, &loerr);
 
         if (loerr != TOX_ERR_FRIEND_GET_LAST_ONLINE_OK) {
@@ -600,7 +600,7 @@ static void select_friend(ToxWindow *self, wint_t key, int *selected, int num)
 
 static void delete_friend(Tox *m, uint32_t f_num)
 {
-    TOX_ERR_FRIEND_DELETE err;
+    Tox_Err_Friend_Delete err;
 
     if (tox_friend_delete(m, f_num, &err) != true) {
         fprintf(stderr, "tox_friend_delete failed with error %d\n", err);
@@ -780,7 +780,7 @@ static void unblock_friend(Tox *m, uint32_t bnum)
         return;
     }
 
-    TOX_ERR_FRIEND_ADD err;
+    Tox_Err_Friend_Add err;
     uint32_t friendnum = tox_friend_add_norequest(m, (uint8_t *) Blocked.list[bnum].pub_key, &err);
 
     if (err != TOX_ERR_FRIEND_ADD_OK) {
@@ -1035,8 +1035,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
             }
 
             pthread_mutex_lock(&Winthread.lock);
-            TOX_CONNECTION connection_status = Friends.list[f].connection_status;
-            TOX_USER_STATUS status = Friends.list[f].status;
+            Tox_Connection connection_status = Friends.list[f].connection_status;
+            Tox_User_Status status = Friends.list[f].status;
             pthread_mutex_unlock(&Winthread.lock);
 
             if (connection_status != TOX_CONNECTION_NONE) {
@@ -1226,13 +1226,13 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
 #endif /* AUDIO */
 
 /* Returns a friend's status */
-TOX_USER_STATUS get_friend_status(uint32_t friendnumber)
+Tox_User_Status get_friend_status(uint32_t friendnumber)
 {
     return Friends.list[friendnumber].status;
 }
 
 /* Returns a friend's connection status */
-TOX_CONNECTION get_friend_connection_status(uint32_t friendnumber)
+Tox_Connection get_friend_connection_status(uint32_t friendnumber)
 {
     return Friends.list[friendnumber].connection_status;
 }

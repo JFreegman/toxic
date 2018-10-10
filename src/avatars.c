@@ -52,7 +52,7 @@ static void avatar_clear(void)
  */
 int avatar_send(Tox *m, uint32_t friendnum)
 {
-    TOX_ERR_FILE_SEND err;
+    Tox_Err_File_Send err;
     uint32_t filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
                                      NULL, (uint8_t *) Avatar.name, Avatar.name_len, &err);
 
@@ -149,7 +149,7 @@ void avatar_unset(Tox *m)
     avatar_send_all(m);
 }
 
-void on_avatar_file_control(Tox *m, struct FileTransfer *ft, TOX_FILE_CONTROL control)
+void on_avatar_file_control(Tox *m, struct FileTransfer *ft, Tox_File_Control control)
 {
     switch (control) {
         case TOX_FILE_CONTROL_RESUME:
@@ -204,7 +204,7 @@ void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position,
         return;
     }
 
-    TOX_ERR_FILE_SEND_CHUNK err;
+    Tox_Err_File_Send_Chunk err;
     tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
 
     if (err != TOX_ERR_FILE_SEND_CHUNK_OK) {

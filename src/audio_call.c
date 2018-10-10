@@ -115,7 +115,7 @@ static void print_err(ToxWindow *self, const char *error_str)
 
 ToxAV *init_audio(ToxWindow *self, Tox *tox)
 {
-    TOXAV_ERR_NEW error;
+    Toxav_Err_New error;
     CallControl.audio_errors = ae_None;
     CallControl.prompt = self;
     CallControl.pending_call = false;
@@ -172,7 +172,7 @@ void terminate_audio(void)
 
 void read_device_callback(const int16_t *captured, uint32_t size, void *data)
 {
-    TOXAV_ERR_SEND_FRAME error;
+    Toxav_Err_Send_Frame error;
     uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
     int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
                            ((int64_t) CallControl.audio_frame_duration) / 1000;
@@ -235,7 +235,7 @@ int start_transmission(ToxWindow *self, Call *call)
 int stop_transmission(Call *call, uint32_t friend_number)
 {
     if (call->ttas) {
-        TOXAV_ERR_CALL_CONTROL error = TOXAV_ERR_CALL_CONTROL_OK;
+        Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
 
         if (CallControl.call_state > TOXAV_FRIEND_CALL_STATE_FINISHED) {
             toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
@@ -480,7 +480,7 @@ void callback_call_ended(uint32_t friend_number)
  */
 void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    TOXAV_ERR_CALL error;
+    Toxav_Err_Call error;
     const char *error_str;
 
     if (argc != 0) {
@@ -531,7 +531,7 @@ on_error:
 
 void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    TOXAV_ERR_ANSWER error;
+    Toxav_Err_Answer error;
     const char *error_str;
 
     if (argc != 0) {
@@ -906,7 +906,7 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     const uint32_t bitrate = strtol(argv[1], NULL, 10);
 
-    TOXAV_ERR_BIT_RATE_SET error;
+    Toxav_Err_Bit_Rate_Set error;
     audio_bit_rate_status_cb(CallControl.av, self->num, bitrate, &error);
 
     if (error != TOXAV_ERR_BIT_RATE_SET_OK) {

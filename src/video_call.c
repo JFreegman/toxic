@@ -102,7 +102,7 @@ void read_video_device_callback(int16_t width, int16_t height, const uint8_t *y,
 {
     uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
     Call *this_call = &CallControl.calls[friend_number];
-    TOXAV_ERR_SEND_FRAME error;
+    Toxav_Err_Send_Frame error;
 
     /* Drop frame if video sending is disabled */
     if (CallControl.video_bit_rate == 0 || this_call->vin_idx == -1) {
@@ -216,7 +216,7 @@ void callback_video_starting(uint32_t friend_number)
     ToxWindow *windows = CallControl.prompt;
     Call *this_call = &CallControl.calls[friend_number];
 
-    TOXAV_ERR_CALL_CONTROL error = TOXAV_ERR_CALL_CONTROL_OK;
+    Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
     toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
 
     if (error == TOXAV_ERR_CALL_CONTROL_OK) {

@@ -144,8 +144,9 @@ void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t 
         device_names[i] = video_input_name;
     }
 
-    if ( i <= 0 )
+    if (i <= 0) {
         return nil;
+    }
 
     *size = i;
 
@@ -174,7 +175,7 @@ void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t 
     NSError *error = NULL;
     AVCaptureInput *input = [[AVCaptureDeviceInput alloc] initWithDevice: device error: &error];
 
-    if ( error != NULL ) {
+    if (error != NULL) {
         [input release];
         return -1;
     }
@@ -193,7 +194,7 @@ void bgrxtoyuv420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v, uint8_t 
     AVCaptureInputPort *port = [input.ports objectAtIndex: 0];
     CMFormatDescriptionRef format_description = port.formatDescription;
 
-    if ( format_description ) {
+    if (format_description) {
         CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(format_description);
         *width = dimensions.width;
         *height = dimensions.height;
@@ -303,8 +304,9 @@ int osx_video_init(char **device_names, int *size)
 {
     _OSXVideo = [[OSXVideo alloc] initWithDeviceNames: device_names AmtDevices: size];
 
-    if ( _OSXVideo == nil )
+    if (_OSXVideo == nil) {
         return -1;
+    }
 
     return 0;
 }
@@ -317,8 +319,9 @@ void osx_video_release()
 
 int osx_video_open_device(uint32_t selection, uint16_t *width, uint16_t *height)
 {
-    if ( _OSXVideo == nil )
+    if (_OSXVideo == nil) {
         return -1;
+    }
 
     return [_OSXVideo openVideoDeviceIndex: selection Width: width Height: height];
 }
@@ -330,8 +333,9 @@ void osx_video_close_device(uint32_t device_idx)
 
 int osx_video_read_device(uint8_t *y, uint8_t *u, uint8_t *v, uint16_t *width, uint16_t *height)
 {
-    if ( _OSXVideo == nil )
+    if (_OSXVideo == nil) {
         return -1;
+    }
 
     return [_OSXVideo getVideoFrameY: y U: u V: v Width: width Height: height];
 }

@@ -29,7 +29,7 @@
 void api_display(const char *const msg);
 FriendsList api_get_friendslist(void);
 char *api_get_nick(void);
-TOX_USER_STATUS api_get_status(void);
+Tox_User_Status api_get_status(void);
 char *api_get_status_message(void);
 void api_send(const char *msg);
 void api_execute(const char *input, int mode);

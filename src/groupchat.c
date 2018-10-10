@@ -223,7 +223,7 @@ void redraw_groupchat_win(ToxWindow *self)
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
-                                     TOX_MESSAGE_TYPE type, const char *msg, size_t len)
+                                     Tox_Message_Type type, const char *msg, size_t len)
 {
     if (self->num != groupnum) {
         return;
@@ -366,7 +366,7 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
     for (i = 0; i < num_peers; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
 
-        TOX_ERR_CONFERENCE_PEER_QUERY err;
+        Tox_Err_Conference_Peer_Query err;
         size_t length = tox_conference_peer_get_name_size(m, groupnum, i, &err);
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK || length >= TOX_MAX_NAME_LENGTH) {
@@ -399,7 +399,7 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
     }
 
     GroupChat *chat = &groupchats[groupnum];
-    TOX_ERR_CONFERENCE_PEER_QUERY err;
+    Tox_Err_Conference_Peer_Query err;
 
     uint32_t num_peers = tox_conference_peer_count(m, groupnum, &err);
     uint32_t old_num = chat->num_peers;
@@ -458,7 +458,7 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *a
         return;
     }
 
-    TOX_ERR_CONFERENCE_SEND_MESSAGE err;
+    Tox_Err_Conference_Send_Message err;
 
     if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_ACTION, (uint8_t *) action, strlen(action), &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send action (error %d)", err);
@@ -567,7 +567,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
                 }
             } else {
-                TOX_ERR_CONFERENCE_SEND_MESSAGE err;
+                Tox_Err_Conference_Send_Message err;
 
                 if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) line, strlen(line), &err)) {
                     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (error %d)", err);

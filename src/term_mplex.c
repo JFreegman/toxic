@@ -69,7 +69,7 @@ static char buffer [BUFFER_SIZE];
 static bool auto_away_active = false;
 
 static mplex_status mplex = MPLEX_NONE;
-static TOX_USER_STATUS prev_status = TOX_USER_STATUS_NONE;
+static Tox_User_Status prev_status = TOX_USER_STATUS_NONE;
 static char prev_note [TOX_MAX_STATUS_MESSAGE_LENGTH] = "";
 
 /* mutex for access to status data, for sync between:
@@ -359,7 +359,7 @@ static int mplex_is_detached(void)
 
 static void mplex_timer_handler(Tox *m)
 {
-    TOX_USER_STATUS current_status, new_status;
+    Tox_User_Status current_status, new_status;
     const char *new_note;
 
     if (mplex == MPLEX_NONE) {

@@ -206,7 +206,7 @@ static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char
     }
 }
 
-static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TYPE type, const char *msg, size_t len)
+static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, Tox_Message_Type type, const char *msg, size_t len)
 {
     if (self->num != num) {
         return;
@@ -232,7 +232,7 @@ static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, TOX_MESSAGE_TY
 static void chat_pause_file_transfers(Tox *m, uint32_t friendnum);
 static void chat_resume_file_senders(ToxWindow *self, Tox *m, uint32_t fnum);
 
-static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_CONNECTION connection_status)
+static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_Connection connection_status)
 {
     if (self->num != num) {
         return;
@@ -248,7 +248,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, TOX_C
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, nick, num);
 
-    TOX_CONNECTION prev_status = statusbar->connection;
+    Tox_Connection prev_status = statusbar->connection;
     statusbar->connection = connection_status;
 
     if (user_settings->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
@@ -300,7 +300,7 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const char 
     set_window_title(self, statusbar->nick, length);
 }
 
-static void chat_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, TOX_USER_STATUS status)
+static void chat_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, Tox_User_Status status)
 {
     if (self->num != num) {
         return;
@@ -357,7 +357,7 @@ static void chat_resume_file_senders(ToxWindow *self, Tox *m, uint32_t friendnum
             continue;
         }
 
-        TOX_ERR_FILE_SEND err;
+        Tox_Err_File_Send err;
         ft->filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_DATA, ft->file_size, ft->file_id,
                                     (uint8_t *) ft->file_name, strlen(ft->file_name), &err);
 
@@ -421,7 +421,7 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
         return;
     }
 
-    TOX_ERR_FILE_SEND_CHUNK err;
+    Tox_Err_File_Send_Chunk err;
     tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
 
     if (err != TOX_ERR_FILE_SEND_CHUNK_OK) {
@@ -476,7 +476,7 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, ui
     ft->last_keep_alive = get_unix_time();
 }
 
-static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, TOX_FILE_CONTROL control)
+static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, Tox_File_Control control)
 {
     if (friendnum != self->num) {
         return;
@@ -1117,7 +1117,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     /* Draw name, status and note in statusbar */
     if (statusbar->connection != TOX_CONNECTION_NONE) {
         int colour = MAGENTA;
-        TOX_USER_STATUS status = statusbar->status;
+        Tox_User_Status status = statusbar->status;
 
         switch (status) {
             case TOX_USER_STATUS_NONE:

@@ -73,7 +73,7 @@ char *api_get_nick(void)
     return (char *) name;
 }
 
-TOX_USER_STATUS api_get_status(void)
+Tox_User_Status api_get_status(void)
 {
     return tox_self_get_status(user_tox);
 }

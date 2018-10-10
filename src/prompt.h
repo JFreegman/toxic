@@ -48,14 +48,14 @@ void prep_prompt_win(void);
 void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run);
 void prompt_update_nick(ToxWindow *prompt, const char *nick);
 void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusmsg);
-void prompt_update_status(ToxWindow *prompt, TOX_USER_STATUS status);
+void prompt_update_status(ToxWindow *prompt, Tox_User_Status status);
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
 void kill_prompt_window(ToxWindow *self);
 
 /* callback: Updates own connection status in prompt statusbar */
-void on_self_connection_status(Tox *m, TOX_CONNECTION connection_status, void *userdata);
+void on_self_connection_status(Tox *m, Tox_Connection connection_status, void *userdata);
 
 /* Returns our own connection status */
-TOX_CONNECTION prompt_selfConnectionStatus(void);
+Tox_Connection prompt_selfConnectionStatus(void);
 
 #endif /* end of include guard: PROMPT_H */

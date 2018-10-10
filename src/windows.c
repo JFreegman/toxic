@@ -62,7 +62,7 @@ void on_friend_request(Tox *m, const uint8_t *public_key, const uint8_t *data, s
     }
 }
 
-void on_friend_connection_status(Tox *m, uint32_t friendnumber, TOX_CONNECTION connection_status, void *userdata)
+void on_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection connection_status, void *userdata)
 {
     size_t i;
 
@@ -88,7 +88,7 @@ void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userd
     }
 }
 
-void on_friend_message(Tox *m, uint32_t friendnumber, TOX_MESSAGE_TYPE type, const uint8_t *string, size_t length,
+void on_friend_message(Tox *m, uint32_t friendnumber, Tox_Message_Type type, const uint8_t *string, size_t length,
                        void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -135,7 +135,7 @@ void on_friend_status_message(Tox *m, uint32_t friendnumber, const uint8_t *stri
     }
 }
 
-void on_friend_status(Tox *m, uint32_t friendnumber, TOX_USER_STATUS status, void *userdata)
+void on_friend_status(Tox *m, uint32_t friendnumber, Tox_User_Status status, void *userdata)
 {
     size_t i;
 
@@ -159,7 +159,7 @@ void on_friend_added(Tox *m, uint32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, Tox_Message_Type type,
                            const uint8_t *message, size_t length, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
@@ -174,7 +174,7 @@ void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TO
     }
 }
 
-void on_conference_invite(Tox *m, uint32_t friendnumber, TOX_CONFERENCE_TYPE type, const uint8_t *group_pub_key,
+void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *group_pub_key,
                           size_t length, void *userdata)
 {
     size_t i;
@@ -269,7 +269,7 @@ void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint
     }
 }
 
-void on_file_recv_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, TOX_FILE_CONTROL control,
+void on_file_recv_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, Tox_File_Control control,
                           void *userdata)
 {
     struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
