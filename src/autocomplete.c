@@ -85,17 +85,22 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char 
     return snprintf(match, match_sz, "%s", matches[0]);
 }
 
-/* looks for all instances in list that begin with the last entered word in line according to pos,
+/*
+ * Looks for all instances in list that begin with the last entered word in line according to pos,
  * then fills line with the complete word. e.g. "Hello jo" would complete the line
  * with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
  *
  * list is a pointer to the list of strings being compared, n_items is the number of items
  * in the list, and size is the size of each item in the list.
  *
+ * dir_search should be true if the line being completed is a file path.
+ *
  * Returns the difference between the old len and new len of line on success.
  * Returns -1 on error.
+ *
+ * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size)
+static int complete_line_helper(ToxWindow *self, const void *list, size_t n_items, size_t size, bool dir_search)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -116,14 +121,6 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
         return -1;
     }
 
-    /* TODO: generalize this */
-    bool dir_search =    !strncmp(ubuf, "/sendfile", strlen("/sendfile"))
-                         || !strncmp(ubuf, "/avatar", strlen("/avatar"));
-
-#ifdef PYTHON
-    dir_search = dir_search || !strncmp(ubuf, "/run", strlen("/run"));
-#endif
-
     /* isolate substring from space behind pos to pos */
     char tmp[MAX_STR_SIZE];
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
@@ -133,7 +130,7 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     char *sub = calloc(1, strlen(ubuf) + 1);
 
     if (sub == NULL) {
-        exit_toxic_err("failed in complete_line", FATALERR_MEMORY);
+        exit_toxic_err("failed in complete_line_helper", FATALERR_MEMORY);
     }
 
     if (!s && !dir_search) {
@@ -219,6 +216,21 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     }
 
     strcpy(&ubuf[strt], match);
+
+    /* If path points to a file with no extension don't append a forward slash */
+    if (dir_search && *endchrs == '/') {
+        const char *path_start = strchr(ubuf+1, '/');
+
+        if (!path_start) {  // should never happen
+            return -1;
+        }
+
+        if (file_type(path_start) == FILE_TYPE_REGULAR) {
+            endchrs = "";
+            diff -= n_endchrs;
+        }
+    }
+
     strcpy(&ubuf[strt + match_len], endchrs);
     strcpy(&ubuf[strt + match_len + n_endchrs], tmpend);
 
@@ -235,6 +247,16 @@ int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size
     ctx->pos += diff;
 
     return diff;
+}
+
+int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size)
+{
+    return complete_line_helper(self, list, n_items, size, false);
+}
+
+static int complete_path(ToxWindow *self, const void *list, size_t n_items, size_t size)
+{
+    return complete_line_helper(self, list, n_items, size, true);
 }
 
 /* Transforms a tab complete starting with the shorthand "~" into the full home directory. */
@@ -266,15 +288,13 @@ static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const c
     ctx->len = ctx->pos;
 }
 
-/* Attempts to match /command <incomplete-dir> line to matching directories.
+/* Attempts to match /command "<incomplete-dir>" line to matching directories.
+ * If there is only one match the line is auto-completed.
  *
- * If only one match, auto-complete line.
- *
- * Returns diff between old len and new len of ctx->line.
- * Returns -1 if no matches or > 1 match.
+ * Returns the diff between old len and new len of ctx->line on success.
+ * Returns -1 if no matches or more than one match.
  */
 #define MAX_DIRS 512
-
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 {
     char b_path[MAX_STR_SIZE];
@@ -337,5 +357,5 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
         print_matches(self, m, dirnames, dircount, NAME_MAX + 1);
     }
 
-    return complete_line(self, dirnames, dircount, NAME_MAX + 1);
+    return complete_path(self, dirnames, dircount, NAME_MAX + 1);
 }

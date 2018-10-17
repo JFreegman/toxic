@@ -86,13 +86,13 @@ int string_is_empty(const char *string);
 /* Same as above but for wide character strings */
 int wstring_is_empty(const wchar_t *string);
 
-/* convert a multibyte string to a wide character string (must provide buffer) */
+/* converts a multibyte string to a wide character string (must provide buffer) */
 int char_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* converts wide character string into a multibyte string and puts in buf. */
 int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n);
 
-/* convert a multibyte string to a wide character string and puts in buf) */
+/* converts a multibyte string to a wide character string and puts in buf) */
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 
 /* Returns 1 if connection has timed out, 0 otherwise */

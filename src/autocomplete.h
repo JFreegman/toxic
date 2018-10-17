@@ -23,20 +23,25 @@
 #ifndef AUTOCOMPLETE_H
 #define AUTOCOMPLETE_H
 
-/* looks for all instances in list that begin with the last entered word in line according to pos,
-   then fills line with the complete word. e.g. "Hello jo" would complete the line
-   with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
-
-   list is a pointer to the list of strings being compared, n_items is the number of items
-   in the list, and size is the size of each item in the list.
-
-   Returns the difference between the old len and new len of line on success, -1 if error */
+/*
+ * Looks for all instances in list that begin with the last entered word in line according to pos,
+ * then fills line with the complete word. e.g. "Hello jo" would complete the line
+ * with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
+ *
+ * list is a pointer to the list of strings being compared, n_items is the number of items
+ * in the list, and size is the size of each item in the list.
+ *
+ * Returns the difference between the old len and new len of line on success.
+ * Returns -1 on error.
+ */
 int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size);
 
-/*  attempts to match /command "<incomplete-dir>" line to matching directories.
-
-    if only one match, auto-complete line.
-    return diff between old len and new len of ctx->line, -1 if no matches or > 1 match */
+/* Attempts to match /command "<incomplete-dir>" line to matching directories.
+ * If there is only one match the line is auto-completed.
+ *
+ * Returns the diff between old len and new len of ctx->line on success.
+ * Returns -1 if no matches or more than one match.
+ */
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd);
 
 #endif /* AUTOCOMPLETE_H */
