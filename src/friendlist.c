@@ -494,7 +494,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
     }
 }
 
-/* puts blocked friend back in friendlist. fnum is new friend number, bnum is blocked number */
+/* Puts blocked friend back in friendlist. fnum is new friend number, bnum is blocked number. */
 static void friendlist_add_blocked(Tox *m, uint32_t fnum, uint32_t bnum)
 {
     realloc_friends(Friends.max_idx + 1);
@@ -526,6 +526,9 @@ static void friendlist_add_blocked(Tox *m, uint32_t fnum, uint32_t bnum)
         sort_blocklist_index();
         sort_friendlist_index();
 
+#ifdef AUDIO
+        init_friend_AV(i);
+#endif
         return;
     }
 }
