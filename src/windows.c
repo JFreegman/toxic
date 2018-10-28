@@ -54,7 +54,7 @@ void on_friend_request(Tox *m, const uint8_t *public_key, const uint8_t *data, s
     length = copy_tox_str(msg, sizeof(msg), (const char *) data, length);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i]->onFriendRequest != NULL) {
+        if (windows[i] != NULL && windows[i]->onFriendRequest != NULL) {
             windows[i]->onFriendRequest(windows[i], m, (const char *) public_key, msg, length);
         }
     }
