@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 2016-09-20
+.\"      Date: 2018-10-27
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2016\-09\-20" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2018\-10\-27" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -120,7 +120,12 @@ Enable friend connection change notifications\&. true or false
 .PP
 \fBnodelist_update_freq\fR
 .RS 4
-How often in days to update the DHT nodes list\&. (0 to disable updates)
+How often in days to update the DHT nodes list\&. (integer; 0 to disable)
+.RE
+.PP
+\fBautosave_freq\fR
+.RS 4
+How often in seconds to auto\-save the Tox data file\&. (integer; 0 to disable)
 .RE
 .PP
 \fBhistory_size\fR

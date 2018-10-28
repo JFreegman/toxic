@@ -54,6 +54,7 @@ struct user_settings {
     int show_welcome_msg;  /* boolean */
     int show_connection_msg;  /* boolean */
     int nodeslist_update_freq;  /* int (<= 0 to disable updates) */
+    int autosave_freq; /* int (<= 0 to disable autosave) */
 
     char line_join[LINE_HINT_MAX + 1];
     char line_quit[LINE_HINT_MAX + 1];

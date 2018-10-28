@@ -94,7 +94,6 @@ ToxWindow *prompt = NULL;
 #define DATANAME  "toxic_profile.tox"
 #define BLOCKNAME "toxic_blocklist"
 
-#define AUTOSAVE_FREQ 600
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
 
@@ -1364,7 +1363,7 @@ int main(int argc, char **argv)
 
         time_t cur_time = get_unix_time();
 
-        if (timed_out(last_save, AUTOSAVE_FREQ)) {
+        if (user_settings->autosave_freq > 0 && timed_out(last_save, user_settings->autosave_freq)) {
             pthread_mutex_lock(&Winthread.lock);
 
             if (store_data(m, DATA_FILE) != 0) {

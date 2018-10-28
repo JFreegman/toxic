@@ -122,8 +122,8 @@ static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
 #ifdef PYTHON
     "/run",
 #endif /* PYTHON */
-    "/title",
     "/sendfile",
+    "/title",
 };
 
 /* Returns true if input command is in the special_commands array. */
