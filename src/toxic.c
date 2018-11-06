@@ -1332,7 +1332,7 @@ int main(int argc, char **argv)
 
 #endif /* PYTHON */
 
-    init_notify(60, 3000);
+    init_notify(60, user_settings->notification_timeout);
 
     /* screen/tmux auto-away timer */
     if (init_mplex_away_timer(m) == -1) {

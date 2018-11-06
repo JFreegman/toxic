@@ -58,6 +58,7 @@ static struct ui_strings {
     const char *native_colors;
     const char *autolog;
     const char *history_size;
+    const char *notification_timeout;
     const char *show_typing_self;
     const char *show_typing_other;
     const char *show_welcome_msg;
@@ -86,6 +87,7 @@ static struct ui_strings {
     "native_colors",
     "autolog",
     "history_size",
+    "notification_timeout",
     "show_typing_self",
     "show_typing_other",
     "show_welcome_msg",
@@ -114,6 +116,7 @@ static void ui_defaults(struct user_settings *settings)
     settings->bell_on_invite = 0;
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
+    settings->notification_timeout = 3000;
     settings->show_typing_self = SHOW_TYPING_ON;
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
@@ -372,6 +375,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &s->show_connection_msg);
 
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
+        config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
         config_setting_lookup_int(setting, ui_strings.nodeslist_update_freq, &s->nodeslist_update_freq);
         config_setting_lookup_int(setting, ui_strings.autosave_freq, &s->autosave_freq);
 

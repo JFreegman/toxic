@@ -49,6 +49,7 @@ struct user_settings {
 
     int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
+    int notification_timeout;
     int show_typing_self;  /* boolean */
     int show_typing_other; /* boolean */
     int show_welcome_msg;  /* boolean */
