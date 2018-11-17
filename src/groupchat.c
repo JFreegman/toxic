@@ -128,6 +128,8 @@ static void kill_groupchat_window(ToxWindow *self)
     del_window(self);
 }
 
+static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t groupnum);
+
 int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type)
 {
     if (groupnum > MAX_GROUPCHAT_NUM) {
@@ -141,6 +143,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
             groupchats[i].chatwin = add_window(m, self);
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
+            groupchats[i].num_offline_peers = 0;
             groupchats[i].type = type;
             groupchats[i].start_time = get_unix_time();
 
@@ -149,6 +152,8 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
             if (i == max_groupchat_index) {
                 ++max_groupchat_index;
             }
+
+            groupchat_onGroupNameListChange(self, m, groupnum);
 
             return 0;
         }
@@ -163,6 +168,7 @@ void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
     free(groupchats[groupnum].name_list);
     free(groupchats[groupnum].peer_list);
+    free(groupchats[groupnum].offline_peer_list);
     memset(&groupchats[groupnum], 0, sizeof(GroupChat));
 
     int i;
@@ -314,7 +320,7 @@ static void group_update_name_list(uint32_t groupnum)
 
     uint32_t i, count = 0;
 
-    for (i = 0; i < chat->max_idx; ++i) {
+    for (i = 0; i < chat->num_peers; ++i) {
         if (chat->peer_list[i].active) {
             memcpy(&chat->name_list[count * TOX_MAX_NAME_LENGTH], chat->peer_list[i].name, chat->peer_list[i].name_length + 1);
             ++count;
@@ -324,7 +330,7 @@ static void group_update_name_list(uint32_t groupnum)
     qsort(chat->name_list, count, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 }
 
-/* Reallocates groupnum's peer list. Increase is true if the list needs to grow.
+/* Reallocates groupnum's peer list.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
@@ -335,19 +341,36 @@ static int realloc_peer_list(GroupChat *chat, uint32_t num_peers)
         return -1;
     }
 
-    if (num_peers == 0) {
-        free(chat->peer_list);
-        chat->peer_list = NULL;
-        return 0;
-    }
-
     struct GroupPeer *tmp_list = realloc(chat->peer_list, num_peers * sizeof(struct GroupPeer));
 
-    if (!tmp_list) {
+    if (num_peers && !tmp_list) {
         return -1;
     }
 
     chat->peer_list = tmp_list;
+
+    return 0;
+}
+
+/* Reallocates groupnum's offline peer list.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+static int realloc_offline_peer_list(GroupChat *chat, uint32_t num_offline_peers)
+{
+    if (!chat) {
+        return -1;
+    }
+
+    struct GroupOfflinePeer *tmp_list = realloc(chat->offline_peer_list,
+                                        num_offline_peers * sizeof(struct GroupOfflinePeer));
+
+    if (num_offline_peers && !tmp_list) {
+        return -1;
+    }
+
+    chat->offline_peer_list = tmp_list;
 
     return 0;
 }
@@ -389,6 +412,56 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
     group_update_name_list(groupnum);
 }
 
+static int comp_last_active(const void *p1, const void *p2)
+{
+    uint64_t t1 = ((GroupOfflinePeer *)p1)->last_active;
+    uint64_t t2 = ((GroupOfflinePeer *)p2)->last_active;
+    return (t1 < t2) - (t1 > t2);
+}
+
+static void update_offline_peer_list(Tox *m, uint32_t groupnum, uint32_t num_offline_peers)
+{
+    GroupChat *chat = &groupchats[groupnum];
+
+    if (!chat) {
+        return;
+    }
+
+    realloc_offline_peer_list(chat, num_offline_peers);
+
+    uint32_t i;
+
+    for (i = 0; i < num_offline_peers; ++i) {
+        GroupOfflinePeer *offline_peer = &chat->offline_peer_list[i];
+
+        Tox_Err_Conference_Offline_Peer_Query err;
+        size_t length = tox_conference_offline_peer_get_name_size(m, groupnum, i, &err);
+
+        if (err != TOX_ERR_CONFERENCE_OFFLINE_PEER_QUERY_OK || length >= TOX_MAX_NAME_LENGTH) {
+            continue;
+        }
+
+        tox_conference_offline_peer_get_name(m, groupnum, i, (uint8_t *) offline_peer->name, &err);
+        offline_peer->name[length] = 0;
+
+        if (err != TOX_ERR_CONFERENCE_OFFLINE_PEER_QUERY_OK) {
+            continue;
+        }
+
+        uint64_t last_active = tox_conference_offline_peer_get_last_active(m, groupnum, i, &err);
+
+        if (err != TOX_ERR_CONFERENCE_OFFLINE_PEER_QUERY_OK) {
+            continue;
+        }
+
+        offline_peer->name_length = length;
+        offline_peer->last_active = last_active;
+    }
+
+    /* Sort with most recently active first */
+    qsort(chat->offline_peer_list, num_offline_peers, sizeof(GroupOfflinePeer), comp_last_active);
+}
+
 static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
     if (self->num != groupnum) {
@@ -400,19 +473,22 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
     }
 
     GroupChat *chat = &groupchats[groupnum];
-    Tox_Err_Conference_Peer_Query err;
 
+    Tox_Err_Conference_Peer_Query err;
     uint32_t num_peers = tox_conference_peer_count(m, groupnum, &err);
-    uint32_t old_num = chat->num_peers;
 
     if (err == TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
         chat->num_peers = num_peers;
-    } else {
-        num_peers = old_num;
+        update_peer_list(m, groupnum, num_peers);
     }
 
-    chat->max_idx = num_peers;
-    update_peer_list(m, groupnum, num_peers);
+    Tox_Err_Conference_Offline_Peer_Query err2;
+    uint32_t num_offline_peers = tox_conference_offline_peer_count(m, groupnum, &err2);
+
+    if (err2 == TOX_ERR_CONFERENCE_OFFLINE_PEER_QUERY_OK) {
+        chat->num_offline_peers = num_offline_peers;
+        update_offline_peer_list(m, groupnum, num_offline_peers);
+    }
 }
 
 static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
@@ -430,7 +506,7 @@ static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t gr
 
     size_t i;
 
-    for (i = 0; i < chat->max_idx; ++i) {
+    for (i = 0; i < chat->num_peers; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
 
         // Test against default tox name to prevent nick change spam on initial join (TODO: this is disgusting)
@@ -614,6 +690,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
         pthread_mutex_lock(&Winthread.lock);
         int num_peers = groupchats[self->num].num_peers;
+        int num_offline_peers = groupchats[self->num].num_offline_peers;
         pthread_mutex_unlock(&Winthread.lock);
 
         wmove(ctx->sidebar, 0, 1);
@@ -627,20 +704,48 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
         int i;
 
-        for (i = 0; i < num_peers && i < maxlines; ++i) {
+        for (i = 0; i < num_peers + num_offline_peers + 4 && i < maxlines; ++i) {
             wmove(ctx->sidebar, i + 2, 1);
 
             pthread_mutex_lock(&Winthread.lock);
-            uint32_t peer = i + groupchats[self->num].side_pos;
+            uint32_t peer_line = i + groupchats[self->num].side_pos;
             pthread_mutex_unlock(&Winthread.lock);
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
             int maxlen = SIDEBAR_WIDTH - 2;
 
-            pthread_mutex_lock(&Winthread.lock);
-            memcpy(tmpnck, &groupchats[self->num].name_list[peer * TOX_MAX_NAME_LENGTH], maxlen);
-            pthread_mutex_unlock(&Winthread.lock);
+            if (peer_line < num_peers) {
+                pthread_mutex_lock(&Winthread.lock);
+                memcpy(tmpnck, &groupchats[self->num].name_list[peer_line * TOX_MAX_NAME_LENGTH], maxlen);
+                pthread_mutex_unlock(&Winthread.lock);
+            } else {
+                if (num_offline_peers == 0) {
+                    continue;
+                }
+
+                if (peer_line == num_peers + 2) {
+                    wprintw(ctx->sidebar, "Offline: %d\n", num_offline_peers);
+                    continue;
+                }
+
+                if (peer_line == num_peers + 3) {
+                    mvwaddch(ctx->sidebar, i + 2, 0, ACS_LTEE);
+                    mvwhline(ctx->sidebar, i + 2, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
+                    continue;
+                }
+
+                uint32_t peernum = peer_line - (num_peers + 4);
+
+                if (peernum < 0 || peernum >= num_offline_peers) {
+                    continue;
+                }
+
+                pthread_mutex_lock(&Winthread.lock);
+                const GroupOfflinePeer *offline_peer = &groupchats[self->num].offline_peer_list[peernum];
+                memcpy(tmpnck, offline_peer->name, offline_peer->name_length + 1);
+                pthread_mutex_unlock(&Winthread.lock);
+            }
 
             tmpnck[maxlen] = '\0';
 
