@@ -126,7 +126,7 @@ static int complete_line_helper(ToxWindow *self, const void *list, size_t n_item
     snprintf(tmp, sizeof(tmp), "%s", ubuf);
     tmp[ctx->pos] = '\0';
 
-    const char *s = strrchr(tmp, ' ');
+    const char *s = dir_search ? strchr(tmp, ' ') : strrchr(tmp, ' ');
     char *sub = calloc(1, strlen(ubuf) + 1);
 
     if (sub == NULL) {
@@ -221,9 +221,19 @@ static int complete_line_helper(ToxWindow *self, const void *list, size_t n_item
     if (dir_search && *endchrs == '/') {
         const char *path_start = strchr(ubuf+1, '/');
 
-        if (!path_start) {  // should never happen
+        if (!path_start) {
+            path_start = strchr(ubuf+1, ' ');
+
+            if (!path_start) {
+                return -1;
+            }
+        }
+
+        if (strlen(path_start) < 2) {
             return -1;
         }
+
+        ++path_start;
 
         if (file_type(path_start) == FILE_TYPE_REGULAR) {
             endchrs = "";
