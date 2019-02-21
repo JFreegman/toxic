@@ -38,6 +38,12 @@ typedef struct GroupPeer {
     uint32_t   peernumber;
 } GroupPeer;
 
+typedef struct GroupOfflinePeer {
+    char       name[TOX_MAX_NAME_LENGTH];
+    size_t     name_length;
+    uint64_t   last_active;
+} GroupOfflinePeer;
+
 typedef struct {
     int chatwin;
     bool active;
@@ -46,10 +52,11 @@ typedef struct {
     time_t start_time;
 
     GroupPeer *peer_list;
-    size_t max_idx;
+    GroupOfflinePeer *offline_peer_list;
 
     char *name_list;
     size_t num_peers;
+    size_t num_offline_peers;
 
 } GroupChat;
 
