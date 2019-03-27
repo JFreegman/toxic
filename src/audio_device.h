@@ -31,7 +31,7 @@
 
 #define OPENAL_BUFS 5
 #define MAX_DEVICES 32
-#include <inttypes.h>
+
 #include "windows.h"
 
 typedef enum DeviceType {

@@ -23,7 +23,7 @@
 #ifndef NOTIFY_H
 #define NOTIFY_H
 
-#include <inttypes.h>
+#include <stdint.h>
 #include "windows.h"
 
 typedef enum _Notification {

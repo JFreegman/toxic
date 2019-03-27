@@ -30,6 +30,7 @@
 #include <time.h>
 #include <wchar.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #ifdef AUDIO
 #ifdef __APPLE__
