@@ -46,10 +46,10 @@ typedef struct {
     time_t start_time;
 
     GroupPeer *peer_list;
-    size_t max_idx;
+    uint32_t max_idx;
 
     char *name_list;
-    size_t num_peers;
+    uint32_t num_peers;
 
 } GroupChat;
 

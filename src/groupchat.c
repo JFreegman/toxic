@@ -428,7 +428,7 @@ static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t gr
         return;
     }
 
-    size_t i;
+    uint32_t i;
 
     for (i = 0; i < chat->max_idx; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
@@ -535,9 +535,9 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             sound_notify(self, notif_error, 0, NULL);
         }
     } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
-        int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
+        const int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
-        if (groupchats[self->num].side_pos < groupchats[self->num].num_peers - L) {
+        if (groupchats[self->num].side_pos < (int64_t) groupchats[self->num].num_peers - L) {
             ++groupchats[self->num].side_pos;
         }
     } else if (key == user_settings->key_peer_list_up) {
@@ -613,19 +613,19 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
 
         pthread_mutex_lock(&Winthread.lock);
-        int num_peers = groupchats[self->num].num_peers;
+        uint32_t num_peers = groupchats[self->num].num_peers;
         pthread_mutex_unlock(&Winthread.lock);
 
         wmove(ctx->sidebar, 0, 1);
         wattron(ctx->sidebar, A_BOLD);
-        wprintw(ctx->sidebar, "Peers: %d\n", num_peers);
+        wprintw(ctx->sidebar, "Peers: %"PRIu32"\n", num_peers);
         wattroff(ctx->sidebar, A_BOLD);
 
         mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
         mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
 
         int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
-        int i;
+        uint32_t i;
 
         for (i = 0; i < num_peers && i < maxlines; ++i) {
             wmove(ctx->sidebar, i + 2, 1);
