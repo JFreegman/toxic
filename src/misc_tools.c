@@ -539,6 +539,10 @@ int check_file_signature(const char *signature, size_t size, FILE *fp)
 /* sets window title in tab bar. */
 void set_window_title(ToxWindow *self, const char *title, int len)
 {
+    if (len <= 0 || !title) {
+        return;
+    }
+
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
 
     if (self->is_groupchat) { /* keep groupnumber in title */

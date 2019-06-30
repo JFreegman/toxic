@@ -132,7 +132,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
+    if (init_groupchat_win(prompt, m, groupnum, type, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_conference_delete(m, groupnum, NULL);
         return;

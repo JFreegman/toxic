@@ -129,7 +129,7 @@ static void kill_groupchat_window(ToxWindow *self)
     del_window(self);
 }
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type)
+int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type, const char *title, size_t title_length)
 {
     if (groupnum > MAX_GROUPCHAT_NUM) {
         return -1;
@@ -146,6 +146,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
             groupchats[i].start_time = get_unix_time();
 
             set_active_window_index(groupchats[i].chatwin);
+            set_window_title(self, title, title_length);
 
             if (i == max_groupchat_index) {
                 ++max_groupchat_index;

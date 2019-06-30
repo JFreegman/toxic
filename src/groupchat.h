@@ -56,7 +56,7 @@ typedef struct {
 /* Frees all Toxic associated data structures for a groupchat (does not call tox_conference_delete() ) */
 void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum);
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type);
+int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type, const char *title, size_t title_length);
 
 /* destroys and re-creates groupchat window with or without the peerlist */
 void redraw_groupchat_win(ToxWindow *self);

@@ -36,7 +36,7 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     if (argc < 1) {
         size_t tlen = tox_conference_get_title_size(m, self->num, &err);
 
-        if (err != TOX_ERR_CONFERENCE_TITLE_OK) {
+        if (err != TOX_ERR_CONFERENCE_TITLE_OK || tlen >= sizeof(title)) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
             return;
         }

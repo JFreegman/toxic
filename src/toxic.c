@@ -344,7 +344,23 @@ static void load_groups(ToxWindow *prompt, Tox *m)
             continue;
         }
 
-        if (init_groupchat_win(prompt, m, groupnum, type) == -1) {
+        Tox_Err_Conference_Title t_err;
+        size_t length = tox_conference_get_title_size(m, groupnum, &t_err);
+        uint8_t title[MAX_STR_SIZE];
+
+        if (t_err != TOX_ERR_CONFERENCE_TITLE_OK || length >= sizeof(title)) {
+            length = 0;
+        } else {
+            tox_conference_get_title(m, groupnum, title, &t_err);
+
+            if (t_err != TOX_ERR_CONFERENCE_TITLE_OK) {
+                length = 0;
+            }
+        }
+
+        title[length] = 0;
+
+        if (init_groupchat_win(prompt, m, groupnum, type, (const char *) title, length) == -1) {
             tox_conference_delete(m, groupnum, NULL);
             continue;
         }
