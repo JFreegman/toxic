@@ -919,8 +919,9 @@ on_error:
 
 void stop_current_call(ToxWindow *self)
 {
+    toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
+
     if (CallControl.pending_call) {
-        toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
         callback_call_canceled(self->num);
     } else {
         stop_transmission(&CallControl.calls[self->num], self->num);
