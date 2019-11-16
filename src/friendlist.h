@@ -93,4 +93,11 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber);
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void);
 
+/*
+ * Returns true if friend associated with `public_key` is in the block list.
+ *
+ * `public_key` must be at least TOX_PUBLIC_KEY_SIZE bytes.
+ */
+bool friend_is_blocked(const char *public_key);
+
 #endif /* end of include guard: FRIENDLIST_H */

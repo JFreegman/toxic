@@ -1240,6 +1240,26 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber)
     return Friends.list[friendnumber].connection_status;
 }
 
+/*
+ * Returns true if friend associated with `public_key` is in the block list.
+ *
+ * `public_key` must be at least TOX_PUBLIC_KEY_SIZE bytes.
+ */
+bool friend_is_blocked(const char *public_key)
+{
+    for (size_t i = 0; i < Blocked.max_idx; ++i) {
+        if (!Blocked.list[i].active) {
+            continue;
+        }
+
+        if (memcmp(public_key, Blocked.list[i].pub_key, TOX_PUBLIC_KEY_SIZE) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 ToxWindow *new_friendlist(void)
 {
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));

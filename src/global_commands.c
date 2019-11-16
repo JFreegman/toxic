@@ -133,7 +133,7 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 
         /* fallthrough */
         default:
-            errmsg = "Faile to add friend: Unknown error.";
+            errmsg = "Failed to add friend: Unknown error.";
             break;
     }
 
@@ -191,6 +191,11 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             }
 
             id_bin[i] = x;
+        }
+
+        if (friend_is_blocked(id_bin)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Friend is in your block list.");
+            return;
         }
 
         cmd_add_helper(self, m, id_bin, msg);
