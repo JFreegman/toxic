@@ -129,7 +129,8 @@ static void kill_groupchat_window(ToxWindow *self)
     del_window(self);
 }
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type, const char *title, size_t title_length)
+int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type, const char *title,
+                       size_t title_length)
 {
     if (groupnum > MAX_GROUPCHAT_NUM) {
         return -1;

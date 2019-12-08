@@ -236,9 +236,8 @@ void add_line_to_hist(ChatContext *ctx)
    resets line if at end of history */
 void fetch_hist_item(ChatContext *ctx, int key_dir)
 {
-    if(wcscmp(ctx->line, L"\0") != 0
-    && ctx->hst_pos == ctx->hst_tot)
-    {
+    if (wcscmp(ctx->line, L"\0") != 0
+            && ctx->hst_pos == ctx->hst_tot) {
         add_line_to_hist(ctx);
         ctx->hst_pos--;
     }

@@ -393,7 +393,7 @@ static void mplex_timer_handler(Tox *m)
     char status_str[MAX_STR_SIZE];
     char note_str[MAX_STR_SIZE];
     const char *status = new_status == TOX_USER_STATUS_AWAY ? "away" :
-                    new_status == TOX_USER_STATUS_BUSY ? "busy" : "online";
+                         new_status == TOX_USER_STATUS_BUSY ? "busy" : "online";
     snprintf(status_str, sizeof(status_str), "/status %s", status);
     snprintf(note_str, sizeof(status_str), "/note %s", new_note);
 

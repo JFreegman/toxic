@@ -219,10 +219,10 @@ static int complete_line_helper(ToxWindow *self, const void *list, size_t n_item
 
     /* If path points to a file with no extension don't append a forward slash */
     if (dir_search && *endchrs == '/') {
-        const char *path_start = strchr(ubuf+1, '/');
+        const char *path_start = strchr(ubuf + 1, '/');
 
         if (!path_start) {
-            path_start = strchr(ubuf+1, ' ');
+            path_start = strchr(ubuf + 1, ' ');
 
             if (!path_start) {
                 return -1;
@@ -279,7 +279,7 @@ static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const c
 
     char newline[MAX_STR_SIZE];
     snprintf(newline, sizeof(newline), "%s %s%s", cmd, homedir, path + 1);
-    snprintf(path, pathsize, "%s", &newline[cmdlen-1]);
+    snprintf(path, pathsize, "%s", &newline[cmdlen - 1]);
 
     wchar_t wline[MAX_STR_SIZE];
 

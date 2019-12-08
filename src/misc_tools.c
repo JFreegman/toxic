@@ -496,11 +496,13 @@ File_Type file_type(const char *path)
     switch (s.st_mode & S_IFMT) {
         case S_IFDIR:
             return FILE_TYPE_DIRECTORY;
+
         case S_IFREG:
             return FILE_TYPE_REGULAR;
+
         default:
             return FILE_TYPE_OTHER;
-   }
+    }
 }
 
 /* returns file size. If file doesn't exist returns 0. */

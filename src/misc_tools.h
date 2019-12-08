@@ -39,11 +39,10 @@
 #define net_to_host(x, y) hst_to_net(x, y)
 #endif
 
-typedef enum File_Type
-{
-   FILE_TYPE_REGULAR,
-   FILE_TYPE_DIRECTORY,
-   FILE_TYPE_OTHER,
+typedef enum File_Type {
+    FILE_TYPE_REGULAR,
+    FILE_TYPE_DIRECTORY,
+    FILE_TYPE_OTHER,
 } File_Type;
 
 
