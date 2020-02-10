@@ -3,7 +3,7 @@
        src="https://scan.coverity.com/projects/4975/badge.svg"/>
 </a>
 
-Toxic is a [Tox](https://tox.chat)-based instant messenging and video chat client.
+Toxic is a [Tox](https://tox.chat)-based instant messaging and video chat client.
 
 [![Toxic Screenshot](https://i.imgur.com/san99Z2.png "Home Screen")](https://i.imgur.com/san99Z2.png)
 

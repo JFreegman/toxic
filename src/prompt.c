@@ -547,7 +547,7 @@ static void print_welcome_msg(ToxWindow *self)
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 
-    const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messenging client.";
+    const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messaging client.";
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
     msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
