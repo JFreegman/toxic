@@ -491,7 +491,10 @@ bool file_exists(const char *path)
 File_Type file_type(const char *path)
 {
     struct stat s;
-    stat(path, &s);
+
+    if (stat(path, &s) == -1) {
+        return FILE_TYPE_OTHER;
+    }
 
     switch (s.st_mode & S_IFMT) {
         case S_IFDIR:
@@ -521,7 +524,7 @@ off_t file_size(const char *path)
    Returns 0 if they are the same, 1 if they differ, and -1 on error.
 
    On success this function will seek back to the beginning of fp */
-int check_file_signature(const char *signature, size_t size, FILE *fp)
+int check_file_signature(const unsigned char *signature, size_t size, FILE *fp)
 {
     char buf[size];
 

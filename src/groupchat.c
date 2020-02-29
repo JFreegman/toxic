@@ -301,7 +301,7 @@ static void group_update_name_list(uint32_t groupnum)
 {
     GroupChat *chat = &groupchats[groupnum];
 
-    if (!chat) {
+    if (!chat->active) {
         return;
     }
 
@@ -359,7 +359,7 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
 {
     GroupChat *chat = &groupchats[groupnum];
 
-    if (!chat) {
+    if (!chat->active) {
         return;
     }
 
@@ -403,6 +403,11 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
     }
 
     GroupChat *chat = &groupchats[groupnum];
+
+    if (!chat->active) {
+        return;
+    }
+
     Tox_Err_Conference_Peer_Query err;
 
     uint32_t num_peers = tox_conference_peer_count(m, groupnum, &err);
@@ -427,7 +432,7 @@ static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t gr
 
     GroupChat *chat = &groupchats[groupnum];
 
-    if (!chat) {
+    if (!chat->active) {
         return;
     }
 

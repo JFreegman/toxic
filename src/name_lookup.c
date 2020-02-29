@@ -292,7 +292,7 @@ void *lookup_thread_func(void *data)
     int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
 
     if (proxy_ret != 0) {
-        lookup_error(self, "Failed to set proxy (error %d)\n");
+        lookup_error(self, "Failed to set proxy (error %d)\n", proxy_ret);
         goto on_exit;
     }
 

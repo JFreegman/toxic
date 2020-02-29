@@ -112,7 +112,7 @@ int avatar_set(Tox *m, const char *path, size_t path_len)
         return -1;
     }
 
-    char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    unsigned char PNG_signature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
     if (check_file_signature(PNG_signature, sizeof(PNG_signature), fp) != 0) {
         fclose(fp);
