@@ -559,7 +559,7 @@ int store_data(Tox *m, const char *path)
             return -1;
         }
 
-        TOX_ERR_ENCRYPTION err;
+        Tox_Err_Encryption err;
         tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) user_password.pass, user_password.len,
                          (uint8_t *) enc_data, &err);
 
@@ -736,7 +736,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                     continue;
                 }
 
-                TOX_ERR_DECRYPTION pwerr;
+                Tox_Err_Decryption pwerr;
                 tox_pass_decrypt((uint8_t *) data, len, (uint8_t *) user_password.pass, pwlen,
                                  (uint8_t *) plain, &pwerr);
 
