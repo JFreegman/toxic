@@ -46,6 +46,7 @@
 
 #include "line_info.h"
 #include "settings.h"
+#include "misc_tools.h"
 
 #include <errno.h>
 
@@ -596,6 +597,8 @@ VideoDeviceError write_video_out(uint16_t width, uint16_t height,
                                  int32_t ystride, int32_t ustride, int32_t vstride,
                                  void *user_data)
 {
+    UNUSED_VAR(user_data);
+
     VideoDevice *device = video_devices_running[vdt_output][0];
 
     if (!device) {

@@ -114,6 +114,8 @@ static const char group_cmd_list[AC_NUM_GROUP_COMMANDS][MAX_CMDNAME_SIZE] = {
 #endif /* PYTHON */
 };
 
+static ToxWindow *new_group_chat(uint32_t groupnum);
+
 static void kill_groupchat_window(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
@@ -129,14 +131,14 @@ static void kill_groupchat_window(ToxWindow *self)
     del_window(self);
 }
 
-int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t type, const char *title,
+int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *title,
                        size_t title_length)
 {
     if (groupnum > MAX_GROUPCHAT_NUM) {
         return -1;
     }
 
-    ToxWindow *self = new_group_chat(m, groupnum);
+    ToxWindow *self = new_group_chat(groupnum);
 
     for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
@@ -162,7 +164,7 @@ int init_groupchat_win(ToxWindow *prompt, Tox *m, uint32_t groupnum, uint8_t typ
     return -1;
 }
 
-void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
+void free_groupchat(ToxWindow *self, uint32_t groupnum)
 {
     free(groupchats[groupnum].name_list);
     free(groupchats[groupnum].peer_list);
@@ -183,7 +185,7 @@ void free_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
 static void delete_groupchat(ToxWindow *self, Tox *m, uint32_t groupnum)
 {
     tox_conference_delete(m, groupnum, NULL);
-    free_groupchat(self, m, groupnum);
+    free_groupchat(self, groupnum);
 }
 
 /* destroys and re-creates groupchat window with or without the peerlist */
@@ -229,6 +231,8 @@ void redraw_groupchat_win(ToxWindow *self)
 static void groupchat_onGroupMessage(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
                                      Tox_Message_Type type, const char *msg, size_t len)
 {
+    UNUSED_VAR(len);
+
     if (self->num != groupnum) {
         return;
     }
@@ -426,6 +430,8 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
 static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
         const char *name, size_t length)
 {
+    UNUSED_VAR(length);
+
     if (self->num != groupnum) {
         return;
     }
@@ -496,7 +502,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ltr || key == '\n') {    /* char is printable */
-        input_new_char(self, key, x, y, x2, y2);
+        input_new_char(self, key, x, x2);
         return;
     }
 
@@ -504,7 +510,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
-    if (input_handle(self, key, x, y, x2, y2)) {
+    if (input_handle(self, key, x, x2)) {
         return;
     }
 
@@ -592,6 +598,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 static void groupchat_onDraw(ToxWindow *self, Tox *m)
 {
+    UNUSED_VAR(m);
+
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
@@ -708,7 +716,7 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-ToxWindow *new_group_chat(Tox *m, uint32_t groupnum)
+static ToxWindow *new_group_chat(uint32_t groupnum)
 {
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 

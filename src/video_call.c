@@ -28,6 +28,7 @@
 #include "global_commands.h"
 #include "line_info.h"
 #include "notify.h"
+#include "misc_tools.h"
 
 #include <stdbool.h>
 #include <curses.h>
@@ -56,6 +57,8 @@ static void print_err(ToxWindow *self, const char *error_str)
 
 ToxAV *init_video(ToxWindow *self, Tox *tox)
 {
+    UNUSED_VAR(tox);
+
     CallControl.video_errors = ve_None;
 
     CallControl.video_enabled = true;
@@ -126,6 +129,8 @@ void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_
                                  int32_t ystride, int32_t ustride, int32_t vstride,
                                  void *user_data)
 {
+    UNUSED_VAR(friend_number);
+
     write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
@@ -185,11 +190,16 @@ void on_video_receive_frame(ToxAV *av, uint32_t friend_number,
                             int32_t ystride, int32_t ustride, int32_t vstride,
                             void *user_data)
 {
+    UNUSED_VAR(av);
+
     write_video_device_callback(friend_number, width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
 void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(user_data);
+
     CallControl.video_bit_rate = video_bit_rate;
     toxav_video_set_bit_rate(CallControl.av, friend_number, CallControl.video_bit_rate, NULL);
 }
@@ -249,6 +259,10 @@ void callback_video_end(uint32_t friend_number)
  */
 void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argv);
+
     const char *error_str;
     Call *this_call = &CallControl.calls[self->num];
 
@@ -285,6 +299,9 @@ on_error:
 
 void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 1) {
@@ -322,6 +339,9 @@ on_error:
 /* This changes primary video device only */
 void cmd_change_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 2) {
@@ -372,6 +392,9 @@ on_error:
 
 void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 2) {

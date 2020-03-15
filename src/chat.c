@@ -172,8 +172,7 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     del_window(self);
 }
 
-static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const char *msg, size_t len,
-                                const char *nick, const char *timefrmt)
+static void recv_message_helper(ToxWindow *self, const char *msg, const char *nick, const char *timefrmt)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -189,8 +188,7 @@ static void recv_message_helper(ToxWindow *self, Tox *m, uint32_t num, const cha
     }
 }
 
-static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char *action, size_t len,
-                               const char *nick, const char *timefrmt)
+static void recv_action_helper(ToxWindow *self, const char *action, const char *nick, const char *timefrmt)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -208,6 +206,8 @@ static void recv_action_helper(ToxWindow *self, Tox *m, uint32_t num, const char
 
 static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, Tox_Message_Type type, const char *msg, size_t len)
 {
+    UNUSED_VAR(len);
+
     if (self->num != num) {
         return;
     }
@@ -219,17 +219,17 @@ static void chat_onMessage(ToxWindow *self, Tox *m, uint32_t num, Tox_Message_Ty
     get_time_str(timefrmt, sizeof(timefrmt));
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
-        recv_message_helper(self, m, num, msg, len, nick, timefrmt);
+        recv_message_helper(self, msg, nick, timefrmt);
         return;
     }
 
     if (type == TOX_MESSAGE_TYPE_ACTION) {
-        recv_action_helper(self, m, num, msg, len, nick, timefrmt);
+        recv_action_helper(self, msg, nick, timefrmt);
         return;
     }
 }
 
-static void chat_pause_file_transfers(Tox *m, uint32_t friendnum);
+static void chat_pause_file_transfers(uint32_t friendnum);
 static void chat_resume_file_senders(ToxWindow *self, Tox *m, uint32_t fnum);
 
 static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_Connection connection_status)
@@ -268,7 +268,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_C
             set_self_typingstatus(self, m, 0);
         }
 
-        chat_pause_file_transfers(m, num);
+        chat_pause_file_transfers(num);
 
         msg = "has gone offline";
         line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
@@ -278,6 +278,8 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_C
 
 static void chat_onTypingChange(ToxWindow *self, Tox *m, uint32_t num, bool is_typing)
 {
+    UNUSED_VAR(m);
+
     if (self->num != num) {
         return;
     }
@@ -287,6 +289,8 @@ static void chat_onTypingChange(ToxWindow *self, Tox *m, uint32_t num, bool is_t
 
 static void chat_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const char *nick, size_t length)
 {
+    UNUSED_VAR(m);
+
     if (self->num != num) {
         return;
     }
@@ -302,6 +306,8 @@ static void chat_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const char 
 
 static void chat_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, Tox_User_Status status)
 {
+    UNUSED_VAR(m);
+
     if (self->num != num) {
         return;
     }
@@ -312,6 +318,8 @@ static void chat_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, Tox_User_
 
 static void chat_onStatusMessageChange(ToxWindow *self, uint32_t num, const char *status, size_t length)
 {
+    UNUSED_VAR(length);
+
     if (self->num != num) {
         return;
     }
@@ -324,11 +332,13 @@ static void chat_onStatusMessageChange(ToxWindow *self, uint32_t num, const char
 
 static void chat_onReadReceipt(ToxWindow *self, Tox *m, uint32_t num, uint32_t receipt)
 {
+    UNUSED_VAR(num);
+
     cqueue_remove(self, m, receipt);
 }
 
 /* Stops active file transfers for this friend. Called when a friend goes offline */
-static void chat_pause_file_transfers(Tox *m, uint32_t friendnum)
+static void chat_pause_file_transfers(uint32_t friendnum)
 {
     ToxicFriend *friend = &Friends.list[friendnum];
 
@@ -436,6 +446,8 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
 static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
                                  const char *data, size_t length)
 {
+    UNUSED_VAR(position);
+
     if (friendnum != self->num) {
         return;
     }
@@ -704,6 +716,9 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
 
 void chat_onInvite(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -726,6 +741,9 @@ void chat_onInvite(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state
 
 void chat_onRinging(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -743,6 +761,9 @@ void chat_onRinging(ToxWindow *self, ToxAV *av, uint32_t friend_number, int stat
 
 void chat_onStarting(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -761,6 +782,9 @@ void chat_onStarting(ToxWindow *self, ToxAV *av, uint32_t friend_number, int sta
 
 void chat_onEnding(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -777,6 +801,9 @@ void chat_onEnding(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state
 
 void chat_onError(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -791,6 +818,9 @@ void chat_onError(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 
 void chat_onStart(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -809,6 +839,9 @@ void chat_onStart(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 
 void chat_onCancel(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -824,6 +857,9 @@ void chat_onCancel(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state
 
 void chat_onReject(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self  || self->num != friend_number) {
         return;
     }
@@ -838,6 +874,9 @@ void chat_onReject(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state
 
 void chat_onEnd(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(state);
+
     if (!self || self->num != friend_number) {
         return;
     }
@@ -986,7 +1025,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ltr || key == '\n') {    /* char is printable */
-        input_new_char(self, key, x, y, x2, y2);
+        input_new_char(self, key, x, x2);
 
         if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->connection != TOX_CONNECTION_NONE) {
             set_self_typingstatus(self, m, 1);
@@ -999,7 +1038,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
-    input_handle(self, key, x, y, x2, y2);
+    input_handle(self, key, x, x2);
 
     if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         int diff = -1;
@@ -1219,7 +1258,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     pthread_mutex_lock(&Winthread.lock);
-    refresh_file_transfer_progress(self, m, self->num);
+    refresh_file_transfer_progress(self, self->num);
     pthread_mutex_unlock(&Winthread.lock);
 }
 

@@ -30,6 +30,7 @@
 #include "notify.h"
 #include "friendlist.h"
 #include "chat.h"
+#include "misc_tools.h"
 
 #ifdef AUDIO
 
@@ -174,6 +175,8 @@ void terminate_audio(void)
 
 void read_device_callback(const int16_t *captured, uint32_t size, void *data)
 {
+    UNUSED_VAR(size);
+
     Toxav_Err_Send_Frame error;
     uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
     int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
@@ -280,6 +283,10 @@ int stop_transmission(Call *call, uint32_t friend_number)
  */
 void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(audio_enabled);
+    UNUSED_VAR(video_enabled);
+
     Tox *m = (Tox *) user_data;
     CallControl.pending_call = true;
     callback_recv_invite(m, friend_number);
@@ -287,6 +294,9 @@ void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 
 void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(user_data);
+
     CallControl.call_state = state;
 
     switch (state) {
@@ -350,6 +360,9 @@ void on_audio_receive_frame(ToxAV *av, uint32_t friend_number,
                             int16_t const *pcm, size_t sample_count,
                             uint8_t channels, uint32_t sampling_rate, void *user_data)
 {
+    UNUSED_VAR(av);
+    UNUSED_VAR(user_data);
+
     write_device_callback(friend_number, pcm, sample_count, channels, sampling_rate);
 }
 
@@ -457,6 +470,10 @@ void callback_call_ended(uint32_t friend_number)
  */
 void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argv);
+
     Toxav_Err_Call error;
     const char *error_str;
 
@@ -508,6 +525,10 @@ on_error:
 
 void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argv);
+
     Toxav_Err_Answer error;
     const char *error_str;
 
@@ -555,6 +576,10 @@ on_error:
 
 void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argv);
+
     const char *error_str;
 
     if (argc != 0) {
@@ -586,6 +611,10 @@ on_error:
 
 void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argv);
+
     const char *error_str = NULL;
 
     if (!CallControl.av) {
@@ -615,6 +644,9 @@ on_error:
 
 void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 1) {
@@ -655,6 +687,9 @@ on_error:
 /* This changes primary device only */
 void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 2) {
@@ -705,6 +740,9 @@ on_error:
 
 void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 2) {
@@ -782,6 +820,9 @@ on_error:
 
 void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 1) {
@@ -835,6 +876,9 @@ on_error:
 
 void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     const char *error_str;
 
     if (argc != 1) {
@@ -869,6 +913,9 @@ on_error:
 
 void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     char *error_str;
 
     if (argc != 1) {

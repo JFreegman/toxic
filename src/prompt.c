@@ -139,6 +139,8 @@ void kill_prompt_window(ToxWindow *self)
 /* callback: Updates own connection status in prompt statusbar */
 void on_self_connection_status(Tox *m, Tox_Connection connection_status, void *userdata)
 {
+    UNUSED_VAR(m);
+    UNUSED_VAR(userdata);
     StatusBar *statusbar = prompt->stb;
     statusbar->connection = connection_status;
 }
@@ -233,7 +235,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ltr || key == '\n') {    /* char is printable */
-        input_new_char(self, key, x, y, x2, y2);
+        input_new_char(self, key, x, x2);
         return;
     }
 
@@ -241,7 +243,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return;
     }
 
-    input_handle(self, key, x, y, x2, y2);
+    input_handle(self, key, x, x2);
 
     if (key == '\t') {    /* TAB key: auto-completes command */
         if (ctx->len > 1 && ctx->line[0] == '/') {
@@ -474,6 +476,9 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
 
 static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data, size_t length)
 {
+    UNUSED_VAR(m);
+    UNUSED_VAR(length);
+
     ChatContext *ctx = self->chatwin;
 
     char timefrmt[TIME_STR_SIZE];

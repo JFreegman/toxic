@@ -15,7 +15,6 @@ cc_binary(
         "-DPYTHON",
         "-DQRCODE",
         "-DVIDEO",
-        "-Wno-error=unused-result",
     ],
     deps = [
         "//c-toxcore",

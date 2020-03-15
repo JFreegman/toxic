@@ -38,7 +38,7 @@
 extern struct user_settings *user_settings;
 
 /* add a char to input field and buffer */
-void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
+void input_new_char(ToxWindow *self, wint_t key, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -94,7 +94,7 @@ static void input_delete(ToxWindow *self)
 }
 
 /* delete last typed word */
-static void input_del_word(ToxWindow *self, int x, int mx_x)
+static void input_del_word(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -139,7 +139,7 @@ static void input_yank(ToxWindow *self, int x, int mx_x)
 }
 
 /* moves cursor/line position to end of line in input field and buffer */
-static void input_mv_end(ToxWindow *self, int y, int mx_x)
+static void input_mv_end(ToxWindow *self, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -214,7 +214,7 @@ static void input_history(ToxWindow *self, wint_t key, int mx_x)
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
+bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
 {
     bool match = true;
 
@@ -241,7 +241,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
             break;
 
         case T_KEY_C_W:
-            input_del_word(self, x, mx_x);
+            input_del_word(self);
             break;
 
         case KEY_HOME:
@@ -251,7 +251,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y)
 
         case KEY_END:
         case T_KEY_C_E:
-            input_mv_end(self, y, mx_x);
+            input_mv_end(self, mx_x);
             break;
 
         case KEY_LEFT:

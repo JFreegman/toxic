@@ -430,6 +430,8 @@ static int extract_node(const char *line, struct Node *node)
 /* Loads the DHT nodeslist to memory from json encoded nodes file. */
 void *load_nodeslist_thread(void *data)
 {
+    UNUSED_VAR(data);
+
     char nodes_path[PATH_MAX];
     get_nodeslist_path(nodes_path, sizeof(nodes_path));
 

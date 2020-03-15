@@ -61,6 +61,8 @@ static void print_matches(ToxWindow *self, Tox *m, const void *list, size_t n_it
  */
 static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char (*matches)[MAX_STR_SIZE], int n)
 {
+    UNUSED_VAR(self);
+
     if (n == 1) {
         return snprintf(match, match_sz, "%s", matches[0]);
     }

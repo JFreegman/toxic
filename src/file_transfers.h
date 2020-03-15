@@ -75,7 +75,7 @@ void init_progress_bar(char *progline);
 void print_progress_bar(ToxWindow *self, double pct_done, double bps, uint32_t line_id);
 
 /* refreshes active file transfer status bars. */
-void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum);
+void refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnum);
 
 /* Returns a pointer to friendnum's FileTransfer struct associated with filenum.
  * Returns NULL if filenum is invalid.

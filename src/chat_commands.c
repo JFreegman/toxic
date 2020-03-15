@@ -38,6 +38,8 @@ extern FriendsList Friends;
 
 void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 2) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Requires type in|out and the file ID.");
         return;
@@ -80,6 +82,8 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
 void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
         return;
@@ -104,6 +108,10 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(argc);
+    UNUSED_VAR(argv);
+
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
@@ -132,7 +140,7 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, type, NULL, 0) == -1) {
+    if (init_groupchat_win(m, groupnum, type, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_conference_delete(m, groupnum, NULL);
         return;
@@ -142,6 +150,8 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File ID required.");
         return;
@@ -218,6 +228,8 @@ on_recv_error:
 
 void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     const char *errmsg = NULL;
 
     if (argc < 1) {

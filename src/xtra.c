@@ -21,6 +21,7 @@
  */
 
 #include "xtra.h"
+#include "misc_tools.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -179,6 +180,8 @@ static void handle_xdnd_drop(XClientMessageEvent *e)
 
 static void handle_xdnd_selection(XSelectionEvent *e)
 {
+    UNUSED_VAR(e);
+
     /* DnD succesfully finished, send finished and call callback */
     XEvent ev = {
         .xclient = {

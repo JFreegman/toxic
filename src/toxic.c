@@ -114,6 +114,8 @@ static time_t last_signal_time;
 
 static void catch_SIGINT(int sig)
 {
+    UNUSED_VAR(sig);
+
     time_t cur_time = get_unix_time();
 
     if (difftime(cur_time, last_signal_time) <= 1) {
@@ -125,7 +127,11 @@ static void catch_SIGINT(int sig)
 
 static void catch_SIGSEGV(int sig)
 {
-    freopen("/dev/tty", "w", stderr);    // make sure stderr is enabled since we may have disabled it
+    UNUSED_VAR(sig);
+
+    if (!freopen("/dev/tty", "w", stderr)) {    // make sure stderr is enabled since we may have disabled it
+        fprintf(stderr, "Warning: Failed to enable stderr\n");
+    }
     endwin();
     fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
     exit(EXIT_FAILURE);
@@ -133,6 +139,8 @@ static void catch_SIGSEGV(int sig)
 
 static void flag_window_resize(int sig)
 {
+    UNUSED_VAR(sig);
+
     Winthread.flag_resize = 1;
 }
 
@@ -198,7 +206,11 @@ void exit_toxic_success(Tox *m)
 void exit_toxic_err(const char *errmsg, int errcode)
 {
     free_global_data();
-    freopen("/dev/tty", "w", stderr);
+
+    if (!freopen("/dev/tty", "w", stderr)) {
+        fprintf(stderr, "Warning: Failed to open stderr\n");
+    }
+
     endwin();
     fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
     exit(EXIT_FAILURE);
@@ -318,7 +330,7 @@ static void load_friendlist(Tox *m)
     sort_friendlist_index();
 }
 
-static void load_groups(ToxWindow *prompt, Tox *m)
+static void load_groups(Tox *m)
 {
     size_t i;
     size_t num_chats = tox_conference_get_chatlist_size(m);
@@ -360,7 +372,7 @@ static void load_groups(ToxWindow *prompt, Tox *m)
 
         title[length] = 0;
 
-        if (init_groupchat_win(prompt, m, groupnum, type, (const char *) title, length) == -1) {
+        if (init_groupchat_win(m, groupnum, type, (const char *) title, length) == -1) {
             tox_conference_delete(m, groupnum, NULL);
             continue;
         }
@@ -456,7 +468,7 @@ static void first_time_encrypt(const char *msg)
     char ch[256] = {0};
 
     do {
-        system("clear");
+        clear_screen();
         printf("%s ", msg);
         fflush(stdout);
 
@@ -515,7 +527,7 @@ static void first_time_encrypt(const char *msg)
         user_password.data_is_encrypted = true;
     }
 
-    system("clear");
+    clear_screen();
 }
 
 /* Store Tox profile data to path.
@@ -705,7 +717,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
             int pweval = user_settings->password_eval[0];
 
             if (!pweval) {
-                system("clear");   // TODO: is this portable?
+                clear_screen();
                 printf("Enter password (q to quit) ");
             }
 
@@ -729,7 +741,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                 }
 
                 if (pwlen < MIN_PASSWORD_LEN) {
-                    system("clear");
+                    clear_screen();
                     sleep(1);
                     printf("Invalid password. Try again. ");
                     pweval = 0;
@@ -753,7 +765,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
                     break;
                 } else if (pwerr == TOX_ERR_DECRYPTION_FAILED) {
-                    system("clear");
+                    clear_screen();
                     sleep(1);
                     printf("Invalid password. Try again. ");
                     pweval = 0;
@@ -1220,6 +1232,8 @@ static void init_default_data_files(void)
 #ifdef X11
 void DnD_callback(const char *asdv, DropType dt)
 {
+    UNUSED_VAR(asdv);
+    UNUSED_VAR(dt);
     // if (dt != DT_plain)
     //     return;
 
@@ -1235,7 +1249,9 @@ int main(int argc, char **argv)
 
     /* Use the -b flag to enable stderr */
     if (!arg_opts.debug) {
-        freopen("/dev/null", "w", stderr);
+        if (!freopen("/dev/null", "w", stderr)) {
+            fprintf(stderr, "Warning: failed to enable stderr\n");
+        }
     }
 
     if (arg_opts.encrypt_data && arg_opts.unencrypt_data) {
@@ -1300,7 +1316,7 @@ int main(int argc, char **argv)
 
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m, !datafile_exists);
-    load_groups(prompt, m);
+    load_groups(m);
 
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {

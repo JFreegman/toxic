@@ -45,6 +45,8 @@ extern FriendsList Friends;
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
         return;
@@ -142,6 +144,8 @@ void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg
 
 void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Tox ID or address required.");
         return;
@@ -206,6 +210,8 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc != 1 || strlen(argv[1]) < 3) {
         avatar_unset(m);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Avatar has been unset.");
@@ -237,12 +243,18 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
 void cmd_clear(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(m);
+    UNUSED_VAR(argc);
+    UNUSED_VAR(argv);
+
     line_info_clear(self->chatwin->hst);
     force_refresh(window);
 }
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc != 3) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Require: <ip> <port> <key>");
         return;
@@ -290,6 +302,9 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
 void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
         return;
@@ -323,6 +338,8 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
 void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
@@ -358,7 +375,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    if (init_groupchat_win(prompt, m, groupnum, type, NULL, 0) == -1) {
+    if (init_groupchat_win(m, groupnum, type, NULL, 0) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_conference_delete(m, groupnum, NULL);
         return;
@@ -369,6 +386,8 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     const char *msg;
     struct chatlog *log = self->chatwin->log;
 
@@ -421,6 +440,10 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(argc);
+    UNUSED_VAR(argv);
+
     char id_string[TOX_ADDRESS_SIZE * 2 + 1];
     char bin_id[TOX_ADDRESS_SIZE];
     tox_self_get_address(m, (uint8_t *) bin_id);
@@ -436,6 +459,8 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 #ifdef QRCODE
 void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     char id_string[TOX_ADDRESS_SIZE * 2 + 1];
     char bin_id[TOX_ADDRESS_SIZE];
     tox_self_get_address(m, (uint8_t *) bin_id);
@@ -495,6 +520,8 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
         return;
@@ -520,6 +547,8 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     if (argc < 1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
         return;
@@ -555,16 +584,31 @@ void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
 void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argc);
+    UNUSED_VAR(argv);
+
     help_init_menu(self);
 }
 
 void cmd_quit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(argc);
+    UNUSED_VAR(argv);
+    UNUSED_VAR(self);
+
     exit_toxic_success(m);
 }
 
 void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+    UNUSED_VAR(argc);
+    UNUSED_VAR(argv);
+
     if (FrndRequests.num_requests == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending friend requests.");
         return;
@@ -597,6 +641,8 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
 void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
     const char *errmsg;
 
     lock_status();

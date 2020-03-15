@@ -24,10 +24,10 @@
 #define INPUT_H
 
 /* add a char to input field and buffer for given chatcontext */
-void input_new_char(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y);
+void input_new_char(ToxWindow *self, wint_t key, int x, int mx_x);
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, wint_t key, int x, int y, int mx_x, int mx_y);
+bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x);
 
 #endif /* INPUT_H */

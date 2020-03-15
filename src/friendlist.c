@@ -344,6 +344,10 @@ static void update_friend_last_online(uint32_t num, time_t timestamp)
 static void friendlist_onMessage(ToxWindow *self, Tox *m, uint32_t num, Tox_Message_Type type, const char *str,
                                  size_t length)
 {
+    UNUSED_VAR(self);
+    UNUSED_VAR(type);
+    UNUSED_VAR(length);
+
     if (num >= Friends.max_idx) {
         return;
     }
@@ -370,6 +374,8 @@ static void friendlist_onMessage(ToxWindow *self, Tox *m, uint32_t num, Tox_Mess
 
 static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_Connection connection_status)
 {
+    UNUSED_VAR(self);
+
     if (num >= Friends.max_idx) {
         return;
     }
@@ -392,6 +398,9 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num,
 
 static void friendlist_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const char *nick, size_t length)
 {
+    UNUSED_VAR(self);
+    UNUSED_VAR(length);
+
     if (num >= Friends.max_idx) {
         return;
     }
@@ -419,6 +428,9 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const
 
 static void friendlist_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, Tox_User_Status status)
 {
+    UNUSED_VAR(self);
+    UNUSED_VAR(m);
+
     if (num >= Friends.max_idx) {
         return;
     }
@@ -428,6 +440,8 @@ static void friendlist_onStatusChange(ToxWindow *self, Tox *m, uint32_t num, Tox
 
 static void friendlist_onStatusMessageChange(ToxWindow *self, uint32_t num, const char *note, size_t length)
 {
+    UNUSED_VAR(self);
+
     if (length > TOX_MAX_STATUS_MESSAGE_LENGTH || num >= Friends.max_idx) {
         return;
     }
@@ -438,6 +452,8 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, uint32_t num, cons
 
 void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
 {
+    UNUSED_VAR(self);
+
     realloc_friends(Friends.max_idx + 1);
     memset(&Friends.list[Friends.max_idx], 0, sizeof(ToxicFriend));
 
@@ -495,7 +511,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
 }
 
 /* Puts blocked friend back in friendlist. fnum is new friend number, bnum is blocked number. */
-static void friendlist_add_blocked(Tox *m, uint32_t fnum, uint32_t bnum)
+static void friendlist_add_blocked(uint32_t fnum, uint32_t bnum)
 {
     realloc_friends(Friends.max_idx + 1);
     memset(&Friends.list[Friends.max_idx], 0, sizeof(ToxicFriend));
@@ -536,6 +552,11 @@ static void friendlist_add_blocked(Tox *m, uint32_t fnum, uint32_t bnum)
 static void friendlist_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_t filenum,
                                   uint64_t file_size, const char *filename, size_t name_length)
 {
+    UNUSED_VAR(self);
+    UNUSED_VAR(file_size);
+    UNUSED_VAR(filename);
+    UNUSED_VAR(name_length);
+
     if (num >= Friends.max_idx) {
         return;
     }
@@ -563,6 +584,11 @@ static void friendlist_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_
 static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8_t type, const char *group_pub_key,
                                      uint16_t length)
 {
+    UNUSED_VAR(self);
+    UNUSED_VAR(type);
+    UNUSED_VAR(group_pub_key);
+    UNUSED_VAR(length);
+
     if (num >= Friends.max_idx) {
         return;
     }
@@ -586,7 +612,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
 }
 
 /* move friendlist/blocklist cursor up and down */
-static void select_friend(ToxWindow *self, wint_t key, int *selected, int num)
+static void select_friend(wint_t key, int *selected, int num)
 {
     if (num <= 0) {
         return;
@@ -656,7 +682,7 @@ static void delete_friend(Tox *m, uint32_t f_num)
 }
 
 /* activates delete friend popup */
-static void del_friend_activate(ToxWindow *self, Tox *m, uint32_t f_num)
+static void del_friend_activate(uint32_t f_num)
 {
     PendingDelete.popup = newwin(3, 22 + TOXIC_MAX_NAME_LENGTH, 8, 8);
     PendingDelete.active = true;
@@ -666,7 +692,7 @@ static void del_friend_activate(ToxWindow *self, Tox *m, uint32_t f_num)
 static void delete_blocked_friend(uint32_t bnum);
 
 /* deactivates delete friend popup and deletes friend if instructed */
-static void del_friend_deactivate(ToxWindow *self, Tox *m, wint_t key)
+static void del_friend_deactivate(Tox *m, wint_t key)
 {
     if (key == 'y') {
         if (blocklist_view == 0) {
@@ -791,7 +817,7 @@ static void unblock_friend(Tox *m, uint32_t bnum)
         return;
     }
 
-    friendlist_add_blocked(m, friendnum, bnum);
+    friendlist_add_blocked(friendnum, bnum);
     delete_blocked_friend(bnum);
     sort_blocklist_index();
     sort_friendlist_index();
@@ -829,7 +855,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     /* lock screen and force decision on deletion popup */
     if (PendingDelete.active) {
         if (key == 'y' || key == 'n') {
-            del_friend_deactivate(self, m, key);
+            del_friend_deactivate(m, key);
         }
 
         return;
@@ -860,7 +886,7 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             break;
 
         case KEY_DC:
-            del_friend_activate(self, m, f);
+            del_friend_activate(f);
             break;
 
         case 'b':
@@ -879,9 +905,9 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
         default:
             if (blocklist_view == 0) {
-                select_friend(self, key, &Friends.num_selected, Friends.num_friends);
+                select_friend(key, &Friends.num_selected, Friends.num_friends);
             } else {
-                select_friend(self, key, &Blocked.num_selected, Blocked.num_blocked);
+                select_friend(key, &Blocked.num_selected, Blocked.num_blocked);
             }
 
             break;
@@ -892,6 +918,8 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 static void blocklist_onDraw(ToxWindow *self, Tox *m, int y2, int x2)
 {
+    UNUSED_VAR(m);
+
     wattron(self->window, A_BOLD);
     wprintw(self->window, " Blocked: ");
     wattroff(self->window, A_BOLD);
@@ -1199,13 +1227,12 @@ void disable_chatwin(uint32_t f_num)
 #ifdef AUDIO
 static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, int state)
 {
-    assert(0);
+    UNUSED_VAR(self);
 
     if (friend_number >= Friends.max_idx) {
         return;
     }
 
-    assert(0);
     Tox *m = toxav_get_tox(av);
 
     if (Friends.list[friend_number].chatwin == -1) {

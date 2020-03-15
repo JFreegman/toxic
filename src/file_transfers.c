@@ -87,7 +87,7 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
     line_info_set(self, line_id, full_line);
 }
 
-static void refresh_progress_helper(ToxWindow *self, Tox *m, struct FileTransfer *ft)
+static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft)
 {
     if (ft->state == FILE_TRANSFER_INACTIVE) {
         return;
@@ -107,13 +107,13 @@ static void refresh_progress_helper(ToxWindow *self, Tox *m, struct FileTransfer
 }
 
 /* refreshes active file transfer status bars. */
-void refresh_file_transfer_progress(ToxWindow *self, Tox *m, uint32_t friendnum)
+void refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnum)
 {
     size_t i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        refresh_progress_helper(self, m, &Friends.list[friendnum].file_receiver[i]);
-        refresh_progress_helper(self, m, &Friends.list[friendnum].file_sender[i]);
+        refresh_progress_helper(self, &Friends.list[friendnum].file_receiver[i]);
+        refresh_progress_helper(self, &Friends.list[friendnum].file_sender[i]);
     }
 }
 

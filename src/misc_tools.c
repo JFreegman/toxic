@@ -40,6 +40,13 @@
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;
 
+void clear_screen(void)
+{
+    if (system("clear") != 0) {
+        fprintf(stderr, "Warning: system() failed to clear screen\n");
+    }
+}
+
 void hst_to_net(uint8_t *num, uint16_t numbytes)
 {
 #ifndef WORDS_BIGENDIAN

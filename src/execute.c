@@ -145,7 +145,7 @@ static bool is_special_command(const char *input)
  *
  * Returns the number of arguments.
  */
-static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
+static int parse_special_command(const char *input, char (*args)[MAX_STR_SIZE])
 {
     int len = strlen(input);
     int s = char_find(0, input, ' ');
@@ -167,10 +167,10 @@ static int parse_special_command(WINDOW *w, ToxWindow *self, const char *input, 
  *
  * Returns the number of arguments.
  */
-static int parse_command(WINDOW *w, ToxWindow *self, const char *input, char (*args)[MAX_STR_SIZE])
+static int parse_command(const char *input, char (*args)[MAX_STR_SIZE])
 {
     if (is_special_command(input)) {
-        return parse_special_command(w, self, input, args);
+        return parse_special_command(input, args);
     }
 
     char *cmd = strdup(input);
@@ -227,7 +227,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
     }
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE];
-    int num_args = parse_command(w, self, input, args);
+    int num_args = parse_command(input, args);
 
     if (num_args <= 0) {
         return;

@@ -233,6 +233,8 @@ static int process_response(struct Recv_Curl_Data *recv_data)
 
 void *lookup_thread_func(void *data)
 {
+    UNUSED_VAR(data);
+
     ToxWindow *self = t_data.self;
 
     char input_domain[MAX_STR_SIZE];

@@ -39,12 +39,16 @@
 #define net_to_host(x, y) hst_to_net(x, y)
 #endif
 
+#define UNUSED_VAR(x) ((void) x)
+
 typedef enum File_Type {
     FILE_TYPE_REGULAR,
     FILE_TYPE_DIRECTORY,
     FILE_TYPE_OTHER,
 } File_Type;
 
+
+void clear_screen(void);
 
 void hst_to_net(uint8_t *num, uint16_t numbytes);
 

@@ -50,6 +50,8 @@ extern struct user_settings *user_settings;
 /* CALLBACKS START */
 void on_friend_request(Tox *m, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) data, length);
 
@@ -62,6 +64,8 @@ void on_friend_request(Tox *m, const uint8_t *public_key, const uint8_t *data, s
 
 void on_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection connection_status, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onConnectionChange != NULL) {
             windows[i]->onConnectionChange(windows[i], m, friendnumber, connection_status);
@@ -71,6 +75,8 @@ void on_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection c
 
 void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     if (user_settings->show_typing_other == SHOW_TYPING_OFF) {
         return;
     }
@@ -85,6 +91,8 @@ void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userd
 void on_friend_message(Tox *m, uint32_t friendnumber, Tox_Message_Type type, const uint8_t *string, size_t length,
                        void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
 
@@ -97,6 +105,8 @@ void on_friend_message(Tox *m, uint32_t friendnumber, Tox_Message_Type type, con
 
 void on_friend_name(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(nick, sizeof(nick), (const char *) string, length);
     filter_str(nick, length);
@@ -112,6 +122,9 @@ void on_friend_name(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t
 
 void on_friend_status_message(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+    UNUSED_VAR(m);
+
     char msg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
     filter_str(msg, length);
@@ -125,6 +138,8 @@ void on_friend_status_message(Tox *m, uint32_t friendnumber, const uint8_t *stri
 
 void on_friend_status(Tox *m, uint32_t friendnumber, Tox_User_Status status, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onStatusChange != NULL) {
             windows[i]->onStatusChange(windows[i], m, friendnumber, status);
@@ -146,6 +161,8 @@ void on_friend_added(Tox *m, uint32_t friendnumber, bool sort)
 void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, Tox_Message_Type type,
                            const uint8_t *message, size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
 
@@ -159,6 +176,8 @@ void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, To
 void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *group_pub_key,
                           size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupInvite != NULL) {
             windows[i]->onGroupInvite(windows[i], m, friendnumber, type, (char *) group_pub_key, length);
@@ -168,6 +187,8 @@ void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type typ
 
 void on_conference_peer_list_changed(Tox *m, uint32_t groupnumber, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupNameListChange != NULL) {
             windows[i]->onGroupNameListChange(windows[i], m, groupnumber);
@@ -178,6 +199,8 @@ void on_conference_peer_list_changed(Tox *m, uint32_t groupnumber, void *userdat
 void on_conference_peer_name(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *name,
                              size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(nick, sizeof(nick), (const char *) name, length);
     filter_str(nick, length);
@@ -192,6 +215,8 @@ void on_conference_peer_name(Tox *m, uint32_t groupnumber, uint32_t peernumber, 
 void on_conference_title(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *title, size_t length,
                          void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     char data[MAX_STR_SIZE + 1];
     length = copy_tox_str(data, sizeof(data), (const char *) title, length);
 
@@ -205,6 +230,8 @@ void on_conference_title(Tox *m, uint32_t groupnumber, uint32_t peernumber, cons
 void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position,
                            size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
 
     if (!ft) {
@@ -224,8 +251,10 @@ void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, u
 }
 
 void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position,
-                        const uint8_t *data, size_t length, void *user_data)
+                        const uint8_t *data, size_t length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
 
     if (!ft) {
@@ -242,6 +271,8 @@ void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint
 void on_file_recv_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, Tox_File_Control control,
                           void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
 
     if (!ft) {
@@ -263,6 +294,8 @@ void on_file_recv_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, To
 void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
                   const uint8_t *filename, size_t filename_length, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     /* We don't care about receiving avatars */
     if (kind != TOX_FILE_KIND_DATA) {
         tox_file_control(m, friendnumber, filenumber, TOX_FILE_CONTROL_CANCEL, NULL);
@@ -279,6 +312,8 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
 
 void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata)
 {
+    UNUSED_VAR(userdata);
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onReadReceipt != NULL) {
             windows[i]->onReadReceipt(windows[i], m, friendnumber, receipt);
@@ -647,7 +682,7 @@ void kill_all_windows(Tox *m)
         if (windows[i]->is_chat) {
             kill_chat_window(windows[i], m);
         } else if (windows[i]->is_groupchat) {
-            free_groupchat(windows[i], m, windows[i]->num);
+            free_groupchat(windows[i], windows[i]->num);
         }
     }
 
