@@ -33,9 +33,12 @@
 
 typedef struct GroupPeer {
     bool       active;
+
+    uint8_t    pubkey[TOX_PUBLIC_KEY_SIZE];
+    uint32_t   peernumber;
+
     char       name[TOX_MAX_NAME_LENGTH];
     size_t     name_length;
-    uint32_t   peernumber;
 } GroupPeer;
 
 typedef struct {

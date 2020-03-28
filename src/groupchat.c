@@ -164,11 +164,25 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *titl
     return -1;
 }
 
+static void free_peer(GroupPeer *peer)
+{
+}
+
 void free_groupchat(ToxWindow *self, uint32_t groupnum)
 {
-    free(groupchats[groupnum].name_list);
-    free(groupchats[groupnum].peer_list);
-    memset(&groupchats[groupnum], 0, sizeof(GroupChat));
+    GroupChat *chat = &groupchats[groupnum];
+
+    for (uint32_t i = 0; i < chat->num_peers; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (peer->active) {
+            free_peer(peer);
+        }
+    }
+
+    free(chat->name_list);
+    free(chat->peer_list);
+    memset(chat, 0, sizeof(GroupChat));
 
     int i;
 
@@ -331,7 +345,7 @@ static void group_update_name_list(uint32_t groupnum)
     qsort(chat->name_list, count, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
 }
 
-/* Reallocates groupnum's peer list. Increase is true if the list needs to grow.
+/* Reallocates groupnum's peer list.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
@@ -359,7 +373,21 @@ static int realloc_peer_list(GroupChat *chat, uint32_t num_peers)
     return 0;
 }
 
-static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
+static bool find_peer_by_pubkey(GroupPeer *list, uint32_t num_peers, uint8_t *pubkey, uint32_t *idx)
+{
+    for (uint32_t i = 0; i < num_peers; ++i) {
+        GroupPeer *peer = &list[i];
+
+        if (peer->active && memcmp(peer->pubkey, pubkey, TOX_PUBLIC_KEY_SIZE) == 0) {
+            *idx = i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers, uint32_t old_num_peers)
 {
     GroupChat *chat = &groupchats[groupnum];
 
@@ -367,14 +395,36 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
         return;
     }
 
+    GroupPeer *old_peer_list = malloc(old_num_peers * sizeof(GroupPeer));
+
+    if (!old_peer_list) {
+        exit_toxic_err("failed in update_peer_list", FATALERR_MEMORY);
+        return;
+    }
+
+    memcpy(old_peer_list, chat->peer_list, old_num_peers * sizeof(GroupPeer));
+
     realloc_peer_list(chat, num_peers);
+    memset(chat->peer_list, 0, num_peers * sizeof(GroupPeer));
 
-    uint32_t i;
-
-    for (i = 0; i < num_peers; ++i) {
+    for (uint32_t i = 0; i < num_peers; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
 
         Tox_Err_Conference_Peer_Query err;
+        tox_conference_peer_get_public_key(m, groupnum, i, peer->pubkey, &err);
+
+        if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
+            continue;
+        }
+
+        uint32_t j;
+
+        if (find_peer_by_pubkey(old_peer_list, old_num_peers, peer->pubkey, &j)) {
+            GroupPeer *old_peer = &old_peer_list[j];
+            memcpy(peer, old_peer, sizeof(GroupPeer));
+            old_peer->active = false;
+        }
+
         size_t length = tox_conference_peer_get_name_size(m, groupnum, i, &err);
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK || length >= TOX_MAX_NAME_LENGTH) {
@@ -392,6 +442,16 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers)
         peer->name_length = length;
         peer->peernumber = i;
     }
+
+    for (uint32_t i = 0; i < old_num_peers; ++i) {
+        GroupPeer *old_peer = &old_peer_list[i];
+
+        if (old_peer->active) {
+            free_peer(old_peer);
+        }
+    }
+
+    free(old_peer_list);
 
     group_update_name_list(groupnum);
 }
@@ -424,7 +484,7 @@ static void groupchat_onGroupNameListChange(ToxWindow *self, Tox *m, uint32_t gr
     }
 
     chat->max_idx = num_peers;
-    update_peer_list(m, groupnum, num_peers);
+    update_peer_list(m, groupnum, num_peers, old_num);
 }
 
 static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t groupnum, uint32_t peernum,
@@ -447,7 +507,6 @@ static void groupchat_onGroupPeerNameChange(ToxWindow *self, Tox *m, uint32_t gr
     for (i = 0; i < chat->max_idx; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
 
-        // Test against default tox name to prevent nick change spam on initial join (TODO: this is disgusting)
         if (peer->active && peer->peernumber == peernum && peer->name_length > 0) {
             ChatContext *ctx = self->chatwin;
             char timefrmt[TIME_STR_SIZE];
