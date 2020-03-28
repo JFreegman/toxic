@@ -142,6 +142,11 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *titl
 
     for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
+            // FIXME: it is assumed at various points in the code that
+            // toxcore's groupnums agree with toxic's indices to groupchats;
+            // probably it so happens that this will (at least typically) be
+            // the case, because toxic and tox maintain the indices in
+            // parallel ways. But it isn't guaranteed by the API.
             groupchats[i].chatwin = add_window(m, self);
             groupchats[i].active = true;
             groupchats[i].num_peers = 0;
