@@ -5,17 +5,25 @@ project()
 
 cc_binary(
     name = "toxic",
-    srcs = glob([
-        "src/*.c",
-        "src/*.h",
-    ]),
+    srcs = glob(
+        [
+            "src/*.c",
+            "src/*.h",
+        ],
+        exclude = ["src/video*"],
+    ) + select({
+        "//tools/config:linux": glob(["src/video*"]),
+        "//tools/config:osx": [],
+    }),
     copts = [
         "-DAUDIO",
         "-DPACKAGE_DATADIR='\"data\"'",
         "-DPYTHON",
         "-DQRCODE",
-        "-DVIDEO",
-    ],
+    ] + select({
+        "//tools/config:linux": ["-DVIDEO"],
+        "//tools/config:osx": [],
+    }),
     deps = [
         "//c-toxcore",
         "@curl",
@@ -25,6 +33,8 @@ cc_binary(
         "@ncurses",
         "@openal",
         "@python3//:python",
-        "@x11",
-    ],
+    ] + select({
+        "//tools/config:linux": ["@x11"],
+        "//tools/config:osx": [],
+    }),
 )

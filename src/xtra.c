@@ -23,6 +23,8 @@
 #include "xtra.h"
 #include "misc_tools.h"
 
+#ifndef __APPLE__
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
@@ -419,3 +421,5 @@ void terminate_xtra(void)
 
     while (Xtra.display); /* Wait for termination */
 }
+
+#endif /* !__APPLE__ */

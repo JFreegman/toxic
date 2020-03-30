@@ -29,17 +29,12 @@
 #include "line_info.h"
 #include "settings.h"
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
 #include <AL/al.h>
 #include <AL/alc.h>
 /* compatibility with older versions of OpenAL */
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 #include <AL/alext.h>
 #endif /* ALC_ALL_DEVICES_SPECIFIER */
-#endif /* __APPLE__ */
 
 #include <stdbool.h>
 #include <string.h>
