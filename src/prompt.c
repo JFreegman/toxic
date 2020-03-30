@@ -220,6 +220,8 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
+    UNUSED_VAR(y);
+
     if (x2 <= 0 || y2 <= 0) {
         return;
     }
@@ -416,7 +418,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     int y, x;
     getyx(self->window, y, x);
-    (void) x;
+
+    UNUSED_VAR(x);
 
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
@@ -508,7 +511,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
         exit_toxic_err("failed in prompt_init_statusbar", FATALERR_CURSES);
     }
 
-    (void) y2;
+    UNUSED_VAR(y2);
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;

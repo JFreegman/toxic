@@ -270,7 +270,8 @@ static void line_info_check_queue(ToxWindow *self)
     int y, y2, x, x2;
     getmaxyx(self->window, y2, x2);
     getyx(self->chatwin->history, y, x);
-    (void) x;
+
+    UNUSED_VAR(x);
 
     if (x2 <= SIDEBAR_WIDTH) {
         return;
@@ -567,7 +568,9 @@ static void line_info_page_up(ToxWindow *self, struct history *hst)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
-    (void) x2;
+
+    UNUSED_VAR(x2);
+
     int jump_dist = y2 / 2;
     int i;
 
@@ -580,7 +583,9 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
-    (void) x2;
+
+    UNUSED_VAR(x2);
+
     int jump_dist = y2 / 2;
     int i;
 

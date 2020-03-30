@@ -28,6 +28,7 @@
 
 #include "line_info.h"
 #include "settings.h"
+#include "misc_tools.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -456,7 +457,7 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
     /*
      * NOTE: We only need to poll input devices for data.
      */
-    (void)arg;
+    UNUSED_VAR(arg);
     uint32_t i;
     int32_t sample = 0;
 

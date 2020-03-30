@@ -138,7 +138,8 @@ static void help_draw_bottom_menu(WINDOW *win)
 {
     int y2, x2;
     getmaxyx(win, y2, x2);
-    (void) x2;
+
+    UNUSED_VAR(x2);
 
     wmove(win, y2 - 2, 1);
 

@@ -235,7 +235,7 @@ void graceful_clear(void)
 
 void *do_playing(void *_p)
 {
-    (void)_p;
+    UNUSED_VAR(_p);
 
     while (true) {
         control_lock();
@@ -334,7 +334,7 @@ int play_source(uint32_t source, uint32_t buffer, bool looping)
 #elif BOX_NOTIFY
 void *do_playing(void *_p)
 {
-    (void)_p;
+    UNUSED_VAR(_p);
 
     while (true) {
         control_lock();

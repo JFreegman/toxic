@@ -232,7 +232,7 @@ void *event_loop(void *p)
 {
     /* Handle events like a real nigga */
 
-    (void) p; /* DINDUNOTHIN */
+    UNUSED_VAR(p); /* DINDUNOTHIN */
 
     XEvent event;
     int pending;

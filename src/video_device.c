@@ -662,7 +662,7 @@ void *video_thread_poll(void *arg)  // TODO: maybe use thread for every input so
     /*
      * NOTE: We only need to poll input devices for data.
      */
-    (void)arg;
+    UNUSED_VAR(arg);
     uint32_t i;
 
     while (1) {

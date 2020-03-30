@@ -488,6 +488,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
+    UNUSED_VAR(y);
+
     if (x2 <= 0 || y2 <= 0) {
         return;
     }
@@ -666,7 +668,9 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
     int y, x;
     getyx(self->window, y, x);
-    (void) x;
+
+    UNUSED_VAR(x);
+
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y + 1, new_x);
 
