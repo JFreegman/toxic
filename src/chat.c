@@ -1371,7 +1371,6 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
     ret->onEnd = &chat_onEnd;
 
     ret->is_call = false;
-    ret->device_selection[0] = ret->device_selection[1] = -1;
     ret->ringing_sound = -1;
 #endif /* AUDIO */
 

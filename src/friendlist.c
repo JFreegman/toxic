@@ -1320,7 +1320,6 @@ ToxWindow *new_friendlist(void)
     ret->onEnd = &friendlist_onAV;
 
     ret->is_call = false;
-    ret->device_selection[0] = ret->device_selection[1] = -1;
 #endif /* AUDIO */
 
     ret->num = -1;

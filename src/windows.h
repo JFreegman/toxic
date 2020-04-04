@@ -146,15 +146,8 @@ struct ToxWindow {
     void(*onEnd)(ToxWindow *, ToxAV *, uint32_t, int);
     void(*onWriteDevice)(ToxWindow *, Tox *, uint32_t, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
-    int device_selection[2]; /* -1 if not set, if set uses these selections instead of primary device */
     bool is_call;
     int ringing_sound;
-
-#ifdef VIDEO
-
-    int video_device_selection[2]; /* -1 if not set, if set uses these selections instead of primary video device */
-
-#endif /* VIDEO */
 
 #endif /* AUDIO */
 

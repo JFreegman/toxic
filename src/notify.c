@@ -169,7 +169,7 @@ void m_open_device(void)
     }
 
     /* Blah error check */
-    open_primary_device(output, &Control.device_idx, 48000, 20, 1);
+    open_output_device(&Control.device_idx, 48000, 20, 1);
 
     device_opened = true;
 }

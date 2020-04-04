@@ -1346,12 +1346,12 @@ int main(int argc, char **argv)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     }
 
-    set_primary_device(input, user_settings->audio_in_dev);
-    set_primary_device(output, user_settings->audio_out_dev);
+    set_al_device(input, user_settings->audio_in_dev);
+    set_al_device(output, user_settings->audio_out_dev);
 
 #elif SOUND_NOTIFY
 
-    if (init_devices() == de_InternalError) {
+    if (init_audio() == de_InternalError) {
         queue_init_message("Failed to init audio devices");
     }
 
