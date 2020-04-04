@@ -749,11 +749,7 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     const char *error_str;
 
     if (argc != 1) {
-        if (argc < 1) {
-            error_str = "Type must be specified!";
-        } else {
-            error_str = "Only two arguments allowed!";
-        }
+        error_str = "Specify type: \"/mute in\" or \"/mute out\".";
 
         goto on_error;
     }

@@ -126,17 +126,25 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    if (type != TOX_CONFERENCE_TYPE_TEXT) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio groups.");
-        return;
-    }
+    uint32_t groupnum ;
 
-    Tox_Err_Conference_Join err;
+    if (type == TOX_CONFERENCE_TYPE_TEXT) {
+        Tox_Err_Conference_Join err;
+        groupnum = tox_conference_join(m, self->num, (const uint8_t *) groupkey, length, &err);
 
-    uint32_t groupnum = tox_conference_join(m, self->num, (const uint8_t *) groupkey, length, &err);
+        if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);
+            return;
+        }
+    } else if (type == TOX_CONFERENCE_TYPE_AV) {
+        groupnum = toxav_join_av_groupchat(m, self->num, (const uint8_t *) groupkey, length, audio_group_callback, NULL);
 
-    if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);
+        if (groupnum == (uint32_t) -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio group chat instance failed to initialize");
+            return;
+        }
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown group type %d", type);
         return;
     }
 
@@ -146,6 +154,11 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
+    if (type == TOX_CONFERENCE_TYPE_AV) {
+        if (!init_group_audio_input(m, groupnum)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
+        }
+    }
 }
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

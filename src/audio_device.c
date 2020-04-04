@@ -251,6 +251,31 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
 }
 #endif
 
+DeviceError set_source_position(uint32_t device_idx, float x, float y, float z)
+{
+    if (device_idx >= MAX_DEVICES) {
+        return de_InvalidSelection;
+    }
+
+    Device *device = &audio_state->devices[output][device_idx];
+
+    if (!device->active) {
+        return de_DeviceNotActive;
+    }
+
+    lock(output);
+
+    alSource3f(device->source, AL_POSITION, x, y, z);
+
+    unlock(output);
+
+    if (!audio_state->al_device[output] || alcGetError(audio_state->al_device[output]) != AL_NO_ERROR) {
+        return de_AlError;
+    }
+
+    return de_None;
+}
+
 static DeviceError close_al_device(DeviceType type)
 {
     if (audio_state->al_device[type] == NULL) {

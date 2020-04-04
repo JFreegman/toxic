@@ -27,7 +27,6 @@
 #include "windows.h"
 
 #define SIDEBAR_WIDTH 16
-#define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
 #define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
 #define GROUP_EVENT_WAIT 3
 
@@ -39,7 +38,19 @@ typedef struct GroupPeer {
 
     char       name[TOX_MAX_NAME_LENGTH];
     size_t     name_length;
+
+    bool       sending_audio;
+    bool       mute;
+    uint32_t   audio_out_idx;
+    time_t     last_audio_time;
 } GroupPeer;
+
+typedef struct AudioInputCallbackData {
+    Tox *tox;
+    uint32_t groupnumber;
+} AudioInputCallbackData;
+
+typedef struct NameListEntry NameListEntry;
 
 typedef struct {
     int chatwin;
@@ -51,9 +62,14 @@ typedef struct {
     GroupPeer *peer_list;
     uint32_t max_idx;
 
-    char *name_list;
+    NameListEntry *name_list;
     uint32_t num_peers;
 
+    bool audio_enabled;
+    time_t last_sent_audio;
+    uint32_t audio_in_idx;
+    bool mute;
+    AudioInputCallbackData audio_input_callback_data;
 } GroupChat;
 
 /* Frees all Toxic associated data structures for a groupchat (does not call tox_conference_delete() ) */
@@ -63,5 +79,15 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *titl
 
 /* destroys and re-creates groupchat window with or without the peerlist */
 void redraw_groupchat_win(ToxWindow *self);
+
+bool init_group_audio_input(Tox *tox, uint32_t groupnumber);
+bool enable_group_audio(Tox *tox, uint32_t groupnumber);
+bool disable_group_audio(Tox *tox, uint32_t groupnumber);
+void audio_group_callback(void *tox, uint32_t groupnumber, uint32_t peernumber,
+                          const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
+                          sample_rate, void *userdata);
+
+bool group_mute_self(uint32_t groupnumber);
+bool group_mute_peer(uint32_t groupnumber, const char *prefix);
 
 #endif /* GROUPCHAT_H */

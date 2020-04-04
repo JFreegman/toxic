@@ -301,7 +301,10 @@ static void help_draw_group(ToxWindow *self)
     wprintw(win, "Group commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /title <msg>               : Set group title (show current title if no msg)\n\n");
+    wprintw(win, "  /title <msg>               : Set group title (show current title if no msg)\n");
+    wprintw(win, "  /audio <on> or <off>       : Enable/disable audio in an audio group\n");
+    wprintw(win, "  /mute                      : Toggle self audio mute status\n");
+    wprintw(win, "  /mute <nick>               : Toggle peer audio mute status\n\n");
 
     help_draw_bottom_menu(win);
 
@@ -387,7 +390,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case 'r':
-            help_init_window(self, 6, 80);
+            help_init_window(self, 9, 80);
             self->help->type = HELP_GROUP;
             break;
 

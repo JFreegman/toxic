@@ -31,6 +31,7 @@
 #include <wchar.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <math.h>
 
 #ifdef AUDIO
 #ifdef __APPLE__
@@ -69,6 +70,8 @@ static int max_groupchat_index = 0;
 
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
+
+extern pthread_mutex_t tox_lock;
 
 #ifdef PYTHON
 #define AC_NUM_GROUP_COMMANDS_PYTHON 1
@@ -152,6 +155,8 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *titl
             groupchats[i].num_peers = 0;
             groupchats[i].type = type;
             groupchats[i].start_time = get_unix_time();
+            groupchats[i].audio_enabled = false;
+            groupchats[i].last_sent_audio = 0;
 
             set_active_window_index(groupchats[i].chatwin);
             set_window_title(self, title, title_length);
@@ -160,7 +165,7 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *titl
                 ++max_groupchat_index;
             }
 
-            return 0;
+            return groupchats[i].chatwin;
         }
     }
 
@@ -171,6 +176,9 @@ int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *titl
 
 static void free_peer(GroupPeer *peer)
 {
+    if (peer->sending_audio) {
+        close_device(output, peer->audio_out_idx);
+    }
 }
 
 void free_groupchat(ToxWindow *self, uint32_t groupnum)
@@ -183,6 +191,10 @@ void free_groupchat(ToxWindow *self, uint32_t groupnum)
         if (peer->active) {
             free_peer(peer);
         }
+    }
+
+    if (chat->audio_enabled) {
+        close_device(input, chat->audio_in_idx);
     }
 
     free(chat->name_list);
@@ -320,6 +332,18 @@ static void groupchat_onGroupTitleChange(ToxWindow *self, Tox *m, uint32_t group
     write_to_log(tmp_event, nick, ctx->log, true);
 }
 
+struct NameListEntry {
+    char name[TOX_MAX_NAME_LENGTH];
+    uint32_t peernum;
+};
+
+static int compare_name_list_entries(const void *a, const void *b)
+{
+    return qsort_strcasecmp_hlpr(
+               ((NameListEntry *)a)->name,
+               ((NameListEntry *)b)->name);
+}
+
 static void group_update_name_list(uint32_t groupnum)
 {
     GroupChat *chat = &groupchats[groupnum];
@@ -332,22 +356,23 @@ static void group_update_name_list(uint32_t groupnum)
         free(chat->name_list);
     }
 
-    chat->name_list = malloc(sizeof(char *) * chat->num_peers * TOX_MAX_NAME_LENGTH);
+    chat->name_list = malloc(chat->num_peers * sizeof(NameListEntry));
 
     if (chat->name_list == NULL) {
         exit_toxic_err("failed in group_update_name_list", FATALERR_MEMORY);
     }
 
-    uint32_t i, count = 0;
+    uint32_t count = 0;
 
-    for (i = 0; i < chat->max_idx; ++i) {
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
         if (chat->peer_list[i].active) {
-            memcpy(&chat->name_list[count * TOX_MAX_NAME_LENGTH], chat->peer_list[i].name, chat->peer_list[i].name_length + 1);
+            memcpy(chat->name_list[count].name, chat->peer_list[i].name, chat->peer_list[i].name_length + 1);
+            chat->name_list[count].peernum = i;
             ++count;
         }
     }
 
-    qsort(chat->name_list, count, TOX_MAX_NAME_LENGTH, qsort_strcasecmp_hlpr);
+    qsort(chat->name_list, count, sizeof(NameListEntry), compare_name_list_entries);
 }
 
 /* Reallocates groupnum's peer list.
@@ -377,6 +402,39 @@ static int realloc_peer_list(GroupChat *chat, uint32_t num_peers)
 
     return 0;
 }
+
+static void set_peer_audio_position(Tox *m, uint32_t groupnum, uint32_t peernum)
+{
+    GroupChat *chat = &groupchats[groupnum];
+    GroupPeer *peer = &chat->peer_list[peernum];
+
+    if (!peer->sending_audio) {
+        return;
+    }
+
+    // Position peers at distance 1 in front of listener,
+    // ordered left to right by order in peerlist excluding self.
+    uint32_t num_posns = chat->num_peers;
+    uint32_t peer_posn = peernum;
+
+    for (uint32_t i = 0; i < chat->num_peers; ++i) {
+        if (tox_conference_peer_number_is_ours(m, groupnum, peernum, NULL)) {
+            if (i == peernum) {
+                return;
+            }
+
+            --num_posns;
+
+            if (i < peernum) {
+                --peer_posn;
+            }
+        }
+    }
+
+    const float angle = asinf(peer_posn - (float)(num_posns - 1) / 2);
+    set_source_position(peer->audio_out_idx, sinf(angle), cosf(angle), 0);
+}
+
 
 static bool find_peer_by_pubkey(GroupPeer *list, uint32_t num_peers, uint8_t *pubkey, uint32_t *idx)
 {
@@ -447,6 +505,8 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers, uint
         peer->active = true;
         peer->name_length = length;
         peer->peernumber = i;
+
+        set_peer_audio_position(m, groupnum, i);
     }
 
     for (uint32_t i = 0; i < old_num_peers; ++i) {
@@ -545,6 +605,13 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *a
     }
 }
 
+/* Offset for the peer number box at the top of the statusbar */
+static int sidebar_offset(uint32_t groupnum)
+{
+    return 2 + groupchats[groupnum].audio_enabled;
+}
+
+
 static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
@@ -583,12 +650,20 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (key == '\t') {  /* TAB key: auto-completes peer name or command */
         if (ctx->len > 0) {
-            int diff;
+            int diff = -1;
 
             /* TODO: make this not suck */
             if (ctx->line[0] != L'/' || wcscmp(ctx->line, L"/me") == 0) {
-                diff = complete_line(self, groupchats[self->num].name_list, groupchats[self->num].num_peers,
-                                     TOX_MAX_NAME_LENGTH);
+                char *names = malloc(groupchats[self->num].num_peers * TOX_MAX_NAME_LENGTH);
+
+                if (names) {
+                    for (uint32_t i = 0; i < groupchats[self->num].num_peers; ++i) {
+                        memcpy(&names[i * TOX_MAX_NAME_LENGTH], groupchats[self->num].name_list[i].name, TOX_MAX_NAME_LENGTH);
+                    }
+
+                    diff = complete_line(self, names, groupchats[self->num].num_peers, TOX_MAX_NAME_LENGTH);
+                    free(names);
+                }
             } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
                 diff = dir_match(self, m, ctx->line, L"/avatar");
             }
@@ -616,7 +691,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             sound_notify(self, notif_error, 0, NULL);
         }
     } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
-        const int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
+        const int L = y2 - CHATBOX_HEIGHT - sidebar_offset(self->num);
 
         if (groupchats[self->num].side_pos < (int64_t) groupchats[self->num].num_peers - L) {
             ++groupchats[self->num].side_pos;
@@ -696,38 +771,83 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
 
         pthread_mutex_lock(&Winthread.lock);
-        uint32_t num_peers = groupchats[self->num].num_peers;
+        const uint32_t num_peers = groupchats[self->num].num_peers;
+        const bool audio = groupchats[self->num].audio_enabled;
+        const bool self_mute = groupchats[self->num].mute;
+        const int header_lines = sidebar_offset(self->num);
         pthread_mutex_unlock(&Winthread.lock);
 
-        wmove(ctx->sidebar, 0, 1);
+        int line = 0;
+
+        if (audio) {
+            wmove(ctx->sidebar, line, 1);
+            wattron(ctx->sidebar, A_BOLD);
+            wprintw(ctx->sidebar, "Mic: ");
+            const bool mic_on = audio && !self_mute;
+            const int color = mic_on ? GREEN : RED;
+            wattron(ctx->sidebar, COLOR_PAIR(color));
+            wprintw(ctx->sidebar, mic_on ? "ON" : "OFF");
+            wattroff(ctx->sidebar, COLOR_PAIR(color));
+            wattroff(ctx->sidebar, A_BOLD);
+            ++line;
+        }
+
+        wmove(ctx->sidebar, line, 1);
         wattron(ctx->sidebar, A_BOLD);
         wprintw(ctx->sidebar, "Peers: %"PRIu32"\n", num_peers);
         wattroff(ctx->sidebar, A_BOLD);
+        ++line;
 
-        mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
-        mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
+        mvwaddch(ctx->sidebar, line, 0, ACS_LTEE);
+        mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
+        ++line;
 
-        int maxlines = y2 - SDBAR_OFST - CHATBOX_HEIGHT;
+        int maxlines = y2 - header_lines - CHATBOX_HEIGHT;
         uint32_t i;
 
         for (i = 0; i < num_peers && i < maxlines; ++i) {
-            wmove(ctx->sidebar, i + 2, 1);
+            wmove(ctx->sidebar, i + header_lines, 1);
 
             pthread_mutex_lock(&Winthread.lock);
-            uint32_t peer = i + groupchats[self->num].side_pos;
+            const uint32_t peer = i + groupchats[self->num].side_pos;
+            const uint32_t peernum = groupchats[self->num].name_list[peer].peernum;
+            const bool is_self = tox_conference_peer_number_is_ours(m, self->num, peernum, NULL);
             pthread_mutex_unlock(&Winthread.lock);
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
-            int maxlen = SIDEBAR_WIDTH - 2;
+            int maxlen = SIDEBAR_WIDTH - 2 - audio;
+
+            if (audio) {
+                pthread_mutex_lock(&Winthread.lock);
+                const GroupPeer *peer = &groupchats[self->num].peer_list[peernum];
+                const bool audio_active = is_self
+                                          ? !timed_out(groupchats[self->num].last_sent_audio, 2)
+                                          : peer->active && peer->sending_audio && !timed_out(peer->last_audio_time, 2);
+                const bool mute = is_self ? self_mute : peer->mute;
+                pthread_mutex_unlock(&Winthread.lock);
+
+                const int aud_attr = A_BOLD | COLOR_PAIR(audio_active && !mute ? GREEN : RED);
+                wattron(ctx->sidebar, aud_attr);
+                waddch(ctx->sidebar, audio_active ? (mute ? 'M' : '*') : '-');
+                wattroff(ctx->sidebar, aud_attr);
+            }
 
             pthread_mutex_lock(&Winthread.lock);
-            memcpy(tmpnck, &groupchats[self->num].name_list[peer * TOX_MAX_NAME_LENGTH], maxlen);
+            memcpy(tmpnck, &groupchats[self->num].name_list[peer].name, maxlen);
             pthread_mutex_unlock(&Winthread.lock);
 
             tmpnck[maxlen] = '\0';
 
+            if (is_self) {
+                wattron(ctx->sidebar, COLOR_PAIR(GREEN));
+            }
+
             wprintw(ctx->sidebar, "%s\n", tmpnck);
+
+            if (is_self) {
+                wattroff(ctx->sidebar, COLOR_PAIR(GREEN));
+            }
         }
     }
 
@@ -820,4 +940,151 @@ static ToxWindow *new_group_chat(uint32_t groupnum)
     ret->active_box = -1;
 
     return ret;
+}
+
+#define GROUPAV_SAMPLE_RATE 48000
+#define GROUPAV_FRAME_DURATION 20
+#define GROUPAV_AUDIO_CHANNELS 1
+#define GROUPAV_SAMPLES_PER_FRAME (GROUPAV_SAMPLE_RATE * GROUPAV_FRAME_DURATION / 1000)
+
+void audio_group_callback(void *tox, uint32_t groupnumber, uint32_t peernumber, const int16_t *pcm,
+                          unsigned int samples, uint8_t channels, uint32_t sample_rate, void *userdata)
+{
+    GroupChat *chat = &groupchats[groupnumber];
+
+    if (!chat->active) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (!peer->active || peer->peernumber != peernumber) {
+            continue;
+        }
+
+        if (!peer->sending_audio) {
+            if (open_output_device(&peer->audio_out_idx,
+                                   sample_rate, GROUPAV_FRAME_DURATION, channels) != de_None) {
+                // TODO: error message?
+                return;
+            }
+
+            peer->sending_audio = true;
+            peer->mute = false;
+
+            set_peer_audio_position(tox, groupnumber, i);
+        }
+
+        write_out(peer->audio_out_idx, pcm, samples, channels, sample_rate);
+
+        peer->last_audio_time = get_unix_time();
+
+        return;
+    }
+}
+
+static void group_read_device_callback(const int16_t *captured, uint32_t size, void *data)
+{
+    UNUSED_VAR(size);
+
+    AudioInputCallbackData *audio_input_callback_data = (AudioInputCallbackData *)data;
+
+    pthread_mutex_lock(&Winthread.lock);
+    groupchats[audio_input_callback_data->groupnumber].last_sent_audio = get_unix_time();
+    pthread_mutex_unlock(&Winthread.lock);
+
+    pthread_mutex_lock(&tox_lock);
+    toxav_group_send_audio(audio_input_callback_data->tox,
+                           audio_input_callback_data->groupnumber,
+                           captured, GROUPAV_SAMPLES_PER_FRAME,
+                           GROUPAV_AUDIO_CHANNELS, GROUPAV_SAMPLE_RATE);
+    pthread_mutex_unlock(&tox_lock);
+}
+
+bool init_group_audio_input(Tox *tox, uint32_t groupnumber)
+{
+    GroupChat *chat = &groupchats[groupnumber];
+
+    if (!chat->active) {
+        return false;
+    }
+
+    const AudioInputCallbackData audio_input_callback_data = { tox, groupnumber };
+    chat->audio_input_callback_data = audio_input_callback_data;
+
+    bool success = (open_input_device(&chat->audio_in_idx,
+                                      group_read_device_callback, &chat->audio_input_callback_data, true,
+                                      GROUPAV_SAMPLE_RATE, GROUPAV_FRAME_DURATION, GROUPAV_AUDIO_CHANNELS)
+                    == de_None);
+
+    chat->audio_enabled = success;
+    chat->mute = false;
+
+    return success;
+}
+
+bool enable_group_audio(Tox *tox, uint32_t groupnumber)
+{
+    if (!toxav_groupchat_av_enabled(tox, groupnumber)) {
+        if (toxav_groupchat_enable_av(tox, groupnumber, audio_group_callback, NULL) != 0) {
+            return false;
+        }
+    }
+
+    return init_group_audio_input(tox, groupnumber);
+}
+
+bool disable_group_audio(Tox *tox, uint32_t groupnumber)
+{
+    GroupChat *chat = &groupchats[groupnumber];
+
+    if (!chat->active) {
+        return false;
+    }
+
+    if (chat->audio_enabled) {
+        close_device(input, chat->audio_in_idx);
+        chat->audio_enabled = false;
+    }
+
+    return (toxav_groupchat_disable_av(tox, groupnumber) == 0);
+}
+
+bool group_mute_self(uint32_t groupnumber)
+{
+    GroupChat *chat = &groupchats[groupnumber];
+
+    if (!chat->active || !chat->audio_enabled) {
+        return false;
+    }
+
+    device_mute(input, chat->audio_in_idx);
+    chat->mute = !chat->mute;
+
+    return true;
+}
+
+bool group_mute_peer(uint32_t groupnumber, const char *prefix)
+{
+    GroupChat *chat = &groupchats[groupnumber];
+
+    if (!chat->active || !chat->audio_enabled) {
+        return false;
+    }
+
+    const int len = strlen(prefix);
+
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (peer->active && peer->sending_audio
+                && peer->name_length >= len && strncmp(prefix, peer->name, len) == 0) {
+            device_mute(output, peer->audio_out_idx);
+            peer->mute = !peer->mute;
+            return true;
+        }
+    }
+
+    return false;
 }

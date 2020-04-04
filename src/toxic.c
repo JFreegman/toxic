@@ -374,9 +374,16 @@ static void load_groups(Tox *m)
 
         title[length] = 0;
 
-        if (init_groupchat_win(m, groupnum, type, (const char *) title, length) == -1) {
+        int win_idx = init_groupchat_win(m, groupnum, type, (const char *) title, length);
+
+        if (win_idx == -1) {
             tox_conference_delete(m, groupnum, NULL);
             continue;
+        }
+
+        if (type == TOX_CONFERENCE_TYPE_AV) {
+            line_info_add(get_window_ptr(win_idx), NULL, NULL, NULL, SYS_MSG, 0, 0,
+                          "Use \"/audio on\" to enable audio in this group.");
         }
     }
 }
