@@ -61,6 +61,8 @@
 extern FriendsList Friends;
 extern ToxWindow *windows[MAX_WINDOWS_NUM];
 
+extern pthread_mutex_t tox_lock;
+
 struct CallControl CallControl;
 
 #define cbend pthread_exit(NULL)
@@ -146,7 +148,7 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
         return NULL;
     }
 
-    if (init_devices(CallControl.av) == de_InternalError) {
+    if (init_devices() == de_InternalError) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
         toxav_kill(CallControl.av);
 
@@ -182,11 +184,18 @@ void read_device_callback(const int16_t *captured, uint32_t size, void *data)
     int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
                            ((int64_t) CallControl.audio_frame_duration) / 1000;
 
-    if (sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number,
-            captured, sample_count,
-            CallControl.audio_channels,
-            CallControl.audio_sample_rate, &error) == false) {
+    if (sample_count <= 0) {
+        return;
     }
+
+    pthread_mutex_lock(&tox_lock);
+
+    toxav_audio_send_frame(CallControl.av, friend_number,
+                           captured, sample_count,
+                           CallControl.audio_channels,
+                           CallControl.audio_sample_rate, &error);
+
+    pthread_mutex_unlock(&tox_lock);
 }
 
 void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
@@ -208,8 +217,9 @@ int start_transmission(ToxWindow *self, Call *call)
         return -1;
     }
 
-    DeviceError error = open_primary_device(input, &call->in_idx,
-                                            CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels);
+    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &self->num, true,
+                                          CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels);
+    /* Set VAD as true for all; TODO: Make it more dynamic */
 
     if (error != de_None) {
         if (error == de_FailedStart) {
@@ -221,15 +231,8 @@ int start_transmission(ToxWindow *self, Call *call)
         }
     }
 
-    if (register_device_callback(self->num, call->in_idx,
-                                 read_device_callback, &self->num, true) != de_None)
-        /* Set VAD as true for all; TODO: Make it more dynamic */
-    {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input handler!");
-    }
-
-    if (open_primary_device(output, &call->out_idx,
-                            CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels) != de_None) {
+    if (open_output_device(&call->out_idx,
+                           CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels) != de_None) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open output device!");
         call->has_output = 0;
     }
@@ -678,9 +681,9 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     }
 
     // Refresh device list.
-    get_devices_names();
+    get_al_device_names();
 
-    print_devices(self, type);
+    print_al_devices(self, type);
 
     return;
 on_error:
@@ -731,90 +734,10 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         goto on_error;
     }
 
-    if (set_primary_device(type, selection) == de_InvalidSelection) {
+    if (set_al_device(type, selection) == de_InvalidSelection) {
         error_str = "Invalid selection!";
         goto on_error;
     }
-
-    return;
-on_error:
-    print_err(self, error_str);
-}
-
-void cmd_ccur_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    UNUSED_VAR(window);
-    UNUSED_VAR(m);
-
-    const char *error_str;
-
-    if (argc != 2) {
-        if (argc < 1) {
-            error_str = "Type must be specified!";
-        } else if (argc < 2) {
-            error_str = "Must have id!";
-        } else {
-            error_str = "Only two arguments allowed!";
-        }
-
-        goto on_error;
-    }
-
-    DeviceType type;
-
-    if (strcmp(argv[1], "in") == 0) { /* Input devices */
-        type = input;
-    }
-
-    else if (strcmp(argv[1], "out") == 0) { /* Output devices */
-        type = output;
-    }
-
-    else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
-        return;
-    }
-
-
-    char *end;
-    long int selection = strtol(argv[2], &end, 10);
-
-    if (*end) {
-        error_str = "Invalid input";
-        goto on_error;
-    }
-
-    if (selection_valid(type, selection) == de_InvalidSelection) {
-        error_str = "Invalid selection!";
-        goto on_error;
-    }
-
-    /* If call is active, change device */
-    if (self->is_call) {
-        Call *this_call = &CallControl.calls[self->num];
-
-        if (this_call->ttas) {
-
-
-            if (type == output) {
-                pthread_mutex_lock(&this_call->mutex);
-                close_device(output, this_call->out_idx);
-                this_call->has_output = open_device(output, selection, &this_call->out_idx,
-                                                    CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels)
-                                        == de_None ? 1 : 0;
-                pthread_mutex_unlock(&this_call->mutex);
-            } else {
-                /* TODO: check for failure */
-                close_device(input, this_call->in_idx);
-                open_device(input, selection, &this_call->in_idx, CallControl.audio_sample_rate,
-                            CallControl.audio_frame_duration, CallControl.audio_channels);
-                /* Set VAD as true for all; TODO: Make it more dynamic */
-                register_device_callback(self->num, this_call->in_idx, read_device_callback, &self->num, true);
-            }
-        }
-    }
-
-    self->device_selection[type] = selection;
 
     return;
 on_error:

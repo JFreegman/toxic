@@ -455,8 +455,6 @@ void cmd_ccur_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
         }
     }
 
-    self->video_device_selection[type] = selection;
-
     return;
 on_error:
     print_err(self, error_str);
