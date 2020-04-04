@@ -433,6 +433,7 @@ static void update_peer_list(Tox *m, uint32_t groupnum, uint32_t num_peers, uint
         size_t length = tox_conference_peer_get_name_size(m, groupnum, i, &err);
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK || length >= TOX_MAX_NAME_LENGTH) {
+            // FIXME: length == TOX_MAX_NAME_LENGTH should not be an error!
             continue;
         }
 
