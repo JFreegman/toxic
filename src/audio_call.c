@@ -61,6 +61,8 @@
 extern FriendsList Friends;
 extern ToxWindow *windows[MAX_WINDOWS_NUM];
 
+extern pthread_mutex_t tox_lock;
+
 struct CallControl CallControl;
 
 #define cbend pthread_exit(NULL)
@@ -182,11 +184,18 @@ void read_device_callback(const int16_t *captured, uint32_t size, void *data)
     int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
                            ((int64_t) CallControl.audio_frame_duration) / 1000;
 
-    if (sample_count <= 0 || toxav_audio_send_frame(CallControl.av, friend_number,
-            captured, sample_count,
-            CallControl.audio_channels,
-            CallControl.audio_sample_rate, &error) == false) {
+    if (sample_count <= 0) {
+        return;
     }
+
+    pthread_mutex_lock(&tox_lock);
+
+    toxav_audio_send_frame(CallControl.av, friend_number,
+                           captured, sample_count,
+                           CallControl.audio_channels,
+                           CallControl.audio_sample_rate, &error);
+
+    pthread_mutex_unlock(&tox_lock);
 }
 
 void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,

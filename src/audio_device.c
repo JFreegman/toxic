@@ -614,7 +614,11 @@ static void *poll_input(void *arg)
                     Device *device = &audio_state->devices[input][i];
 
                     if (device->active && !device->muted && device->cb) {
-                        device->cb(frame, f_size, device->cb_data);
+                        const DataHandleCallback cb = device->cb;
+                        void *const cb_data = device->cb_data;
+                        unlock(input);
+                        cb(frame, f_size, cb_data);
+                        lock(input);
                     }
                 }
             }
