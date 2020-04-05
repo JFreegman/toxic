@@ -55,6 +55,8 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
   * `DISABLE_X11=1` → Disable X11 support (needed for focus tracking)
   * `DISABLE_AV=1` → Disable audio call support
   * `DISABLE_SOUND_NOTIFY=1` → Disable sound notifications support
+  * `DISABLE_QRCODE` → Disable QR exporting support
+  * `DISABLE_QRPNG` → Disable support for exporting QR as PNG
   * `DISABLE_DESKTOP_NOTIFY=1` → Disable desktop notifications support
   * `ENABLE_PYTHON=1` → Build toxic with Python scripting support
 
