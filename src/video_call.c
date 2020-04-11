@@ -223,7 +223,6 @@ void callback_recv_video_end(uint32_t friend_number)
 }
 void callback_video_starting(uint32_t friend_number)
 {
-    ToxWindow *windows = CallControl.prompt;
     Call *this_call = &CallControl.calls[friend_number];
 
     Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
@@ -233,13 +232,15 @@ void callback_video_starting(uint32_t friend_number)
         size_t i;
 
         for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
-            if (windows[i].is_call && windows[i].num == friend_number) {
-                if (0 != start_video_transmission(&windows[i], CallControl.av, this_call)) {
-                    line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
+            ToxWindow *window = get_window_ptr(i);
+
+            if (window != NULL && window->is_call && window->num == friend_number) {
+                if (0 != start_video_transmission(window, CallControl.av, this_call)) {
+                    line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Error starting transmission!");
                     return;
                 }
 
-                line_info_add(&windows[i], NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
+                line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
             }
         }
     }
