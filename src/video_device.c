@@ -181,7 +181,7 @@ static int xioctl(int fh, unsigned long request, void *arg)
 #ifdef VIDEO
 VideoDeviceError init_video_devices(ToxAV *av_)
 #else
-VideoDeviceError init_video_devices()
+VideoDeviceError init_video_devices(void)
 #endif /* VIDEO */
 {
     size[vdt_input] = 0;
@@ -315,9 +315,10 @@ VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selectio
     return vde_None;
 }
 
-VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t *device_idx)
+VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t *device_idx,
+        uint32_t *width, uint32_t *height)
 {
-    return open_video_device(type, primary_video_device[type], device_idx);
+    return open_video_device(type, primary_video_device[type], device_idx, width, height);
 }
 
 void get_primary_video_device_name(VideoDeviceType type, char *buf, int size)
@@ -325,7 +326,8 @@ void get_primary_video_device_name(VideoDeviceType type, char *buf, int size)
     memcpy(buf, dvideo_device_names[type], size);
 }
 
-VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t *device_idx)
+VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t *device_idx,
+                                   uint32_t *width, uint32_t *height)
 {
     if (size[type] <= selection || selection < 0) {
         return vde_InvalidSelection;
@@ -372,6 +374,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
 #if defined(__OSX__) || defined(__APPLE__)
 
+        /* TODO: use requested resolution */
         if (osx_video_open_device(selection, &device->video_width, &device->video_height) != 0) {
             free(device);
             unlock;
@@ -405,6 +408,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        fmt.fmt.pix.width = width == NULL ? 0 : *width;
+        fmt.fmt.pix.height = height == NULL ? 0 : *height;
 
         if (-1 == xioctl(device->fd, VIDIOC_S_FMT, &fmt)) {
             close(device->fd);
@@ -542,6 +547,14 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         XFlush(device->x_display);
 
         vpx_img_alloc(&device->input, VPX_IMG_FMT_I420, device->video_width, device->video_height, 1);
+
+        if (width != NULL) {
+            *width = device->video_width;
+        }
+
+        if (height != NULL) {
+            *height = device->video_height;
+        }
 
         video_thread_paused = false;
     } else { /* vdt_output */

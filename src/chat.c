@@ -101,10 +101,17 @@ static const char *chat_cmd_list[] = {
     "/sdev",
     "/mute",
     "/sense",
-    "/video",
     "/bitrate",
 
 #endif /* AUDIO */
+
+#ifdef VIDEO
+
+    "/res",
+    "/vcall",
+    "/video",
+
+#endif /* VIDEO */
 
 #ifdef PYTHON
 
@@ -131,9 +138,6 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     StatusBar *statusbar = self->stb;
 
 #ifdef AUDIO
-#ifdef VIDEO
-    stop_video_stream(self);
-#endif /* VIDEO */
     stop_current_call(self);
 #endif /* AUDIO */
 

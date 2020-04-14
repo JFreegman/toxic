@@ -92,7 +92,9 @@ static struct cmd_func chat_commands[] = {
     { "/bitrate",   cmd_bitrate           },
 #endif /* AUDIO */
 #ifdef VIDEO
+    { "/vcall",     cmd_vcall             },
     { "/video",     cmd_video             },
+    { "/res",       cmd_res               },
 #endif /* VIDEO */
     { NULL,         NULL                  },
 };
@@ -105,7 +107,7 @@ static struct cmd_func conference_commands[] = {
     { "/mute",      cmd_conference_mute   },
     { "/sense",     cmd_conference_sense  },
 #endif /* AUDIO */
-    { NULL,         NULL            },
+    { NULL,         NULL             },
 };
 
 

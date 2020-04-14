@@ -27,7 +27,7 @@
 
 #include "audio_device.h"
 
-typedef enum _AudioError {
+typedef enum AudioError {
     ae_None = 0,
     ae_StartingCaptureDevice = 1 << 0,
     ae_StartingOutputDevice = 1 << 1,
@@ -35,7 +35,7 @@ typedef enum _AudioError {
 } AudioError;
 
 #ifdef VIDEO
-typedef enum _VideoError {
+typedef enum VideoError {
     ve_None = 0,
     ve_StartingCaptureDevice = 1 << 0,
     ve_StartingOutputDevice = 1 << 1,
@@ -44,14 +44,27 @@ typedef enum _VideoError {
 
 #endif /* VIDEO */
 
+/* Status transitions:
+ * None -> Pending (call invitation made or received);
+ * Pending -> None (invitation rejected or failed);
+ * Pending -> Active (call starts);
+ * Active -> None (call ends).
+ */
+typedef enum CallStatus {
+    cs_None = 0,
+    cs_Pending,
+    cs_Active
+} CallStatus;
+
 typedef struct Call {
-    pthread_t ttid; /* Transmission thread id */
-    bool ttas, has_output; /* Transmission thread active status (0 - stopped, 1- running) */
-    uint32_t in_idx, out_idx; /* Audio Index */
-#ifdef VIDEO
-    uint32_t vin_idx, vout_idx; /* Video Index */
-#endif /* VIDEO */
-    pthread_mutex_t mutex;
+    CallStatus status;
+    uint32_t state; /* ToxAV call state, valid when `status == cs_Active` */
+    uint32_t in_idx, out_idx; /* Audio device index, or -1 if not open */
+    uint32_t audio_bit_rate; /* Bit rate for sending audio */
+
+    uint32_t vin_idx, vout_idx; /* Video device index, or -1 if not open */
+    uint32_t video_width, video_height;
+    uint32_t video_bit_rate; /* Bit rate for sending video; 0 for no video */
 } Call;
 
 struct CallControl {
@@ -66,19 +79,17 @@ struct CallControl {
     Call *calls;
     uint32_t max_calls;
 
-    uint32_t call_state;
-    bool pending_call;
     bool audio_enabled;
     bool video_enabled;
 
-    uint32_t audio_bit_rate;
     int32_t audio_frame_duration;
     uint32_t audio_sample_rate;
     uint8_t audio_channels;
+    uint32_t default_audio_bit_rate;
 
-    uint32_t video_bit_rate;
     int32_t video_frame_duration;
-
+    uint32_t default_video_width, default_video_height;
+    uint32_t default_video_bit_rate;
 };
 
 extern struct CallControl CallControl;
@@ -86,8 +97,12 @@ extern struct CallControl CallControl;
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
 ToxAV *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio(void);
-int start_transmission(ToxWindow *self, Call *call);
+
+bool init_call(Call *call);
+
+void place_call(ToxWindow *self);
 void stop_current_call(ToxWindow *self);
+
 void init_friend_AV(uint32_t index);
 void del_friend_AV(uint32_t index);
 

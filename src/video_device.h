@@ -62,9 +62,11 @@ VideoDeviceError register_video_device_callback(int32_t call_idx, uint32_t devic
 void *get_video_device_callback_data(uint32_t device_idx);
 
 VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection);
-VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t *device_idx);
+VideoDeviceError open_primary_video_device(VideoDeviceType type, uint32_t *device_idx,
+        uint32_t *width, uint32_t *height);
 /* Start device */
-VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t *device_idx);
+VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t *device_idx,
+                                   uint32_t *width, uint32_t *height);
 /* Stop device */
 VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx);
 

@@ -45,8 +45,9 @@ void cmd_bitrate(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SI
 #endif /* AUDIO */
 
 #ifdef VIDEO
+void cmd_vcall(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_video(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
-void cmd_ccur_video_device(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_res(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
 #endif /* VIDEO */
 
 #endif /* CHAT_COMMANDS_H */
