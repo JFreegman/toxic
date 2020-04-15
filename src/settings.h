@@ -24,6 +24,7 @@
 #define SETTINGS_H
 
 #include <limits.h>
+#include <sys/param.h>
 
 #include <tox/tox.h>
 

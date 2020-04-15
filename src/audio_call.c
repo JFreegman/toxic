@@ -41,6 +41,7 @@
 #include <stdbool.h>
 #include <curses.h>
 #include <string.h>
+#include <strings.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>

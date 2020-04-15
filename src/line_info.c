@@ -20,6 +20,7 @@
  *
  */
 
+#define _DEFAULT_SOURCE
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>

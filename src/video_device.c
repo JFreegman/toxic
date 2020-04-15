@@ -20,6 +20,7 @@
  *
  */
 
+#define _XOPEN_SOURCE 500
 #include "video_device.h"
 #include "video_call.h"
 

@@ -20,6 +20,7 @@
  *
  */
 
+#define _XOPEN_SOURCE 500
 #include <curses.h>
 #include <errno.h>
 #include <stdio.h>
@@ -30,6 +31,7 @@
 #include <signal.h>
 #include <locale.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <pthread.h>
 #include <getopt.h>

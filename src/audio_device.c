@@ -20,6 +20,9 @@
  *
  */
 
+/* TODO(iphydf): use nanosleep instead of usleep */
+#define _XOPEN_SOURCE 500
+
 #include "audio_device.h"
 
 #ifdef AUDIO
