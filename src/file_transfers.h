@@ -24,7 +24,6 @@
 #define FILE_TRANSFERS_H
 
 #include <limits.h>
-#include <sys/param.h>
 
 #include "toxic.h"
 #include "windows.h"

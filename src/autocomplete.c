@@ -22,9 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <limits.h>
-#include <sys/param.h>
 
 #ifdef __APPLE__
 #include <sys/types.h>

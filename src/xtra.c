@@ -20,7 +20,6 @@
  *
  */
 
-#define _XOPEN_SOURCE 500
 #include "xtra.h"
 #include "misc_tools.h"
 

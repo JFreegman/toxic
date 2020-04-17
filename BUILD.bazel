@@ -16,6 +16,7 @@ cc_binary(
         "//tools/config:osx": [],
     }),
     copts = [
+        "-std=gnu99",
         "-DAUDIO",
         "-DPACKAGE_DATADIR='\"data\"'",
         "-DPYTHON",

@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <libconfig.h>
 #include <ctype.h>
 

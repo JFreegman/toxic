@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <strings.h>
 #include <curl/curl.h>
 
 #include "toxic.h"

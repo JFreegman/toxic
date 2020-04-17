@@ -20,12 +20,9 @@
  *
  */
 
-#define _POSIX_C_SOURCE 200809L
-#define _XOPEN_SOURCE 500
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <strings.h>
 #include <time.h>
 #include <limits.h>
 #include <dirent.h>
