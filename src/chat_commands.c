@@ -23,15 +23,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "chat.h"
+#include "conference.h"
+#include "execute.h"
+#include "file_transfers.h"
+#include "friendlist.h"
+#include "line_info.h"
+#include "misc_tools.h"
 #include "toxic.h"
 #include "windows.h"
-#include "misc_tools.h"
-#include "friendlist.h"
-#include "execute.h"
-#include "line_info.h"
-#include "conference.h"
-#include "chat.h"
-#include "file_transfers.h"
 
 extern ToxWindow *prompt;
 extern FriendsList Friends;

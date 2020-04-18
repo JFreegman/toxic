@@ -20,22 +20,22 @@
  *
  */
 
+#include <ctype.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
-#include <ctype.h>
 
-#include "friendlist.h"
-#include "prompt.h"
-#include "toxic.h"
-#include "windows.h"
-#include "conference.h"
+#include "avatars.h"
 #include "chat.h"
+#include "conference.h"
+#include "file_transfers.h"
+#include "friendlist.h"
 #include "line_info.h"
 #include "misc_tools.h"
-#include "avatars.h"
+#include "prompt.h"
 #include "settings.h"
-#include "file_transfers.h"
+#include "toxic.h"
+#include "windows.h"
 
 extern char *DATA_FILE;
 extern struct Winthread Winthread;

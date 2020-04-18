@@ -26,14 +26,14 @@
 
 #include <wchar.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "misc_tools.h"
-#include "toxic_strings.h"
-#include "line_info.h"
-#include "notify.h"
 #include "conference.h"
+#include "line_info.h"
+#include "misc_tools.h"
+#include "notify.h"
 #include "settings.h"
+#include "toxic.h"
+#include "toxic_strings.h"
+#include "windows.h"
 
 extern struct user_settings *user_settings;
 

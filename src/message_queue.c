@@ -22,12 +22,12 @@
 
 #include <stdlib.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "message_queue.h"
-#include "misc_tools.h"
 #include "line_info.h"
 #include "log.h"
+#include "message_queue.h"
+#include "misc_tools.h"
+#include "toxic.h"
+#include "windows.h"
 
 void cqueue_cleanup(struct chat_queue *q)
 {

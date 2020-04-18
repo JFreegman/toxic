@@ -22,10 +22,10 @@
 
 #include <string.h>
 
-#include "windows.h"
-#include "toxic.h"
 #include "help.h"
 #include "misc_tools.h"
+#include "toxic.h"
+#include "windows.h"
 
 #ifdef PYTHON
 #include "api.h"

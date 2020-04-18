@@ -20,18 +20,18 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 #include <curl/curl.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "line_info.h"
-#include "global_commands.h"
-#include "misc_tools.h"
 #include "configdir.h"
 #include "curl_util.h"
+#include "global_commands.h"
+#include "line_info.h"
+#include "misc_tools.h"
+#include "toxic.h"
+#include "windows.h"
 
 extern struct arg_opts arg_opts;
 extern struct Winthread Winthread;

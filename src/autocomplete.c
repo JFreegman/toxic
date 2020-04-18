@@ -20,9 +20,9 @@
  *
  */
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 
 #ifdef __APPLE__
 #include <sys/types.h>
@@ -31,12 +31,12 @@
 #include <dirent.h>
 #endif /* __APPLE__ */
 
-#include "windows.h"
-#include "toxic.h"
-#include "misc_tools.h"
-#include "line_info.h"
-#include "execute.h"
 #include "configdir.h"
+#include "execute.h"
+#include "line_info.h"
+#include "misc_tools.h"
+#include "toxic.h"
+#include "windows.h"
 
 static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matches)
 {

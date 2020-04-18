@@ -25,9 +25,9 @@
 
 #include <time.h>
 
+#include "file_transfers.h"
 #include "toxic.h"
 #include "windows.h"
-#include "file_transfers.h"
 
 struct LastOnline {
     uint64_t last_on;

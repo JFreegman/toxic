@@ -23,20 +23,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "misc_tools.h"
-#include "friendlist.h"
-#include "log.h"
-#include "line_info.h"
-#include "conference.h"
-#include "prompt.h"
-#include "help.h"
-#include "term_mplex.h"
 #include "avatars.h"
+#include "conference.h"
+#include "friendlist.h"
+#include "help.h"
+#include "line_info.h"
+#include "log.h"
+#include "misc_tools.h"
 #include "name_lookup.h"
+#include "prompt.h"
 #include "qr_code.h"
+#include "term_mplex.h"
+#include "toxic.h"
 #include "toxic_strings.h"
+#include "windows.h"
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;

@@ -20,14 +20,14 @@
  *
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "misc_tools.h"
+#include "avatars.h"
 #include "file_transfers.h"
 #include "friendlist.h"
-#include "avatars.h"
+#include "misc_tools.h"
 
 extern FriendsList Friends;
 

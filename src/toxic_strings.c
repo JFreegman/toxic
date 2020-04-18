@@ -24,11 +24,11 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "toxic.h"
-#include "windows.h"
 #include "misc_tools.h"
-#include "toxic_strings.h"
 #include "notify.h"
+#include "toxic.h"
+#include "toxic_strings.h"
+#include "windows.h"
 
 /* Adds char to line at pos. Return 0 on success, -1 if line buffer is full */
 int add_char_to_buf(ChatContext *ctx, wint_t ch)

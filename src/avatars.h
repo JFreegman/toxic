@@ -23,6 +23,8 @@
 #ifndef AVATARS_H
 #define AVATARS_H
 
+#include "file_transfers.h"
+
 #define MAX_AVATAR_FILE_SIZE 65536
 
 /* Sends avatar to friendnum.

@@ -24,28 +24,28 @@
 #define _GNU_SOURCE    /* needed for wcswidth() */
 #endif
 
+#include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <wchar.h>
-#include <assert.h>
-#include <limits.h>
 
-#include "toxic.h"
-#include "windows.h"
+#include "autocomplete.h"
 #include "execute.h"
-#include "misc_tools.h"
 #include "file_transfers.h"
 #include "friendlist.h"
-#include "toxic_strings.h"
-#include "log.h"
-#include "line_info.h"
-#include "settings.h"
-#include "input.h"
 #include "help.h"
-#include "autocomplete.h"
-#include "notify.h"
+#include "input.h"
+#include "line_info.h"
+#include "log.h"
 #include "message_queue.h"
+#include "misc_tools.h"
+#include "notify.h"
+#include "settings.h"
+#include "toxic.h"
+#include "toxic_strings.h"
+#include "windows.h"
 
 #ifdef AUDIO
 #include "audio_call.h"

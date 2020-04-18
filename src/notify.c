@@ -20,21 +20,21 @@
  *
  */
 
+#include <assert.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <time.h>
-#include <assert.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
 
-#include "notify.h"
 #include "audio_device.h"
-#include "settings.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "notify.h"
+#include "settings.h"
 #include "xtra.h"
 
 #if defined(AUDIO) || defined(SOUND_NOTIFY)

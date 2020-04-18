@@ -20,19 +20,19 @@
  *
  */
 
-#include "xtra.h"
 #include "misc_tools.h"
+#include "xtra.h"
 
 #ifndef __APPLE__
 
-#include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <X11/Xlib.h>
 
-#include <pthread.h>
 #include <assert.h>
+#include <pthread.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
 
 
 const  Atom XtraTerminate = 1;

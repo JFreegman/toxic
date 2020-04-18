@@ -26,18 +26,18 @@
 #include <string.h> /* strlen, strcpy, strstr, strchr, strrchr, strcat, strncmp */
 
 #include <pthread.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
 #include <tox/tox.h>
 
 #include "execute.h"
-#include "windows.h"
+#include "settings.h"
 #include "term_mplex.h"
 #include "toxic.h"
-#include "settings.h"
+#include "windows.h"
 
 extern struct ToxWindow *prompt;
 extern struct user_settings *user_settings;

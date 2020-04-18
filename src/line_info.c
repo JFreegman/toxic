@@ -20,19 +20,19 @@
  *
  */
 
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdarg.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "line_info.h"
 #include "conference.h"
-#include "settings.h"
-#include "notify.h"
+#include "line_info.h"
 #include "message_queue.h"
 #include "misc_tools.h"
+#include "notify.h"
+#include "settings.h"
+#include "toxic.h"
+#include "windows.h"
 
 extern struct user_settings *user_settings;
 

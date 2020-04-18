@@ -28,20 +28,20 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "prompt.h"
-#include "friendlist.h"
-#include "execute.h"
-#include "misc_tools.h"
-#include "toxic_strings.h"
-#include "log.h"
-#include "line_info.h"
-#include "settings.h"
-#include "input.h"
-#include "help.h"
-#include "notify.h"
 #include "autocomplete.h"
+#include "execute.h"
+#include "friendlist.h"
+#include "help.h"
+#include "input.h"
+#include "line_info.h"
+#include "log.h"
+#include "misc_tools.h"
+#include "notify.h"
+#include "prompt.h"
+#include "settings.h"
+#include "toxic.h"
+#include "toxic_strings.h"
+#include "windows.h"
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;

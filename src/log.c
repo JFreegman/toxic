@@ -22,16 +22,16 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "configdir.h"
+#include "line_info.h"
+#include "log.h"
+#include "misc_tools.h"
+#include "settings.h"
 #include "toxic.h"
 #include "windows.h"
-#include "misc_tools.h"
-#include "log.h"
-#include "settings.h"
-#include "line_info.h"
 
 extern struct user_settings *user_settings;
 

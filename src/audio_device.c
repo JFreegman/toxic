@@ -23,8 +23,8 @@
 #include "audio_device.h"
 
 #include "line_info.h"
-#include "settings.h"
 #include "misc_tools.h"
+#include "settings.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -33,13 +33,13 @@
 #include <AL/alext.h>
 #endif /* ALC_ALL_DEVICES_SPECIFIER */
 
-#include <stdbool.h>
-#include <string.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;

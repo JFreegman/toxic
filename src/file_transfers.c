@@ -20,18 +20,18 @@
  *
  */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "friendlist.h"
 #include "file_transfers.h"
+#include "friendlist.h"
 #include "line_info.h"
 #include "misc_tools.h"
 #include "notify.h"
+#include "toxic.h"
+#include "windows.h"
 
 extern FriendsList Friends;
 

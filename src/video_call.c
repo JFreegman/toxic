@@ -20,23 +20,23 @@
  *
  */
 
-#include "toxic.h"
-#include "windows.h"
-#include "video_call.h"
-#include "video_device.h"
 #include "chat_commands.h"
 #include "global_commands.h"
 #include "line_info.h"
-#include "notify.h"
 #include "misc_tools.h"
+#include "notify.h"
+#include "toxic.h"
+#include "video_call.h"
+#include "video_device.h"
+#include "windows.h"
 
-#include <stdbool.h>
-#include <curses.h>
-#include <string.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <curses.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifdef VIDEO
 

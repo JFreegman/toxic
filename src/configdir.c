@@ -20,18 +20,18 @@
  *
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <errno.h>
-#include <unistd.h>
 #include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "toxic.h"
 #include "configdir.h"
 #include "misc_tools.h"
+#include "toxic.h"
 
 /* get the user's home directory. */
 void get_home_dir(char *home, int size)

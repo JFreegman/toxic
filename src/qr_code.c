@@ -22,14 +22,14 @@
 
 #ifdef QRCODE
 
-#include <stdlib.h>
 #include <qrencode.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "qr_code.h"
 #include "toxic.h"
 #include "windows.h"
-#include "qr_code.h"
 
 #ifdef QRPNG
 #include <png.h>

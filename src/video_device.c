@@ -20,8 +20,8 @@
  *
  */
 
-#include "video_device.h"
 #include "video_call.h"
+#include "video_device.h"
 
 #include <sys/ioctl.h>
 
@@ -30,13 +30,13 @@
 #if defined(__OSX__) || defined(__APPLE__)
 #import "osx_video.h"
 #else
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
 #include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <X11/Xlib.h>
+#include <X11/Xos.h>
+#include <X11/Xutil.h>
 #if defined(__OpenBSD__) || defined(__NetBSD__)
 #include <sys/videoio.h>
 #else
@@ -45,16 +45,15 @@
 #endif /* __OSX__ || __APPLE__ */
 
 #include "line_info.h"
-#include "settings.h"
 #include "misc_tools.h"
+#include "settings.h"
 
 #include <errno.h>
-
-#include <stdbool.h>
-#include <string.h>
 #include <pthread.h>
-#include <unistd.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifdef VIDEO
 

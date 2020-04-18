@@ -20,20 +20,20 @@
  *
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
-#include "toxic.h"
-#include "windows.h"
-#include "execute.h"
+#include "api.h"
 #include "chat_commands.h"
+#include "execute.h"
 #include "global_commands.h"
 #include "conference_commands.h"
 #include "line_info.h"
 #include "misc_tools.h"
 #include "notify.h"
-#include "api.h"
+#include "toxic.h"
+#include "windows.h"
 
 struct cmd_func {
     const char *name;

@@ -20,15 +20,15 @@
  *
  */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "conference.h"
+#include "line_info.h"
+#include "log.h"
+#include "misc_tools.h"
 #include "toxic.h"
 #include "windows.h"
-#include "line_info.h"
-#include "misc_tools.h"
-#include "log.h"
-#include "conference.h"
 
 static void print_err(ToxWindow *self, const char *error_str)
 {

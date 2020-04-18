@@ -24,8 +24,8 @@
 
 #include <sys/stat.h>
 
-#include "windows.h"
 #include "toxic.h"
+#include "windows.h"
 
 #ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))

@@ -23,8 +23,8 @@
 #ifndef CHAT_H
 #define CHAT_H
 
-#include "windows.h"
 #include "toxic.h"
+#include "windows.h"
 
 /* set CTRL to -1 if we don't want to send a control signal.
    set msg to NULL if we don't want to display a message */

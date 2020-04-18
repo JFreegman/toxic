@@ -24,9 +24,9 @@
 #define WINDOWS_H
 
 #include <pthread.h>
-#include <wctype.h>
-#include <wchar.h>
 #include <signal.h>
+#include <wchar.h>
+#include <wctype.h>
 
 #include <tox/tox.h>
 

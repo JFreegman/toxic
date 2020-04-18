@@ -20,26 +20,26 @@
  *
  */
 
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <time.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #include <tox/tox.h>
 
-#include "toxic.h"
-#include "windows.h"
+#include "avatars.h"
 #include "chat.h"
 #include "friendlist.h"
-#include "misc_tools.h"
-#include "line_info.h"
-#include "settings.h"
-#include "notify.h"
 #include "help.h"
+#include "line_info.h"
 #include "log.h"
-#include "avatars.h"
+#include "misc_tools.h"
+#include "notify.h"
+#include "settings.h"
+#include "toxic.h"
+#include "windows.h"
 
 #ifdef AUDIO
 #include "audio_call.h"

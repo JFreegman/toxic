@@ -25,9 +25,9 @@
 
 #include <limits.h>
 
+#include "notify.h"
 #include "toxic.h"
 #include "windows.h"
-#include "notify.h"
 
 #define KiB 1024
 #define MiB 1048576       /* 1024^2 */

@@ -20,18 +20,19 @@
  *
  */
 
-#include <stdlib.h>
+#include <arpa/inet.h>
 #include <ctype.h>
-#include <string.h>
-#include <time.h>
 #include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 
-#include "toxic.h"
-#include "windows.h"
+#include "file_transfers.h"
 #include "misc_tools.h"
 #include "settings.h"
-#include "file_transfers.h"
+#include "toxic.h"
+#include "windows.h"
 
 extern ToxWindow *prompt;
 extern struct user_settings *user_settings;

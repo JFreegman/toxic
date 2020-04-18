@@ -23,8 +23,8 @@
 #ifndef LINE_INFO_H
 #define LINE_INFO_H
 
-#include "windows.h"
 #include "toxic.h"
+#include "windows.h"
 
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40

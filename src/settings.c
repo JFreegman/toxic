@@ -20,23 +20,23 @@
  *
  */
 
+#include <ctype.h>
+#include <libconfig.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libconfig.h>
-#include <ctype.h>
 
+#include "configdir.h"
+#include "misc_tools.h"
+#include "notify.h"
 #include "toxic.h"
 #include "windows.h"
-#include "configdir.h"
-#include "notify.h"
-#include "misc_tools.h"
 
 #ifdef AUDIO
 #include "audio_device.h"
 #endif /* AUDIO */
 
-#include "settings.h"
 #include "line_info.h"
+#include "settings.h"
 
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."

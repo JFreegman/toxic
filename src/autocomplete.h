@@ -23,6 +23,8 @@
 #ifndef AUTOCOMPLETE_H
 #define AUTOCOMPLETE_H
 
+#include "windows.h"
+
 /*
  * Looks for all instances in list that begin with the last entered word in line according to pos,
  * then fills line with the complete word. e.g. "Hello jo" would complete the line

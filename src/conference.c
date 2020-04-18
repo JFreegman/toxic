@@ -24,14 +24,14 @@
 #define _GNU_SOURCE    /* needed for strcasestr() and wcswidth() */
 #endif
 
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
-#include <time.h>
-#include <wchar.h>
-#include <unistd.h>
 #include <inttypes.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <wchar.h>
 
 #ifdef AUDIO
 #ifdef __APPLE__
@@ -47,21 +47,21 @@
 #endif /* __APPLE__ */
 #endif /* AUDIO */
 
-#include "windows.h"
-#include "toxic.h"
-#include "execute.h"
-#include "misc_tools.h"
-#include "conference.h"
-#include "prompt.h"
-#include "toxic_strings.h"
-#include "log.h"
-#include "line_info.h"
-#include "settings.h"
-#include "input.h"
-#include "help.h"
-#include "notify.h"
-#include "autocomplete.h"
 #include "audio_device.h"
+#include "autocomplete.h"
+#include "conference.h"
+#include "execute.h"
+#include "help.h"
+#include "input.h"
+#include "line_info.h"
+#include "log.h"
+#include "misc_tools.h"
+#include "notify.h"
+#include "prompt.h"
+#include "settings.h"
+#include "toxic.h"
+#include "toxic_strings.h"
+#include "windows.h"
 
 extern char *DATA_FILE;
 

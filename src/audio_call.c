@@ -20,17 +20,17 @@
  *
  */
 
-#include "toxic.h"
-#include "windows.h"
 #include "audio_call.h"
 #include "audio_device.h"
 #include "chat_commands.h"
+#include "chat.h"
+#include "friendlist.h"
 #include "global_commands.h"
 #include "line_info.h"
-#include "notify.h"
-#include "friendlist.h"
-#include "chat.h"
 #include "misc_tools.h"
+#include "notify.h"
+#include "toxic.h"
+#include "windows.h"
 
 #ifdef AUDIO
 

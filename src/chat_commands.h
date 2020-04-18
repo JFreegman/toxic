@@ -23,8 +23,8 @@
 #ifndef CHAT_COMMANDS_H
 #define CHAT_COMMANDS_H
 
-#include "windows.h"
 #include "toxic.h"
+#include "windows.h"
 
 void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_conference_invite(WINDOW *, ToxWindow *, Tox *, int argc, char (*argv)[MAX_STR_SIZE]);
