@@ -36,4 +36,5 @@ install:
 
 script:
   - $HOME/cache/astyle/build/gcc/bin/astyle --options=astylerc $(find . -name "*.[ch]")
+  - git diff --exit-code
   - make ENABLE_PYTHON=1 -j2

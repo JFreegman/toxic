@@ -132,6 +132,7 @@ static void catch_SIGSEGV(int sig)
     if (!freopen("/dev/tty", "w", stderr)) {    // make sure stderr is enabled since we may have disabled it
         fprintf(stderr, "Warning: Failed to enable stderr\n");
     }
+
     endwin();
     fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
     exit(EXIT_FAILURE);
