@@ -1,6 +1,8 @@
 ---
 language: python
 python: nightly
+dist: xenial
+os: linux
 
 addons:
   apt:

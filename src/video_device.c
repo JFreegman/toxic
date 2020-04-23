@@ -102,8 +102,8 @@ uint32_t primary_video_device[2];          /* Primary device */
 static ToxAV *av = NULL;
 
 /* q_mutex */
-#define lock pthread_mutex_lock(&video_mutex);
-#define unlock pthread_mutex_unlock(&video_mutex);
+#define lock pthread_mutex_lock(&video_mutex)
+#define unlock pthread_mutex_unlock(&video_mutex)
 pthread_mutex_t video_mutex;
 
 bool video_thread_running = true,
