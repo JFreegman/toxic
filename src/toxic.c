@@ -219,6 +219,16 @@ void exit_toxic_err(const char *errmsg, int errcode)
     exit(EXIT_FAILURE);
 }
 
+void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
+                       const char *message, void *user_data)
+{
+    UNUSED_VAR(user_data);
+    UNUSED_VAR(file);
+    UNUSED_VAR(m);
+
+    fprintf(stderr, "[%d] %u:%s() - %s\n", level, line, func, message);
+}
+
 static void init_term(void)
 {
 #if HAVE_WIDECHAR
@@ -645,6 +655,10 @@ static void init_tox_options(struct Tox_Options *tox_opts)
     tox_options_set_proxy_type(tox_opts, arg_opts.proxy_type);
     tox_options_set_tcp_port(tox_opts, arg_opts.tcp_port);
 
+    if (arg_opts.logging) {
+        tox_options_set_log_callback(tox_opts, cb_toxcore_logger);
+    }
+
     if (!tox_options_get_ipv6_enabled(tox_opts)) {
         queue_init_message("Forcing IPv4 connection");
     }
@@ -942,6 +956,7 @@ static void print_usage(void)
     fprintf(stderr, "  -e, --encrypt-data       Encrypt an unencrypted data file\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
+    fprintf(stderr, "  -l, --logging            Enable toxcore logging to stderr\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
     fprintf(stderr, "  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]\n");
@@ -978,6 +993,7 @@ static void parse_args(int argc, char *argv[])
         {"default-locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
         {"encrypt-data", no_argument, 0, 'e'},
+        {"logging", no_argument, 0, 'l'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
@@ -991,7 +1007,7 @@ static void parse_args(int argc, char *argv[])
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotuxvc:f:n:r:p:P:T:";
+    const char *opts_str = "4bdehlotuxvc:f:n:r:p:P:T:";
     int opt, indexptr;
     long int port = 0;
 
@@ -1053,6 +1069,12 @@ static void parse_args(int argc, char *argv[])
 
                 queue_init_message("Using '%s' data file", DATA_FILE);
 
+                break;
+
+            case 'l':
+                arg_opts.debug = true;
+                arg_opts.logging = true;
+                queue_init_message("Toxcore logging enabled to stderr");
                 break;
 
             case 'n':
@@ -1248,6 +1270,9 @@ void DnD_callback(const char *asdv, DropType dt)
 
 int main(int argc, char **argv)
 {
+    /* Make sure all written files are read/writeable only by the current user. */
+    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
     parse_args(argc, argv);
 
     /* Use the -b flag to enable stderr */
@@ -1262,9 +1287,6 @@ int main(int argc, char **argv)
         arg_opts.unencrypt_data = 0;
         queue_init_message("Warning: Using --unencrypt-data and --encrypt-data simultaneously has no effect");
     }
-
-    /* Make sure all written files are read/writeable only by the current user. */
-    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
     init_default_data_files();
 

@@ -89,6 +89,7 @@ struct arg_opts {
     bool no_connect;
     bool encrypt_data;
     bool unencrypt_data;
+    bool logging;
 
     char nameserver_path[MAX_STR_SIZE];
     char config_path[MAX_STR_SIZE];
