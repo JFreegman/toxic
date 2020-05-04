@@ -36,3 +36,25 @@ jobs:
 
       script:
         - make ENABLE_PYTHON=1 -j$(nproc)
+
+    - env: JOB=macos
+      os: macos
+      language: c
+
+      cache:
+        directories:
+          - $HOME/cache
+
+      install:
+        - brew install
+          freealut
+          libconfig
+          libqrencode
+          libsodium
+          openal-soft
+        - export LDFLAGS="-L/usr/local/Cellar/openal-soft/1.20.1/lib"
+        - git clone --depth=1 https://github.com/TokTok/c-toxcore ../c-toxcore
+        - test -f /usr/local/lib/libtoxcore.dylib || (cd ../c-toxcore && cmake -B_build -H. && make -C_build install -j$(nproc))
+
+      script:
+        - make ENABLE_PYTHON=1 DISABLE_DESKTOP_NOTIFY=1 DISABLE_X11=1 DISABLE_AV=1 DISABLE_SOUND_NOTIFY=1 -j$(nproc)
