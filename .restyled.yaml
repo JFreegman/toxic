@@ -1,0 +1,4 @@
+---
+restylers:
+  - astyle:
+      arguments: ["--options=astylerc"]
