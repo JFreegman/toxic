@@ -126,17 +126,31 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         return;
     }
 
-    if (type != TOX_CONFERENCE_TYPE_TEXT) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio conferences.");
+    uint32_t conferencenum;
+
+    if (type == TOX_CONFERENCE_TYPE_TEXT) {
+        Tox_Err_Conference_Join err;
+        conferencenum = tox_conference_join(m, self->num, (const uint8_t *) conferencekey, length, &err);
+
+        if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
+            return;
+        }
+    } else if (type == TOX_CONFERENCE_TYPE_AV) {
+#ifdef AUDIO
+        conferencenum = toxav_join_av_groupchat(m, self->num, (const uint8_t *) conferencekey, length, audio_conference_callback, NULL);
+
+        if (conferencenum == (uint32_t) -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio conference instance failed to initialize");
+            return;
+        }
+
+#else
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio support disabled by compile-time option.");
         return;
-    }
-
-    Tox_Err_Conference_Join err;
-
-    uint32_t conferencenum = tox_conference_join(m, self->num, (const uint8_t *) conferencekey, length, &err);
-
-    if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
+#endif
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
         return;
     }
 
@@ -146,6 +160,15 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         return;
     }
 
+#ifdef AUDIO
+
+    if (type == TOX_CONFERENCE_TYPE_AV) {
+        if (!init_conference_audio_input(m, conferencenum)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
+        }
+    }
+
+#endif
 }
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

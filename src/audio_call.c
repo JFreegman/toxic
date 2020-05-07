@@ -61,9 +61,9 @@
 extern FriendsList Friends;
 extern ToxWindow *windows[MAX_WINDOWS_NUM];
 
-extern pthread_mutex_t tox_lock;
-
 struct CallControl CallControl;
+
+extern struct Winthread Winthread;
 
 #define cbend pthread_exit(NULL)
 
@@ -188,14 +188,10 @@ void read_device_callback(const int16_t *captured, uint32_t size, void *data)
         return;
     }
 
-    pthread_mutex_lock(&tox_lock);
-
     toxav_audio_send_frame(CallControl.av, friend_number,
                            captured, sample_count,
                            CallControl.audio_channels,
                            CallControl.audio_sample_rate, &error);
-
-    pthread_mutex_unlock(&tox_lock);
 }
 
 void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
@@ -752,11 +748,7 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     const char *error_str;
 
     if (argc != 1) {
-        if (argc < 1) {
-            error_str = "Type must be specified!";
-        } else {
-            error_str = "Only two arguments allowed!";
-        }
+        error_str = "Specify type: \"/mute in\" or \"/mute out\".";
 
         goto on_error;
     }
@@ -785,10 +777,10 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
         if (type == input) {
             device_mute(type, this_call->in_idx);
-            self->chatwin->infobox.in_is_muted ^= 1;
+            self->chatwin->infobox.in_is_muted = device_is_muted(type, this_call->in_idx);
         } else {
             device_mute(type, this_call->out_idx);
-            self->chatwin->infobox.out_is_muted ^= 1;
+            self->chatwin->infobox.out_is_muted = device_is_muted(type, this_call->out_idx);
         }
 
         pthread_mutex_unlock(&this_call->mutex);

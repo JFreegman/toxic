@@ -304,7 +304,15 @@ static void help_draw_conference(ToxWindow *self)
     wprintw(win, "Conference commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /title <msg>            : Set conference title (show current title if no msg)\n\n");
+    wprintw(win, "  /title <msg>               : Set conference title (show current title if no msg)\n");
+#ifdef AUDIO
+    wattron(win, A_BOLD);
+    wprintw(win, "\n Audio:\n");
+    wattroff(win, A_BOLD);
+    wprintw(win, "  /audio <on> or <off>       : Enable/disable audio in an audio conference\n");
+    wprintw(win, "  /mute                      : Toggle self audio mute status\n");
+    wprintw(win, "  /mute <nick> or <pubkey>   : Toggle peer audio mute status\n\n");
+#endif
 
     help_draw_bottom_menu(win);
 
@@ -390,7 +398,11 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'o':
-            help_init_window(self, 6, 80);
+            height = 6;
+#ifdef AUDIO
+            height += 5;
+#endif
+            help_init_window(self, height, 80);
             self->help->type = HELP_CONFERENCE;
             break;
 

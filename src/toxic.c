@@ -103,8 +103,6 @@ struct av_thread av_thread;
 struct arg_opts arg_opts;
 struct user_settings *user_settings = NULL;
 
-pthread_mutex_t tox_lock;
-
 static struct user_password {
     bool data_is_encrypted;
     char pass[MAX_PASSWORD_LEN + 1];
@@ -407,9 +405,21 @@ static void load_conferences(Tox *m)
 
         title[length] = 0;
 
-        if (init_conference_win(m, conferencenum, type, (const char *) title, length) == -1) {
+        int win_idx = init_conference_win(m, conferencenum, type, (const char *) title, length);
+
+        if (win_idx == -1) {
             tox_conference_delete(m, conferencenum, NULL);
             continue;
+        }
+
+        if (type == TOX_CONFERENCE_TYPE_AV) {
+            line_info_add(get_window_ptr(win_idx), NULL, NULL, NULL, SYS_MSG, 0, 0,
+#ifdef AUDIO
+                          "Use \"/audio on\" to enable audio in this conference."
+#else
+                          "Audio support disabled by compile-time option."
+#endif
+                         );
         }
     }
 
@@ -946,12 +956,9 @@ static void do_toxic(Tox *m)
         return;
     }
 
-    pthread_mutex_lock(&tox_lock);
-
     tox_iterate(m, NULL);
     do_tox_connection(m);
 
-    pthread_mutex_unlock(&tox_lock);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -1396,10 +1403,6 @@ int main(int argc, char **argv)
         exit_toxic_err("failed in main", FATALERR_MEMORY);
     }
 
-    if (pthread_mutex_init(&tox_lock, NULL) != 0) {
-        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
-    }
-
     const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
     if (settings_load(user_settings, p) == -1) {
@@ -1470,7 +1473,7 @@ int main(int argc, char **argv)
 
 #elif SOUND_NOTIFY
 
-    if (init_audio() == de_InternalError) {
+    if (init_devices() == de_InternalError) {
         queue_init_message("Failed to init audio devices");
     }
 

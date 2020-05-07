@@ -365,17 +365,32 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    if (type != TOX_CONFERENCE_TYPE_TEXT) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio conferences.");
+    uint32_t conferencenum;
+
+    if (type == TOX_CONFERENCE_TYPE_TEXT) {
+        Tox_Err_Conference_New err;
+
+        conferencenum = tox_conference_new(m, &err);
+
+        if (err != TOX_ERR_CONFERENCE_NEW_OK) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
+            return;
+        }
+    } else if (type == TOX_CONFERENCE_TYPE_AV) {
+#ifdef AUDIO
+        conferencenum = toxav_add_av_groupchat(m, audio_conference_callback, NULL);
+
+        if (conferencenum == (uint32_t) -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio conference instance failed to initialize");
+            return;
+        }
+
+#else
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio support disabled by compile-time option.");
         return;
-    }
-
-    Tox_Err_Conference_New err;
-
-    uint32_t conferencenum = tox_conference_new(m, &err);
-
-    if (err != TOX_ERR_CONFERENCE_NEW_OK) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
+#endif
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
         return;
     }
 
@@ -384,6 +399,16 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         tox_conference_delete(m, conferencenum, NULL);
         return;
     }
+
+#ifdef AUDIO
+
+    if (type == TOX_CONFERENCE_TYPE_AV) {
+        if (!init_conference_audio_input(m, conferencenum)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
+        }
+    }
+
+#endif
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference [%d] created.", conferencenum);
 }

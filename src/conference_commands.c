@@ -27,6 +27,7 @@
 #include "line_info.h"
 #include "misc_tools.h"
 #include "log.h"
+#include "conference.h"
 
 void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -78,4 +79,71 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
     char tmp_event[MAX_STR_SIZE + 20];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
     write_to_log(tmp_event, selfnick, self->chatwin->log, true);
+}
+
+void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+#ifdef AUDIO
+    bool enable;
+
+    if (argc == 1 && !strcasecmp(argv[1], "on")) {
+        enable = true;
+    } else if (argc == 1 && !strcasecmp(argv[1], "off")) {
+        enable = false;
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify: on | off");
+        return;
+    }
+
+    if ((enable ? enable_conference_audio : disable_conference_audio)(m, self->num)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, enable ? "Enabled conference audio" : "Disabled conference audio");
+    } else {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, enable ? "Failed to enable audio" : "Failed to disable audio");
+    }
+
+#endif
+}
+
+void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+#ifdef AUDIO
+
+    if (argc < 1) {
+        if (conference_mute_self(self->num)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toggled self audio mute status");
+        } else {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No audio input to mute");
+        }
+    } else {
+        NameListEntry *entries[16];
+        uint32_t n = get_name_list_entries_by_prefix(self->num, argv[1], entries, 16);
+
+        if (n == 0) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No such peer");
+            return;
+        }
+
+        if (n > 1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+                          "Multiple matching peers (use /mute [public key] to disambiguate):");
+
+            for (uint32_t i = 0; i < n; ++i) {
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s: %s", entries[i]->pubkey_str, entries[i]->name);
+            }
+
+            return;
+        }
+
+        if (conference_mute_peer(m, self->num, entries[0]->peernum)) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toggled audio mute status of %s", entries[0]->name);
+        } else {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No such audio peer");
+        }
+    }
+
+#endif
 }

@@ -64,9 +64,13 @@ DeviceError terminate_devices(void);
 /* toggle device mute */
 DeviceError device_mute(DeviceType type, uint32_t device_idx);
 
+bool device_is_muted(DeviceType type, uint32_t device_idx);
+
 #ifdef AUDIO
 DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
 #endif
+
+DeviceError set_source_position(uint32_t device_idx, float x, float y, float z);
 
 DeviceError set_al_device(DeviceType type, int32_t selection);
 

@@ -71,6 +71,13 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr);
  */
 int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size);
 
+/* Converts a binary representation of a Tox public key into a string.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int bin_pubkey_to_string(const uint8_t *bin_pubkey, size_t bin_pubkey_size, char *output, size_t output_size);
+
 /* get the current unix time (not thread safe) */
 time_t get_unix_time(void);
 

@@ -186,6 +186,26 @@ int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_
     return 0;
 }
 
+/* Converts a binary representation of a Tox public key into a string.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
+int bin_pubkey_to_string(const uint8_t *bin_pubkey, size_t bin_pubkey_size, char *output, size_t output_size)
+{
+    if (bin_pubkey_size != TOX_PUBLIC_KEY_SIZE || output_size < (TOX_PUBLIC_KEY_SIZE * 2 + 1)) {
+        return -1;
+    }
+
+    size_t i;
+
+    for (i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
+        snprintf(&output[i * 2], output_size - (i * 2), "%02X", bin_pubkey[i] & 0xff);
+    }
+
+    return 0;
+}
+
 /* Returns 1 if the string is empty, 0 otherwise */
 int string_is_empty(const char *string)
 {

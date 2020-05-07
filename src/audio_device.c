@@ -44,9 +44,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define inline__ inline __attribute__((always_inline))
-
 extern struct user_settings *user_settings;
+extern struct Winthread Winthread;
 
 typedef struct FrameInfo {
     uint32_t samples_per_frame;
@@ -91,6 +90,8 @@ typedef struct AudioState {
 
     FrameInfo capture_frame_info;
 
+    // mutexes to prevent changes to input resp. output devices and al_devices
+    // during poll_input iterations resp. calls to write_out
     pthread_mutex_t mutex[2];
 
     // TODO: unused
@@ -231,6 +232,21 @@ DeviceError device_mute(DeviceType type, uint32_t device_idx)
     return de_None;
 }
 
+bool device_is_muted(DeviceType type, uint32_t device_idx)
+{
+    if (device_idx >= MAX_DEVICES) {
+        return false;
+    }
+
+    Device *device = &audio_state->devices[type][device_idx];
+
+    if (!device->active) {
+        return false;
+    }
+
+    return device->muted;
+}
+
 #ifdef AUDIO
 DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
 {
@@ -252,6 +268,31 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
     return de_None;
 }
 #endif
+
+DeviceError set_source_position(uint32_t device_idx, float x, float y, float z)
+{
+    if (device_idx >= MAX_DEVICES) {
+        return de_InvalidSelection;
+    }
+
+    Device *device = &audio_state->devices[output][device_idx];
+
+    if (!device->active) {
+        return de_DeviceNotActive;
+    }
+
+    lock(output);
+
+    alSource3f(device->source, AL_POSITION, x, y, z);
+
+    unlock(output);
+
+    if (!audio_state->al_device[output] || alcGetError(audio_state->al_device[output]) != AL_NO_ERROR) {
+        return de_AlError;
+    }
+
+    return de_None;
+}
 
 static DeviceError close_al_device(DeviceType type)
 {
@@ -535,8 +576,8 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     return err;
 }
 
-inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t sample_count, uint8_t channels,
-                               uint32_t sample_rate)
+DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t sample_count, uint8_t channels,
+                      uint32_t sample_rate)
 {
     if (device_idx >= MAX_DEVICES) {
         return de_InvalidSelection;
@@ -634,17 +675,19 @@ static void *poll_input(void *arg)
             if (available_samples >= f_size && f_size <= FRAME_BUF_SIZE) {
                 alcCaptureSamples(audio_state->al_device[input], frame_buf, f_size);
 
+                unlock(input);
+                pthread_mutex_lock(&Winthread.lock);
+                lock(input);
+
                 for (int i = 0; i < MAX_DEVICES; i++) {
                     Device *device = &audio_state->devices[input][i];
 
                     if (device->active && !device->muted && device->cb) {
-                        const DataHandleCallback cb = device->cb;
-                        void *const cb_data = device->cb_data;
-                        unlock(input);
-                        cb(frame_buf, f_size, cb_data);
-                        lock(input);
+                        device->cb(frame_buf, f_size, device->cb_data);
                     }
                 }
+
+                pthread_mutex_unlock(&Winthread.lock);
             }
         }
 
