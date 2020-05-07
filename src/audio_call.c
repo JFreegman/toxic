@@ -213,9 +213,8 @@ int start_transmission(ToxWindow *self, Call *call)
         return -1;
     }
 
-    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &self->num, true,
+    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &self->num, false,
                                           CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels);
-    /* Set VAD as true for all; TODO: Make it more dynamic */
 
     if (error != de_None) {
         if (error == de_FailedStart) {
@@ -819,7 +818,7 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 
     /* Call must be active */
     if (self->is_call) {
-        device_set_VAD_treshold(CallControl.calls[self->num].in_idx, value);
+        device_set_VAD_threshold(CallControl.calls[self->num].in_idx, value);
         self->chatwin->infobox.vad_lvl = value;
     }
 

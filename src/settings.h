@@ -84,7 +84,7 @@ struct user_settings {
 #ifdef AUDIO
     int audio_in_dev;
     int audio_out_dev;
-    double VAD_treshold;
+    double VAD_threshold;
 #endif
 };
 

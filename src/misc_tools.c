@@ -197,9 +197,7 @@ int bin_pubkey_to_string(const uint8_t *bin_pubkey, size_t bin_pubkey_size, char
         return -1;
     }
 
-    size_t i;
-
-    for (i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
+    for (size_t i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
         snprintf(&output[i * 2], output_size - (i * 2), "%02X", bin_pubkey[i] & 0xff);
     }
 

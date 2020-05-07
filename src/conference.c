@@ -353,12 +353,14 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
         return 0;
     }
 
-    const int len = strlen(prefix);
+    const size_t len = strlen(prefix);
 
     if (len == 2 * TOX_PUBLIC_KEY_SIZE) {
         for (uint32_t i = 0; i < chat->num_peers; ++i) {
-            if (strcasecmp(prefix, chat->name_list[i].pubkey_str) == 0) {
-                entries[0] = &chat->name_list[i];
+            NameListEntry *entry = &chat->name_list[i];
+
+            if (strcasecmp(prefix, entry->pubkey_str) == 0) {
+                entries[0] = entry;
                 return 1;
             }
         }
@@ -367,9 +369,11 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
     uint32_t n = 0;
 
     for (uint32_t i = 0; i < chat->num_peers; ++i) {
-        if (strncmp(prefix, chat->name_list[i].name, len) == 0
-                || strncasecmp(prefix, chat->name_list[i].pubkey_str, len) == 0) {
-            entries[n] = &chat->name_list[i];
+        NameListEntry *entry = &chat->name_list[i];
+
+        if (strncmp(prefix, entry->name, len) == 0
+                || strncasecmp(prefix, entry->pubkey_str, len) == 0) {
+            entries[n] = entry;
             ++n;
 
             if (n == maxpeers) {
@@ -418,11 +422,14 @@ static void conference_update_name_list(uint32_t conferencenum)
     uint32_t count = 0;
 
     for (uint32_t i = 0; i < chat->max_idx; ++i) {
-        if (chat->peer_list[i].active) {
-            memcpy(chat->name_list[count].name, chat->peer_list[i].name, chat->peer_list[i].name_length + 1);
-            bin_pubkey_to_string(chat->peer_list[i].pubkey, sizeof(chat->peer_list[i].pubkey),
-                                 chat->name_list[count].pubkey_str, sizeof(chat->name_list[count].pubkey_str));
-            chat->name_list[count].peernum = i;
+        const ConferencePeer *peer = &chat->peer_list[i];
+        NameListEntry *entry = &chat->name_list[count];
+
+        if (peer->active) {
+            memcpy(entry->name, peer->name, peer->name_length + 1);
+            bin_pubkey_to_string(peer->pubkey, sizeof(peer->pubkey),
+                                 entry->pubkey_str, sizeof(entry->pubkey_str));
+            entry->peernum = i;
             ++count;
         }
     }
@@ -451,7 +458,7 @@ static int realloc_peer_list(ConferenceChat *chat, uint32_t num_peers)
         return 0;
     }
 
-    struct ConferencePeer *tmp_list = realloc(chat->peer_list, num_peers * sizeof(struct ConferencePeer));
+    ConferencePeer *tmp_list = realloc(chat->peer_list, num_peers * sizeof(ConferencePeer));
 
     if (!tmp_list) {
         return -1;
@@ -462,13 +469,35 @@ static int realloc_peer_list(ConferenceChat *chat, uint32_t num_peers)
     return 0;
 }
 
+/* return NULL if peer or conference doesn't exist */
+static ConferencePeer *peer_in_conference(uint32_t conferencenum, uint32_t peernum)
+{
+    if (conferencenum >= MAX_CONFERENCE_NUM) {
+        return NULL;
+    }
+
+    const ConferenceChat *chat = &conferences[conferencenum];
+
+    if (!chat->active || peernum > chat->max_idx) {
+        return NULL;
+    }
+
+    ConferencePeer *peer = &chat->peer_list[peernum];
+
+    if (!peer->active) {
+        return NULL;
+    }
+
+    return peer;
+}
+
 #ifdef AUDIO
 static void set_peer_audio_position(Tox *m, uint32_t conferencenum, uint32_t peernum)
 {
     ConferenceChat *chat = &conferences[conferencenum];
     ConferencePeer *peer = &chat->peer_list[peernum];
 
-    if (!peer->sending_audio) {
+    if (peer == NULL || !peer->sending_audio) {
         return;
     }
 
@@ -497,10 +526,10 @@ static void set_peer_audio_position(Tox *m, uint32_t conferencenum, uint32_t pee
 #endif
 
 
-static bool find_peer_by_pubkey(ConferencePeer *list, uint32_t num_peers, uint8_t *pubkey, uint32_t *idx)
+static bool find_peer_by_pubkey(const ConferencePeer *list, uint32_t num_peers, uint8_t *pubkey, uint32_t *idx)
 {
     for (uint32_t i = 0; i < num_peers; ++i) {
-        ConferencePeer *peer = &list[i];
+        const ConferencePeer *peer = &list[i];
 
         if (peer->active && memcmp(peer->pubkey, pubkey, TOX_PUBLIC_KEY_SIZE) == 0) {
             *idx = i;
@@ -567,7 +596,7 @@ static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers,
 
         peer->active = true;
         peer->name_length = length;
-        peer->peernumber = i;
+        peer->peernum = i;
 
 #ifdef AUDIO
         set_peer_audio_position(m, conferencenum, i);
@@ -628,28 +657,19 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint3
         return;
     }
 
-    ConferenceChat *chat = &conferences[conferencenum];
+    const ConferencePeer *peer = peer_in_conference(conferencenum, peernum);
 
-    if (!chat->active) {
-        return;
-    }
+    if (peer != NULL && peer->name_length > 0) {
+        ChatContext *ctx = self->chatwin;
+        char timefrmt[TIME_STR_SIZE];
+        get_time_str(timefrmt, sizeof(timefrmt));
 
-    for (uint32_t i = 0; i < chat->max_idx; ++i) {
-        ConferencePeer *peer = &chat->peer_list[i];
+        char tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
+        snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (const char *) name);
 
-        if (peer->active && peer->peernumber == peernum && peer->name_length > 0) {
-            ChatContext *ctx = self->chatwin;
-            char timefrmt[TIME_STR_SIZE];
-            get_time_str(timefrmt, sizeof(timefrmt));
+        write_to_log(tmp_event, peer->name, ctx->log, true);
+        line_info_add(self, timefrmt, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
 
-            char tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
-            snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (const char *) name);
-
-            write_to_log(tmp_event, peer->name, ctx->log, true);
-            line_info_add(self, timefrmt, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
-
-            break;
-        }
     }
 
     conference_onConferenceNameListChange(self, m, conferencenum);
@@ -716,6 +736,7 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     bool input_ret = false;
+    ConferenceChat *chat = &conferences[self->num];
 
     if (key == L'\t') {  /* TAB key: auto-completes peer name or command */
         input_ret = true;
@@ -725,14 +746,14 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             /* TODO: make this not suck */
             if (ctx->line[0] != L'/' || wcscmp(ctx->line, L"/me") == 0) {
-                const char **complete_strs = calloc(conferences[self->num].num_peers, sizeof(const char *));
+                const char **complete_strs = calloc(chat->num_peers, sizeof(const char *));
 
                 if (complete_strs) {
-                    for (uint32_t i = 0; i < conferences[self->num].num_peers; ++i) {
-                        complete_strs[i] = (const char *) conferences[self->num].name_list[i].name;
+                    for (uint32_t i = 0; i < chat->num_peers; ++i) {
+                        complete_strs[i] = (const char *) chat->name_list[i].name;
                     }
 
-                    diff = complete_line(self, complete_strs, conferences[self->num].num_peers);
+                    diff = complete_line(self, complete_strs, chat->num_peers);
                     free(complete_strs);
                 }
             } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
@@ -746,20 +767,20 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 #endif
             else if (wcsncmp(ctx->line, L"/mute ", wcslen(L"/mute ")) == 0) {
-                const char **complete_strs = calloc(conferences[self->num].num_peers, sizeof(const char *));
+                const char **complete_strs = calloc(chat->num_peers, sizeof(const char *));
 
                 if (complete_strs) {
-                    for (uint32_t i = 0; i < conferences[self->num].num_peers; ++i) {
-                        complete_strs[i] = (const char *) conferences[self->num].name_list[i].name;
+                    for (uint32_t i = 0; i < chat->num_peers; ++i) {
+                        complete_strs[i] = (const char *) chat->name_list[i].name;
                     }
 
-                    diff = complete_line(self, complete_strs, conferences[self->num].num_peers);
+                    diff = complete_line(self, complete_strs, chat->num_peers);
 
                     if (diff == -1) {
-                        for (uint32_t i = 0; i < conferences[self->num].num_peers; ++i) {
-                            complete_strs[i] = (const char *) conferences[self->num].name_list[i].pubkey_str;
+                        for (uint32_t i = 0; i < chat->num_peers; ++i) {
+                            complete_strs[i] = (const char *) chat->name_list[i].pubkey_str;
                         }
-                        diff = complete_line(self, complete_strs, conferences[self->num].num_peers);
+                        diff = complete_line(self, complete_strs, chat->num_peers);
                     }
 
                     free(complete_strs);
@@ -784,14 +805,14 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         input_ret = true;
         const int L = y2 - CHATBOX_HEIGHT - sidebar_offset(self->num);
 
-        if (conferences[self->num].side_pos < (int64_t) conferences[self->num].num_peers - L) {
-            ++conferences[self->num].side_pos;
+        if (chat->side_pos < (int64_t) chat->num_peers - L) {
+            ++chat->side_pos;
         }
     } else if (key == T_KEY_C_UP) {
         input_ret = true;
 
-        if (conferences[self->num].side_pos > 0) {
-            --conferences[self->num].side_pos;
+        if (chat->side_pos > 0) {
+            --chat->side_pos;
         }
     } else if (key == L'\r') {
         input_ret = true;
@@ -850,14 +871,14 @@ static void draw_peer(ToxWindow *self, Tox *m, ChatContext *ctx, uint32_t i)
     if (audio) {
 #ifdef AUDIO
         pthread_mutex_lock(&Winthread.lock);
-        const ConferencePeer *peer = &conferences[self->num].peer_list[peernum];
+        const ConferencePeer *peer = peer_in_conference(self->num, peernum);
         const bool audio_active = is_self
                                   ? !timed_out(conferences[self->num].last_sent_audio, 2)
-                                  : peer->active && peer->sending_audio && !timed_out(peer->last_audio_time, 2);
+                                  : peer != NULL && peer->sending_audio && !timed_out(peer->last_audio_time, 2);
         const bool mute = audio_active &&
                           (is_self
                            ? device_is_muted(input, conferences[self->num].audio_in_idx)
-                           : device_is_muted(output, peer->audio_out_idx));
+                           : peer != NULL && device_is_muted(output, peer->audio_out_idx));
         pthread_mutex_unlock(&Winthread.lock);
 
         const int aud_attr = A_BOLD | COLOR_PAIR(audio_active && !mute ? GREEN : RED);
@@ -929,14 +950,27 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
 #ifdef AUDIO
             pthread_mutex_lock(&Winthread.lock);
             const bool mic_on = !device_is_muted(input, conferences[self->num].audio_in_idx);
+            const float volume = get_input_volume();
+            const float threshold = device_get_VAD_threshold(conferences[self->num].audio_in_idx);
             pthread_mutex_unlock(&Winthread.lock);
 
             wmove(ctx->sidebar, line, 1);
             wattron(ctx->sidebar, A_BOLD);
             wprintw(ctx->sidebar, "Mic: ");
-            const int color = mic_on ? GREEN : RED;
+            const int color = mic_on && volume > threshold ? GREEN : RED;
             wattron(ctx->sidebar, COLOR_PAIR(color));
-            wprintw(ctx->sidebar, mic_on ? "ON" : "OFF");
+
+            if (mic_on) {
+                float v = volume;
+
+                while (v > 0.0f) {
+                    wprintw(ctx->sidebar, v > 10.0f ? (v > 15.0f ? "*" : "+") : (v > 5.0f ? "-" : "."));
+                    v -= 20.0f;
+                }
+            } else {
+                wprintw(ctx->sidebar, "OFF");
+            }
+
             wattroff(ctx->sidebar, COLOR_PAIR(color));
             wattroff(ctx->sidebar, A_BOLD);
             ++line;
@@ -953,10 +987,9 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
         mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
         ++line;
 
-        int maxlines = y2 - header_lines - CHATBOX_HEIGHT;
-        uint32_t i;
-
-        for (i = 0; i < num_peers && i < maxlines; ++i) {
+        for (uint32_t i = 0;
+                i < num_peers && i < y2 - header_lines - CHATBOX_HEIGHT;
+                ++i) {
             wmove(ctx->sidebar, i + header_lines, 1);
             draw_peer(self, m, ctx, i);
         }
@@ -1060,40 +1093,32 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
 #define CONFAV_AUDIO_CHANNELS 1
 #define CONFAV_SAMPLES_PER_FRAME (CONFAV_SAMPLE_RATE * CONFAV_FRAME_DURATION / 1000)
 
-void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernumber, const int16_t *pcm,
+void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum, const int16_t *pcm,
                           unsigned int samples, uint8_t channels, uint32_t sample_rate, void *userdata)
 {
-    ConferenceChat *chat = &conferences[conferencenum];
+    ConferencePeer *peer = peer_in_conference(conferencenum, peernum);
 
-    if (!chat->active) {
+    if (peer == NULL) {
         return;
     }
 
-    for (uint32_t i = 0; i < chat->max_idx; ++i) {
-        ConferencePeer *peer = &chat->peer_list[i];
-
-        if (!peer->active || peer->peernumber != peernumber) {
-            continue;
+    if (!peer->sending_audio) {
+        if (open_output_device(&peer->audio_out_idx,
+                               sample_rate, CONFAV_FRAME_DURATION, channels) != de_None) {
+            // TODO: error message?
+            return;
         }
 
-        if (!peer->sending_audio) {
-            if (open_output_device(&peer->audio_out_idx,
-                                   sample_rate, CONFAV_FRAME_DURATION, channels) != de_None) {
-                // TODO: error message?
-                return;
-            }
+        peer->sending_audio = true;
 
-            peer->sending_audio = true;
-
-            set_peer_audio_position(tox, conferencenum, i);
-        }
-
-        write_out(peer->audio_out_idx, pcm, samples, channels, sample_rate);
-
-        peer->last_audio_time = get_unix_time();
-
-        return;
+        set_peer_audio_position(tox, conferencenum, peernum);
     }
+
+    write_out(peer->audio_out_idx, pcm, samples, channels, sample_rate);
+
+    peer->last_audio_time = get_unix_time();
+
+    return;
 }
 
 static void conference_read_device_callback(const int16_t *captured, uint32_t size, void *data)
@@ -1155,12 +1180,12 @@ bool disable_conference_audio(Tox *tox, uint32_t conferencenum)
         chat->audio_enabled = false;
     }
 
-    return (toxav_groupchat_disable_av(tox, conferencenum) == 0);
+    return toxav_groupchat_disable_av(tox, conferencenum) == 0;
 }
 
 bool conference_mute_self(uint32_t conferencenum)
 {
-    ConferenceChat *chat = &conferences[conferencenum];
+    const ConferenceChat *chat = &conferences[conferencenum];
 
     if (!chat->active || !chat->audio_enabled) {
         return false;
@@ -1177,20 +1202,42 @@ bool conference_mute_peer(const Tox *m, uint32_t conferencenum, uint32_t peernum
         return conference_mute_self(conferencenum);
     }
 
-    ConferenceChat *chat = &conferences[conferencenum];
+    const ConferenceChat *chat = &conferences[conferencenum];
 
     if (!chat->active || !chat->audio_enabled
             || peernum > chat->max_idx) {
         return false;
     }
 
-    const ConferencePeer *peer = &chat->peer_list[peernum];
+    const ConferencePeer *peer = peer_in_conference(conferencenum, peernum);
 
-    if (!peer->active || !peer->sending_audio) {
+    if (peer == NULL || !peer->sending_audio) {
         return false;
     }
 
     device_mute(output, peer->audio_out_idx);
     return true;
+}
+
+bool conference_set_VAD_threshold(uint32_t conferencenum, float threshold)
+{
+    const ConferenceChat *chat = &conferences[conferencenum];
+
+    if (!chat->active || !chat->audio_enabled) {
+        return false;
+    }
+
+    return (device_set_VAD_threshold(chat->audio_in_idx, threshold) == de_None);
+}
+
+float conference_get_VAD_threshold(uint32_t conferencenum)
+{
+    const ConferenceChat *chat = &conferences[conferencenum];
+
+    if (!chat->active || !chat->audio_enabled) {
+        return 0.0f;
+    }
+
+    return device_get_VAD_threshold(chat->audio_in_idx);
 }
 #endif

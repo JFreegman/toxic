@@ -11,6 +11,7 @@ endif
 CHECK_AUDIO_LIBS := $(shell $(PKG_CONFIG) --exists $(AUDIO_LIBS) || echo -n "error")
 ifneq ($(CHECK_AUDIO_LIBS), error)
     LIBS += $(AUDIO_LIBS)
+    LDFLAGS += -lm
     CFLAGS += $(AUDIO_CFLAGS)
     OBJ += $(AUDIO_OBJ)
 else ifneq ($(MAKECMDGOALS), clean)

@@ -1440,18 +1440,8 @@ int main(int argc, char **argv)
     prompt_init_statusbar(prompt, m, !datafile_exists);
     load_conferences(m);
 
-    /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
-    }
-
-    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0) {
-        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
-    }
-
-    /* thread for message queue */
-    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0) {
-        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     }
 
 #ifdef AUDIO
@@ -1478,6 +1468,16 @@ int main(int argc, char **argv)
     }
 
 #endif /* AUDIO */
+
+    /* thread for ncurses stuff */
+    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) m) != 0) {
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+    }
+
+    /* thread for message queue */
+    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) m) != 0) {
+        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+    }
 
 #ifdef PYTHON
 

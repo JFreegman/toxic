@@ -66,9 +66,9 @@ DeviceError device_mute(DeviceType type, uint32_t device_idx);
 
 bool device_is_muted(DeviceType type, uint32_t device_idx);
 
-#ifdef AUDIO
-DeviceError device_set_VAD_treshold(uint32_t device_idx, float value);
-#endif
+DeviceError device_set_VAD_threshold(uint32_t device_idx, float value);
+
+float device_get_VAD_threshold(uint32_t device_idx);
 
 DeviceError set_source_position(uint32_t device_idx, float x, float y, float z);
 
@@ -87,6 +87,9 @@ DeviceError close_device(DeviceType type, uint32_t device_idx);
 /* Write data to output device */
 DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t length, uint8_t channels,
                       uint32_t sample_rate);
+
+/* return current input volume as float in range 0.0-100.0 */
+float get_input_volume(void);
 
 void print_al_devices(ToxWindow *self, DeviceType type);
 

@@ -21,6 +21,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "toxic.h"
 #include "windows.h"
@@ -28,6 +29,11 @@
 #include "misc_tools.h"
 #include "log.h"
 #include "conference.h"
+
+static void print_err(ToxWindow *self, const char *error_str)
+{
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
+}
 
 void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
@@ -40,12 +46,12 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
         size_t tlen = tox_conference_get_title_size(m, self->num, &err);
 
         if (err != TOX_ERR_CONFERENCE_TITLE_OK || tlen >= sizeof(title)) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
+            print_err(self, "Title is not set");
             return;
         }
 
         if (!tox_conference_get_title(m, self->num, (uint8_t *) title, &err)) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is not set");
+            print_err(self, "Title is not set");
             return;
         }
 
@@ -81,11 +87,11 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
     write_to_log(tmp_event, selfnick, self->chatwin->log, true);
 }
 
+#ifdef AUDIO
 void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
-#ifdef AUDIO
     bool enable;
 
     if (argc == 1 && !strcasecmp(argv[1], "on")) {
@@ -93,43 +99,38 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     } else if (argc == 1 && !strcasecmp(argv[1], "off")) {
         enable = false;
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify: on | off");
+        print_err(self, "Please specify: on | off");
         return;
     }
 
-    if ((enable ? enable_conference_audio : disable_conference_audio)(m, self->num)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, enable ? "Enabled conference audio" : "Disabled conference audio");
+    if (enable ? enable_conference_audio(m, self->num) : disable_conference_audio(m, self->num)) {
+        print_err(self, enable ? "Enabled conference audio" : "Disabled conference audio");
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, enable ? "Failed to enable audio" : "Failed to disable audio");
+        print_err(self, enable ? "Failed to enable audio" : "Failed to disable audio");
     }
-
-#endif
 }
 
 void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
-#ifdef AUDIO
-
     if (argc < 1) {
         if (conference_mute_self(self->num)) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toggled self audio mute status");
+            print_err(self, "Toggled self audio mute status");
         } else {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No audio input to mute");
+            print_err(self, "No audio input to mute");
         }
     } else {
         NameListEntry *entries[16];
         uint32_t n = get_name_list_entries_by_prefix(self->num, argv[1], entries, 16);
 
         if (n == 0) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No such peer");
+            print_err(self, "No such peer");
             return;
         }
 
         if (n > 1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
-                          "Multiple matching peers (use /mute [public key] to disambiguate):");
+            print_err(self, "Multiple matching peers (use /mute [public key] to disambiguate):");
 
             for (uint32_t i = 0; i < n; ++i) {
                 line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s: %s", entries[i]->pubkey_str, entries[i]->name);
@@ -141,9 +142,39 @@ void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         if (conference_mute_peer(m, self->num, entries[0]->peernum)) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toggled audio mute status of %s", entries[0]->name);
         } else {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No such audio peer");
+            print_err(self, "No such audio peer");
         }
     }
-
-#endif
 }
+
+void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
+    if (argc == 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Current VAD threshold: %.1f",
+                      (double) conference_get_VAD_threshold(self->num));
+        return;
+    }
+
+    if (argc > 1) {
+        print_err(self, "Only one argument allowed.");
+        return;
+    }
+
+    char *end;
+    float value = strtof(argv[1], &end);
+
+    if (*end) {
+        print_err(self, "Invalid input");
+        return;
+    }
+
+    if (conference_set_VAD_threshold(self->num, value)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Set VAD threshold to %.1f", (double) value);
+    } else {
+        print_err(self, "Failed to set conference audio input sensitivity.");
+    }
+}
+#endif /* AUDIO */

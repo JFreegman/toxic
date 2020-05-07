@@ -82,8 +82,8 @@ audio = {
   // preferred audio output device; numbers correspond to /lsdev out
   output_device=0;
 
-  // default VAD treshold; float (recommended values are around 40)
-  VAD_treshold=40.0;
+  // default VAD threshold; float (recommended values are 1.0-40.0)
+  VAD_threshold=5.0;
 };
 
 tox = {

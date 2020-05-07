@@ -22,10 +22,6 @@
 
 #include "audio_device.h"
 
-#ifdef AUDIO
-#include "audio_call.h"
-#endif
-
 #include "line_info.h"
 #include "settings.h"
 #include "misc_tools.h"
@@ -43,6 +39,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
@@ -70,11 +67,8 @@ typedef struct Device {
     // used only by input devices:
     DataHandleCallback cb;
     void *cb_data;
-    // TODO: implement VAD, and fix the typo, or remove these.
-    bool enable_VAD;
-#ifdef AUDIO
-    float VAD_treshold; /* 40 is usually recommended value */
-#endif
+    float VAD_threshold;
+    uint32_t VAD_samples_remaining;
 
     // used only by output devices:
     uint32_t source;
@@ -89,9 +83,11 @@ typedef struct AudioState {
     uint32_t num_devices[2];
 
     FrameInfo capture_frame_info;
+    float input_volume;
 
     // mutexes to prevent changes to input resp. output devices and al_devices
-    // during poll_input iterations resp. calls to write_out
+    // during poll_input iterations resp. calls to write_out;
+    // mutex[input] also used to lock input_volume which poll_input writes to.
     pthread_mutex_t mutex[2];
 
     // TODO: unused
@@ -118,7 +114,9 @@ static void unlock(DeviceType type)
 static bool thread_running = true,
             thread_paused = true;               /* Thread control */
 
+#ifdef AUDIO
 static void *poll_input(void *);
+#endif
 
 static uint32_t sound_mode(bool stereo)
 {
@@ -148,6 +146,7 @@ DeviceError init_devices(void)
         }
     }
 
+#ifdef AUDIO
     // Start poll thread
     pthread_t thread_id;
 
@@ -155,6 +154,8 @@ DeviceError init_devices(void)
             || pthread_detach(thread_id) != 0) {
         return de_InternalError;
     }
+
+#endif
 
     return de_None;
 }
@@ -247,8 +248,7 @@ bool device_is_muted(DeviceType type, uint32_t device_idx)
     return device->muted;
 }
 
-#ifdef AUDIO
-DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
+DeviceError device_set_VAD_threshold(uint32_t device_idx, float value)
 {
     if (device_idx >= MAX_DEVICES) {
         return de_InvalidSelection;
@@ -260,14 +260,32 @@ DeviceError device_set_VAD_treshold(uint32_t device_idx, float value)
         return de_DeviceNotActive;
     }
 
+    if (value <= 0.0f) {
+        value = 0.0f;
+    }
+
     lock(input);
 
-    device->VAD_treshold = value;
+    device->VAD_threshold = value;
 
     unlock(input);
     return de_None;
 }
-#endif
+
+float device_get_VAD_threshold(uint32_t device_idx)
+{
+    if (device_idx >= MAX_DEVICES) {
+        return 0.0;
+    }
+
+    Device *device = &audio_state->devices[input][device_idx];
+
+    if (!device->active) {
+        return 0.0;
+    }
+
+    return device->VAD_threshold;
+}
 
 DeviceError set_source_position(uint32_t device_idx, float x, float y, float z)
 {
@@ -511,9 +529,10 @@ static DeviceError open_device(DeviceType type, uint32_t *device_idx,
     if (type == input) {
         device->cb = cb;
         device->cb_data = cb_data;
-        device->enable_VAD = enable_VAD;
 #ifdef AUDIO
-        device->VAD_treshold = user_settings->VAD_treshold;
+        device->VAD_threshold = enable_VAD ? user_settings->VAD_threshold : 0.0f;
+#else
+        device->VAD_threshold = 0.0f;
 #endif
     } else {
         if (open_source(device) != de_None) {
@@ -606,7 +625,7 @@ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t sample_
         ALuint *bufids = malloc(processed * sizeof(ALuint));
 
         if (bufids == NULL) {
-            pthread_mutex_unlock(device->mutex);
+            unlock(output);
             return de_InternalError;
         }
 
@@ -638,6 +657,33 @@ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t sample_
     unlock(output);
     return de_None;
 }
+
+#ifdef AUDIO
+/* Adapted from qtox,
+ * Copyright © 2014-2019 by The qTox Project Contributors
+ *
+ * return normalized volume of buffer in range 0.0-100.0
+ */
+float volume(int16_t *frame, uint32_t samples)
+{
+    float sum_of_squares = 0;
+
+    for (uint32_t i = 0; i < samples; i++) {
+        const float sample = (float)(frame[i]) / INT16_MAX;
+        sum_of_squares += powf(sample, 2);
+    }
+
+    const float root_mean_square = sqrtf(sum_of_squares / samples);
+    const float root_two = 1.414213562;
+
+    // normalizedVolume == 1.0 corresponds to a sine wave of maximal amplitude
+    const float normalized_volume = root_mean_square * root_two;
+
+    return 100.0f * fminf(1.0f, normalized_volume);
+}
+
+// Time in ms for which we continue to capture audio after VAD is triggered:
+#define VAD_TIME 250
 
 #define FRAME_BUF_SIZE 16000
 
@@ -679,8 +725,22 @@ static void *poll_input(void *arg)
                 pthread_mutex_lock(&Winthread.lock);
                 lock(input);
 
+                float frame_volume = volume(frame_buf, f_size);
+
+                audio_state->input_volume = frame_volume;
+
                 for (int i = 0; i < MAX_DEVICES; i++) {
                     Device *device = &audio_state->devices[input][i];
+
+                    if (device->VAD_threshold != 0.0f) {
+                        if (frame_volume >= device->VAD_threshold) {
+                            device->VAD_samples_remaining = VAD_TIME * (audio_state->capture_frame_info.sample_rate / 1000);
+                        } else if (device->VAD_samples_remaining < f_size) {
+                            continue;
+                        } else {
+                            device->VAD_samples_remaining -= f_size;
+                        }
+                    }
 
                     if (device->active && !device->muted && device->cb) {
                         device->cb(frame_buf, f_size, device->cb_data);
@@ -696,6 +756,20 @@ static void *poll_input(void *arg)
     }
 
     pthread_exit(NULL);
+}
+#endif
+
+float get_input_volume(void)
+{
+    float ret = 0.0f;
+
+    if (audio_state->al_device[input] != NULL) {
+        lock(input);
+        ret = audio_state->input_volume;
+        unlock(input);
+    }
+
+    return ret;
 }
 
 void print_al_devices(ToxWindow *self, DeviceType type)

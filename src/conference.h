@@ -34,7 +34,7 @@ typedef struct ConferencePeer {
     bool       active;
 
     uint8_t    pubkey[TOX_PUBLIC_KEY_SIZE];
-    uint32_t   peernumber;
+    uint32_t   peernum;    /* index in chat->peer_list */
 
     char       name[TOX_MAX_NAME_LENGTH];
     size_t     name_length;
@@ -96,11 +96,13 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
 bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
 bool enable_conference_audio(Tox *tox, uint32_t conferencenum);
 bool disable_conference_audio(Tox *tox, uint32_t conferencenum);
-void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernumber,
+void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum,
                           const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
                           sample_rate, void *userdata);
 
 bool conference_mute_self(uint32_t conferencenum);
 bool conference_mute_peer(const Tox *m, uint32_t conferencenum, uint32_t peernum);
+bool conference_set_VAD_threshold(uint32_t conferencenum, float threshold);
+float conference_get_VAD_threshold(uint32_t conferencenum);
 
 #endif /* CONFERENCE_H */
