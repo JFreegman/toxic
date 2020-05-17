@@ -191,6 +191,10 @@ void exit_toxic_success(Tox *m)
     terminate_python();
 #endif /* PYTHON */
 
+    if (arg_opts.log_fp) {
+        fclose(arg_opts.log_fp);
+    }
+
     free_global_data();
     tox_kill(m);
     endwin();
@@ -226,7 +230,12 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
     UNUSED_VAR(file);
     UNUSED_VAR(m);
 
-    fprintf(stderr, "[%d] %u:%s() - %s\n", level, line, func, message);
+    if (user_data) {
+        FILE *fp = (FILE *)user_data;
+        fprintf(fp, "[%d] %u:%s() - %s\n", level, line, func, message);
+    } else {
+        fprintf(stderr, "[%d] %u:%s() - %s\n", level, line, func, message);
+    }
 }
 
 static void init_term(void)
@@ -657,6 +666,10 @@ static void init_tox_options(struct Tox_Options *tox_opts)
 
     if (arg_opts.logging) {
         tox_options_set_log_callback(tox_opts, cb_toxcore_logger);
+
+        if (arg_opts.log_fp != NULL) {
+            tox_options_set_log_user_data(tox_opts, arg_opts.log_fp);
+        }
     }
 
     if (!tox_options_get_ipv6_enabled(tox_opts)) {
@@ -956,7 +969,7 @@ static void print_usage(void)
     fprintf(stderr, "  -e, --encrypt-data       Encrypt an unencrypted data file\n");
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
-    fprintf(stderr, "  -l, --logging            Enable toxcore logging to stderr\n");
+    fprintf(stderr, "  -l, --logging            Enable toxcore logging: Requires [log_path | stderr]\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
     fprintf(stderr, "  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]\n");
@@ -993,7 +1006,7 @@ static void parse_args(int argc, char *argv[])
         {"default-locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
         {"encrypt-data", no_argument, 0, 'e'},
-        {"logging", no_argument, 0, 'l'},
+        {"logging", required_argument, 0, 'l'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
@@ -1007,7 +1020,7 @@ static void parse_args(int argc, char *argv[])
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehlotuxvc:f:n:r:p:P:T:";
+    const char *opts_str = "4bdehotuxvc:f:l:n:r:p:P:T:";
     int opt, indexptr;
     long int port = 0;
 
@@ -1072,9 +1085,24 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'l':
-                arg_opts.debug = true;
-                arg_opts.logging = true;
-                queue_init_message("Toxcore logging enabled to stderr");
+                if (optarg) {
+                    arg_opts.logging = true;
+
+                    if (strcmp(optarg, "stderr") != 0) {
+                        arg_opts.log_fp = fopen(optarg, "w");
+
+                        if (arg_opts.log_fp != NULL) {
+                            queue_init_message("Toxcore logging enabled to %s", optarg);
+                        } else {
+                            arg_opts.debug = true;
+                            queue_init_message("Failed to open log file %s. Falling back to stderr.", optarg);
+                        }
+                    } else {
+                        arg_opts.debug = true;
+                        queue_init_message("Toxcore logging enabled to stderr");
+                    }
+                }
+
                 break;
 
             case 'n':

@@ -89,11 +89,13 @@ struct arg_opts {
     bool no_connect;
     bool encrypt_data;
     bool unencrypt_data;
-    bool logging;
 
     char nameserver_path[MAX_STR_SIZE];
     char config_path[MAX_STR_SIZE];
     char nodes_path[MAX_STR_SIZE];
+
+    bool logging;
+    FILE *log_fp;
 
     char proxy_address[256];
     uint8_t proxy_type;
