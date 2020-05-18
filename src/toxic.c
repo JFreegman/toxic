@@ -191,12 +191,14 @@ void exit_toxic_success(Tox *m)
     terminate_python();
 #endif /* PYTHON */
 
-    if (arg_opts.log_fp) {
-        fclose(arg_opts.log_fp);
-    }
-
     free_global_data();
     tox_kill(m);
+
+    if (arg_opts.log_fp != NULL) {
+        fclose(arg_opts.log_fp);
+        arg_opts.log_fp = NULL;
+    }
+
     endwin();
     curl_global_cleanup();
 
