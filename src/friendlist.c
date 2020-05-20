@@ -308,7 +308,9 @@ void sort_friendlist_index(void)
         }
     }
 
-    qsort(Friends.index, Friends.num_friends, sizeof(uint32_t), index_name_cmp);
+    if (Friends.num_friends > 0) {
+        qsort(Friends.index, Friends.num_friends, sizeof(uint32_t), index_name_cmp);
+    }
 }
 
 static int index_name_cmp_block(const void *n1, const void *n2)

@@ -235,6 +235,7 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
     if (user_data) {
         FILE *fp = (FILE *)user_data;
         fprintf(fp, "[%d] %u:%s() - %s\n", level, line, func, message);
+        fflush(fp);
     } else {
         fprintf(stderr, "[%d] %u:%s() - %s\n", level, line, func, message);
     }
@@ -354,17 +355,18 @@ static void load_friendlist(Tox *m)
     sort_friendlist_index();
 }
 
-static void load_groups(Tox *m)
+static void load_conferences(Tox *m)
 {
-    size_t i;
     size_t num_chats = tox_conference_get_chatlist_size(m);
-    uint32_t chatlist[num_chats];
 
-    if (num_chats) {
-        tox_conference_get_chatlist(m, chatlist);
+    if (num_chats == 0) {
+        return;
     }
 
-    for (i = 0; i < num_chats; ++i) {
+    uint32_t chatlist[num_chats];
+    tox_conference_get_chatlist(m, chatlist);
+
+    for (size_t i = 0; i < num_chats; ++i) {
         uint32_t groupnum = chatlist[i];
 
         if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
@@ -1371,7 +1373,7 @@ int main(int argc, char **argv)
 
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m, !datafile_exists);
-    load_groups(m);
+    load_conferences(m);
 
     /* thread for ncurses stuff */
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
