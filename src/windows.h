@@ -83,6 +83,7 @@ struct av_thread {
 struct arg_opts {
     bool use_ipv4;
     bool force_tcp;
+    bool disable_local_discovery;
     bool debug;
     bool default_locale;
     bool use_custom_data;

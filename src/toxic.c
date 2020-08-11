@@ -667,6 +667,7 @@ static void init_tox_options(struct Tox_Options *tox_opts)
     tox_options_set_udp_enabled(tox_opts, !arg_opts.force_tcp);
     tox_options_set_proxy_type(tox_opts, arg_opts.proxy_type);
     tox_options_set_tcp_port(tox_opts, arg_opts.tcp_port);
+    tox_options_set_local_discovery_enabled(tox_opts, !arg_opts.disable_local_discovery);
 
     if (arg_opts.logging) {
         tox_options_set_log_callback(tox_opts, cb_toxcore_logger);
@@ -974,6 +975,7 @@ static void print_usage(void)
     fprintf(stderr, "  -f, --file               Use specified data file\n");
     fprintf(stderr, "  -h, --help               Show this message and exit\n");
     fprintf(stderr, "  -l, --logging            Enable toxcore logging: Requires [log_path | stderr]\n");
+    fprintf(stderr, "  -L, --no-lan             Disable local discovery\n");
     fprintf(stderr, "  -n, --nodes              Use specified DHTnodes file\n");
     fprintf(stderr, "  -o, --noconnect          Do not connect to the DHT network\n");
     fprintf(stderr, "  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]\n");
@@ -1004,13 +1006,14 @@ static void parse_args(int argc, char *argv[])
     set_default_opts();
 
     static struct option long_opts[] = {
-        {"file", required_argument, 0, 'f'},
         {"ipv4", no_argument, 0, '4'},
         {"debug", no_argument, 0, 'b'},
         {"default-locale", no_argument, 0, 'd'},
         {"config", required_argument, 0, 'c'},
         {"encrypt-data", no_argument, 0, 'e'},
+        {"file", required_argument, 0, 'f'},
         {"logging", required_argument, 0, 'l'},
+        {"no-lan", no_argument, 0, 'L'},
         {"nodes", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {"noconnect", no_argument, 0, 'o'},
@@ -1024,7 +1027,7 @@ static void parse_args(int argc, char *argv[])
         {NULL, no_argument, NULL, 0},
     };
 
-    const char *opts_str = "4bdehotuxvc:f:l:n:r:p:P:T:";
+    const char *opts_str = "4bdehLotuxvc:f:l:n:r:p:P:T:";
     int opt, indexptr;
     long int port = 0;
 
@@ -1107,6 +1110,11 @@ static void parse_args(int argc, char *argv[])
                     }
                 }
 
+                break;
+
+            case 'L':
+                arg_opts.disable_local_discovery = 1;
+                queue_init_message("Local discovery disabled");
                 break;
 
             case 'n':
