@@ -302,7 +302,7 @@ static long unsigned int focused_window_id(void)
 
 int is_focused(void)
 {
-    return Xtra.proxy_window == focused_window_id() || Xtra.terminal_window == focused_window_id();
+    return Xtra.display && (Xtra.proxy_window == focused_window_id() || Xtra.terminal_window == focused_window_id());
 }
 
 int init_xtra(drop_callback d)
