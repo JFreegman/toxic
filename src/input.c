@@ -100,7 +100,6 @@ static void input_del_word(ToxWindow *self)
 
     if (del_word_buf(ctx) == -1) {
         sound_notify(self, notif_error, 0, NULL);
-        return;
     }
 }
 
@@ -172,14 +171,38 @@ static void input_mv_left(ToxWindow *self, int x, int mx_x)
     }
 
     int cur_len = ctx->pos > 0 ? wcwidth(ctx->line[ctx->pos - 1]) : 0;
-    int s_len = ctx->start > 0 ? wcwidth(ctx->line[ctx->start - 1]) : 0;
 
     --ctx->pos;
 
-    if (ctx->start && (x >= mx_x - cur_len)) {
+    if (ctx->start > 0 && (x >= mx_x - cur_len)) {
+        int s_len = wcwidth(ctx->line[ctx->start - 1]);
         ctx->start = MAX(0, ctx->start - 1 + (s_len - cur_len));
-    } else if (ctx->start) {
+    } else if (ctx->start > 0) {
         ctx->start = MAX(0, ctx->start - cur_len);
+    }
+}
+
+/* moves the cursor to the beginning of the previous word in input field and buffer */
+static void input_skip_left(ToxWindow *self, int x, int mx_x)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (ctx->pos <= 1) {
+        return;
+    }
+
+    int count = 0;
+
+    do {
+        --ctx->pos;
+        count += wcwidth(ctx->line[ctx->pos]);
+    } while (ctx->pos > 0 && (ctx->line[ctx->pos-1] != L' ' || ctx->line[ctx->pos] == L' '));
+
+    if (ctx->start > 0 && (x >= mx_x - count)) {
+        int s_len = wcwidth(ctx->line[ctx->start - 1]);
+        ctx->start = MAX(0, ctx->start - 1 + (s_len - count));
+    } else if (ctx->start > 0) {
+        ctx->start = MAX(0, ctx->start - count);
     }
 }
 
@@ -199,6 +222,29 @@ static void input_mv_right(ToxWindow *self, int x, int mx_x)
     if (x + cur_len >= mx_x) {
         int s_len = wcwidth(ctx->line[ctx->start]);
         ctx->start += 1 + MAX(0, cur_len - s_len);
+    }
+}
+
+/* moves the cursor to the end of the next word in input field and buffer */
+static void input_skip_right(ToxWindow *self, int x, int mx_x)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (ctx->pos >= ctx->len) {
+        return;
+    }
+
+    int count = 0;
+
+    do {
+        count += wcwidth(ctx->line[ctx->pos]);
+        ++ctx->pos;
+    } while (ctx->pos < ctx->len && !(ctx->line[ctx->pos] == L' ' && ctx->line[ctx->pos-1] != L' '));
+
+    int newpos = x + count;
+
+    if (newpos >= mx_x) {
+        ctx->start += (1 + (newpos - mx_x));
     }
 }
 
@@ -269,6 +315,14 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
 
         case T_KEY_C_L:
             force_refresh(self->chatwin->history);
+            break;
+
+        case T_KEY_C_LEFT:
+            input_skip_left(self, x, mx_x);
+            break;
+
+        case T_KEY_C_RIGHT:
+            input_skip_right(self, x, mx_x);
             break;
 
         default:
