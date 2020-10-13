@@ -61,8 +61,6 @@
 #define T_KEY_PREV       0x0F     /* ctrl-o */
 #define T_KEY_C_E        0x05     /* ctrl-e */
 #define T_KEY_C_A        0x01     /* ctrl-a */
-#define T_KEY_C_RB       0x1D     /* ctrl-] */
-#define T_KEY_C_LB       0x1B     /* ctrl-[ */
 #define T_KEY_C_V        0x16     /* ctrl-v */
 #define T_KEY_C_F        0x06     /* ctrl-f */
 #define T_KEY_C_H        0x08     /* ctrl-h */
@@ -73,6 +71,8 @@
 #define T_KEY_C_T        0x14     /* ctrl-t */
 #define T_KEY_C_LEFT     0x221    /* ctrl-left arrow */
 #define T_KEY_C_RIGHT    0x230    /* ctrl-right arrow */
+#define T_KEY_C_UP       0x236    /* ctrl-up arrow */
+#define T_KEY_C_DOWN     0x20D    /* ctrl-down arrow */
 #define T_KEY_TAB        0x09     /* TAB key */
 
 #define ONLINE_CHAR "*"

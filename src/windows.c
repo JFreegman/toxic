@@ -609,8 +609,10 @@ static struct key_sequence_codes {
     wchar_t *code;
     wint_t   key;
 } Keys[] = {
-    { L"[1;5D", T_KEY_C_LEFT  },
+    { L"[1;5A", T_KEY_C_UP    },
+    { L"[1;5B", T_KEY_C_DOWN  },
     { L"[1;5C", T_KEY_C_RIGHT },
+    { L"[1;5D", T_KEY_C_LEFT  },
     { NULL, 0 }
 };
 

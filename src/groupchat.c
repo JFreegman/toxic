@@ -556,14 +556,14 @@ static bool groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         } else {
             sound_notify(self, notif_error, 0, NULL);
         }
-    } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
+    } else if (key == T_KEY_C_DOWN) {    /* Scroll peerlist up and down one position */
         input_ret = true;
         const int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
         if (groupchats[self->num].side_pos < (int64_t) groupchats[self->num].num_peers - L) {
             ++groupchats[self->num].side_pos;
         }
-    } else if (key == user_settings->key_peer_list_up) {
+    } else if (key == T_KEY_C_UP) {
         input_ret = true;
 
         if (groupchats[self->num].side_pos > 0) {

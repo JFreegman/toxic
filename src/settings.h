@@ -75,8 +75,6 @@ struct user_settings {
     int key_half_page_up;
     int key_half_page_down;
     int key_page_bottom;
-    int key_peer_list_up;
-    int key_peer_list_down;
     int key_toggle_peerlist;
     int key_toggle_pastemode;
 

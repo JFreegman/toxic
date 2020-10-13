@@ -122,8 +122,6 @@ keys = {
   half_page_up="Ctrl+F";
   half_page_down="Ctrl+V";
   page_bottom="Ctrl+H";
-  peer_list_up="Ctrl+[";
-  peer_list_down="Ctrl+]";
   toggle_peerlist="Ctrl+b";
   toggle_paste_mode="Ctrl+T";
 };

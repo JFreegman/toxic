@@ -145,8 +145,6 @@ static const struct keys_strings {
     const char *half_page_up;
     const char *half_page_down;
     const char *page_bottom;
-    const char *peer_list_up;
-    const char *peer_list_down;
     const char *toggle_peerlist;
     const char *toggle_pastemode;
 } key_strings = {
@@ -158,8 +156,6 @@ static const struct keys_strings {
     "half_page_up",
     "half_page_down",
     "page_bottom",
-    "peer_list_up",
-    "peer_list_down",
     "toggle_peerlist",
     "toggle_paste_mode",
 };
@@ -174,8 +170,6 @@ static void key_defaults(struct user_settings *settings)
     settings->key_half_page_up = T_KEY_C_F;
     settings->key_half_page_down = T_KEY_C_V;
     settings->key_page_bottom = T_KEY_C_H;
-    settings->key_peer_list_up = T_KEY_C_LB;
-    settings->key_peer_list_down = T_KEY_C_RB;
     settings->key_toggle_peerlist = T_KEY_C_B;
     settings->key_toggle_pastemode = T_KEY_C_T;
 }
@@ -491,14 +485,6 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) {
             set_key_binding(&s->key_page_bottom, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.peer_list_up, &tmp)) {
-            set_key_binding(&s->key_peer_list_up, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.peer_list_down, &tmp)) {
-            set_key_binding(&s->key_peer_list_down, &tmp);
         }
 
         if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp)) {

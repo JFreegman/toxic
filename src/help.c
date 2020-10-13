@@ -279,7 +279,7 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
     wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
     wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
-    wprintw(win, "  Ctrl+[ and Ctrl+]         : Scroll peer list in groupchats\n");
+    wprintw(win, "  Ctrl+up and Ctrl+down     : Scroll peer list in groupchats\n");
     wprintw(win, "  Ctrl+B                    : Toggle the groupchat peerlist\n");
     wprintw(win, "  Ctrl+J                    : Insert new line\n");
     wprintw(win, "  Ctrl+T                    : Toggle paste mode\n\n");
