@@ -1002,7 +1002,10 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
     cqueue_add(ctx->cqueue, action, strlen(action), OUT_ACTION, id);
 }
 
-static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
+/*
+ * Return true if input is recognized by handler
+ */
+bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
@@ -1014,7 +1017,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     UNUSED_VAR(y);
 
     if (y2 <= 0 || x2 <= 0) {
-        return;
+        return false;
     }
 
     if (ctx->pastemode && key == '\r') {
@@ -1023,7 +1026,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (self->help->active) {
         help_onKey(self, key);
-        return;
+        return true;
     }
 
     if (ltr || key == '\n') {    /* char is printable */
@@ -1033,16 +1036,21 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             set_self_typingstatus(self, m, 1);
         }
 
-        return;
+        return true;
     }
 
     if (line_info_onKey(self, key)) {
-        return;
+        return true;
     }
 
-    input_handle(self, key, x, x2);
+    if (input_handle(self, key, x, x2)) {
+        return true;
+    }
+
+    int input_ret = false;
 
     if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
+        input_ret = true;
         int diff = -1;
 
         /* TODO: make this not suck */
@@ -1080,6 +1088,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
     } else if (key == '\r') {
+        input_ret = true;
         rm_trailing_spaces_buf(ctx);
 
         if (!wstring_is_empty(ctx->line)) {
@@ -1096,7 +1105,7 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
                     kill_chat_window(self, m);
-                    return;
+                    return input_ret;
                 } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                     send_action(self, ctx, m, line + strlen("/me "));
                 } else {
@@ -1125,6 +1134,8 @@ static void chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     if (ctx->len <= 0 && ctx->self_is_typing) {
         set_self_typingstatus(self, m, 0);
     }
+
+    return input_ret;
 }
 
 static void chat_onDraw(ToxWindow *self, Tox *m)

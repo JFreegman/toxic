@@ -480,7 +480,10 @@ static void send_group_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *a
     }
 }
 
-static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
+/*
+ * Return true if input is recognized by handler
+ */
+static bool groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -491,12 +494,12 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     UNUSED_VAR(y);
 
     if (x2 <= 0 || y2 <= 0) {
-        return;
+        return false;
     }
 
     if (self->help->active) {
         help_onKey(self, key);
-        return;
+        return true;
     }
 
     if (ctx->pastemode && key == '\r') {
@@ -505,18 +508,22 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, x2);
-        return;
+        return true;
     }
 
     if (line_info_onKey(self, key)) {
-        return;
+        return true;
     }
 
     if (input_handle(self, key, x, x2)) {
-        return;
+        return true;
     }
 
+    bool input_ret = false;
+
     if (key == '\t') {  /* TAB key: auto-completes peer name or command */
+        input_ret = true;
+
         if (ctx->len > 0) {
             int diff;
 
@@ -534,7 +541,6 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             }
 
 #endif
-
             else {
                 diff = complete_line(self, group_cmd_list, AC_NUM_GROUP_COMMANDS, MAX_CMDNAME_SIZE);
             }
@@ -551,16 +557,20 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             sound_notify(self, notif_error, 0, NULL);
         }
     } else if (key == user_settings->key_peer_list_down) {    /* Scroll peerlist up and down one position */
+        input_ret = true;
         const int L = y2 - CHATBOX_HEIGHT - SDBAR_OFST;
 
         if (groupchats[self->num].side_pos < (int64_t) groupchats[self->num].num_peers - L) {
             ++groupchats[self->num].side_pos;
         }
     } else if (key == user_settings->key_peer_list_up) {
+        input_ret = true;
+
         if (groupchats[self->num].side_pos > 0) {
             --groupchats[self->num].side_pos;
         }
     } else if (key == '\r') {
+        input_ret = true;
         rm_trailing_spaces_buf(ctx);
 
         if (!wstring_is_empty(ctx->line)) {
@@ -577,7 +587,7 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
                     delete_groupchat(self, m, self->num);
-                    return;
+                    return true;
                 } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                     send_group_action(self, ctx, m, line + strlen("/me "));
                 } else {
@@ -596,6 +606,8 @@ static void groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         reset_buf(ctx);
     }
+
+    return input_ret;
 }
 
 static void groupchat_onDraw(ToxWindow *self, Tox *m)

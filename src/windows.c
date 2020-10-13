@@ -567,6 +567,91 @@ static void draw_bar(void)
     refresh();
 }
 
+/*
+ * Gets current char from stdscr and puts it in ch.
+ *
+ * Return 1 if char is printable.
+ * Return 0 if char is not printable.
+ * Return -1 on error.
+ */
+static int get_current_char(wint_t *ch)
+{
+    wint_t tmpchar = 0;
+    bool is_printable = false;
+
+#ifdef HAVE_WIDECHAR
+    int status = wget_wch(stdscr, &tmpchar);
+
+    if (status == ERR) {
+        return -1;
+    }
+
+    if (status == OK) {
+        is_printable = iswprint(tmpchar);
+    }
+
+#else
+    tmpchar = getch();
+
+    if (tmpchar == ERR) {
+        return -1;
+    }
+
+    is_printable = isprint(tmpchar);
+#endif /* HAVE_WIDECHAR */
+
+    *ch = tmpchar;
+
+    return (int) is_printable;
+}
+
+static struct key_sequence_codes {
+    wchar_t *code;
+    wint_t   key;
+} Keys[] = {
+    { L"[1;5D", T_KEY_C_LEFT  },
+    { L"[1;5C", T_KEY_C_RIGHT },
+    { NULL, 0 }
+};
+
+/*
+ * Return key code corresponding to character sequence queued in stdscr.
+ * Return -1 if sequence is unknown.
+ */
+#define MAX_SEQUENCE_SIZE 5
+static wint_t get_input_sequence_code(void)
+{
+    wchar_t code[MAX_SEQUENCE_SIZE + 1];
+
+    size_t length = 0;
+    wint_t ch = 0;
+
+    for (size_t i = 0; i < MAX_SEQUENCE_SIZE; ++i) {
+        int res = get_current_char(&ch);
+
+        if (res < 0) {
+            break;
+        }
+
+        ++length;
+        code[i] = (wchar_t) ch;
+    }
+
+    if (length == 0) {
+        return -1;
+    }
+
+    code[length] = L'\0';
+
+    for (size_t i = 0; Keys[i].key != 0; ++i) {
+        if (wcscmp(code, Keys[i].code) == 0) {
+            return Keys[i].key;
+        }
+    }
+
+    return -1;
+}
+
 void draw_active_window(Tox *m)
 {
     ToxWindow *a = windows[active_window_index];
@@ -579,51 +664,47 @@ void draw_active_window(Tox *m)
     a->alert = WINDOW_ALERT_NONE;
     pthread_mutex_unlock(&Winthread.lock);
 
-    wint_t ch = 0;
-
     draw_bar();
 
     touchwin(a->window);
     a->onDraw(a, m);
     wrefresh(a->window);
 
-    /* Handle input */
-    bool ltr;
-#ifdef HAVE_WIDECHAR
-    int status = wget_wch(stdscr, &ch);
+    wint_t ch = 0;
+    int printable = get_current_char(&ch);
 
-    if (status == ERR) {
+    if (printable < 0) {
         return;
     }
 
-    if (status == OK) {
-        ltr = iswprint(ch);
-    } else { /* if (status == KEY_CODE_YES) */
-        ltr = false;
-    }
-
-#else
-    ch = getch();
-
-    if (ch == ERR) {
-        return;
-    }
-
-    /* TODO verify if this works */
-    ltr = isprint(ch);
-#endif /* HAVE_WIDECHAR */
-
-    if (!ltr && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
+    if (printable == 0 && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
         set_next_window((int) ch);
-    } else {
+        return;
+    } else if (printable == 0 && !a->is_friendlist) {
         pthread_mutex_lock(&Winthread.lock);
-        a->onKey(a, m, ch, ltr);
+        bool input_ret = a->onKey(a, m, ch, (bool) printable);
         pthread_mutex_unlock(&Winthread.lock);
+
+        if (input_ret) {
+            return;
+        }
+
+        // if an unprintable key code is unrecognized by input handler we attempt to manually decode char sequence
+        wint_t tmp = get_input_sequence_code();
+
+        if (tmp != (wint_t) -1) {
+            ch = tmp;
+        }
     }
+
+    pthread_mutex_lock(&Winthread.lock);
+    a->onKey(a, m, ch, (bool) printable);
+    pthread_mutex_unlock(&Winthread.lock);
 }
 
-/* refresh inactive windows to prevent scrolling bugs.
-   call at least once per second */
+/* Refresh inactive windows to prevent scrolling bugs.
+ * Call at least once per second.
+ */
 void refresh_inactive_windows(void)
 {
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {

@@ -113,7 +113,7 @@ typedef struct Help Help;
 
 struct ToxWindow {
     /* ncurses */
-    void(*onKey)(ToxWindow *, Tox *, wint_t, bool);
+    bool(*onKey)(ToxWindow *, Tox *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
     void(*onInit)(ToxWindow *, Tox *);
 

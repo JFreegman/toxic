@@ -212,7 +212,10 @@ static int add_friend_request(const char *public_key, const char *data)
     return -1;
 }
 
-static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
+/*
+ * Return true if input is recognized by handler
+ */
+static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -223,7 +226,7 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     UNUSED_VAR(y);
 
     if (x2 <= 0 || y2 <= 0) {
-        return;
+        return false;
     }
 
     if (ctx->pastemode && key == '\r') {
@@ -233,21 +236,27 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     /* ignore non-menu related input if active */
     if (self->help->active) {
         help_onKey(self, key);
-        return;
+        return true;
     }
 
     if (ltr || key == '\n') {    /* char is printable */
         input_new_char(self, key, x, x2);
-        return;
+        return true;
     }
 
     if (line_info_onKey(self, key)) {
-        return;
+        return true;
     }
 
-    input_handle(self, key, x, x2);
+    if (input_handle(self, key, x, x2)) {
+        return true;
+    }
+
+    int input_ret = false;
 
     if (key == '\t') {    /* TAB key: auto-completes command */
+        input_ret = true;
+
         if (ctx->len > 1 && ctx->line[0] == '/') {
             int diff = -1;
 
@@ -285,6 +294,8 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             sound_notify(self, notif_error, 0, NULL);
         }
     } else if (key == '\r') {
+        input_ret = true;
+
         rm_trailing_spaces_buf(ctx);
 
         if (!wstring_is_empty(ctx->line)) {
@@ -305,6 +316,8 @@ static void prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         wmove(self->window, y2 - CURS_Y_OFFSET, 0);
         reset_buf(ctx);
     }
+
+    return input_ret;
 }
 
 static void prompt_onDraw(ToxWindow *self, Tox *m)

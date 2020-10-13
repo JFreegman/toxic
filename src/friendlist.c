@@ -825,25 +825,28 @@ static void unblock_friend(Tox *m, uint32_t bnum)
     sort_friendlist_index();
 }
 
-static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
+/*
+ * Return true if input is recognized by handler
+ */
+static bool friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 {
 
     if (self->help->active) {
         help_onKey(self, key);
-        return;
+        return true;
     }
 
     if (key == 'h') {
         help_init_menu(self);
-        return;
+        return true;
     }
 
     if (!blocklist_view && !Friends.num_friends && (key != KEY_RIGHT && key != KEY_LEFT)) {
-        return;
+        return true;
     }
 
     if (blocklist_view && !Blocked.num_blocked && (key != KEY_RIGHT && key != KEY_LEFT)) {
-        return;
+        return true;
     }
 
     int f = 0;
@@ -860,11 +863,11 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             del_friend_deactivate(m, key);
         }
 
-        return;
+        return true;
     }
 
     if (key == ltr) {
-        return;
+        return true;
     }
 
     switch (key) {
@@ -914,6 +917,8 @@ static void friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             break;
     }
+
+    return true;
 }
 
 #define FLIST_OFST 6    /* Accounts for space at top and bottom */
