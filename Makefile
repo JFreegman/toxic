@@ -70,7 +70,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	fi
 	@echo "  CC    $(@:$(BUILD_DIR)/%=%)"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)/$*.o -c $(SRC_DIR)/$*.c
-	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c > $(BUILD_DIR)/$*.d
+	@$(CC) -MM $(CFLAGS) $(SRC_DIR)/$*.c >$(BUILD_DIR)/$*.d
 
 clean:
 	rm -f $(BUILD_DIR)/*.d $(BUILD_DIR)/*.o $(BUILD_DIR)/toxic
