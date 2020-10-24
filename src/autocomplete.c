@@ -279,7 +279,7 @@ static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const c
     char homedir[MAX_STR_SIZE] = {0};
     get_home_dir(homedir, sizeof(homedir));
 
-    char newline[MAX_STR_SIZE];
+    char newline[MAX_STR_SIZE + 1];
     snprintf(newline, sizeof(newline), "%s %s%s", cmd, homedir, path + 1);
     snprintf(path, pathsize, "%s", &newline[cmdlen - 1]);
 
@@ -309,12 +309,12 @@ static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const c
 #define MAX_DIRS 512
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 {
-    char b_path[MAX_STR_SIZE];
-    char b_name[MAX_STR_SIZE];
+    char b_path[MAX_STR_SIZE + 1];
+    char b_name[MAX_STR_SIZE + 1];
     char b_cmd[MAX_STR_SIZE];
     const wchar_t *tmpline = &line[wcslen(cmd) + 1];   /* start after "/command " */
 
-    if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path)) == -1) {
+    if (wcs_to_mbs_buf(b_path, tmpline, sizeof(b_path) - 1) == -1) {
         return -1;
     }
 
@@ -323,7 +323,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     }
 
     if (b_path[0] == '~') {
-        complete_home_dir(self, b_path, sizeof(b_path), b_cmd, strlen(b_cmd) + 2);
+        complete_home_dir(self, b_path, sizeof(b_path) - 1, b_cmd, strlen(b_cmd) + 2);
     }
 
     int si = char_rfind(b_path, '/', strlen(b_path));
@@ -332,9 +332,8 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
         b_path[0] = '.';
         b_path[1] = '\0';
     } else if (!si && b_path[0] != '/') {    /* look for matches in pwd */
-        char tmp[MAX_STR_SIZE];
-        snprintf(tmp, sizeof(tmp), ".%s", b_path);
-        snprintf(b_path, sizeof(b_path), "%s", tmp);
+        memmove(b_path + 1, b_path, sizeof(b_path) - 1);
+        b_path[0] = '.';
     }
 
     snprintf(b_name, sizeof(b_name), "%s", &b_path[si + 1]);

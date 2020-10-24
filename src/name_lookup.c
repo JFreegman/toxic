@@ -269,7 +269,7 @@ void *lookup_thread_func(void *data)
 
     memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
 
-    char post_data[MAX_STR_SIZE];
+    char post_data[MAX_STR_SIZE + 30];
 
     snprintf(post_data, sizeof(post_data), "{\"action\": 3, \"name\": \"%s\"}", name);
 

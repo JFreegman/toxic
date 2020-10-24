@@ -491,10 +491,11 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
 
         update_friend_last_online(i, t);
 
-        char tempname[TOX_MAX_NAME_LENGTH] = {0};
-        get_nick_truncate(m, tempname, num);
-        snprintf(Friends.list[i].name, sizeof(Friends.list[i].name), "%s", tempname);
-        Friends.list[i].namelength = strlen(Friends.list[i].name);
+        char tempname[TOX_MAX_NAME_LENGTH + 1];
+        int name_len = get_nick_truncate(m, tempname, num);
+        memcpy(Friends.list[i].name, tempname, name_len);
+        Friends.list[i].name[name_len] = 0;
+        Friends.list[i].namelength = name_len;
 
         if (i == Friends.max_idx) {
             ++Friends.max_idx;

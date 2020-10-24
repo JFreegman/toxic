@@ -1306,7 +1306,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     char nick[TOX_MAX_NAME_LENGTH + 1];
     size_t n_len = get_nick_truncate(m, nick, self->num);
-    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
+    memcpy(statusbar->nick, nick, n_len);
+    statusbar->nick[n_len] = 0;
     statusbar->nick_len = n_len;
 
     /* Init subwindows */

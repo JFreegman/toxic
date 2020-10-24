@@ -75,7 +75,7 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group title to: %s", title);
 
-    char tmp_event[MAX_STR_SIZE];
+    char tmp_event[MAX_STR_SIZE + 20];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
     write_to_log(tmp_event, selfnick, self->chatwin->log, true);
 }
