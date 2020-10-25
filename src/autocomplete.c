@@ -306,7 +306,7 @@ static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const c
  * Returns the diff between old len and new len of ctx->line on success.
  * Returns -1 if no matches or more than one match.
  */
-#define MAX_DIRS 512
+#define MAX_DIRS 75
 int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 {
     char b_path[MAX_STR_SIZE + 1];

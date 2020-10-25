@@ -60,7 +60,7 @@
 
 #define MAX_BOX_MSG_LEN 127
 #define SOUNDS_SIZE 10
-#define ACTIVE_NOTIFS_MAX 50
+#define ACTIVE_NOTIFS_MAX 10
 
 extern struct user_settings *user_settings;
 
@@ -754,19 +754,17 @@ int box_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id, con
     actives[id].size++;
     actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
 
-    char formated[128 * 129] = {'\0'};
+    char *formatted = calloc(1, sizeof(char) * ((MAX_BOX_MSG_LEN + 1) * (MAX_BOX_MSG_LEN + 2)));
 
-    int i = 0;
-
-    for (; i < actives[id].size; i ++) {
-        strcat(formated, actives[id].messages[i]);
-        strcat(formated, "\n");
+    for (size_t i = 0; i < actives[id].size; ++i) {
+        strcat(formatted, actives[id].messages[i]);
+        strcat(formatted, "\n");
     }
 
-    formated[strlen(formated) - 1] = '\0';
-
-    notify_notification_update(actives[id].box, actives[id].title, formated, NULL);
+    notify_notification_update(actives[id].box, actives[id].title, formatted, NULL);
     notify_notification_show(actives[id].box, NULL);
+
+    free(formatted);
 
     control_unlock();
 
@@ -863,19 +861,17 @@ int box_silent_notify2(ToxWindow *self, uint64_t flags, int id, const char *form
     actives[id].size ++;
     actives[id].n_timeout = get_unix_time() + Control.notif_timeout / 1000;
 
-    char formated[128 * 129] = {'\0'};
+    char *formatted = calloc(1, sizeof(char) * ((MAX_BOX_MSG_LEN + 1) * (MAX_BOX_MSG_LEN + 2)));
 
-    int i = 0;
-
-    for (; i < actives[id].size; i ++) {
-        strcat(formated, actives[id].messages[i]);
-        strcat(formated, "\n");
+    for (size_t i = 0; i < actives[id].size; ++i) {
+        strcat(formatted, actives[id].messages[i]);
+        strcat(formatted, "\n");
     }
 
-    formated[strlen(formated) - 1] = '\0';
-
-    notify_notification_update(actives[id].box, actives[id].title, formated, NULL);
+    notify_notification_update(actives[id].box, actives[id].title, formatted, NULL);
     notify_notification_show(actives[id].box, NULL);
+
+    free(formatted);
 
     control_unlock();
 

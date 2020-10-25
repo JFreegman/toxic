@@ -26,21 +26,19 @@
 #include "toxic.h"
 #include "windows.h"
 
-#define MAX_FRIEND_REQUESTS 32
+#define MAX_FRIEND_REQUESTS 20
 
 struct friend_request {
     bool active;
-    char msg[MAX_STR_SIZE];
+    char msg[TOX_MAX_FRIEND_REQUEST_LENGTH + 1];
     uint8_t key[TOX_PUBLIC_KEY_SIZE];
 };
 
-typedef struct {
+typedef struct FriendRequests {
     int max_idx;
     int num_requests;
     struct friend_request request[MAX_FRIEND_REQUESTS];
 } FriendRequests;
-
-extern FriendRequests FrndRequests;
 
 ToxWindow *new_prompt(void);
 

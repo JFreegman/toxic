@@ -41,6 +41,7 @@
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
 extern FriendsList Friends;
+extern FriendRequests FrndRequests;
 
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -87,7 +88,6 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     FrndRequests.max_idx = i;
     --FrndRequests.num_requests;
-
 }
 
 void cmd_add_helper(ToxWindow *self, Tox *m, const char *id_bin, const char *msg)
