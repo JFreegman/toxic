@@ -452,15 +452,21 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_
     return de_None;
 }
 
+#define FRAME_BUF_SIZE 16000
+
 void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
 {
     /*
      * NOTE: We only need to poll input devices for data.
      */
     UNUSED_VAR(arg);
-    uint32_t i;
     int32_t sample = 0;
 
+    int16_t *frame_buf = malloc(FRAME_BUF_SIZE * sizeof(int16_t));
+
+    if (frame_buf == NULL) {
+        exit_toxic_err("failed in thread_poll", FATALERR_MEMORY);
+    }
 
     while (1) {
         lock;
@@ -479,7 +485,7 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
         }
 
         else {
-            for (i = 0; i < size[input]; ++i) {
+            for (uint32_t i = 0; i < size[input]; ++i) {
                 lock;
 
                 if (running[input][i] != NULL) {
@@ -487,15 +493,14 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
 
                     int f_size = (running[input][i]->sample_rate * running[input][i]->frame_duration / 1000);
 
-                    if (sample < f_size) {
+                    if (sample < f_size || f_size > FRAME_BUF_SIZE) {
                         unlock;
                         continue;
                     }
 
                     Device *device = running[input][i];
 
-                    int16_t frame[16000];
-                    alcCaptureSamples(device->dhndl, frame, f_size);
+                    alcCaptureSamples(device->dhndl, frame_buf, f_size);
 
                     if (device->muted) {
                         unlock;
@@ -503,7 +508,7 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
                     }
 
                     if (device->cb) {
-                        device->cb(frame, f_size, device->cb_data);
+                        device->cb(frame_buf, f_size, device->cb_data);
                     }
                 }
 
@@ -513,6 +518,8 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
             usleep(5000);
         }
     }
+
+    free(frame_buf);
 
     pthread_exit(NULL);
 }
