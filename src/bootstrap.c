@@ -241,6 +241,7 @@ on_exit:
  * Return -2 if http lookup failed.
  * Return -3 if http reponse was empty.
  * Return -4 if data could not be written to disk.
+ * Return -5 if memory allocation fails.
  */
 static int update_DHT_nodeslist(const char *nodes_path)
 {
@@ -254,26 +255,34 @@ static int update_DHT_nodeslist(const char *nodes_path)
         return -1;
     }
 
-    struct Recv_Curl_Data recv_data;
+    struct Recv_Curl_Data *recv_data = calloc(1, sizeof(struct Recv_Curl_Data));
 
-    memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
+    if (recv_data == NULL) {
+        fclose(fp);
+        return -5;
+    }
 
-    if (curl_fetch_nodes_JSON(&recv_data) == -1) {
+    if (curl_fetch_nodes_JSON(recv_data) == -1) {
+        free(recv_data);
         fclose(fp);
         return -2;
     }
 
-    if (recv_data.length == 0) {
+    if (recv_data->length == 0) {
+        free(recv_data);
         fclose(fp);
         return -3;
     }
 
-    if (fwrite(recv_data.data, recv_data.length, 1, fp) != 1) {
+    if (fwrite(recv_data->data, recv_data->length, 1, fp) != 1) {
+        free(recv_data);
         fclose(fp);
         return -4;
     }
 
+    free(recv_data);
     fclose(fp);
+
     return 1;
 }
 

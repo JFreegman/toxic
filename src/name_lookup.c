@@ -265,9 +265,12 @@ void *lookup_thread_func(void *data)
         kill_lookup_thread();
     }
 
-    struct Recv_Curl_Data recv_data;
+    struct Recv_Curl_Data *recv_data = calloc(1, sizeof(struct Recv_Curl_Data));
 
-    memset(&recv_data, 0, sizeof(struct Recv_Curl_Data));
+    if (recv_data == NULL) {
+        lookup_error(self, "memory allocation error");
+        kill_lookup_thread();
+    }
 
     char post_data[MAX_STR_SIZE + 30];
 
@@ -285,7 +288,7 @@ void *lookup_thread_func(void *data)
 
     curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
 
-    curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, &recv_data);
+    curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
 
     curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
@@ -334,7 +337,7 @@ void *lookup_thread_func(void *data)
         }
     }
 
-    if (process_response(&recv_data) == -1) {
+    if (process_response(recv_data) == -1) {
         lookup_error(self, "Bad response.");
         goto on_exit;
     }
@@ -344,6 +347,7 @@ void *lookup_thread_func(void *data)
     pthread_mutex_unlock(&Winthread.lock);
 
 on_exit:
+    free(recv_data);
     curl_slist_free_all(headers);
     curl_easy_cleanup(c_handle);
     kill_lookup_thread();
