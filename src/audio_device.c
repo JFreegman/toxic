@@ -342,6 +342,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     }
 
     lock;
+
     Device *device = running[type][device_idx];
     DeviceError rc = de_None;
 
@@ -472,6 +473,7 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
         lock;
 
         if (!thread_running) {
+            free(frame_buf);
             unlock;
             break;
         }
@@ -488,17 +490,17 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
             for (uint32_t i = 0; i < size[input]; ++i) {
                 lock;
 
-                if (running[input][i] != NULL) {
-                    alcGetIntegerv(running[input][i]->dhndl, ALC_CAPTURE_SAMPLES, sizeof(int32_t), &sample);
+                Device *device = running[input][i];
 
-                    int f_size = (running[input][i]->sample_rate * running[input][i]->frame_duration / 1000);
+                if (device != NULL) {
+                    alcGetIntegerv(device->dhndl, ALC_CAPTURE_SAMPLES, sizeof(int32_t), &sample);
+
+                    int f_size = (device->sample_rate * device->frame_duration / 1000);
 
                     if (sample < f_size || f_size > FRAME_BUF_SIZE) {
                         unlock;
                         continue;
                     }
-
-                    Device *device = running[input][i];
 
                     alcCaptureSamples(device->dhndl, frame_buf, f_size);
 
@@ -518,8 +520,6 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
             usleep(5000);
         }
     }
-
-    free(frame_buf);
 
     pthread_exit(NULL);
 }

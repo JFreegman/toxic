@@ -111,6 +111,8 @@ void callback_call_ended(uint32_t friend_number);
 void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
                            uint32_t sample_rate);
 
+static int stop_transmission(Call *call, uint32_t friend_number, bool set_call_control);
+
 static void print_err(ToxWindow *self, const char *error_str)
 {
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
@@ -160,10 +162,8 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
 
 void terminate_audio(void)
 {
-    int i;
-
-    for (i = 0; i < CallControl.max_calls; ++i) {
-        stop_transmission(&CallControl.calls[i], i);
+    for (size_t i = 0; i < CallControl.max_calls; ++i) {
+        stop_transmission(&CallControl.calls[i], i, true);
     }
 
     if (CallControl.av) {
@@ -237,33 +237,38 @@ int start_transmission(ToxWindow *self, Call *call)
     return 0;
 }
 
-int stop_transmission(Call *call, uint32_t friend_number)
+/*
+ * Stops call transmission.
+ *
+ * `set_call_control` should be set to false if we already called toxav_call_control() with TOXAV_CALL_CONTROL_CANCEL.
+ */
+static int stop_transmission(Call *call, uint32_t friend_number, bool set_call_control)
 {
     if (call->ttas) {
         Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
 
-        if (CallControl.call_state > TOXAV_FRIEND_CALL_STATE_FINISHED) {
+        if (set_call_control && CallControl.call_state > TOXAV_FRIEND_CALL_STATE_FINISHED) {
             toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
         }
 
+        call->ttas = false;
+
+        if (call->in_idx != -1) {
+            close_device(input, call->in_idx);
+        }
+
+        if (call->out_idx != -1) {
+            close_device(output, call->out_idx);
+        }
+
+        if (set_call(call, false) == -1) {
+            return -1;
+        }
+
         if (error == TOXAV_ERR_CALL_CONTROL_OK) {
-            call->ttas = false;
-
-            if (call->in_idx != -1) {
-                close_device(input, call->in_idx);
-            }
-
-            if (call->out_idx != -1) {
-                close_device(output, call->out_idx);
-            }
-
-            if (set_call(call, false) == -1) {
-                return -1;
-            }
-
             return 0;
         } else {
-
+            fprintf(stderr, "failed to stop transmission. ToxAV error: %d\n", error);
             return -1;
         }
     }
@@ -306,8 +311,7 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
 #ifdef VIDEO
             callback_video_end(friend_number);
 #endif /* VIDEO */
-
-            stop_transmission(&CallControl.calls[friend_number], friend_number);
+            stop_transmission(&CallControl.calls[friend_number], friend_number, true);
             callback_call_ended(friend_number);
             CallControl.pending_call = false;
 
@@ -324,8 +328,7 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
             callback_recv_video_end(friend_number);
             callback_video_end(friend_number);
 #endif /* VIDEO */
-
-            stop_transmission(&CallControl.calls[friend_number], friend_number);
+            stop_transmission(&CallControl.calls[friend_number], friend_number, true);
 
             /* Reset stored call state after finishing */
             CallControl.call_state = 0;
@@ -971,7 +974,7 @@ void stop_current_call(ToxWindow *self)
     if (CallControl.pending_call) {
         callback_call_canceled(self->num);
     } else {
-        stop_transmission(&CallControl.calls[self->num], self->num);
+        stop_transmission(&CallControl.calls[self->num], self->num, false);
         callback_call_ended(self->num);
     }
 

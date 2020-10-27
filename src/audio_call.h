@@ -87,7 +87,6 @@ extern struct CallControl CallControl;
 ToxAV *init_audio(ToxWindow *self, Tox *tox);
 void terminate_audio(void);
 int start_transmission(ToxWindow *self, Call *call);
-int stop_transmission(Call *call, uint32_t friend_number);
 void stop_current_call(ToxWindow *self);
 void init_friend_AV(uint32_t index);
 void del_friend_AV(uint32_t index);
