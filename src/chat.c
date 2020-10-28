@@ -422,17 +422,27 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
         ft->position = position;
     }
 
-    uint8_t send_data[length];
-    size_t send_length = fread(send_data, 1, sizeof(send_data), ft->file);
+    uint8_t *send_data = malloc(length);
+
+    if (send_data == NULL) {
+        snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Out of memory.", ft->file_name);
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        return;
+    }
+
+    size_t send_length = fread(send_data, 1, length, ft->file);
 
     if (send_length != length) {
         snprintf(msg, sizeof(msg), "File transfer for '%s' failed: Read fail.", ft->file_name);
         close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        free(send_data);
         return;
     }
 
     Tox_Err_File_Send_Chunk err;
     tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
+
+    free(send_data);
 
     if (err != TOX_ERR_FILE_SEND_CHUNK_OK) {
         fprintf(stderr, "tox_file_send_chunk failed in chat callback (error %d)\n", err);
@@ -613,20 +623,29 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     bytes_convert_str(sizestr, sizeof(sizestr), file_size);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)", filename, sizestr);
 
-    char file_path[PATH_MAX + name_length + 1];
+    size_t file_path_buf_size = PATH_MAX + name_length + 1;
+    char *file_path = malloc(file_path_buf_size);
+
+    if (file_path == NULL) {
+        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Out of memory.");
+        return;
+    }
+
     size_t path_len = name_length;
 
     /* use specified download path in config if possible */
     if (!string_is_empty(user_settings->download_path)) {
-        snprintf(file_path, sizeof(file_path), "%s%s", user_settings->download_path, filename);
+        snprintf(file_path, file_path_buf_size, "%s%s", user_settings->download_path, filename);
         path_len += strlen(user_settings->download_path);
     } else {
-        snprintf(file_path, sizeof(file_path), "%s", filename);
+        snprintf(file_path, file_path_buf_size, "%s", filename);
     }
 
-    if (path_len >= sizeof(file_path) || path_len >= sizeof(ft->file_path) || name_length >= sizeof(ft->file_name)) {
+    if (path_len >= file_path_buf_size || path_len >= sizeof(ft->file_path) || name_length >= sizeof(ft->file_name)) {
         tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer faield: File path too long.");
+        free(file_path);
         return;
     }
 
@@ -642,7 +661,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         ++count;
         size_t d_len = strlen(d);
 
-        if (path_len + d_len >= sizeof(file_path)) {
+        if (path_len + d_len >= file_path_buf_size) {
             path_len -= d_len;
             file_path[path_len] = '\0';
         }
@@ -653,6 +672,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         if (count > 999) {
             tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: invalid file path.");
+            free(file_path);
             return;
         }
     }
@@ -663,6 +683,8 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
     tox_file_get_file_id(m, friendnum, filenum, ft->file_id, NULL);
+
+    free(file_path);
 
     if (self->active_box != -1) {
         box_notify2(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,

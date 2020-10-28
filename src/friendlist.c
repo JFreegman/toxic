@@ -187,13 +187,21 @@ static int save_blocklist(char *path)
         return 0;
     }
 
-    char temp_path[strlen(path) + strlen(TEMP_BLOCKLIST_EXT) + 1];
-    snprintf(temp_path, sizeof(temp_path), "%s%s", path, TEMP_BLOCKLIST_EXT);
+    size_t temp_buf_size = strlen(path) + strlen(TEMP_BLOCKLIST_EXT) + 1;
+    char *temp_path = malloc(temp_buf_size);
+
+    if (temp_path == NULL) {
+        free(data);
+        return -1;
+    }
+
+    snprintf(temp_path, temp_buf_size, "%s%s", path, TEMP_BLOCKLIST_EXT);
 
     FILE *fp = fopen(temp_path, "wb");
 
     if (fp == NULL) {
         free(data);
+        free(temp_path);
         return -1;
     }
 
@@ -201,6 +209,7 @@ static int save_blocklist(char *path)
         fprintf(stderr, "Failed to write blocklist data.\n");
         fclose(fp);
         free(data);
+        free(temp_path);
         return -1;
     }
 
@@ -208,8 +217,11 @@ static int save_blocklist(char *path)
     free(data);
 
     if (rename(temp_path, path) != 0) {
+        free(temp_path);
         return -1;
     }
+
+    free(temp_path);
 
     return 0;
 }
@@ -235,15 +247,22 @@ int load_blocklist(char *path)
         return -1;
     }
 
-    char data[len];
+    char *data = malloc(len);
+
+    if (data == NULL) {
+        fclose(fp);
+        return -1;
+    }
 
     if (fread(data, len, 1, fp) != 1) {
         fclose(fp);
+        free(data);
         return -1;
     }
 
     if (len % sizeof(BlockedFriend) != 0) {
         fclose(fp);
+        free(data);
         return -1;
     }
 
@@ -251,9 +270,7 @@ int load_blocklist(char *path)
     Blocked.max_idx = num;
     realloc_blocklist(num);
 
-    int i;
-
-    for (i = 0; i < num; ++i) {
+    for (int i = 0; i < num; ++i) {
         BlockedFriend tmp;
         memset(&tmp, 0, sizeof(BlockedFriend));
         memset(&Blocked.list[i], 0, sizeof(BlockedFriend));
@@ -279,6 +296,8 @@ int load_blocklist(char *path)
     }
 
     fclose(fp);
+    free(data);
+
     sort_blocklist_index();
 
     return 0;

@@ -196,16 +196,25 @@ void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position,
         ft->position = position;
     }
 
-    uint8_t send_data[length];
-    size_t send_length = fread(send_data, 1, sizeof(send_data), ft->file);
+    uint8_t *send_data = malloc(length);
+
+    if (send_data == NULL) {
+        close_file_transfer(NULL, m, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        return;
+    }
+
+    size_t send_length = fread(send_data, 1, length, ft->file);
 
     if (send_length != length) {
         close_file_transfer(NULL, m, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        free(send_data);
         return;
     }
 
     Tox_Err_File_Send_Chunk err;
     tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
+
+    free(send_data);
 
     if (err != TOX_ERR_FILE_SEND_CHUNK_OK) {
         fprintf(stderr, "tox_file_send_chunk failed in avatar callback (error %d)\n", err);

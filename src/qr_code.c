@@ -138,12 +138,18 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
 
     real_width = (qr_obj->width + BORDER_LEN * 2) * SQUARE_SIZE;
     size_t row_size = real_width * 4;
-    unsigned char row[row_size];
+    unsigned char *row = malloc(row_size);
+
+    if (row == NULL) {
+        fclose(fp);
+        return -1;
+    }
 
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
     if (png_ptr == NULL) {
         fclose(fp);
+        free(row);
         QRcode_free(qr_obj);
         return -1;
     }
@@ -152,12 +158,14 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
 
     if (info_ptr == NULL) {
         fclose(fp);
+        free(row);
         QRcode_free(qr_obj);
         return -1;
     }
 
     if (setjmp(png_jmpbuf(png_ptr))) {
         fclose(fp);
+        free(row);
         QRcode_free(qr_obj);
         png_destroy_write_struct(&png_ptr, &info_ptr);
         return -1;
@@ -206,10 +214,12 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
         png_write_row(png_ptr, row);
     }
 
+    free(row);
+    fclose(fp);
+
     png_write_end(png_ptr, info_ptr);
     png_destroy_write_struct(&png_ptr, &info_ptr);
 
-    fclose(fp);
     QRcode_free(qr_obj);
 
     return 0;

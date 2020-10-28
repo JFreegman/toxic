@@ -81,10 +81,18 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
         strcat(prog_line, "-");
     }
 
-    char full_line[strlen(pct_str) + NUM_PROG_MARKS + strlen(bps_str) + 7];
-    snprintf(full_line, sizeof(full_line), "%s [%s] %s/s", pct_str, prog_line, bps_str);
+    size_t line_buf_size = strlen(pct_str) + NUM_PROG_MARKS + strlen(bps_str) + 7;
+    char *full_line = malloc(line_buf_size);
+
+    if (full_line == NULL) {
+        return;
+    }
+
+    snprintf(full_line, line_buf_size, "%s [%s] %s/s", pct_str, prog_line, bps_str);
 
     line_info_set(self, line_id, full_line);
+
+    free(full_line);
 }
 
 static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft)

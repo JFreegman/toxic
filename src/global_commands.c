@@ -476,45 +476,79 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     nick[nick_len] = '\0';
 
     size_t data_file_len = strlen(DATA_FILE);
-    char dir[data_file_len + 1];
+    char *dir = malloc(data_file_len + 1);
+
+    if (dir == NULL) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code: Out of memory.");
+        return;
+    }
+
     size_t dir_len = get_base_dir(DATA_FILE, data_file_len, dir);
 
 #ifdef QRPNG
 
     if (argc == 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Required 'txt' or 'png'");
+        free(dir);
         return;
     } else if (!strcmp(argv[1], "txt")) {
 
 #endif /* QRPNG */
-        char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1];
-        snprintf(qr_path, sizeof(qr_path), "%s%s%s", dir, nick, QRCODE_FILENAME_EXT);
+        size_t qr_path_buf_size = dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1;
+        char *qr_path = malloc(qr_path_buf_size);
+
+        if (qr_path == NULL) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code: Out of memory");
+            free(dir);
+            return;
+        }
+
+        snprintf(qr_path, qr_path_buf_size, "%s%s%s", dir, nick, QRCODE_FILENAME_EXT);
 
         if (ID_to_QRcode_txt(id_string, qr_path) == -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+            free(dir);
+            free(qr_path);
             return;
         }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "QR code has been printed to the file '%s'", qr_path);
+
+        free(qr_path);
 
 #ifdef QRPNG
     } else if (!strcmp(argv[1], "png")) {
-        char qr_path[dir_len + nick_len + strlen(QRCODE_FILENAME_EXT_PNG) + 1];
-        snprintf(qr_path, sizeof(qr_path), "%s%s%s", dir, nick, QRCODE_FILENAME_EXT_PNG);
+        size_t qr_path_buf_size = dir_len + nick_len + strlen(QRCODE_FILENAME_EXT_PNG) + 1;
+        char *qr_path = malloc(qr_path_buf_size);
+
+        if (qr_path == NULL) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code: Out of memory");
+            free(dir);
+            return;
+        }
+
+        snprintf(qr_path, qr_path_buf_size, "%s%s%s", dir, nick, QRCODE_FILENAME_EXT_PNG);
 
         if (ID_to_QRcode_png(id_string, qr_path) == -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
+            free(dir);
+            free(qr_path);
             return;
         }
 
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "QR code has been printed to the file '%s'", qr_path);
 
+        free(qr_path);
+
     } else {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown option '%s' -- Required 'txt' or 'png'", argv[1]);
+        free(dir);
         return;
     }
 
 #endif /* QRPNG */
+
+    free(dir);
 }
 #endif /* QRCODE */
 

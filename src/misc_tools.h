@@ -169,10 +169,14 @@ File_Type file_type(const char *path);
 /* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path);
 
-/* compares the first size bytes of fp and signature.
-   Returns 0 if they are the same, 1 if they differ, and -1 on error.
-
-   On success this function will seek back to the beginning of fp */
+/* Compares the first size bytes of fp to signature.
+ *
+ * Returns 0 if they are the same
+ * Returns 1 if they differ
+ * Returns -1 on error.
+ *
+ * On success this function will seek back to the beginning of fp.
+ */
 int check_file_signature(const unsigned char *signature, size_t size, FILE *fp);
 
 /* sets window title in tab bar. */
@@ -189,5 +193,19 @@ bool is_ip4_address(const char *address);
  * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
  */
 bool is_ip6_address(const char *address);
+
+
+/*
+ * Frees `length` members of pointer array `arr` and frees `arr`.
+ */
+void free_ptr_array(void **arr, size_t length);
+
+/*
+ * Returns a new array of `length` pointers of size `ptr_size`. Each pointer is allocated `bytes` bytes.
+ * Returns NULL on failure.
+ *
+ * The caller is responsible for freeing the array with `free_ptr_array`.
+ */
+void **malloc_ptr_array(size_t length, size_t bytes, size_t ptr_size);
 
 #endif /* MISC_TOOLS_H */

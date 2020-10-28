@@ -362,7 +362,13 @@ static void load_conferences(Tox *m)
         return;
     }
 
-    uint32_t chatlist[num_chats];
+    uint32_t *chatlist = malloc(num_chats * sizeof(uint32_t));
+
+    if (chatlist == NULL) {
+        fprintf(stderr, "malloc() failed in load_conferences()\n");
+        return;
+    }
+
     tox_conference_get_chatlist(m, chatlist);
 
     for (size_t i = 0; i < num_chats; ++i) {
@@ -402,6 +408,8 @@ static void load_conferences(Tox *m)
             continue;
         }
     }
+
+    free(chatlist);
 }
 
 /* return length of password on success, 0 on failure */
@@ -567,12 +575,19 @@ int store_data(Tox *m, const char *path)
         return -1;
     }
 
-    char temp_path[strlen(path) + strlen(TEMP_PROFILE_EXT) + 1];
-    snprintf(temp_path, sizeof(temp_path), "%s%s", path, TEMP_PROFILE_EXT);
+    size_t temp_buf_size = strlen(path) + strlen(TEMP_PROFILE_EXT) + 1;
+    char *temp_path = malloc(temp_buf_size);
+
+    if (temp_path == NULL) {
+        return -1;
+    }
+
+    snprintf(temp_path, temp_buf_size, "%s%s", path, TEMP_PROFILE_EXT);
 
     FILE *fp = fopen(temp_path, "wb");
 
     if (fp == NULL) {
+        free(temp_path);
         return -1;
     }
 
@@ -580,6 +595,7 @@ int store_data(Tox *m, const char *path)
     char *data = malloc(data_len * sizeof(char));
 
     if (data == NULL) {
+        free(temp_path);
         fclose(fp);
         return -1;
     }
@@ -592,6 +608,7 @@ int store_data(Tox *m, const char *path)
 
         if (enc_data == NULL) {
             fclose(fp);
+            free(temp_path);
             free(data);
             return -1;
         }
@@ -603,6 +620,7 @@ int store_data(Tox *m, const char *path)
         if (err != TOX_ERR_ENCRYPTION_OK) {
             fprintf(stderr, "tox_pass_encrypt() failed with error %d\n", err);
             fclose(fp);
+            free(temp_path);
             free(data);
             free(enc_data);
             return -1;
@@ -611,6 +629,7 @@ int store_data(Tox *m, const char *path)
         if (fwrite(enc_data, enc_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
+            free(temp_path);
             free(data);
             free(enc_data);
             return -1;
@@ -621,6 +640,7 @@ int store_data(Tox *m, const char *path)
         if (fwrite(data, data_len, 1, fp) != 1) {
             fprintf(stderr, "Failed to write profile data.\n");
             fclose(fp);
+            free(temp_path);
             free(data);
             return -1;
         }
@@ -630,8 +650,11 @@ int store_data(Tox *m, const char *path)
     free(data);
 
     if (rename(temp_path, path) != 0) {
+        free(temp_path);
         return -1;
     }
+
+    free(temp_path);
 
     return 0;
 }
@@ -719,13 +742,22 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
         if (len == 0) {
             fclose(fp);
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            return NULL;
         }
 
-        char data[len];
+        char *data = malloc(len);
 
-        if (fread(data, sizeof(data), 1, fp) != 1) {
+        if (data == NULL) {
             fclose(fp);
+            exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
+            return NULL;
+        }
+
+        if (fread(data, len, 1, fp) != 1) {
+            fclose(fp);
+            free(data);
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            return NULL;
         }
 
         bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
@@ -733,7 +765,9 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted) {
             fclose(fp);
+            free(data);
             exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
+            return NULL;
         }
 
         if (arg_opts.unencrypt_data && is_encrypted) {
@@ -756,7 +790,13 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
             }
 
             size_t plain_len = len - TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
-            char plain[plain_len];
+            char *plain = malloc(plain_len);  // must be freed after tox_new()
+
+            if (plain == NULL) {
+                fclose(fp);
+                exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
+                return NULL;
+            }
 
             while (true) {
                 fflush(stdout); // Flush before prompts so the user sees the question/message
@@ -771,6 +811,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
                 if (strcasecmp(user_password.pass, "q") == 0) {
                     fclose(fp);
+                    free(plain);
                     exit(0);
                 }
 
@@ -794,6 +835,8 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
                     if (m == NULL) {
                         fclose(fp);
+                        free(data);
+                        free(plain);
                         return NULL;
                     }
 
@@ -805,9 +848,14 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                     pweval = 0;
                 } else {
                     fclose(fp);
+                    free(data);
+                    free(plain);
                     exit_toxic_err("tox_pass_decrypt() failed", pwerr);
+                    return NULL;
                 }
             }
+
+            free(plain);
         } else {   /* data is not encrypted */
             tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_TOX_SAVE);
             tox_options_set_savedata_data(tox_opts, (uint8_t *) data, len);
@@ -816,14 +864,17 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
             if (m == NULL) {
                 fclose(fp);
+                free(data);
                 return NULL;
             }
         }
 
         fclose(fp);
+        free(data);
     } else {   /* Data file does not/should not exist */
         if (file_exists(data_path)) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            return NULL;
         }
 
         tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_NONE);
@@ -836,6 +887,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
         if (store_data(m, data_path) == -1) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            return NULL;
         }
     }
 
@@ -1207,37 +1259,59 @@ static void parse_args(int argc, char *argv[])
 #define OLD_DATA_BLOCKLIST_NAME "data-blocklist"
 static int rename_old_profile(const char *user_config_dir)
 {
-    char old_data_file[strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_NAME) + 1];
-    snprintf(old_data_file, sizeof(old_data_file), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_NAME);
+    size_t old_buf_size = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_NAME) + 1;
+    char *old_data_file = malloc(old_buf_size);
+
+    if (old_data_file == NULL) {
+        return -1;
+    }
+
+    snprintf(old_data_file, old_buf_size, "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_NAME);
 
     if (!file_exists(old_data_file)) {
+        free(old_data_file);
         return 0;
     }
 
     if (file_exists(DATA_FILE)) {
+        free(old_data_file);
         return 0;
     }
 
     if (rename(old_data_file, DATA_FILE) != 0) {
+        free(old_data_file);
         return -1;
     }
 
+    free(old_data_file);
+
     queue_init_message("Data file has been moved to %s", DATA_FILE);
 
-    char old_data_blocklist[strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_BLOCKLIST_NAME) + 1];
+    size_t old_block_buf_size = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_BLOCKLIST_NAME) + 1;
+    char *old_data_blocklist = malloc(old_block_buf_size);
+
+    if (old_data_blocklist == NULL) {
+        return -1;
+    }
+
     snprintf(old_data_blocklist, sizeof(old_data_blocklist), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
 
     if (!file_exists(old_data_blocklist)) {
+        free(old_data_blocklist);
         return 0;
     }
 
     if (file_exists(BLOCK_FILE)) {
+        free(old_data_blocklist);
         return 0;
     }
 
     if (rename(old_data_blocklist, BLOCK_FILE) != 0) {
+        free(old_data_blocklist);
         return -1;
     }
+
+    free(old_data_blocklist);
 
     return 0;
 }

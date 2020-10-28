@@ -50,16 +50,20 @@ void clear_screen(void)
 void hst_to_net(uint8_t *num, uint16_t numbytes)
 {
 #ifndef WORDS_BIGENDIAN
-    uint32_t i;
-    uint8_t buff[numbytes];
+    uint8_t *buff = malloc(numbytes);
 
-    for (i = 0; i < numbytes; ++i) {
+    if (buff == NULL) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < numbytes; ++i) {
         buff[i] = num[numbytes - i - 1];
     }
 
     memcpy(num, buff, numbytes);
+
+    free(buff);
 #endif
-    return;
 }
 
 time_t get_unix_time(void)
@@ -527,19 +531,30 @@ off_t file_size(const char *path)
     return st.st_size;
 }
 
-/* compares the first size bytes of fp to signature.
-   Returns 0 if they are the same, 1 if they differ, and -1 on error.
-
-   On success this function will seek back to the beginning of fp */
+/* Compares the first size bytes of fp to signature.
+ *
+ * Returns 0 if they are the same
+ * Returns 1 if they differ
+ * Returns -1 on error.
+ *
+ * On success this function will seek back to the beginning of fp.
+ */
 int check_file_signature(const unsigned char *signature, size_t size, FILE *fp)
 {
-    char buf[size];
+    char *buf = malloc(size);
+
+    if (buf == NULL) {
+        return -1;
+    }
 
     if (fread(buf, size, 1, fp) != 1) {
+        free(buf);
         return -1;
     }
 
     int ret = memcmp(signature, buf, size);
+
+    free(buf);
 
     if (fseek(fp, 0L, SEEK_SET) == -1) {
         return -1;
@@ -602,4 +617,46 @@ bool is_ip6_address(const char *address)
     }
 
     return num_colons > 1 && num_colons < 8;
+}
+
+/*
+ * Frees `length` members of pointer array `arr` and frees `arr`.
+ */
+void free_ptr_array(void **arr, size_t length)
+{
+    if (arr == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < length; ++i) {
+        free(arr[i]);
+    }
+
+    free(arr);
+}
+
+/*
+ * Returns a new array of `length` pointers of size `ptr_size`. Each pointer is allocated `bytes` bytes.
+ * Returns NULL on failure.
+ *
+ * The caller is responsible for freeing the array with `free_ptr_array`.
+ */
+void **malloc_ptr_array(size_t length, size_t bytes, size_t ptr_size)
+{
+    void **arr = malloc(length * ptr_size);
+
+    if (arr == NULL) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < length; ++i) {
+        arr[i] = malloc(bytes);
+
+        if (arr[i] == NULL) {
+            free_ptr_array(arr, i);
+            return NULL;
+        }
+    }
+
+    return arr;
 }

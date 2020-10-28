@@ -301,6 +301,16 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx
             return de_FailedStart;
         }
 
+        size_t zeros_size = frame_size * sizeof(uint16_t);
+        uint16_t *zeros = calloc(1, zeros_size);
+
+        if (zeros == NULL) {
+            free(device);
+            running[type][*device_idx] = NULL;
+            unlock;
+            return de_FailedStart;
+        }
+
         device->ctx = alcCreateContext(device->dhndl, NULL);
         alcMakeContextCurrent(device->ctx);
 
@@ -308,12 +318,11 @@ DeviceError open_device(DeviceType type, int32_t selection, uint32_t *device_idx
         alGenSources((uint32_t)1, &device->source);
         alSourcei(device->source, AL_LOOPING, AL_FALSE);
 
-        uint16_t zeros[frame_size];
-        memset(zeros, 0, frame_size * 2);
-
         for (i = 0; i < OPENAL_BUFS; ++i) {
-            alBufferData(device->buffers[i], device->sound_mode, zeros, frame_size * 2, sample_rate);
+            alBufferData(device->buffers[i], device->sound_mode, zeros, zeros_size, sample_rate);
         }
+
+        free(zeros);
 
         alSourceQueueBuffers(device->source, OPENAL_BUFS, device->buffers);
         alSourcePlay(device->source);
@@ -425,10 +434,16 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_
     alGetSourcei(device->source, AL_BUFFERS_QUEUED, &queued);
 
     if (processed) {
-        ALuint bufids[processed];
+        ALuint *bufids = malloc(processed * sizeof(ALuint));
+
+        if (bufids == NULL) {
+            return de_InternalError;
+        }
+
         alSourceUnqueueBuffers(device->source, processed, bufids);
         alDeleteBuffers(processed - 1, bufids + 1);
         bufid = bufids[0];
+        free(bufids);
     } else if (queued < 16) {
         alGenBuffers(1, &bufid);
     } else {

@@ -38,20 +38,32 @@
 #include "execute.h"
 #include "configdir.h"
 
-static void print_matches(ToxWindow *self, Tox *m, const void *list, size_t n_items, size_t size)
+static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matches)
 {
     if (m) {
         execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
     }
 
-    const char *L = (char *) list;
-    int i;
+    for (size_t i = 0; i < n_matches; ++i) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", list[i]);
+    }
 
-    for (i = 0; i < n_items; ++i) {
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+}
+
+static void print_dir_matches(ToxWindow *self, Tox *m, const void *list, size_t n_items, size_t size)
+{
+    if (m) {
+        execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
+    }
+
+    const char *L = (char *)list;
+
+    for (size_t i = 0; i < n_items; ++i) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", &L[i * size]);
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");   /* formatting */
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
 /* puts match in match buffer. if more than one match, add first n chars that are identical.
@@ -59,21 +71,19 @@ static void print_matches(ToxWindow *self, Tox *m, const void *list, size_t n_it
  *
  * Returns the length of the match.
  */
-static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char (*matches)[MAX_STR_SIZE], int n)
+static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char **matches, size_t n_items,
+                            size_t max_size)
 {
     UNUSED_VAR(self);
 
-    if (n == 1) {
+    if (n_items == 1) {
         return snprintf(match, match_sz, "%s", matches[0]);
     }
 
-    int i;
-
-    for (i = 0; i < MAX_STR_SIZE; ++i) {
+    for (size_t i = 0; i < max_size; ++i) {
         char ch1 = matches[0][i];
-        int j;
 
-        for (j = 0; j < n; ++j) {
+        for (size_t j = 0; j < n_items; ++j) {
             char ch2 = matches[j][i];
 
             if (ch1 != ch2 || !ch1) {
@@ -102,7 +112,7 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char 
  *
  * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-static int complete_line_helper(ToxWindow *self, const void *list, size_t n_items, size_t size, bool dir_search)
+static int complete_line_helper(ToxWindow *self, const void *list, const size_t n_items, size_t size, bool dir_search)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -161,7 +171,14 @@ static int complete_line_helper(ToxWindow *self, const void *list, size_t n_item
 
     int s_len = strlen(sub);
     size_t n_matches = 0;
-    char matches[n_items][MAX_STR_SIZE];
+
+    char **matches = (char **)malloc_ptr_array(n_items, MAX_STR_SIZE, sizeof(char *));
+
+    if (matches == NULL) {
+        free(sub);
+        return -1;
+    }
+
     int i = 0;
 
     /* put all list matches in matches array */
@@ -177,15 +194,18 @@ static int complete_line_helper(ToxWindow *self, const void *list, size_t n_item
     free(sub);
 
     if (!n_matches) {
+        free_ptr_array((void **) matches, n_items);
         return -1;
     }
 
     if (!dir_search && n_matches > 1) {
-        print_matches(self, NULL, matches, n_matches, MAX_STR_SIZE);
+        print_ac_matches(self, NULL, matches, n_matches);
     }
 
     char match[MAX_STR_SIZE];
-    size_t match_len = get_str_match(self, match, sizeof(match), matches, n_matches);
+    size_t match_len = get_str_match(self, match, sizeof(match), matches, n_matches, MAX_STR_SIZE);
+
+    free_ptr_array((void **) matches, n_items);
 
     if (match_len == 0) {
         return 0;
@@ -365,7 +385,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 
     if (dircount > 1) {
         qsort(dirnames, dircount, NAME_MAX + 1, qsort_strcasecmp_hlpr);
-        print_matches(self, m, dirnames, dircount, NAME_MAX + 1);
+        print_dir_matches(self, m, dirnames, dircount, NAME_MAX + 1);
     }
 
     return complete_path(self, dirnames, dircount, NAME_MAX + 1);
