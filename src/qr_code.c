@@ -142,6 +142,7 @@ int ID_to_QRcode_png(const char *tox_id, const char *outfile)
 
     if (row == NULL) {
         fclose(fp);
+        QRcode_free(qr_obj);
         return -1;
     }
 

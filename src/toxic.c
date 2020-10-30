@@ -794,6 +794,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
             if (plain == NULL) {
                 fclose(fp);
+                free(data);
                 exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
                 return NULL;
             }
@@ -812,6 +813,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                 if (strcasecmp(user_password.pass, "q") == 0) {
                     fclose(fp);
                     free(plain);
+                    free(data);
                     exit(0);
                 }
 
@@ -1294,7 +1296,7 @@ static int rename_old_profile(const char *user_config_dir)
         return -1;
     }
 
-    snprintf(old_data_blocklist, sizeof(old_data_blocklist), "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
+    snprintf(old_data_blocklist, old_block_buf_size, "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
 
     if (!file_exists(old_data_blocklist)) {
         free(old_data_blocklist);

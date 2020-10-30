@@ -28,13 +28,16 @@
  * then fills line with the complete word. e.g. "Hello jo" would complete the line
  * with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
  *
- * list is a pointer to the list of strings being compared, n_items is the number of items
- * in the list, and size is the size of each item in the list.
+* `list` is a pointer to `n_items` strings.
+ *
+ * dir_search should be true if the line being completed is a file path.
  *
  * Returns the difference between the old len and new len of line on success.
  * Returns -1 on error.
+ *
+ * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size);
+int complete_line(ToxWindow *self, const char **list, size_t n_items);
 
 /* Attempts to match /command "<incomplete-dir>" line to matching directories.
  * If there is only one match the line is auto-completed.

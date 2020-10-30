@@ -37,6 +37,7 @@ extern FriendsList Friends;
 
 /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
 #define NUM_PROG_MARKS 50
+#define STR_BUF_SIZE 30
 
 /* creates initial progress line that will be updated during file transfer.
    Assumes progline has room for at least MAX_STR_SIZE bytes */
@@ -59,10 +60,10 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
         return;
     }
 
-    char pct_str[24];
+    char pct_str[STR_BUF_SIZE] = {0};
     snprintf(pct_str, sizeof(pct_str), "%.1f%%", pct_done);
 
-    char bps_str[24];
+    char bps_str[STR_BUF_SIZE] = {0};
     bytes_convert_str(bps_str, sizeof(bps_str), bps);
 
     char prog_line[NUM_PROG_MARKS + 1] = {0};

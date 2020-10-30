@@ -42,9 +42,7 @@ extern struct user_settings *user_settings;
 
 void clear_screen(void)
 {
-    if (system("clear") != 0) {
-        fprintf(stderr, "Warning: system() failed to clear screen\n");
-    }
+    printf("\033[2J\033[1;1H");
 }
 
 void hst_to_net(uint8_t *num, uint16_t numbytes)
@@ -239,6 +237,12 @@ int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
 int qsort_strcasecmp_hlpr(const void *str1, const void *str2)
 {
     return strcasecmp((const char *) str1, (const char *) str2);
+}
+
+/* case-insensitive string compare function for use with qsort */
+int qsort_ptr_char_array_helper(const void *str1, const void *str2)
+{
+    return strcasecmp(*(char **)str1, *(char **)str2);
 }
 
 /* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
@@ -620,30 +624,33 @@ bool is_ip6_address(const char *address)
 }
 
 /*
- * Frees `length` members of pointer array `arr` and frees `arr`.
+ * Frees all members of a pointer array plus `arr`.
  */
-void free_ptr_array(void **arr, size_t length)
+void free_ptr_array(void **arr)
 {
     if (arr == NULL) {
         return;
     }
 
-    for (size_t i = 0; i < length; ++i) {
-        free(arr[i]);
+    void **tmp = arr;
+
+    while (*arr) {
+        free(*arr);
+        ++arr;
     }
 
-    free(arr);
+    free(tmp);
 }
 
 /*
- * Returns a new array of `length` pointers of size `ptr_size`. Each pointer is allocated `bytes` bytes.
+ * Returns a null terminated array of `length` pointers. Each pointer is allocated `bytes` bytes.
  * Returns NULL on failure.
  *
  * The caller is responsible for freeing the array with `free_ptr_array`.
  */
-void **malloc_ptr_array(size_t length, size_t bytes, size_t ptr_size)
+void **malloc_ptr_array(size_t length, size_t bytes)
 {
-    void **arr = malloc(length * ptr_size);
+    void **arr = malloc((length + 1) * sizeof(void *));
 
     if (arr == NULL) {
         return NULL;
@@ -653,10 +660,12 @@ void **malloc_ptr_array(size_t length, size_t bytes, size_t ptr_size)
         arr[i] = malloc(bytes);
 
         if (arr[i] == NULL) {
-            free_ptr_array(arr, i);
+            free_ptr_array(arr);
             return NULL;
         }
     }
+
+    arr[length] = NULL;
 
     return arr;
 }

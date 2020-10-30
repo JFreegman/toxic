@@ -51,21 +51,6 @@ static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matc
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
-static void print_dir_matches(ToxWindow *self, Tox *m, const void *list, size_t n_items, size_t size)
-{
-    if (m) {
-        execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
-    }
-
-    const char *L = (char *)list;
-
-    for (size_t i = 0; i < n_items; ++i) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", &L[i * size]);
-    }
-
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
-}
-
 /* puts match in match buffer. if more than one match, add first n chars that are identical.
  * e.g. if matches contains: [foo, foobar, foe] we put fo in match.
  *
@@ -102,8 +87,7 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char 
  * then fills line with the complete word. e.g. "Hello jo" would complete the line
  * with "Hello john". If multiple matches, prints out all the matches and semi-completes line.
  *
- * list is a pointer to the list of strings being compared, n_items is the number of items
- * in the list, and size is the size of each item in the list.
+ * `list` is a pointer to `n_items` strings. Each string in the list must be <= MAX_STR_SIZE.
  *
  * dir_search should be true if the line being completed is a file path.
  *
@@ -112,7 +96,7 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char 
  *
  * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-static int complete_line_helper(ToxWindow *self, const void *list, const size_t n_items, size_t size, bool dir_search)
+static int complete_line_helper(ToxWindow *self, const char **list, const size_t n_items, bool dir_search)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -120,11 +104,10 @@ static int complete_line_helper(ToxWindow *self, const void *list, const size_t 
         return -1;
     }
 
-    if (ctx->len >= MAX_STR_SIZE || size > MAX_STR_SIZE) {
+    if (ctx->len >= MAX_STR_SIZE) {
         return -1;
     }
 
-    const char *L = (const char *) list;
     const char *endchrs = " ";
     char ubuf[MAX_STR_SIZE] = {0};
 
@@ -172,29 +155,24 @@ static int complete_line_helper(ToxWindow *self, const void *list, const size_t 
     int s_len = strlen(sub);
     size_t n_matches = 0;
 
-    char **matches = (char **)malloc_ptr_array(n_items, MAX_STR_SIZE, sizeof(char *));
+    char **matches = (char **) malloc_ptr_array(n_items, MAX_STR_SIZE);
 
     if (matches == NULL) {
         free(sub);
         return -1;
     }
 
-    int i = 0;
-
     /* put all list matches in matches array */
-    for (i = 0; i < n_items; ++i) {
-        char str[MAX_CMDNAME_SIZE + 1];
-        snprintf(str, sizeof(str), "%s", &L[i * size]);
-
-        if (strncasecmp(str, sub, s_len) == 0) {
-            strcpy(matches[n_matches++], str);
+    for (size_t i = 0; i < n_items; ++i) {
+        if (strncasecmp(list[i], sub, s_len) == 0) {
+            snprintf(matches[n_matches++], MAX_STR_SIZE, "%s", list[i]);
         }
     }
 
     free(sub);
 
     if (!n_matches) {
-        free_ptr_array((void **) matches, n_items);
+        free_ptr_array((void **) matches);
         return -1;
     }
 
@@ -205,7 +183,7 @@ static int complete_line_helper(ToxWindow *self, const void *list, const size_t 
     char match[MAX_STR_SIZE];
     size_t match_len = get_str_match(self, match, sizeof(match), matches, n_matches, MAX_STR_SIZE);
 
-    free_ptr_array((void **) matches, n_items);
+    free_ptr_array((void **) matches);
 
     if (match_len == 0) {
         return 0;
@@ -281,14 +259,14 @@ static int complete_line_helper(ToxWindow *self, const void *list, const size_t 
     return diff;
 }
 
-int complete_line(ToxWindow *self, const void *list, size_t n_items, size_t size)
+int complete_line(ToxWindow *self, const char **list, size_t n_items)
 {
-    return complete_line_helper(self, list, n_items, size, false);
+    return complete_line_helper(self, list, n_items, false);
 }
 
-static int complete_path(ToxWindow *self, const void *list, size_t n_items, size_t size)
+static int complete_path(ToxWindow *self, const char **list, const size_t n_items)
 {
-    return complete_line_helper(self, list, n_items, size, true);
+    return complete_line_helper(self, list, n_items, true);
 }
 
 /* Transforms a tab complete starting with the shorthand "~" into the full home directory. */
@@ -365,14 +343,21 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
         return -1;
     }
 
-    char dirnames[MAX_DIRS][NAME_MAX + 1];
+    char **dirnames = (char **) malloc_ptr_array(MAX_DIRS, NAME_MAX + 1);
+
+    if (dirnames == NULL) {
+        closedir(dp);
+        return -1;
+    }
+
     struct dirent *entry;
+
     int dircount = 0;
 
     while ((entry = readdir(dp)) && dircount < MAX_DIRS) {
         if (strncmp(entry->d_name, b_name, b_name_len) == 0
                 && strcmp(".", entry->d_name) && strcmp("..", entry->d_name)) {
-            snprintf(dirnames[dircount], sizeof(dirnames[dircount]), "%s", entry->d_name);
+            snprintf(dirnames[dircount], NAME_MAX + 1, "%s", entry->d_name);
             ++dircount;
         }
     }
@@ -380,13 +365,18 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     closedir(dp);
 
     if (dircount == 0) {
+        free_ptr_array((void **) dirnames);
         return -1;
     }
 
     if (dircount > 1) {
-        qsort(dirnames, dircount, NAME_MAX + 1, qsort_strcasecmp_hlpr);
-        print_dir_matches(self, m, dirnames, dircount, NAME_MAX + 1);
+        qsort(dirnames, dircount, sizeof(char *), qsort_ptr_char_array_helper);
+        print_ac_matches(self, m, dirnames, dircount);
     }
 
-    return complete_path(self, dirnames, dircount, NAME_MAX + 1);
+    int ret = complete_path(self, (const char **) dirnames, dircount);
+
+    free_ptr_array((void **) dirnames);
+
+    return ret;
 }

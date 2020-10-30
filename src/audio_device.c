@@ -437,6 +437,7 @@ inline__ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_
         ALuint *bufids = malloc(processed * sizeof(ALuint));
 
         if (bufids == NULL) {
+            pthread_mutex_unlock(device->mutex);
             return de_InternalError;
         }
 

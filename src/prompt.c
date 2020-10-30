@@ -49,68 +49,47 @@ extern struct Winthread Winthread;
 
 extern FriendsList Friends;
 FriendRequests FrndRequests;
-#ifdef AUDIO
-#define AC_NUM_GLOB_COMMANDS_AUDIO 2
-#else
-#define AC_NUM_GLOB_COMMANDS_AUDIO 0
-#endif /* AUDIO */
-#ifdef VIDEO
-#define AC_NUM_GLOB_COMMANDS_VIDEO 2
-#else
-#define AC_NUM_GLOB_COMMANDS_VIDEO 0
-#endif /* VIDEO */
-#ifdef PYTHON
-#define AC_NUM_GLOB_COMMANDS_PYTHON 1
-#else
-#define AC_NUM_GLOB_COMMANDS_PYTHON 0
-#endif /* PYTHON */
-#ifdef QRCODE
-#define AC_NUM_GLOB_COMMANDS_QRCODE 1
-#else
-#define AC_NUM_GLOB_COMMANDS_QRCODE 0
-#endif /* QRCODE */
-#define AC_NUM_GLOB_COMMANDS (17 + AC_NUM_GLOB_COMMANDS_AUDIO + AC_NUM_GLOB_COMMANDS_VIDEO + AC_NUM_GLOB_COMMANDS_PYTHON + AC_NUM_GLOB_COMMANDS_QRCODE)
 
 /* Array of global command names used for tab completion. */
-static const char glob_cmd_list[AC_NUM_GLOB_COMMANDS][MAX_CMDNAME_SIZE] = {
-    { "/accept"     },
-    { "/add"        },
-    { "/avatar"     },
-    { "/clear"      },
-    { "/connect"    },
-    { "/decline"    },
-    { "/exit"       },
-    { "/group"      },
-    { "/help"       },
-    { "/log"        },
-    { "/myid"       },
+static const char *glob_cmd_list[] = {
+    "/accept",
+    "/add",
+    "/avatar",
+    "/clear",
+    "/connect",
+    "/decline",
+    "/exit",
+    "/group",
+    "/help",
+    "/log",
+    "/myid",
 #ifdef QRCODE
-    { "/myqr"       },
+    "/myqr",
 #endif /* QRCODE */
-    { "/nick"       },
-    { "/note"       },
-    { "/nospam"     },
-    { "/quit"       },
-    { "/requests"   },
-    { "/status"     },
+    "/nick",
+    "/note",
+    "/nospam",
+    "/quit",
+    "/requests",
+    "/status",
 
 #ifdef AUDIO
 
-    { "/lsdev"       },
-    { "/sdev"        },
+    "/lsdev",
+    "/sdev",
 
 #endif /* AUDIO */
 
 #ifdef VIDEO
 
-    { "/lsvdev"      },
-    { "/svdev"       },
+    "/lsvdev",
+    "/svdev",
 
 #endif /* VIDEO */
 
 #ifdef PYTHON
 
-    { "/run"         },
+    "/run",
 
 #endif /* PYTHON */
 
@@ -272,14 +251,14 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 #endif
 
             else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
-                const char status_cmd_list[3][8] = {
-                    {"online"},
-                    {"away"},
-                    {"busy"},
+                const char *status_cmd_list[] = {
+                    "online",
+                    "away",
+                    "busy",
                 };
-                diff = complete_line(self, status_cmd_list, 3, 8);
+                diff = complete_line(self, status_cmd_list, sizeof(status_cmd_list) / sizeof(char *));
             } else {
-                diff = complete_line(self, glob_cmd_list, AC_NUM_GLOB_COMMANDS, MAX_CMDNAME_SIZE);
+                diff = complete_line(self, glob_cmd_list, sizeof(glob_cmd_list) / sizeof(char *));
             }
 
             if (diff != -1) {

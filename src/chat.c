@@ -65,67 +65,50 @@ static void init_infobox(ToxWindow *self);
 static void kill_infobox(ToxWindow *self);
 #endif /* AUDIO */
 
-#ifdef AUDIO
-#define AC_NUM_CHAT_COMMANDS_AUDIO 9
-#else
-#define AC_NUM_CHAT_COMMANDS_AUDIO 0
-#endif /* AUDIO */
-#ifdef PYTHON
-#define AC_NUM_CHAT_COMMANDS_PYTHON 1
-#else
-#define AC_NUM_CHAT_COMMANDS_PYTHON 0
-#endif /* PYTHON */
-#ifdef QRCODE
-#define AC_NUM_CHAT_COMMANDS_QRCODE 1
-#else
-#define AC_NUM_CHAT_COMMANDS_QRCODE 0
-#endif /* QRCODE */
-#define AC_NUM_CHAT_COMMANDS (21 + AC_NUM_CHAT_COMMANDS_AUDIO + AC_NUM_CHAT_COMMANDS_PYTHON + AC_NUM_CHAT_COMMANDS_QRCODE)
-
 /* Array of chat command names used for tab completion. */
-static const char chat_cmd_list[AC_NUM_CHAT_COMMANDS][MAX_CMDNAME_SIZE] = {
-    { "/accept"     },
-    { "/add"        },
-    { "/avatar"     },
-    { "/cancel"     },
-    { "/clear"      },
-    { "/close"      },
-    { "/connect"    },
-    { "/exit"       },
-    { "/group"      },
-    { "/help"       },
-    { "/invite"     },
-    { "/join"       },
-    { "/log"        },
-    { "/myid"       },
+static const char *chat_cmd_list[] = {
+    "/accept",
+    "/add",
+    "/avatar",
+    "/cancel",
+    "/clear",
+    "/close",
+    "/connect",
+    "/exit",
+    "/group",
+    "/help",
+    "/invite",
+    "/join",
+    "/log",
+    "/myid",
 #ifdef QRCODE
-    { "/myqr"       },
+    "/myqr",
 #endif /* QRCODE */
-    { "/nick"       },
-    { "/note"       },
-    { "/nospam"     },
-    { "/quit"       },
-    { "/savefile"   },
-    { "/sendfile"   },
-    { "/status"     },
+    "/nick",
+    "/note",
+    "/nospam",
+    "/quit",
+    "/savefile",
+    "/sendfile",
+    "/status",
 
 #ifdef AUDIO
 
-    { "/call"       },
-    { "/answer"     },
-    { "/reject"     },
-    { "/hangup"     },
-    { "/sdev"       },
-    { "/mute"       },
-    { "/sense"      },
-    { "/video"      },
-    { "/bitrate"    },
+    "/call",
+    "/answer",
+    "/reject",
+    "/hangup",
+    "/sdev",
+    "/mute",
+    "/sense",
+    "/video",
+    "/bitrate",
 
 #endif /* AUDIO */
 
 #ifdef PYTHON
 
-    { "/run"        },
+    "/run",
 
 #endif /* PYTHON */
 };
@@ -662,7 +645,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         size_t d_len = strlen(d);
 
         if (path_len + d_len >= file_path_buf_size) {
-            path_len -= d_len;
+            path_len = file_path_buf_size - d_len - 1;
             file_path[path_len] = '\0';
         }
 
@@ -1090,14 +1073,14 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 #endif
 
         else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
-            const char status_cmd_list[3][8] = {
-                {"online"},
-                {"away"},
-                {"busy"},
+            const char *status_cmd_list[] = {
+                "online",
+                "away",
+                "busy",
             };
-            diff = complete_line(self, status_cmd_list, 3, 8);
+            diff = complete_line(self, status_cmd_list, sizeof(status_cmd_list) / sizeof(char *));
         } else {
-            diff = complete_line(self, chat_cmd_list, AC_NUM_CHAT_COMMANDS, MAX_CMDNAME_SIZE);
+            diff = complete_line(self, chat_cmd_list, sizeof(chat_cmd_list) / sizeof(char *));
         }
 
         if (diff != -1) {

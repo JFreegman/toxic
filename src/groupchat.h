@@ -48,7 +48,7 @@ typedef struct {
     GroupPeer *peer_list;
     uint32_t max_idx;
 
-    char *name_list;
+    char **name_list;
     uint32_t num_peers;
 
 } GroupChat;

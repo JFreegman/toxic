@@ -494,7 +494,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     } else if (!strcmp(argv[1], "txt")) {
 
 #endif /* QRPNG */
-        size_t qr_path_buf_size = dir_len + nick_len + strlen(QRCODE_FILENAME_EXT) + 1;
+        size_t qr_path_buf_size = dir_len + nick_len + sizeof(QRCODE_FILENAME_EXT);
         char *qr_path = malloc(qr_path_buf_size);
 
         if (qr_path == NULL) {
@@ -518,7 +518,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 #ifdef QRPNG
     } else if (!strcmp(argv[1], "png")) {
-        size_t qr_path_buf_size = dir_len + nick_len + strlen(QRCODE_FILENAME_EXT_PNG) + 1;
+        size_t qr_path_buf_size = dir_len + nick_len + sizeof(QRCODE_FILENAME_EXT_PNG);
         char *qr_path = malloc(qr_path_buf_size);
 
         if (qr_path == NULL) {
