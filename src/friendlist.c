@@ -1031,7 +1031,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
     wprintw(self->window, " Online: ");
     wattroff(self->window, A_BOLD);
 
-    wprintw(self->window, "%d/%d \n\n", Friends.num_online, Friends.num_friends);
+    wprintw(self->window, "%zu/%zu \n\n", Friends.num_online, Friends.num_friends);
 
     if ((y2 - FLIST_OFST) <= 0) {
         return;

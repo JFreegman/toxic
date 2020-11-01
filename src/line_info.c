@@ -391,7 +391,7 @@ void line_info_print(ToxWindow *self)
                     }
                 }
 
-                wprintw(win, "\n", line->msg);
+                wprintw(win, "\n");
                 break;
 
             case OUT_ACTION_READ:

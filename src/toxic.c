@@ -129,12 +129,12 @@ static void catch_SIGSEGV(int sig)
 {
     UNUSED_VAR(sig);
 
-    if (!freopen("/dev/tty", "w", stderr)) {    // make sure stderr is enabled since we may have disabled it
-        fprintf(stderr, "Warning: Failed to enable stderr\n");
+    if (freopen("/dev/tty", "w", stderr)) {    // make sure stderr is enabled since we may have disabled it
+        fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
     }
 
     endwin();
-    fprintf(stderr, "Caught SIGSEGV: Aborting toxic session.\n");
+
     exit(EXIT_FAILURE);
 }
 
@@ -216,12 +216,11 @@ void exit_toxic_err(const char *errmsg, int errcode)
 {
     free_global_data();
 
-    if (!freopen("/dev/tty", "w", stderr)) {
-        fprintf(stderr, "Warning: Failed to open stderr\n");
+    if (freopen("/dev/tty", "w", stderr)) {
+        fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
     }
 
     endwin();
-    fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
     exit(EXIT_FAILURE);
 }
 
