@@ -56,7 +56,7 @@ static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matc
  *
  * Returns the length of the match.
  */
-static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, char **matches, size_t n_items,
+static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, const char **matches, size_t n_items,
                             size_t max_size)
 {
     UNUSED_VAR(self);
@@ -181,7 +181,7 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
     }
 
     char match[MAX_STR_SIZE];
-    size_t match_len = get_str_match(self, match, sizeof(match), matches, n_matches, MAX_STR_SIZE);
+    size_t match_len = get_str_match(self, match, sizeof(match), (const char **) matches, n_matches, MAX_STR_SIZE);
 
     free_ptr_array((void **) matches);
 
@@ -298,6 +298,18 @@ static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const c
     ctx->len = ctx->pos;
 }
 
+/*
+ * Return true if the first `p_len` chars in `s` are equal to `p` and `s` is a valid directory name.
+ */
+static bool is_partial_match(const char *s, const char *p, size_t p_len)
+{
+    if (s == NULL || p == NULL) {
+        return false;
+    }
+
+    return strncmp(s, p, p_len) == 0 && strcmp(".", s) != 0 && strcmp("..", s) != 0;
+}
+
 /* Attempts to match /command "<incomplete-dir>" line to matching directories.
  * If there is only one match the line is auto-completed.
  *
@@ -336,7 +348,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 
     snprintf(b_name, sizeof(b_name), "%s", &b_path[si + 1]);
     b_path[si + 1] = '\0';
-    int b_name_len = strlen(b_name);
+    size_t b_name_len = strlen(b_name);
     DIR *dp = opendir(b_path);
 
     if (dp == NULL) {
@@ -355,8 +367,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
     int dircount = 0;
 
     while ((entry = readdir(dp)) && dircount < MAX_DIRS) {
-        if (strncmp(entry->d_name, b_name, b_name_len) == 0
-                && strcmp(".", entry->d_name) && strcmp("..", entry->d_name)) {
+        if (is_partial_match(entry->d_name, b_name, b_name_len)) {
             snprintf(dirnames[dircount], NAME_MAX + 1, "%s", entry->d_name);
             ++dircount;
         }

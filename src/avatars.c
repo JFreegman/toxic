@@ -39,6 +39,37 @@ static struct Avatar {
     off_t size;
 } Avatar;
 
+/* Compares the first size bytes of fp to signature.
+ *
+ * Returns 0 if they are the same
+ * Returns 1 if they differ
+ * Returns -1 on error.
+ *
+ * On success this function will seek back to the beginning of fp.
+ */
+static int check_file_signature(const unsigned char *signature, size_t size, FILE *fp)
+{
+    char *buf = malloc(size);
+
+    if (buf == NULL) {
+        return -1;
+    }
+
+    if (fread(buf, size, 1, fp) != 1) {
+        free(buf);
+        return -1;
+    }
+
+    int ret = memcmp(signature, buf, size);
+
+    free(buf);
+
+    if (fseek(fp, 0L, SEEK_SET) == -1) {
+        return -1;
+    }
+
+    return ret == 0 ? 0 : 1;
+}
 
 static void avatar_clear(void)
 {

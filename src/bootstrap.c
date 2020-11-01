@@ -24,6 +24,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <curl/curl.h>
 #include <tox/tox.h>
@@ -105,6 +108,37 @@ static struct DHT_Nodes {
     time_t last_updated;
 } Nodes;
 
+/* Return true if address appears to be a valid ipv4 address. */
+static bool is_ip4_address(const char *address)
+{
+    struct sockaddr_in s_addr;
+    return inet_pton(AF_INET, address, &(s_addr.sin_addr)) != 0;
+}
+
+/* Return true if address roughly appears to be a valid ipv6 address.
+ *
+ * TODO: Improve this function (inet_pton behaves strangely with ipv6).
+ * for now the only guarantee is that it won't return true if the
+ * address is a domain or ipv4 address, and should only be used if you're
+ * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
+ */
+static bool is_ip6_address(const char *address)
+{
+    size_t num_colons = 0;
+    char ch = 0;
+
+    for (size_t i = 0; (ch = address[i]); ++i) {
+        if (ch == '.') {
+            return false;
+        }
+
+        if (ch == ':') {
+            ++num_colons;
+        }
+    }
+
+    return num_colons > 1 && num_colons < 8;
+}
 
 /* Determine if a node is offline by comparing the age of the nodeslist
  * to the last time the node was successfully pinged.

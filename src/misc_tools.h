@@ -110,13 +110,16 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
 /* case-insensitive string compare function for use with qsort */
 int qsort_ptr_char_array_helper(const void *str1, const void *str2);
 
-/* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
-      - cannot be empty
-      - cannot start with a space
-      - must not contain a forward slash (for logfile naming purposes)
-      - must not contain contiguous spaces
-      - must not contain a newline or tab seqeunce */
-int valid_nick(const char *nick);
+/* Returns true if nick is valid.
+ *
+ * A valid toxic nick:
+ * - cannot be empty
+ * - cannot start with a space
+ * - must not contain a forward slash (for logfile naming purposes)
+ * - must not contain contiguous spaces
+ * - must not contain a newline or tab seqeunce
+ */
+bool valid_nick(const char *nick);
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
 void filter_str(char *str, size_t len);
@@ -172,31 +175,8 @@ File_Type file_type(const char *path);
 /* returns file size. If file doesn't exist returns 0. */
 off_t file_size(const char *path);
 
-/* Compares the first size bytes of fp to signature.
- *
- * Returns 0 if they are the same
- * Returns 1 if they differ
- * Returns -1 on error.
- *
- * On success this function will seek back to the beginning of fp.
- */
-int check_file_signature(const unsigned char *signature, size_t size, FILE *fp);
-
 /* sets window title in tab bar. */
 void set_window_title(ToxWindow *self, const char *title, int len);
-
-/* Return true if address appears to be a valid ipv4 address. */
-bool is_ip4_address(const char *address);
-
-/* Return true if address roughly appears to be a valid ipv6 address.
- *
- * TODO: Improve this function (inet_pton behaves strangely with ipv6).
- * for now the only guarantee is that it won't return true if the
- * address is a domain or ipv4 address, and should only be used if you're
- * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
- */
-bool is_ip6_address(const char *address);
-
 
 /*
  * Frees all members of a pointer array plus `arr`.

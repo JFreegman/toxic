@@ -25,10 +25,6 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
-#include <dirent.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <sys/stat.h>
 
 #include "toxic.h"
@@ -59,7 +55,6 @@ void hst_to_net(uint8_t *num, uint16_t numbytes)
     }
 
     memcpy(num, buff, numbytes);
-
     free(buff);
 #endif
 }
@@ -146,11 +141,10 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
         return -1;
     }
 
-    int i, res;
     const char *pos = keystr;
 
-    for (i = 0; i < size; ++i) {
-        res = sscanf(pos, "%2hhx", (unsigned char *)&buf[i]);
+    for (size_t i = 0; i < size; ++i) {
+        int res = sscanf(pos, "%2hhx", (unsigned char *)&buf[i]);
         pos += 2;
 
         if (res == EOF || res < 1) {
@@ -172,9 +166,7 @@ int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_
         return -1;
     }
 
-    size_t i;
-
-    for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
+    for (size_t i = 0; i < TOX_ADDRESS_SIZE; ++i) {
         snprintf(&output[i * 2], output_size - (i * 2), "%02X", bin_id[i] & 0xff);
     }
 
@@ -245,43 +237,59 @@ int qsort_ptr_char_array_helper(const void *str1, const void *str2)
     return strcasecmp(*(char **)str1, *(char **)str2);
 }
 
-/* Returns 1 if nick is valid, 0 if not. A valid toxic nick:
-      - cannot be empty
-      - cannot start with a space
-      - must not contain a forward slash (for logfile naming purposes)
-      - must not contain contiguous spaces
-      - must not contain a newline or tab seqeunce */
-int valid_nick(const char *nick)
+static const char invalid_chars[] = {'/', '\n', '\t', '\v', '\r', '\0'};
+
+/*
+ * Helper function for `valid_nick()`.
+ *
+ * Returns true if `ch` is not in the `invalid_chars` array.
+ */
+static bool is_valid_char(char ch)
 {
-    if (!nick[0] || nick[0] == ' ') {
-        return 0;
-    }
+    char tmp;
 
-    int i;
-
-    for (i = 0; nick[i]; ++i) {
-        if ((nick[i] == ' ' && nick[i + 1] == ' ')
-                || nick[i] == '/'
-                || nick[i] == '\n'
-                || nick[i] == '\t'
-                || nick[i] == '\v'
-                || nick[i] == '\r')
-
-        {
-            return 0;
+    for (size_t i = 0; (tmp = invalid_chars[i]); ++i) {
+        if (tmp == ch) {
+            return false;
         }
     }
 
-    return 1;
+    return true;
+}
+
+/* Returns true if nick is valid.
+ *
+ * A valid toxic nick:
+ * - cannot be empty
+ * - cannot start with a space
+ * - must not contain a forward slash (for logfile naming purposes)
+ * - must not contain contiguous spaces
+ * - must not contain a newline or tab seqeunce
+ */
+bool valid_nick(const char *nick)
+{
+    if (!nick[0] || nick[0] == ' ') {
+        return false;
+    }
+
+    for (size_t i = 0; nick[i]; ++i) {
+        char ch = nick[i];
+
+        if ((ch == ' ' && nick[i + 1] == ' ') || !is_valid_char(ch)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
 void filter_str(char *str, size_t len)
 {
-    size_t i;
+    for (size_t i = 0; i < len; ++i) {
+        char ch = str[i];
 
-    for (i = 0; i < len; ++i) {
-        if (str[i] == '\n' || str[i] == '\r' || str[i] == '\t' || str[i] == '\v' || str[i] == '\0') {
+        if (!is_valid_char(ch) || str[i] == '\0') {
             str[i] = ' ';
         }
     }
@@ -535,38 +543,6 @@ off_t file_size(const char *path)
     return st.st_size;
 }
 
-/* Compares the first size bytes of fp to signature.
- *
- * Returns 0 if they are the same
- * Returns 1 if they differ
- * Returns -1 on error.
- *
- * On success this function will seek back to the beginning of fp.
- */
-int check_file_signature(const unsigned char *signature, size_t size, FILE *fp)
-{
-    char *buf = malloc(size);
-
-    if (buf == NULL) {
-        return -1;
-    }
-
-    if (fread(buf, size, 1, fp) != 1) {
-        free(buf);
-        return -1;
-    }
-
-    int ret = memcmp(signature, buf, size);
-
-    free(buf);
-
-    if (fseek(fp, 0L, SEEK_SET) == -1) {
-        return -1;
-    }
-
-    return ret == 0 ? 0 : 1;
-}
-
 /* sets window title in tab bar. */
 void set_window_title(ToxWindow *self, const char *title, int len)
 {
@@ -588,39 +564,6 @@ void set_window_title(ToxWindow *self, const char *title, int len)
     }
 
     snprintf(self->name, sizeof(self->name), "%s", cpy);
-}
-
-/* Return true if address appears to be a valid ipv4 address. */
-bool is_ip4_address(const char *address)
-{
-    struct sockaddr_in s_addr;
-    return inet_pton(AF_INET, address, &(s_addr.sin_addr)) != 0;
-}
-
-/* Return true if address roughly appears to be a valid ipv6 address.
- *
- * TODO: Improve this function (inet_pton behaves strangely with ipv6).
- * for now the only guarantee is that it won't return true if the
- * address is a domain or ipv4 address, and should only be used if you're
- * reasonably sure that the address is one of the three (ipv4, ipv6 or a domain).
- */
-bool is_ip6_address(const char *address)
-{
-    size_t i;
-    size_t num_colons = 0;
-    char ch = 0;
-
-    for (i = 0; (ch = address[i]); ++i) {
-        if (ch == '.') {
-            return false;
-        }
-
-        if (ch == ':') {
-            ++num_colons;
-        }
-    }
-
-    return num_colons > 1 && num_colons < 8;
 }
 
 /*

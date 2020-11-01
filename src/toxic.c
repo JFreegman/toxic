@@ -742,7 +742,6 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
         if (len == 0) {
             fclose(fp);
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
-            return NULL;
         }
 
         char *data = malloc(len);
@@ -750,14 +749,12 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
         if (data == NULL) {
             fclose(fp);
             exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
-            return NULL;
         }
 
         if (fread(data, len, 1, fp) != 1) {
             fclose(fp);
             free(data);
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
-            return NULL;
         }
 
         bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
@@ -767,7 +764,6 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
             fclose(fp);
             free(data);
             exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
-            return NULL;
         }
 
         if (arg_opts.unencrypt_data && is_encrypted) {
@@ -796,7 +792,6 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                 fclose(fp);
                 free(data);
                 exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
-                return NULL;
             }
 
             while (true) {
@@ -853,7 +848,6 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                     free(data);
                     free(plain);
                     exit_toxic_err("tox_pass_decrypt() failed", pwerr);
-                    return NULL;
                 }
             }
 
@@ -876,7 +870,6 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
     } else {   /* Data file does not/should not exist */
         if (file_exists(data_path)) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
-            return NULL;
         }
 
         tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_NONE);
@@ -889,7 +882,6 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
 
         if (store_data(m, data_path) == -1) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
-            return NULL;
         }
     }
 
