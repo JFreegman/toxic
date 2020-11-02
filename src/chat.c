@@ -502,7 +502,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
             /* transfer is accepted */
             if (ft->state == FILE_TRANSFER_PENDING) {
                 ft->state = FILE_TRANSFER_STARTED;
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%d] for '%s' accepted.",
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%zu] for '%s' accepted.",
                               ft->index, ft->file_name);
                 char progline[MAX_STR_SIZE];
                 init_progress_bar(progline);
@@ -660,7 +660,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         }
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %d' to accept the file transfer.", ft->index);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %zu' to accept the file transfer.", ft->index);
 
     ft->file_size = file_size;
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);

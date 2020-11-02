@@ -1106,22 +1106,30 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'f':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 arg_opts.use_custom_data = 1;
 
                 if (DATA_FILE) {
                     free(DATA_FILE);
+                    DATA_FILE = NULL;
                 }
 
                 if (BLOCK_FILE) {
                     free(BLOCK_FILE);
+                    BLOCK_FILE = NULL;
                 }
 
                 DATA_FILE = malloc(strlen(optarg) + 1);
-                strcpy(DATA_FILE, optarg);
 
                 if (DATA_FILE == NULL) {
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
                 }
+
+                strcpy(DATA_FILE, optarg);
 
                 BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 

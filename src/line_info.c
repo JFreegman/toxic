@@ -420,7 +420,7 @@ void line_info_print(ToxWindow *self)
                     }
                 }
 
-                wprintw(win, "\n", line->msg);
+                wprintw(win, "\n");
                 break;
 
             case SYS_MSG:

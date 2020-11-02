@@ -92,7 +92,7 @@ int avatar_send(Tox *m, uint32_t friendnum)
     }
 
     if (err != TOX_ERR_FILE_SEND_OK) {
-        fprintf(stderr, "tox_file_send failed for friendnumber %d (error %d)\n", friendnum, err);
+        fprintf(stderr, "tox_file_send failed for friendnumber %u (error %d)\n", friendnum, err);
         return -1;
     }
 

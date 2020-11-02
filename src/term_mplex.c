@@ -100,9 +100,19 @@ static char *read_into_dyn_buffer(FILE *stream)
         int length = dyn_buffer_size + strlen(input_ptr);
 
         if (dyn_buffer) {
-            dyn_buffer = (char *) realloc(dyn_buffer, length);
+            char *tmp = realloc(dyn_buffer, length);
+
+            if (tmp == NULL) {
+                return NULL;
+            }
+
+            dyn_buffer = tmp;
         } else {
-            dyn_buffer = (char *) malloc(length);
+            dyn_buffer = malloc(length);
+
+            if (dyn_buffer == NULL) {
+                return NULL;
+            }
         }
 
         strcpy(dyn_buffer + dyn_buffer_size - 1, input_ptr);

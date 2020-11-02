@@ -407,7 +407,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num,
         ++Friends.num_online;
 
         if (avatar_send(m, num) == -1) {
-            fprintf(stderr, "avatar_send failed for friend %d\n", num);
+            fprintf(stderr, "avatar_send failed for friend %u\n", num);
         }
     }
 
