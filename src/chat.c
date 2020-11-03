@@ -638,21 +638,23 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
 
     while ((filecheck = fopen(file_path, "r"))) {
         fclose(filecheck);
+
         file_path[path_len] = '\0';
-        char d[9];
-        sprintf(d, "(%d)", count);
-        ++count;
+        char d[5];
+        snprintf(d, sizeof(d), "(%d)", count);
         size_t d_len = strlen(d);
 
         if (path_len + d_len >= file_path_buf_size) {
-            path_len = file_path_buf_size - d_len - 1;
-            file_path[path_len] = '\0';
+            tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: File path too long.");
+            free(file_path);
+            return;
         }
 
         strcat(file_path, d);
         file_path[path_len + d_len] = '\0';
 
-        if (count > 999) {
+        if (++count > 99) {  // If there are this many duplicate file names we should probably give up
             tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: invalid file path.");
             free(file_path);
