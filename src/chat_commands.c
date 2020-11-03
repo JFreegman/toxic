@@ -103,7 +103,7 @@ void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %lu.", groupnum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %ld.", groupnum);
 }
 
 void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -189,7 +189,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         goto on_recv_error;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%zu] as: '%s'", idx, ft->file_path);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx, ft->file_path);
 
     /* prep progress bar line */
     char progline[MAX_STR_SIZE];

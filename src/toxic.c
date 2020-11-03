@@ -1093,6 +1093,11 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'c':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 snprintf(arg_opts.config_path, sizeof(arg_opts.config_path), "%s", optarg);
 
                 if (!file_exists(arg_opts.config_path)) {
@@ -1176,6 +1181,11 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'n':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
                 break;
 
@@ -1185,6 +1195,11 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'p':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 arg_opts.proxy_type = TOX_PROXY_TYPE_SOCKS5;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
@@ -1202,6 +1217,11 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'P':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
@@ -1219,6 +1239,11 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'r':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 snprintf(arg_opts.nameserver_path, sizeof(arg_opts.nameserver_path), "%s", optarg);
 
                 if (!file_exists(arg_opts.nameserver_path)) {
@@ -1232,10 +1257,15 @@ static void parse_args(int argc, char *argv[])
                 break;
 
             case 'T':
+                if (optarg == NULL) {
+                    queue_init_message("Invalid argument for option: %d", opt);
+                    break;
+                }
+
                 port = strtol(optarg, NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE) {
-                    port = 14191;
+                    port = MAX_PORT_RANGE;
                 }
 
                 arg_opts.tcp_port = port;
@@ -1250,77 +1280,13 @@ static void parse_args(int argc, char *argv[])
                 exit(EXIT_SUCCESS);
 
             case 'h':
+
+            // Intentional fallthrough
             default:
                 print_usage();
                 exit(EXIT_SUCCESS);
         }
     }
-}
-
-/* Looks for an old default profile data file and blocklist, and renames them to the new default names.
- *
- * Returns 0 on success.
- * Returns -1 on failure.
- */
-#define OLD_DATA_NAME "data"
-#define OLD_DATA_BLOCKLIST_NAME "data-blocklist"
-static int rename_old_profile(const char *user_config_dir)
-{
-    size_t old_buf_size = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_NAME) + 1;
-    char *old_data_file = malloc(old_buf_size);
-
-    if (old_data_file == NULL) {
-        return -1;
-    }
-
-    snprintf(old_data_file, old_buf_size, "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_NAME);
-
-    if (!file_exists(old_data_file)) {
-        free(old_data_file);
-        return 0;
-    }
-
-    if (file_exists(DATA_FILE)) {
-        free(old_data_file);
-        return 0;
-    }
-
-    if (rename(old_data_file, DATA_FILE) != 0) {
-        free(old_data_file);
-        return -1;
-    }
-
-    free(old_data_file);
-
-    queue_init_message("Data file has been moved to %s", DATA_FILE);
-
-    size_t old_block_buf_size = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(OLD_DATA_BLOCKLIST_NAME) + 1;
-    char *old_data_blocklist = malloc(old_block_buf_size);
-
-    if (old_data_blocklist == NULL) {
-        return -1;
-    }
-
-    snprintf(old_data_blocklist, old_block_buf_size, "%s%s%s", user_config_dir, CONFIGDIR, OLD_DATA_BLOCKLIST_NAME);
-
-    if (!file_exists(old_data_blocklist)) {
-        free(old_data_blocklist);
-        return 0;
-    }
-
-    if (file_exists(BLOCK_FILE)) {
-        free(old_data_blocklist);
-        return 0;
-    }
-
-    if (rename(old_data_blocklist, BLOCK_FILE) != 0) {
-        free(old_data_blocklist);
-        return -1;
-    }
-
-    free(old_data_blocklist);
-
-    return 0;
 }
 
 /* Initializes the default config directory and data files used by toxic.
@@ -1363,11 +1329,6 @@ static void init_default_data_files(void)
         strcpy(BLOCK_FILE, user_config_dir);
         strcat(BLOCK_FILE, CONFIGDIR);
         strcat(BLOCK_FILE, BLOCKNAME);
-    }
-
-    /* For backwards compatibility with old toxic profile names. TODO: remove this some day */
-    if (rename_old_profile(user_config_dir) == -1) {
-        queue_init_message("Warning: Profile backwards compatibility failed.");
     }
 
     free(user_config_dir);
