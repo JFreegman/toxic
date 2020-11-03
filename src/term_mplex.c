@@ -153,7 +153,12 @@ static char *extract_socket_path(const char *info)
         return NULL;
     }
 
-    path = (char *) malloc(end - pos + 1);
+    path = malloc(end - pos + 1);
+
+    if (path == NULL) {
+        return NULL;
+    }
+
     *end = '\0';
     return strcpy(path, pos);
 }
@@ -310,7 +315,12 @@ static int tmux_is_detached(void)
     session_info_stream = NULL;
 
     /* prepare search string, for finding the current session's entry */
-    search_str = (char *) malloc(numstr_len + 2);
+    search_str = malloc(numstr_len + 2);
+
+    if (search_str == NULL) {
+        goto fail;
+    }
+
     search_str[0] = '\n';
     strcpy(search_str + 1, mplex_data);
 

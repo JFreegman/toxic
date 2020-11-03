@@ -429,12 +429,17 @@ static int password_prompt(char *buf, int size)
     }
 
     const char *p = fgets(buf, size, stdin);
-    int len = strlen(buf);
 
     /* re-enable terminal echo */
     tcsetattr(fileno(stdin), TCSANOW, &oflags);
 
-    if (p == NULL || len <= 1) {
+    if (p == NULL) {
+        return 0;
+    }
+
+    size_t len = strlen(buf);
+
+    if (len <= 1) {
         return 0;
     }
 

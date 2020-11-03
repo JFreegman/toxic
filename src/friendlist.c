@@ -716,7 +716,7 @@ static void delete_blocked_friend(uint32_t bnum);
 /* deactivates delete friend popup and deletes friend if instructed */
 static void del_friend_deactivate(Tox *m, wint_t key)
 {
-    if (key == 'y') {
+    if (key == L'y') {
         if (blocklist_view == 0) {
             delete_friend(m, PendingDelete.num);
             sort_friendlist_index();
