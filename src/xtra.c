@@ -248,7 +248,7 @@ void *event_loop(void *p)
 
         if (!pending) {
             XUnlockDisplay(Xtra.display);
-            usleep(10000);
+            sleep_thread(10000L);
             continue;
         }
 

@@ -227,7 +227,7 @@ void graceful_clear(void)
             return;
         }
 
-        usleep(1000);
+        sleep_thread(1000L);
     }
 
     control_unlock();
@@ -305,7 +305,7 @@ void *do_playing(void *_p)
         has_looping = false;
 
         control_unlock();
-        usleep(10000);
+        sleep_thread(10000L);
     }
 
     pthread_exit(NULL);
@@ -361,7 +361,7 @@ void *do_playing(void *_p)
         }
 
         control_unlock();
-        usleep(10000);
+        sleep_thread(10000L);
     }
 
     pthread_exit(NULL);

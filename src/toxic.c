@@ -995,7 +995,7 @@ void *thread_cqueue(void *data)
 
         pthread_mutex_unlock(&Winthread.lock);
 
-        usleep(4000);
+        sleep_thread(4000L);
     }
 }
 
@@ -1009,7 +1009,8 @@ void *thread_av(void *data)
         toxav_iterate(av);
         pthread_mutex_unlock(&Winthread.lock);
 
-        usleep(toxav_iteration_interval(av) * 1000);
+        long int sleep_duration = toxav_iteration_interval(av) * 1000;
+        sleep_thread(sleep_duration);
     }
 }
 #endif /* AUDIO */
@@ -1513,7 +1514,8 @@ int main(int argc, char **argv)
             last_save = cur_time;
         }
 
-        usleep(tox_iteration_interval(m) * 1000);
+        long int sleep_duration = tox_iteration_interval(m) * 1000;
+        sleep_thread(sleep_duration);
     }
 
     return 0;

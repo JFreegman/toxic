@@ -258,7 +258,7 @@ VideoDeviceError terminate_video_devices(void)
     video_thread_running = false;
     unlock;
 
-    usleep(20000);
+    sleep_thread(20000L);
 
     int i;
 
@@ -676,7 +676,7 @@ void *video_thread_poll(void *arg)  // TODO: maybe use thread for every input so
         unlock;
 
         if (video_thread_paused) {
-            usleep(10000);    /* Wait for unpause. */
+            sleep_thread(10000L);    /* Wait for unpause. */
         } else {
             for (i = 0; i < size[vdt_input]; ++i) {
                 lock;
@@ -765,7 +765,8 @@ void *video_thread_poll(void *arg)  // TODO: maybe use thread for every input so
                 unlock;
             }
 
-            usleep(1000 * 1000 / 24);
+            long int sleep_duration = 1000 * 1000 / 24;
+            sleep_thread(sleep_duration);
         }
     }
 

@@ -123,7 +123,7 @@ DeviceError terminate_devices(void)
     thread_running = false;
     unlock;
 
-    usleep(20000);
+    sleep_thread(20000L);
 
     if (pthread_mutex_destroy(&mutex) != 0) {
         return (DeviceError) de_InternalError;
@@ -499,7 +499,7 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
 
         /* Wait for unpause. */
         if (paused) {
-            usleep(10000);
+            sleep_thread(10000L);
         }
 
         else {
@@ -533,7 +533,7 @@ void *thread_poll(void *arg)  // TODO: maybe use thread for every input source
                 unlock;
             }
 
-            usleep(5000);
+            sleep_thread(5000L);
         }
     }
 
