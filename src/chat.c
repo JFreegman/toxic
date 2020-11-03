@@ -610,8 +610,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     char *file_path = malloc(file_path_buf_size);
 
     if (file_path == NULL) {
-        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Out of memory.");
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, "File transfer failed: Out of memory.", notif_error);
         return;
     }
 
@@ -626,8 +625,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     }
 
     if (path_len >= file_path_buf_size || path_len >= sizeof(ft->file_path) || name_length >= sizeof(ft->file_name)) {
-        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer faield: File path too long.");
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, "File transfer failed: File path too long.", notif_error);
         free(file_path);
         return;
     }
@@ -645,8 +643,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         size_t d_len = strlen(d);
 
         if (path_len + d_len >= file_path_buf_size) {
-            tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: File path too long.");
+            close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, "File transfer failed: File path too long.", notif_error);
             free(file_path);
             return;
         }
@@ -655,8 +652,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         file_path[path_len + d_len] = '\0';
 
         if (++count > 99) {  // If there are this many duplicate file names we should probably give up
-            tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: invalid file path.");
+            close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, "File transfer failed: invalid file path.", notif_error);
             free(file_path);
             return;
         }
