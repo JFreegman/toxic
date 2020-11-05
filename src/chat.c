@@ -582,6 +582,38 @@ on_error:
     return false;
 }
 
+/*
+ * Return true if file name is valid.
+ *
+ * A valid file name:
+ * - cannot be empty.
+ * - cannot contain the '/' characters.
+ * - cannot begin with a space or hyphen.
+ * - cannot be "." or ".."
+ */
+static bool valid_file_name(const char *filename, size_t length)
+{
+    if (length == 0) {
+        return false;
+    }
+
+    if (filename[0] == ' ' || filename[0] == '-') {
+        return false;
+    }
+
+    if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0) {
+        return false;
+    }
+
+    for (size_t i = 0; i < length; ++i) {
+        if (filename[i] == '/') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t file_size,
                             const char *filename, size_t name_length)
 {
@@ -598,13 +630,19 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
 
     if (!ft) {
         tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Too many concurrent file transfers.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+                      "File transfer request failed: Too many concurrent file transfers.");
         return;
     }
 
     char sizestr[32];
     bytes_convert_str(sizestr, sizeof(sizestr), file_size);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer request for '%s' (%s)", filename, sizestr);
+
+    if (!valid_file_name(filename, name_length)) {
+        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, "File transfer failed: Invalid file name.", notif_error);
+        return;
+    }
 
     size_t file_path_buf_size = PATH_MAX + name_length + 1;
     char *file_path = malloc(file_path_buf_size);
