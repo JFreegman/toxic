@@ -29,7 +29,7 @@
 #include "prompt.h"
 #include "toxic.h"
 #include "windows.h"
-#include "groupchat.h"
+#include "conference.h"
 #include "chat.h"
 #include "line_info.h"
 #include "misc_tools.h"
@@ -158,7 +158,7 @@ void on_friend_added(Tox *m, uint32_t friendnumber, bool sort)
     store_data(m, DATA_FILE);
 }
 
-void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, Tox_Message_Type type,
+void on_conference_message(Tox *m, uint32_t conferencenumber, uint32_t peernumber, Tox_Message_Type type,
                            const uint8_t *message, size_t length, void *userdata)
 {
     UNUSED_VAR(userdata);
@@ -167,36 +167,36 @@ void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, To
     length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onGroupMessage != NULL) {
-            windows[i]->onGroupMessage(windows[i], m, groupnumber, peernumber, type, msg, length);
+        if (windows[i] != NULL && windows[i]->onConferenceMessage != NULL) {
+            windows[i]->onConferenceMessage(windows[i], m, conferencenumber, peernumber, type, msg, length);
         }
     }
 }
 
-void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *group_pub_key,
+void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *conference_pub_key,
                           size_t length, void *userdata)
 {
     UNUSED_VAR(userdata);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onGroupInvite != NULL) {
-            windows[i]->onGroupInvite(windows[i], m, friendnumber, type, (char *) group_pub_key, length);
+        if (windows[i] != NULL && windows[i]->onConferenceInvite != NULL) {
+            windows[i]->onConferenceInvite(windows[i], m, friendnumber, type, (char *) conference_pub_key, length);
         }
     }
 }
 
-void on_conference_peer_list_changed(Tox *m, uint32_t groupnumber, void *userdata)
+void on_conference_peer_list_changed(Tox *m, uint32_t conferencenumber, void *userdata)
 {
     UNUSED_VAR(userdata);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onGroupNameListChange != NULL) {
-            windows[i]->onGroupNameListChange(windows[i], m, groupnumber);
+        if (windows[i] != NULL && windows[i]->onConferenceNameListChange != NULL) {
+            windows[i]->onConferenceNameListChange(windows[i], m, conferencenumber);
         }
     }
 }
 
-void on_conference_peer_name(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *name,
+void on_conference_peer_name(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *name,
                              size_t length, void *userdata)
 {
     UNUSED_VAR(userdata);
@@ -206,13 +206,13 @@ void on_conference_peer_name(Tox *m, uint32_t groupnumber, uint32_t peernumber, 
     filter_str(nick, length);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onGroupPeerNameChange != NULL) {
-            windows[i]->onGroupPeerNameChange(windows[i], m, groupnumber, peernumber, nick, length);
+        if (windows[i] != NULL && windows[i]->onConferencePeerNameChange != NULL) {
+            windows[i]->onConferencePeerNameChange(windows[i], m, conferencenumber, peernumber, nick, length);
         }
     }
 }
 
-void on_conference_title(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *title, size_t length,
+void on_conference_title(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *title, size_t length,
                          void *userdata)
 {
     UNUSED_VAR(userdata);
@@ -221,8 +221,8 @@ void on_conference_title(Tox *m, uint32_t groupnumber, uint32_t peernumber, cons
     length = copy_tox_str(data, sizeof(data), (const char *) title, length);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onGroupTitleChange != NULL) {
-            windows[i]->onGroupTitleChange(windows[i], m, groupnumber, peernumber, data, length);
+        if (windows[i] != NULL && windows[i]->onConferenceTitleChange != NULL) {
+            windows[i]->onConferenceTitleChange(windows[i], m, conferencenumber, peernumber, data, length);
         }
     }
 }
@@ -454,7 +454,7 @@ void on_window_resize(void)
             wclear(w->help->win);
         }
 
-        if (w->is_groupchat) {
+        if (w->is_conference) {
             delwin(w->chatwin->sidebar);
             w->chatwin->sidebar = NULL;
         } else {
@@ -474,7 +474,7 @@ void on_window_resize(void)
         } else {
             w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
 
-            if (!w->is_groupchat) {
+            if (!w->is_conference) {
                 w->stb->topline = subwin(w->window, 2, x2, 0, 0);
             }
         }
@@ -754,7 +754,7 @@ int get_num_active_windows(void)
     return num_active_windows;
 }
 
-/* destroys all chat and groupchat windows (should only be called on shutdown) */
+/* destroys all chat and conference windows (should only be called on shutdown) */
 void kill_all_windows(Tox *m)
 {
     for (uint8_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
@@ -764,8 +764,8 @@ void kill_all_windows(Tox *m)
 
         if (windows[i]->is_chat) {
             kill_chat_window(windows[i], m);
-        } else if (windows[i]->is_groupchat) {
-            free_groupchat(windows[i], windows[i]->num);
+        } else if (windows[i]->is_conference) {
+            free_conference(windows[i], windows[i]->num);
         }
     }
 

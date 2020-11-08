@@ -145,8 +145,8 @@ void str_to_lower(char *str);
    Returns nick len on success, -1 on failure */
 size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum);
 
-/* same as get_nick_truncate but for groupchats */
-int get_group_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t groupnum);
+/* same as get_nick_truncate but for conferences */
+int get_conference_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t conferencenum);
 
 /* copies data to msg buffer.
    returns length of msg, which will be no larger than size-1 */

@@ -29,7 +29,7 @@
 #include "friendlist.h"
 #include "execute.h"
 #include "line_info.h"
-#include "groupchat.h"
+#include "conference.h"
 #include "chat.h"
 #include "file_transfers.h"
 
@@ -80,33 +80,33 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
 }
 
-void cmd_groupinvite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference number required.");
         return;
     }
 
-    long int groupnum = strtol(argv[1], NULL, 10);
+    long int conferencenum = strtol(argv[1], NULL, 10);
 
-    if ((groupnum == 0 && strcmp(argv[1], "0")) || groupnum < 0 || groupnum == LONG_MAX) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
+    if ((conferencenum == 0 && strcmp(argv[1], "0")) || conferencenum < 0 || conferencenum == LONG_MAX) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
         return;
     }
 
     Tox_Err_Conference_Invite err;
 
-    if (!tox_conference_invite(m, self->num, groupnum, &err)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d)", err);
+    if (!tox_conference_invite(m, self->num, conferencenum, &err)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to conference (error %d)", err);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %ld.", groupnum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.", conferencenum);
 }
 
-void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
     UNUSED_VAR(argc);
@@ -117,32 +117,32 @@ void cmd_join_group(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    const char *groupkey = Friends.list[self->num].group_invite.key;
-    uint16_t length = Friends.list[self->num].group_invite.length;
-    uint8_t type = Friends.list[self->num].group_invite.type;
+    const char *conferencekey = Friends.list[self->num].conference_invite.key;
+    uint16_t length = Friends.list[self->num].conference_invite.length;
+    uint8_t type = Friends.list[self->num].conference_invite.type;
 
-    if (!Friends.list[self->num].group_invite.pending) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending group chat invite.");
+    if (!Friends.list[self->num].conference_invite.pending) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
         return;
     }
 
     if (type != TOX_CONFERENCE_TYPE_TEXT) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio groups.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio conferences.");
         return;
     }
 
     Tox_Err_Conference_Join err;
 
-    uint32_t groupnum = tox_conference_join(m, self->num, (const uint8_t *) groupkey, length, &err);
+    uint32_t conferencenum = tox_conference_join(m, self->num, (const uint8_t *) conferencekey, length, &err);
 
     if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
         return;
     }
 
-    if (init_groupchat_win(m, groupnum, type, NULL, 0) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_conference_delete(m, groupnum, NULL);
+    if (init_conference_win(m, conferencenum, type, NULL, 0) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
+        tox_conference_delete(m, conferencenum, NULL);
         return;
     }
 

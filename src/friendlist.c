@@ -116,8 +116,8 @@ static void realloc_blocklist(int n)
 void kill_friendlist(ToxWindow *self)
 {
     for (size_t i = 0; i < Friends.max_idx; ++i) {
-        if (Friends.list[i].active && Friends.list[i].group_invite.key != NULL) {
-            free(Friends.list[i].group_invite.key);
+        if (Friends.list[i].active && Friends.list[i].conference_invite.key != NULL) {
+            free(Friends.list[i].conference_invite.key);
         }
     }
 
@@ -603,12 +603,13 @@ static void friendlist_onFileRecv(ToxWindow *self, Tox *m, uint32_t num, uint32_
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
 
-static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8_t type, const char *group_pub_key,
-                                     uint16_t length)
+static void friendlist_onConferenceInvite(ToxWindow *self, Tox *m, int32_t num, uint8_t type,
+        const char *conference_pub_key,
+        uint16_t length)
 {
     UNUSED_VAR(self);
     UNUSED_VAR(type);
-    UNUSED_VAR(group_pub_key);
+    UNUSED_VAR(conference_pub_key);
     UNUSED_VAR(length);
 
     if (num >= Friends.max_idx) {
@@ -628,7 +629,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, int32_t num, uint8
     get_nick_truncate(m, nick, num);
 
     line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
-                  "* Group chat invite from %s failed: too many windows are open.", nick);
+                  "* Conference chat invite from %s failed: too many windows are open.", nick);
 
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
@@ -674,8 +675,8 @@ static void delete_friend(Tox *m, uint32_t f_num)
         }
     }
 
-    if (Friends.list[f_num].group_invite.key != NULL) {
-        free(Friends.list[f_num].group_invite.key);
+    if (Friends.list[f_num].conference_invite.key != NULL) {
+        free(Friends.list[f_num].conference_invite.key);
     }
 
     memset(&Friends.list[f_num], 0, sizeof(ToxicFriend));
@@ -1333,7 +1334,7 @@ ToxWindow *new_friendlist(void)
     ret->onStatusChange = &friendlist_onStatusChange;
     ret->onStatusMessageChange = &friendlist_onStatusMessageChange;
     ret->onFileRecv = &friendlist_onFileRecv;
-    ret->onGroupInvite = &friendlist_onGroupInvite;
+    ret->onConferenceInvite = &friendlist_onConferenceInvite;
 
 #ifdef AUDIO
     ret->onInvite = &friendlist_onAV;

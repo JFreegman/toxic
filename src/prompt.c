@@ -59,7 +59,7 @@ static const char *glob_cmd_list[] = {
     "/connect",
     "/decline",
     "/exit",
-    "/group",
+    "/conference",
     "/help",
     "/log",
     "/myid",

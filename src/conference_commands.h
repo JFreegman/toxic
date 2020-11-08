@@ -1,4 +1,4 @@
-/*  group_commands.h
+/*  conference_commands.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,12 +20,12 @@
  *
  */
 
-#ifndef GROUP_COMMANDS_H
-#define GROUP_COMMANDS_H
+#ifndef CONFERENCE_COMMANDS_H
+#define CONFERENCE_COMMANDS_H
 
 #include "windows.h"
 #include "toxic.h"
 
-void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
 
-#endif /* GROUP_COMMANDS_H */
+#endif /* CONFERENCE_COMMANDS_H */

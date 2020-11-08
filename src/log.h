@@ -31,7 +31,7 @@ struct chatlog {
 };
 
 typedef enum {
-    LOG_GROUP,
+    LOG_CONFERENCE,
     LOG_PROMPT,
     LOG_CHAT,
 } LOG_TYPE;

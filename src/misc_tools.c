@@ -406,16 +406,16 @@ on_error:
     return len;
 }
 
-/* same as get_nick_truncate but for groupchats */
-int get_group_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t groupnum)
+/* same as get_nick_truncate but for conferences */
+int get_conference_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t conferencenum)
 {
     Tox_Err_Conference_Peer_Query err;
-    size_t len = tox_conference_peer_get_name_size(m, groupnum, peernum, &err);
+    size_t len = tox_conference_peer_get_name_size(m, conferencenum, peernum, &err);
 
     if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
         goto on_error;
     } else {
-        if (!tox_conference_peer_get_name(m, groupnum, peernum, (uint8_t *) buf, NULL)) {
+        if (!tox_conference_peer_get_name(m, conferencenum, peernum, (uint8_t *) buf, NULL)) {
             goto on_error;
         }
     }
@@ -565,7 +565,7 @@ void set_window_title(ToxWindow *self, const char *title, int len)
 
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
 
-    if (self->is_groupchat) { /* keep groupnumber in title */
+    if (self->is_conference) { /* keep conferencenumber in title */
         snprintf(cpy, sizeof(cpy), "%u %s", self->num, title);
     } else {
         snprintf(cpy, sizeof(cpy), "%s", title);

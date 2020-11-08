@@ -1,4 +1,4 @@
-/*  group_commands.c
+/*  conference_commands.c
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -28,7 +28,7 @@
 #include "misc_tools.h"
 #include "log.h"
 
-void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -73,7 +73,7 @@ void cmd_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';
 
-    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the group title to: %s", title);
+    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
 
     char tmp_event[MAX_STR_SIZE + 20];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);

@@ -115,14 +115,14 @@ void on_friend_name(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t
 void on_friend_status(Tox *m, uint32_t friendnumber, Tox_User_Status status, void *userdata);
 void on_friend_status_message(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
 void on_friend_added(Tox *m, uint32_t friendnumber, bool sort);
-void on_conference_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, Tox_Message_Type type,
+void on_conference_message(Tox *m, uint32_t conferencenumber, uint32_t peernumber, Tox_Message_Type type,
                            const uint8_t *message, size_t length, void *userdata);
-void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *group_pub_key,
+void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *conference_pub_key,
                           size_t length, void *userdata);
-void on_conference_peer_list_changed(Tox *m, uint32_t groupnumber, void *userdata);
-void on_conference_peer_name(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *name,
+void on_conference_peer_list_changed(Tox *m, uint32_t conferencenumber, void *userdata);
+void on_conference_peer_name(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *name,
                              size_t length, void *userdata);
-void on_conference_title(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *title, size_t length,
+void on_conference_title(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *title, size_t length,
                          void *userdata);
 void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
                            void *userdata);

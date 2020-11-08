@@ -28,7 +28,7 @@
 #include "toxic.h"
 #include "windows.h"
 #include "line_info.h"
-#include "groupchat.h"
+#include "conference.h"
 #include "settings.h"
 #include "notify.h"
 #include "message_queue.h"
@@ -277,7 +277,7 @@ static void line_info_check_queue(ToxWindow *self)
         return;
     }
 
-    int offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;   /* offset width of groupchat sidebar */
+    int offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;   /* offset width of conference sidebar */
     int lines = 1 + line->newlines + (line->len / (x2 - offst));
     int max_y = y2 - CHATBOX_HEIGHT;
 
@@ -318,7 +318,7 @@ void line_info_print(ToxWindow *self)
         return;
     }
 
-    if (self->is_groupchat) {
+    if (self->is_conference) {
         wmove(win, 0, 0);
     } else {
         wmove(win, 2, 0);

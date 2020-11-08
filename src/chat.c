@@ -75,7 +75,7 @@ static const char *chat_cmd_list[] = {
     "/close",
     "/connect",
     "/exit",
-    "/group",
+    "/conference",
     "/help",
     "/invite",
     "/join",
@@ -714,28 +714,29 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     }
 }
 
-static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t type, const char *group_pub_key,
-                               uint16_t length)
+static void chat_onConferenceInvite(ToxWindow *self, Tox *m, int32_t friendnumber, uint8_t type,
+                                    const char *conference_pub_key,
+                                    uint16_t length)
 {
     if (self->num != friendnumber) {
         return;
     }
 
-    if (Friends.list[friendnumber].group_invite.key != NULL) {
-        free(Friends.list[friendnumber].group_invite.key);
+    if (Friends.list[friendnumber].conference_invite.key != NULL) {
+        free(Friends.list[friendnumber].conference_invite.key);
     }
 
     char *k = malloc(length);
 
     if (k == NULL) {
-        exit_toxic_err("Failed in chat_onGroupInvite", FATALERR_MEMORY);
+        exit_toxic_err("Failed in chat_onConferenceInvite", FATALERR_MEMORY);
     }
 
-    memcpy(k, group_pub_key, length);
-    Friends.list[friendnumber].group_invite.key = k;
-    Friends.list[friendnumber].group_invite.pending = true;
-    Friends.list[friendnumber].group_invite.length = length;
-    Friends.list[friendnumber].group_invite.type = type;
+    memcpy(k, conference_pub_key, length);
+    Friends.list[friendnumber].conference_invite.key = k;
+    Friends.list[friendnumber].conference_invite.pending = true;
+    Friends.list[friendnumber].conference_invite.length = length;
+    Friends.list[friendnumber].conference_invite.type = type;
 
     sound_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, NULL);
 
@@ -743,12 +744,12 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, int32_t friendnumber, ui
     get_nick_truncate(m, name, friendnumber);
 
     if (self->active_box != -1) {
-        box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join group chat");
+        box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join conference");
     } else {
-        box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join group chat");
+        box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join conference");
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a group chat.", name);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a conference.", name);
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 }
 
@@ -1402,7 +1403,7 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
     ret->onMessage = &chat_onMessage;
     ret->onConnectionChange = &chat_onConnectionChange;
     ret->onTypingChange = & chat_onTypingChange;
-    ret->onGroupInvite = &chat_onGroupInvite;
+    ret->onConferenceInvite = &chat_onConferenceInvite;
     ret->onNickChange = &chat_onNickChange;
     ret->onStatusChange = &chat_onStatusChange;
     ret->onStatusMessageChange = &chat_onStatusMessageChange;

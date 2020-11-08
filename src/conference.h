@@ -1,4 +1,4 @@
-/*  groupchat.h
+/*  conference.h
  *
  *
  *  Copyright (C) 2014 Toxic All Rights Reserved.
@@ -20,23 +20,23 @@
  *
  */
 
-#ifndef GROUPCHAT_H
-#define GROUPCHAT_H
+#ifndef CONFERENCE_H
+#define CONFERENCE_H
 
 #include "toxic.h"
 #include "windows.h"
 
 #define SIDEBAR_WIDTH 16
 #define SDBAR_OFST 2    /* Offset for the peer number box at the top of the statusbar */
-#define MAX_GROUPCHAT_NUM MAX_WINDOWS_NUM - 2
-#define GROUP_EVENT_WAIT 3
+#define MAX_CONFERENCE_NUM (MAX_WINDOWS_NUM - 2)
+#define CONFERENCE_EVENT_WAIT 3
 
-typedef struct GroupPeer {
+typedef struct ConferencePeer {
     bool       active;
     char       name[TOX_MAX_NAME_LENGTH];
     size_t     name_length;
     uint32_t   peernumber;
-} GroupPeer;
+} ConferencePeer;
 
 typedef struct {
     int chatwin;
@@ -45,20 +45,19 @@ typedef struct {
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     time_t start_time;
 
-    GroupPeer *peer_list;
+    ConferencePeer *peer_list;
     uint32_t max_idx;
 
     char **name_list;
     uint32_t num_peers;
+} ConferenceChat;
 
-} GroupChat;
+/* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
+void free_conference(ToxWindow *self, uint32_t conferencenum);
 
-/* Frees all Toxic associated data structures for a groupchat (does not call tox_conference_delete() ) */
-void free_groupchat(ToxWindow *self, uint32_t groupnum);
+int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title, size_t title_length);
 
-int init_groupchat_win(Tox *m, uint32_t groupnum, uint8_t type, const char *title, size_t title_length);
+/* destroys and re-creates conference window with or without the peerlist */
+void redraw_conference_win(ToxWindow *self);
 
-/* destroys and re-creates groupchat window with or without the peerlist */
-void redraw_groupchat_win(ToxWindow *self);
-
-#endif /* GROUPCHAT_H */
+#endif /* CONFERENCE_H */

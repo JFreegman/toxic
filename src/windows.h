@@ -125,11 +125,11 @@ struct ToxWindow {
     void(*onNickChange)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
     void(*onStatusChange)(ToxWindow *, Tox *, uint32_t, Tox_User_Status);
     void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
-    void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_Message_Type, const char *, size_t);
-    void(*onGroupInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
-    void(*onGroupNameListChange)(ToxWindow *, Tox *, uint32_t);
-    void(*onGroupPeerNameChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
-    void(*onGroupTitleChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onConferenceMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_Message_Type, const char *, size_t);
+    void(*onConferenceInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
+    void(*onConferenceNameListChange)(ToxWindow *, Tox *, uint32_t);
+    void(*onConferencePeerNameChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onConferenceTitleChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
     void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_File_Control);
@@ -172,8 +172,8 @@ struct ToxWindow {
     bool is_chat;
     bool is_prompt;
     bool is_friendlist;
-    bool is_groupchat;
-    int show_peerlist;    /* used to toggle groupchat peerlist */
+    bool is_conference;
+    int show_peerlist;    /* used to toggle conference peerlist */
 
     WINDOW_ALERTS alert;
 
@@ -218,7 +218,7 @@ struct infobox {
 
 #define MAX_LINE_HIST 128
 
-/* chat and groupchat window/buffer holder */
+/* chat and conference window/buffer holder */
 struct ChatContext {
     wchar_t line[MAX_STR_SIZE];
     int pos;

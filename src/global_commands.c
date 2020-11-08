@@ -29,7 +29,7 @@
 #include "friendlist.h"
 #include "log.h"
 #include "line_info.h"
-#include "groupchat.h"
+#include "conference.h"
 #include "prompt.h"
 #include "help.h"
 #include "term_mplex.h"
@@ -336,7 +336,7 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     --FrndRequests.num_requests;
 }
 
-void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -346,7 +346,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     }
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify group type: text | audio");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please specify conference type: text | audio");
         return;
     }
 
@@ -357,31 +357,31 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     } else if (!strcasecmp(argv[1], "text")) {
         type = TOX_CONFERENCE_TYPE_TEXT;
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid group types are: text | audio");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Valid conference types are: text | audio");
         return;
     }
 
     if (type != TOX_CONFERENCE_TYPE_TEXT) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio groups.");
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toxic does not support audio conferences.");
         return;
     }
 
     Tox_Err_Conference_New err;
 
-    uint32_t groupnum = tox_conference_new(m, &err);
+    uint32_t conferencenum = tox_conference_new(m, &err);
 
     if (err != TOX_ERR_CONFERENCE_NEW_OK) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d)", err);
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
         return;
     }
 
-    if (init_groupchat_win(m, groupnum, type, NULL, 0) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_conference_delete(m, groupnum, NULL);
+    if (init_conference_win(m, conferencenum, type, NULL, 0) == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
+        tox_conference_delete(m, conferencenum, NULL);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat [%d] created.", groupnum);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference [%d] created.", conferencenum);
 }
 
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -415,8 +415,8 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             log_ret = log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
         } else if (self->is_prompt) {
             log_ret = log_enable(self->name, myid, NULL, log, LOG_PROMPT);
-        } else if (self->is_groupchat) {
-            log_ret = log_enable(self->name, myid, NULL, log, LOG_GROUP);
+        } else if (self->is_conference) {
+            log_ret = log_enable(self->name, myid, NULL, log, LOG_CONFERENCE);
         }
 
         msg = log_ret == 0 ? "Logging enabled." : "Warning: Log failed to initialize.";

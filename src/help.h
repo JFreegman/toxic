@@ -30,7 +30,7 @@ typedef enum {
     HELP_MENU,
     HELP_GLOBAL,
     HELP_CHAT,
-    HELP_GROUP,
+    HELP_CONFERENCE,
     HELP_KEYS,
     HELP_CONTACTS,
 #ifdef PYTHON

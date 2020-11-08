@@ -52,7 +52,7 @@
 #include "friendlist.h"
 #include "prompt.h"
 #include "misc_tools.h"
-#include "groupchat.h"
+#include "conference.h"
 #include "file_transfers.h"
 #include "line_info.h"
 #include "settings.h"
@@ -372,29 +372,29 @@ static void load_conferences(Tox *m)
     tox_conference_get_chatlist(m, chatlist);
 
     for (size_t i = 0; i < num_chats; ++i) {
-        uint32_t groupnum = chatlist[i];
+        uint32_t conferencenum = chatlist[i];
 
         if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-            tox_conference_delete(m, groupnum, NULL);
+            tox_conference_delete(m, conferencenum, NULL);
             continue;
         }
 
         Tox_Err_Conference_Get_Type err;
-        Tox_Conference_Type type = tox_conference_get_type(m, groupnum, &err);
+        Tox_Conference_Type type = tox_conference_get_type(m, conferencenum, &err);
 
         if (err != TOX_ERR_CONFERENCE_GET_TYPE_OK) {
-            tox_conference_delete(m, groupnum, NULL);
+            tox_conference_delete(m, conferencenum, NULL);
             continue;
         }
 
         Tox_Err_Conference_Title t_err;
-        size_t length = tox_conference_get_title_size(m, groupnum, &t_err);
+        size_t length = tox_conference_get_title_size(m, conferencenum, &t_err);
         uint8_t title[MAX_STR_SIZE];
 
         if (t_err != TOX_ERR_CONFERENCE_TITLE_OK || length >= sizeof(title)) {
             length = 0;
         } else {
-            tox_conference_get_title(m, groupnum, title, &t_err);
+            tox_conference_get_title(m, conferencenum, title, &t_err);
 
             if (t_err != TOX_ERR_CONFERENCE_TITLE_OK) {
                 length = 0;
@@ -403,8 +403,8 @@ static void load_conferences(Tox *m)
 
         title[length] = 0;
 
-        if (init_groupchat_win(m, groupnum, type, (const char *) title, length) == -1) {
-            tox_conference_delete(m, groupnum, NULL);
+        if (init_conference_win(m, conferencenum, type, (const char *) title, length) == -1) {
+            tox_conference_delete(m, conferencenum, NULL);
             continue;
         }
     }

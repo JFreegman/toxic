@@ -29,7 +29,7 @@
 #include "execute.h"
 #include "chat_commands.h"
 #include "global_commands.h"
-#include "group_commands.h"
+#include "conference_commands.h"
 #include "line_info.h"
 #include "misc_tools.h"
 #include "notify.h"
@@ -48,7 +48,7 @@ static struct cmd_func global_commands[] = {
     { "/connect",   cmd_connect       },
     { "/decline",   cmd_decline       },
     { "/exit",      cmd_quit          },
-    { "/group",     cmd_groupchat     },
+    { "/conference", cmd_conference    },
     { "/help",      cmd_prompt_help   },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
@@ -67,8 +67,8 @@ static struct cmd_func global_commands[] = {
     { "/sdev",      cmd_change_device },
 #endif /* AUDIO */
 #ifdef VIDEO
-    { "/lsvdev",    cmd_list_video_devices },
-    { "/svdev",    cmd_change_video_device },
+    { "/lsvdev",    cmd_list_video_devices  },
+    { "/svdev",     cmd_change_video_device },
 #endif /* VIDEO */
 #ifdef PYTHON
     { "/run",       cmd_run           },
@@ -77,28 +77,28 @@ static struct cmd_func global_commands[] = {
 };
 
 static struct cmd_func chat_commands[] = {
-    { "/cancel",    cmd_cancelfile  },
-    { "/invite",    cmd_groupinvite },
-    { "/join",      cmd_join_group  },
-    { "/savefile",  cmd_savefile    },
-    { "/sendfile",  cmd_sendfile    },
+    { "/cancel",    cmd_cancelfile        },
+    { "/invite",    cmd_conference_invite },
+    { "/join",      cmd_conference_join   },
+    { "/savefile",  cmd_savefile          },
+    { "/sendfile",  cmd_sendfile          },
 #ifdef AUDIO
-    { "/call",      cmd_call        },
-    { "/answer",    cmd_answer      },
-    { "/reject",    cmd_reject      },
-    { "/hangup",    cmd_hangup      },
-    { "/mute",      cmd_mute        },
-    { "/sense",     cmd_sense       },
-    { "/bitrate",   cmd_bitrate     },
+    { "/call",      cmd_call              },
+    { "/answer",    cmd_answer            },
+    { "/reject",    cmd_reject            },
+    { "/hangup",    cmd_hangup            },
+    { "/mute",      cmd_mute              },
+    { "/sense",     cmd_sense             },
+    { "/bitrate",   cmd_bitrate           },
 #endif /* AUDIO */
 #ifdef VIDEO
-    { "/video",     cmd_video       },
+    { "/video",     cmd_video             },
 #endif /* VIDEO */
-    { NULL,         NULL            },
+    { NULL,         NULL                  },
 };
 
-static struct cmd_func group_commands[] = {
-    { "/title",     cmd_set_title   },
+static struct cmd_func conference_commands[] = {
+    { "/title",     cmd_conference_set_title },
 
 #ifdef AUDIO
     { "/mute",      cmd_mute        },
@@ -246,8 +246,8 @@ void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode)
 
             break;
 
-        case GROUPCHAT_COMMAND_MODE:
-            if (do_command(w, self, m, num_args, group_commands, args) == 0) {
+        case CONFERENCE_COMMAND_MODE:
+            if (do_command(w, self, m, num_args, conference_commands, args) == 0) {
                 return;
             }
 

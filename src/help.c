@@ -101,11 +101,11 @@ static void help_draw_menu(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "hat commands\n");
 
-    wprintw(win, " g");
+    wprintw(win, " c");
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, "r");
+    wprintw(win, "o");
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
-    wprintw(win, "oup commands\n");
+    wprintw(win, "nference commands\n");
 
 #ifdef PYTHON
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
@@ -176,7 +176,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
     wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
-    wprintw(win, "  /group <type>              : Create a group chat where type: text | audio\n");
+    wprintw(win, "  /conference <type>         : Create a conference where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
 #ifdef QRCODE
 #ifdef QRPNG
@@ -231,8 +231,8 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "Chat Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /invite <n>                : Invite contact to a group chat\n");
-    wprintw(win, "  /join                      : Join a pending group chat\n");
+    wprintw(win, "  /invite <n>                : Invite contact to a conference \n");
+    wprintw(win, "  /join                      : Join a pending conference\n");
     wprintw(win, "  /sendfile <path>           : Send a file\n");
     wprintw(win, "  /savefile <id>             : Receive a file\n");
     wprintw(win, "  /cancel <type> <id>        : Cancel file transfer where type: in|out\n");
@@ -279,8 +279,8 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
     wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
     wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
-    wprintw(win, "  Ctrl+up and Ctrl+down     : Scroll peer list in groupchats\n");
-    wprintw(win, "  Ctrl+B                    : Toggle the groupchat peerlist\n");
+    wprintw(win, "  Ctrl+up and Ctrl+down     : Scroll peer list in conference\n");
+    wprintw(win, "  Ctrl+B                    : Toggle the conference peerlist\n");
     wprintw(win, "  Ctrl+J                    : Insert new line\n");
     wprintw(win, "  Ctrl+T                    : Toggle paste mode\n\n");
     wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
@@ -291,17 +291,17 @@ static void help_draw_keys(ToxWindow *self)
     wnoutrefresh(win);
 }
 
-static void help_draw_group(ToxWindow *self)
+static void help_draw_conference(ToxWindow *self)
 {
     WINDOW *win = self->help->win;
 
     wmove(win, 1, 1);
 
     wattron(win, A_BOLD | COLOR_PAIR(RED));
-    wprintw(win, "Group commands:\n");
+    wprintw(win, "Conference commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /title <msg>               : Set group title (show current title if no msg)\n\n");
+    wprintw(win, "  /title <msg>            : Set conference title (show current title if no msg)\n\n");
 
     help_draw_bottom_menu(win);
 
@@ -386,9 +386,9 @@ void help_onKey(ToxWindow *self, wint_t key)
             self->help->type = HELP_GLOBAL;
             break;
 
-        case L'r':
+        case L'o':
             help_init_window(self, 6, 80);
-            self->help->type = HELP_GROUP;
+            self->help->type = HELP_CONFERENCE;
             break;
 
 #ifdef PYTHON
@@ -439,8 +439,8 @@ void help_onDraw(ToxWindow *self)
             help_draw_contacts(self);
             break;
 
-        case HELP_GROUP:
-            help_draw_group(self);
+        case HELP_CONFERENCE:
+            help_draw_conference(self);
             break;
 
 #ifdef PYTHON
