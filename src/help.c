@@ -356,12 +356,12 @@ void help_onKey(ToxWindow *self, wint_t key)
     int height;
 
     switch (key) {
-        case 'x':
+        case L'x':
         case T_KEY_ESC:
             help_exit(self);
             break;
 
-        case 'c':
+        case L'c':
 #ifdef VIDEO
             help_init_window(self, 23, 80);
 #elif AUDIO
@@ -372,7 +372,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             self->help->type = HELP_CHAT;
             break;
 
-        case 'g':
+        case L'g':
             height = 22;
 #ifdef VIDEO
             height += 8;
@@ -386,30 +386,30 @@ void help_onKey(ToxWindow *self, wint_t key)
             self->help->type = HELP_GLOBAL;
             break;
 
-        case 'r':
+        case L'r':
             help_init_window(self, 6, 80);
             self->help->type = HELP_GROUP;
             break;
 
 #ifdef PYTHON
 
-        case 'p':
+        case L'p':
             help_init_window(self, 4 + num_registered_handlers(), help_max_width());
             self->help->type = HELP_PLUGIN;
             break;
 #endif /* PYTHON */
 
-        case 'f':
+        case L'f':
             help_init_window(self, 10, 80);
             self->help->type = HELP_CONTACTS;
             break;
 
-        case 'k':
+        case L'k':
             help_init_window(self, 15, 80);
             self->help->type = HELP_KEYS;
             break;
 
-        case 'm':
+        case L'm':
             help_init_menu(self);
             self->help->type = HELP_MENU;
             break;

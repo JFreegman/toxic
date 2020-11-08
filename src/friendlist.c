@@ -856,7 +856,7 @@ static bool friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return true;
     }
 
-    if (key == 'h') {
+    if (key == L'h') {
         help_init_menu(self);
         return true;
     }
@@ -879,7 +879,7 @@ static bool friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     /* lock screen and force decision on deletion popup */
     if (PendingDelete.active) {
-        if (key == 'y' || key == 'n') {
+        if (key == L'y' || key == L'n') {
             del_friend_deactivate(m, key);
         }
 
@@ -891,7 +891,7 @@ static bool friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     switch (key) {
-        case '\r':
+        case L'\r':
             if (blocklist_view) {
                 break;
             }
@@ -914,7 +914,7 @@ static bool friendlist_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             del_friend_activate(f);
             break;
 
-        case 'b':
+        case L'b':
             if (!blocklist_view) {
                 block_friend(m, f);
             } else {

@@ -498,11 +498,11 @@ static bool groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return true;
     }
 
-    if (ctx->pastemode && key == '\r') {
-        key = '\n';
+    if (ctx->pastemode && key == L'\r') {
+        key = L'\n';
     }
 
-    if (ltr || key == '\n') {    /* char is printable */
+    if (ltr || key == L'\n') {    /* char is printable */
         input_new_char(self, key, x, x2);
         return true;
     }
@@ -517,7 +517,7 @@ static bool groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     bool input_ret = false;
 
-    if (key == '\t') {  /* TAB key: auto-completes peer name or command */
+    if (key == L'\t') {  /* TAB key: auto-completes peer name or command */
         input_ret = true;
 
         if (ctx->len > 0) {
@@ -564,7 +564,7 @@ static bool groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         if (groupchats[self->num].side_pos > 0) {
             --groupchats[self->num].side_pos;
         }
-    } else if (key == '\r') {
+    } else if (key == L'\r') {
         input_ret = true;
         rm_trailing_spaces_buf(ctx);
 

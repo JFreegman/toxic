@@ -1061,8 +1061,8 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return false;
     }
 
-    if (ctx->pastemode && key == '\r') {
-        key = '\n';
+    if (ctx->pastemode && key == L'\r') {
+        key = L'\n';
     }
 
     if (self->help->active) {
@@ -1070,7 +1070,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return true;
     }
 
-    if (ltr || key == '\n') {    /* char is printable */
+    if (ltr || key == L'\n') {    /* char is printable */
         input_new_char(self, key, x, x2);
 
         if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->connection != TOX_CONNECTION_NONE) {
@@ -1090,7 +1090,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
     int input_ret = false;
 
-    if (key == '\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
+    if (key == L'\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         input_ret = true;
         int diff = -1;
 
@@ -1128,7 +1128,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             sound_notify(self, notif_error, 0, NULL);
         }
 
-    } else if (key == '\r') {
+    } else if (key == L'\r') {
         input_ret = true;
         rm_trailing_spaces_buf(ctx);
 
