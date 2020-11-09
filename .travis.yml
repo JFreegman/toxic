@@ -52,7 +52,7 @@ jobs:
           libqrencode
           libsodium
           openal-soft
-        - export LDFLAGS="-L/usr/local/Cellar/openal-soft/1.20.1/lib"
+        - export LDFLAGS="-L/usr/local/Cellar/openal-soft/1.21.0/lib"
         - git clone --depth=1 https://github.com/TokTok/c-toxcore ../c-toxcore
         - test -f /usr/local/lib/libtoxcore.dylib || (cd ../c-toxcore && cmake -B_build -H. && make -C_build install -j$(nproc))
 
