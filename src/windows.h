@@ -61,6 +61,13 @@ typedef enum {
     WINDOW_ALERT_2 = MAGENTA,
 } WINDOW_ALERTS;
 
+typedef enum {
+    WINDOW_TYPE_PROMPT,
+    WINDOW_TYPE_CHAT,
+    WINDOW_TYPE_CONFERENCE,
+    WINDOW_TYPE_FRIEND_LIST,
+} WINDOW_TYPE;
+
 /* Fixes text color problem on some terminals.
    Uncomment if necessary */
 /* #define URXVT_FIX */
@@ -169,10 +176,8 @@ struct ToxWindow {
     uint8_t index; /* This window's index in the windows array */
     int x;
 
-    bool is_chat;
-    bool is_prompt;
-    bool is_friendlist;
-    bool is_conference;
+    WINDOW_TYPE type;
+
     int show_peerlist;    /* used to toggle conference peerlist */
 
     WINDOW_ALERTS alert;

@@ -1323,7 +1323,7 @@ ToxWindow *new_friendlist(void)
         exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
     }
 
-    ret->is_friendlist = true;
+    ret->type = WINDOW_TYPE_FRIEND_LIST;
 
     ret->onKey = &friendlist_onKey;
     ret->onDraw = &friendlist_onDraw;

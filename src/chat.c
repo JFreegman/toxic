@@ -1395,7 +1395,7 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
         exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
     }
 
-    ret->is_chat = true;
+    ret->type = WINDOW_TYPE_CHAT;
 
     ret->onKey = &chat_onKey;
     ret->onDraw = &chat_onDraw;

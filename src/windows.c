@@ -444,7 +444,7 @@ void on_window_resize(void)
 
         ToxWindow *w = windows[i];
 
-        if (windows[i]->is_friendlist)  {
+        if (windows[i]->type == WINDOW_TYPE_FRIEND_LIST)  {
             delwin(w->window);
             w->window = newwin(y2, x2, 0, 0);
             continue;
@@ -454,7 +454,7 @@ void on_window_resize(void)
             wclear(w->help->win);
         }
 
-        if (w->is_conference) {
+        if (w->type == WINDOW_TYPE_CONFERENCE) {
             delwin(w->chatwin->sidebar);
             w->chatwin->sidebar = NULL;
         } else {
@@ -474,7 +474,7 @@ void on_window_resize(void)
         } else {
             w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
 
-            if (!w->is_conference) {
+            if (w->type != WINDOW_TYPE_CONFERENCE) {
                 w->stb->topline = subwin(w->window, 2, x2, 0, 0);
             }
         }
@@ -682,7 +682,7 @@ void draw_active_window(Tox *m)
     if (printable == 0 && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
         set_next_window((int) ch);
         return;
-    } else if (printable == 0 && !a->is_friendlist) {
+    } else if ((printable == 0) && (a->type != WINDOW_TYPE_FRIEND_LIST)) {
         pthread_mutex_lock(&Winthread.lock);
         bool input_ret = a->onKey(a, m, ch, (bool) printable);
         pthread_mutex_unlock(&Winthread.lock);
@@ -716,7 +716,7 @@ void refresh_inactive_windows(void)
             continue;
         }
 
-        if (i != active_window_index && !toxwin->is_friendlist) {
+        if ((i != active_window_index) && (toxwin->type != WINDOW_TYPE_FRIEND_LIST)) {
             pthread_mutex_lock(&Winthread.lock);
             line_info_print(toxwin);
             pthread_mutex_unlock(&Winthread.lock);
@@ -762,9 +762,9 @@ void kill_all_windows(Tox *m)
             continue;
         }
 
-        if (windows[i]->is_chat) {
+        if (windows[i]->type == WINDOW_TYPE_CHAT) {
             kill_chat_window(windows[i], m);
-        } else if (windows[i]->is_conference) {
+        } else if (windows[i]->type == WINDOW_TYPE_CONFERENCE) {
             free_conference(windows[i], windows[i]->num);
         }
     }

@@ -410,12 +410,12 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
         int log_ret = -1;
 
-        if (self->is_chat) {
+        if (self->type == WINDOW_TYPE_CHAT) {
             Friends.list[self->num].logging_on = true;
             log_ret = log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
-        } else if (self->is_prompt) {
+        } else if (self->type == WINDOW_TYPE_PROMPT) {
             log_ret = log_enable(self->name, myid, NULL, log, LOG_PROMPT);
-        } else if (self->is_conference) {
+        } else if (self->type == WINDOW_TYPE_CONFERENCE) {
             log_ret = log_enable(self->name, myid, NULL, log, LOG_CONFERENCE);
         }
 
@@ -423,7 +423,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
-        if (self->is_chat) {
+        if (self->type == WINDOW_TYPE_CHAT) {
             Friends.list[self->num].logging_on = false;
         }
 

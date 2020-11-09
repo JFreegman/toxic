@@ -987,8 +987,8 @@ void *thread_cqueue(void *data)
         for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
             ToxWindow *toxwin = get_window_ptr(i);
 
-            if (toxwin != NULL && toxwin->is_chat
-                    && get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE) {
+            if ((toxwin != NULL) && (toxwin->type == WINDOW_TYPE_CHAT)
+                    && (get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE)) {
                 cqueue_try_send(toxwin, m);
             }
         }

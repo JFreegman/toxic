@@ -334,7 +334,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
        maybe convert entire function to if/else and make them all customizable keys? */
     if (!match) {
         if (key == user_settings->key_toggle_peerlist) {
-            if (self->is_conference) {
+            if (self->type == WINDOW_TYPE_CONFERENCE) {
                 self->show_peerlist ^= 1;
                 redraw_conference_win(self);
             }

@@ -734,7 +734,7 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
         exit_toxic_err("failed in new_conference_chat", FATALERR_MEMORY);
     }
 
-    ret->is_conference = true;
+    ret->type = WINDOW_TYPE_CONFERENCE;
 
     ret->onKey = &conference_onKey;
     ret->onDraw = &conference_onDraw;

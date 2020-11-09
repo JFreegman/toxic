@@ -603,7 +603,7 @@ ToxWindow *new_prompt(void)
     }
 
     ret->num = -1;
-    ret->is_prompt = true;
+    ret->type = WINDOW_TYPE_PROMPT;
 
     ret->onKey = &prompt_onKey;
     ret->onDraw = &prompt_onDraw;

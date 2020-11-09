@@ -62,7 +62,7 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
     getmaxyx(self->window, y2, x2);
 
     int side_offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;
-    int top_offst = self->is_chat || self->is_prompt ? 2 : 0;
+    int top_offst = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? 2 : 0;
     int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
 
     int curlines = 0;
@@ -318,7 +318,7 @@ void line_info_print(ToxWindow *self)
         return;
     }
 
-    if (self->is_conference) {
+    if (self->type == WINDOW_TYPE_CONFERENCE) {
         wmove(win, 0, 0);
     } else {
         wmove(win, 2, 0);
