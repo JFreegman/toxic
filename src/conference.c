@@ -116,6 +116,7 @@ static void kill_conference_window(ToxWindow *self)
     free(ctx->log);
     free(ctx);
     free(self->help);
+    kill_notifs(self->active_box);
     del_window(self);
 }
 

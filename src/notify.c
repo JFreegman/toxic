@@ -193,7 +193,7 @@ void graceful_clear(void)
     while (1) {
         int i;
 
-        for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
+        for (i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
             if (actives[i].active) {
 #ifdef BOX_NOTIFY
 
@@ -249,7 +249,7 @@ void *do_playing(void *_p)
         bool test_active_notify = false;
         int i;
 
-        for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
+        for (i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
 
             if (actives[i].looping) {
                 has_looping = true;
@@ -315,7 +315,7 @@ int play_source(uint32_t source, uint32_t buffer, bool looping)
 {
     int i = 0;
 
-    for (; i < ACTIVE_NOTIFS_MAX && actives[i].active; i ++);
+    for (; i < ACTIVE_NOTIFS_MAX && actives[i].active; ++i);
 
     if (i == ACTIVE_NOTIFS_MAX) {
         return -1; /* Full */
@@ -346,7 +346,7 @@ void *do_playing(void *_p)
 
         int i;
 
-        for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
+        for (i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
             if (actives[i].box && time(NULL) >= actives[i].n_timeout) {
                 GError *ignore;
                 notify_notification_close(actives[i].box, &ignore);
@@ -372,7 +372,7 @@ void graceful_clear(void)
     int i;
     control_lock();
 
-    for (i = 0; i < ACTIVE_NOTIFS_MAX; i ++) {
+    for (i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
         if (actives[i].box) {
             GError *ignore;
             notify_notification_close(actives[i].box, &ignore);
@@ -388,7 +388,37 @@ void graceful_clear(void)
 
     control_unlock();
 }
+
 #endif /* SOUND_NOTIFY */
+
+/* Kills all notifications for `id`. This must be called before freeing a ToxWindow. */
+void kill_notifs(int id)
+{
+    control_lock();
+
+    for (size_t i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
+        if (!actives[i].id_indicator) {
+            continue;
+        }
+
+        if (*actives[i].id_indicator == id) {
+#ifdef BOX_NOTIFY
+
+            if (actives[i].box) {
+                GError *ignore;
+                notify_notification_close(actives[i].box, &ignore);
+            }
+
+#endif // BOX_NOTIFY
+
+            actives[i] = (struct _ActiveNotifications) {
+                0
+            };
+        }
+    }
+
+    control_unlock();
+}
 
 /**********************************************************************************/
 /**********************************************************************************/
@@ -450,7 +480,7 @@ void terminate_notify(void)
 #ifdef SOUND_NOTIFY
     int i = 0;
 
-    for (; i < SOUNDS_SIZE; i ++) {
+    for (; i < SOUNDS_SIZE; ++i) {
         free(Control.sounds[i]);
     }
 

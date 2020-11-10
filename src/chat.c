@@ -152,6 +152,7 @@ void kill_chat_window(ToxWindow *self, Tox *m)
     free(statusbar);
 
     disable_chatwin(self->num);
+    kill_notifs(self->active_box);
     del_window(self);
 }
 

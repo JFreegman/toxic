@@ -62,6 +62,9 @@ typedef enum _Flags {
 int init_notify(int login_cooldown, int notification_timeout);
 void terminate_notify(void);
 
+/* Kills all notifications for `id`. This must be called before freeing a ToxWindow. */
+void kill_notifs(int id);
+
 int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indicator);
 int sound_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id);
 
