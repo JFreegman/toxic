@@ -947,6 +947,7 @@ static void do_toxic(Tox *m)
 
     tox_iterate(m, NULL);
     do_tox_connection(m);
+
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -985,9 +986,7 @@ void *thread_cqueue(void *data)
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
 
-        size_t i;
-
-        for (i = 2; i < MAX_WINDOWS_NUM; ++i) {
+        for (size_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
             ToxWindow *toxwin = get_window_ptr(i);
 
             if ((toxwin != NULL) && (toxwin->type == WINDOW_TYPE_CHAT)
@@ -998,7 +997,7 @@ void *thread_cqueue(void *data)
 
         pthread_mutex_unlock(&Winthread.lock);
 
-        sleep_thread(4000L);
+        sleep_thread(750000L); // 0.75 seconds
     }
 }
 

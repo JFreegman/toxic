@@ -59,7 +59,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
     new_m->type = type;
     new_m->line_id = line_id;
     new_m->last_send_try = 0;
-    new_m->receipt = 0;
+    new_m->receipt = -1;
     new_m->next = NULL;
 
     if (q->root == NULL) {
@@ -135,23 +135,37 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
     }
 }
 
-#define CQUEUE_TRY_SEND_INTERVAL 10
+/* We use knowledge of toxcore internals (bad!) to determine that if we haven't received a read receipt
+ * for a sent packet after this amount of time, the connection has been severed and the packet needs
+ * to be re-sent despite toxcore not returning an error on its initial send.
+ */
+#define TRY_SEND_TIMEOUT 32
 
-/* Tries to send the oldest unsent message in queue. */
+/*
+ * Tries to send all messages in the send queue in sequential order.
+ * If a message fails to send the function will immediately return.
+ */
 void cqueue_try_send(ToxWindow *self, Tox *m)
 {
     struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
 
-    if (!msg) {
-        return;
-    }
+    while (msg) {
+        if (msg->receipt == -1) {
+            TOX_ERR_FRIEND_SEND_MESSAGE err;
+            Tox_Message_Type type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
+            uint32_t receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, &err);
 
-    if (msg->receipt != 0 && !timed_out(msg->last_send_try, CQUEUE_TRY_SEND_INTERVAL)) {
-        return;
-    }
+            if (err != TOX_ERR_FRIEND_SEND_MESSAGE_OK) {
+                return;
+            }
 
-    Tox_Message_Type type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
-    msg->receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, NULL);
-    msg->last_send_try = get_unix_time();
+            msg->receipt = receipt;
+            msg->last_send_try = get_unix_time();
+        } else if (timed_out(msg->last_send_try, TRY_SEND_TIMEOUT)) {  // unlikely but possible
+            msg->receipt = -1;
+        }
+
+        msg = msg->next;
+    }
 }
