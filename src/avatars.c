@@ -73,7 +73,9 @@ static int check_file_signature(const unsigned char *signature, size_t size, FIL
 
 static void avatar_clear(void)
 {
-    memset(&Avatar, 0, sizeof(struct Avatar));
+    Avatar = (struct Avatar) {
+        0
+    };
 }
 
 /* Sends avatar to friendnum.

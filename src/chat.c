@@ -946,7 +946,9 @@ static void init_infobox(ToxWindow *self)
 
     UNUSED_VAR(y2);
 
-    memset(&ctx->infobox, 0, sizeof(struct infobox));
+    ctx->infobox = (struct infobox) {
+        0
+    };
 
     ctx->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
     ctx->infobox.starttime = get_unix_time();
@@ -964,7 +966,10 @@ static void kill_infobox(ToxWindow *self)
     }
 
     delwin(ctx->infobox.win);
-    memset(&ctx->infobox, 0, sizeof(struct infobox));
+
+    ctx->infobox = (struct infobox) {
+        0
+    };
 }
 
 /* update infobox info and draw in respective chat window */
@@ -1142,7 +1147,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             char line[MAX_STR_SIZE] = {0};
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                memset(&line, 0, sizeof(line));
+                memset(line, 0, sizeof(line));
             }
 
             if (line[0] == '/') {

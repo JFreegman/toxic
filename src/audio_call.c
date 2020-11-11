@@ -1008,7 +1008,10 @@ static void realloc_calls(uint32_t n)
 void init_friend_AV(uint32_t index)
 {
     realloc_calls(CallControl.max_calls + 1);
-    memset(&CallControl.calls[CallControl.max_calls], 0, sizeof(Call));
+
+    CallControl.calls[CallControl.max_calls] = (Call) {
+        0
+    };
 
     if (index == CallControl.max_calls) {
         ++CallControl.max_calls;

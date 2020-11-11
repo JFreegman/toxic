@@ -59,7 +59,10 @@ void help_init_menu(ToxWindow *self)
 static void help_exit(ToxWindow *self)
 {
     delwin(self->help->win);
-    memset(self->help, 0, sizeof(Help));
+
+    *(self->help) = (struct Help) {
+        0
+    };
 }
 
 static void help_init_window(ToxWindow *self, int height, int width)

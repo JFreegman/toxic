@@ -101,6 +101,17 @@ static struct _ActiveNotifications {
 /**********************************************************************************/
 /**********************************************************************************/
 
+static void clear_actives_index(size_t idx)
+{
+    if (actives[idx].id_indicator) {
+        *actives[idx].id_indicator = -1;
+    }
+
+    actives[idx] = (struct _ActiveNotifications) {
+        0
+    };
+}
+
 /* coloured tab notifications: primary notification type */
 static void tab_notify(ToxWindow *self, uint64_t flags)
 {
@@ -213,7 +224,7 @@ void graceful_clear(void)
                     stop_sound(i);
                 } else {
                     if (!is_playing(actives[i].source)) {
-                        memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+                        clear_actives_index(i);
                     } else {
                         break;
                     }
@@ -270,7 +281,7 @@ void *do_playing(void *_p)
                     alSourceStop(actives[i].source);
                     alDeleteSources(1, &actives[i].source);
                     alDeleteBuffers(1, &actives[i].buffer);
-                    memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+                    clear_actives_index(i);
                 }
             }
 
@@ -289,7 +300,7 @@ void *do_playing(void *_p)
                     alSourceStop(actives[i].source);
                     alDeleteSources(1, &actives[i].source);
                     alDeleteBuffers(1, &actives[i].buffer);
-                    memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+                    clear_actives_index(i);
                 }
             }
 
@@ -344,19 +355,11 @@ void *do_playing(void *_p)
             break;
         }
 
-        int i;
-
-        for (i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
+        for (size_t i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
             if (actives[i].box && time(NULL) >= actives[i].n_timeout) {
                 GError *ignore;
                 notify_notification_close(actives[i].box, &ignore);
-                actives[i].box = NULL;
-
-                if (actives[i].id_indicator) {
-                    *actives[i].id_indicator = -1;    /* reset indicator value */
-                }
-
-                memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+                clear_actives_index(i);
             }
         }
 
@@ -369,21 +372,15 @@ void *do_playing(void *_p)
 
 void graceful_clear(void)
 {
-    int i;
     control_lock();
 
-    for (i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
+    for (size_t i = 0; i < ACTIVE_NOTIFS_MAX; ++i) {
         if (actives[i].box) {
             GError *ignore;
             notify_notification_close(actives[i].box, &ignore);
-            actives[i].box = NULL;
         }
 
-        if (actives[i].id_indicator) {
-            *actives[i].id_indicator = -1;    /* reset indicator value */
-        }
-
-        memset(&actives[i], 0, sizeof(struct _ActiveNotifications));
+        clear_actives_index(i);
     }
 
     control_unlock();
@@ -410,10 +407,7 @@ void kill_notifs(int id)
             }
 
 #endif // BOX_NOTIFY
-
-            actives[i] = (struct _ActiveNotifications) {
-                0
-            };
+            clear_actives_index(i);
         }
     }
 
@@ -553,7 +547,6 @@ int play_notify_sound(Notification notif, uint64_t flags)
     return rc;
 }
 
-
 void stop_sound(int id)
 {
     if (id >= 0 && id < ACTIVE_NOTIFS_MAX && actives[id].looping && actives[id].active) {
@@ -566,15 +559,11 @@ void stop_sound(int id)
 
 #endif /* BOX_NOTIFY */
 
-        if (actives[id].id_indicator) {
-            *actives[id].id_indicator = -1;
-        }
-
         // alSourcei(actives[id].source, AL_LOOPING, false);
         alSourceStop(actives[id].source);
         alDeleteSources(1, &actives[id].source);
         alDeleteBuffers(1, &actives[id].buffer);
-        memset(&actives[id], 0, sizeof(struct _ActiveNotifications));
+        clear_actives_index(id);
     }
 }
 #endif /* SOUND_NOTIFY */

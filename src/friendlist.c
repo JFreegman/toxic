@@ -127,6 +127,20 @@ void kill_friendlist(ToxWindow *self)
     del_window(self);
 }
 
+static void clear_blocklist_index(size_t idx)
+{
+    Blocked.list[idx] = (BlockedFriend) {
+        0
+    };
+}
+
+static void clear_friendlist_index(size_t idx)
+{
+    Friends.list[idx] = (ToxicFriend) {
+        0
+    };
+}
+
 /* Saves the blocklist to path. If there are no items in the blocklist the
  * empty file will be removed.
  *
@@ -160,8 +174,7 @@ static int save_blocklist(char *path)
                 continue;
             }
 
-            BlockedFriend tmp;
-            memset(&tmp, 0, sizeof(BlockedFriend));
+            BlockedFriend tmp = {0};
             tmp.namelength = htons(Blocked.list[i].namelength);
             memcpy(tmp.name, Blocked.list[i].name, Blocked.list[i].namelength + 1);  // Include null byte
             memcpy(tmp.pub_key, Blocked.list[i].pub_key, TOX_PUBLIC_KEY_SIZE);
@@ -271,9 +284,8 @@ int load_blocklist(char *path)
     realloc_blocklist(num);
 
     for (int i = 0; i < num; ++i) {
-        BlockedFriend tmp;
-        memset(&tmp, 0, sizeof(BlockedFriend));
-        memset(&Blocked.list[i], 0, sizeof(BlockedFriend));
+        BlockedFriend tmp = {0};
+        clear_blocklist_index(i);
 
         memcpy(&tmp, data + i * sizeof(BlockedFriend), sizeof(BlockedFriend));
         Blocked.list[i].namelength = ntohs(tmp.namelength);
@@ -476,7 +488,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
     UNUSED_VAR(self);
 
     realloc_friends(Friends.max_idx + 1);
-    memset(&Friends.list[Friends.max_idx], 0, sizeof(ToxicFriend));
+    clear_friendlist_index(Friends.max_idx);
 
     uint32_t i;
 
@@ -536,7 +548,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
 static void friendlist_add_blocked(uint32_t fnum, uint32_t bnum)
 {
     realloc_friends(Friends.max_idx + 1);
-    memset(&Friends.list[Friends.max_idx], 0, sizeof(ToxicFriend));
+    clear_friendlist_index(Friends.max_idx);
 
     int i;
 
@@ -679,7 +691,7 @@ static void delete_friend(Tox *m, uint32_t f_num)
         free(Friends.list[f_num].conference_invite.key);
     }
 
-    memset(&Friends.list[f_num], 0, sizeof(ToxicFriend));
+    clear_friendlist_index(f_num);
 
     int i;
 
@@ -728,7 +740,11 @@ static void del_friend_deactivate(Tox *m, wint_t key)
     }
 
     delwin(PendingDelete.popup);
-    memset(&PendingDelete, 0, sizeof(PendingDelete));
+
+    PendingDelete = (struct PendingDel) {
+        0
+    };
+
     clear();
     refresh();
 }
@@ -766,7 +782,7 @@ static void draw_del_popup(void)
 /* deletes contact from blocked list */
 static void delete_blocked_friend(uint32_t bnum)
 {
-    memset(&Blocked.list[bnum], 0, sizeof(BlockedFriend));
+    clear_blocklist_index(bnum);
 
     int i;
 
@@ -794,7 +810,7 @@ void block_friend(Tox *m, uint32_t fnum)
     }
 
     realloc_blocklist(Blocked.max_idx + 1);
-    memset(&Blocked.list[Blocked.max_idx], 0, sizeof(BlockedFriend));
+    clear_blocklist_index(Blocked.max_idx);
 
     int i;
 

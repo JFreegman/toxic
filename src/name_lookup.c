@@ -63,6 +63,13 @@ static struct lookup_thread {
     pthread_attr_t attr;
 } lookup_thread;
 
+static void clear_thread_data(void)
+{
+    t_data = (struct thread_data) {
+        0
+    };
+}
+
 static int lookup_error(ToxWindow *self, const char *errmsg, ...)
 {
     char frmt_msg[MAX_STR_SIZE];
@@ -81,7 +88,7 @@ static int lookup_error(ToxWindow *self, const char *errmsg, ...)
 
 static void kill_lookup_thread(void)
 {
-    memset(&t_data, 0, sizeof(struct thread_data));
+    clear_thread_data();
     pthread_attr_destroy(&lookup_thread.attr);
     pthread_exit(NULL);
 }
@@ -376,21 +383,21 @@ void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
 
     if (pthread_attr_init(&lookup_thread.attr) != 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to init");
-        memset(&t_data, 0, sizeof(struct thread_data));
+        clear_thread_data();
         return;
     }
 
     if (pthread_attr_setdetachstate(&lookup_thread.attr, PTHREAD_CREATE_DETACHED) != 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to set");
         pthread_attr_destroy(&lookup_thread.attr);
-        memset(&t_data, 0, sizeof(struct thread_data));
+        clear_thread_data();
         return;
     }
 
     if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, NULL) != 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
         pthread_attr_destroy(&lookup_thread.attr);
-        memset(&t_data, 0, sizeof(struct thread_data));
+        clear_thread_data();
         return;
     }
 }

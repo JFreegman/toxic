@@ -401,8 +401,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         }
 
         /* Setup video format */
-        struct v4l2_format fmt;
-        memset(&(fmt), 0, sizeof(fmt));
+        struct v4l2_format fmt = {0};
 
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
@@ -418,8 +417,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         device->video_height = fmt.fmt.pix.height;
 
         /* Request buffers */
-        struct v4l2_requestbuffers req;
-        memset(&(req), 0, sizeof(req));
+        struct v4l2_requestbuffers req = {0};
+
         req.count = 4;
         req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         req.memory = V4L2_MEMORY_MMAP;
@@ -441,8 +440,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         device->buffers = calloc(req.count, sizeof(struct VideoBuffer));
 
         for (i = 0; i < req.count; ++i) {
-            struct v4l2_buffer buf;
-            memset(&(buf), 0, sizeof(buf));
+            struct v4l2_buffer buf = {0};
 
             buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buf.memory = V4L2_MEMORY_MMAP;
@@ -479,8 +477,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
         enum v4l2_buf_type type;
 
         for (i = 0; i < device->n_buffers; ++i) {
-            struct v4l2_buffer buf;
-            memset(&(buf), 0, sizeof(buf));
+            struct v4l2_buffer buf = {0};
 
             buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buf.memory = V4L2_MEMORY_MMAP;
@@ -698,8 +695,7 @@ void *video_thread_poll(void *arg)  // TODO: maybe use thread for every input so
                     }
 
 #else /* not __OSX__ || __APPLE__ */
-                    struct v4l2_buffer buf;
-                    memset(&(buf), 0, sizeof(buf));
+                    struct v4l2_buffer buf = {0};
 
                     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                     buf.memory = V4L2_MEMORY_MMAP;

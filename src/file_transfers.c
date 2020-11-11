@@ -126,14 +126,19 @@ void refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnum)
     }
 }
 
+static void clear_file_transfer(struct FileTransfer *ft)
+{
+    *ft = (struct FileTransfer) {
+        0
+    };
+}
+
 /* Returns a pointer to friendnum's FileTransfer struct associated with filenum.
  * Returns NULL if filenum is invalid.
  */
 struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filenum)
 {
-    size_t i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
+    for (size_t i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft_send = &Friends.list[friendnum].file_sender[i];
 
         if (ft_send->state != FILE_TRANSFER_INACTIVE && ft_send->filenum == filenum) {
@@ -160,9 +165,7 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t
         return NULL;
     }
 
-    size_t i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
+    for (size_t i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft = direction == FILE_TRANSFER_SEND ?
                                       &Friends.list[friendnum].file_sender[i] :
                                       &Friends.list[friendnum].file_receiver[i];
@@ -180,13 +183,11 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t
  */
 static struct FileTransfer *new_file_sender(ToxWindow *window, uint32_t friendnum, uint32_t filenum, uint8_t type)
 {
-    size_t i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
+    for (size_t i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft = &Friends.list[friendnum].file_sender[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
-            memset(ft, 0, sizeof(struct FileTransfer));
+            clear_file_transfer(ft);
             ft->window = window;
             ft->index = i;
             ft->friendnum = friendnum;
@@ -207,13 +208,11 @@ static struct FileTransfer *new_file_sender(ToxWindow *window, uint32_t friendnu
  */
 static struct FileTransfer *new_file_receiver(ToxWindow *window, uint32_t friendnum, uint32_t filenum, uint8_t type)
 {
-    size_t i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
+    for (size_t i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft = &Friends.list[friendnum].file_receiver[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
-            memset(ft, 0, sizeof(struct FileTransfer));
+            clear_file_transfer(ft);
             ft->window = window;
             ft->index = i;
             ft->friendnum = friendnum;
@@ -281,7 +280,7 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
     }
 
-    memset(ft, 0, sizeof(struct FileTransfer));
+    clear_file_transfer(ft);
 }
 
 /* Kills all active file transfers for friendnum */

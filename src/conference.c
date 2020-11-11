@@ -157,7 +157,10 @@ void free_conference(ToxWindow *self, uint32_t conferencenum)
 {
     free_ptr_array((void **) conferences[conferencenum].name_list);
     free(conferences[conferencenum].peer_list);
-    memset(&conferences[conferencenum], 0, sizeof(ConferenceChat));
+
+    conferences[conferencenum] = (ConferenceChat) {
+        0
+    };
 
     int i;
 
@@ -577,7 +580,7 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             char line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                memset(&line, 0, sizeof(line));
+                memset(line, 0, sizeof(line));
             }
 
             if (line[0] == '/') {

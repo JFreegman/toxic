@@ -76,7 +76,9 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         on_friend_added(m, friendnum, true);
     }
 
-    memset(&FrndRequests.request[req], 0, sizeof(struct friend_request));
+    FrndRequests.request[req] = (struct friend_request) {
+        0
+    };
 
     int i;
 
@@ -322,7 +324,9 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    memset(&FrndRequests.request[req], 0, sizeof(struct friend_request));
+    FrndRequests.request[req] = (struct friend_request) {
+        0
+    };
 
     int i;
 

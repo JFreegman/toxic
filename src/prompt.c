@@ -284,7 +284,7 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             char line[MAX_STR_SIZE] = {0};
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                memset(&line, 0, sizeof(line));
+                memset(line, 0, sizeof(line));
             }
 
             line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);

@@ -158,7 +158,9 @@ void log_disable(struct chatlog *log)
         fclose(log->file);
     }
 
-    memset(log, 0, sizeof(struct chatlog));
+    *log = (struct chatlog) {
+        0
+    };
 }
 
 int log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype)

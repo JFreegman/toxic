@@ -173,7 +173,10 @@ void free_global_data(void)
 void exit_toxic_success(Tox *m)
 {
     store_data(m, DATA_FILE);
-    memset(&user_password, 0, sizeof(struct user_password));
+
+    user_password = (struct user_password) {
+        0
+    };
 
     terminate_notify();
 
@@ -1046,7 +1049,9 @@ static void print_version(void)
 
 static void set_default_opts(void)
 {
-    memset(&arg_opts, 0, sizeof(struct arg_opts));
+    arg_opts = (struct arg_opts) {
+        0
+    };
 
     /* set any non-zero defaults here*/
     arg_opts.proxy_type = TOX_PROXY_TYPE_NONE;
