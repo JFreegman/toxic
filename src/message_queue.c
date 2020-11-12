@@ -98,6 +98,7 @@ static void cqueue_mark_read(ToxWindow *self, struct cqueue_msg *msg)
 /* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
 void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
 {
+    struct chatlog *log = self->chatwin->log;
     struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
 
@@ -107,13 +108,16 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
             continue;
         }
 
-        char selfname[TOX_MAX_NAME_LENGTH];
-        tox_self_get_name(m, (uint8_t *) selfname);
+        if (log->log_on) {
+            char selfname[TOX_MAX_NAME_LENGTH];
+            tox_self_get_name(m, (uint8_t *) selfname);
 
-        size_t len = tox_self_get_name_size(m);
-        selfname[len] = '\0';
+            size_t len = tox_self_get_name_size(m);
+            selfname[len] = 0;
 
-        write_to_log(msg->message, selfname, self->chatwin->log, msg->type == OUT_ACTION);
+            write_to_log(msg->message, selfname, log, msg->type == OUT_ACTION);
+        }
+
         cqueue_mark_read(self, msg);
 
         struct cqueue_msg *next = msg->next;
@@ -123,23 +127,36 @@ void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt)
                 next->prev = NULL;
             }
 
-            free(msg);
             q->root = next;
         } else {
             struct cqueue_msg *prev = msg->prev;
-            free(msg);
             prev->next = next;
+            next->prev = prev;
         }
+
+        free(msg);
 
         return;
     }
 }
 
-/* We use knowledge of toxcore internals (bad!) to determine that if we haven't received a read receipt
- * for a sent packet after this amount of time, the connection has been severed and the packet needs
- * to be re-sent despite toxcore not returning an error on its initial send.
- */
+// We use knowledge of toxcore internals (bad!) to determine that if we haven't received a read receipt for a
+// sent packet after this amount of time, the connection has been severed and the packet needs to be re-sent.
 #define TRY_SEND_TIMEOUT 32
+
+/*
+ * Marks all timed out messages in queue as unsent.
+ */
+static void cqueue_check_timeouts(struct cqueue_msg *msg)
+{
+    while (msg) {
+        if (timed_out(msg->last_send_try, TRY_SEND_TIMEOUT)) {
+            msg->receipt = -1;
+        }
+
+        msg = msg->next;
+    }
+}
 
 /*
  * Tries to send all messages in the send queue in sequential order.
@@ -151,21 +168,24 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
     struct cqueue_msg *msg = q->root;
 
     while (msg) {
-        if (msg->receipt == -1) {
-            TOX_ERR_FRIEND_SEND_MESSAGE err;
-            Tox_Message_Type type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
-            uint32_t receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, &err);
-
-            if (err != TOX_ERR_FRIEND_SEND_MESSAGE_OK) {
-                return;
-            }
-
-            msg->receipt = receipt;
-            msg->last_send_try = get_unix_time();
-        } else if (timed_out(msg->last_send_try, TRY_SEND_TIMEOUT)) {  // unlikely but possible
-            msg->receipt = -1;
+        if (msg->receipt != -1) {
+            // we can no longer try to send unsent messages until we get receipts for our previous sent
+            // messages, but we continue to iterate the list, checking timestamps for any further
+            // successfully sent messages that have not yet gotten a receipt.
+            cqueue_check_timeouts(msg);
+            return;
         }
 
+        TOX_ERR_FRIEND_SEND_MESSAGE err;
+        Tox_Message_Type type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
+        uint32_t receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, &err);
+
+        if (err != TOX_ERR_FRIEND_SEND_MESSAGE_OK) {
+            return;
+        }
+
+        msg->receipt = receipt;
+        msg->last_send_try = get_unix_time();
         msg = msg->next;
     }
 }
