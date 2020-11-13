@@ -110,6 +110,12 @@ static void help_draw_menu(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, "nference commands\n");
 
+    wprintw(win, " g");
+    wattron(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, "r");
+    wattroff(win, A_BOLD | COLOR_PAIR(BLUE));
+    wprintw(win, "oupchat commands\n");
+
 #ifdef PYTHON
     wattron(win, A_BOLD | COLOR_PAIR(BLUE));
     wprintw(win, " p");
@@ -171,9 +177,10 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /add <addr> <msg>          : Add contact with optional message\n");
     wprintw(win, "  /accept <id>               : Accept friend request\n");
     wprintw(win, "  /avatar <path>             : Set an avatar (leave path empty to unset)\n");
+    wprintw(win, "  /conference <type>         : Create a conference where type: text | audio\n");
+    wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(win, "  /decline <id>              : Decline friend request\n");
     wprintw(win, "  /requests                  : List pending friend requests\n");
-    wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(win, "  /status <type>             : Set status (Online, Busy, Away)\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");

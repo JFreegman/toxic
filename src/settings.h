@@ -61,6 +61,7 @@ struct user_settings {
     char line_quit[LINE_HINT_MAX + 1];
     char line_alert[LINE_HINT_MAX + 1];
     char line_normal[LINE_HINT_MAX + 1];
+    char line_special[LINE_HINT_MAX + 1];
 
     char download_path[PATH_MAX];
     char chatlogs_path[PATH_MAX];
@@ -85,6 +86,7 @@ struct user_settings {
 
     int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
     char mplex_away_note [TOX_MAX_STATUS_MESSAGE_LENGTH];
+    char group_part_message[TOX_GROUP_MAX_PART_LENGTH];
 
 #ifdef AUDIO
     int audio_in_dev;
@@ -130,6 +132,7 @@ enum settings_values {
 #define LINE_QUIT    "<--"
 #define LINE_ALERT   "-!-"
 #define LINE_NORMAL  "-"
+#define LINE_SPECIAL ">"
 #define TIMESTAMP_DEFAULT      "%H:%M"
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"

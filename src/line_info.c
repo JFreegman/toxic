@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "conference.h"
+#include "groupchats.h"
 #include "line_info.h"
 #include "message_queue.h"
 #include "misc_tools.h"
@@ -433,6 +434,13 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
             len += strlen(user_settings->line_normal) + 3; // two spaces and a ':' char
             break;
 
+        case IN_PRVT_MSG:
+
+        /* fallthrough */
+        case OUT_PRVT_MSG:
+            len += strlen(user_settings->line_special) + 3;
+            break;
+
         case CONNECTION:
             len += strlen(user_settings->line_join) + 2;  // two spaces
             break;
@@ -546,7 +554,7 @@ void line_info_print(ToxWindow *self)
         return;
     }
 
-    if (self->type == WINDOW_TYPE_CONFERENCE) {
+    if (self->type == WINDOW_TYPE_CONFERENCE || self->type == WINDOW_TYPE_GROUPCHAT) {
         wmove(win, 0, 0);
     } else {
         wmove(win, TOP_BAR_HEIGHT, 0);
@@ -582,7 +590,7 @@ void line_info_print(ToxWindow *self)
             case OUT_MSG_READ:
 
             /* fallthrough */
-            case IN_MSG:
+            case IN_MSG: {
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
@@ -620,6 +628,71 @@ void line_info_print(ToxWindow *self)
 
                 waddch(win, '\n');
                 break;
+            }
+
+            case IN_PRVT_MSG:
+
+            /* fallthrough */
+
+            case OUT_PRVT_MSG: {
+                wattron(win, COLOR_PAIR(BLUE));
+                wprintw(win, "%s ", line->timestr);
+                wattroff(win, COLOR_PAIR(BLUE));
+
+                int nameclr = GREEN;
+
+                if (line->colour) {
+                    nameclr = line->colour;
+                } else if (type == IN_MSG) {
+                    nameclr = CYAN;
+                }
+
+                wattron(win, COLOR_PAIR(nameclr));
+                wprintw(win, "%s %s: ", (type != OUT_PRVT_MSG && type != IN_PRVT_MSG) ?
+                        user_settings->line_normal :
+                        user_settings->line_special,
+                        line->name1);
+                wattroff(win, COLOR_PAIR(nameclr));
+
+                char *msg = line->msg;
+
+                while (msg) {
+                    char *line = strsep(&msg, "\n");
+
+                    if (line[0] == '>') {
+                        wattron(win, COLOR_PAIR(GREEN));
+                    } else if (line[0] == '<') {
+                        wattron(win, COLOR_PAIR(RED));
+                    }
+
+                    wprintw(win, "%s%c", line, msg ? '\n' : '\0');
+
+                    if (line[0] == '>') {
+                        wattroff(win, COLOR_PAIR(GREEN));
+                    } else if (line[0] == '<') {
+                        wattroff(win, COLOR_PAIR(RED));
+                    }
+
+                    // change the \0 set by strsep back to \n
+                    if (msg) {
+                        msg[-1] = '\n';
+                    }
+                }
+
+                if (type == OUT_MSG && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
+                    wattron(win, COLOR_PAIR(RED));
+                    wprintw(win, " x", line->msg);
+                    wattroff(win, COLOR_PAIR(RED));
+
+                    if (line->noread_flag == false) {
+                        line->noread_flag = true;
+                        line->len += 2;
+                    }
+                }
+
+                wprintw(win, "\n", line->msg);
+                break;
+            }
 
             case OUT_ACTION_READ:
 
@@ -627,7 +700,7 @@ void line_info_print(ToxWindow *self)
             case OUT_ACTION:
 
             /* fallthrough */
-            case IN_ACTION:
+            case IN_ACTION: {
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
@@ -639,8 +712,9 @@ void line_info_print(ToxWindow *self)
 
                 waddch(win, '\n');
                 break;
+            }
 
-            case SYS_MSG:
+            case SYS_MSG: {
                 if (line->timestr[0]) {
                     wattron(win, COLOR_PAIR(BLUE));
                     wprintw(win, "%s ", line->timestr);
@@ -667,8 +741,9 @@ void line_info_print(ToxWindow *self)
                 }
 
                 break;
+            }
 
-            case PROMPT:
+            case PROMPT: {
                 wattron(win, COLOR_PAIR(GREEN));
                 wprintw(win, "$ ");
                 wattroff(win, COLOR_PAIR(GREEN));
@@ -679,8 +754,9 @@ void line_info_print(ToxWindow *self)
 
                 waddch(win, '\n');
                 break;
+            }
 
-            case CONNECTION:
+            case CONNECTION: {
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
@@ -698,8 +774,9 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(line->colour));
 
                 break;
+            }
 
-            case DISCONNECTION:
+            case DISCONNECTION: {
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
@@ -717,8 +794,9 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(line->colour));
 
                 break;
+            }
 
-            case NAME_CHANGE:
+            case NAME_CHANGE: {
                 wattron(win, COLOR_PAIR(BLUE));
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
@@ -737,6 +815,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(MAGENTA));
 
                 break;
+            }
         }
 
         line = line->next;

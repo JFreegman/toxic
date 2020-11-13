@@ -32,6 +32,7 @@ enum {
     GLOBAL_COMMAND_MODE,
     CHAT_COMMAND_MODE,
     CONFERENCE_COMMAND_MODE,
+    GROUPCHAT_COMMAND_MODE,
 };
 
 void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode);

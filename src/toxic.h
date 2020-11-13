@@ -148,6 +148,30 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
 void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata);
 void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata);
 void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata);
+void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, size_t length,
+                     const uint8_t *group_name,
+                     size_t group_name_length, void *userdata);
+void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+                      const uint8_t *message, size_t length, void *userdata);
+void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+                              const uint8_t *message, size_t length,
+                              void *userdata);
+void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peernumber, void *userdata);
+void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peer_id, Tox_Group_Exit_Type exit_type,
+                        const uint8_t *nick,
+                        size_t nick_len, const uint8_t *partmsg, size_t length, void *userdata);
+void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *topic, size_t length,
+                           void *userdata);
+void on_group_peer_limit(Tox *m, uint32_t groupnumber, uint32_t peer_limit, void *userdata);
+void on_group_privacy_state(Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE privacy_state, void *userdata);
+void on_group_password(Tox *m, uint32_t groupnumber, const uint8_t *password, size_t length, void *userdata);
+void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
+                          void *userdata);
+void on_group_status_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_USER_STATUS status, void *userdata);
+void on_group_self_join(Tox *m, uint32_t groupnumber, void *userdata);
+void on_group_rejected(Tox *m, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL type, void *userdata);
+void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
+                         TOX_GROUP_MOD_EVENT type, void *userdata);
 
 extern char *DATA_FILE;
 extern char *BLOCK_FILE;

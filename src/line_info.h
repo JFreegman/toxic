@@ -39,6 +39,8 @@ typedef enum LINE_TYPE {
     IN_ACTION,
     OUT_ACTION,
     OUT_ACTION_READ,     /* same as OUT_MSG_READ but for actions */
+    IN_PRVT_MSG,   /* PRVT should only be used for groups */
+    OUT_PRVT_MSG,
     PROMPT,
     CONNECTION,
     DISCONNECTION,

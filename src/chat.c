@@ -69,11 +69,15 @@ static const char *chat_cmd_list[] = {
     "/add",
     "/avatar",
     "/cancel",
+    "/cinvite",
+    "/cjoin",
     "/clear",
     "/close",
     "/connect",
     "/exit",
+    "/gaccept",
     "/conference",
+    "/group",
 #ifdef GAMES
     "/game",
     "/play",
@@ -757,8 +761,41 @@ static void chat_onConferenceInvite(ToxWindow *self, Tox *m, int32_t friendnumbe
                    "invites you to join %s", description);
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to %s.", name, description);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a conference.", name);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/cjoin\" to join the chat.");
+}
+
+static void chat_onGroupInvite(ToxWindow *self, Tox *m, uint32_t friendnumber, const char *invite_data, size_t length,
+                               const char *group_name, size_t group_name_length)
+{
+    UNUSED_VAR(group_name_length);
+
+    if (self->num != friendnumber) {
+        return;
+    }
+
+    if (Friends.list[friendnumber].group_invite.data) {
+        free(Friends.list[friendnumber].group_invite.data);
+    }
+
+    Friends.list[friendnumber].group_invite.data = malloc(length * sizeof(uint8_t));
+    memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
+    Friends.list[friendnumber].group_invite.length = length;
+
+    sound_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, NULL);
+
+    char name[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, name, friendnumber);
+
+    if (self->active_box != -1) {
+        box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join group chat");
+    } else {
+        box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join group chat");
+    }
+
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to join group chat \"%s\"", name, group_name);
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+                  "Type \"/gaccept <password>\" to join the chat (password is optional).");
 }
 
 #ifdef GAMES

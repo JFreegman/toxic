@@ -70,6 +70,8 @@ static struct ui_strings {
     const char *line_quit;
     const char *line_alert;
     const char *line_normal;
+    const char *line_special;
+    const char *group_part_message;
 
     const char *mplex_away;
     const char *mplex_away_note;
@@ -103,8 +105,10 @@ static struct ui_strings {
     "line_quit",
     "line_alert",
     "line_normal",
+    "line_special",
     "mplex_away",
     "mplex_away_note",
+    "group_part_message",
     "color_bar_bg",
     "color_bar_fg",
     "color_bar_accent",
@@ -130,13 +134,14 @@ static void ui_defaults(struct user_settings *settings)
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
     settings->show_connection_msg = SHOW_CONNECTION_MSG_ON;
-    settings->nodeslist_update_freq = 7;
+    settings->nodeslist_update_freq = 1;
     settings->autosave_freq = 600;
 
     snprintf(settings->line_join, LINE_HINT_MAX + 1, "%s", LINE_JOIN);
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
     snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
+    snprintf(settings->line_special, LINE_HINT_MAX + 1, "%s", LINE_SPECIAL);
 
     settings->mplex_away = MPLEX_ON;
     snprintf(settings->mplex_away_note, sizeof(settings->mplex_away_note), "%s", MPLEX_AWAY_NOTE);
@@ -420,10 +425,18 @@ int settings_load(struct user_settings *s, const char *patharg)
             snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
         }
 
+        if (config_setting_lookup_string(setting, ui_strings.line_special, &str)) {
+            snprintf(s->line_special, sizeof(s->line_special), "%s", str);
+        }
+
         config_setting_lookup_bool(setting, ui_strings.mplex_away, &s->mplex_away);
 
         if (config_setting_lookup_string(setting, ui_strings.mplex_away_note, &str)) {
             snprintf(s->mplex_away_note, sizeof(s->mplex_away_note), "%s", str);
+        }
+
+        if (config_setting_lookup_string(setting, ui_strings.group_part_message, &str)) {
+            snprintf(s->group_part_message, sizeof(s->group_part_message), "%s", str);
         }
     }
 

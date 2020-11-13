@@ -85,11 +85,13 @@ static const char *conference_cmd_list[] = {
     "/connect",
     "/decline",
     "/exit",
+    "/group",
     "/conference",
 #ifdef GAMES
     "/game",
 #endif
     "/help",
+    "/join",
     "/log",
 #ifdef AUDIO
     "/mute",

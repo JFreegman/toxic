@@ -29,6 +29,7 @@
 typedef enum {
     HELP_MENU,
     HELP_GLOBAL,
+    HELP_GROUP,
     HELP_CHAT,
     HELP_CONFERENCE,
     HELP_KEYS,

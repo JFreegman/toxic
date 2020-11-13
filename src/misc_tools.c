@@ -136,6 +136,26 @@ void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
     }
 }
 
+/* Converts seconds to string in format H hours, m minutes, s seconds */
+void get_elapsed_time_str_alt(char *buf, int bufsize, uint64_t secs)
+{
+    if (!secs) {
+        return;
+    }
+
+    long int seconds = secs % 60;
+    long int minutes = (secs % 3600) / 60;
+    long int hours = secs / 3600;
+
+    if (!minutes && !hours) {
+        snprintf(buf, bufsize, "%ld seconds", seconds);
+    } else if (!hours) {
+        snprintf(buf, bufsize, "%ld minutes, %ld seconds", minutes, seconds);
+    } else {
+        snprintf(buf, bufsize, "%ld hours, %ld minutes, %ld seconds", hours, minutes, seconds);
+    }
+}
+
 /*
  * Converts a hexidecimal string representation of a Tox public key to binary format and puts
  * the result in output.
@@ -470,6 +490,59 @@ on_error:
     strcpy(buf, UNKNOWN_NAME);
     len = strlen(UNKNOWN_NAME);
     buf[len] = '\0';
+
+    return len;
+}
+
+/* same as get_nick_truncate but for groupchats */
+size_t get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, uint32_t groupnum)
+{
+    TOX_ERR_GROUP_PEER_QUERY err;
+    size_t len = tox_group_peer_get_name_size(m, groupnum, peer_id, &err);
+
+    if (err != TOX_ERR_GROUP_PEER_QUERY_OK || len == 0) {
+        strcpy(buf, UNKNOWN_NAME);
+        len = strlen(UNKNOWN_NAME);
+    } else {
+        tox_group_peer_get_name(m, groupnum, peer_id, (uint8_t *) buf, &err);
+
+        if (err != TOX_ERR_GROUP_PEER_QUERY_OK) {
+            strcpy(buf, UNKNOWN_NAME);
+            len = strlen(UNKNOWN_NAME);
+        }
+    }
+
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    buf[len] = '\0';
+
+    filter_str(buf, len);
+
+    return len;
+}
+
+/* same as get_group_nick_truncate() but for self. */
+size_t get_group_self_nick_truncate(Tox *m, char *buf, uint32_t groupnum)
+{
+    TOX_ERR_GROUP_SELF_QUERY err;
+    size_t len = tox_group_self_get_name_size(m, groupnum, &err);
+
+    if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
+        strcpy(buf, UNKNOWN_NAME);
+        len = strlen(UNKNOWN_NAME);
+    } else {
+        tox_group_self_get_name(m, groupnum, (uint8_t *) buf, &err);
+
+        if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
+            strcpy(buf, UNKNOWN_NAME);
+            len = strlen(UNKNOWN_NAME);
+        }
+    }
+
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    buf[len] = 0;
+
+    filter_str(buf, len);
+
     return len;
 }
 
@@ -605,7 +678,8 @@ void set_window_title(ToxWindow *self, const char *title, int len)
 
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
 
-    if (self->type == WINDOW_TYPE_CONFERENCE) { /* keep conferencenumber in title for invites */
+    /* keep conferencenumber in title */
+    if (self->type == WINDOW_TYPE_CONFERENCE || self->type == WINDOW_TYPE_GROUPCHAT) {
         snprintf(cpy, sizeof(cpy), "%u %s", self->num, title);
     } else {
         snprintf(cpy, sizeof(cpy), "%s", title);

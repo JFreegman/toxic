@@ -53,6 +53,7 @@
 #include "execute.h"
 #include "file_transfers.h"
 #include "friendlist.h"
+#include "groupchats.h"
 #include "line_info.h"
 #include "log.h"
 #include "message_queue.h"
@@ -472,6 +473,17 @@ static void load_friendlist(Tox *m)
     sort_friendlist_index();
 }
 
+static void load_groups(Tox *m)
+{
+    size_t numgroups = tox_group_get_number_groups(m);
+
+    for (size_t i = 0; i < numgroups; ++i) {
+        if (init_groupchat_win(m, i, NULL, 0) != 0) {
+            tox_group_leave(m, i, NULL, 0, NULL);
+        }
+    }
+}
+
 static void load_conferences(Tox *m)
 {
     size_t num_chats = tox_conference_get_chatlist_size(m);
@@ -815,6 +827,20 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_file_recv_control(m, on_file_recv_control);
     tox_callback_file_recv_chunk(m, on_file_recv_chunk);
     tox_callback_friend_lossless_packet(m, on_lossless_custom_packet);
+    tox_callback_group_invite(m, on_group_invite);
+    tox_callback_group_message(m, on_group_message);
+    tox_callback_group_private_message(m, on_group_private_message);
+    tox_callback_group_peer_status(m, on_group_status_change);
+    tox_callback_group_peer_join(m, on_group_peer_join);
+    tox_callback_group_peer_exit(m, on_group_peer_exit);
+    tox_callback_group_peer_name(m, on_group_nick_change);
+    tox_callback_group_topic(m, on_group_topic_change);
+    tox_callback_group_peer_limit(m, on_group_peer_limit);
+    tox_callback_group_privacy_state(m, on_group_privacy_state);
+    tox_callback_group_password(m, on_group_password);
+    tox_callback_group_self_join(m, on_group_self_join);
+    tox_callback_group_join_fail(m, on_group_rejected);
+    tox_callback_group_moderation(m, on_group_moderation);
 }
 
 static void init_tox_options(struct Tox_Options *tox_opts)
@@ -1584,6 +1610,7 @@ int main(int argc, char **argv)
 
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m, !datafile_exists);
+    load_groups(m);
     load_conferences(m);
     set_active_window_index(0);
 

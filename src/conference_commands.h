@@ -1,7 +1,7 @@
 /*  conference_commands.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2020 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -33,3 +33,4 @@ void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, cha
 void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
 
 #endif /* CONFERENCE_COMMANDS_H */
+

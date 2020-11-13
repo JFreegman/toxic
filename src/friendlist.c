@@ -116,6 +116,10 @@ void kill_friendlist(ToxWindow *self)
             free(Friends.list[i].game_invite.data);
 #endif
         }
+
+        if (Friends.list[i].group_invite.data != NULL) {
+            free(Friends.list[i].group_invite.data);
+        }
     }
 
     realloc_blocklist(0);
@@ -670,6 +674,35 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Tox *m, int32_t num, 
 
     line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* Conference chat invite from %s failed: too many windows are open.", nick);
+
+    sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+}
+
+static void friendlist_onGroupInvite(ToxWindow *self, Tox *m, uint32_t num, const char *data, size_t length,
+                                     const char *group_name, size_t group_name_length)
+{
+    UNUSED_VAR(self);
+    UNUSED_VAR(data);
+    UNUSED_VAR(length);
+
+    if (num >= Friends.max_idx) {
+        return;
+    }
+
+    if (Friends.list[num].chatwin != -1) {
+        return;
+    }
+
+    if (get_num_active_windows() < MAX_WINDOWS_NUM) {
+        Friends.list[num].chatwin = add_window(m, new_chat(m, Friends.list[num].num));
+        return;
+    }
+
+    char nick[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, nick, num);
+
+    line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
+                  "* Group chat invite from %s failed: too many windows are open.", nick);
 
     sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
 }
@@ -1398,6 +1431,7 @@ ToxWindow *new_friendlist(void)
     ret->onStatusMessageChange = &friendlist_onStatusMessageChange;
     ret->onFileRecv = &friendlist_onFileRecv;
     ret->onConferenceInvite = &friendlist_onConferenceInvite;
+    ret->onGroupInvite = &friendlist_onGroupInvite;
 
 #ifdef AUDIO
     ret->onInvite = &friendlist_onAV;

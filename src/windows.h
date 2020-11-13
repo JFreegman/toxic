@@ -87,6 +87,7 @@ typedef enum {
     WINDOW_TYPE_PROMPT,
     WINDOW_TYPE_CHAT,
     WINDOW_TYPE_CONFERENCE,
+    WINDOW_TYPE_GROUPCHAT,
     WINDOW_TYPE_FRIEND_LIST,
 
 #ifdef GAMES
@@ -191,6 +192,22 @@ struct ToxWindow {
     void(*onGameInvite)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
     void(*onGameData)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
 #endif // GAMES
+
+    void(*onGroupInvite)(ToxWindow *, Tox *, uint32_t, const char *, size_t, const char *, size_t);
+    void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
+    void(*onGroupPrivateMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupPeerJoin)(ToxWindow *, Tox *, uint32_t, uint32_t);
+    void(*onGroupPeerExit)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_GROUP_EXIT_TYPE, const char *, size_t, const char *,
+                           size_t);
+    void(*onGroupNickChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupStatusChange)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_USER_STATUS);
+    void(*onGroupTopicChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
+    void(*onGroupPeerLimit)(ToxWindow *, Tox *, uint32_t, uint32_t);
+    void(*onGroupPrivacyState)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_PRIVACY_STATE);
+    void(*onGroupPassword)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
+    void(*onGroupSelfJoin)(ToxWindow *, Tox *, uint32_t);
+    void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_JOIN_FAIL);
+    void(*onGroupModeration)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, TOX_GROUP_MOD_EVENT);
 
 #ifdef AUDIO
 

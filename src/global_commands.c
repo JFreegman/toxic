@@ -26,6 +26,7 @@
 #include "avatars.h"
 #include "conference.h"
 #include "friendlist.h"
+#include "groupchats.h"
 #include "help.h"
 #include "line_info.h"
 #include "log.h"
@@ -459,6 +460,152 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference [%d] created.", conferencenum);
 }
 
+void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        return;
+    }
+
+    if (argc < 1) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group name required");
+        return;
+    }
+
+    const char *tmp_name = argv[1];
+    int len = strlen(tmp_name);
+
+    if (len == 0 || len > TOX_GROUP_MAX_GROUP_NAME_LENGTH) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid group name.");
+        return;
+    }
+
+    char name[TOX_GROUP_MAX_GROUP_NAME_LENGTH];
+
+    if (argv[1][0] == '\"') {    /* remove opening and closing quotes */
+        snprintf(name, sizeof(name), "%s", &argv[1][1]);
+        len -= 2;
+        name[len] = '\0';
+    } else {
+        snprintf(name, sizeof(name), "%s", argv[1]);
+    }
+
+    size_t nick_length = tox_self_get_name_size(m);
+    char self_nick[TOX_MAX_NAME_LENGTH + 1];
+    tox_self_get_name(m, (uint8_t *) self_nick);
+    self_nick[nick_length] = '\0';
+
+    TOX_ERR_GROUP_NEW err;
+    uint32_t groupnumber = tox_group_new(m, TOX_GROUP_PRIVACY_STATE_PUBLIC, (const uint8_t *) name, len,
+                                         (const uint8_t *) self_nick, nick_length, &err);
+
+    if (err != TOX_ERR_GROUP_NEW_OK) {
+        switch (err) {
+            case TOX_ERR_GROUP_NEW_TOO_LONG: {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group name length cannot exceed %d.",
+                              TOX_GROUP_MAX_GROUP_NAME_LENGTH);
+                break;
+            }
+
+            case TOX_ERR_GROUP_NEW_EMPTY: {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group name cannot be empty.");
+                break;
+            }
+
+            default: {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat instance failed to initialize (error %d).", err);
+                break;
+            }
+        }
+
+        return;
+    }
+
+    int init = init_groupchat_win(m, groupnumber, name, len);
+
+    if (init == -1) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        tox_group_leave(m, groupnumber, NULL, 0, NULL);
+    } else if (init == -2) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "You have been kicked from a group. Close the window and try again.");
+        tox_group_leave(m, groupnumber, NULL, 0, NULL);
+    }
+}
+
+void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        return;
+    }
+
+    if (argc < 1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Chat ID is required.");
+        return;
+    }
+
+    const char *chat_id = argv[1];
+
+    if (strlen(chat_id) != TOX_GROUP_CHAT_ID_SIZE * 2) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID");
+        return;
+    }
+
+    char id_bin[TOX_GROUP_CHAT_ID_SIZE] = {0};
+
+    size_t i;
+    char xch[3];
+    uint32_t x;
+
+    for (i = 0; i < TOX_GROUP_CHAT_ID_SIZE; ++i) {
+        xch[0] = chat_id[2 * i];
+        xch[1] = chat_id[2 * i + 1];
+        xch[2] = '\0';
+
+        if (sscanf(xch, "%02x", &x) != 1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID.");
+            return;
+        }
+
+        id_bin[i] = x;
+    }
+
+    const char *passwd = NULL;
+    uint16_t passwd_len = 0;
+
+    if (argc > 1) {
+        passwd = argv[2];
+        passwd_len = strlen(passwd);
+    }
+
+    size_t nick_length = tox_self_get_name_size(m);
+    char self_nick[TOX_MAX_NAME_LENGTH + 1];
+    tox_self_get_name(m, (uint8_t *) self_nick);
+    self_nick[nick_length] = '\0';
+
+    TOX_ERR_GROUP_JOIN err;
+    uint32_t groupnumber = tox_group_join(m, (uint8_t *) id_bin, (const uint8_t *) self_nick, nick_length,
+                                          (const uint8_t *) passwd, passwd_len, &err);
+
+    if (err != TOX_ERR_GROUP_JOIN_OK) {
+        if (err == TOX_ERR_GROUP_JOIN_TOO_LONG) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password length cannot exceed %d.", TOX_GROUP_MAX_PASSWORD_SIZE);
+        } else {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
+        }
+
+        return;
+    }
+
+    int init = init_groupchat_win(m, groupnumber, NULL, 0);
+
+    if (init == -1) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        tox_group_leave(m, groupnumber, NULL, 0, NULL);
+    }
+}
+
 void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -636,6 +783,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     tox_self_set_name(m, (uint8_t *) nick, len, NULL);
     prompt_update_nick(prompt, nick);
+    set_nick_all_groups(m, nick, len);
 
     store_data(m, DATA_FILE);
 }
@@ -762,6 +910,8 @@ void cmd_status(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 
     tox_self_set_status(m, status);
     prompt_update_status(prompt, status);
+    set_status_all_groups(m, status);
+
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s.", status_str);
 
 

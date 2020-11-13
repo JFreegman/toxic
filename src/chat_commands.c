@@ -29,6 +29,7 @@
 #include "file_transfers.h"
 #include "friendlist.h"
 #include "line_info.h"
+#include "groupchats.h"
 #include "misc_tools.h"
 #include "toxic.h"
 #include "windows.h"
