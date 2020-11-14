@@ -164,7 +164,9 @@ bool init_call(Call *call)
         return false;
     }
 
-    memset(call, 0, sizeof(Call));
+    *call = (struct Call) {
+        0
+    };
 
     call->status = cs_Pending;
 

@@ -560,10 +560,13 @@ static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers,
     }
 
     realloc_peer_list(chat, num_peers);
-    memset(chat->peer_list, 0, num_peers * sizeof(ConferencePeer));
 
     for (uint32_t i = 0; i < num_peers; ++i) {
         ConferencePeer *peer = &chat->peer_list[i];
+
+        *peer = (struct ConferencePeer) {
+            0
+        };
 
         Tox_Err_Conference_Peer_Query err;
         tox_conference_peer_get_public_key(m, conferencenum, i, peer->pubkey, &err);
