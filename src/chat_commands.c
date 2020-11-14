@@ -183,7 +183,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     Tox_Err_File_Control err;
-    tox_file_control(m, self->num, ft->filenum, TOX_FILE_CONTROL_RESUME, &err);
+    tox_file_control(m, self->num, ft->filenumber, TOX_FILE_CONTROL_RESUME, &err);
 
     if (err != TOX_ERR_FILE_CONTROL_OK) {
         goto on_recv_error;

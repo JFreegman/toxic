@@ -326,15 +326,17 @@ static void chat_pause_file_transfers(uint32_t friendnum)
 {
     ToxicFriend *friend = &Friends.list[friendnum];
 
-    size_t i;
+    for (size_t i = 0; i < MAX_FILES; ++i) {
+        struct FileTransfer *fts = &friend->file_sender[i];
 
-    for (i = 0; i < MAX_FILES; ++i) {
-        if (friend->file_sender[i].state >= FILE_TRANSFER_STARTED) {
-            friend->file_sender[i].state = FILE_TRANSFER_PAUSED;
+        if (fts->file_type == TOX_FILE_KIND_DATA && fts->state >= FILE_TRANSFER_STARTED) {
+            fts->state = FILE_TRANSFER_PAUSED;
         }
 
-        if (friend->file_receiver[i].state >= FILE_TRANSFER_STARTED) {
-            friend->file_receiver[i].state = FILE_TRANSFER_PAUSED;
+        struct FileTransfer *ftr = &friend->file_receiver[i];
+
+        if (ftr->file_type == TOX_FILE_KIND_DATA && ftr->state >= FILE_TRANSFER_STARTED) {
+            ftr->state = FILE_TRANSFER_PAUSED;
         }
     }
 }
@@ -342,18 +344,16 @@ static void chat_pause_file_transfers(uint32_t friendnum)
 /* Tries to resume broken file senders. Called when a friend comes online */
 static void chat_resume_file_senders(ToxWindow *self, Tox *m, uint32_t friendnum)
 {
-    size_t i;
-
-    for (i = 0; i < MAX_FILES; ++i) {
+    for (size_t i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *ft = &Friends.list[friendnum].file_sender[i];
 
-        if (ft->state != FILE_TRANSFER_PAUSED) {
+        if (ft->state != FILE_TRANSFER_PAUSED || ft->file_type != TOX_FILE_KIND_DATA) {
             continue;
         }
 
         Tox_Err_File_Send err;
-        ft->filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_DATA, ft->file_size, ft->file_id,
-                                    (uint8_t *) ft->file_name, strlen(ft->file_name), &err);
+        ft->filenumber = tox_file_send(m, friendnum, TOX_FILE_KIND_DATA, ft->file_size, ft->file_id,
+                                       (uint8_t *) ft->file_name, strlen(ft->file_name), &err);
 
         if (err != TOX_ERR_FILE_SEND_OK) {
             char msg[MAX_STR_SIZE];
@@ -364,14 +364,14 @@ static void chat_resume_file_senders(ToxWindow *self, Tox *m, uint32_t friendnum
     }
 }
 
-static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
+static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenumber, uint64_t position,
                                     size_t length)
 {
     if (friendnum != self->num) {
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
 
     if (!ft) {
         return;
@@ -424,7 +424,7 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
     }
 
     Tox_Err_File_Send_Chunk err;
-    tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
+    tox_file_send_chunk(m, ft->friendnumber, ft->filenumber, position, send_data, send_length, &err);
 
     free(send_data);
 
@@ -434,10 +434,9 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *m, uint32_t friendnum,
 
     ft->position += send_length;
     ft->bps += send_length;
-    ft->last_keep_alive = get_unix_time();
 }
 
-static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t position,
+static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenumber, uint64_t position,
                                  const char *data, size_t length)
 {
     UNUSED_VAR(position);
@@ -446,7 +445,7 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, ui
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
 
     if (!ft) {
         return;
@@ -479,16 +478,16 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *m, uint32_t friendnum, ui
 
     ft->bps += length;
     ft->position += length;
-    ft->last_keep_alive = get_unix_time();
 }
 
-static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, Tox_File_Control control)
+static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenumber,
+                               Tox_File_Control control)
 {
     if (friendnum != self->num) {
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenum);
+    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
 
     if (!ft) {
         return;
@@ -498,8 +497,6 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
 
     switch (control) {
         case TOX_FILE_CONTROL_RESUME: {
-            ft->last_keep_alive = get_unix_time();
-
             /* transfer is accepted */
             if (ft->state == FILE_TRANSFER_PENDING) {
                 ft->state = FILE_TRANSFER_STARTED;
@@ -534,12 +531,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
  *
  * Returns true if resume is successful.
  */
-static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum)
+static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenumber)
 {
     char msg[MAX_STR_SIZE];
     uint8_t file_id[TOX_FILE_ID_LENGTH];
 
-    if (!tox_file_get_file_id(m, friendnum, filenum, file_id, NULL)) {
+    if (!tox_file_get_file_id(m, friendnum, filenumber, file_id, NULL)) {
         return false;
     }
 
@@ -555,9 +552,8 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, u
         }
 
         if (memcmp(ft->file_id, file_id, TOX_FILE_ID_LENGTH) == 0) {
-            ft->filenum = filenum;
+            ft->filenumber = filenumber;
             ft->state = FILE_TRANSFER_STARTED;
-            ft->last_keep_alive = get_unix_time();
             resuming = true;
             break;
         }
@@ -567,11 +563,11 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *m, uint32_t friendnum, u
         return false;
     }
 
-    if (!tox_file_seek(m, ft->friendnum, ft->filenum, ft->position, NULL)) {
+    if (!tox_file_seek(m, ft->friendnumber, ft->filenumber, ft->position, NULL)) {
         goto on_error;
     }
 
-    if (!tox_file_control(m, ft->friendnum, ft->filenum, TOX_FILE_CONTROL_RESUME, NULL)) {
+    if (!tox_file_control(m, ft->friendnumber, ft->filenumber, TOX_FILE_CONTROL_RESUME, NULL)) {
         goto on_error;
     }
 
@@ -615,7 +611,7 @@ static bool valid_file_name(const char *filename, size_t length)
     return true;
 }
 
-static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenum, uint64_t file_size,
+static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_t filenumber, uint64_t file_size,
                             const char *filename, size_t name_length)
 {
     if (self->num != friendnum) {
@@ -623,14 +619,14 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     }
 
     /* first check if we need to resume a broken transfer */
-    if (chat_resume_broken_ft(self, m, friendnum, filenum)) {
+    if (chat_resume_broken_ft(self, m, friendnum, filenumber)) {
         return;
     }
 
-    struct FileTransfer *ft = new_file_transfer(self, friendnum, filenum, FILE_TRANSFER_RECV, TOX_FILE_KIND_DATA);
+    struct FileTransfer *ft = new_file_transfer(self, friendnum, filenumber, FILE_TRANSFER_RECV, TOX_FILE_KIND_DATA);
 
     if (!ft) {
-        tox_file_control(m, friendnum, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+        tox_file_control(m, friendnum, filenumber, TOX_FILE_CONTROL_CANCEL, NULL);
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
                       "File transfer request failed: Too many concurrent file transfers.");
         return;
@@ -702,7 +698,7 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     ft->file_size = file_size;
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
-    tox_file_get_file_id(m, friendnum, filenum, ft->file_id, NULL);
+    tox_file_get_file_id(m, friendnum, filenumber, ft->file_id, NULL);
 
     free(file_path);
 

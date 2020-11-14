@@ -48,5 +48,6 @@ void avatar_unset(Tox *m);
 
 void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position, size_t length);
 void on_avatar_file_control(Tox *m, struct FileTransfer *ft, Tox_File_Control control);
+void on_avatar_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection connection_status);
 
 #endif /* AVATARS_H */

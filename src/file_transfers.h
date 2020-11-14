@@ -51,18 +51,16 @@ struct FileTransfer {
     ToxWindow *window;
     FILE *file;
     FILE_TRANSFER_STATE state;
-    FILE_TRANSFER_DIRECTION direction;
     uint8_t file_type;
     char file_name[TOX_MAX_FILENAME_LENGTH + 1];
     char file_path[PATH_MAX + 1];    /* Not used by senders */
     double   bps;
-    uint32_t filenum;
-    uint32_t friendnum;
+    uint32_t filenumber;
+    uint32_t friendnumber;
     size_t   index;
     uint64_t file_size;
     uint64_t position;
     time_t   last_line_progress;   /* The last time we updated the progress bar */
-    time_t   last_keep_alive;  /* The last time we sent or received data */
     uint32_t line_id;
     uint8_t  file_id[TOX_FILE_ID_LENGTH];
 };
@@ -75,24 +73,24 @@ void init_progress_bar(char *progline);
 void print_progress_bar(ToxWindow *self, double pct_done, double bps, uint32_t line_id);
 
 /* refreshes active file transfer status bars. */
-void refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnum);
+void refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnumber);
 
-/* Returns a pointer to friendnum's FileTransfer struct associated with filenum.
- * Returns NULL if filenum is invalid.
+/* Returns a pointer to friendnumber's FileTransfer struct associated with filenumber.
+ * Returns NULL if filenumber is invalid.
  */
-struct FileTransfer *get_file_transfer_struct(uint32_t friendnum, uint32_t filenum);
+struct FileTransfer *get_file_transfer_struct(uint32_t friendnumber, uint32_t filenumber);
 
 
 /* Returns a pointer to the FileTransfer struct associated with index with the direction specified.
  * Returns NULL on failure.
  */
-struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnum, uint32_t index,
+struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnumber, uint32_t index,
         FILE_TRANSFER_DIRECTION direction);
 
 /* Initializes an unused file transfer and returns its pointer.
  * Returns NULL on failure.
  */
-struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnum, uint32_t filenum,
+struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnumber, uint32_t filenumber,
                                        FILE_TRANSFER_DIRECTION direction, uint8_t type);
 
 /* Closes file transfer ft.
@@ -103,8 +101,11 @@ struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnum, ui
 void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int CTRL, const char *message,
                          Notification sound_type);
 
-/* Kills all active file transfers for friendnum */
-void kill_all_file_transfers_friend(Tox *m, uint32_t friendnum);
+/* Kills active outgoing avatar file transfers for friendnumber */
+void kill_avatar_file_transfers_friend(Tox *m, uint32_t friendnumber);
+
+/* Kills all active file transfers for friendnumber */
+void kill_all_file_transfers_friend(Tox *m, uint32_t friendnumber);
 
 void kill_all_file_transfers(Tox *m);
 

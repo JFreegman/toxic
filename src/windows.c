@@ -66,6 +66,8 @@ void on_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection c
 {
     UNUSED_VAR(userdata);
 
+    on_avatar_friend_connection_status(m, friendnumber, connection_status);
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onConnectionChange != NULL) {
             windows[i]->onConnectionChange(windows[i], m, friendnumber, connection_status);

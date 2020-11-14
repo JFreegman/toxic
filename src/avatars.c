@@ -78,27 +78,27 @@ static void avatar_clear(void)
     };
 }
 
-/* Sends avatar to friendnum.
+/* Sends avatar to friendnumber.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_send(Tox *m, uint32_t friendnum)
+int avatar_send(Tox *m, uint32_t friendnumber)
 {
     Tox_Err_File_Send err;
-    uint32_t filenum = tox_file_send(m, friendnum, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
-                                     NULL, (uint8_t *) Avatar.name, Avatar.name_len, &err);
+    uint32_t filenumber = tox_file_send(m, friendnumber, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
+                                        NULL, (uint8_t *) Avatar.name, Avatar.name_len, &err);
 
     if (Avatar.size == 0) {
         return 0;
     }
 
     if (err != TOX_ERR_FILE_SEND_OK) {
-        fprintf(stderr, "tox_file_send failed for friendnumber %u (error %d)\n", friendnum, err);
+        fprintf(stderr, "tox_file_send failed for friendnumber %u (error %d)\n", friendnumber, err);
         return -1;
     }
 
-    struct FileTransfer *ft = new_file_transfer(NULL, friendnum, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_AVATAR);
+    struct FileTransfer *ft = new_file_transfer(NULL, friendnumber, filenumber, FILE_TRANSFER_SEND, TOX_FILE_KIND_AVATAR);
 
     if (!ft) {
         return -1;
@@ -119,9 +119,7 @@ int avatar_send(Tox *m, uint32_t friendnum)
 /* Sends avatar to all friends */
 static void avatar_send_all(Tox *m)
 {
-    size_t i;
-
-    for (i = 0; i < Friends.max_idx; ++i) {
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
         if (Friends.list[i].connection_status != TOX_CONNECTION_NONE) {
             avatar_send(m, Friends.list[i].num);
         }
@@ -180,6 +178,13 @@ void avatar_unset(Tox *m)
 {
     avatar_clear();
     avatar_send_all(m);
+}
+
+void on_avatar_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection connection_status)
+{
+    if (connection_status == TOX_CONNECTION_NONE) {
+        kill_avatar_file_transfers_friend(m, friendnumber);
+    }
 }
 
 void on_avatar_file_control(Tox *m, struct FileTransfer *ft, Tox_File_Control control)
@@ -245,7 +250,7 @@ void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position,
     }
 
     Tox_Err_File_Send_Chunk err;
-    tox_file_send_chunk(m, ft->friendnum, ft->filenum, position, send_data, send_length, &err);
+    tox_file_send_chunk(m, ft->friendnumber, ft->filenumber, position, send_data, send_length, &err);
 
     free(send_data);
 
@@ -254,5 +259,4 @@ void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position,
     }
 
     ft->position += send_length;
-    ft->last_keep_alive = get_unix_time();
 }
