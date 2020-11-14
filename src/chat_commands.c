@@ -138,7 +138,8 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         }
     } else if (type == TOX_CONFERENCE_TYPE_AV) {
 #ifdef AUDIO
-        conferencenum = toxav_join_av_groupchat(m, self->num, (const uint8_t *) conferencekey, length, audio_conference_callback, NULL);
+        conferencenum = toxav_join_av_groupchat(m, self->num, (const uint8_t *) conferencekey, length,
+                                                audio_conference_callback, NULL);
 
         if (conferencenum == (uint32_t) -1) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio conference instance failed to initialize");

@@ -780,6 +780,7 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                         for (uint32_t i = 0; i < chat->num_peers; ++i) {
                             complete_strs[i] = (const char *) chat->name_list[i].pubkey_str;
                         }
+
                         diff = complete_line(self, complete_strs, chat->num_peers);
                     }
 
@@ -1094,7 +1095,7 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
 #define CONFAV_SAMPLES_PER_FRAME (CONFAV_SAMPLE_RATE * CONFAV_FRAME_DURATION / 1000)
 
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum, const int16_t *pcm,
-                          unsigned int samples, uint8_t channels, uint32_t sample_rate, void *userdata)
+                               unsigned int samples, uint8_t channels, uint32_t sample_rate, void *userdata)
 {
     ConferencePeer *peer = peer_in_conference(conferencenum, peernum);
 

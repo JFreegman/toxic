@@ -97,8 +97,8 @@ bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
 bool enable_conference_audio(Tox *tox, uint32_t conferencenum);
 bool disable_conference_audio(Tox *tox, uint32_t conferencenum);
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum,
-                          const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
-                          sample_rate, void *userdata);
+                               const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
+                               sample_rate, void *userdata);
 
 bool conference_mute_self(uint32_t conferencenum);
 bool conference_mute_peer(const Tox *m, uint32_t conferencenum, uint32_t peernum);
