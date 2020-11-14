@@ -1618,6 +1618,7 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
     ret->onFileControl = &chat_onFileControl;
     ret->onFileRecv = &chat_onFileRecv;
     ret->onReadReceipt = &chat_onReadReceipt;
+    ret->onGroupInvite = &chat_onGroupInvite;
 
 #ifdef AUDIO
     ret->onInvite = &chat_onInvite;
