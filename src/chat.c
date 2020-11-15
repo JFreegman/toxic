@@ -128,7 +128,14 @@ static void set_self_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
 
     ChatContext *ctx = self->chatwin;
 
-    tox_self_set_typing(m, self->num, is_typing, NULL);
+    TOX_ERR_SET_TYPING err;
+    tox_self_set_typing(m, self->num, is_typing, &err);
+
+    if (err != TOX_ERR_SET_TYPING_OK) {
+        fprintf(stderr, "Warning: tox_self_set_typing() failed with error %d\n", err);
+        return;
+    }
+
     ctx->self_is_typing = is_typing;
 }
 
@@ -253,7 +260,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_C
         Friends.list[num].is_typing = false;
 
         if (self->chatwin->self_is_typing) {
-            set_self_typingstatus(self, m, 0);
+            set_self_typingstatus(self, m, false);
         }
 
         chat_pause_file_transfers(num);
@@ -1083,7 +1090,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         input_new_char(self, key, x, x2);
 
         if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->connection != TOX_CONNECTION_NONE) {
-            set_self_typingstatus(self, m, 1);
+            set_self_typingstatus(self, m, true);
         }
 
         return true;
@@ -1093,11 +1100,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         return true;
     }
 
-    if (input_handle(self, key, x, x2)) {
-        return true;
-    }
-
-    int input_ret = false;
+    int input_ret = input_handle(self, key, x, x2);
 
     if (key == L'\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         input_ret = true;
@@ -1182,7 +1185,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing) {
-        set_self_typingstatus(self, m, 0);
+        set_self_typingstatus(self, m, false);
     }
 
     return input_ret;
