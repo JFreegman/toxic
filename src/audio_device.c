@@ -397,7 +397,7 @@ static DeviceError open_source(Device *device)
     alSourcei(device->source, AL_LOOPING, AL_FALSE);
 
     const uint32_t frame_size = device->frame_info.samples_per_frame * sample_size(device->frame_info.stereo);
-    size_t zeros_size = frame_size / 2;
+    size_t zeros_size = frame_size * sizeof(uint16_t);
     uint16_t *zeros = calloc(1, zeros_size);
 
     if (zeros == NULL) {
@@ -407,7 +407,7 @@ static DeviceError open_source(Device *device)
 
     for (int i = 0; i < OPENAL_BUFS; ++i) {
         alBufferData(device->buffers[i], sound_mode(device->frame_info.stereo), zeros,
-                     frame_size, device->frame_info.sample_rate);
+                     zeros_size, device->frame_info.sample_rate);
     }
 
     free(zeros);
