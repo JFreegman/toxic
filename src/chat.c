@@ -1330,6 +1330,29 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     pthread_mutex_unlock(&Winthread.lock);
 }
 
+static void chat_init_log(ToxWindow *self, Tox *m, const char *self_nick)
+{
+    ChatContext *ctx = self->chatwin;
+
+    char myid[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) myid);
+
+    if (log_init(ctx->log, self_nick, myid, Friends.list[self->num].pub_key, LOG_TYPE_CHAT) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to initialize chat log.");
+        return;
+    }
+
+    if (load_chat_history(self, ctx->log) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
+    }
+
+    if (Friends.list[self->num].logging_on) {
+        if (log_enable(ctx->log) != 0) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
+        }
+    }
+}
+
 static void chat_onInit(ToxWindow *self, Tox *m)
 {
     curs_set(1);
@@ -1380,19 +1403,9 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    char myid[TOX_ADDRESS_SIZE];
-    tox_self_get_address(m, (uint8_t *) myid);
+    chat_init_log(self, m, nick);
 
-    int log_ret = log_enable(nick, myid, Friends.list[self->num].pub_key, ctx->log, LOG_CHAT);
-    load_chat_history(self, ctx->log);
-
-    if (!Friends.list[self->num].logging_on) {
-        log_disable(ctx->log);
-    } else if (log_ret == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
-    }
-
-    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
+    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);  // Print log status to screen
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);

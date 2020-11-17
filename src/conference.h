@@ -27,8 +27,9 @@
 #include "windows.h"
 
 #define SIDEBAR_WIDTH 16
-#define MAX_CONFERENCE_NUM MAX_WINDOWS_NUM - 2
+#define MAX_CONFERENCE_NUM (MAX_WINDOWS_NUM - 2)
 #define CONFERENCE_EVENT_WAIT 3
+#define CONFERENCE_MAX_TITLE_LENGTH TOX_MAX_NAME_LENGTH
 
 typedef struct ConferencePeer {
     bool       active;
@@ -64,6 +65,9 @@ typedef struct {
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     time_t start_time;
 
+    char title[CONFERENCE_MAX_TITLE_LENGTH + 1];
+    size_t title_length;
+
     ConferencePeer *peer_list;
     uint32_t max_idx;
 
@@ -79,10 +83,14 @@ typedef struct {
 /* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
 void free_conference(ToxWindow *self, uint32_t conferencenum);
 
-int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title, size_t title_length);
+int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
 
 /* destroys and re-creates conference window with or without the peerlist */
 void redraw_conference_win(ToxWindow *self);
+
+void conference_set_title(ToxWindow *self, uint32_t conferencesnum, const char *title, size_t length);
+void conference_rename_log_path(Tox *m, uint32_t conferencenum, const char *new_title);
+int conference_enable_logging(ToxWindow *self, Tox *m, uint32_t conferencenum, struct chatlog *log);
 
 /* Puts `(NameListEntry *)`s in `entries` for each matched peer, up to a maximum
  * of `maxpeers`.

@@ -434,21 +434,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     const char *swch = argv[1];
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
-        char myid[TOX_ADDRESS_SIZE];
-        tox_self_get_address(m, (uint8_t *) myid);
-
-        int log_ret = -1;
-
-        if (self->type == WINDOW_TYPE_CHAT) {
-            Friends.list[self->num].logging_on = true;
-            log_ret = log_enable(self->name, myid, Friends.list[self->num].pub_key, log, LOG_CHAT);
-        } else if (self->type == WINDOW_TYPE_PROMPT) {
-            log_ret = log_enable(self->name, myid, NULL, log, LOG_PROMPT);
-        } else if (self->type == WINDOW_TYPE_CONFERENCE) {
-            log_ret = log_enable(self->name, myid, NULL, log, LOG_CONFERENCE);
-        }
-
-        msg = log_ret == 0 ? "Logging enabled." : "Warning: Log failed to initialize.";
+        msg = log_enable(log) == 0 ? "Logging enabled." : "Warning: Failed to enable log.";
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {

@@ -40,7 +40,7 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
     UNUSED_VAR(window);
 
     Tox_Err_Conference_Title err;
-    char title[MAX_STR_SIZE];
+    char title[CONFERENCE_MAX_TITLE_LENGTH + 1];
 
     if (argc < 1) {
         size_t tlen = tox_conference_get_title_size(m, self->num, &err);
@@ -61,15 +61,23 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
         return;
     }
 
+    size_t len = strlen(argv[1]);
+
+    if (len >= sizeof(title)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title: max length exceeded.");
+        return;
+    }
+
     snprintf(title, sizeof(title), "%s", argv[1]);
-    int len = strlen(title);
 
     if (!tox_conference_set_title(m, self->num, (uint8_t *) title, len, &err)) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title (error %d)", err);
         return;
     }
 
-    set_window_title(self, title, len);
+    conference_rename_log_path(m, self->num, title);  // must be called first
+
+    conference_set_title(self, self->num, title, len);
 
     char timefrmt[TIME_STR_SIZE];
     char selfnick[TOX_MAX_NAME_LENGTH];

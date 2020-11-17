@@ -554,6 +554,25 @@ static void print_welcome_msg(ToxWindow *self)
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
+static void prompt_init_log(ToxWindow *self, Tox *m, const char *self_name)
+{
+    ChatContext *ctx = self->chatwin;
+
+    char myid[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) myid);
+
+    if (log_init(ctx->log, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        return;
+    }
+
+    if (user_settings->autolog == AUTOLOG_ON) {
+        if (log_enable(ctx->log) == -1) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Failed to enable log.");
+        }
+    }
+}
+
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     curs_set(1);
@@ -577,14 +596,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    if (user_settings->autolog == AUTOLOG_ON) {
-        char myid[TOX_ADDRESS_SIZE];
-        tox_self_get_address(m, (uint8_t *) myid);
-
-        if (log_enable(self->name, myid, NULL, ctx->log, LOG_PROMPT) == -1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
-        }
-    }
+    prompt_init_log(self, m, self->name);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);

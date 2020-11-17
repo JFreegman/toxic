@@ -453,7 +453,9 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *m, uint32_t num, const
     tox_self_get_address(m, (uint8_t *) myid);
 
     if (strcmp(oldname, newnamecpy) != 0) {
-        rename_logfile(oldname, newnamecpy, myid, Friends.list[num].pub_key, Friends.list[num].chatwin);
+        if (rename_logfile(oldname, newnamecpy, myid, Friends.list[num].pub_key, Friends.list[num].chatwin) != 0) {
+            fprintf(stderr, "Failed to rename friend chat log from `%s` to `%s`\n", oldname, newnamecpy);
+        }
     }
 
     sort_friendlist_index();

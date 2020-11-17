@@ -30,30 +30,43 @@ struct chatlog {
     bool log_on;    /* specific to current chat window */
 };
 
-typedef enum {
-    LOG_CONFERENCE,
-    LOG_PROMPT,
-    LOG_CHAT,
+typedef enum LOG_TYPE {
+    LOG_TYPE_PROMPT,
+    LOG_TYPE_CHAT,
 } LOG_TYPE;
+
+/* Initializes a log. This function must be called before any other logging operations.
+ *
+ * Return 0 on success.
+ * Return -1 on failure.
+ */
+int log_init(struct chatlog *log, const char *name, const char *selfkey, const char *otherkey, LOG_TYPE type);
 
 /* formats/writes line to log file */
 void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event);
 
-/* enables logging for specified log and creates/fetches file if necessary.
+/* enables logging for specified log.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int log_enable(char *name, const char *selfkey, const char *otherkey, struct chatlog *log, int logtype);
+int log_enable(struct chatlog *log);
 
 /* disables logging for specified log and closes file */
 void log_disable(struct chatlog *log);
 
-/* Loads previous history from chat log */
-void load_chat_history(ToxWindow *self, struct chatlog *log);
+/* Loads chat log history and prints it to `self` window.
+ *
+ * Return 0 on success or if log file doesn't exist.
+ * Return -1 on failure.
+ */
+int load_chat_history(ToxWindow *self, struct chatlog *log);
 
-/* renames chatlog file replacing src with dest.
-   Returns 0 on success or if no log exists, -1 on failure. */
-int rename_logfile(char *src, char *dest, const char *selfkey, const char *otherkey, int winnum);
+/* Renames chatlog file `src` to `dest`.
+ *
+ * Return 0 on success or if no log exists.
+ * Return -1 on failure.
+ */
+int rename_logfile(const char *src, const char *dest, const char *selfkey, const char *otherkey, int winnum);
 
 #endif /* LOG_H */

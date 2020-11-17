@@ -114,6 +114,25 @@ static const char *conference_cmd_list[] = {
 
 static ToxWindow *new_conference_chat(uint32_t conferencenum);
 
+void conference_set_title(ToxWindow *self, uint32_t conferencesnum, const char *title, size_t length)
+{
+    ConferenceChat *chat = &conferences[conferencesnum];
+
+    if (!chat->active) {
+        return;
+    }
+
+    if (length > CONFERENCE_MAX_TITLE_LENGTH) {
+        length = CONFERENCE_MAX_TITLE_LENGTH;
+    }
+
+    memcpy(chat->title, title, length);
+    chat->title[length] = 0;
+    chat->title_length = length;
+
+    set_window_title(self, title, length);
+}
+
 static void kill_conference_window(ToxWindow *self)
 {
     ChatContext *ctx = self->chatwin;
@@ -130,8 +149,35 @@ static void kill_conference_window(ToxWindow *self)
     del_window(self);
 }
 
-int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title,
-                        size_t title_length)
+static void init_conference_logging(ToxWindow *self, Tox *m, uint32_t conferencenum)
+{
+    ChatContext *ctx = self->chatwin;
+
+    char my_id[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) my_id);
+
+    char conference_id[TOX_CONFERENCE_ID_SIZE];
+    tox_conference_get_id(m, conferencenum, (uint8_t *) conference_id);
+
+    if (log_init(ctx->log, conferences[conferencenum].title, my_id, conference_id, LOG_TYPE_CHAT) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        return;
+    }
+
+    if (load_chat_history(self, ctx->log) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
+    }
+
+    if (user_settings->autolog == AUTOLOG_ON) {
+        if (log_enable(ctx->log) != 0) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
+        }
+    }
+
+    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);  // print log state to screen
+}
+
+int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
 {
     if (conferencenum > MAX_CONFERENCE_NUM) {
         return -1;
@@ -155,7 +201,10 @@ int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char
             conferences[i].last_sent_audio = 0;
 
             set_active_window_index(conferences[i].chatwin);
-            set_window_title(self, title, title_length);
+
+            conference_set_title(self, conferencenum, title, length);
+
+            init_conference_logging(self, m, conferencenum);
 
             if (i == max_conference_index) {
                 ++max_conference_index;
@@ -223,6 +272,25 @@ static void delete_conference(ToxWindow *self, Tox *m, uint32_t conferencenum)
 {
     tox_conference_delete(m, conferencenum, NULL);
     free_conference(self, conferencenum);
+}
+
+void conference_rename_log_path(Tox *m, uint32_t conferencenum, const char *new_title)
+{
+    ConferenceChat *chat = &conferences[conferencenum];
+
+    if (!chat->active) {
+        return;
+    }
+
+    char myid[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) myid);
+
+    char conference_id[TOX_CONFERENCE_ID_SIZE];
+    tox_conference_get_id(m, conferencenum, (uint8_t *) conference_id);
+
+    if (rename_logfile(chat->title, new_title, myid, conference_id, chat->chatwin) != 0) {
+        fprintf(stderr, "Failed to rename conference log to `%s`\n", new_title);
+    }
 }
 
 /* destroys and re-creates conference window with or without the peerlist */
@@ -319,13 +387,21 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Tox *m, uint32_t
         return;
     }
 
-    set_window_title(self, title, length);
+    ConferenceChat *chat = &conferences[conferencenum];
+
+    if (!chat->active) {
+        return;
+    }
+
+    conference_rename_log_path(m, conferencenum, title);  // must be called first
+
+    conference_set_title(self, conferencenum, title, length);
 
     char timefrmt[TIME_STR_SIZE];
     get_time_str(timefrmt, sizeof(timefrmt));
 
     /* don't announce title when we join the room */
-    if (!timed_out(conferences[self->num].start_time, CONFERENCE_EVENT_WAIT)) {
+    if (!timed_out(conferences[conferencenum].start_time, CONFERENCE_EVENT_WAIT)) {
         return;
     }
 
@@ -1037,17 +1113,6 @@ static void conference_onInit(ToxWindow *self, Tox *m)
     }
 
     line_info_init(ctx->hst);
-
-    if (user_settings->autolog == AUTOLOG_ON) {
-        char myid[TOX_ADDRESS_SIZE];
-        tox_self_get_address(m, (uint8_t *) myid);
-
-        if (log_enable(self->name, myid, NULL, ctx->log, LOG_CONFERENCE) == -1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
-        }
-    }
-
-    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
