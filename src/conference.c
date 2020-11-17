@@ -1159,7 +1159,7 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
 
 #define CONFAV_SAMPLE_RATE 48000
 #define CONFAV_FRAME_DURATION 20
-#define CONFAV_AUDIO_CHANNELS 1
+#define CONFAV_AUDIO_CHANNELS 2
 #define CONFAV_SAMPLES_PER_FRAME (CONFAV_SAMPLE_RATE * CONFAV_FRAME_DURATION / 1000)
 
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum, const int16_t *pcm,
