@@ -105,6 +105,7 @@ static struct cmd_func conference_commands[] = {
 #ifdef AUDIO
     { "/audio",     cmd_enable_audio },
     { "/mute",      cmd_conference_mute   },
+    { "/ptt",       cmd_conference_push_to_talk },
     { "/sense",     cmd_conference_sense  },
 #endif /* AUDIO */
     { NULL,         NULL             },

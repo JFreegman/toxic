@@ -90,6 +90,9 @@ audio = {
 
   // Number of channels to use for 1-on-1 audio broadcasts; 1 for mono, 2 for stereo.
   chat_audio_channels=2;
+
+  // toggle conference push-to-talk
+  push_to_talk=false;
 };
 
 tox = {

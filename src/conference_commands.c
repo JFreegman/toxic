@@ -112,7 +112,8 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     }
 
     if (enable ? enable_conference_audio(m, self->num) : disable_conference_audio(m, self->num)) {
-        print_err(self, enable ? "Enabled conference audio" : "Disabled conference audio");
+        print_err(self, enable ? "Enabled conference audio. Use the '/ptt' command to toggle Push-To-Talk."
+                  : "Disabled conference audio");
     } else {
         print_err(self, enable ? "Failed to enable audio" : "Failed to disable audio");
     }
@@ -150,7 +151,7 @@ void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         if (conference_mute_peer(m, self->num, entries[0]->peernum)) {
             line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toggled audio mute status of %s", entries[0]->name);
         } else {
-            print_err(self, "No such audio peer");
+            print_err(self, "Peer is not on the call");
         }
     }
 }
@@ -184,5 +185,29 @@ void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, cha
     } else {
         print_err(self, "Failed to set conference audio input sensitivity.");
     }
+}
+
+void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
+    bool enable;
+
+    if (argc == 1 && !strcasecmp(argv[1], "on")) {
+        enable = true;
+    } else if (argc == 1 && !strcasecmp(argv[1], "off")) {
+        enable = false;
+    } else {
+        print_err(self, "Please specify: on | off");
+        return;
+    }
+
+    if (!toggle_conference_push_to_talk(self->num, enable)) {
+        print_err(self, "Failed to toggle push to talk.");
+        return;
+    }
+
+    print_err(self, enable ? "Push-To-Talk is enabled. Push F2 to activate" : "Push-To-Talk is disabled");
 }
 #endif /* AUDIO */

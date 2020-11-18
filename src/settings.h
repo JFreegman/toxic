@@ -87,6 +87,7 @@ struct user_settings {
     double VAD_threshold;
     int conference_audio_channels;
     int chat_audio_channels;
+    int push_to_talk;      /* boolean */
 #endif
 };
 

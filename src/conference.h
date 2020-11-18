@@ -74,6 +74,9 @@ typedef struct {
     NameListEntry *name_list;
     uint32_t num_peers;
 
+    bool push_to_talk_enabled;
+    time_t ptt_last_pushed;
+
     bool audio_enabled;
     time_t last_sent_audio;
     uint32_t audio_in_idx;
@@ -104,6 +107,7 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
 bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
 bool enable_conference_audio(Tox *tox, uint32_t conferencenum);
 bool disable_conference_audio(Tox *tox, uint32_t conferencenum);
+bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled);
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum,
                                const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
                                sample_rate, void *userdata);
