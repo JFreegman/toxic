@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 2018-10-27
+.\"      Date: 2020-05-07
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2018\-10\-27" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2020\-05\-07" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -135,7 +135,7 @@ Maximum lines for chat window history\&. Integer value\&. (for example: 700)
 .PP
 \fBnotification_timeout\fR
 .RS 4
-Time in milliseconds to display a notification\&. (for example: 3000)
+Time in milliseconds to display a notification\&. Integer value\&. (for example: 3000)
 .RE
 .PP
 \fBline_join\fR
@@ -219,7 +219,17 @@ Audio output device\&. Integer value\&. Number corresponds to
 .PP
 \fBVAD_threshold\fR
 .RS 4
-Voice Activity Detection threshold\&. Float value\&. Recommended values are 1\&.0-40\&.0
+Voice Activity Detection threshold\&. Float value\&. Recommended values are 1\&.0\-40\&.0
+.RE
+.PP
+\fBconference_audio_channels\fR
+.RS 4
+Number of channels for conference audio broadcast\&. Integer value\&. 1 (mono) or 2 (stereo)
+.RE
+.PP
+\fBchat_audio_channels\fR
+.RS 4
+Number of channels for 1\-on\-1 audio broadcast\&. Integer value\&. 1 (mono) or 2 (stereo)
 .RE
 .RE
 .PP

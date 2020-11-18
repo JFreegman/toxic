@@ -1159,7 +1159,6 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
 
 #define CONFAV_SAMPLE_RATE 48000
 #define CONFAV_FRAME_DURATION 20
-#define CONFAV_AUDIO_CHANNELS 2
 #define CONFAV_SAMPLES_PER_FRAME (CONFAV_SAMPLE_RATE * CONFAV_FRAME_DURATION / 1000)
 
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum, const int16_t *pcm,
@@ -1198,10 +1197,12 @@ static void conference_read_device_callback(const int16_t *captured, uint32_t si
 
     conferences[audio_input_callback_data->conferencenum].last_sent_audio = get_unix_time();
 
+    int channels = user_settings->conference_audio_channels;
+
     toxav_group_send_audio(audio_input_callback_data->tox,
                            audio_input_callback_data->conferencenum,
                            captured, CONFAV_SAMPLES_PER_FRAME,
-                           CONFAV_AUDIO_CHANNELS, CONFAV_SAMPLE_RATE);
+                           channels, CONFAV_SAMPLE_RATE);
 }
 
 bool init_conference_audio_input(Tox *tox, uint32_t conferencenum)
@@ -1215,9 +1216,11 @@ bool init_conference_audio_input(Tox *tox, uint32_t conferencenum)
     const AudioInputCallbackData audio_input_callback_data = { tox, conferencenum };
     chat->audio_input_callback_data = audio_input_callback_data;
 
+    int channels = user_settings->conference_audio_channels;
+
     bool success = (open_input_device(&chat->audio_in_idx,
                                       conference_read_device_callback, &chat->audio_input_callback_data, true,
-                                      CONFAV_SAMPLE_RATE, CONFAV_FRAME_DURATION, CONFAV_AUDIO_CHANNELS)
+                                      CONFAV_SAMPLE_RATE, CONFAV_FRAME_DURATION, channels)
                     == de_None);
 
     chat->audio_enabled = success;

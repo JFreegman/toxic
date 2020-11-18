@@ -84,6 +84,12 @@ audio = {
 
   // default VAD threshold; float (recommended values are 1.0-40.0)
   VAD_threshold=5.0;
+
+  // Number of channels to use for conference audio broadcasts; 1 for mono, 2 for stereo.
+  conference_audio_channels=1;
+
+  // Number of channels to use for 1-on-1 audio broadcasts; 1 for mono, 2 for stereo.
+  chat_audio_channels=2;
 };
 
 tox = {

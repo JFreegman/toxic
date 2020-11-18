@@ -205,11 +205,15 @@ static const struct audio_strings {
     const char *input_device;
     const char *output_device;
     const char *VAD_threshold;
+    const char *conference_audio_channels;
+    const char *chat_audio_channels;
 } audio_strings = {
     "audio",
     "input_device",
     "output_device",
     "VAD_threshold",
+    "conference_audio_channels",
+    "chat_audio_channels",
 };
 
 static void audio_defaults(struct user_settings *settings)
@@ -217,6 +221,8 @@ static void audio_defaults(struct user_settings *settings)
     settings->audio_in_dev = 0;
     settings->audio_out_dev = 0;
     settings->VAD_threshold = 5.0;
+    settings->conference_audio_channels = 1;
+    settings->chat_audio_channels = 2;
 }
 #endif
 
@@ -506,6 +512,13 @@ int settings_load(struct user_settings *s, const char *patharg)
         s->audio_out_dev = s->audio_out_dev < 0 || s->audio_out_dev > MAX_DEVICES ? 0 : s->audio_out_dev;
 
         config_setting_lookup_float(setting, audio_strings.VAD_threshold, &s->VAD_threshold);
+
+        config_setting_lookup_int(setting, audio_strings.conference_audio_channels, &s->conference_audio_channels);
+        s->conference_audio_channels = s->conference_audio_channels <= 0
+                                       || s->conference_audio_channels > 2 ? 1 : s->conference_audio_channels;
+
+        config_setting_lookup_int(setting, audio_strings.chat_audio_channels, &s->chat_audio_channels);
+        s->chat_audio_channels = s->chat_audio_channels <= 0 || s->chat_audio_channels > 2 ? 2 : s->chat_audio_channels;
     }
 
 #endif

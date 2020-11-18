@@ -29,6 +29,7 @@
 #include "line_info.h"
 #include "misc_tools.h"
 #include "notify.h"
+#include "settings.h"
 #include "toxic.h"
 #include "windows.h"
 
@@ -64,6 +65,7 @@ extern ToxWindow *windows[MAX_WINDOWS_NUM];
 
 struct CallControl CallControl;
 
+extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
@@ -103,7 +105,7 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallControl.default_audio_bit_rate = 64;
     CallControl.audio_sample_rate = 48000;
     CallControl.audio_frame_duration = 20;
-    CallControl.audio_channels = 1;
+    CallControl.audio_channels = user_settings->chat_audio_channels;
 
     CallControl.video_enabled = false;
     CallControl.default_video_bit_rate = 0;
