@@ -358,8 +358,15 @@ int rename_logfile(const char *src, const char *dest, const char *selfkey, const
     }
 
     if (file_exists(newpath)) {
-        if (remove(oldpath) != 0) {
-            fprintf(stderr, "Failed to remove old path `%s`\n", oldpath);
+        char new_backup[MAX_STR_SIZE + 4];
+        snprintf(new_backup, sizeof(new_backup), "%s.old", newpath);
+
+        if (file_exists(new_backup)) {
+            goto on_error;
+        }
+
+        if (rename(newpath, new_backup) != 0) {
+            goto on_error;
         }
     } else {
         if (rename(oldpath, newpath) != 0) {
