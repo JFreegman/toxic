@@ -160,7 +160,7 @@ static void init_conference_logging(ToxWindow *self, Tox *m, uint32_t conference
     char conference_id[TOX_CONFERENCE_ID_SIZE];
     tox_conference_get_id(m, conferencenum, (uint8_t *) conference_id);
 
-    if (log_init(ctx->log, conferences[conferencenum].title, my_id, conference_id, LOG_TYPE_CHAT) != 0) {
+    if (log_init(ctx->log, conferences[self->num].title, my_id, conference_id, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }
@@ -656,7 +656,11 @@ static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers,
         memcpy(old_peer_list, chat->peer_list, old_num_peers * sizeof(ConferencePeer));
     }
 
-    realloc_peer_list(chat, num_peers);
+    if (realloc_peer_list(chat, num_peers) != 0) {
+        free(old_peer_list);
+        fprintf(stderr, "Warning: realloc_peer_list() failed in update_peer_list()\n");
+        return;
+    }
 
     for (uint32_t i = 0; i < num_peers; ++i) {
         ConferencePeer *peer = &chat->peer_list[i];
@@ -971,15 +975,9 @@ static void draw_peer(ToxWindow *self, Tox *m, ChatContext *ctx, uint32_t i)
     const uint32_t peernum = conferences[self->num].name_list[peer_idx].peernum;
     const bool is_self = tox_conference_peer_number_is_ours(m, self->num, peernum, NULL);
     const bool audio = conferences[self->num].audio_enabled;
-    pthread_mutex_unlock(&Winthread.lock);
-
-    /* truncate nick to fit in side panel without modifying list */
-    char tmpnick[TOX_MAX_NAME_LENGTH];
-    int maxlen = SIDEBAR_WIDTH - 2 - 2 * audio;
 
     if (audio) {
 #ifdef AUDIO
-        pthread_mutex_lock(&Winthread.lock);
         const ConferencePeer *peer = peer_in_conference(self->num, peernum);
         const bool audio_active = is_self
                                   ? !timed_out(conferences[self->num].last_sent_audio, 2)
@@ -996,7 +994,13 @@ static void draw_peer(ToxWindow *self, Tox *m, ChatContext *ctx, uint32_t i)
         wattroff(ctx->sidebar, aud_attr);
         waddch(ctx->sidebar, ' ');
 #endif
+    } else {
+        pthread_mutex_unlock(&Winthread.lock);
     }
+
+    /* truncate nick to fit in side panel without modifying list */
+    char tmpnick[TOX_MAX_NAME_LENGTH];
+    int maxlen = SIDEBAR_WIDTH - 2 - 2 * audio;
 
     pthread_mutex_lock(&Winthread.lock);
     memcpy(tmpnick, &conferences[self->num].name_list[peer_idx].name, maxlen);

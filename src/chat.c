@@ -504,8 +504,6 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
         return;
     }
 
-    char msg[MAX_STR_SIZE];
-
     switch (control) {
         case TOX_FILE_CONTROL_RESUME: {
             /* transfer is accepted */
@@ -531,6 +529,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
         }
 
         case TOX_FILE_CONTROL_CANCEL: {
+            char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", ft->file_name);
             close_file_transfer(self, m, ft, -1, msg, notif_error);
             break;

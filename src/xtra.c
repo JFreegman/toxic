@@ -235,10 +235,11 @@ void *event_loop(void *p)
     UNUSED_VAR(p); /* DINDUNOTHIN */
 
     XEvent event;
-    int pending;
 
     while (Xtra.display) {
         /* NEEDMOEVENTSFODEMPROGRAMS */
+
+        int pending = 0;
 
         XLockDisplay(Xtra.display);
 

@@ -916,7 +916,7 @@ void stop_current_call(ToxWindow *self)
  */
 static void realloc_calls(uint32_t n)
 {
-    if (n <= 0) {
+    if (n == 0) {
         free(CallControl.calls);
         CallControl.calls = NULL;
         return;

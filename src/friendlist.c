@@ -807,7 +807,7 @@ static void delete_blocked_friend(uint32_t bnum)
 /* deletes contact from friendlist and puts in blocklist */
 void block_friend(Tox *m, uint32_t fnum)
 {
-    if (Friends.num_friends <= 0) {
+    if (Friends.num_friends == 0) {
         return;
     }
 

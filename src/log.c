@@ -368,10 +368,10 @@ int rename_logfile(const char *src, const char *dest, const char *selfkey, const
         if (rename(newpath, new_backup) != 0) {
             goto on_error;
         }
-    } else {
-        if (rename(oldpath, newpath) != 0) {
-            goto on_error;
-        }
+    }
+
+    if (rename(oldpath, newpath) != 0) {
+        goto on_error;
     }
 
     if (log != NULL) {

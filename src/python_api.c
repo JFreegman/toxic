@@ -114,25 +114,23 @@ static PyObject *python_api_get_status_message(PyObject *self, PyObject *args)
 
 static PyObject *python_api_get_all_friends(PyObject *self, PyObject *args)
 {
-    size_t       i, ii;
     FriendsList  friends;
-    PyObject    *cur, *ret;
-    char         pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    char pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2 + 1];
 
     if (!PyArg_ParseTuple(args, "")) {
         return NULL;
     }
 
     friends = api_get_friendslist();
-    ret     = PyList_New(0);
+    PyObject *ret = PyList_New(0);
 
-    for (i = 0; i < friends.num_friends; i++) {
-        for (ii = 0; ii < TOX_PUBLIC_KEY_SIZE; ii++) {
+    for (size_t i = 0; i < friends.num_friends; i++) {
+        for (size_t ii = 0; ii < TOX_PUBLIC_KEY_SIZE; ii++) {
             snprintf(pubkey_buf + ii * 2, 3, "%02X", friends.list[i].pub_key[ii] & 0xff);
         }
 
         pubkey_buf[TOX_PUBLIC_KEY_SIZE * 2] = '\0';
-        cur = Py_BuildValue("(s,s)", friends.list[i].name, pubkey_buf);
+        PyObject *cur = Py_BuildValue("(s,s)", friends.list[i].name, pubkey_buf);
         PyList_Append(ret, cur);
     }
 
@@ -264,14 +262,14 @@ PyMODINIT_FUNC PyInit_toxic_api(void)
 
 void terminate_python(void)
 {
-    struct python_registered_func *cur, *old;
-
     if (python_commands.name != NULL) {
         free(python_commands.name);
     }
 
+    struct python_registered_func *cur = NULL;
+
     for (cur = python_commands.next; cur != NULL;) {
-        old = cur;
+        struct python_registered_func *old = cur;
         cur = cur->next;
         free(old->name);
         free(old);

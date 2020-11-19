@@ -175,36 +175,36 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
 void invoke_autoruns(WINDOW *window, ToxWindow *self)
 {
-    struct dirent *dir;
-    char    abspath_buf[PATH_MAX + 1], err_buf[PATH_MAX + 1];
-    size_t  path_len;
-    DIR    *d;
-    FILE   *fp;
+    char abspath_buf[PATH_MAX + 256];
+    char err_buf[PATH_MAX + 128];
 
     if (user_settings->autorun_path[0] == '\0') {
         return;
     }
 
-    d = opendir(user_settings->autorun_path);
+    DIR *d = opendir(user_settings->autorun_path);
 
     if (d == NULL) {
-        snprintf(err_buf, PATH_MAX + 1, "Autorun path does not exist: %s", user_settings->autorun_path);
+        snprintf(err_buf, sizeof(err_buf), "Autorun path does not exist: %s", user_settings->autorun_path);
         api_display(err_buf);
         return;
     }
 
+    struct dirent *dir = NULL;
+
     cur_window  = window;
+
     self_window = self;
 
     while ((dir = readdir(d)) != NULL) {
-        path_len = strlen(dir->d_name);
+        size_t path_len = strlen(dir->d_name);
 
         if (!strcmp(dir->d_name + path_len - 3, ".py")) {
-            snprintf(abspath_buf, PATH_MAX + 1, "%s%s", user_settings->autorun_path, dir->d_name);
-            fp = fopen(abspath_buf, "r");
+            snprintf(abspath_buf, sizeof(abspath_buf), "%s%s", user_settings->autorun_path, dir->d_name);
+            FILE *fp = fopen(abspath_buf, "r");
 
             if (fp == NULL) {
-                snprintf(err_buf, PATH_MAX + 1, "Invalid path: %s", abspath_buf);
+                snprintf(err_buf, sizeof(err_buf), "Invalid path: %s", abspath_buf);
                 api_display(err_buf);
                 continue;
             }

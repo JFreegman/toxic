@@ -389,9 +389,6 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio support disabled by compile-time option.");
         return;
 #endif
-    } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
-        return;
     }
 
     if (init_conference_win(m, conferencenum, type, NULL, 0) == -1) {
