@@ -623,7 +623,7 @@ ToxWindow *new_prompt(void)
     ret->onConnectionChange = &prompt_onConnectionChange;
     ret->onFriendRequest = &prompt_onFriendRequest;
 
-    strcpy(ret->name, "home");
+    strcpy(ret->name, "Home");
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));

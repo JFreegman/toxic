@@ -494,7 +494,7 @@ void on_window_resize(void)
     }
 }
 
-static void draw_window_tab(ToxWindow *toxwin)
+static void draw_window_tab(ToxWindow *toxwin, bool active_window)
 {
     pthread_mutex_lock(&Winthread.lock);
 
@@ -505,7 +505,12 @@ static void draw_window_tab(ToxWindow *toxwin)
     pthread_mutex_unlock(&Winthread.lock);
 
     clrtoeol();
-    printw(" [%s]", toxwin->name);
+
+    if (active_window || toxwin->index <= 1) {
+        printw(" [%s]", toxwin->name);
+    } else {
+        printw(" [%u]", toxwin->index - 1);
+    }
 
     pthread_mutex_lock(&Winthread.lock);
 
@@ -540,7 +545,9 @@ static void draw_bar(void)
             continue;
         }
 
-        if (i == active_window_index) {
+        bool active_window = i == active_window_index;
+
+        if (active_window) {
 
 #ifdef URXVT_FIX
             attron(A_BOLD | COLOR_PAIR(GREEN));
@@ -550,9 +557,9 @@ static void draw_bar(void)
             attron(A_BOLD);
         }
 
-        draw_window_tab(windows[i]);
+        draw_window_tab(windows[i], active_window);
 
-        if (i == active_window_index) {
+        if (active_window) {
 
 #ifdef URXVT_FIX
             attroff(A_BOLD | COLOR_PAIR(GREEN));

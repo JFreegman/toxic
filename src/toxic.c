@@ -1501,6 +1501,7 @@ int main(int argc, char **argv)
 
     pthread_mutex_lock(&Winthread.lock);
     print_init_messages(prompt);
+    set_active_window_index(0);
     pthread_mutex_unlock(&Winthread.lock);
 
     cleanup_init_messages();
