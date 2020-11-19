@@ -521,7 +521,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    int init = init_groupchat_win(m, groupnumber, name, len);
+    int init = init_groupchat_win(m, groupnumber, name, len, Group_Join_Type_Create);
 
     if (init == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
@@ -598,7 +598,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    int init = init_groupchat_win(m, groupnumber, NULL, 0);
+    int init = init_groupchat_win(m, groupnumber, NULL, 0, Group_Join_Type_Join);
 
     if (init == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");

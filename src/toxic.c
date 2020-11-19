@@ -478,7 +478,7 @@ static void load_groups(Tox *m)
     size_t numgroups = tox_group_get_number_groups(m);
 
     for (size_t i = 0; i < numgroups; ++i) {
-        if (init_groupchat_win(m, i, NULL, 0) != 0) {
+        if (init_groupchat_win(m, i, NULL, 0, Group_Join_Type_Load) != 0) {
             tox_group_leave(m, i, NULL, 0, NULL);
         }
     }

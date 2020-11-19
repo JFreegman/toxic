@@ -32,6 +32,12 @@
 
 #define MAX_GROUPCHAT_NUM (MAX_WINDOWS_NUM - 2)
 
+typedef enum Group_Join_Type {
+    Group_Join_Type_Create,
+    Group_Join_Type_Join,
+    Group_Join_Type_Load,
+} Group_Join_Type;
+
 typedef struct GroupPeer {
     bool             active;
     char             name[TOX_MAX_NAME_LENGTH];
@@ -49,6 +55,8 @@ typedef struct {
     uint32_t   num_peers;     /* Number of peers in the chat/name_list array */
     uint32_t   max_idx;       /* Maximum peer list index - 1 */
 
+    char       group_name[TOX_GROUP_MAX_GROUP_NAME_LENGTH + 1];
+    size_t     group_name_length;
     uint32_t   groupnumber;
     bool       active;
     uint64_t   time_connected;    /* The time we successfully connected to the group */
@@ -58,7 +66,7 @@ typedef struct {
 } GroupChat;
 
 void exit_groupchat(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *partmessage, size_t length);
-int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size_t length);
+int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size_t length, Group_Join_Type join_type);
 void set_nick_all_groups(Tox *m, const char *new_nick, size_t length);
 void set_status_all_groups(Tox *m, uint8_t status);
 int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id);

@@ -219,7 +219,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         return;
     }
 
-    if (init_groupchat_win(m, groupnumber, NULL, 0) == -1) {
+    if (init_groupchat_win(m, groupnumber, NULL, 0, Group_Join_Type_Join) == -1) {
         line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_leave(m, groupnumber, NULL, 0, NULL);
         return;

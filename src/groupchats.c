@@ -265,7 +265,53 @@ void exit_groupchat(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *p
     }
 
     tox_group_leave(m, groupnumber, (uint8_t *) partmessage, length, NULL);
-    close_groupchat(self, m, groupnumber);
+
+    if (self != NULL) {
+        close_groupchat(self, m, groupnumber);
+    }
+}
+
+/*
+ * Initializes groupchat log. This should only be called after we have the group name.
+ */
+static void init_groupchat_log(ToxWindow *self, Tox *m, uint32_t groupnumber)
+{
+    GroupChat *chat = get_groupchat(groupnumber);
+
+    if (!chat) {
+        return;
+    }
+
+    ChatContext *ctx = self->chatwin;
+
+    char my_id[TOX_ADDRESS_SIZE];
+    tox_self_get_address(m, (uint8_t *) my_id);
+
+    char chat_id[TOX_GROUP_CHAT_ID_SIZE];
+
+    TOX_ERR_GROUP_STATE_QUERIES err;
+
+    if (!tox_group_get_chat_id(m, groupnumber, (uint8_t *)chat_id, &err)) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch chat id. Logging disabled. (error: %d)", err);
+        return;
+    }
+
+    if (log_init(ctx->log, chat->group_name, my_id, chat_id, LOG_TYPE_CHAT) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        return;
+    }
+
+    if (load_chat_history(self, ctx->log) != 0) {
+        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
+    }
+
+    if (user_settings->autolog == AUTOLOG_ON) {
+        if (log_enable(ctx->log) != 0) {
+            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
+        }
+    }
+
+    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);  // print log state to screen
 }
 
 /* Creates a new toxic groupchat window associated with groupnumber.
@@ -273,16 +319,11 @@ void exit_groupchat(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *p
  * Returns 0 on success.
  * Returns -1 on general failure.
  * Returns -2 if the groupnumber is already in use. This usually means that the client has
- * been kicked and needs to close the chat window before opening a new one.
+ *     been kicked and needs to close the chat window before opening a new one.
  */
-int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size_t length)
+int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size_t length, Group_Join_Type join_type)
 {
     ToxWindow *self = new_group_chat(m, groupnumber, groupname, length);
-
-    /* In case we're loading a saved group */
-    if (length == 0) {
-        groupchat_set_group_name(self, m, groupnumber);
-    }
 
     for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
@@ -305,6 +346,10 @@ int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size
             if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
                 close_groupchat(self, m, groupnumber);
                 return -1;
+            }
+
+            if (join_type == Group_Join_Type_Create || join_type == Group_Join_Type_Load) {
+                groupchat_set_group_name(self, m, groupnumber);
             }
 
             groupchat_onGroupPeerJoin(self, m, groupnumber, peer_id);
@@ -901,6 +946,12 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, ui
 
 static void groupchat_set_group_name(ToxWindow *self, Tox *m, uint32_t groupnumber)
 {
+    GroupChat *chat = get_groupchat(groupnumber);
+
+    if (!chat) {
+        return;
+    }
+
     TOX_ERR_GROUP_STATE_QUERIES err;
     size_t len = tox_group_get_name_size(m, groupnumber, &err);
 
@@ -916,11 +967,12 @@ static void groupchat_set_group_name(ToxWindow *self, Tox *m, uint32_t groupnumb
         return;
     }
 
-    char groupname[TOX_GROUP_MAX_GROUP_NAME_LENGTH + 1];
-    len = copy_tox_str(groupname, sizeof(groupname), tmp_groupname, len);
+    len = copy_tox_str(chat->group_name, sizeof(chat->group_name), tmp_groupname, len);
+    chat->group_name_length = len;
 
     if (len > 0) {
-        set_window_title(self, groupname, len);
+        set_window_title(self, chat->group_name, len);
+        init_groupchat_log(self, m, groupnumber);
     }
 }
 
@@ -936,7 +988,6 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum
         return;
     }
 
-    groupchat_set_group_name(self, m, groupnumber);
     chat->time_connected = get_unix_time();
 
     char topic[TOX_GROUP_MAX_TOPIC_LENGTH + 1];
@@ -961,6 +1012,10 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum
     get_time_str(timefrmt, sizeof(timefrmt));
 
     line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- Topic set to: %s", topic);
+
+    if (chat->group_name_length == 0) {
+        groupchat_set_group_name(self, m, groupnumber);
+    }
 
     /* Update own role since it may have changed while we were offline */
     TOX_ERR_GROUP_SELF_QUERY s_err;
@@ -1582,17 +1637,6 @@ static void groupchat_onInit(ToxWindow *self, Tox *m)
     }
 
     line_info_init(ctx->hst);
-
-    if (user_settings->autolog == AUTOLOG_ON) {
-        char myid[TOX_ADDRESS_SIZE];
-        tox_self_get_address(m, (uint8_t *) myid);
-
-        if (log_enable(self->name, myid, NULL, ctx->log, LOG_CONFERENCE) == -1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
-        }
-    }
-
-    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
