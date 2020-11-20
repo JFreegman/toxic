@@ -584,7 +584,11 @@ void set_window_title(ToxWindow *self, const char *title, int len)
 
     char cpy[TOXIC_MAX_NAME_LENGTH + 1];
 
-    snprintf(cpy, sizeof(cpy), "%s", title);
+    if (self->type == WINDOW_TYPE_CONFERENCE) { /* keep conferencenumber in title for invites */
+        snprintf(cpy, sizeof(cpy), "%u %s", self->num, title);
+    } else {
+        snprintf(cpy, sizeof(cpy), "%s", title);
+    }
 
     if (len > MAX_WINDOW_NAME_LENGTH) {
         strcpy(&cpy[MAX_WINDOW_NAME_LENGTH - 3], "...");
