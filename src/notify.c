@@ -126,6 +126,8 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
     } else if ((flags & NT_WNDALERT_2) && (!self->alert || self->alert > WINDOW_ALERT_1)) {
         self->alert = WINDOW_ALERT_2;
     }
+
+    ++self->pending_messages;
 }
 
 static bool notifications_are_disabled(uint64_t flags)

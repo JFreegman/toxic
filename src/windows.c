@@ -502,14 +502,22 @@ static void draw_window_tab(ToxWindow *toxwin, bool active_window)
         attron(COLOR_PAIR(toxwin->alert));
     }
 
+    unsigned int pending_messages = toxwin->pending_messages;
+
     pthread_mutex_unlock(&Winthread.lock);
 
     clrtoeol();
 
-    if (active_window || toxwin->index <= 1) {
+    WINDOW_TYPE type = toxwin->type;
+
+    if (active_window || (type == WINDOW_TYPE_PROMPT || type == WINDOW_TYPE_FRIEND_LIST)) {
         printw(" [%s]", toxwin->name);
     } else {
-        printw(" [%u]", toxwin->index - 1);
+        if (pending_messages > 0) {
+            printw(" [%u]", pending_messages);
+        } else {
+            printw(" [*]");
+        }
     }
 
     pthread_mutex_lock(&Winthread.lock);
@@ -673,6 +681,7 @@ void draw_active_window(Tox *m)
 
     pthread_mutex_lock(&Winthread.lock);
     a->alert = WINDOW_ALERT_NONE;
+    a->pending_messages = 0;
     pthread_mutex_unlock(&Winthread.lock);
 
     draw_bar();

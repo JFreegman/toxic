@@ -365,7 +365,7 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    uint32_t conferencenum;
+    uint32_t conferencenum = 0;
 
     if (type == TOX_CONFERENCE_TYPE_TEXT) {
         Tox_Err_Conference_New err;
