@@ -122,8 +122,8 @@ enum settings_values {
 #define LINE_JOIN    "-->"
 #define LINE_QUIT    "<--"
 #define LINE_ALERT   "-!-"
-#define LINE_NORMAL  "---"
-#define TIMESTAMP_DEFAULT      "%H:%M:%S"
+#define LINE_NORMAL  "-"
+#define TIMESTAMP_DEFAULT      "%H:%M"
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Detached from screen"
 
