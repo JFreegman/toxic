@@ -46,7 +46,7 @@ void line_info_init(struct history *hst)
 
     hst->line_start = hst->line_root;
     hst->line_end = hst->line_start;
-    hst->queue_sz = 0;
+    hst->queue_size = 0;
 }
 
 /* resets line_start (moves to end of chat history) */
@@ -58,21 +58,20 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
         return;
     }
 
-    int y2, x2;
+    int y2;
+    int x2;
     getmaxyx(self->window, y2, x2);
+    UNUSED_VAR(x2);
 
-    int side_offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;
     int top_offst = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? 2 : 0;
-    int max_y = (y2 - CHATBOX_HEIGHT - top_offst);
+    int max_y = y2 - CHATBOX_HEIGHT - top_offst;
 
     int curlines = 0;
-    int nxtlines = line->newlines + (line->format_len / (x2 - side_offst));
 
     do {
-        curlines += 1 + nxtlines;
+        curlines += line->format_lines;
         line = line->prev;
-        nxtlines = line->newlines + (line->format_len / (x2 - side_offst));
-    } while (line->prev && curlines + nxtlines < max_y);
+    } while (line->prev && curlines + line->format_lines < max_y);
 
     hst->line_start = line;
 }
@@ -87,9 +86,7 @@ void line_info_cleanup(struct history *hst)
         tmp1 = tmp2;
     }
 
-    int i;
-
-    for (i = 0; i < hst->queue_sz; ++i) {
+    for (size_t i = 0; i < hst->queue_size; ++i) {
         if (hst->queue[i]) {
             free(hst->queue[i]);
         }
@@ -117,24 +114,22 @@ static void line_info_root_fwd(struct history *hst)
 /* returns ptr to queue item 0 and removes it from queue. Returns NULL if queue is empty. */
 static struct line_info *line_info_ret_queue(struct history *hst)
 {
-    if (hst->queue_sz <= 0) {
+    if (hst->queue_size == 0) {
         return NULL;
     }
 
     struct line_info *line = hst->queue[0];
 
-    int i;
-
-    for (i = 0; i < hst->queue_sz; ++i) {
+    for (size_t i = 0; i < hst->queue_size; ++i) {
         hst->queue[i] = hst->queue[i + 1];
     }
 
-    --hst->queue_sz;
+    --hst->queue_size;
 
     return line;
 }
 
-/* Prints `n` chars from `s` to `win`.
+/* Prints a maximum of `n` chars from `s` to `win`.
  *
  * Return true if the string contains a newline or tab byte.
  */
@@ -144,7 +139,9 @@ static bool print_n_chars(WINDOW *win, const char *s, size_t n)
     char ch;
 
     for (size_t i = 0; i < n && (ch = s[i]); ++i) {
-        waddch(win, ch);
+        if (win) {
+            wprintw(win, "%c", ch);
+        }
 
         if (ch == '\n') {
             newline = true;
@@ -169,22 +166,29 @@ static int rspace_index(const char *s, int limit)
 }
 
 
-/* Prints line message to window, wrapping at the last word that fits on the current line.
+/* Prints `line` message to window, wrapping at the last word that fits on the current line.
+ * This function updates the `format_lines` field of `line` according to current window dimensions.
  *
- * This function updates the `format_len` field of `line` according to current window dimensions.
+ * If `win` is null nothing will be printed to the window. This is useful to set the
+ * `format_lines` field on initialization.
  */
 static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
 {
     const char *msg = line->msg;
     uint16_t length = line->msg_len;
-    uint16_t real_len = length;
+    uint16_t lines = line->newlines;
     const int x_start = line->len - line->msg_len - 1;  // manually keep track of x position because ncurses sucks
 
     while (msg) {
+        ++lines;
+
         int x_limit = max_x - x_start;
 
         if (length < x_limit || x_limit <= 0) {
-            wprintw(win, "%s", msg);
+            if (win) {
+                wprintw(win, "%s", msg);
+            }
+
             break;
         }
 
@@ -199,15 +203,15 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
 
             // replace last space on current line with newline if we intend to split it
             if (length >= x_limit && !newline) {
-                waddch(win, '\n');
                 --length;
                 ++msg;
-                real_len += x_limit + 1;  // include empty space at end of line
 
-                /* Add padding to the start of the next line */
-                for (size_t i = 0; i < x_start; ++i) {
-                    waddch(win, ' ');
-                    ++real_len;
+                if (win) {
+                    waddch(win, '\n');
+
+                    for (size_t i = 0; i < x_start; ++i) {
+                        waddch(win, ' ');    // Add padding to the start of the next line
+                    }
                 }
             }
         } else {
@@ -217,7 +221,18 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
         }
     }
 
-    line->format_len = line->len - line->msg_len + real_len;
+    line->format_lines = lines;
+}
+
+static void line_info_init_line(WINDOW *win, struct line_info *line)
+{
+    int max_y;
+    int max_x;
+    UNUSED_VAR(max_y);
+
+    getmaxyx(win, max_y, max_x);
+
+    print_wrap(NULL, line, max_x);
 }
 
 /* creates new line_info line and puts it in the queue.
@@ -234,7 +249,7 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
 
     struct history *hst = self->chatwin->hst;
 
-    if (hst->queue_sz >= MAX_LINE_INFO_QUEUE) {
+    if (hst->queue_size >= MAX_LINE_INFO_QUEUE) {
         return -1;
     }
 
@@ -322,9 +337,8 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
         len += strlen(new_line->name2);
     }
 
-    new_line->id = (hst->line_end->id + 1 + hst->queue_sz) % INT_MAX;
+    new_line->id = (hst->line_end->id + 1 + hst->queue_size) % INT_MAX;
     new_line->len = len;
-    new_line->format_len = len;
     new_line->msg_len = msg_len;
     new_line->type = type;
     new_line->bold = bold;
@@ -332,7 +346,9 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
     new_line->noread_flag = false;
     new_line->timestamp = get_unix_time();
 
-    hst->queue[hst->queue_sz++] = new_line;
+    line_info_init_line(self->chatwin->history, new_line);
+
+    hst->queue[hst->queue_size++] = new_line;
 
     return new_line->id;
 }
@@ -356,7 +372,10 @@ static void line_info_check_queue(ToxWindow *self)
     hst->line_end = line;
     hst->line_end->id = line->id;
 
-    int y, y2, x, x2;
+    int y;
+    int y2;
+    int x;
+    int x2;
     getmaxyx(self->window, y2, x2);
     getyx(self->chatwin->history, y, x);
 
@@ -366,14 +385,13 @@ static void line_info_check_queue(ToxWindow *self)
         return;
     }
 
-    int offst = self->show_peerlist ? SIDEBAR_WIDTH : 0;   /* offset width of conference sidebar */
-    int lines = 1 + line->newlines + (line->format_len / (x2 - offst));
+    int lines = line->format_lines;
     int max_y = y2 - CHATBOX_HEIGHT;
 
     /* move line_start forward proportionate to the number of new lines */
-    if (y + lines - 1 >= max_y) {
+    if (y + lines > max_y) {
         while (lines > 0 && hst->line_start->next) {
-            lines -= 1 + hst->line_start->next->newlines + (hst->line_start->next->format_len / (x2 - offst));
+            lines -= hst->line_start->next->format_lines;
             hst->line_start = hst->line_start->next;
             ++hst->start_id;
         }
@@ -399,7 +417,9 @@ void line_info_print(ToxWindow *self)
 
     wclear(win);
 
-    int y2, x2;
+    int y2;
+
+    int x2;
 
     getmaxyx(self->window, y2, x2);
 
@@ -612,7 +632,7 @@ void line_info_print(ToxWindow *self)
     }
 
     /* keep calling until queue is empty */
-    if (hst->queue_sz > 0) {
+    if (hst->queue_size > 0) {
         line_info_print(self);
     }
 }
@@ -657,10 +677,9 @@ static void line_info_page_up(ToxWindow *self, struct history *hst)
 
     UNUSED_VAR(x2);
 
-    int jump_dist = y2 / 2;
-    int i;
+    size_t jump_dist = y2 / 2;
 
-    for (i = 0; i < jump_dist && hst->line_start->prev; ++i) {
+    for (size_t i = 0; i < jump_dist && hst->line_start->prev; ++i) {
         hst->line_start = hst->line_start->prev;
     }
 }
@@ -672,9 +691,9 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
 
     UNUSED_VAR(x2);
 
-    int jump_dist = y2 / 2;
+    size_t jump_dist = y2 / 2;
 
-    for (int i = 0; i < jump_dist && hst->line_start->next; ++i) {
+    for (size_t i = 0; i < jump_dist && hst->line_start->next; ++i) {
         hst->line_start = hst->line_start->next;
     }
 }

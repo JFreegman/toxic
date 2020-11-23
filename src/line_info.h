@@ -29,7 +29,7 @@
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40
 #define MAX_LINE_INFO_QUEUE 1024
-#define MAX_LINE_INFO_MSG_SIZE MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32    /* needs extra room for log loading */
+#define MAX_LINE_INFO_MSG_SIZE (MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32) /* needs extra room for log loading */
 
 typedef enum {
     SYS_MSG,
@@ -57,9 +57,9 @@ struct line_info {
     uint8_t noread_flag;   /* true if a line should be flagged as unread */
     uint32_t id;
     uint16_t len;        /* combined length of entire line */
-    uint16_t format_len; /* formatted length of combined string (dynamically set by print_wrap()) */
     uint16_t msg_len;    /* length of the message */
     uint8_t newlines;
+    uint16_t format_lines;  /* number of lines the combined string takes up (dynamically set) */
 
     struct line_info *prev;
     struct line_info *next;
@@ -73,7 +73,7 @@ struct history {
     uint32_t start_id;    /* keeps track of where line_start should be when at bottom of history */
 
     struct line_info *queue[MAX_LINE_INFO_QUEUE];
-    int queue_sz;
+    size_t queue_size;
 };
 
 /* creates new line_info line and puts it in the queue.
