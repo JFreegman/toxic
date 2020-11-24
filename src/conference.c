@@ -951,12 +951,14 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 } else {
                     execute(ctx->history, self, m, line, CONFERENCE_COMMAND_MODE);
                 }
-            } else {
+            } else if (line[0]) {
                 Tox_Err_Conference_Send_Message err;
 
                 if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) line, strlen(line), &err)) {
                     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (error %d)", err);
                 }
+            } else {
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             }
         }
 

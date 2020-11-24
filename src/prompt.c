@@ -281,14 +281,14 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             add_line_to_hist(ctx);
             wstrsubst(ctx->line, L'¶', L'\n');
 
-            char line[MAX_STR_SIZE] = {0};
+            char line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                memset(line, 0, sizeof(line));
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+            } else {
+                line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
+                execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
             }
-
-            line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
-            execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
         }
 
         wclear(ctx->linewin);

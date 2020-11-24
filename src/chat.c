@@ -1148,7 +1148,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             wstrsubst(ctx->line, L'¶', L'\n');
 
-            char line[MAX_STR_SIZE] = {0};
+            char line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
                 memset(line, 0, sizeof(line));
@@ -1163,7 +1163,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 } else {
                     execute(ctx->history, self, m, line, CHAT_COMMAND_MODE);
                 }
-            } else {
+            } else if (line[0]) {
                 char selfname[TOX_MAX_NAME_LENGTH];
                 tox_self_get_name(m, (uint8_t *) selfname);
 
@@ -1175,6 +1175,8 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
                 int id = line_info_add(self, timefrmt, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
                 cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, id);
+            } else {
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             }
         }
 
