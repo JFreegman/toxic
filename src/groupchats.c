@@ -1471,8 +1471,10 @@ static bool groupchat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 } else {
                     execute(ctx->history, self, m, line, GROUPCHAT_COMMAND_MODE);
                 }
-            } else {
+            } else if (line[0]) {
                 send_group_message(self, m, self->num, line, TOX_MESSAGE_TYPE_NORMAL);
+            } else {
+                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             }
 
             wclear(ctx->linewin);
