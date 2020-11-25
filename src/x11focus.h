@@ -1,7 +1,7 @@
 /*  xtra.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2020 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -20,21 +20,15 @@
  *
  */
 
-#ifndef XTRA_H
-#define XTRA_H
+#ifndef X11FOCUS_H
+#define X11FOCUS_H
+
+#include <stdbool.h>
 
 /* NOTE: If no xlib present don't compile */
 
-typedef enum {
-    DT_plain,
-    DT_file_list
-}
-DropType;
+int               init_x11focus(void);
+void              terminate_x11focus(void);
+bool              is_focused(void);
 
-typedef void (*drop_callback)(const char *, DropType);
-
-int               init_xtra(drop_callback d);
-void              terminate_xtra(void);
-int               is_focused(void); /* returns bool */
-
-#endif /* XTRA_H */
+#endif /* X11FOCUS */

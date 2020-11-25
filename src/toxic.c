@@ -66,7 +66,7 @@
 #include "windows.h"
 
 #ifdef X11
-#include "xtra.h"
+#include "x11focus.h"
 #endif
 
 #ifdef AUDIO
@@ -205,10 +205,7 @@ void exit_toxic_success(Tox *m)
     curl_global_cleanup();
 
 #ifdef X11
-    /* We have to terminate xtra last coz reasons
-     * Please don't call this anywhere else coz trust me
-     */
-    terminate_xtra();
+    terminate_x11focus();
 #endif /* X11 */
 
     exit(EXIT_SUCCESS);
@@ -1350,21 +1347,6 @@ static void init_default_data_files(void)
     free(user_config_dir);
 }
 
-// this doesn't do anything (yet)
-#ifdef X11
-void DnD_callback(const char *asdv, DropType dt)
-{
-    UNUSED_VAR(asdv);
-    UNUSED_VAR(dt);
-    // if (dt != DT_plain)
-    //     return;
-
-    // pthread_mutex_lock(&Winthread.lock);
-    // line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, asdv);
-    // pthread_mutex_unlock(&Winthread.lock);
-}
-#endif /* X11 */
-
 int main(int argc, char **argv)
 {
     /* Make sure all written files are read/writeable only by the current user. */
@@ -1422,7 +1404,7 @@ int main(int argc, char **argv)
 
 #ifdef X11
 
-    if (init_xtra(DnD_callback) == -1) {
+    if (init_x11focus() == -1) {
         queue_init_message("X failed to initialize");
     }
 

@@ -35,7 +35,7 @@
 #include "misc_tools.h"
 #include "notify.h"
 #include "settings.h"
-#include "xtra.h"
+#include "x11focus.h"
 
 #if defined(AUDIO) || defined(SOUND_NOTIFY)
 #ifdef __APPLE__

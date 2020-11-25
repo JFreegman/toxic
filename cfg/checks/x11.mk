@@ -1,7 +1,7 @@
 # Variables for X11 support
 X11_LIBS = x11
 X11_CFLAGS = -DX11
-X11_OBJ = xtra.o
+X11_OBJ = x11focus.o
 
 # Check if we can build X11 support
 CHECK_X11_LIBS = $(shell $(PKG_CONFIG) --exists $(X11_LIBS) || echo -n "error")
