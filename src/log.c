@@ -358,19 +358,8 @@ int rename_logfile(const char *src, const char *dest, const char *selfkey, const
     }
 
     if (file_exists(newpath)) {
-        char new_backup[MAX_STR_SIZE + 4];
-        snprintf(new_backup, sizeof(new_backup), "%s.old", newpath);
-
-        if (file_exists(new_backup)) {
-            goto on_error;
-        }
-
-        if (rename(newpath, new_backup) != 0) {
-            goto on_error;
-        }
-    }
-
-    if (rename(oldpath, newpath) != 0) {
+        remove(oldpath);
+    } else if (rename(oldpath, newpath) != 0) {
         goto on_error;
     }
 
