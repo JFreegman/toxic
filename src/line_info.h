@@ -58,7 +58,6 @@ struct line_info {
     uint32_t id;
     uint16_t len;        /* combined length of entire line */
     uint16_t msg_len;    /* length of the message */
-    uint8_t newlines;
     uint16_t format_lines;  /* number of lines the combined string takes up (dynamically set) */
 
     struct line_info *prev;

@@ -71,7 +71,7 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
     do {
         curlines += line->format_lines;
         line = line->prev;
-    } while (line->prev && curlines + line->format_lines < max_y);
+    } while (line->prev && curlines + line->format_lines <= max_y);
 
     hst->line_start = line;
 }
@@ -165,6 +165,36 @@ static int rspace_index(const char *s, int limit)
     return -1;
 }
 
+/* Returns the first index in `s` containing a newline byte found before `limit`.
+ * Returns -1 if no newline  is found.
+ */
+static int newline_index(const char *s, int limit)
+{
+    char ch;
+
+    for (int i = 0; i < limit && (ch = s[i]); ++i) {
+        if (ch == '\n') {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/* Returns the number of newline bytes in `s` */
+static unsigned int newline_count(const char *s)
+{
+    char ch;
+    unsigned int count = 0;
+
+    for (size_t i = 0; (ch = s[i]); ++i) {
+        if (ch == '\n') {
+            ++count;
+        }
+    }
+
+    return count;
+}
 
 /* Prints `line` message to window, wrapping at the last word that fits on the current line.
  * This function updates the `format_lines` field of `line` according to current window dimensions.
@@ -176,49 +206,61 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
 {
     const char *msg = line->msg;
     uint16_t length = line->msg_len;
-    uint16_t lines = line->newlines;
+    uint16_t lines = 0;
     const int x_start = line->len - line->msg_len - 1;  // manually keep track of x position because ncurses sucks
+    int x_limit = max_x - x_start;
+
+    if (x_limit <= 0) {
+        fprintf(stderr, "Warning: x_limit <= 0 in print_wrap(): %d\n", x_limit);
+        return;
+    }
 
     while (msg) {
-        ++lines;
-
-        int x_limit = max_x - x_start;
-
-        if (length < x_limit || x_limit <= 0) {
-            if (win) {
-                wprintw(win, "%s", msg);
+        if (length < x_limit) {
+            if (print_n_chars(win, msg, length)) {
+                lines += newline_count(msg);
             }
 
+            ++lines;
             break;
+        }
+
+        int newline_idx = newline_index(msg, x_limit - 1);
+
+        if (newline_idx >= 0) {
+            print_n_chars(win, msg, newline_idx + 1);
+            msg += newline_idx + 1;
+            length -= (newline_idx + 1);
+            x_limit = max_x; // if we find a newline we stop adding column padding for rest of message
+            ++lines;
+            continue;
         }
 
         int space_idx = rspace_index(msg, x_limit - 1);
 
         if (space_idx >= 1) {
-            bool newline = print_n_chars(win, msg, space_idx);
-
-            msg += space_idx;
-            length -= space_idx;
-            x_limit -= space_idx;
+            print_n_chars(win, msg, space_idx);
+            msg += space_idx + 1;
+            length -= (space_idx + 1);
 
             // replace last space on current line with newline if we intend to split it
-            if (length >= x_limit && !newline) {
-                --length;
-                ++msg;
-
-                if (win) {
-                    waddch(win, '\n');
-
-                    for (size_t i = 0; i < x_start; ++i) {
-                        waddch(win, ' ');    // Add padding to the start of the next line
-                    }
-                }
+            if (win && length >= x_limit - space_idx) {
+                waddch(win, '\n');
             }
         } else {
             print_n_chars(win, msg, x_limit);
             msg += x_limit;
             length -= x_limit;
         }
+
+        // Add padding to the start of the next line
+        if (win && x_limit < max_x) {
+            for (size_t i = 0; i < x_start; ++i) {
+                waddch(win, ' ');
+            }
+        }
+
+        ++lines;
     }
 
     line->format_lines = lines;
@@ -259,7 +301,8 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
         exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
     }
 
-    char frmt_msg[MAX_LINE_INFO_MSG_SIZE] = {0};
+    char frmt_msg[MAX_LINE_INFO_MSG_SIZE];
+    frmt_msg[0] = 0;
 
     va_list args;
     va_start(args, msg);
@@ -314,12 +357,6 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
         snprintf(new_line->msg, sizeof(new_line->msg), "%s", frmt_msg);
         msg_len = strlen(new_line->msg);
         len += msg_len;
-
-        for (size_t i = 0; frmt_msg[i]; ++i) {
-            if (frmt_msg[i] == '\n') {
-                ++new_line->newlines;
-            }
-        }
     }
 
     if (timestr) {
@@ -523,6 +560,7 @@ void line_info_print(ToxWindow *self)
                     if (line->noread_flag == false) {
                         line->noread_flag = true;
                         line->len += 2;
+                        line->msg_len += 2;
                     }
                 }
 
