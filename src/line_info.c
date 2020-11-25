@@ -242,11 +242,7 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
             print_n_chars(win, msg, space_idx);
             msg += space_idx + 1;
             length -= (space_idx + 1);
-
-            // replace last space on current line with newline if we intend to split it
-            if (win && length >= x_limit - space_idx) {
-                waddch(win, '\n');
-            }
+            waddch(win, '\n');
         } else {
             print_n_chars(win, msg, x_limit);
             msg += x_limit;
@@ -261,6 +257,22 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
         }
 
         ++lines;
+    }
+
+    if (win && line->noread_flag) {
+        int x;
+        int y;
+        UNUSED_VAR(y);
+
+        getyx(win, y, x);
+
+        if (x >= max_x - 1 || x == x_start) {
+            ++lines;
+        }
+
+        wattron(win, COLOR_PAIR(RED));
+        wprintw(win, " x");
+        wattroff(win, COLOR_PAIR(RED));
     }
 
     line->format_lines = lines;
@@ -522,14 +534,9 @@ void line_info_print(ToxWindow *self)
                     wattroff(win, COLOR_PAIR(RED));
                 }
 
-                if (type == OUT_MSG && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
-                    wattron(win, COLOR_PAIR(RED));
-                    wprintw(win, " x");
-                    wattroff(win, COLOR_PAIR(RED));
-
-                    if (line->noread_flag == false) {
+                if (type == OUT_MSG && !line->read_flag) {
+                    if (timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
                         line->noread_flag = true;
-                        line->len += 2;
                     }
                 }
 
@@ -552,15 +559,9 @@ void line_info_print(ToxWindow *self)
                 print_wrap(win, line, max_x);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
-                if (type == OUT_ACTION && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
-                    wattron(win, COLOR_PAIR(RED));
-                    wprintw(win, " x");
-                    wattroff(win, COLOR_PAIR(RED));
-
-                    if (line->noread_flag == false) {
+                if (type == OUT_ACTION && !line->read_flag) {
+                    if (timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
                         line->noread_flag = true;
-                        line->len += 2;
-                        line->msg_len += 2;
                     }
                 }
 

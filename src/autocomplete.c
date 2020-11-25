@@ -109,7 +109,7 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
     }
 
     const char *endchrs = " ";
-    char ubuf[MAX_STR_SIZE] = {0};
+    char ubuf[MAX_STR_SIZE];
 
     /* work with multibyte string copy of buf for simplicity */
     if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1) {
@@ -118,8 +118,8 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
 
     /* isolate substring from space behind pos to pos */
     char tmp[MAX_STR_SIZE];
-    snprintf(tmp, sizeof(tmp), "%s", ubuf);
-    tmp[ctx->pos] = '\0';
+    memcpy(tmp, ubuf, ctx->pos);
+    tmp[ctx->pos] = 0;
 
     const char *s = dir_search ? strchr(tmp, ' ') : strrchr(tmp, ' ');
     char *sub = calloc(1, strlen(ubuf) + 1);

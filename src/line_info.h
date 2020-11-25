@@ -54,7 +54,8 @@ struct line_info {
     uint8_t type;
     uint8_t bold;
     uint8_t colour;
-    uint8_t noread_flag;   /* true if a line should be flagged as unread */
+    bool    noread_flag;   /* true if a line should be flagged as unread */
+    bool    read_flag;     /* true if a message has been flagged as read */
     uint32_t id;
     uint16_t len;        /* combined length of entire line */
     uint16_t msg_len;    /* length of the message */
