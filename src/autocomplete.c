@@ -147,7 +147,7 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
         }
     }
 
-    if (!sub[0]) {
+    if (!sub[0] && !(dir_search && n_items == 1)) {
         free(sub);
         return 0;
     }
