@@ -88,7 +88,6 @@ static void cqueue_mark_read(ToxWindow *self, struct cqueue_msg *msg)
 
         if (line->noread_flag == true) {
             line->len -= 2;
-            line->msg_len -= 2;
             line->noread_flag = false;
         }
 
