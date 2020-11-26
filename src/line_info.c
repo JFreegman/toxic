@@ -242,7 +242,10 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
             print_n_chars(win, msg, space_idx);
             msg += space_idx + 1;
             length -= (space_idx + 1);
-            waddch(win, '\n');
+
+            if (win) {
+                waddch(win, '\n');
+            }
         } else {
             print_n_chars(win, msg, x_limit);
             msg += x_limit;

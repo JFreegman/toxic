@@ -358,7 +358,9 @@ int rename_logfile(const char *src, const char *dest, const char *selfkey, const
     }
 
     if (file_exists(newpath)) {
-        remove(oldpath);
+        if (remove(oldpath) != 0) {
+            fprintf(stderr, "Warning: remove() failed to remove log path `%s`\n", oldpath);
+        }
     } else if (rename(oldpath, newpath) != 0) {
         goto on_error;
     }
