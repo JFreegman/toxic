@@ -5,8 +5,7 @@ CFG_DIR = $(BASE_DIR)/cfg
 
 LIBS = toxcore ncursesw libconfig libcurl
 
-CFLAGS ?= -g
-CFLAGS += -std=c99 -pthread -Wall -Wpedantic -Wunused -fstack-protector-all -Wvla -Wmissing-field-initializers -Wno-missing-braces
+CFLAGS ?= -std=c99 -pthread -Wall -Wpedantic -Wunused -fstack-protector-all -Wvla -Wno-missing-braces
 CFLAGS += '-DTOXICVER="$(VERSION)"' -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED -D_FILE_OFFSET_BITS=64
 CFLAGS += '-DPACKAGE_DATADIR="$(abspath $(DATADIR))"'
 CFLAGS += ${USER_CFLAGS}
@@ -17,6 +16,22 @@ OBJ = autocomplete.o avatars.o bootstrap.o chat.o chat_commands.o configdir.o cu
 OBJ += file_transfers.o friendlist.o global_commands.o conference_commands.o conference.o help.o input.o
 OBJ += line_info.o log.o message_queue.o misc_tools.o name_lookup.o notify.o prompt.o qr_code.o settings.o
 OBJ += term_mplex.o toxic.o toxic_strings.o windows.o
+
+# Check if debug build is enabled
+RELEASE := $(shell if [ -z "$(RELEASE_ENABLED)" ] || [ "$(RELEASE_ENABLED)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
+ifneq ($(RELEASE), enabled)
+	CFLAGS += -O0 -g -DDEBUG
+	LDFLAGS += -O0
+else
+	CFLAGS += -O2 -flto
+	LDFLAGS += -O2 -flto
+endif
+
+# Check if LLVM Address Sanitizer is enabled
+ASAN_ENABLED := $(shell if [ -z "$(ENABLE_ASAN)" ] || [ "$(ENABLE_ASAN)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
+ifneq ($(ASAN_ENABLED), disabled)
+	CFLAGS += -fsanitize=address -fno-omit-frame-pointer -mllvm -asan-use-private-alias=1 -Wno-unused-command-line-argument
+endif
 
 # Check on wich system we are running
 UNAME_S = $(shell uname -s)

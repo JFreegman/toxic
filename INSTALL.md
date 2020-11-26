@@ -59,6 +59,8 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
   * `DISABLE_QRPNG` → Disable support for exporting QR as PNG
   * `DISABLE_DESKTOP_NOTIFY=1` → Disable desktop notifications support
   * `ENABLE_PYTHON=1` → Build toxic with Python scripting support
+  * `ENABLE_RELEASE=1` → Build toxic without debug symbols and with full compiler optimizations
+  * `ENABLE_ASAN=1` → Build toxic with LLVM Address Sanitizer enabled
 
 * `DESTDIR=""` Specifies the base install directory for binaries and data files (e.g.: DESTDIR="/tmp/build/pkg")
 
