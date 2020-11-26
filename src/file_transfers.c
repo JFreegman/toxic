@@ -60,13 +60,15 @@ void print_progress_bar(ToxWindow *self, double bps, double pct_done, uint32_t l
         return;
     }
 
-    char pct_str[STR_BUF_SIZE] = {0};
+    char pct_str[STR_BUF_SIZE];
     snprintf(pct_str, sizeof(pct_str), "%.1f%%", pct_done);
 
-    char bps_str[STR_BUF_SIZE] = {0};
+    char bps_str[STR_BUF_SIZE];
     bytes_convert_str(bps_str, sizeof(bps_str), bps);
 
-    char prog_line[NUM_PROG_MARKS + 1] = {0};
+    char prog_line[NUM_PROG_MARKS + 1];
+    prog_line[0] = 0;
+
     int n = pct_done / (100 / NUM_PROG_MARKS);
     int i, j;
 

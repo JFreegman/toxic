@@ -683,6 +683,9 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 
     while (line) {
         if (line->id == id) {
+            size_t new_len = strlen(msg);
+            line->len = line->len - line->msg_len + new_len;
+            line->msg_len = new_len;
             snprintf(line->msg, sizeof(line->msg), "%s", msg);
             return;
         }
