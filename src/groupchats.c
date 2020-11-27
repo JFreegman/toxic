@@ -696,12 +696,12 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Tox *m, uint32_t gr
     line_info_add(self, timefrmt, nick, NULL, IN_PRVT_MSG, 0, MAGENTA, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
 
-    sound_notify(self, generic_message, NT_WNDALERT_0, NULL);
-
     if (self->active_box != -1) {
-        box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+        box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+                    self->active_box, "%s %s", nick, msg);
     } else {
-        box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+        box_notify(self,  generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+                   &self->active_box, self->name, "%s %s", nick, msg);
     }
 }
 
