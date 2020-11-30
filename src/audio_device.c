@@ -775,7 +775,7 @@ float get_input_volume(void)
 void print_al_devices(ToxWindow *self, DeviceType type)
 {
     for (int i = 0; i < audio_state->num_al_devices[type]; ++i) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG,
+        line_info_add(self, false, NULL, NULL, SYS_MSG,
                       audio_state->current_al_device_name[type]
                       && strcmp(audio_state->current_al_device_name[type], audio_state->al_device_names[type][i]) == 0 ? 1 : 0,
                       0, "%d: %s", i, audio_state->al_device_names[type][i]);

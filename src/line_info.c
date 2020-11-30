@@ -339,7 +339,7 @@ static void line_info_init_line(ToxWindow *self, struct line_info *line)
  * Returns the id of the new line.
  * Returns -1 on failure.
  */
-int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
+int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const char *name2, LINE_TYPE type,
                   uint8_t bold, uint8_t colour, const char *msg, ...)
 {
     if (!self) {
@@ -416,8 +416,8 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
         len += msg_len;
     }
 
-    if (timestr) {
-        snprintf(new_line->timestr, sizeof(new_line->timestr), "%s", timestr);
+    if (show_timestamp) {
+        get_time_str(new_line->timestr, sizeof(new_line->timestr));
         len += strlen(new_line->timestr) + 1;
     }
 

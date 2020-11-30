@@ -274,7 +274,7 @@ void close_file_transfer(ToxWindow *self, Tox *m, struct FileTransfer *ft, int C
             box_notify(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);
         }
 
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
     }
 
     clear_file_transfer(ft);

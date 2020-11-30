@@ -32,7 +32,7 @@
 
 static void print_err(ToxWindow *self, const char *error_str)
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
 void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -56,7 +56,7 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
         }
 
         title[tlen] = '\0';
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Title is set to: %s", title);
 
         return;
     }
@@ -64,14 +64,14 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
     size_t len = strlen(argv[1]);
 
     if (len >= sizeof(title)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title: max length exceeded.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title: max length exceeded.");
         return;
     }
 
     snprintf(title, sizeof(title), "%s", argv[1]);
 
     if (!tox_conference_set_title(m, self->num, (uint8_t *) title, len, &err)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title (error %d)", err);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title (error %d)", err);
         return;
     }
 
@@ -79,16 +79,13 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
 
     conference_set_title(self, self->num, title, len);
 
-    char timefrmt[TIME_STR_SIZE];
     char selfnick[TOX_MAX_NAME_LENGTH];
-
-    get_time_str(timefrmt, sizeof(timefrmt));
-
     tox_self_get_name(m, (uint8_t *) selfnick);
+
     size_t sn_len = tox_self_get_name_size(m);
     selfnick[sn_len] = '\0';
 
-    line_info_add(self, timefrmt, selfnick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
+    line_info_add(self, true, selfnick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
 
     char tmp_event[MAX_STR_SIZE + 20];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
@@ -142,14 +139,14 @@ void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
             print_err(self, "Multiple matching peers (use /mute [public key] to disambiguate):");
 
             for (uint32_t i = 0; i < n; ++i) {
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s: %s", entries[i]->pubkey_str, entries[i]->name);
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s: %s", entries[i]->pubkey_str, entries[i]->name);
             }
 
             return;
         }
 
         if (conference_mute_peer(m, self->num, entries[0]->peernum)) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Toggled audio mute status of %s", entries[0]->name);
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Toggled audio mute status of %s", entries[0]->name);
         } else {
             print_err(self, "Peer is not on the call");
         }
@@ -162,7 +159,7 @@ void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, cha
     UNUSED_VAR(m);
 
     if (argc == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Current VAD threshold: %.1f",
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Current VAD threshold: %.1f",
                       (double) conference_get_VAD_threshold(self->num));
         return;
     }
@@ -181,7 +178,7 @@ void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, cha
     }
 
     if (conference_set_VAD_threshold(self->num, value)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Set VAD threshold to %.1f", (double) value);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Set VAD threshold to %.1f", (double) value);
     } else {
         print_err(self, "Failed to set conference audio input sensitivity.");
     }

@@ -81,8 +81,8 @@ int bin_pubkey_to_string(const uint8_t *bin_pubkey, size_t bin_pubkey_size, char
 /* get the current unix time (not thread safe) */
 time_t get_unix_time(void);
 
-/* Puts the current time in buf in the format of [HH:mm:ss] (not thread safe) */
-void get_time_str(char *buf, int bufsize);
+/* Puts the current time in buf in the format of specified by the config */
+void get_time_str(char *buf, size_t bufsize);
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
 void get_elapsed_time_str(char *buf, int bufsize, time_t secs);

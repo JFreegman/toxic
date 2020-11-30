@@ -99,18 +99,16 @@ void api_send(const char *msg)
     }
 
     char *name = api_get_nick();
-    char  timefrmt[TIME_STR_SIZE];
 
     if (name == NULL) {
         return;
     }
 
     self_window = get_active_window();
-    get_time_str(timefrmt, sizeof(timefrmt));
 
     strncpy((char *) self_window->chatwin->line, msg, sizeof(self_window->chatwin->line));
     add_line_to_hist(self_window->chatwin);
-    int id = line_info_add(self_window, timefrmt, name, NULL, OUT_MSG, 0, 0, "%s", msg);
+    int id = line_info_add(self_window, true, name, NULL, OUT_MSG, 0, 0, "%s", msg);
     cqueue_add(self_window->chatwin->cqueue, msg, strlen(msg), OUT_MSG, id);
     free(name);
 }
@@ -156,7 +154,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             error_str = "Only one argument allowed.";
         }
 
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;
     }
 
@@ -165,7 +163,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     if (fp == NULL) {
         error_str = "Path does not exist.";
 
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, error_str);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;
     }
 

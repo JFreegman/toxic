@@ -96,11 +96,16 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
-/*Puts the current time in buf in the format of [HH:mm:ss] */
-void get_time_str(char *buf, int bufsize)
+/* Puts the current time in buf in the format of specified by the config */
+void get_time_str(char *buf, size_t bufsize)
 {
+    if (buf == NULL || bufsize == 0) {
+        return;
+    }
+
+    *buf = 0;
+
     if (user_settings->timestamps == TIMESTAMPS_OFF) {
-        buf[0] = '\0';
         return;
     }
 

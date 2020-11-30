@@ -90,7 +90,7 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
 
 static void print_err(ToxWindow *self, const char *error_str)
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
 ToxAV *init_audio(ToxWindow *self, Tox *tox)
@@ -113,13 +113,13 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
 
     if (!CallControl.av) {
         CallControl.audio_errors |= ae_StartingCoreAudio;
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init ToxAV");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init ToxAV");
 
         return NULL;
     }
 
     if (init_devices() == de_InternalError) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
         toxav_kill(CallControl.av);
 
         return CallControl.av = NULL;
@@ -200,7 +200,7 @@ static bool cancel_call(Call *call)
 static int start_transmission(ToxWindow *self, Call *call)
 {
     if (!self || !CallControl.av) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare audio transmission");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare audio transmission");
         return -1;
     }
 
@@ -209,17 +209,17 @@ static int start_transmission(ToxWindow *self, Call *call)
 
     if (error != de_None) {
         if (error == de_FailedStart) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to start audio input device");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to start audio input device");
         }
 
         if (error == de_InternalError) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening audio input device");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Internal error with opening audio input device");
         }
     }
 
     if (open_output_device(&call->out_idx,
                            CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels) != de_None) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open audio output device!");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to open audio output device!");
     }
 
     return 0;
@@ -342,7 +342,7 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
         case TOXAV_FRIEND_CALL_STATE_ERROR:
         case TOXAV_FRIEND_CALL_STATE_FINISHED:
             if (state == TOXAV_FRIEND_CALL_STATE_ERROR) {
-                line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
+                line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "ToxAV callstate error!");
             }
 
             if (call->status == cs_Pending) {
@@ -669,7 +669,7 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     }
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -708,7 +708,7 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     }
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -748,7 +748,7 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -816,7 +816,7 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     }
 
     if (argc == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
                       "Current audio encoding bitrate: %u", call->audio_bit_rate);
         return;
     }

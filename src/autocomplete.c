@@ -45,10 +45,10 @@ static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matc
     }
 
     for (size_t i = 0; i < n_matches; ++i) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", list[i]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", list[i]);
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
 /* puts match in match buffer. if more than one match, add first n chars that are identical.

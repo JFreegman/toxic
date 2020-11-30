@@ -164,17 +164,17 @@ static void init_conference_logging(ToxWindow *self, Tox *m, uint32_t conference
     tox_conference_get_id(m, conferencenum, (uint8_t *) conference_id);
 
     if (log_init(ctx->log, conferences[self->num].title, my_id, conference_id, LOG_TYPE_CHAT) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }
 
     if (load_chat_history(self, ctx->log) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 
     if (user_settings->autolog == AUTOLOG_ON) {
         if (log_enable(ctx->log) != 0) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
     }
 
@@ -380,10 +380,7 @@ static void conference_onConferenceMessage(ToxWindow *self, Tox *m, uint32_t con
         sound_notify(self, silent, NT_WNDALERT_1, NULL);
     }
 
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
-
-    line_info_add(self, timefrmt, nick, NULL, type == TOX_MESSAGE_TYPE_NORMAL ? IN_MSG : IN_ACTION, 0, nick_clr, "%s", msg);
+    line_info_add(self, true, nick, NULL, type == TOX_MESSAGE_TYPE_NORMAL ? IN_MSG : IN_ACTION, 0, nick_clr, "%s", msg);
     write_to_log(msg, nick, ctx->log, false);
 }
 
@@ -407,9 +404,6 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Tox *m, uint32_t
 
     conference_set_title(self, conferencenum, title, length);
 
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
-
     /* don't announce title when we join the room */
     if (!timed_out(conferences[conferencenum].start_time, CONFERENCE_EVENT_WAIT)) {
         return;
@@ -417,7 +411,7 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Tox *m, uint32_t
 
     char nick[TOX_MAX_NAME_LENGTH];
     get_conference_nick_truncate(m, nick, peernum, conferencenum);
-    line_info_add(self, timefrmt, nick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
+    line_info_add(self, true, nick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
@@ -673,8 +667,6 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
         return;
     }
 
-    char timefrmt[TIME_STR_SIZE];
-
     for (uint32_t i = 0; i < num_peers; ++i) {
         ConferencePeer *peer = &chat->peer_list[i];
 
@@ -719,8 +711,7 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
 
         if (new_peer && peer->name_length > 0 && timed_out(chat->start_time, CONFERENCE_EVENT_WAIT)) {
             const char *msg = "has joined the group";
-            get_time_str(timefrmt, sizeof(timefrmt));
-            line_info_add(self, timefrmt, peer->name, NULL, CONNECTION, 0, GREEN, msg);
+            line_info_add(self, true, peer->name, NULL, CONNECTION, 0, GREEN, msg);
             write_to_log(msg, peer->name, ctx->log, true);
         }
 
@@ -737,9 +728,7 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
         if (old_peer->active) {
             if (!find_peer_by_pubkey(chat->peer_list, chat->num_peers, old_peer->pubkey, NULL)) {
                 const char *msg = "has left the group";
-                get_time_str(timefrmt, sizeof(timefrmt));
-
-                line_info_add(self, timefrmt, old_peer->name, NULL, DISCONNECTION, 0, RED, msg);
+                line_info_add(self, true, old_peer->name, NULL, DISCONNECTION, 0, RED, msg);
                 write_to_log(msg, old_peer->name, ctx->log, true);
             }
 
@@ -796,19 +785,16 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint3
     if (peer != NULL) {
         ChatContext *ctx = self->chatwin;
 
-        char timefrmt[TIME_STR_SIZE];
-        get_time_str(timefrmt, sizeof(timefrmt));
-
         if (peer->name_length > 0) {
             char log_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
-            line_info_add(self, timefrmt, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
+            line_info_add(self, true, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
 
             snprintf(log_event, sizeof(log_event), "is now known as %s", (const char *) name);
             write_to_log(log_event, peer->name, ctx->log, true);
 
         } else {  // this is kind of a hack; peers always join a group with no name set and then set it after
             const char *msg = "has joined the group";
-            line_info_add(self, timefrmt, name, NULL, CONNECTION, 0, GREEN, msg);
+            line_info_add(self, true, name, NULL, CONNECTION, 0, GREEN, msg);
             write_to_log(msg, name, ctx->log, true);
         }
     }
@@ -826,7 +812,7 @@ static void send_conference_action(ToxWindow *self, ChatContext *ctx, Tox *m, ch
     Tox_Err_Conference_Send_Message err;
 
     if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_ACTION, (uint8_t *) action, strlen(action), &err)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send action (error %d)", err);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send action (error %d)", err);
     }
 }
 
@@ -992,10 +978,10 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                 Tox_Err_Conference_Send_Message err;
 
                 if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) line, strlen(line), &err)) {
-                    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (error %d)", err);
+                    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (error %d)", err);
                 }
             } else {
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             }
         }
 

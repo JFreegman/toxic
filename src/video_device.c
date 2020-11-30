@@ -852,7 +852,7 @@ void print_video_devices(ToxWindow *self, VideoDeviceType type)
     int i;
 
     for (i = 0; i < size[type]; ++i) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
     }
 
     return;

@@ -41,7 +41,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     UNUSED_VAR(window);
 
     if (argc < 2) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Requires type in|out and the file ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Requires type in|out and the file ID.");
         return;
     }
 
@@ -50,7 +50,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     long int idx = strtol(argv[2], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[2], "0")) || idx >= MAX_FILES || idx < 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
@@ -62,17 +62,17 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     } else if (strcasecmp(inoutstr, "out") == 0) {
         ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_SEND);
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
         return;
     }
 
     if (!ft) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
     if (ft->state == FILE_TRANSFER_INACTIVE) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
@@ -85,25 +85,25 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
     UNUSED_VAR(window);
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference number required.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference number required.");
         return;
     }
 
     long int conferencenum = strtol(argv[1], NULL, 10);
 
     if ((conferencenum == 0 && strcmp(argv[1], "0")) || conferencenum < 0 || conferencenum == LONG_MAX) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
         return;
     }
 
     Tox_Err_Conference_Invite err;
 
     if (!tox_conference_invite(m, self->num, conferencenum, &err)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to conference (error %d)", err);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to conference (error %d)", err);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.", conferencenum);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.", conferencenum);
 }
 
 void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -113,7 +113,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
     UNUSED_VAR(argv);
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 
@@ -122,7 +122,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
     uint8_t type = Friends.list[self->num].conference_invite.type;
 
     if (!Friends.list[self->num].conference_invite.pending) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
         return;
     }
 
@@ -133,7 +133,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         conferencenum = tox_conference_join(m, self->num, (const uint8_t *) conferencekey, length, &err);
 
         if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
             return;
         }
     } else if (type == TOX_CONFERENCE_TYPE_AV) {
@@ -142,21 +142,21 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
                                                 audio_conference_callback, NULL);
 
         if (conferencenum == (uint32_t) -1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio conference instance failed to initialize");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio conference instance failed to initialize");
             return;
         }
 
 #else
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio support disabled by compile-time option.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio support disabled by compile-time option.");
         return;
 #endif
     } else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
         return;
     }
 
     if (init_conference_win(m, conferencenum, type, NULL, 0) == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
         tox_conference_delete(m, conferencenum, NULL);
         return;
     }
@@ -165,7 +165,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
 
     if (type == TOX_CONFERENCE_TYPE_AV) {
         if (!init_conference_audio_input(m, conferencenum)) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
         }
     }
 
@@ -177,26 +177,26 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     UNUSED_VAR(window);
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File ID required.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File ID required.");
         return;
     }
 
     long int idx = strtol(argv[1], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[1], "0")) || idx < 0 || idx >= MAX_FILES) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
     struct FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
 
     if (!ft) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
     if (ft->state != FILE_TRANSFER_PENDING) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
         return;
     }
 
@@ -213,12 +213,12 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         goto on_recv_error;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx, ft->file_path);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx, ft->file_path);
 
     /* prep progress bar line */
     char progline[MAX_STR_SIZE];
     init_progress_bar(progline);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
 
     ft->line_id = self->chatwin->hst->line_end->id + 2;
     ft->state = FILE_TRANSFER_STARTED;
@@ -229,23 +229,23 @@ on_recv_error:
 
     switch (err) {
         case TOX_ERR_FILE_CONTROL_FRIEND_NOT_FOUND:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
             return;
 
         case TOX_ERR_FILE_CONTROL_FRIEND_NOT_CONNECTED:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend is not online.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend is not online.");
             return;
 
         case TOX_ERR_FILE_CONTROL_NOT_FOUND:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Invalid filenumber.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Invalid filenumber.");
             return;
 
         case TOX_ERR_FILE_CONTROL_SENDQ:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Connection error.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Connection error.");
             return;
 
         default:
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed (error %d)\n", err);
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed (error %d)\n", err);
             return;
     }
 }
@@ -257,7 +257,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     const char *errmsg = NULL;
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File path required.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File path required.");
         return;
     }
 
@@ -266,21 +266,21 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     int path_len = strlen(path);
 
     if (path_len >= MAX_STR_SIZE) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");
         return;
     }
 
     FILE *file_to_send = fopen(path, "r");
 
     if (file_to_send == NULL) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "File not found.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File not found.");
         return;
     }
 
     off_t filesize = file_size(path);
 
     if (filesize == 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
         fclose(file_to_send);
         return;
     }
@@ -310,7 +310,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     char sizestr[32];
     bytes_convert_str(sizestr, sizeof(sizestr), filesize);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s' (%s)", filenum, file_name, sizestr);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s' (%s)", filenum, file_name, sizestr);
 
     return;
 
@@ -338,7 +338,7 @@ on_send_error:
             break;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
     tox_file_control(m, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
     fclose(file_to_send);
 }

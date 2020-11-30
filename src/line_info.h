@@ -31,7 +31,7 @@
 #define MAX_LINE_INFO_QUEUE 1024
 #define MAX_LINE_INFO_MSG_SIZE (MAX_STR_SIZE + TOXIC_MAX_NAME_LENGTH + 32) /* needs extra room for log loading */
 
-typedef enum {
+typedef enum LINE_TYPE {
     SYS_MSG,
     IN_MSG,
     OUT_MSG,
@@ -81,7 +81,7 @@ struct history {
  * Returns the id of the new line.
  * Returns -1 on failure.
  */
-int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const char *name2, uint8_t type,
+int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const char *name2, LINE_TYPE type,
                   uint8_t bold, uint8_t colour, const char *msg, ...);
 
 /* Prints a section of history starting at line_start */

@@ -52,7 +52,7 @@ void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rat
 
 static void print_err(ToxWindow *self, const char *error_str)
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
 ToxAV *init_video(ToxWindow *self, Tox *tox)
@@ -66,13 +66,13 @@ ToxAV *init_video(ToxWindow *self, Tox *tox)
     CallControl.video_frame_duration = 10;
 
     if (!CallControl.av) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
 
         return NULL;
     }
 
     if (init_video_devices(CallControl.av) == vde_InternalError) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
 
         return NULL;
     }
@@ -110,17 +110,17 @@ void read_video_device_callback(int16_t width, int16_t height, const uint8_t *y,
 
     /* Drop frame if video sending is disabled */
     if (this_call->video_bit_rate == 0 || this_call->status != cs_Active || this_call->vin_idx == -1) {
-        line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video frame dropped.");
+        line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Video frame dropped.");
         return;
     }
 
     if (toxav_video_send_frame(CallControl.av, friend_number, width, height, y, u, v, &error) == false) {
-        line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to send video frame");
+        line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to send video frame");
 
         if (error == TOXAV_ERR_SEND_FRAME_NULL) {
-            line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to capture video frame");
+            line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to capture video frame");
         } else if (error == TOXAV_ERR_SEND_FRAME_INVALID) {
-            line_info_add(CallControl.prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video frame");
+            line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video frame");
         }
     }
 }
@@ -138,22 +138,22 @@ void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_
 int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
 {
     if (!self || !av) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video transmission");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video transmission");
         return -1;
     }
 
     if (open_primary_video_device(vdt_input, &call->vin_idx, &call->video_width, &call->video_height) != vde_None) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input video device!");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input video device!");
         return -1;
     }
 
     if (register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
         return -1;
     }
 
     if (!toxav_video_set_bit_rate(CallControl.av, self->num, call->video_bit_rate, NULL)) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
         return -1;
     }
 
@@ -347,11 +347,11 @@ void cmd_res(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     if (argc == 0) {
         if (call->status == cs_Active && call->vin_idx != -1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
                           "Resolution of current call: %u x %u",
                           call->video_width, call->video_height);
         } else {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
                           "Initial resolution for video calls: %u x %u",
                           CallControl.default_video_width, CallControl.default_video_height);
         }
@@ -411,7 +411,7 @@ void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, c
     }
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -447,7 +447,7 @@ void cmd_change_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, 
     }
 
     else {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 

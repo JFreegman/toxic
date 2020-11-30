@@ -144,7 +144,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     tox_self_set_status_message(m, (const uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK) {
-        line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
+        line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
     }
 }
 
@@ -284,9 +284,9 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             char line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             } else {
-                line_info_add(self, NULL, NULL, NULL, PROMPT, 0, 0, "%s", line);
+                line_info_add(self, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
                 execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
             }
         }
@@ -466,8 +466,6 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
     }
 
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
     const char *msg;
 
     if (user_settings->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
@@ -476,7 +474,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
 
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
-        line_info_add(self, timefrmt, nick, NULL, CONNECTION, 0, GREEN, msg);
+        line_info_add(self, true, nick, NULL, CONNECTION, 0, GREEN, msg);
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1) {
@@ -488,7 +486,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
         }
     } else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
-        line_info_add(self, timefrmt, nick, NULL, DISCONNECTION, 0, RED, msg);
+        line_info_add(self, true, nick, NULL, DISCONNECTION, 0, RED, msg);
         write_to_log(msg, nick, ctx->log, true);
 
         if (self->active_box != -1) {
@@ -508,21 +506,18 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
 
     ChatContext *ctx = self->chatwin;
 
-    char timefrmt[TIME_STR_SIZE];
-    get_time_str(timefrmt, sizeof(timefrmt));
-
-    line_info_add(self, timefrmt, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
+    line_info_add(self, true, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
     write_to_log("Friend request with the message '%s'", "", ctx->log, true);
 
     int n = add_friend_request(key, data);
 
     if (n == -1) {
         const char *errmsg = "Friend request queue is full. Discarding request.";
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
     sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
@@ -572,18 +567,18 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
 
 static void print_welcome_msg(ToxWindow *self)
 {
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "    _____ _____  _____ ____ ");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "   |_   _/ _ \\ \\/ /_ _/ ___|");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "    _____ _____  _____ ____ ");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "   |_   _/ _ \\ \\/ /_ _/ ___|");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
 
     const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messaging client.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
     msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 1, CYAN, msg);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
 static void prompt_init_log(ToxWindow *self, Tox *m, const char *self_name)
@@ -594,13 +589,13 @@ static void prompt_init_log(ToxWindow *self, Tox *m, const char *self_name)
     tox_self_get_address(m, (uint8_t *) myid);
 
     if (log_init(ctx->log, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }
 
     if (user_settings->autolog == AUTOLOG_ON) {
         if (log_enable(ctx->log) == -1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Warning: Failed to enable log.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Failed to enable log.");
         }
     }
 }

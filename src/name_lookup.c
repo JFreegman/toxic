@@ -80,7 +80,7 @@ static int lookup_error(ToxWindow *self, const char *errmsg, ...)
     va_end(args);
 
     pthread_mutex_lock(&Winthread.lock);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "name lookup failed: %s", frmt_msg);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "name lookup failed: %s", frmt_msg);
     pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
@@ -365,12 +365,12 @@ on_exit:
 void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message)
 {
     if (t_data.disabled) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "name lookups are disabled.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "name lookups are disabled.");
         return;
     }
 
     if (t_data.busy) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Please wait for previous name lookup to finish.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Please wait for previous name lookup to finish.");
         return;
     }
 
@@ -382,20 +382,20 @@ void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
     t_data.busy = true;
 
     if (pthread_attr_init(&lookup_thread.attr) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to init");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to init");
         clear_thread_data();
         return;
     }
 
     if (pthread_attr_setdetachstate(&lookup_thread.attr, PTHREAD_CREATE_DETACHED) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to set");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to set");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
         return;
     }
 
     if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, NULL) != 0) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
         return;

@@ -1512,7 +1512,7 @@ int main(int argc, char **argv)
             pthread_mutex_lock(&Winthread.lock);
 
             if (store_data(m, DATA_FILE) != 0) {
-                line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
+                line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
             }
 
             pthread_mutex_unlock(&Winthread.lock);
