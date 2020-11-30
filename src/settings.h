@@ -125,7 +125,7 @@ enum settings_values {
 #define LINE_NORMAL  "-"
 #define TIMESTAMP_DEFAULT      "%H:%M"
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
-#define MPLEX_AWAY_NOTE "Detached from screen"
+#define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
 
 int settings_load(struct user_settings *s, const char *patharg);
 

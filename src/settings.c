@@ -116,7 +116,7 @@ static void ui_defaults(struct user_settings *settings)
     settings->bell_on_invite = 0;
     settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
-    settings->notification_timeout = 3000;
+    settings->notification_timeout = 6000;
     settings->show_typing_self = SHOW_TYPING_ON;
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
@@ -130,10 +130,7 @@ static void ui_defaults(struct user_settings *settings)
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
 
     settings->mplex_away = MPLEX_ON;
-    snprintf(settings->mplex_away_note,
-             sizeof(settings->mplex_away_note),
-             "%s",
-             MPLEX_AWAY_NOTE);
+    snprintf(settings->mplex_away_note, sizeof(settings->mplex_away_note), "%s", MPLEX_AWAY_NOTE);
 }
 
 static const struct keys_strings {
@@ -339,7 +336,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         if (config_setting_lookup_int(setting, ui_strings.time_format, &time)) {
             if (time == 12) {
-                snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M:%S %p");
+                snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M %p");
                 snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M:%S %p]");
             }
         }
