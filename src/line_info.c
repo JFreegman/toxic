@@ -423,11 +423,15 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
         case IN_ACTION:
 
         /* fallthrough */
+        case OUT_ACTION_READ:
+
+        /* fallthrough */
         case OUT_ACTION:
             len += strlen(user_settings->line_normal) + 2; // two spaces
             break;
 
         case IN_MSG:
+        case OUT_MSG_READ:
 
         /* fallthrough */
         case OUT_MSG:

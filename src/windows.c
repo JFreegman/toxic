@@ -712,7 +712,7 @@ void on_window_resize(void)
             wclear(w->help->win);
         }
 
-        if (w->type == WINDOW_TYPE_CONFERENCE) {
+        if (w->type == WINDOW_TYPE_CONFERENCE || w->type == WINDOW_TYPE_GROUPCHAT) {
             delwin(w->chatwin->sidebar);
             w->chatwin->sidebar = NULL;
         } else {
@@ -740,7 +740,7 @@ void on_window_resize(void)
         } else {
             w->chatwin->history =  subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
 
-            if (w->type != WINDOW_TYPE_CONFERENCE) {
+            if (!(w->type == WINDOW_TYPE_CONFERENCE || w->type == WINDOW_TYPE_GROUPCHAT)) {
                 w->stb->topline = subwin(w->window, TOP_BAR_HEIGHT, x2, 0, 0);
             }
         }
