@@ -39,9 +39,11 @@
 #define MAX_WINDOWS_NUM 20
 #define MAX_WINDOW_NAME_LENGTH 22
 #define CURS_Y_OFFSET 1    /* y-axis cursor offset for chat contexts */
-#define CHATBOX_HEIGHT 2
+#define CHATBOX_HEIGHT 1
+#define TOP_BAR_HEIGHT 1
+#define WINDOW_BAR_HEIGHT 1
 
-/* Curses foreground colours (background is black) */
+/* ncurses colour pairs as FOREGROUND_BACKGROUND. No background defaults to black. */
 typedef enum {
     WHITE,
     GREEN,
@@ -51,14 +53,23 @@ typedef enum {
     YELLOW,
     MAGENTA,
     BLACK,
+    BLUE_BLACK,
+    BLACK_WHITE,
+    WHITE_BLUE,
+    GREEN_BLUE,
+    CYAN_BLUE,
+    PURPLE_BLUE,
+    BLACK_BLUE,
+    RED_BLUE,
+    YELLOW_BLUE,
 } C_COLOURS;
 
 /* tab alert types: lower types take priority (this relies on the order of C_COLOURS) */
 typedef enum {
     WINDOW_ALERT_NONE = 0,
-    WINDOW_ALERT_0 = GREEN,
-    WINDOW_ALERT_1 = RED,
-    WINDOW_ALERT_2 = MAGENTA,
+    WINDOW_ALERT_0 = GREEN_BLUE,
+    WINDOW_ALERT_1 = CYAN_BLUE,
+    WINDOW_ALERT_2 = PURPLE_BLUE,
 } WINDOW_ALERTS;
 
 typedef enum {
@@ -167,6 +178,7 @@ struct ToxWindow {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     uint32_t num;    /* corresponds to friendnumber in chat windows */
     uint8_t index; /* This window's index in the windows array */
+    bool scroll_pause; /* true if this window is not scrolled to the bottom */
     unsigned int pending_messages;  /* # of new messages in this window since the last time it was focused */
     int x;
 
@@ -181,6 +193,7 @@ struct ToxWindow {
     Help *help;
 
     WINDOW *window;
+    WINDOW *window_bar;
 };
 
 /* statusbar info holder */
@@ -264,6 +277,7 @@ void on_window_resize(void);
 void force_refresh(WINDOW *w);
 ToxWindow *get_window_ptr(size_t i);
 ToxWindow *get_active_window(void);
+void draw_window_bar(ToxWindow *self);
 
 /* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */

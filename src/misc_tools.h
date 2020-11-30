@@ -108,7 +108,7 @@ int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n);
 /* Returns 1 if connection has timed out, 0 otherwise */
 int timed_out(time_t timestamp, time_t timeout);
 
-/* Sleeps the caller's thread for `usec` microseconds */
+/* Attempts to sleep the caller's thread for `usec` microseconds */
 void sleep_thread(long int usec);
 
 /* Colours the window tab according to type. Beeps if is_beep is true */

@@ -256,7 +256,7 @@ static void init_term(void)
     keypad(stdscr, 1);
     noecho();
     nonl();
-    timeout(100);
+    timeout(50);
 
     if (has_colors()) {
         short bg_color = COLOR_BLACK;
@@ -268,15 +268,23 @@ static void init_term(void)
             }
         }
 
-        init_pair(0, COLOR_WHITE, COLOR_BLACK);
-        init_pair(1, COLOR_GREEN, bg_color);
-        init_pair(2, COLOR_CYAN, bg_color);
-        init_pair(3, COLOR_RED, bg_color);
-        init_pair(4, COLOR_BLUE, bg_color);
-        init_pair(5, COLOR_YELLOW, bg_color);
-        init_pair(6, COLOR_MAGENTA, bg_color);
-        init_pair(7, COLOR_BLACK, COLOR_BLACK);
-        init_pair(8, COLOR_BLACK, COLOR_WHITE);
+        init_pair(WHITE, COLOR_WHITE, COLOR_BLACK);
+        init_pair(GREEN, COLOR_GREEN, bg_color);
+        init_pair(CYAN, COLOR_CYAN, bg_color);
+        init_pair(RED, COLOR_RED, bg_color);
+        init_pair(BLUE, COLOR_BLUE, bg_color);
+        init_pair(YELLOW, COLOR_YELLOW, bg_color);
+        init_pair(MAGENTA, COLOR_MAGENTA, bg_color);
+        init_pair(BLACK, COLOR_BLACK, COLOR_BLACK);
+        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
+        init_pair(BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);
+        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
+        init_pair(CYAN_BLUE, COLOR_CYAN, COLOR_BLUE);
+        init_pair(GREEN_BLUE, COLOR_GREEN, COLOR_BLUE);
+        init_pair(PURPLE_BLUE, COLOR_MAGENTA, COLOR_BLUE);
+        init_pair(BLACK_BLUE, COLOR_BLACK, COLOR_BLUE);
+        init_pair(YELLOW_BLUE, COLOR_YELLOW, COLOR_BLUE);
+        init_pair(RED_BLUE, COLOR_RED, COLOR_BLUE);
     }
 
     refresh();
@@ -1421,6 +1429,7 @@ int main(int argc, char **argv)
     prompt = init_windows(m);
     prompt_init_statusbar(prompt, m, !datafile_exists);
     load_conferences(m);
+    set_active_window_index(0);
 
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
@@ -1483,7 +1492,6 @@ int main(int argc, char **argv)
 
     pthread_mutex_lock(&Winthread.lock);
     print_init_messages(prompt);
-    set_active_window_index(0);
     pthread_mutex_unlock(&Winthread.lock);
 
     cleanup_init_messages();

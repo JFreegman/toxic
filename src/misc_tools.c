@@ -71,16 +71,19 @@ int timed_out(time_t timestamp, time_t timeout)
     return timestamp + timeout <= get_unix_time();
 }
 
-/* Sleeps the caller's thread for `usec` microseconds */
+/* Attempts to sleep the caller's thread for `usec` microseconds */
 void sleep_thread(long int usec)
 {
     struct timespec req;
+    struct timespec rem;
 
     req.tv_sec = 0;
     req.tv_nsec = usec * 1000L;
 
-    if (nanosleep(&req, NULL) == -1) {
-        fprintf(stderr, "nanosleep() returned -1\n");
+    if (nanosleep(&req, &rem) == -1) {
+        if (nanosleep(&rem, NULL) == -1) {
+            fprintf(stderr, "nanosleep() returned -1\n");
+        }
     }
 }
 

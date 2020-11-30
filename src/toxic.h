@@ -75,7 +75,7 @@
 #define T_KEY_C_DOWN     0x20D    /* ctrl-down arrow */
 #define T_KEY_TAB        0x09     /* TAB key */
 
-#define ONLINE_CHAR "*"
+#define ONLINE_CHAR  "o"
 #define OFFLINE_CHAR "o"
 
 typedef enum _FATAL_ERRS {

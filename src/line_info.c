@@ -63,10 +63,10 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
     getmaxyx(self->window, y2, x2);
     UNUSED_VAR(x2);
 
-    int top_offst = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? 2 : 0;
-    int max_y = y2 - CHATBOX_HEIGHT - top_offst;
+    int top_offst = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? TOP_BAR_HEIGHT : 0;
+    int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT - top_offst;
 
-    int curlines = 0;
+    uint16_t curlines = 0;
 
     do {
         curlines += line->format_lines;
@@ -74,6 +74,8 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
     } while (line->prev && curlines + line->format_lines <= max_y);
 
     hst->line_start = line;
+
+    self->scroll_pause = false;
 }
 
 void line_info_cleanup(struct history *hst)
@@ -131,20 +133,32 @@ static struct line_info *line_info_ret_queue(struct history *hst)
 
 /* Prints a maximum of `n` chars from `s` to `win`.
  *
- * Return true if the string contains a newline or tab byte.
+ * Return 1 if the string contains a newline byte.
+ * Return 0 if string does not contain a newline byte.
+ * Return -1 if printing was aborted.
  */
-static bool print_n_chars(WINDOW *win, const char *s, size_t n)
+static int print_n_chars(WINDOW *win, const char *s, size_t n, int max_y)
 {
     bool newline = false;
     char ch;
 
     for (size_t i = 0; i < n && (ch = s[i]); ++i) {
-        if (win) {
-            wprintw(win, "%c", ch);
-        }
-
         if (ch == '\n') {
             newline = true;
+
+            int x;
+            int y;
+            UNUSED_VAR(x);
+            getyx(win, y, x);
+
+            // make sure cursor will wrap correctly after newline to prevent display bugs
+            if (y + 1 >= max_y) {
+                return -1;
+            }
+        }
+
+        if (win) {
+            wprintw(win, "%c", ch);
         }
     }
 
@@ -201,24 +215,42 @@ static unsigned int newline_count(const char *s)
  *
  * If `win` is null nothing will be printed to the window. This is useful to set the
  * `format_lines` field on initialization.
+ *
+ * Return 0 on success.
+ * Return -1 if not all characters in line's message were printed to screen.
  */
-static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
+static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
 {
+    int x;
+    int y;
+    UNUSED_VAR(y);
+
     const char *msg = line->msg;
     uint16_t length = line->msg_len;
     uint16_t lines = 0;
     const int x_start = line->len - line->msg_len - 1;  // manually keep track of x position because ncurses sucks
     int x_limit = max_x - x_start;
 
-    if (x_limit <= 0) {
+    if (x_limit <= 1) {
         fprintf(stderr, "Warning: x_limit <= 0 in print_wrap(): %d\n", x_limit);
-        return;
+        return -1;
     }
 
     while (msg) {
+        getyx(win, y, x);
+
+        // next line would print past window limit so we abort; we don't want to update format_lines
+        if (x > x_start) {
+            return -1;
+        }
+
         if (length < x_limit) {
-            if (print_n_chars(win, msg, length)) {
+            int p_ret = print_n_chars(win, msg, length, max_y);
+
+            if (p_ret == 1) {
                 lines += newline_count(msg);
+            } else if (p_ret == -1) {
+                return -1;
             }
 
             ++lines;
@@ -228,8 +260,11 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
         int newline_idx = newline_index(msg, x_limit - 1);
 
         if (newline_idx >= 0) {
-            print_n_chars(win, msg, newline_idx + 1);
-            msg += newline_idx + 1;
+            if (print_n_chars(win, msg, newline_idx + 1, max_y) == -1) {
+                return -1;
+            }
+
+            msg += (newline_idx + 1);
             length -= (newline_idx + 1);
             x_limit = max_x; // if we find a newline we stop adding column padding for rest of message
             ++lines;
@@ -239,7 +274,10 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
         int space_idx = rspace_index(msg, x_limit - 1);
 
         if (space_idx >= 1) {
-            print_n_chars(win, msg, space_idx);
+            if (print_n_chars(win, msg, space_idx, max_y) == -1) {
+                return -1;
+            }
+
             msg += space_idx + 1;
             length -= (space_idx + 1);
 
@@ -247,7 +285,10 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
                 waddch(win, '\n');
             }
         } else {
-            print_n_chars(win, msg, x_limit);
+            if (print_n_chars(win, msg, x_limit, max_y) == -1) {
+                return -1;
+            }
+
             msg += x_limit;
             length -= x_limit;
         }
@@ -263,10 +304,6 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
     }
 
     if (win && line->noread_flag) {
-        int x;
-        int y;
-        UNUSED_VAR(y);
-
         getyx(win, y, x);
 
         if (x >= max_x - 1 || x == x_start) {
@@ -279,17 +316,22 @@ static void print_wrap(WINDOW *win, struct line_info *line, int max_x)
     }
 
     line->format_lines = lines;
+
+    return 0;
 }
 
-static void line_info_init_line(WINDOW *win, struct line_info *line)
+static void line_info_init_line(ToxWindow *self, struct line_info *line)
 {
-    int max_y;
-    int max_x;
-    UNUSED_VAR(max_y);
+    int y2;
+    int x2;
+    UNUSED_VAR(y2);
 
-    getmaxyx(win, max_y, max_x);
+    getmaxyx(self->window, y2, x2);
 
-    print_wrap(NULL, line, max_x);
+    const int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT;
+    const int max_x = self->show_peerlist ? x2 - 1 - SIDEBAR_WIDTH : x2;
+
+    print_wrap(NULL, line, max_x, max_y);
 }
 
 /* creates new line_info line and puts it in the queue.
@@ -358,7 +400,7 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
             break;
 
         case PROMPT:
-            ++len;
+            len += 2;
             break;
 
         default:
@@ -398,7 +440,7 @@ int line_info_add(ToxWindow *self, const char *timestr, const char *name1, const
     new_line->noread_flag = false;
     new_line->timestamp = get_unix_time();
 
-    line_info_init_line(self->chatwin->history, new_line);
+    line_info_init_line(self, new_line);
 
     hst->queue[hst->queue_size++] = new_line;
 
@@ -424,29 +466,8 @@ static void line_info_check_queue(ToxWindow *self)
     hst->line_end = line;
     hst->line_end->id = line->id;
 
-    int y;
-    int y2;
-    int x;
-    int x2;
-    getmaxyx(self->window, y2, x2);
-    getyx(self->chatwin->history, y, x);
-
-    UNUSED_VAR(x);
-
-    if (x2 <= SIDEBAR_WIDTH) {
-        return;
-    }
-
-    int lines = line->format_lines;
-    int max_y = y2 - CHATBOX_HEIGHT;
-
-    /* move line_start forward proportionate to the number of new lines */
-    if (y + lines > max_y) {
-        while (lines > 0 && hst->line_start->next) {
-            lines -= hst->line_start->next->format_lines;
-            hst->line_start = hst->line_start->next;
-            ++hst->start_id;
-        }
+    if (!self->scroll_pause) {
+        line_info_reset_start(self, hst);
     }
 }
 
@@ -482,16 +503,31 @@ void line_info_print(ToxWindow *self)
     if (self->type == WINDOW_TYPE_CONFERENCE) {
         wmove(win, 0, 0);
     } else {
-        wmove(win, 2, 0);
+        wmove(win, TOP_BAR_HEIGHT, 0);
     }
 
     struct line_info *line = hst->line_start->next;
 
+    if (!line) {
+        return;
+    }
+
+    const int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT;
     const int max_x = self->show_peerlist ? x2 - 1 - SIDEBAR_WIDTH : x2;
+    uint16_t numlines = line->format_lines;
+    int print_ret = 0;
 
-    int numlines = 0;
+    while (line && numlines++ <= max_y && print_ret == 0) {
+        int y;
+        int x;
+        UNUSED_VAR(y);
 
-    while (line && numlines++ <= y2) {
+        getyx(win, y, x);
+
+        if (x > 0) { // Prevents us from printing off the screen
+            break;
+        }
+
         uint8_t type = line->type;
 
         switch (type) {
@@ -529,7 +565,7 @@ void line_info_print(ToxWindow *self)
                     wattron(win, COLOR_PAIR(RED));
                 }
 
-                print_wrap(win, line, max_x);
+                print_ret = print_wrap(win, line, max_x, max_y);
 
                 if (line->msg[0] == '>') {
                     wattroff(win, COLOR_PAIR(GREEN));
@@ -559,7 +595,7 @@ void line_info_print(ToxWindow *self)
 
                 wattron(win, COLOR_PAIR(YELLOW));
                 wprintw(win, "%s %s ", user_settings->line_normal, line->name1);
-                print_wrap(win, line, max_x);
+                print_ret = print_wrap(win, line, max_x, max_y);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
                 if (type == OUT_ACTION && !line->read_flag) {
@@ -586,7 +622,7 @@ void line_info_print(ToxWindow *self)
                     wattron(win, COLOR_PAIR(line->colour));
                 }
 
-                print_wrap(win, line, max_x);
+                print_ret = print_wrap(win, line, max_x, max_y);
                 waddch(win, '\n');
 
                 if (line->bold) {
@@ -605,7 +641,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(GREEN));
 
                 if (line->msg[0]) {
-                    print_wrap(win, line, max_x);
+                    print_ret = print_wrap(win, line, max_x, max_y);
                 }
 
                 waddch(win, '\n');
@@ -623,7 +659,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_wrap(win, line, max_x);
+                print_ret = print_wrap(win, line, max_x, max_y);
                 waddch(win, '\n');
 
                 wattroff(win, COLOR_PAIR(line->colour));
@@ -642,7 +678,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_wrap(win, line, max_x);
+                print_ret = print_wrap(win, line, max_x, max_y);
                 waddch(win, '\n');
 
                 wattroff(win, COLOR_PAIR(line->colour));
@@ -660,7 +696,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_wrap(win, line, max_x);
+                print_ret = print_wrap(win, line, max_x, max_y);
 
                 wattron(win, A_BOLD);
                 wprintw(win, "%s\n", line->name2);
@@ -677,6 +713,38 @@ void line_info_print(ToxWindow *self)
     if (hst->queue_size > 0) {
         line_info_print(self);
     }
+}
+
+/*
+ * Return true if all lines starting from `line` can fit on the screen.
+ */
+static bool line_info_screen_fit(ToxWindow *self, struct line_info *line)
+{
+    if (!line) {
+        return true;
+    }
+
+    int x2;
+    int y2;
+    getmaxyx(self->chatwin->history, y2, x2);
+
+    UNUSED_VAR(x2);
+
+    const int top_offset = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? TOP_BAR_HEIGHT : 0;
+    const int max_y = y2 - top_offset;
+
+    uint16_t lines = line->format_lines;
+
+    while (line) {
+        if (lines > max_y) {
+            return false;
+        }
+
+        lines += line->format_lines;
+        line = line->next;
+    }
+
+    return true;
 }
 
 /* puts msg in specified line_info msg buffer */
@@ -697,49 +765,74 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
     }
 }
 
-static void line_info_scroll_up(struct history *hst)
+static void line_info_scroll_up(ToxWindow *self, struct history *hst)
 {
     if (hst->line_start->prev) {
         hst->line_start = hst->line_start->prev;
-    } else {
-        sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+        self->scroll_pause = true;
     }
 }
 
-static void line_info_scroll_down(struct history *hst)
+static void line_info_scroll_down(ToxWindow *self, struct history *hst)
 {
-    if (hst->line_start->next) {
-        hst->line_start = hst->line_start->next;
+    struct line_info *next = hst->line_start->next;
+
+    if (next && self->scroll_pause) {
+        if (line_info_screen_fit(self, next->next)) {
+            line_info_reset_start(self, hst);
+        } else {
+            hst->line_start = next;
+        }
     } else {
-        sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+        line_info_reset_start(self, hst);
     }
 }
 
 static void line_info_page_up(ToxWindow *self, struct history *hst)
 {
-    int x2, y2;
+    int x2;
+    int y2;
     getmaxyx(self->window, y2, x2);
 
     UNUSED_VAR(x2);
 
-    size_t jump_dist = y2 / 2;
+    const int top_offset = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? TOP_BAR_HEIGHT : 0;
+    const int max_y = y2 - top_offset;
+    size_t jump_dist = max_y / 2;
 
     for (size_t i = 0; i < jump_dist && hst->line_start->prev; ++i) {
         hst->line_start = hst->line_start->prev;
     }
+
+    self->scroll_pause = true;
 }
 
 static void line_info_page_down(ToxWindow *self, struct history *hst)
 {
-    int x2, y2;
-    getmaxyx(self->window, y2, x2);
+    if (!self->scroll_pause) {
+        return;
+    }
+
+    int x2;
+    int y2;
+    getmaxyx(self->chatwin->history, y2, x2);
 
     UNUSED_VAR(x2);
 
-    size_t jump_dist = y2 / 2;
+    const int top_offset = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? TOP_BAR_HEIGHT : 0;
+    const int max_y = y2 - top_offset;
+    size_t jump_dist = max_y / 2;
 
-    for (size_t i = 0; i < jump_dist && hst->line_start->next; ++i) {
-        hst->line_start = hst->line_start->next;
+    struct line_info *next = hst->line_start->next;
+
+    for (size_t i = 0; i < jump_dist && next; ++i) {
+        if (line_info_screen_fit(self, next->next)) {
+            line_info_reset_start(self, hst);
+            break;
+        }
+
+        hst->line_start = next;
+        next = hst->line_start->next;
     }
 }
 
@@ -753,9 +846,9 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
     } else if (key == user_settings->key_half_page_down) {
         line_info_page_down(self, hst);
     } else if (key == user_settings->key_scroll_line_up) {
-        line_info_scroll_up(hst);
+        line_info_scroll_up(self, hst);
     } else if (key == user_settings->key_scroll_line_down) {
-        line_info_scroll_down(hst);
+        line_info_scroll_down(self, hst);
     } else if (key == user_settings->key_page_bottom) {
         line_info_reset_start(self, hst);
     } else {

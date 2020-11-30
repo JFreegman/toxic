@@ -30,7 +30,7 @@ endif
 # Check if LLVM Address Sanitizer is enabled
 ASAN_ENABLED := $(shell if [ -z "$(ENABLE_ASAN)" ] || [ "$(ENABLE_ASAN)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
 ifneq ($(ASAN_ENABLED), disabled)
-	CFLAGS += -fsanitize=address -fno-omit-frame-pointer -mllvm -asan-use-private-alias=1 -Wno-unused-command-line-argument
+	CFLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 
 # Check on wich system we are running

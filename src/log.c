@@ -306,7 +306,7 @@ int load_chat_history(ToxWindow *self, struct chatlog *log)
         line = strtok_r(NULL, "\n", &tmp);
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, YELLOW, "---");
 
     free(buf);
 

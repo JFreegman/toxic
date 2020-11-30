@@ -5,7 +5,7 @@
 
 Toxic is a [Tox](https://tox.chat)-based instant messaging and video chat client.
 
-[![Toxic Screenshot](https://i.imgur.com/5S577z6.png "Toxic Audio Conference")](https://i.imgur.com/5S577z6.png)
+[![Toxic Screenshot](https://i.imgur.com/TwYA8L0.png "Toxic Home Screen")](https://i.imgur.com/TwYA8L0.png)
 
 ## Installation
 [See the install instructions](/INSTALL.md)

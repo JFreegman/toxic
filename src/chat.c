@@ -745,17 +745,17 @@ static void chat_onConferenceInvite(ToxWindow *self, Tox *m, int32_t friendnumbe
     Friends.list[friendnumber].conference_invite.length = length;
     Friends.list[friendnumber].conference_invite.type = type;
 
-    sound_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, NULL);
-
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friendnumber);
 
     const char *description = type == TOX_CONFERENCE_TYPE_AV ? "an audio conference" : "a conference";
 
     if (self->active_box != -1) {
-        box_silent_notify2(self, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box, "invites you to join %s", description);
+        box_notify2(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, self->active_box,
+                    "invites you to join %s", description);
     } else {
-        box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join %s", description);
+        box_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, &self->active_box, name,
+                   "invites you to join %s", description);
     }
 
     line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to %s.", name, description);
@@ -1181,7 +1181,7 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         wclear(ctx->linewin);
-        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        wmove(self->window, y2, 0);
         reset_buf(ctx);
     }
 
@@ -1194,7 +1194,8 @@ bool chat_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 static void chat_onDraw(ToxWindow *self, Tox *m)
 {
-    int x2, y2;
+    int x2;
+    int y2;
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
@@ -1209,15 +1210,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     wclear(ctx->linewin);
 
-    curs_set(1);
-
     if (ctx->len > 0) {
-        mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
+        mvwprintw(ctx->linewin, 0, 0, "%ls", &ctx->line[ctx->start]);
     }
+
+    curs_set(1);
 
     /* Draw status bar */
     StatusBar *statusbar = self->stb;
-    mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
     /* Draw name, status and note in statusbar */
@@ -1227,38 +1227,63 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
         switch (status) {
             case TOX_USER_STATUS_NONE:
-                colour = GREEN;
+                colour = GREEN_BLUE;
                 break;
 
             case TOX_USER_STATUS_AWAY:
-                colour = YELLOW;
+                colour = YELLOW_BLUE;
                 break;
 
             case TOX_USER_STATUS_BUSY:
-                colour = RED;
+                colour = RED_BLUE;
                 break;
         }
 
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, " [");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, " %s", ONLINE_CHAR);
+        wprintw(statusbar->topline, "%s", ONLINE_CHAR);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
-        if (Friends.list[self->num].is_typing) {
-            wattron(statusbar->topline, COLOR_PAIR(YELLOW));
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, "] ");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        pthread_mutex_lock(&Winthread.lock);
+        const bool is_typing = Friends.list[self->num].is_typing;
+        pthread_mutex_unlock(&Winthread.lock);
+
+        if (is_typing) {
+            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+        } else {
+            wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
         }
 
-        wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", statusbar->nick);
-        wattroff(statusbar->topline, A_BOLD);
+        wprintw(statusbar->topline, "%s", statusbar->nick);
 
-        if (Friends.list[self->num].is_typing) {
-            wattroff(statusbar->topline, COLOR_PAIR(YELLOW));
+        if (is_typing) {
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+        } else {
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(WHITE_BLUE));
         }
     } else {
-        wprintw(statusbar->topline, " %s", OFFLINE_CHAR);
-        wattron(statusbar->topline, A_BOLD);
-        wprintw(statusbar->topline, " %s ", statusbar->nick);
-        wattroff(statusbar->topline, A_BOLD);
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, " [");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wprintw(statusbar->topline, "%s", OFFLINE_CHAR);
+        wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, "] ");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wprintw(statusbar->topline, "%s", statusbar->nick);
+        wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
     }
 
     /* Reset statusbar->statusmsg on window resize */
@@ -1287,30 +1312,51 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     if (statusbar->statusmsg[0]) {
-        wprintw(statusbar->topline, ": %s ", statusbar->statusmsg);
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, " | ");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wprintw(statusbar->topline, "%s ", statusbar->statusmsg);
+    } else {
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
     }
 
-    wclrtoeol(statusbar->topline);
+    int s_y;
+    int s_x;
+    getyx(statusbar->topline, s_y, s_x);
+
+    mvwhline(statusbar->topline, s_y, s_x, ' ', x2 - s_x - (KEY_IDENT_DIGITS * 2) - 3);
+    wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+
     wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
+
+    wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
     wprintw(statusbar->topline, "{");
+    wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
 
-    size_t i;
+    wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
 
-    for (i = 0; i < KEY_IDENT_DIGITS; ++i) {
+    for (size_t i = 0; i < KEY_IDENT_DIGITS; ++i) {
         wprintw(statusbar->topline, "%02X", Friends.list[self->num].pub_key[i] & 0xff);
     }
 
-    wprintw(statusbar->topline, "}\n");
+    wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
 
-    mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
+    wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+    wprintw(statusbar->topline, "} ");
+    wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
 
-    int y, x;
+    int y;
+    int x;
     getyx(self->window, y, x);
 
     UNUSED_VAR(x);
 
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
-    wmove(self->window, y + 1, new_x);
+    wmove(self->window, y, new_x);
+
+    draw_window_bar(self);
 
     wnoutrefresh(self->window);
 
@@ -1357,7 +1403,9 @@ static void chat_init_log(ToxWindow *self, Tox *m, const char *self_nick)
 static void chat_onInit(ToxWindow *self, Tox *m)
 {
     curs_set(1);
-    int x2, y2;
+
+    int x2;
+    int y2;
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
@@ -1390,9 +1438,10 @@ static void chat_onInit(ToxWindow *self, Tox *m)
     /* Init subwindows */
     ChatContext *ctx = self->chatwin;
 
-    statusbar->topline = subwin(self->window, 2, x2, 0, 0);
-    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
-    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
+    statusbar->topline = subwin(self->window, TOP_BAR_HEIGHT, x2, 0, 0);
+    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
+    self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, x2, y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - WINDOW_BAR_HEIGHT, 0);
 
     ctx->hst = calloc(1, sizeof(struct history));
     ctx->log = calloc(1, sizeof(struct chatlog));

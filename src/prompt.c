@@ -292,7 +292,7 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         wclear(ctx->linewin);
-        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        wmove(self->window, y2, 0);
         reset_buf(ctx);
     }
 
@@ -301,7 +301,8 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
 static void prompt_onDraw(ToxWindow *self, Tox *m)
 {
-    int x2, y2;
+    int x2;
+    int y2;
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
@@ -316,63 +317,87 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
     wclear(ctx->linewin);
 
-    curs_set(1);
-
     if (ctx->len > 0) {
-        mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
+        mvwprintw(ctx->linewin, 0, 0, "%ls", &ctx->line[ctx->start]);
     }
+
+    mvwhline(ctx->linewin, 0, ctx->len, ' ', x2 - ctx->len);
+
+    curs_set(1);
 
     StatusBar *statusbar = self->stb;
 
-    mvwhline(statusbar->topline, 1, 0, ACS_HLINE, x2);
     wmove(statusbar->topline, 0, 0);
 
     pthread_mutex_lock(&Winthread.lock);
     Tox_Connection connection = statusbar->connection;
+    Tox_User_Status status = statusbar->status;
     pthread_mutex_unlock(&Winthread.lock);
 
     if (connection != TOX_CONNECTION_NONE) {
         int colour = MAGENTA;
         const char *status_text = "ERROR";
 
-        pthread_mutex_lock(&Winthread.lock);
-        Tox_User_Status status = statusbar->status;
-        pthread_mutex_unlock(&Winthread.lock);
-
         switch (status) {
             case TOX_USER_STATUS_NONE:
                 status_text = "Online";
-                colour = GREEN;
+                colour = GREEN_BLUE;
                 break;
 
             case TOX_USER_STATUS_AWAY:
                 status_text = "Away";
-                colour = YELLOW;
+                colour = YELLOW_BLUE;
                 break;
 
             case TOX_USER_STATUS_BUSY:
                 status_text = "Busy";
-                colour = RED;
+                colour = RED_BLUE;
                 break;
         }
 
-        wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, " [%s]", status_text);
-        wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, " [");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
 
-        wattron(statusbar->topline, A_BOLD);
+        wattron(statusbar->topline, A_BOLD | COLOR_PAIR(colour));
+        wprintw(statusbar->topline, "%s", status_text);
+        wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(colour));
+
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, "]");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+
         pthread_mutex_lock(&Winthread.lock);
         wprintw(statusbar->topline, " %s", statusbar->nick);
         pthread_mutex_unlock(&Winthread.lock);
-        wattroff(statusbar->topline, A_BOLD);
     } else {
-        wprintw(statusbar->topline, " [Offline]");
-        wattron(statusbar->topline, A_BOLD);
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, " [");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wprintw(statusbar->topline, "Offline");
+        wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, "]");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+
         pthread_mutex_lock(&Winthread.lock);
         wprintw(statusbar->topline, " %s", statusbar->nick);
         pthread_mutex_unlock(&Winthread.lock);
-        wattroff(statusbar->topline, A_BOLD);
     }
+
+    int s_y;
+    int s_x;
+    getyx(statusbar->topline, s_y, s_x);
+
+    mvwhline(statusbar->topline, s_y, s_x, ' ', x2 - s_x);
+    wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
 
     /* Reset statusbar->statusmsg on window resize */
     if (x2 != self->x) {
@@ -401,20 +426,27 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 
     if (statusbar->statusmsg[0]) {
-        wprintw(statusbar->topline, " : %s", statusbar->statusmsg);
+        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wprintw(statusbar->topline, " | ");
+        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+
+        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wprintw(statusbar->topline, "%s", statusbar->statusmsg);
+        wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
     }
 
     pthread_mutex_unlock(&Winthread.lock);
 
-    mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
-
-    int y, x;
+    int y;
+    int x;
     getyx(self->window, y, x);
 
     UNUSED_VAR(x);
 
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
-    wmove(self->window, y + 1, new_x);
+    wmove(self->window, y, new_x);
+
+    draw_window_bar(self);
 
     wnoutrefresh(self->window);
 
@@ -535,7 +567,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
     prompt_update_nick(prompt, nick);
 
     /* Init statusbar subwindow */
-    statusbar->topline = subwin(self->window, 2, x2, 0, 0);
+    statusbar->topline = subwin(self->window, TOP_BAR_HEIGHT, x2, 0, 0);
 }
 
 static void print_welcome_msg(ToxWindow *self)
@@ -576,7 +608,9 @@ static void prompt_init_log(ToxWindow *self, Tox *m, const char *self_name)
 static void prompt_onInit(ToxWindow *self, Tox *m)
 {
     curs_set(1);
-    int y2, x2;
+
+    int y2;
+    int x2;
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
@@ -584,8 +618,10 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
     }
 
     ChatContext *ctx = self->chatwin;
-    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
-    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
+
+    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
+    self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, x2, y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
+    ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - WINDOW_BAR_HEIGHT, 0);
 
     ctx->log = calloc(1, sizeof(struct chatlog));
     ctx->hst = calloc(1, sizeof(struct history));

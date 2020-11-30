@@ -307,9 +307,9 @@ void redraw_conference_win(ToxWindow *self)
     refresh();
     clear();
 
-    int x2, y2;
-    getmaxyx(stdscr, y2, x2);
-    y2 -= 2;
+    int x2;
+    int y2;
+    getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
         return;
@@ -322,20 +322,22 @@ void redraw_conference_win(ToxWindow *self)
 
     delwin(ctx->linewin);
     delwin(ctx->history);
+    delwin(self->window_bar);
     delwin(self->window);
 
     self->window = newwin(y2, x2, 0, 0);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
+    self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, x2, y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
 
     if (self->show_peerlist) {
-        ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2 - SIDEBAR_WIDTH - 1, 0, 0);
-        ctx->sidebar = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
+        ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2 - SIDEBAR_WIDTH - 1, 0, 0);
+        ctx->sidebar = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
     } else {
-        ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
+        ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
     }
 
     scrollok(ctx->history, 0);
-
+    wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
 static void conference_onConferenceMessage(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t peernum,
@@ -362,12 +364,12 @@ static void conference_onConferenceMessage(ToxWindow *self, Tox *m, uint32_t con
 
     /* Only play sound if mentioned by someone else */
     if (strcasestr(msg, selfnick) && strcmp(selfnick, nick)) {
-        sound_notify(self, generic_message, NT_WNDALERT_0 | user_settings->bell_on_message, NULL);
-
         if (self->active_box != -1) {
-            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+            box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+                        self->active_box, "%s %s", nick, msg);
         } else {
-            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+            box_notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+                       &self->active_box, self->name, "%s %s", nick, msg);
         }
 
         nick_clr = RED;
@@ -963,7 +965,7 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
         }
 
         wclear(ctx->linewin);
-        wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+        wmove(self->window, y2, 0);
         reset_buf(ctx);
     }
 
@@ -1049,15 +1051,16 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
     curs_set(1);
 
     if (ctx->len > 0) {
-        mvwprintw(ctx->linewin, 1, 0, "%ls", &ctx->line[ctx->start]);
+        mvwprintw(ctx->linewin, 0, 0, "%ls", &ctx->line[ctx->start]);
     }
 
     wclear(ctx->sidebar);
-    mvwhline(self->window, y2 - CHATBOX_HEIGHT, 0, ACS_HLINE, x2);
 
     if (self->show_peerlist) {
+        wattron(ctx->sidebar, COLOR_PAIR(BLUE));
         mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
+        wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
 
         pthread_mutex_lock(&Winthread.lock);
         const uint32_t num_peers = chat->num_peers;
@@ -1117,8 +1120,11 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
         wattroff(ctx->sidebar, A_BOLD);
         ++line;
 
+        wattron(ctx->sidebar, COLOR_PAIR(BLUE));
         mvwaddch(ctx->sidebar, line, 0, ACS_LTEE);
         mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
+        wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
+
         ++line;
 
         for (uint32_t i = 0;
@@ -1135,7 +1141,9 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
     UNUSED_VAR(x);
 
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
-    wmove(self->window, y + 1, new_x);
+    wmove(self->window, y, new_x);
+
+    draw_window_bar(self);
 
     wnoutrefresh(self->window);
 
@@ -1155,9 +1163,10 @@ static void conference_onInit(ToxWindow *self, Tox *m)
 
     ChatContext *ctx = self->chatwin;
 
-    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, x2 - SIDEBAR_WIDTH - 1, 0, 0);
+    ctx->history = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2 - SIDEBAR_WIDTH - 1, 0, 0);
+    self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, x2, y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
     ctx->linewin = subwin(self->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
-    ctx->sidebar = subwin(self->window, y2 - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
+    ctx->sidebar = subwin(self->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
 
     ctx->hst = calloc(1, sizeof(struct history));
     ctx->log = calloc(1, sizeof(struct chatlog));

@@ -336,7 +336,7 @@ int add_window(Tox *m, ToxWindow *w)
         }
 
         w->index = i;
-        w->window = newwin(LINES - 2, COLS, 0, 0);
+        w->window = newwin(LINES, COLS, 0, 0);
 
         if (w->window == NULL) {
             return -1;
@@ -397,8 +397,9 @@ void del_window(ToxWindow *w)
     set_active_window_index(0);
 
     uint8_t idx = w->index;
+    delwin(w->window_bar);
     delwin(w->window);
-    free(windows[idx]);
+    free(w);
     windows[idx] = NULL;
 
     clear();
@@ -408,7 +409,12 @@ void del_window(ToxWindow *w)
 
 ToxWindow *init_windows(Tox *m)
 {
+    if (COLS <= CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT) {
+        exit_toxic_err("add_window() for prompt failed in init_windows", FATALERR_WININIT);
+    }
+
     prompt = new_prompt();
+
     int n_prompt = add_window(m, prompt);
 
     if (n_prompt < 0) {
@@ -430,25 +436,18 @@ void on_window_resize(void)
     refresh();
     clear();
 
-    /* equivalent to LINES and COLS */
-    int x2, y2;
-    getmaxyx(stdscr, y2, x2);
-    y2 -= 2;
-
-    if (y2 <= 0 || x2 <= 0) {
-        return;
-    }
-
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] == NULL) {
+        ToxWindow *w = windows[i];
+
+        if (w == NULL) {
             continue;
         }
 
-        ToxWindow *w = windows[i];
-
-        if (windows[i]->type == WINDOW_TYPE_FRIEND_LIST)  {
+        if (w->type == WINDOW_TYPE_FRIEND_LIST)  {
+            delwin(w->window_bar);
             delwin(w->window);
-            w->window = newwin(y2, x2, 0, 0);
+            w->window = newwin(LINES, COLS, 0, 0);
+            w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, COLS, LINES - 2, 0);
             continue;
         }
 
@@ -465,21 +464,34 @@ void on_window_resize(void)
 
         delwin(w->chatwin->linewin);
         delwin(w->chatwin->history);
+        delwin(w->window_bar);
         delwin(w->window);
 
-        w->window = newwin(y2, x2, 0, 0);
-        w->chatwin->linewin = subwin(w->window, CHATBOX_HEIGHT, x2, y2 - CHATBOX_HEIGHT, 0);
+        w->window = newwin(LINES, COLS, 0, 0);
+
+        int x2;
+        int y2;
+        getmaxyx(w->window, y2, x2);
+
+        if (y2 <= 0 || x2 <= 0) {
+            fprintf(stderr, "Failed to resize window: max_x: %d, max_y: %d\n", x2, y2);
+            delwin(w->window);
+            return;
+        }
 
         if (w->show_peerlist) {
-            w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2 - SIDEBAR_WIDTH - 1, 0, 0);
-            w->chatwin->sidebar = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
+            w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2 - SIDEBAR_WIDTH - 1, 0, 0);
+            w->chatwin->sidebar = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
         } else {
-            w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT + 1, x2, 0, 0);
+            w->chatwin->history =  subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
 
             if (w->type != WINDOW_TYPE_CONFERENCE) {
-                w->stb->topline = subwin(w->window, 2, x2, 0, 0);
+                w->stb->topline = subwin(w->window, TOP_BAR_HEIGHT, x2, 0, 0);
             }
         }
+
+        w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, x2, y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
+        w->chatwin->linewin = subwin(w->window, CHATBOX_HEIGHT, x2, y2 - WINDOW_BAR_HEIGHT, 0);
 
 #ifdef AUDIO
 
@@ -491,62 +503,84 @@ void on_window_resize(void)
 #endif /* AUDIO */
 
         scrollok(w->chatwin->history, 0);
+        wmove(w->window, y2 - CURS_Y_OFFSET, 0);
     }
 }
 
-static void draw_window_tab(ToxWindow *toxwin, bool active_window)
+static void draw_window_tab(WINDOW *win, ToxWindow *toxwin, bool active_window)
 {
     pthread_mutex_lock(&Winthread.lock);
 
-    if (toxwin->alert != WINDOW_ALERT_NONE) {
-        attron(COLOR_PAIR(toxwin->alert));
-    }
-
+    bool has_alert = toxwin->alert != WINDOW_ALERT_NONE;
     unsigned int pending_messages = toxwin->pending_messages;
 
     pthread_mutex_unlock(&Winthread.lock);
 
-    clrtoeol();
-
     WINDOW_TYPE type = toxwin->type;
 
-    if (active_window || (type == WINDOW_TYPE_PROMPT || type == WINDOW_TYPE_FRIEND_LIST)) {
-        printw(" [%s]", toxwin->name);
+    if (active_window) {
+        wattron(win, A_BOLD | COLOR_PAIR(CYAN_BLUE));
+        wprintw(win, " [");
+        wattroff(win, COLOR_PAIR(CYAN_BLUE));
+        wattron(win, COLOR_PAIR(WHITE_BLUE));
     } else {
-        if (pending_messages > 0) {
-            printw(" [%u]", pending_messages);
+        if (has_alert) {
+            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wprintw(win, " [");
+            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+            wattron(win, A_BOLD | COLOR_PAIR(toxwin->alert));
         } else {
-            printw(" [*]");
+            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wprintw(win, " [");
+            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+            wattron(win, COLOR_PAIR(WHITE_BLUE));
         }
     }
 
-    pthread_mutex_lock(&Winthread.lock);
-
-    if (toxwin->alert != WINDOW_ALERT_NONE) {
-        attroff(COLOR_PAIR(toxwin->alert));
+    if (active_window || (type == WINDOW_TYPE_PROMPT || type == WINDOW_TYPE_FRIEND_LIST)) {
+        wprintw(win, "%s", toxwin->name);
+    } else {
+        if (pending_messages > 0) {
+            wprintw(win, "%u", pending_messages);
+        } else {
+            wprintw(win, "-");
+        }
     }
 
-    pthread_mutex_unlock(&Winthread.lock);
+    if (active_window) {
+        wattroff(win, COLOR_PAIR(WHITE_BLUE));
+        wattron(win, COLOR_PAIR(CYAN_BLUE));
+        wprintw(win, "]");
+        wattroff(win, A_BOLD | COLOR_PAIR(CYAN_BLUE));
+    } else {
+        if (has_alert) {
+            wattroff(win, A_BOLD | COLOR_PAIR(toxwin->alert));
+            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wprintw(win, "]");
+            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+        } else {
+            wattroff(win, COLOR_PAIR(WHITE_BLUE));
+            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wprintw(win, "]");
+            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+        }
+    }
 }
 
-static void draw_bar(void)
+void draw_window_bar(ToxWindow *self)
 {
-    int y, x;
+    WINDOW *win = self->window_bar;
+    wclear(win);
 
-    ToxWindow *w = windows[active_window_index];
-
-    if (w == NULL) {
-        return;
+    if (self->scroll_pause) {
+        wattron(win, A_BLINK | A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+        wprintw(win, "^");
+        wattroff(win, A_BLINK | A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+    } else {
+        wattron(win, COLOR_PAIR(WHITE_BLUE));
+        wprintw(win, " ");
+        wattroff(win, COLOR_PAIR(WHITE_BLUE));
     }
-
-    // save current cursor position
-    getyx(w->window, y, x);
-
-    attron(COLOR_PAIR(BLUE));
-    mvhline(LINES - 2, 0, '_', COLS);
-    attroff(COLOR_PAIR(BLUE));
-
-    move(LINES - 1, 0);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] == NULL) {
@@ -554,34 +588,18 @@ static void draw_bar(void)
         }
 
         bool active_window = i == active_window_index;
-
-        if (active_window) {
-
-#ifdef URXVT_FIX
-            attron(A_BOLD | COLOR_PAIR(GREEN));
-        } else {
-#endif
-
-            attron(A_BOLD);
-        }
-
-        draw_window_tab(windows[i], active_window);
-
-        if (active_window) {
-
-#ifdef URXVT_FIX
-            attroff(A_BOLD | COLOR_PAIR(GREEN));
-        } else {
-#endif
-
-            attroff(A_BOLD);
-        }
+        draw_window_tab(win, windows[i], active_window);
     }
 
-    // restore cursor position after drawing
-    move(y, x);
+    int cur_x;
+    int cur_y;
+    UNUSED_VAR(cur_y);
 
-    refresh();
+    getyx(win, cur_y, cur_x);
+
+    wattron(win, COLOR_PAIR(WHITE_BLUE));
+    mvwhline(win, 0, cur_x, ' ', COLS - cur_x);
+    wattroff(win, COLOR_PAIR(WHITE_BLUE));
 }
 
 /*
@@ -683,8 +701,6 @@ void draw_active_window(Tox *m)
     a->alert = WINDOW_ALERT_NONE;
     a->pending_messages = 0;
     pthread_mutex_unlock(&Winthread.lock);
-
-    draw_bar();
 
     touchwin(a->window);
     a->onDraw(a, m);
