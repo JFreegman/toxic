@@ -65,6 +65,9 @@
 
 extern char *DATA_FILE;
 
+#define MAX_CONFERENCE_NUM (MAX_WINDOWS_NUM - 2)
+#define CONFERENCE_EVENT_WAIT 30
+
 static ConferenceChat conferences[MAX_CONFERENCE_NUM];
 static int max_conference_index = 0;
 
@@ -631,7 +634,10 @@ static bool find_peer_by_pubkey(const ConferencePeer *list, uint32_t num_peers, 
         const ConferencePeer *peer = &list[i];
 
         if (peer->active && memcmp(peer->pubkey, pubkey, TOX_PUBLIC_KEY_SIZE) == 0) {
-            *idx = i;
+            if (idx) {
+                *idx = i;
+            }
+
             return true;
         }
     }
@@ -639,13 +645,16 @@ static bool find_peer_by_pubkey(const ConferencePeer *list, uint32_t num_peers, 
     return false;
 }
 
-static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers, uint32_t old_num_peers)
+static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t num_peers,
+                             uint32_t old_num_peers)
 {
     ConferenceChat *chat = &conferences[conferencenum];
 
     if (!chat->active) {
         return;
     }
+
+    ChatContext *ctx = self->chatwin;
 
     ConferencePeer *old_peer_list = malloc(old_num_peers * sizeof(ConferencePeer));
 
@@ -664,6 +673,8 @@ static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers,
         return;
     }
 
+    char timefrmt[TIME_STR_SIZE];
+
     for (uint32_t i = 0; i < num_peers; ++i) {
         ConferencePeer *peer = &chat->peer_list[i];
 
@@ -678,12 +689,14 @@ static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers,
             continue;
         }
 
+        bool new_peer = true;
         uint32_t j;
 
         if (find_peer_by_pubkey(old_peer_list, old_num_peers, peer->pubkey, &j)) {
             ConferencePeer *old_peer = &old_peer_list[j];
             memcpy(peer, old_peer, sizeof(ConferencePeer));
             old_peer->active = false;
+            new_peer = false;
         }
 
         size_t length = tox_conference_peer_get_name_size(m, conferencenum, i, &err);
@@ -704,22 +717,37 @@ static void update_peer_list(Tox *m, uint32_t conferencenum, uint32_t num_peers,
         peer->name_length = length;
         peer->peernum = i;
 
+        if (new_peer && peer->name_length > 0 && timed_out(chat->start_time, CONFERENCE_EVENT_WAIT)) {
+            const char *msg = "has joined the group";
+            get_time_str(timefrmt, sizeof(timefrmt));
+            line_info_add(self, timefrmt, peer->name, NULL, CONNECTION, 0, GREEN, msg);
+            write_to_log(msg, peer->name, ctx->log, true);
+        }
+
 #ifdef AUDIO
         set_peer_audio_position(m, conferencenum, i);
 #endif
     }
 
+    conference_update_name_list(conferencenum);
+
     for (uint32_t i = 0; i < old_num_peers; ++i) {
         ConferencePeer *old_peer = &old_peer_list[i];
 
         if (old_peer->active) {
+            if (!find_peer_by_pubkey(chat->peer_list, chat->num_peers, old_peer->pubkey, NULL)) {
+                const char *msg = "has left the group";
+                get_time_str(timefrmt, sizeof(timefrmt));
+
+                line_info_add(self, timefrmt, old_peer->name, NULL, DISCONNECTION, 0, RED, msg);
+                write_to_log(msg, old_peer->name, ctx->log, true);
+            }
+
             free_peer(old_peer);
         }
     }
 
     free(old_peer_list);
-
-    conference_update_name_list(conferencenum);
 }
 
 static void conference_onConferenceNameListChange(ToxWindow *self, Tox *m, uint32_t conferencenum)
@@ -751,7 +779,7 @@ static void conference_onConferenceNameListChange(ToxWindow *self, Tox *m, uint3
 
     chat->num_peers = num_peers;
     chat->max_idx = num_peers;
-    update_peer_list(m, conferencenum, num_peers, old_num);
+    update_peer_list(self, m, conferencenum, num_peers, old_num);
 }
 
 static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t peernum,
@@ -765,17 +793,24 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint3
 
     const ConferencePeer *peer = peer_in_conference(conferencenum, peernum);
 
-    if (peer != NULL && peer->name_length > 0) {
+    if (peer != NULL) {
         ChatContext *ctx = self->chatwin;
+
         char timefrmt[TIME_STR_SIZE];
         get_time_str(timefrmt, sizeof(timefrmt));
 
-        char tmp_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
-        snprintf(tmp_event, sizeof(tmp_event), "is now known as %s", (const char *) name);
+        if (peer->name_length > 0) {
+            char log_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
+            line_info_add(self, timefrmt, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
 
-        write_to_log(tmp_event, peer->name, ctx->log, true);
-        line_info_add(self, timefrmt, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
+            snprintf(log_event, sizeof(log_event), "is now known as %s", (const char *) name);
+            write_to_log(log_event, peer->name, ctx->log, true);
 
+        } else {  // this is kind of a hack; peers always join a group with no name set and then set it after
+            const char *msg = "has joined the group";
+            line_info_add(self, timefrmt, name, NULL, CONNECTION, 0, GREEN, msg);
+            write_to_log(msg, name, ctx->log, true);
+        }
     }
 
     conference_onConferenceNameListChange(self, m, conferencenum);
@@ -1124,7 +1159,6 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
         mvwaddch(ctx->sidebar, line, 0, ACS_LTEE);
         mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
         wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
-
         ++line;
 
         for (uint32_t i = 0;

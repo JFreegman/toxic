@@ -26,10 +26,8 @@
 #include "toxic.h"
 #include "windows.h"
 
-#define SIDEBAR_WIDTH 16
-#define MAX_CONFERENCE_NUM (MAX_WINDOWS_NUM - 2)
-#define CONFERENCE_EVENT_WAIT 3
 #define CONFERENCE_MAX_TITLE_LENGTH TOX_MAX_NAME_LENGTH
+#define SIDEBAR_WIDTH 16
 
 typedef struct ConferencePeer {
     bool       active;

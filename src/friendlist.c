@@ -1100,9 +1100,9 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
         int num_selected = Friends.num_selected;
         pthread_mutex_unlock(&Winthread.lock);
 
-        bool f_selected = false;
-
         if (is_active) {
+            bool f_selected = false;
+
             if (i == num_selected) {
                 wattron(self->window, A_BOLD);
                 wprintw(self->window, " > ");

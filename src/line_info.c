@@ -54,7 +54,7 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
 {
     struct line_info *line = hst->line_end;
 
-    if (line->prev == NULL) {
+    if (line == NULL || line->prev == NULL) {
         return;
     }
 
