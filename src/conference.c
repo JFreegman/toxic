@@ -710,7 +710,7 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
         peer->peernum = i;
 
         if (new_peer && peer->name_length > 0 && timed_out(chat->start_time, CONFERENCE_EVENT_WAIT)) {
-            const char *msg = "has joined the group";
+            const char *msg = "has joined the conference";
             line_info_add(self, true, peer->name, NULL, CONNECTION, 0, GREEN, msg);
             write_to_log(msg, peer->name, ctx->log, true);
         }
@@ -726,8 +726,8 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
         ConferencePeer *old_peer = &old_peer_list[i];
 
         if (old_peer->active) {
-            if (!find_peer_by_pubkey(chat->peer_list, chat->num_peers, old_peer->pubkey, NULL)) {
-                const char *msg = "has left the group";
+            if (old_peer->name_length > 0 && !find_peer_by_pubkey(chat->peer_list, chat->num_peers, old_peer->pubkey, NULL)) {
+                const char *msg = "has left the conference";
                 line_info_add(self, true, old_peer->name, NULL, DISCONNECTION, 0, RED, msg);
                 write_to_log(msg, old_peer->name, ctx->log, true);
             }
@@ -793,7 +793,7 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint3
             write_to_log(log_event, peer->name, ctx->log, true);
 
         } else {  // this is kind of a hack; peers always join a group with no name set and then set it after
-            const char *msg = "has joined the group";
+            const char *msg = "has joined the conference";
             line_info_add(self, true, name, NULL, CONNECTION, 0, GREEN, msg);
             write_to_log(msg, name, ctx->log, true);
         }
