@@ -3,134 +3,134 @@
 
 ui = {
   // true to enable timestamps, false to disable
-  timestamps=true;
+  timestamps = true;
 
   // true to enable acoustic alerts on messages, false to disable
-  alerts=true;
+  alerts = true;
 
   // Output a bell when receiving a message (see manpage)
-  bell_on_message=true
+  bell_on_message = true;
 
   // Output a bell when receiving a filetransfer (see manpage)
-  bell_on_filetrans=true
+  bell_on_filetrans = true;
 
   // Don't output a bell when a filetransfer was accepted (see manpage)
-  bell_on_filetrans_accept=false
+  bell_on_filetrans_accept = false;
 
   // Output a bell when receiving a group/call invite (see manpage)
-  bell_on_invite=true
+  bell_on_invite = true;
 
   // true to use native terminal colours, false to use toxic default colour theme
-  native_colors=false;
+  native_colors = false;
 
   // true to enable autologging, false to disable
-  autolog=false;
+  autolog = false;
 
   // 24 or 12 hour time
-  time_format=24;
+  time_format = 24;
 
   // Timestamp format string according to date/strftime format. Overrides time_format setting
-  timestamp_format="%H:%M";
+  timestamp_format = "%H:%M";
 
   // true to show you when others are typing a message in 1-on-1 chats
-  show_typing_other=true;
+  show_typing_other = true;
 
   // true to show others when you're typing a message in 1-on-1 chats
-  show_typing_self=true;
+  show_typing_self = true;
 
   // true to show the welcome message on startup
-  show_welcome_msg=true;
+  show_welcome_msg = true;
 
   // true to show friend connection change messages on the home screen
-  show_connection_msg=true;
+  show_connection_msg = true;
 
   // How often in days to update the DHT nodes list. (0 to disable updates)
-  nodeslist_update_freq=7;
+  nodeslist_update_freq = 7;
 
   // How often in seconds to auto-save the Tox data file. (0 to disable periodic auto-saves)
-  autosave_freq=600;
+  autosave_freq = 600;
 
   // maximum lines for chat window history
-  history_size=700;
+  history_size = 700;
 
   // time in milliseconds to display a notification
-  notification_timeout=6000;
+  notification_timeout = 6000;
 
   // Indicator for display when someone connects or joins a group.
-  line_join="-->";
+  line_join = "-->";
 
   // Indicator for display when someone disconnects or leaves a group.
-  line_quit="<--";
+  line_quit = "<--";
 
   // Indicator for alert messages.
-  line_alert="-!-";
+  line_alert = "-!-";
 
   // Indicator for normal messages.
-  line_normal="-";
+  line_normal = "-";
 
   // true to change status based on screen/tmux attach/detach, false to disable
-  mplex_away=true;
+  mplex_away = true;
 
   // Status message to use when status set to away due to screen/tmux detach
-  mplex_away_note="Away from keyboard, be back soon!"
+  mplex_away_note = "Away from keyboard, be back soon!";
 };
 
 audio = {
   // preferred audio input device; numbers correspond to /lsdev in
-  input_device=2;
+  input_device = 2;
 
   // preferred audio output device; numbers correspond to /lsdev out
-  output_device=0;
+  output_device = 0;
 
   // default VAD threshold; float (recommended values are 1.0-40.0)
-  VAD_threshold=5.0;
+  VAD_threshold = 5.0;
 
   // Number of channels to use for conference audio broadcasts; 1 for mono, 2 for stereo.
-  conference_audio_channels=1;
+  conference_audio_channels = 1;
 
   // Number of channels to use for 1-on-1 audio broadcasts; 1 for mono, 2 for stereo.
-  chat_audio_channels=2;
+  chat_audio_channels = 2;
 
   // toggle conference push-to-talk
-  push_to_talk=false;
+  push_to_talk = false;
 };
 
 tox = {
   // Path for downloaded files
-  // download_path="/home/USERNAME/Downloads/";
+  // download_path = "/home/USERNAME/Downloads/";
 
   // Path for your avatar (file must be a .png and cannot exceed 64 KiB)
-  // avatar_path="/home/USERNAME/Pictures/youravatar.png";
+  // avatar_path = "/home/USERNAME/Pictures/youravatar.png";
 
   // Path for scripts that should be run on startup
-  // autorun_path="/home/USERNAME/toxic_scripts/";
+  // autorun_path = "/home/USERNAME/toxic_scripts/";
 
   // Path for chatlogs
-  // chatlogs_path="/home/USERNAME/toxic_chatlogs/";
+  // chatlogs_path = "/home/USERNAME/toxic_chatlogs/";
 };
 
 // To disable a sound set the path to "silent"
 sounds = {
-  error="__DATADIR__/sounds/ToxicError.wav";
-  user_log_in="__DATADIR__/sounds/ToxicContactOnline.wav";
-  user_log_out="__DATADIR__/sounds/ToxicContactOffline.wav";
-  call_incoming="__DATADIR__/sounds/ToxicIncomingCall.wav";
-  call_outgoing="__DATADIR__/sounds/ToxicOutgoingCall.wav";
-  generic_message="__DATADIR__/sounds/ToxicRecvMessage.wav";
-  transfer_pending="__DATADIR__/sounds/ToxicTransferStart.wav";
-  transfer_completed="__DATADIR__/sounds/ToxicTransferComplete.wav";
+  error = "__DATADIR__/sounds/ToxicError.wav";
+  user_log_in = "__DATADIR__/sounds/ToxicContactOnline.wav";
+  user_log_out = "__DATADIR__/sounds/ToxicContactOffline.wav";
+  call_incoming = "__DATADIR__/sounds/ToxicIncomingCall.wav";
+  call_outgoing = "__DATADIR__/sounds/ToxicOutgoingCall.wav";
+  generic_message = "__DATADIR__/sounds/ToxicRecvMessage.wav";
+  transfer_pending = "__DATADIR__/sounds/ToxicTransferStart.wav";
+  transfer_completed = "__DATADIR__/sounds/ToxicTransferComplete.wav";
 };
 
 // Currently supported: Ctrl modified keys, Tab, PAGEUP and PAGEDOWN (case insensitive)
 // Note: Ctrl+M does not work
 keys = {
-  next_tab="Ctrl+P";
-  prev_tab="Ctrl+O";
-  scroll_line_up="PAGEUP";
-  scroll_line_down="PAGEDOWN";
-  half_page_up="Ctrl+F";
-  half_page_down="Ctrl+V";
-  page_bottom="Ctrl+H";
-  toggle_peerlist="Ctrl+b";
-  toggle_paste_mode="Ctrl+T";
+  next_tab = "Ctrl+P";
+  prev_tab = "Ctrl+O";
+  scroll_line_up = "PAGEUP";
+  scroll_line_down = "PAGEDOWN";
+  half_page_up = "Ctrl+F";
+  half_page_down = "Ctrl+V";
+  page_bottom = "Ctrl+H";
+  toggle_peerlist = "Ctrl+B";
+  toggle_paste_mode = "Ctrl+T";
 };
