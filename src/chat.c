@@ -1215,63 +1215,63 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
         switch (status) {
             case TOX_USER_STATUS_NONE:
-                colour = GREEN_BLUE;
+                colour = STATUS_ONLINE;
                 break;
 
             case TOX_USER_STATUS_AWAY:
-                colour = YELLOW_BLUE;
+                colour = STATUS_AWAY;
                 break;
 
             case TOX_USER_STATUS_BUSY:
-                colour = RED_BLUE;
+                colour = STATUS_ONLINE;
                 break;
         }
 
-        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " [");
-        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
         wprintw(statusbar->topline, "%s", ONLINE_CHAR);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
-        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, "] ");
-        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         pthread_mutex_lock(&Winthread.lock);
         const bool is_typing = Friends.list[self->num].is_typing;
         pthread_mutex_unlock(&Winthread.lock);
 
         if (is_typing) {
-            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_NOTIFY));
         } else {
-            wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+            wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
         }
 
         wprintw(statusbar->topline, "%s", statusbar->nick);
 
         if (is_typing) {
-            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_NOTIFY));
         } else {
-            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(WHITE_BLUE));
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_TEXT));
         }
     } else {
-        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " [");
-        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
-        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
         wprintw(statusbar->topline, "%s", OFFLINE_CHAR);
-        wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
-        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, "] ");
-        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
-        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
         wprintw(statusbar->topline, "%s", statusbar->nick);
-        wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
     }
 
     /* Reset statusbar->statusmsg on window resize */
@@ -1300,14 +1300,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     if (statusbar->statusmsg[0]) {
-        wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " | ");
-        wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
-        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
         wprintw(statusbar->topline, "%s ", statusbar->statusmsg);
     } else {
-        wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+        wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
     }
 
     int s_y;
@@ -1315,25 +1315,25 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     getyx(statusbar->topline, s_y, s_x);
 
     mvwhline(statusbar->topline, s_y, s_x, ' ', x2 - s_x - (KEY_IDENT_DIGITS * 2) - 3);
-    wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
     wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
 
-    wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+    wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
     wprintw(statusbar->topline, "{");
-    wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
-    wattron(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+    wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
     for (size_t i = 0; i < KEY_IDENT_DIGITS; ++i) {
         wprintw(statusbar->topline, "%02X", Friends.list[self->num].pub_key[i] & 0xff);
     }
 
-    wattroff(statusbar->topline, COLOR_PAIR(WHITE_BLUE));
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
-    wattron(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+    wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
     wprintw(statusbar->topline, "} ");
-    wattroff(statusbar->topline, COLOR_PAIR(CYAN_BLUE));
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
     int y;
     int x;

@@ -519,21 +519,21 @@ static void draw_window_tab(WINDOW *win, ToxWindow *toxwin, bool active_window)
     WINDOW_TYPE type = toxwin->type;
 
     if (active_window) {
-        wattron(win, A_BOLD | COLOR_PAIR(CYAN_BLUE));
+        wattron(win, A_BOLD | COLOR_PAIR(BAR_ACCENT));
         wprintw(win, " [");
-        wattroff(win, COLOR_PAIR(CYAN_BLUE));
-        wattron(win, COLOR_PAIR(WHITE_BLUE));
+        wattroff(win, COLOR_PAIR(BAR_ACCENT));
+        wattron(win, COLOR_PAIR(BAR_TEXT));
     } else {
         if (has_alert) {
-            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wattron(win, COLOR_PAIR(BAR_ACCENT));
             wprintw(win, " [");
-            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+            wattroff(win, COLOR_PAIR(BAR_ACCENT));
             wattron(win, A_BOLD | COLOR_PAIR(toxwin->alert));
         } else {
-            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wattron(win, COLOR_PAIR(BAR_ACCENT));
             wprintw(win, " [");
-            wattroff(win, COLOR_PAIR(CYAN_BLUE));
-            wattron(win, COLOR_PAIR(WHITE_BLUE));
+            wattroff(win, COLOR_PAIR(BAR_ACCENT));
+            wattron(win, COLOR_PAIR(BAR_TEXT));
         }
     }
 
@@ -548,21 +548,21 @@ static void draw_window_tab(WINDOW *win, ToxWindow *toxwin, bool active_window)
     }
 
     if (active_window) {
-        wattroff(win, COLOR_PAIR(WHITE_BLUE));
-        wattron(win, COLOR_PAIR(CYAN_BLUE));
+        wattroff(win, COLOR_PAIR(BAR_TEXT));
+        wattron(win, COLOR_PAIR(BAR_ACCENT));
         wprintw(win, "]");
-        wattroff(win, A_BOLD | COLOR_PAIR(CYAN_BLUE));
+        wattroff(win, A_BOLD | COLOR_PAIR(BAR_ACCENT));
     } else {
         if (has_alert) {
             wattroff(win, A_BOLD | COLOR_PAIR(toxwin->alert));
-            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wattron(win, COLOR_PAIR(BAR_ACCENT));
             wprintw(win, "]");
-            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+            wattroff(win, COLOR_PAIR(BAR_ACCENT));
         } else {
-            wattroff(win, COLOR_PAIR(WHITE_BLUE));
-            wattron(win, COLOR_PAIR(CYAN_BLUE));
+            wattroff(win, COLOR_PAIR(BAR_TEXT));
+            wattron(win, COLOR_PAIR(BAR_ACCENT));
             wprintw(win, "]");
-            wattroff(win, COLOR_PAIR(CYAN_BLUE));
+            wattroff(win, COLOR_PAIR(BAR_ACCENT));
         }
     }
 }
@@ -573,13 +573,13 @@ void draw_window_bar(ToxWindow *self)
     wclear(win);
 
     if (self->scroll_pause) {
-        wattron(win, A_BLINK | A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+        wattron(win, A_BLINK | A_BOLD | COLOR_PAIR(BAR_NOTIFY));
         wprintw(win, "^");
-        wattroff(win, A_BLINK | A_BOLD | COLOR_PAIR(YELLOW_BLUE));
+        wattroff(win, A_BLINK | A_BOLD | COLOR_PAIR(BAR_NOTIFY));
     } else {
-        wattron(win, COLOR_PAIR(WHITE_BLUE));
+        wattron(win, COLOR_PAIR(BAR_TEXT));
         wprintw(win, " ");
-        wattroff(win, COLOR_PAIR(WHITE_BLUE));
+        wattroff(win, COLOR_PAIR(BAR_TEXT));
     }
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
@@ -597,9 +597,9 @@ void draw_window_bar(ToxWindow *self)
 
     getyx(win, cur_y, cur_x);
 
-    wattron(win, COLOR_PAIR(WHITE_BLUE));
+    wattron(win, COLOR_PAIR(BAR_TEXT));
     mvwhline(win, 0, cur_x, ' ', COLS - cur_x);
-    wattroff(win, COLOR_PAIR(WHITE_BLUE));
+    wattroff(win, COLOR_PAIR(BAR_TEXT));
 }
 
 /*

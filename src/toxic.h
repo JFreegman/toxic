@@ -48,6 +48,7 @@
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */
 #define KEY_IDENT_DIGITS 3    /* number of hex digits to display for the pub-key based identifier */
 #define TIME_STR_SIZE 32
+#define COLOR_STR_SIZE 10 /* should fit every color option */
 
 #ifndef MAX_PORT_RANGE
 #define MAX_PORT_RANGE 65535

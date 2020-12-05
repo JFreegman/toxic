@@ -68,6 +68,11 @@ struct user_settings {
     char autorun_path[PATH_MAX];
     char password_eval[PASSWORD_EVAL_MAX];
 
+    char color_bar_bg[COLOR_STR_SIZE];
+    char color_bar_fg[COLOR_STR_SIZE];
+    char color_bar_accent[COLOR_STR_SIZE];
+    char color_bar_notify[COLOR_STR_SIZE];
+
     int key_next_tab;
     int key_prev_tab;
     int key_scroll_line_up;

@@ -23,6 +23,18 @@ ui = {
   // true to use native terminal colours, false to use toxic default colour theme
   native_colors=false;
 
+  // set background color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
+  color_bar_bg = "blue";
+
+  // set foreground (text) color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
+  color_bar_fg = "white";
+
+  // set foreground accent color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
+  color_bar_accent = "cyan";
+
+  // set foreground notify (and typing) color in chat status bar (black, white, red, green, blue, cyan, yellow, magenta)
+  color_bar_notify = "yellow";
+
   // true to enable autologging, false to disable
   autolog=false;
 

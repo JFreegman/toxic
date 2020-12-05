@@ -55,21 +55,22 @@ typedef enum {
     BLACK,
     BLUE_BLACK,
     BLACK_WHITE,
-    WHITE_BLUE,
-    GREEN_BLUE,
-    CYAN_BLUE,
-    PURPLE_BLUE,
-    BLACK_BLUE,
-    RED_BLUE,
-    YELLOW_BLUE,
+    BAR_TEXT,
+    STATUS_ONLINE,
+    BAR_ACCENT,
+    PURPLE_BG,
+    BLACK_BG,
+    STATUS_BUSY,
+    STATUS_AWAY,
+    BAR_NOTIFY,
 } C_COLOURS;
 
 /* tab alert types: lower types take priority (this relies on the order of C_COLOURS) */
 typedef enum {
     WINDOW_ALERT_NONE = 0,
-    WINDOW_ALERT_0 = GREEN_BLUE,
-    WINDOW_ALERT_1 = CYAN_BLUE,
-    WINDOW_ALERT_2 = PURPLE_BLUE,
+    WINDOW_ALERT_0 = STATUS_ONLINE,
+    WINDOW_ALERT_1 = BAR_ACCENT,
+    WINDOW_ALERT_2 = PURPLE_BG,
 } WINDOW_ALERTS;
 
 typedef enum {

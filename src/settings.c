@@ -73,6 +73,11 @@ static struct ui_strings {
 
     const char *mplex_away;
     const char *mplex_away_note;
+
+    const char *color_bar_bg;
+    const char *color_bar_fg;
+    const char *color_bar_accent;
+    const char *color_bar_notify;
 } ui_strings = {
     "ui",
     "timestamps",
@@ -100,6 +105,10 @@ static struct ui_strings {
     "line_normal",
     "mplex_away",
     "mplex_away_note",
+    "color_bar_bg",
+    "color_bar_fg",
+    "color_bar_accent",
+    "color_bar_notify",
 };
 
 static void ui_defaults(struct user_settings *settings)
@@ -343,6 +352,22 @@ int settings_load(struct user_settings *s, const char *patharg)
 
         if (config_setting_lookup_string(setting, ui_strings.timestamp_format, &str)) {
             snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", str);
+        }
+
+        if (config_setting_lookup_string(setting, ui_strings.color_bar_bg, &str)) {
+            snprintf(s->color_bar_bg, sizeof(s->color_bar_bg), "%s", str);
+        }
+
+        if (config_setting_lookup_string(setting, ui_strings.color_bar_fg, &str)) {
+            snprintf(s->color_bar_fg, sizeof(s->color_bar_fg), "%s", str);
+        }
+
+        if (config_setting_lookup_string(setting, ui_strings.color_bar_accent, &str)) {
+            snprintf(s->color_bar_accent, sizeof(s->color_bar_accent), "%s", str);
+        }
+
+        if (config_setting_lookup_string(setting, ui_strings.color_bar_notify, &str)) {
+            snprintf(s->color_bar_notify, sizeof(s->color_bar_notify), "%s", str);
         }
 
         if (config_setting_lookup_string(setting, ui_strings.log_timestamp_format, &str)) {

@@ -260,12 +260,112 @@ static void init_term(void)
 
     if (has_colors()) {
         short bg_color = COLOR_BLACK;
+        short bar_bg_color = COLOR_BLUE;
+        short bar_fg_color = COLOR_WHITE;
+        short bar_accent_color = COLOR_CYAN;
+        short bar_notify_color = COLOR_YELLOW;
         start_color();
 
         if (user_settings->colour_theme == NATIVE_COLS) {
             if (assume_default_colors(-1, -1) == OK) {
                 bg_color = -1;
             }
+        }
+
+        if (!string_is_empty(user_settings->color_bar_bg)) {
+            if (strcmp(user_settings->color_bar_bg, "black") == 0) {
+                bar_bg_color = COLOR_BLACK;
+            } else if (strcmp(user_settings->color_bar_bg, "red") == 0) {
+                bar_bg_color = COLOR_RED;
+            } else if (strcmp(user_settings->color_bar_bg, "blue") == 0) {
+                bar_bg_color = COLOR_BLUE;
+            } else if (strcmp(user_settings->color_bar_bg, "cyan") == 0) {
+                bar_bg_color = COLOR_CYAN;
+            } else if (strcmp(user_settings->color_bar_bg, "green") == 0) {
+                bar_bg_color = COLOR_GREEN;
+            } else if (strcmp(user_settings->color_bar_bg, "yellow") == 0) {
+                bar_bg_color = COLOR_YELLOW;
+            } else if (strcmp(user_settings->color_bar_bg, "magenta") == 0) {
+                bar_bg_color = COLOR_MAGENTA;
+            } else if (strcmp(user_settings->color_bar_bg, "white") == 0) {
+                bar_bg_color = COLOR_WHITE;
+            } else {
+                bar_bg_color = COLOR_BLUE;
+            }
+        } else {
+            bar_bg_color = COLOR_BLUE;
+        }
+
+        if (!string_is_empty(user_settings->color_bar_fg)) {
+            if (strcmp(user_settings->color_bar_fg, "black") == 0) {
+                bar_fg_color = COLOR_BLACK;
+            } else if (strcmp(user_settings->color_bar_fg, "red") == 0) {
+                bar_fg_color = COLOR_RED;
+            } else if (strcmp(user_settings->color_bar_fg, "blue") == 0) {
+                bar_fg_color = COLOR_BLUE;
+            } else if (strcmp(user_settings->color_bar_fg, "cyan") == 0) {
+                bar_fg_color = COLOR_CYAN;
+            } else if (strcmp(user_settings->color_bar_fg, "green") == 0) {
+                bar_fg_color = COLOR_GREEN;
+            } else if (strcmp(user_settings->color_bar_fg, "yellow") == 0) {
+                bar_fg_color = COLOR_YELLOW;
+            } else if (strcmp(user_settings->color_bar_fg, "magenta") == 0) {
+                bar_fg_color = COLOR_MAGENTA;
+            } else if (strcmp(user_settings->color_bar_fg, "white") == 0) {
+                bar_fg_color = COLOR_WHITE;
+            } else {
+                bar_fg_color = COLOR_WHITE;
+            }
+        } else {
+            bar_fg_color = COLOR_WHITE;
+        }
+
+        if (!string_is_empty(user_settings->color_bar_accent)) {
+            if (strcmp(user_settings->color_bar_accent, "black") == 0) {
+                bar_accent_color = COLOR_BLACK;
+            } else if (strcmp(user_settings->color_bar_accent, "red") == 0) {
+                bar_accent_color = COLOR_RED;
+            } else if (strcmp(user_settings->color_bar_accent, "blue") == 0) {
+                bar_accent_color = COLOR_BLUE;
+            } else if (strcmp(user_settings->color_bar_accent, "cyan") == 0) {
+                bar_accent_color = COLOR_CYAN;
+            } else if (strcmp(user_settings->color_bar_accent, "green") == 0) {
+                bar_accent_color = COLOR_GREEN;
+            } else if (strcmp(user_settings->color_bar_accent, "yellow") == 0) {
+                bar_accent_color = COLOR_YELLOW;
+            } else if (strcmp(user_settings->color_bar_accent, "magenta") == 0) {
+                bar_accent_color = COLOR_MAGENTA;
+            } else if (strcmp(user_settings->color_bar_accent, "white") == 0) {
+                bar_accent_color = COLOR_WHITE;
+            } else {
+                bar_accent_color = COLOR_CYAN;
+            }
+        } else {
+            bar_accent_color = COLOR_CYAN;
+        }
+
+        if (!string_is_empty(user_settings->color_bar_notify)) {
+            if (strcmp(user_settings->color_bar_notify, "black") == 0) {
+                bar_notify_color = COLOR_BLACK;
+            } else if (strcmp(user_settings->color_bar_notify, "red") == 0) {
+                bar_notify_color = COLOR_RED;
+            } else if (strcmp(user_settings->color_bar_notify, "blue") == 0) {
+                bar_notify_color = COLOR_BLUE;
+            } else if (strcmp(user_settings->color_bar_notify, "cyan") == 0) {
+                bar_notify_color = COLOR_CYAN;
+            } else if (strcmp(user_settings->color_bar_notify, "green") == 0) {
+                bar_notify_color = COLOR_GREEN;
+            } else if (strcmp(user_settings->color_bar_notify, "yellow") == 0) {
+                bar_notify_color = COLOR_YELLOW;
+            } else if (strcmp(user_settings->color_bar_notify, "magenta") == 0) {
+                bar_notify_color = COLOR_MAGENTA;
+            } else if (strcmp(user_settings->color_bar_notify, "white") == 0) {
+                bar_notify_color = COLOR_WHITE;
+            } else {
+                bar_notify_color = COLOR_YELLOW;
+            }
+        } else {
+            bar_notify_color = COLOR_YELLOW;
         }
 
         init_pair(WHITE, COLOR_WHITE, COLOR_BLACK);
@@ -278,13 +378,14 @@ static void init_term(void)
         init_pair(BLACK, COLOR_BLACK, COLOR_BLACK);
         init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
         init_pair(BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);
-        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
-        init_pair(CYAN_BLUE, COLOR_CYAN, COLOR_BLUE);
-        init_pair(GREEN_BLUE, COLOR_GREEN, COLOR_BLUE);
-        init_pair(PURPLE_BLUE, COLOR_MAGENTA, COLOR_BLUE);
-        init_pair(BLACK_BLUE, COLOR_BLACK, COLOR_BLUE);
-        init_pair(YELLOW_BLUE, COLOR_YELLOW, COLOR_BLUE);
-        init_pair(RED_BLUE, COLOR_RED, COLOR_BLUE);
+        init_pair(BLACK_BG, COLOR_BLACK, bar_bg_color);
+        init_pair(PURPLE_BG, COLOR_MAGENTA, bar_bg_color);
+        init_pair(BAR_TEXT, bar_fg_color, bar_bg_color);
+        init_pair(BAR_ACCENT, bar_accent_color, bar_bg_color);
+        init_pair(BAR_NOTIFY, bar_notify_color, bar_bg_color);
+        init_pair(STATUS_ONLINE, COLOR_GREEN, bar_bg_color);
+        init_pair(STATUS_AWAY, COLOR_YELLOW, bar_bg_color);
+        init_pair(STATUS_BUSY, COLOR_RED, bar_bg_color);
     }
 
     refresh();
