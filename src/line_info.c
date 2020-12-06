@@ -374,33 +374,33 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
         /* fallthrough */
         case OUT_ACTION:
-            len += strlen(user_settings->line_normal) + 2;
+            len += strlen(user_settings->line_normal) + 2; // two spaces
             break;
 
         case IN_MSG:
 
         /* fallthrough */
         case OUT_MSG:
-            len += strlen(user_settings->line_normal) + 3;
+            len += strlen(user_settings->line_normal) + 3; // two spaces and a ':' char
             break;
 
         case CONNECTION:
-            len += strlen(user_settings->line_join) + 2;
+            len += strlen(user_settings->line_join) + 2;  // two spaces
             break;
 
         case DISCONNECTION:
-            len += strlen(user_settings->line_quit) + 2;
+            len += strlen(user_settings->line_quit) + 2;  // two spaces
             break;
 
         case SYS_MSG:
             break;
 
         case NAME_CHANGE:
-            len += strlen(user_settings->line_alert) + 1;
+            len += strlen(user_settings->line_alert) + 2;  // two spaces
             break;
 
         case PROMPT:
-            len += 2;
+            len += 2;  // '$' char and a space
             break;
 
         default:
