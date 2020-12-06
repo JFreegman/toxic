@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 2020-05-07
+.\"      Date: 2020-11-18
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2020\-05\-07" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2020\-11\-18" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,6 +91,26 @@ Enable or disable acoustic alerts on events\&. true or false
 \fBnative_colors\fR
 .RS 4
 Select between native terminal colors and toxic color theme\&. true or false
+.RE
+.PP
+\fBcolor_bar_bg\fR
+.RS 4
+set background color of chat status bars\&. (black, white, red, green, blue, cyan, yellow, magenta)
+.RE
+.PP
+\fBcolor_bar_fg\fR
+.RS 4
+set foreground (text) color of chat status bars\&. (black, white, red, green, blue, cyan, yellow, magenta)
+.RE
+.PP
+\fBcolor_bar_accent\fR
+.RS 4
+set foreground accent color of chat status bars\&. (black, white, red, green, blue, cyan, yellow, magenta)
+.RE
+.PP
+\fBcolor_bar_notify\fR
+.RS 4
+set foreground notify (and typing) color in chat status bar\&. (black, white, red, green, blue, cyan, yellow, magenta)
 .RE
 .PP
 \fBautolog\fR
@@ -222,11 +242,6 @@ Audio output device\&. Integer value\&. Number corresponds to
 Voice Activity Detection threshold\&. Float value\&. Recommended values are 1\&.0\-40\&.0
 .RE
 .PP
-\fBpush_to_talk\fR
-.RS 4
-Enable/Disable Push\-To\-Talk for conference audio chats (active key is F2)\&. true or false
-.RE
-.PP
 \fBconference_audio_channels\fR
 .RS 4
 Number of channels for conference audio broadcast\&. Integer value\&. 1 (mono) or 2 (stereo)
@@ -235,6 +250,11 @@ Number of channels for conference audio broadcast\&. Integer value\&. 1 (mono) o
 \fBchat_audio_channels\fR
 .RS 4
 Number of channels for 1\-on\-1 audio broadcast\&. Integer value\&. 1 (mono) or 2 (stereo)
+.RE
+.PP
+\fBpush_to_talk\fR
+.RS 4
+Enable/Disable Push\-To\-Talk for conference audio chats (active key is F2)\&. true or false
 .RE
 .RE
 .PP
