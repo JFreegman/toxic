@@ -536,19 +536,19 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 
     if (argc < 1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Chat ID is required.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Chat ID is required.");
         return;
     }
 
     const char *chat_id = argv[1];
 
     if (strlen(chat_id) != TOX_GROUP_CHAT_ID_SIZE * 2) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID");
         return;
     }
 
@@ -564,7 +564,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         xch[2] = '\0';
 
         if (sscanf(xch, "%02x", &x) != 1) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID.");
             return;
         }
 
@@ -590,9 +590,9 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     if (err != TOX_ERR_GROUP_JOIN_OK) {
         if (err == TOX_ERR_GROUP_JOIN_TOO_LONG) {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Password length cannot exceed %d.", TOX_GROUP_MAX_PASSWORD_SIZE);
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Password length cannot exceed %d.", TOX_GROUP_MAX_PASSWORD_SIZE);
         } else {
-            line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
         }
 
         return;
@@ -601,7 +601,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     int init = init_groupchat_win(m, groupnumber, NULL, 0, Group_Join_Type_Join);
 
     if (init == -1) {
-        line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_leave(m, groupnumber, NULL, 0, NULL);
     }
 }

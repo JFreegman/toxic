@@ -793,8 +793,8 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, uint32_t friendnumber, c
         box_silent_notify(self, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name, "invites you to join group chat");
     }
 
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to join group chat \"%s\"", name, group_name);
-    line_info_add(self, NULL, NULL, NULL, SYS_MSG, 0, 0,
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to join group chat \"%s\"", name, group_name);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
                   "Type \"/gaccept <password>\" to join the chat (password is optional).");
 }
 

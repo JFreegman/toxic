@@ -106,9 +106,11 @@ static struct ui_strings {
     "line_alert",
     "line_normal",
     "line_special",
+    "group_part_message",
+
     "mplex_away",
     "mplex_away_note",
-    "group_part_message",
+
     "color_bar_bg",
     "color_bar_fg",
     "color_bar_accent",
