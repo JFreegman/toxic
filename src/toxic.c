@@ -256,7 +256,7 @@ static void init_term(void)
     keypad(stdscr, 1);
     noecho();
     nonl();
-    timeout(50);
+    timeout(30);
 
     if (has_colors()) {
         short bg_color = COLOR_BLACK;
@@ -377,7 +377,9 @@ static void init_term(void)
         init_pair(MAGENTA, COLOR_MAGENTA, bg_color);
         init_pair(BLACK, COLOR_BLACK, COLOR_BLACK);
         init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
+        init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
         init_pair(BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);
+        init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
         init_pair(BLACK_BG, COLOR_BLACK, bar_bg_color);
         init_pair(PURPLE_BG, COLOR_MAGENTA, bar_bg_color);
         init_pair(BAR_TEXT, bar_fg_color, bar_bg_color);
@@ -1460,6 +1462,8 @@ int main(int argc, char **argv)
 {
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+    srand(time(NULL)); // We use rand() for trivial/non-security related things
 
     parse_args(argc, argv);
 

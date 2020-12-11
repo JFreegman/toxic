@@ -26,6 +26,7 @@
 #include "avatars.h"
 #include "conference.h"
 #include "friendlist.h"
+#include "game_base.h"
 #include "help.h"
 #include "line_info.h"
 #include "log.h"
@@ -338,6 +339,58 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
     FrndRequests.max_idx = i;
     --FrndRequests.num_requests;
+}
+
+void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+    if (argc < 1) {
+        game_list_print(self);
+        return;
+    }
+
+    GameType type = game_get_type(argv[1]);
+
+    if (type >= GT_Invalid) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Unknown game.");
+        return;
+    }
+
+    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        return;
+    }
+
+    bool force_small = false;
+
+    if (argc >= 2) {
+        force_small = strcasecmp(argv[2], "small") == 0;
+
+        if (!force_small) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Unknown argument.");
+            return;
+        }
+    }
+
+    int ret = game_initialize(self, m, type, force_small);
+
+    switch (ret) {
+        case 0: {
+            break;
+        }
+
+        case -1: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Window is too small. Try enlarging your window or re-running the command with the 'small' argument.");
+            return;
+        }
+
+        default: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (error %d)", ret);
+            return;
+        }
+    }
 }
 
 void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

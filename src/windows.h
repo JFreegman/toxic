@@ -55,6 +55,8 @@ typedef enum {
     BLACK,
     BLUE_BLACK,
     BLACK_WHITE,
+    WHITE_BLACK,
+    WHITE_BLUE,
     BAR_TEXT,
     STATUS_ONLINE,
     BAR_ACCENT,
@@ -78,6 +80,7 @@ typedef enum {
     WINDOW_TYPE_CHAT,
     WINDOW_TYPE_CONFERENCE,
     WINDOW_TYPE_FRIEND_LIST,
+    WINDOW_TYPE_GAME,
 } WINDOW_TYPE;
 
 /* Fixes text color problem on some terminals.
@@ -129,6 +132,7 @@ typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;
 typedef struct ChatContext ChatContext;
 typedef struct Help Help;
+typedef struct GameData GameData;
 
 struct ToxWindow {
     /* ncurses */
@@ -192,6 +196,8 @@ struct ToxWindow {
     ChatContext *chatwin;
     StatusBar *stb;
     Help *help;
+
+    GameData *game;
 
     WINDOW *window;
     WINDOW *window_bar;
