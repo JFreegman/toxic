@@ -30,6 +30,7 @@
 #include "conference.h"
 #include "file_transfers.h"
 #include "friendlist.h"
+#include "game_base.h"
 #include "line_info.h"
 #include "misc_tools.h"
 #include "prompt.h"
@@ -440,6 +441,9 @@ void on_window_resize(void)
     refresh();
     clear();
 
+    int x2;
+    int y2;
+
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *w = windows[i];
 
@@ -452,6 +456,19 @@ void on_window_resize(void)
             delwin(w->window);
             w->window = newwin(LINES, COLS, 0, 0);
             w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, COLS, LINES - 2, 0);
+            continue;
+        }
+
+        if (w->type == WINDOW_TYPE_GAME) {
+            delwin(w->window_bar);
+            delwin(w->window);
+            delwin(w->game->window);
+            w->window = newwin(LINES, COLS, 0, 0);
+
+            getmaxyx(w->window, y2, x2);
+
+            w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, COLS, LINES - 2, 0);
+            w->game->window = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
             continue;
         }
 
@@ -473,8 +490,6 @@ void on_window_resize(void)
 
         w->window = newwin(LINES, COLS, 0, 0);
 
-        int x2;
-        int y2;
         getmaxyx(w->window, y2, x2);
 
         if (y2 <= 0 || x2 <= 0) {
@@ -710,6 +725,23 @@ void draw_active_window(Tox *m)
     a->onDraw(a, m);
     wrefresh(a->window);
 
+    if (a->type == WINDOW_TYPE_GAME) {
+        int ch = getch();
+
+        if (ch == ERR) {
+            return;
+        }
+
+        if (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab) {
+            set_next_window(ch);
+            ch = KEY_F(2);
+        }
+
+        a->onKey(a, m, ch, false);
+
+        return;
+    }
+
     wint_t ch = 0;
     int printable = get_current_char(&ch);
 
@@ -796,14 +828,18 @@ int get_num_active_windows(void)
 void kill_all_windows(Tox *m)
 {
     for (uint8_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] == NULL) {
+        ToxWindow *w = windows[i];
+
+        if (w == NULL) {
             continue;
         }
 
-        if (windows[i]->type == WINDOW_TYPE_CHAT) {
-            kill_chat_window(windows[i], m);
-        } else if (windows[i]->type == WINDOW_TYPE_CONFERENCE) {
-            free_conference(windows[i], windows[i]->num);
+        if (w->type == WINDOW_TYPE_CHAT) {
+            kill_chat_window(w, m);
+        } else if (w->type == WINDOW_TYPE_CONFERENCE) {
+            free_conference(w, w->num);
+        }  else if (w->type == WINDOW_TYPE_GAME) {
+            game_kill(w);
         }
     }
 

@@ -76,6 +76,7 @@ static const char *chat_cmd_list[] = {
     "/connect",
     "/exit",
     "/conference",
+    "/game",
     "/help",
     "/invite",
     "/join",

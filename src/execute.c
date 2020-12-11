@@ -49,6 +49,7 @@ static struct cmd_func global_commands[] = {
     { "/decline",   cmd_decline       },
     { "/exit",      cmd_quit          },
     { "/conference", cmd_conference    },
+    { "/game",      cmd_game          },
     { "/help",      cmd_prompt_help   },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
