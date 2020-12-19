@@ -32,7 +32,7 @@ typedef struct Coords {
 
 // don't change these
 typedef enum Direction {
-    NORTH = 0,
+    NORTH = 0u,
     SOUTH = 1,
     EAST  = 3,
     WEST  = 4,
@@ -60,7 +60,7 @@ typedef time_t  TIME_S;
 /*
  * Return true if dir is a valid Direction.
  */
-#define GAME_UTIL_DIRECTION_VALID(dir)(((dir) >= 0) && ((dir) < (INVALID_DIRECTION)))
+#define GAME_UTIL_DIRECTION_VALID(dir)((dir) < (INVALID_DIRECTION))
 
 /*
  * Returns cardinal direction mapped to `key`.

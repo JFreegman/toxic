@@ -838,7 +838,7 @@ void kill_all_windows(Tox *m)
             kill_chat_window(w, m);
         } else if (w->type == WINDOW_TYPE_CONFERENCE) {
             free_conference(w, w->num);
-        }  else if (w->type == WINDOW_TYPE_GAME) {
+        } else if (w->type == WINDOW_TYPE_GAME) {
             game_kill(w);
         }
     }

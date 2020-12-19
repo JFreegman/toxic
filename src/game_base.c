@@ -27,6 +27,7 @@
 
 #include "game_centipede.h"
 #include "game_base.h"
+#include "game_chess.h"
 #include "game_snake.h"
 #include "line_info.h"
 #include "misc_tools.h"
@@ -44,7 +45,6 @@
 #define GAME_MAX_UPDATE_INTERVAL 50
 
 
-#define GAME_BORDER_COLOUR  BAR_TEXT
 
 /* Determines if window is large enough for a respective window type */
 #define WINDOW_SIZE_LARGE_SQUARE_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_SQUARE_Y))\
@@ -69,6 +69,7 @@ struct GameList {
 
 static struct GameList game_list[] = {
     { "centipede", GT_Centipede  },
+    { "chess",     GT_Chess      },
     { "snake",     GT_Snake      },
     {  NULL,       GT_Invalid    },
 };
@@ -120,7 +121,7 @@ void game_list_print(ToxWindow *self)
     const char *name = NULL;
 
     for (size_t i = 0; (name = game_list[i].name); ++i) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i + 1, name);
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%zu: %s", i + 1, name);
     }
 }
 
@@ -175,6 +176,11 @@ static int game_initialize_type(GameData *game)
 
         case GT_Centipede: {
             ret = centipede_initialize(game);
+            break;
+        }
+
+        case GT_Chess: {
+            ret = chess_initialize(game);
             break;
         }
 
@@ -495,18 +501,23 @@ static void game_draw_status(const GameData *game, const int max_x, const int ma
     int y = ((max_y - game->game_max_y) / 2) - 1;
 
     wattron(win, A_BOLD);
-    mvwprintw(win, y, x, "Score: %zu", game->score);
 
-    mvwprintw(win, y + game->game_max_y + 2, x, "High Score: %zu", game->high_score);
+    if (game->show_score) {
+        mvwprintw(win, y, x, "Score: %ld", game->score);
+    }
+
+    if (game->show_high_score) {
+        mvwprintw(win, y + game->game_max_y + 2, x, "High Score: %zu", game->high_score);
+    }
 
     x = ((max_x / 2) + (game->game_max_x / 2)) - 7;
 
-    if (game->level > 0) {
+    if (game->show_level) {
         mvwprintw(win, y, x, "Level: %zu", game->level);
     }
 
-    if (game->lives >= 0) {
-        mvwprintw(win, y + game->game_max_y + 2, x, "Lives: %zu", game->lives);
+    if (game->show_lives) {
+        mvwprintw(win, y + game->game_max_y + 2, x, "Lives: %d", game->lives);
     }
 
     wattroff(win, A_BOLD);
@@ -617,10 +628,10 @@ void game_onDraw(ToxWindow *self, Tox *m)
 {
     UNUSED_VAR(m);   // Note: This function is not thread safe if we ever need to use `m`
 
-    curs_set(0);
-
     game_draw_help_bar(self->window);
     draw_window_bar(self);
+
+    curs_set(0);
 
     GameData *game = self->game;
 
@@ -663,8 +674,6 @@ void game_onDraw(ToxWindow *self, Tox *m)
     }
 
     game_draw_messages(game, true);
-
-    wnoutrefresh(self->window);
 }
 
 bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
@@ -830,6 +839,26 @@ int game_x_left_bound(const GameData *game)
     return ((max_x - game->game_max_x) / 2) + 1;
 }
 
+void game_show_score(GameData *game, bool show_score)
+{
+    game->show_score = show_score;
+}
+
+void game_show_high_score(GameData *game, bool show_high_score)
+{
+    game->show_high_score = show_high_score;
+}
+
+void game_show_lives(GameData *game, bool show_lives)
+{
+    game->show_lives = show_lives;
+}
+
+void game_show_level(GameData *game, bool show_level)
+{
+    game->show_level = show_level;
+}
+
 void game_update_score(GameData *game, long int points)
 {
     game->score += points;
@@ -851,7 +880,6 @@ void game_increment_level(GameData *game)
 
 void game_update_lives(GameData *game, int lives)
 {
-    fprintf(stderr, "%d\n", lives);
     game->lives += lives;
 }
 
@@ -912,3 +940,4 @@ void game_set_cb_on_pause(GameData *game, cb_game_pause *func, void *cb_data)
     game->cb_game_pause = func;
     game->cb_game_pause_data = cb_data;
 }
+
