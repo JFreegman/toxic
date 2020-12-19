@@ -886,7 +886,10 @@ int snake_initialize(GameData *game)
 
     state->last_powerup_time = get_unix_time();
 
-    game_update_lives(game, -1);
+    game_show_level(game, true);
+    game_show_score(game, true);
+    game_show_high_score(game, true);
+
     game_increment_level(game);
     game_set_update_interval(game, SNAKE_DEFAULT_UPDATE_INTERVAL);
     game_random_coords(game, &state->food);

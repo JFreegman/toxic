@@ -53,7 +53,7 @@
 /* Max speed of an enemy agent */
 #define CENT_MAX_ENEMY_AGENT_SPEED 8
 
-/* How often a head that reachest he bottom can repdoduce */
+/* How often a head that reaches the bottom can repdoduce */
 #define CENT_REPRODUCE_TIMEOUT 10
 
 #define CENT_CENTIPEDE_DEFAULT_SPEED  5
@@ -194,7 +194,7 @@ typedef struct CentState {
 
 
 #define CENT_LEVEL_COLOURS_SIZE 19
-const static int cent_level_colours[] = {
+static const int cent_level_colours[] = {
     RED,
     CYAN,
     MAGENTA,
@@ -487,6 +487,8 @@ static int cent_birth_centipede(const GameData *game, CentState *state, size_t l
     new_head->display_char = CENT_CENTIPEDE_HEAD_CHAR;
     new_head->prev = NULL;
 
+    centipedes->heads[head_idx] = new_head;
+
     Segment *prev = new_head;
 
     for (size_t i = 0; i < length; ++i) {
@@ -509,8 +511,6 @@ static int cent_birth_centipede(const GameData *game, CentState *state, size_t l
         prev->next = new_seg;
         prev = new_seg;
     }
-
-    centipedes->heads[head_idx] = new_head;
 
     return 0;
 }
@@ -1077,8 +1077,7 @@ static void cent_set_head_direction(CentState *state, Segment *head, int y_botto
 }
 
 /*
- * If a head has reached the bottom it reproduces (spawns an additional head) every time it
- * makes two round-trips across the screen.
+ * If a head has reached the bottom it reproduces (spawns an additional head) on a timer.
  */
 static void cent_do_reproduce(const GameData *game, CentState *state, Segment *head, int x_right, int x_left,
                               int y_bottom)
@@ -1510,6 +1509,10 @@ void cent_cb_update_game_state(GameData *game, void *cb_data)
 
     CentState *state = (CentState *)cb_data;
 
+    if (state->game_over) {
+        return;
+    }
+
     TIME_MS cur_time = get_time_millis();
 
     cent_blaster_collision_check(game, state);
@@ -1720,6 +1723,10 @@ int centipede_initialize(GameData *game)
         return -1;
     }
 
+    game_show_level(game, true);
+    game_show_score(game, true);
+    game_show_lives(game, true);
+    game_show_high_score(game, true);
     game_increment_level(game);
     game_set_update_interval(game, 10);
 

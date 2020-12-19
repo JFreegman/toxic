@@ -53,10 +53,10 @@ typedef enum {
     YELLOW,
     MAGENTA,
     BLACK,
-    BLUE_BLACK,
     BLACK_WHITE,
     WHITE_BLACK,
     WHITE_BLUE,
+    WHITE_GREEN,
     BAR_TEXT,
     STATUS_ONLINE,
     BAR_ACCENT,
@@ -290,4 +290,5 @@ void draw_window_bar(ToxWindow *self);
    call at least once per second */
 void refresh_inactive_windows(void);
 
-#endif /* WINDOWS_H */
+#endif // WINWDOWS_H
+

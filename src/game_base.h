@@ -31,6 +31,8 @@
 #include "game_util.h"
 #include "windows.h"
 
+#define GAME_BORDER_COLOUR BAR_TEXT
+
 /* Max size of a default size square game window */
 #define GAME_MAX_SQUARE_Y 26
 #define GAME_MAX_SQUARE_X (GAME_MAX_SQUARE_Y * 2)
@@ -44,7 +46,7 @@
 #define GAME_MAX_RECT_X (GAME_MAX_RECT_Y * 4)
 
 /* Max size of a small rectangle game window */
-#define GAME_MAX_RECT_Y_SMALL 12
+#define GAME_MAX_RECT_Y_SMALL 14
 #define GAME_MAX_RECT_X_SMALL (GAME_MAX_RECT_Y_SMALL * 4)
 
 /* Maximum length of a game message set with game_set_message() */
@@ -60,13 +62,13 @@ typedef void cb_game_key_press(GameData *game, int key, void *cb_data);
 
 
 typedef enum GameWindowShape {
-    GW_ShapeSquare = 0,
+    GW_ShapeSquare = 0u,
     GW_ShapeRectangle,
     GW_ShapeInvalid,
 } GameWindowShape;
 
 typedef enum GameStatus {
-    GS_None = 0,
+    GS_None = 0u,
     GS_Paused,
     GS_Running,
     GS_Finished,
@@ -74,8 +76,9 @@ typedef enum GameStatus {
 } GameStatus;
 
 typedef enum GameType {
-    GT_Snake = 0,
-    GT_Centipede,
+    GT_Centipede = 0u,
+    GT_Chess,
+    GT_Snake,
     GT_Invalid,
 } GameType;
 
@@ -102,6 +105,11 @@ struct GameData {
     size_t     level;
     GameStatus status;
     GameType   type;
+
+    bool       show_lives;
+    bool       show_score;
+    bool       show_high_score;
+    bool       show_level;
 
     GameMessage *messages;
     size_t      messages_size;
@@ -196,7 +204,7 @@ bool game_coordinates_in_bounds(const GameData *game, int x, int y);
 void game_random_coords(const GameData *game, Coords *coords);
 
 /*
- *Gets the current max dimensions of the game window.
+ * Gets the current max dimensions of the game window.
  */
 void game_max_x_y(const GameData *game, int *x, int *y);
 
@@ -207,6 +215,14 @@ int game_y_bottom_bound(const GameData *game);
 int game_y_top_bound(const GameData *game);
 int game_x_right_bound(const GameData *game);
 int game_x_left_bound(const GameData *game);
+
+/*
+ * Toggle whether the respective game info is shown around the game window.
+ */
+void game_show_score(GameData *game, bool show_score);
+void game_show_high_score(GameData *game, bool show_high_score);
+void game_show_lives(GameData *game, bool show_lives);
+void game_show_level(GameData *game, bool show_level);
 
 /*
  * Updates game score.

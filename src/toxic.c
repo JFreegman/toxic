@@ -376,10 +376,10 @@ static void init_term(void)
         init_pair(YELLOW, COLOR_YELLOW, bg_color);
         init_pair(MAGENTA, COLOR_MAGENTA, bg_color);
         init_pair(BLACK, COLOR_BLACK, COLOR_BLACK);
-        init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
         init_pair(WHITE_BLUE, COLOR_WHITE, COLOR_BLUE);
         init_pair(BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);
         init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
+        init_pair(WHITE_GREEN, COLOR_WHITE, COLOR_GREEN);
         init_pair(BLACK_BG, COLOR_BLACK, bar_bg_color);
         init_pair(PURPLE_BG, COLOR_MAGENTA, bar_bg_color);
         init_pair(BAR_TEXT, bar_fg_color, bar_bg_color);
