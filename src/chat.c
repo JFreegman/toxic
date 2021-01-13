@@ -1027,7 +1027,7 @@ static void draw_infobox(ToxWindow *self)
     wattroff(infobox->win, A_BOLD);
     wprintw(infobox->win, "%.2f\n", (double) infobox->vad_lvl);
 
-    wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_TTEE, ' ', ACS_LLCORNER, ' ');
+    wborder(infobox->win, ACS_VLINE, ' ', ACS_HLINE, ACS_HLINE, ACS_ULCORNER, ' ', ACS_LLCORNER, ' ');
     wnoutrefresh(infobox->win);
 }
 
