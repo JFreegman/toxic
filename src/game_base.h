@@ -52,14 +52,35 @@
 /* Maximum length of a game message set with game_set_message() */
 #define GAME_MAX_MESSAGE_SIZE 64
 
+/* Default number of seconds a game message is displayed for */
 #define GAME_MESSAGE_DEFAULT_TIMEOUT 3
+
+
+/***** NETWORKING DEFINES *****/
+
+/* Header starts after custom packet type byte. Comprised of: NetworkVersion (1b) + GameType (1b) + id (4b) */
+#define GAME_PACKET_HEADER_SIZE (1 + 1 + sizeof(uint32_t))
+
+/* Max size of a game packet including the header */
+#define GAME_MAX_PACKET_SIZE 1024
+
+/* Max size of a game packet payload */
+#define GAME_MAX_DATA_SIZE (GAME_MAX_PACKET_SIZE - GAME_PACKET_HEADER_SIZE - 1)
+
+/* Current version of networking protocol */
+#define GAME_NETWORKING_VERSION 0x01
 
 typedef void cb_game_update_state(GameData *game, void *cb_data);
 typedef void cb_game_render_window(GameData *game, WINDOW *window, void *cb_data);
 typedef void cb_game_kill(GameData *game, void *cb_data);
 typedef void cb_game_pause(GameData *game, bool is_paused, void *cb_data);
 typedef void cb_game_key_press(GameData *game, int key, void *cb_data);
+typedef void cb_game_on_packet(GameData *game, const uint8_t *data, size_t length, void *cb_data);
 
+typedef enum GamePacketType {
+    GP_Invite = 0u,
+    GP_Data,
+} GamePacketType;
 
 typedef enum GameWindowShape {
     GW_ShapeSquare = 0u,
@@ -105,6 +126,7 @@ struct GameData {
     size_t     level;
     GameStatus status;
     GameType   type;
+    bool       is_multiplayer;
 
     bool       show_lives;
     bool       show_score;
@@ -116,10 +138,19 @@ struct GameData {
 
     int        game_max_x; // max dimensions of game window
     int        game_max_y;
+
+    int        parent_max_x; // max dimensions of parent window
+    int        parent_max_y;
+
     int        window_id;
     WINDOW     *window;
-    const ToxWindow   *parent;
+
+    Tox        *tox;  // must be locked with Winthread mutex
+
     GameWindowShape    window_shape;
+
+    uint32_t id;  // indentifies multiplayer instance
+    uint32_t friend_number; // friendnumber associated with parent window
 
     cb_game_update_state *cb_game_update_state;
     void *cb_game_update_state_data;
@@ -135,6 +166,9 @@ struct GameData {
 
     cb_game_key_press *cb_game_key_press;
     void *cb_game_key_press_data;
+
+    cb_game_on_packet *cb_game_on_packet;
+    void *cb_game_on_packet_data;
 };
 
 
@@ -164,13 +198,31 @@ void game_set_cb_on_pause(GameData *game, cb_game_pause *func, void *cb_data);
 void game_set_cb_on_keypress(GameData *game, cb_game_key_press *func, void *cb_data);
 
 /*
+ * Sets the callback for the game packet event.
+ */
+void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_data);
+
+/*
  * Initializes game instance.
+ *
+ * `type` must be a valid GameType.
+ *
+ * `id` should be a unique integer to indentify the game instance. If we're being invited to a game
+ *   this identifier should be sent via the invite packet.
+ *
+ * `force_small_window` will make the game window small.
+ *
+ * if `multiplayer_data` is non-null this indicates that we accepted a game invite from a contact.
+ *   The data contains any information we need to initialize the game state.
  *
  * Return 0 on success.
  * Return -1 if screen is too small.
- * Return -2 on other failure.
+ * Return -2 on network related error.
+ * Return -3 if multiplayer game is being initialized outside of a contact's window.
+ * Return -4 on other failure.
  */
-int game_initialize(const ToxWindow *self, Tox *m, GameType type, bool force_small_window);
+int game_initialize(const ToxWindow *self, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
+                    size_t length, bool force_small_window);
 
 /*
  * Sets game window to `shape` and attempts to adjust size for best fit.
@@ -189,9 +241,19 @@ int game_set_window_shape(GameData *game, GameWindowShape shape);
 GameType game_get_type(const char *game_string);
 
 /*
+ * Returns the name represented as a string associated with `type`.
+ */
+const char *game_get_name_string(GameType type);
+
+/*
  * Prints all available games to window associated with `self`.
  */
 void game_list_print(ToxWindow *self);
+
+/*
+ * Return true if game `type` has a multiplayer mode.
+ */
+bool game_type_is_multiplayer(GameType type);
 
 /*
  * Returns true if coordinates designated by `x` and `y` are within the game window boundaries.
@@ -308,4 +370,15 @@ TIME_MS get_time_millis(void);
  */
 void game_kill(ToxWindow *self);
 
+/*
+ * Sends a packet containing payload `data` of size `length` to the friendnumber associated with the game's
+ * parent window.
+ *
+ * `length` must not exceed GAME_MAX_DATA_SIZE bytes.
+ *
+ * `packet_type` should be GP_Invite for an invite packet or GP_Data for all other game data.
+ */
+int game_send_packet(const GameData *game, const uint8_t *data, size_t length, GamePacketType packet_type);
+
 #endif // GAME_BASE
+

@@ -806,6 +806,7 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_file_chunk_request(m, on_file_chunk_request);
     tox_callback_file_recv_control(m, on_file_recv_control);
     tox_callback_file_recv_chunk(m, on_file_recv_chunk);
+    tox_callback_friend_lossless_packet(m, on_lossless_custom_packet);
 }
 
 static void init_tox_options(struct Tox_Options *tox_opts)

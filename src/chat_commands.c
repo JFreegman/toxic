@@ -172,6 +172,59 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
 #endif
 }
 
+void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
+    bool force_small = false;
+
+    if (argc >= 2) {
+        force_small = strcasecmp(argv[2], "small") == 0;
+    }
+
+    if (!Friends.list[self->num].game_invite.pending) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
+        return;
+    }
+
+    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        return;
+    }
+
+    GameType type = Friends.list[self->num].game_invite.type;
+    uint32_t id = Friends.list[self->num].game_invite.id;
+    uint8_t *data = Friends.list[self->num].game_invite.data;
+    size_t length = Friends.list[self->num].game_invite.data_length;
+
+    int ret = game_initialize(self, m, type, id, data, length, force_small);
+
+    switch (ret) {
+        case 0: {
+            free(data);
+            Friends.list[self->num].game_invite.data = NULL;
+            Friends.list[self->num].game_invite.pending = false;
+            break;
+        }
+
+        case -1: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Window is too small. Try enlarging your window.");
+            return;
+        }
+
+        case -2: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (network error)");
+            return;
+        }
+
+        default: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (error %d)", ret);
+            return;
+        }
+    }
+}
+
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);

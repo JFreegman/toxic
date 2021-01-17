@@ -26,6 +26,7 @@
 #include <time.h>
 
 #include "file_transfers.h"
+#include "game_base.h"
 #include "toxic.h"
 #include "windows.h"
 
@@ -39,6 +40,14 @@ struct ConferenceInvite {
     char *key;
     uint16_t length;
     uint8_t type;
+    bool pending;
+};
+
+struct GameInvite {
+    uint8_t *data;
+    size_t data_length;
+    GameType type;
+    uint32_t id;
     bool pending;
 };
 
@@ -58,6 +67,7 @@ typedef struct {
 
     struct LastOnline last_online;
     struct ConferenceInvite conference_invite;
+    struct GameInvite game_invite;
 
     struct FileTransfer file_receiver[MAX_FILES];
     struct FileTransfer file_sender[MAX_FILES];

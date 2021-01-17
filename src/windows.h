@@ -43,6 +43,13 @@
 #define TOP_BAR_HEIGHT 1
 #define WINDOW_BAR_HEIGHT 1
 
+
+typedef enum CustomPacket {
+    CUSTOM_PACKET_GAME_INVITE = 160,
+    CUSTOM_PACKET_GAME_DATA   = 161,
+} CustomPacket;
+
+
 /* ncurses colour pairs as FOREGROUND_BACKGROUND. No background defaults to black. */
 typedef enum {
     WHITE,
@@ -159,6 +166,10 @@ struct ToxWindow {
     void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
     void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
+
+    /* custom packets/games */
+    void(*onGameInvite)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
+    void(*onGameData)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
 
 #ifdef AUDIO
 

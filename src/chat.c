@@ -35,6 +35,7 @@
 #include "execute.h"
 #include "file_transfers.h"
 #include "friendlist.h"
+#include "game_base.h"
 #include "help.h"
 #include "input.h"
 #include "line_info.h"
@@ -88,6 +89,7 @@ static const char *chat_cmd_list[] = {
     "/nick",
     "/note",
     "/nospam",
+    "/play",
     "/quit",
     "/savefile",
     "/sendfile",
@@ -755,6 +757,75 @@ static void chat_onConferenceInvite(ToxWindow *self, Tox *m, int32_t friendnumbe
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to %s.", name, description);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
+}
+
+void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const uint8_t *data, size_t length)
+{
+    if (!self || self->num != friend_number) {
+        return;
+    }
+
+    if (length < GAME_PACKET_HEADER_SIZE) {
+        return;
+    }
+
+    uint8_t version = data[0];
+
+    if (version != GAME_NETWORKING_VERSION) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Game invite failed. Friend has network protocol version %d, you have version %d.", version, GAME_NETWORKING_VERSION);
+        return;
+    }
+
+    GameType type = data[1];
+
+    if (!game_type_is_multiplayer(type)) {
+        return;
+    }
+
+    uint32_t id;
+    game_util_unpack_u32(data + 2, &id);
+
+    const char *game_string = game_get_name_string(type);
+
+    if (game_string == NULL) {
+        return;
+    }
+
+    Friends.list[friend_number].game_invite.type = type;
+    Friends.list[friend_number].game_invite.id = id;
+    Friends.list[friend_number].game_invite.pending = true;
+
+    uint32_t data_length = length - GAME_PACKET_HEADER_SIZE;
+    Friends.list[friend_number].game_invite.data_length = data_length;
+
+    if (data_length > 0) {
+        free(Friends.list[friend_number].game_invite.data);
+
+        uint8_t *buf = calloc(1, data_length);
+
+        if (buf == NULL) {
+            return;
+        }
+
+        memcpy(buf, data + GAME_PACKET_HEADER_SIZE, data_length);
+        Friends.list[friend_number].game_invite.data = buf;
+    }
+
+    char name[TOX_MAX_NAME_LENGTH];
+    get_nick_truncate(m, name, friend_number);
+
+    if (self->active_box != -1) {
+        box_notify2(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, self->active_box,
+                    "invites you to play %s", game_string);
+    } else {
+        box_notify(self, generic_message, NT_WNDALERT_2 | user_settings->bell_on_invite, &self->active_box, name,
+                   "invites you to play %s", game_string);
+    }
+
+
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a game of %s.", name, game_string);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/play\" to join the game.");
 }
 
 /* AV Stuff */
@@ -1475,6 +1546,7 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
     ret->onFileControl = &chat_onFileControl;
     ret->onFileRecv = &chat_onFileRecv;
     ret->onReadReceipt = &chat_onReadReceipt;
+    ret->onGameInvite = &chat_onGameInvite;
 
 #ifdef AUDIO
     ret->onInvite = &chat_onInvite;
