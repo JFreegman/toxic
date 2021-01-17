@@ -792,7 +792,8 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint3
             snprintf(log_event, sizeof(log_event), "is now known as %s", (const char *) name);
             write_to_log(log_event, peer->name, ctx->log, true);
 
-        } else {  // this is kind of a hack; peers always join a group with no name set and then set it after
+            // this is kind of a hack; peers always join a group with no name set and then set it after
+        } else if (timed_out(conferences[conferencenum].start_time, CONFERENCE_EVENT_WAIT)) {
             const char *msg = "has joined the conference";
             line_info_add(self, true, name, NULL, CONNECTION, 0, GREEN, msg);
             write_to_log(msg, name, ctx->log, true);
