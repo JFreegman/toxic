@@ -323,6 +323,49 @@ void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, voi
         }
     }
 }
+
+void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata)
+{
+    UNUSED_VAR(userdata);
+
+    if (length == 0 || data == NULL) {
+        return;
+    }
+
+    uint8_t type = data[0];
+
+    switch (type) {
+        case CUSTOM_PACKET_GAME_INVITE: {
+            for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+                ToxWindow *window = windows[i];
+
+                if (window != NULL && window->onGameInvite != NULL) {
+                    window->onGameInvite(window, m, friendnumber, data + 1, length - 1);
+                }
+            }
+
+            break;
+        }
+
+        case CUSTOM_PACKET_GAME_DATA: {
+            for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+                ToxWindow *window = windows[i];
+
+                if (window != NULL && window->onGameData != NULL) {
+                    window->onGameData(window, m, friendnumber, data + 1, length - 1);
+                }
+            }
+
+            break;
+        }
+
+        default: {
+            fprintf(stderr, "Got unknown custom packet of type: %u\n", type);
+            return;
+        }
+    }
+}
+
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow *w)

@@ -89,4 +89,15 @@ void game_util_move_coords(Direction direction, Coords *coords);
  */
 int game_util_random_colour(void);
 
+/*
+ * Packs an unsigned 32 bit integer `v` into `bytes`.
+ */
+size_t game_util_pack_u32(uint8_t *bytes, uint32_t v);
+
+/*
+ * Unpacks an unsigned 32 bit integer in `bytes` to `v`.
+ */
+size_t game_util_unpack_u32(const uint8_t *bytes, uint32_t *v);
+
 #endif  // GAME_UTIL
+

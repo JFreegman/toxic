@@ -135,5 +135,7 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
                   const uint8_t *filename, size_t filename_length, void *userdata);
 void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata);
 void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata);
+void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata);
+
 
 #endif /* TOXIC_H */

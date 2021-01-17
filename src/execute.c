@@ -81,6 +81,7 @@ static struct cmd_func chat_commands[] = {
     { "/cancel",    cmd_cancelfile        },
     { "/invite",    cmd_conference_invite },
     { "/join",      cmd_conference_join   },
+    { "/play",      cmd_game_join         },
     { "/savefile",  cmd_savefile          },
     { "/sendfile",  cmd_sendfile          },
 #ifdef AUDIO

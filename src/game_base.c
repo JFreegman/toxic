@@ -25,12 +25,15 @@
 #include <string.h>
 #include <time.h>
 
+#include "friendlist.h"
 #include "game_centipede.h"
 #include "game_base.h"
 #include "game_chess.h"
 #include "game_snake.h"
 #include "line_info.h"
 #include "misc_tools.h"
+
+extern struct Winthread Winthread;
 
 /*
  * Determines the base rate at which game objects should update their state.
@@ -60,7 +63,7 @@
                                                   && ((max_x) >= (GAME_MAX_RECT_X_SMALL)))
 
 
-static ToxWindow *game_new_window(GameType type);
+static ToxWindow *game_new_window(GameType type, uint32_t friendnumber);
 
 struct GameList {
     const char *name;
@@ -73,13 +76,6 @@ static struct GameList game_list[] = {
     { "snake",     GT_Snake      },
     {  NULL,       GT_Invalid    },
 };
-
-
-static void game_get_parent_max_x_y(const ToxWindow *parent, int *max_x, int *max_y)
-{
-    getmaxyx(parent->window, *max_y, *max_x);
-    *max_y -= (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT);
-}
 
 /*
  * Returns the GameType associated with `game_string`.
@@ -97,8 +93,7 @@ GameType game_get_type(const char *game_string)
     return GT_Invalid;
 }
 
-/* Returns the string name associated with `type`. */
-static const char *game_get_name_string(GameType type)
+const char *game_get_name_string(GameType type)
 {
     GameType match_type;
 
@@ -111,9 +106,6 @@ static const char *game_get_name_string(GameType type)
     return NULL;
 }
 
-/*
- * Prints all available games to window associated with `self`.
- */
 void game_list_print(ToxWindow *self)
 {
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Available games:");
@@ -125,11 +117,16 @@ void game_list_print(ToxWindow *self)
     }
 }
 
+bool game_type_is_multiplayer(GameType type)
+{
+    return type == GT_Chess;
+}
+
 /* Returns the current wall time in milliseconds */
 TIME_MS get_time_millis(void)
 {
     struct timespec t;
-    timespec_get(&t, TIME_UTC);
+    clock_gettime(CLOCK_MONOTONIC, &t);
     return ((TIME_MS) t.tv_sec) * 1000 + ((TIME_MS) t.tv_nsec) / 1000000;
 }
 
@@ -164,9 +161,9 @@ static void game_toggle_pause(GameData *game)
     }
 }
 
-static int game_initialize_type(GameData *game)
+static int game_initialize_type(GameData *game, const uint8_t *data, size_t length)
 {
-    int ret = -1;
+    int ret = -3;
 
     switch (game->type) {
         case GT_Snake: {
@@ -180,7 +177,7 @@ static int game_initialize_type(GameData *game)
         }
 
         case GT_Chess: {
-            ret = chess_initialize(game);
+            ret = chess_initialize(game, data, length);
             break;
         }
 
@@ -192,18 +189,14 @@ static int game_initialize_type(GameData *game)
     return ret;
 }
 
-/*
- * Initializes game instance.
- *
- * Return 0 on success.
- * Return -1 if screen is too small.
- * Return -2 on other failure.
- */
-int game_initialize(const ToxWindow *parent, Tox *m, GameType type, bool force_small_window)
+int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
+                    size_t length, bool force_small_window)
 {
     int max_x;
     int max_y;
-    game_get_parent_max_x_y(parent, &max_x, &max_y);
+    getmaxyx(parent->window, max_y, max_x);
+
+    max_y -= (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT);
 
     int max_game_window_x = GAME_MAX_SQUARE_X;
     int max_game_window_y = GAME_MAX_SQUARE_Y;
@@ -221,10 +214,10 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, bool force_s
         }
     }
 
-    ToxWindow *self = game_new_window(type);
+    ToxWindow *self = game_new_window(type, parent->num);
 
     if (self == NULL) {
-        return -2;
+        return -4;
     }
 
     GameData *game = self->game;
@@ -234,27 +227,47 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, bool force_s
     if (window_id == -1) {
         free(game);
         free(self);
-        return -2;
+        return -4;
     }
 
-    game->parent = parent;
+    game->is_multiplayer = game_type_is_multiplayer(type);
+
+    if (game->is_multiplayer) {
+        if (parent->type != WINDOW_TYPE_CHAT) {
+            game_kill(self);
+            return -3;
+        }
+
+        if (get_friend_connection_status(parent->num) == TOX_CONNECTION_NONE) {
+            return -2;
+        }
+
+        game->is_multiplayer = true;
+    }
+
+    game->tox = m;
     game->window_shape = GW_ShapeSquare;
     game->game_max_x = max_game_window_x;
     game->game_max_y = max_game_window_y;
+    game->parent_max_x = max_x;
+    game->parent_max_y = max_y;
     game->update_interval = GAME_DEFAULT_UPDATE_INTERVAL;
     game->type = type;
     game->window_id = window_id;
-    game->level = 0;
     game->window = subwin(self->window, max_y, max_x, 0, 0);
+    game->id = id;
+    game->friend_number = parent->num;
 
     if (game->window == NULL) {
         game_kill(self);
-        return -2;
+        return -4;
     }
 
-    if (game_initialize_type(game) == -1) {
+    int init_ret = game_initialize_type(game, multiplayer_data, length);
+
+    if (init_ret < 0) {
         game_kill(self);
-        return -1;
+        return init_ret;
     }
 
     game->status = GS_Running;
@@ -283,11 +296,8 @@ int game_set_window_shape(GameData *game, GameWindowShape shape)
         return 0;
     }
 
-    const ToxWindow *parent = game->parent;
-
-    int max_x;
-    int max_y;
-    game_get_parent_max_x_y(parent, &max_x, &max_y);
+    const int max_x = game->parent_max_x;
+    const int max_y = game->parent_max_y;
 
     if (WINDOW_SIZE_LARGE_RECT_VALID(max_x, max_y)) {
         game->game_max_x = GAME_MAX_RECT_X;
@@ -439,14 +449,14 @@ static int game_restart(GameData *game)
 
     game_clear_all_messages(game);
 
-    if (game_initialize_type(game) == -1) {
+    if (game_initialize_type(game, NULL, 0) == -1) {
         return -1;
     }
 
     return 0;
 }
 
-static void game_draw_help_bar(WINDOW *win)
+static void game_draw_help_bar(const GameData *game, WINDOW *win)
 {
     int max_x;
     int max_y;
@@ -456,10 +466,12 @@ static void game_draw_help_bar(WINDOW *win)
 
     wmove(win, max_y - 1, 1);
 
-    wprintw(win, "Pause: ");
-    wattron(win, A_BOLD);
-    wprintw(win, "F2  ");
-    wattroff(win, A_BOLD);
+    if (!game->is_multiplayer) {
+        wprintw(win, "Pause: ");
+        wattron(win, A_BOLD);
+        wprintw(win, "F2  ");
+        wattroff(win, A_BOLD);
+    }
 
     wprintw(win, "Quit: ");
     wattron(win, A_BOLD);
@@ -628,12 +640,12 @@ void game_onDraw(ToxWindow *self, Tox *m)
 {
     UNUSED_VAR(m);   // Note: This function is not thread safe if we ever need to use `m`
 
-    game_draw_help_bar(self->window);
+    GameData *game = self->game;
+
+    game_draw_help_bar(game, self->window);
     draw_window_bar(self);
 
     curs_set(0);
-
-    GameData *game = self->game;
 
     int max_x;
     int max_y;
@@ -678,8 +690,8 @@ void game_onDraw(ToxWindow *self, Tox *m)
 
 bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
 {
-    UNUSED_VAR(m);  // Note: this function is not thread safe if we ever need to use `m`
     UNUSED_VAR(is_printable);
+    UNUSED_VAR(m);
 
     GameData *game = self->game;
 
@@ -688,12 +700,12 @@ bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
         return true;
     }
 
-    if (key == KEY_F(2)) {
+    if (!game->is_multiplayer && key == KEY_F(2)) {
         game_toggle_pause(self->game);
         return true;
     }
 
-    if (game->status == GS_Finished && key == KEY_F(5)) {
+    if (!game->is_multiplayer && game->status == GS_Finished && key == KEY_F(5)) {
         if (game_restart(self->game) == -1) {
             fprintf(stderr, "Warning: game_restart() failed\n");
         }
@@ -702,7 +714,15 @@ bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
     }
 
     if (game->cb_game_key_press) {
+        if (game->is_multiplayer) {
+            pthread_mutex_lock(&Winthread.lock);  // we use the tox instance when we send packets
+        }
+
         game->cb_game_key_press(game, key, game->cb_game_key_press_data);
+
+        if (game->is_multiplayer) {
+            pthread_mutex_unlock(&Winthread.lock);
+        }
     }
 
     return true;
@@ -723,7 +743,55 @@ void game_onInit(ToxWindow *self, Tox *m)
     self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, max_x, max_y - 2, 0);
 }
 
-static ToxWindow *game_new_window(GameType type)
+/*
+ * Byte 0:   Game type
+ * Byte 1-4: Game ID
+ * Byte 5-*  Game data
+ */
+void game_onPacket(ToxWindow *self, Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length)
+{
+    UNUSED_VAR(m);
+
+    GameData *game = self->game;
+
+    if (friendnumber != self->num) {
+        return;
+    }
+
+    if (data == NULL) {
+        return;
+    }
+
+    if (length < GAME_PACKET_HEADER_SIZE || length > GAME_MAX_PACKET_SIZE) {
+        return;
+    }
+
+    if (data[0] != GAME_NETWORKING_VERSION) {
+        return;
+    }
+
+    GameType type = (GameType)data[1];
+
+    if (game->type != type) {
+        return;
+    }
+
+    uint32_t id;
+    game_util_unpack_u32(data + 2, &id);
+
+    if (game->id != id) {
+        return;
+    }
+
+    data += GAME_PACKET_HEADER_SIZE;
+    length -= GAME_PACKET_HEADER_SIZE;
+
+    if (game->cb_game_on_packet) {
+        game->cb_game_on_packet(game, data, length, game->cb_game_on_packet_data);
+    }
+}
+
+static ToxWindow *game_new_window(GameType type, uint32_t friendnumber)
 {
     const char *window_name = game_get_name_string(type);
 
@@ -737,11 +805,13 @@ static ToxWindow *game_new_window(GameType type)
         return NULL;
     }
 
+    ret->num = friendnumber;
     ret->type = WINDOW_TYPE_GAME;
 
     ret->onInit = &game_onInit;
     ret->onDraw = &game_onDraw;
     ret->onKey = &game_onKey;
+    ret->onGameData = &game_onPacket;
 
     ret->game = calloc(1, sizeof(GameData));
 
@@ -939,5 +1009,60 @@ void game_set_cb_on_pause(GameData *game, cb_game_pause *func, void *cb_data)
 {
     game->cb_game_pause = func;
     game->cb_game_pause_data = cb_data;
+}
+
+void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_data)
+{
+    game->cb_game_on_packet = func;
+    game->cb_game_on_packet_data = cb_data;
+}
+
+/*
+ * Wraps `packet` in a header comprised of the custom packet type, game type and game id.
+ */
+static int game_wrap_packet(const GameData *game, uint8_t *packet, size_t size, GamePacketType packet_type)
+{
+    if (size < GAME_PACKET_HEADER_SIZE + 1) {
+        return -1;
+    }
+
+    if (packet_type != GP_Invite && packet_type != GP_Data) {
+        return -1;
+    }
+
+    packet[0] = packet_type == GP_Data ? CUSTOM_PACKET_GAME_DATA : CUSTOM_PACKET_GAME_INVITE;
+    packet[1] = GAME_NETWORKING_VERSION;
+    packet[2] = game->type;
+
+    game_util_pack_u32(packet + 3, game->id);
+
+    return 0;
+}
+
+int game_send_packet(const GameData *game, const uint8_t *data, size_t length, GamePacketType packet_type)
+{
+    if (length > GAME_MAX_DATA_SIZE) {
+        return -1;
+    }
+
+    uint8_t packet[GAME_MAX_PACKET_SIZE];
+
+    if (game_wrap_packet(game, packet, sizeof(packet), packet_type) == -1) {
+        return -1;
+    }
+
+    size_t packet_length = 1 + GAME_PACKET_HEADER_SIZE;  // 1 extra byte for custom packet type
+
+    memcpy(packet + 1 + GAME_PACKET_HEADER_SIZE, data, length);
+    packet_length += length;
+
+    TOX_ERR_FRIEND_CUSTOM_PACKET err;
+
+    if (!tox_friend_send_lossless_packet(game->tox, game->friend_number, packet, packet_length, &err)) {
+        fprintf(stderr, "failed to send game packet: error %d\n", err);
+        return -1;
+    }
+
+    return -0;
 }
 
