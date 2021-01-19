@@ -26,7 +26,6 @@
 #include "avatars.h"
 #include "conference.h"
 #include "friendlist.h"
-#include "game_base.h"
 #include "help.h"
 #include "line_info.h"
 #include "log.h"
@@ -38,6 +37,10 @@
 #include "toxic.h"
 #include "toxic_strings.h"
 #include "windows.h"
+
+#ifdef GAMES
+#include "game_base.h"
+#endif
 
 extern char *DATA_FILE;
 extern ToxWindow *prompt;
@@ -341,6 +344,8 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     --FrndRequests.num_requests;
 }
 
+#ifdef GAMES
+
 void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -405,6 +410,8 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         }
     }
 }
+
+#endif // GAMES
 
 void cmd_conference(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {

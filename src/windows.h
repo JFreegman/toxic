@@ -87,7 +87,10 @@ typedef enum {
     WINDOW_TYPE_CHAT,
     WINDOW_TYPE_CONFERENCE,
     WINDOW_TYPE_FRIEND_LIST,
+
+#ifdef GAMES
     WINDOW_TYPE_GAME,
+#endif
 } WINDOW_TYPE;
 
 /* Fixes text color problem on some terminals.
@@ -139,7 +142,10 @@ typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;
 typedef struct ChatContext ChatContext;
 typedef struct Help Help;
+
+#ifdef GAMES
 typedef struct GameData GameData;
+#endif
 
 struct ToxWindow {
     /* ncurses */
@@ -167,9 +173,10 @@ struct ToxWindow {
     void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
     void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
 
-    /* custom packets/games */
+#ifdef GAMES
     void(*onGameInvite)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
     void(*onGameData)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
+#endif // GAMES
 
 #ifdef AUDIO
 
@@ -208,7 +215,9 @@ struct ToxWindow {
     StatusBar *stb;
     Help *help;
 
+#ifdef GAMES
     GameData *game;
+#endif
 
     WINDOW *window;
     WINDOW *window_bar;

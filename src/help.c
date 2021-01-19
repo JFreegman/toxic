@@ -181,6 +181,10 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /conference <type>         : Create a conference where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
+#ifdef GAMES
+    wprintw(win, "  /game                      : Play a game\n");
+#endif /* GAMES */
+
 #ifdef QRCODE
 #ifdef QRPNG
     wprintw(win, "  /myqr <txt> or <png>       : Print your Tox ID's QR code to a file.\n");
@@ -263,6 +267,10 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /vcall                     : Video call\n");
     wprintw(win, "  /video                     : Toggle video in call\n");
 #endif /* VIDEO */
+
+#ifdef GAMES
+    wprintw(win, "  /game                      : Play a game with contact\n");
+#endif /* GAMES */
 
     help_draw_bottom_menu(win);
 
@@ -378,11 +386,11 @@ void help_onKey(ToxWindow *self, wint_t key)
 
         case L'c':
 #ifdef VIDEO
-            help_init_window(self, 25, 80);
+            help_init_window(self, 26, 80);
 #elif AUDIO
-            help_init_window(self, 20, 80);
+            help_init_window(self, 21, 80);
 #else
-            help_init_window(self, 10, 80);
+            help_init_window(self, 11, 80);
 #endif
             self->help->type = HELP_CHAT;
             break;
@@ -396,6 +404,9 @@ void help_onKey(ToxWindow *self, wint_t key)
 #endif
 #ifdef PYTHON
             height += 2;
+#endif
+#ifdef GAMES
+            height += 1;
 #endif
             help_init_window(self, height, 80);
             self->help->type = HELP_GLOBAL;

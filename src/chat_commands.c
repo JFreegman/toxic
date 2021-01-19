@@ -172,6 +172,8 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
 #endif
 }
 
+#ifdef GAMES
+
 void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -224,6 +226,8 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         }
     }
 }
+
+#endif // GAMES
 
 void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {

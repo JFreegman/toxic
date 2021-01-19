@@ -88,7 +88,9 @@ static const char *conference_cmd_list[] = {
     "/decline",
     "/exit",
     "/conference",
+#ifdef GAME
     "/game",
+#endif
     "/help",
     "/log",
 #ifdef AUDIO

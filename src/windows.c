@@ -30,13 +30,16 @@
 #include "conference.h"
 #include "file_transfers.h"
 #include "friendlist.h"
-#include "game_base.h"
 #include "line_info.h"
 #include "misc_tools.h"
 #include "prompt.h"
 #include "settings.h"
 #include "toxic.h"
 #include "windows.h"
+
+#ifdef GAMES
+#include "game_base.h"
+#endif
 
 extern char *DATA_FILE;
 extern struct Winthread Winthread;
@@ -335,6 +338,8 @@ void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *dat
     uint8_t type = data[0];
 
     switch (type) {
+#ifdef GAMES
+
         case CUSTOM_PACKET_GAME_INVITE: {
             for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
                 ToxWindow *window = windows[i];
@@ -358,6 +363,8 @@ void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *dat
 
             break;
         }
+
+#endif // GAMES
 
         default: {
             fprintf(stderr, "Got unknown custom packet of type: %u\n", type);
@@ -502,6 +509,8 @@ void on_window_resize(void)
             continue;
         }
 
+#ifdef GAMES
+
         if (w->type == WINDOW_TYPE_GAME) {
             delwin(w->window_bar);
             delwin(w->window);
@@ -514,6 +523,8 @@ void on_window_resize(void)
             w->game->window = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
             continue;
         }
+
+#endif // GAMES
 
         if (w->help->active) {
             wclear(w->help->win);
@@ -768,6 +779,8 @@ void draw_active_window(Tox *m)
     a->onDraw(a, m);
     wrefresh(a->window);
 
+#ifdef GAMES
+
     if (a->type == WINDOW_TYPE_GAME) {
         int ch = getch();
 
@@ -784,6 +797,8 @@ void draw_active_window(Tox *m)
 
         return;
     }
+
+#endif // GAMES
 
     wint_t ch = 0;
     int printable = get_current_char(&ch);
@@ -881,9 +896,14 @@ void kill_all_windows(Tox *m)
             kill_chat_window(w, m);
         } else if (w->type == WINDOW_TYPE_CONFERENCE) {
             free_conference(w, w->num);
-        } else if (w->type == WINDOW_TYPE_GAME) {
+        }
+
+#ifdef GAMES
+        else if (w->type == WINDOW_TYPE_GAME) {
             game_kill(w);
         }
+
+#endif // GAMES
     }
 
     /* TODO: use enum instead of magic indices */

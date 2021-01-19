@@ -19,6 +19,13 @@ ifneq ($(AUDIO), disabled)
 ifneq ($(VIDEO), disabled)
     -include $(CHECKS_DIR)/video.mk
 endif
+
+#check if we want to build with game support
+GAMES := $(shell if [ -z "$(DISABLE_GAMES)" ] || [ "$(DISABLE_GAMES)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
+ifneq ($(GAMES), disabled)
+    -include $(CHECKS_DIR)/games.mk
+endif
+
 endif
 endif
 
