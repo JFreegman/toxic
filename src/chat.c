@@ -35,7 +35,6 @@
 #include "execute.h"
 #include "file_transfers.h"
 #include "friendlist.h"
-#include "game_base.h"
 #include "help.h"
 #include "input.h"
 #include "line_info.h"
@@ -47,6 +46,10 @@
 #include "toxic.h"
 #include "toxic_strings.h"
 #include "windows.h"
+
+#ifdef GAMES
+#include "game_base.h"
+#endif
 
 #ifdef AUDIO
 #include "audio_call.h"
@@ -77,7 +80,9 @@ static const char *chat_cmd_list[] = {
     "/connect",
     "/exit",
     "/conference",
+#ifdef GAMES
     "/game",
+#endif
     "/help",
     "/invite",
     "/join",
@@ -759,6 +764,7 @@ static void chat_onConferenceInvite(ToxWindow *self, Tox *m, int32_t friendnumbe
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/join\" to join the chat.");
 }
 
+#ifdef GAMES
 void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const uint8_t *data, size_t length)
 {
     if (!self || self->num != friend_number) {
@@ -827,6 +833,8 @@ void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const ui
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a game of %s.", name, game_string);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/play\" to join the game.");
 }
+
+#endif // GAMES
 
 /* AV Stuff */
 #ifdef AUDIO
@@ -1546,7 +1554,6 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
     ret->onFileControl = &chat_onFileControl;
     ret->onFileRecv = &chat_onFileRecv;
     ret->onReadReceipt = &chat_onReadReceipt;
-    ret->onGameInvite = &chat_onGameInvite;
 
 #ifdef AUDIO
     ret->onInvite = &chat_onInvite;
@@ -1562,6 +1569,10 @@ ToxWindow *new_chat(Tox *m, uint32_t friendnum)
     ret->is_call = false;
     ret->ringing_sound = -1;
 #endif /* AUDIO */
+
+#ifdef GAMES
+    ret->onGameInvite = &chat_onGameInvite;
+#endif /* GAMES */
 
     ret->active_box = -1;
 

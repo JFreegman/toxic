@@ -49,7 +49,9 @@ static struct cmd_func global_commands[] = {
     { "/decline",   cmd_decline       },
     { "/exit",      cmd_quit          },
     { "/conference", cmd_conference    },
+#ifdef GAMES
     { "/game",      cmd_game          },
+#endif
     { "/help",      cmd_prompt_help   },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
@@ -81,7 +83,9 @@ static struct cmd_func chat_commands[] = {
     { "/cancel",    cmd_cancelfile        },
     { "/invite",    cmd_conference_invite },
     { "/join",      cmd_conference_join   },
+#ifdef GAMES
     { "/play",      cmd_game_join         },
+#endif
     { "/savefile",  cmd_savefile          },
     { "/sendfile",  cmd_sendfile          },
 #ifdef AUDIO

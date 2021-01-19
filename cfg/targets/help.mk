@@ -16,6 +16,7 @@ help:
 	@echo "  DISABLE_DESKTOP_NOTIFY: Set to \"1\" to force building without desktop notifications support"
 	@echo "  DISABLE_QRCODE:         Set to \"1\" to force building without QR export support"
 	@echo "  DISABLE_QRPNG:          Set to \"1\" to force building without QR exported as PNG support"
+	@echo "  DISABLE_GAMES:          Set to \"1\" to force building without game support"
 	@echo "  ENABLE_PYTHON:          Set to \"1\" to enable building with Python scripting support"
 	@echo "  ENABLE_RELEASE:         Set to \"1\" to build without debug symbols and with full compiler optimizations"
 	@echo "  ENABLE_ASAN:            Set to \"1\" to build with LLVM address sanitizer enabled.

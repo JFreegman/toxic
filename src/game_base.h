@@ -171,7 +171,6 @@ struct GameData {
     void *cb_game_on_packet_data;
 };
 
-
 /*
  * Sets the callback for game state updates.
  */

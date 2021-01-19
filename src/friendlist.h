@@ -26,9 +26,12 @@
 #include <time.h>
 
 #include "file_transfers.h"
-#include "game_base.h"
 #include "toxic.h"
 #include "windows.h"
+
+#ifdef GAMES
+#include "game_base.h"
+#endif
 
 struct LastOnline {
     uint64_t last_on;
@@ -43,6 +46,8 @@ struct ConferenceInvite {
     bool pending;
 };
 
+#ifdef GAMES
+
 struct GameInvite {
     uint8_t *data;
     size_t data_length;
@@ -50,6 +55,8 @@ struct GameInvite {
     uint32_t id;
     bool pending;
 };
+
+#endif // GAMES
 
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
@@ -67,7 +74,10 @@ typedef struct {
 
     struct LastOnline last_online;
     struct ConferenceInvite conference_invite;
+
+#ifdef GAMES
     struct GameInvite game_invite;
+#endif
 
     struct FileTransfer file_receiver[MAX_FILES];
     struct FileTransfer file_sender[MAX_FILES];

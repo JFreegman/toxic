@@ -1065,4 +1065,3 @@ int game_send_packet(const GameData *game, const uint8_t *data, size_t length, G
 
     return -0;
 }
-
