@@ -18,7 +18,7 @@ OBJ += line_info.o log.o message_queue.o misc_tools.o name_lookup.o notify.o pro
 OBJ += term_mplex.o toxic.o toxic_strings.o windows.o
 
 # Check if debug build is enabled
-RELEASE := $(shell if [ -z "$(RELEASE_ENABLED)" ] || [ "$(RELEASE_ENABLED)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
+RELEASE := $(shell if [ -z "$(ENABLE_RELEASE)" ] || [ "$(ENABLE_RELEASE)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
 ifneq ($(RELEASE), enabled)
 	CFLAGS += -O0 -g -DDEBUG
 	LDFLAGS += -O0
@@ -28,8 +28,8 @@ else
 endif
 
 # Check if LLVM Address Sanitizer is enabled
-ASAN_ENABLED := $(shell if [ -z "$(ENABLE_ASAN)" ] || [ "$(ENABLE_ASAN)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
-ifneq ($(ASAN_ENABLED), disabled)
+ENABLE_ASAN := $(shell if [ -z "$(ENABLE_ASAN)" ] || [ "$(ENABLE_ASAN)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
+ifneq ($(ENABLE_ASAN), disabled)
 	CFLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 
