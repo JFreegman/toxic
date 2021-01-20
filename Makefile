@@ -28,8 +28,8 @@ else
 endif
 
 # Check if LLVM Address Sanitizer is enabled
-ENABLE_ASAN := $(shell if [ -z "$(ENABLE_ASAN)" ] || [ "$(ENABLE_ASAN)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
-ifneq ($(ENABLE_ASAN), disabled)
+ASAN := $(shell if [ -z "$(ENABLE_ASAN)" ] || [ "$(ENABLE_ASAN)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
+ifneq ($(ASAN), disabled)
 	CFLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 
