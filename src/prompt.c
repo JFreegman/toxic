@@ -286,7 +286,10 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
                 line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             } else {
-                line_info_add(self, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
+                if (strcmp(line, "/clear") != 0) {
+                    line_info_add(self, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
+                }
+
                 execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
             }
         }
