@@ -367,7 +367,9 @@ void set_active_window_index(uint8_t index)
     }
 }
 
-/* Shows next window when tab or back-tab is pressed */
+/* Displays the next window if `ch` is equal to the next window key binding.
+ * Otherwise displays the previous window.
+ */
 void set_next_window(int ch)
 {
     if (ch == user_settings->key_next_tab) {
@@ -394,8 +396,6 @@ void set_next_window(int ch)
 /* Deletes window w and cleans up */
 void del_window(ToxWindow *w)
 {
-    set_active_window_index(0);
-
     uint8_t idx = w->index;
     delwin(w->window_bar);
     delwin(w->window);
@@ -404,7 +404,11 @@ void del_window(ToxWindow *w)
 
     clear();
     refresh();
-    --num_active_windows;
+
+    if (num_active_windows > 0) {
+        set_next_window(-1);
+        --num_active_windows;
+    }
 }
 
 ToxWindow *init_windows(Tox *m)
