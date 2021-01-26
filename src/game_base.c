@@ -32,6 +32,7 @@
 #include "game_snake.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "windows.h"
 
 extern struct Winthread Winthread;
 
@@ -144,6 +145,12 @@ void game_kill(ToxWindow *self)
     del_window(self);
 }
 
+static void game_init_abort(const ToxWindow *parent, ToxWindow *self)
+{
+    game_kill(self);
+    set_active_window_index(parent->index);
+}
+
 static void game_toggle_pause(GameData *game)
 {
     GameStatus status = game->status;
@@ -234,11 +241,12 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
 
     if (game->is_multiplayer) {
         if (parent->type != WINDOW_TYPE_CHAT) {
-            game_kill(self);
+            game_init_abort(parent, self);
             return -3;
         }
 
         if (get_friend_connection_status(parent->num) == TOX_CONNECTION_NONE) {
+            game_init_abort(parent, self);
             return -2;
         }
 
@@ -259,14 +267,14 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
     game->friend_number = parent->num;
 
     if (game->window == NULL) {
-        game_kill(self);
+        game_init_abort(parent, self);
         return -4;
     }
 
     int init_ret = game_initialize_type(game, multiplayer_data, length);
 
     if (init_ret < 0) {
-        game_kill(self);
+        game_init_abort(parent, self);
         return init_ret;
     }
 
@@ -680,7 +688,6 @@ void game_onDraw(ToxWindow *self, Tox *m)
         }
 
         default: {
-            fprintf(stderr, "Unknown game status: %d\n", game->status);
             break;
         }
     }
