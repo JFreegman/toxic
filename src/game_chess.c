@@ -1476,6 +1476,30 @@ static int chess_get_display_colour(ChessColour p_colour, int tile_colour)
     }
 }
 
+void chess_move_curs_up_left(ChessState *state)
+{
+    chess_move_curs_left(state);
+    chess_move_curs_up(state);
+}
+
+void chess_move_curs_up_right(ChessState *state)
+{
+    chess_move_curs_right(state);
+    chess_move_curs_up(state);
+}
+
+void chess_move_curs_down_left(ChessState *state)
+{
+    chess_move_curs_left(state);
+    chess_move_curs_down(state);
+}
+
+void chess_move_curs_down_right(ChessState *state)
+{
+    chess_move_curs_right(state);
+    chess_move_curs_down(state);
+}
+
 static void chess_draw_board_coords_white(WINDOW *win, const Board *board)
 {
     for (size_t i = 0; i < CHESS_BOARD_COLUMNS; ++i) {
@@ -1728,7 +1752,29 @@ void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
             break;
         }
 
-        case '\r': {
+        case KEY_HOME: {
+            chess_move_curs_up_left(state);
+            break;
+        }
+
+        case KEY_END: {
+            chess_move_curs_down_left(state);
+            break;
+        }
+
+        case KEY_PPAGE: {
+            chess_move_curs_up_right(state);
+            break;
+        }
+
+        case KEY_NPAGE: {
+            chess_move_curs_down_right(state);
+            break;
+        }
+
+        case '\r':
+        /* Intentional fallthrough */
+        case ' ': {
             chess_do_input(game, state);
             break;
         }
