@@ -324,8 +324,6 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         mvwprintw(ctx->linewin, 0, 0, "%ls", &ctx->line[ctx->start]);
     }
 
-    mvwhline(ctx->linewin, 0, ctx->len, ' ', x2 - ctx->len);
-
     curs_set(1);
 
     StatusBar *statusbar = self->stb;
