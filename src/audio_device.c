@@ -575,6 +575,7 @@ DeviceError close_device(DeviceType type, uint32_t device_idx)
     Device *device = &audio_state->devices[type][device_idx];
 
     if (!device->active) {
+        unlock(type);
         return de_DeviceNotActive;
     }
 

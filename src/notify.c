@@ -707,6 +707,7 @@ int box_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indi
 #else
 
     if (id == -1) {
+        control_unlock();
         return -1;
     }
 
