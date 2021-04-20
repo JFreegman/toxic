@@ -1223,7 +1223,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
                 break;
 
             case TOX_USER_STATUS_BUSY:
-                colour = STATUS_ONLINE;
+                colour = STATUS_BUSY;
                 break;
         }
 
