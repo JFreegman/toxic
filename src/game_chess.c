@@ -1773,6 +1773,7 @@ void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
         }
 
         case '\r':
+
         /* Intentional fallthrough */
         case ' ': {
             chess_do_input(game, state);

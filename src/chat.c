@@ -82,6 +82,7 @@ static const char *chat_cmd_list[] = {
     "/conference",
 #ifdef GAMES
     "/game",
+    "/play",
 #endif
     "/help",
     "/invite",
@@ -94,7 +95,6 @@ static const char *chat_cmd_list[] = {
     "/nick",
     "/note",
     "/nospam",
-    "/play",
     "/quit",
     "/savefile",
     "/sendfile",

@@ -60,7 +60,7 @@ static const char *glob_cmd_list[] = {
     "/decline",
     "/exit",
     "/conference",
-#ifdef GAME
+#ifdef GAMES
     "/game",
 #endif
     "/help",
