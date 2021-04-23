@@ -286,6 +286,13 @@ void game_show_lives(GameData *game, bool show_lives);
 void game_show_level(GameData *game, bool show_level);
 
 /*
+ * Sends a notification to the window associated with `game`.
+ *
+ * `message` - the notification message that will be displayed.
+ */
+void game_window_notify(const GameData *game, const char *message);
+
+/*
  * Updates game score.
  */
 void game_update_score(GameData *game, long int points);

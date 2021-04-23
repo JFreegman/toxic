@@ -1854,6 +1854,34 @@ static int chess_handle_opponent_move_packet(const GameData *game, ChessState *s
 
 }
 
+static void chess_notify(const GameData *game, ChessPacketType type)
+{
+    const char *msg = NULL;
+
+    switch (type) {
+        case CHESS_PACKET_INIT_ACCEPT_INVITE: {
+            msg = "Game on!";
+            break;
+        }
+
+        case CHESS_PACKET_RESIGN: {
+            msg = "Opponnet has resigned";
+            break;
+        }
+
+        case CHESS_PACKET_MOVE_PIECE: {
+            msg = "Opponent has moved";
+            break;
+        }
+
+        default: {
+            return;
+        }
+    }
+
+    game_window_notify(game, msg);
+}
+
 static void chess_cb_on_packet(GameData *game, const uint8_t *data, size_t length, void *cb_data)
 {
     if (length == 0 || data == NULL) {
@@ -1904,6 +1932,8 @@ static void chess_cb_on_packet(GameData *game, const uint8_t *data, size_t lengt
             break;
         }
     }
+
+    chess_notify(game, type);
 }
 
 static int chess_init_board(GameData *game, ChessState *state, bool self_is_white)

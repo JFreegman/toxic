@@ -32,9 +32,12 @@
 #include "game_snake.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "notify.h"
+#include "settings.h"
 #include "windows.h"
 
 extern struct Winthread Winthread;
+extern struct user_settings *user_settings;
 
 /*
  * Determines the base rate at which game objects should update their state.
@@ -64,7 +67,7 @@ extern struct Winthread Winthread;
                                                   && ((max_x) >= (GAME_MAX_RECT_X_SMALL)))
 
 
-static ToxWindow *game_new_window(GameType type, uint32_t friendnumber);
+static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber);
 
 struct GameList {
     const char *name;
@@ -121,6 +124,28 @@ void game_list_print(ToxWindow *self)
 bool game_type_is_multiplayer(GameType type)
 {
     return type == GT_Chess;
+}
+
+/*
+ * Sends a notification to the window associated with `game`.
+ *
+ * `message` - the notification message that will be displayed.
+ */
+void game_window_notify(const GameData *game, const char *message)
+{
+    ToxWindow *self = get_window_ptr(game->window_id);
+
+    if (self == NULL) {
+        return;
+    }
+
+    if (self->active_box != -1) {
+        box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+                    self->active_box, "%s", message);
+    } else {
+        box_notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+                   &self->active_box, self->name, "%s", message);
+    }
 }
 
 /* Returns the current wall time in milliseconds */
@@ -221,7 +246,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
         }
     }
 
-    ToxWindow *self = game_new_window(type, parent->num);
+    ToxWindow *self = game_new_window(m, type, parent->num);
 
     if (self == NULL) {
         return -4;
@@ -751,9 +776,10 @@ void game_onInit(ToxWindow *self, Tox *m)
 }
 
 /*
- * Byte 0:   Game type
- * Byte 1-4: Game ID
- * Byte 5-*  Game data
+ * Byte 0:   Version
+ * Byte 1:   Game type
+ * Byte 2-5: Game ID
+ * Byte 6-*  Game data
  */
 void game_onPacket(ToxWindow *self, Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length)
 {
@@ -798,7 +824,7 @@ void game_onPacket(ToxWindow *self, Tox *m, uint32_t friendnumber, const uint8_t
     }
 }
 
-static ToxWindow *game_new_window(GameType type, uint32_t friendnumber)
+static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber)
 {
     const char *window_name = game_get_name_string(type);
 
@@ -827,7 +853,16 @@ static ToxWindow *game_new_window(GameType type, uint32_t friendnumber)
         return NULL;
     }
 
-    snprintf(ret->name, sizeof(ret->name), "%s", window_name);
+    ret->active_box = -1;
+
+    if (game_type_is_multiplayer(type)) {
+        char nick[TOX_MAX_NAME_LENGTH];
+        get_nick_truncate(m, nick, friendnumber);
+
+        snprintf(ret->name, sizeof(ret->name), "%s (%s)", window_name, nick);
+    } else {
+        snprintf(ret->name, sizeof(ret->name), "%s", window_name);
+    }
 
     return ret;
 }
