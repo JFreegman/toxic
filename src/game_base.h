@@ -56,7 +56,7 @@
 #define GAME_MESSAGE_DEFAULT_TIMEOUT 3
 
 
-/***** NETWORKING DEFINES *****/
+/***** NETWORKING CONSTANTS *****/
 
 /* Header starts after custom packet type byte. Comprised of: NetworkVersion (1b) + GameType (1b) + id (4b) */
 #define GAME_PACKET_HEADER_SIZE (1 + 1 + sizeof(uint32_t))
@@ -99,6 +99,7 @@ typedef enum GameStatus {
 typedef enum GameType {
     GT_Centipede = 0u,
     GT_Chess,
+    GT_Life,
     GT_Snake,
     GT_Invalid,
 } GameType;
@@ -296,6 +297,11 @@ void game_window_notify(const GameData *game, const char *message);
  * Updates game score.
  */
 void game_update_score(GameData *game, long int points);
+
+/*
+ * Sets game score to `val`.
+ */
+void game_set_score(GameData *game, long int score);
 
 /*
  * Returns the game's current score.

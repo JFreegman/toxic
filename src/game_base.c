@@ -29,6 +29,7 @@
 #include "game_centipede.h"
 #include "game_base.h"
 #include "game_chess.h"
+#include "game_life.h"
 #include "game_snake.h"
 #include "line_info.h"
 #include "misc_tools.h"
@@ -77,6 +78,7 @@ struct GameList {
 static struct GameList game_list[] = {
     { "centipede", GT_Centipede  },
     { "chess",     GT_Chess      },
+    { "life",      GT_Life       },
     { "snake",     GT_Snake      },
     {  NULL,       GT_Invalid    },
 };
@@ -210,6 +212,11 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
 
         case GT_Chess: {
             ret = chess_initialize(game, data, length);
+            break;
+        }
+
+        case GT_Life: {
+            ret = life_initialize(game);
             break;
         }
 
@@ -978,6 +985,11 @@ void game_update_score(GameData *game, long int points)
     if (game->score > game->high_score) {
         game->high_score = game->score;
     }
+}
+
+void game_set_score(GameData *game, long int val)
+{
+    game->score = val;
 }
 
 long int game_get_score(const GameData *game)

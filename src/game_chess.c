@@ -1411,7 +1411,7 @@ static void chess_move_curs_left(ChessState *state)
 {
     Board *board = &state->board;
 
-    size_t new_x = state->curs_x - CHESS_TILE_SIZE_X;
+    int new_x = state->curs_x - CHESS_TILE_SIZE_X;
 
     if (new_x < board->x_left_bound) {
         return;
@@ -1424,7 +1424,7 @@ static void chess_move_curs_right(ChessState *state)
 {
     Board *board = &state->board;
 
-    size_t new_x = state->curs_x + CHESS_TILE_SIZE_X;
+    int new_x = state->curs_x + CHESS_TILE_SIZE_X;
 
     if (new_x > board->x_right_bound) {
         return;
@@ -1437,7 +1437,7 @@ static void chess_move_curs_up(ChessState *state)
 {
     Board *board = &state->board;
 
-    size_t new_y = state->curs_y - CHESS_TILE_SIZE_Y;
+    int new_y = state->curs_y - CHESS_TILE_SIZE_Y;
 
     if (new_y < board->y_top_bound) {
         return;
@@ -1450,7 +1450,7 @@ static void chess_move_curs_down(ChessState *state)
 {
     Board *board = &state->board;
 
-    size_t new_y = state->curs_y + CHESS_TILE_SIZE_Y;
+    int new_y = state->curs_y + CHESS_TILE_SIZE_Y;
 
     if (new_y >= board->y_bottom_bound) {
         return;
@@ -1715,7 +1715,6 @@ void chess_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
     ChessState *state = (ChessState *)cb_data;
 
     move(state->curs_y, state->curs_x);
-
 
     curs_set(1);
 

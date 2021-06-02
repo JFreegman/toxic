@@ -801,6 +801,7 @@ void snake_cb_kill(GameData *game, void *cb_data)
     game_set_cb_update_state(game, NULL, NULL);
     game_set_cb_render_window(game, NULL, NULL);
     game_set_cb_kill(game, NULL, NULL);
+    game_set_cb_on_keypress(game, NULL, NULL);
     game_set_cb_on_pause(game, NULL, NULL);
 }
 
