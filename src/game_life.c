@@ -51,6 +51,7 @@ typedef struct LifeState {
     TIME_MS    time_last_cycle;
     size_t     speed;
     size_t     generation;
+    bool       paused;
 
     Cell       **cells;
     int        num_columns;
@@ -321,7 +322,9 @@ void life_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 
     move(state->curs_y, state->curs_x);
 
-    curs_set(1);
+    if (state->generation == 0 || state->paused) {
+        curs_set(1);
+    }
 
     life_draw_cells(game, win, state);
 }
@@ -478,6 +481,7 @@ void life_cb_on_keypress(GameData *game, int key, void *cb_data)
 
         case '\t': {
             life_toggle_display_candy(state);
+            break;
         }
 
         default: {
@@ -499,6 +503,17 @@ static void life_free_cells(LifeState *state)
     }
 
     free(state->cells);
+}
+
+void life_cb_pause(GameData *game, bool is_paused, void *cb_data)
+{
+    if (!cb_data) {
+        return;
+    }
+
+    LifeState *state = (LifeState *)cb_data;
+
+    state->paused = is_paused;
 }
 
 void life_cb_kill(GameData *game, void *cb_data)
@@ -574,8 +589,15 @@ static int life_init_state(GameData *game, LifeState *state)
 
 int life_initialize(GameData *game)
 {
-    if (game_set_window_shape(game, GW_ShapeRectangle) == -1) {
-        return -1;
+    // Try best fit from largest to smallest before giving up
+    if (game_set_window_shape(game, GW_ShapeRectangleLarge) == -1) {
+        if (game_set_window_shape(game, GW_ShapeSquareLarge) == -1) {
+            if (game_set_window_shape(game, GW_ShapeRectangle) == -1) {
+                if (game_set_window_shape(game, GW_ShapeSquare) == -1) {
+                    return -1;
+                }
+            }
+        }
     }
 
     LifeState *state = calloc(1, sizeof(LifeState));
@@ -596,6 +618,7 @@ int life_initialize(GameData *game)
     game_set_cb_update_state(game, life_cb_update_game_state, state);
     game_set_cb_render_window(game, life_cb_render_window, state);
     game_set_cb_on_keypress(game, life_cb_on_keypress, state);
+    game_set_cb_on_pause(game, life_cb_pause, state);
     game_set_cb_kill(game, life_cb_kill, state);
 
     return 0;

@@ -1864,7 +1864,7 @@ static void chess_notify(const GameData *game, ChessPacketType type)
         }
 
         case CHESS_PACKET_RESIGN: {
-            msg = "Opponnet has resigned";
+            msg = "Opponent has resigned";
             break;
         }
 

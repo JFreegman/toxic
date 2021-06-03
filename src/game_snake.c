@@ -29,8 +29,8 @@
 #include "game_snake.h"
 #include "misc_tools.h"
 
-#define SNAKE_MAX_SNAKE_LENGTH     (GAME_MAX_SQUARE_X * GAME_MAX_SQUARE_Y)
-#define SNAKE_AGENT_MAX_LIST_SIZE  (GAME_MAX_SQUARE_X * GAME_MAX_SQUARE_Y)
+#define SNAKE_MAX_SNAKE_LENGTH     (GAME_MAX_SQUARE_X_DEFAULT * GAME_MAX_SQUARE_Y_DEFAULT)
+#define SNAKE_AGENT_MAX_LIST_SIZE  (GAME_MAX_SQUARE_X_DEFAULT * GAME_MAX_SQUARE_Y_DEFAULT)
 
 #define SNAKE_DEFAULT_SNAKE_SPEED 6
 #define SNAKE_DEFAULT_AGENT_SPEED 1
@@ -850,6 +850,7 @@ static void snake_initialize_snake_head(const GameData *game, Snake *snake)
 
 int snake_initialize(GameData *game)
 {
+    // note: if this changes we must update SNAKE_MAX_SNAKE_LENGTH and SNAKE_AGENT_MAX_LIST_SIZE
     if (game_set_window_shape(game, GW_ShapeSquare) == -1) {
         return -1;
     }

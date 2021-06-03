@@ -33,7 +33,7 @@
 #define CENT_MUSHROOMS_POP_CONSTANT 35000
 
 /* Max number of mushrooms */
-#define CENT_MUSHROOMS_LENGTH (GAME_MAX_SQUARE_X * GAME_MAX_SQUARE_Y)
+#define CENT_MUSHROOMS_LENGTH (GAME_MAX_SQUARE_X_DEFAULT * GAME_MAX_SQUARE_X_DEFAULT)
 
 /* Max number of individual centipedes at any given time */
 #define CENT_MAX_NUM_HEADS    20
@@ -1714,6 +1714,7 @@ static int cent_init_state(GameData *game, CentState *state)
 
 int centipede_initialize(GameData *game)
 {
+    // note: If this changes we must update CENT_MUSHROOMS_LENGTH
     if (game_set_window_shape(game, GW_ShapeSquare) == -1) {
         return -1;
     }

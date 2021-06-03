@@ -179,12 +179,6 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     UNUSED_VAR(window);
     UNUSED_VAR(m);
 
-    bool force_small = false;
-
-    if (argc >= 2) {
-        force_small = strcasecmp(argv[2], "small") == 0;
-    }
-
     if (!Friends.list[self->num].game_invite.pending) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
         return;
@@ -200,7 +194,7 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     uint8_t *data = Friends.list[self->num].game_invite.data;
     size_t length = Friends.list[self->num].game_invite.data_length;
 
-    int ret = game_initialize(self, m, type, id, data, length, force_small);
+    int ret = game_initialize(self, m, type, id, data, length);
 
     switch (ret) {
         case 0: {

@@ -367,19 +367,8 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    bool force_small = false;
-
-    if (argc >= 2) {
-        force_small = strcasecmp(argv[2], "small") == 0;
-
-        if (!force_small) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Unknown argument.");
-            return;
-        }
-    }
-
     uint32_t id = rand();
-    int ret = game_initialize(self, m, type, id, NULL, 0, force_small);
+    int ret = game_initialize(self, m, type, id, NULL, 0);
 
     switch (ret) {
         case 0: {
@@ -387,8 +376,7 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         }
 
         case -1: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
-                          "Window is too small. Try enlarging your window or re-running the command with the 'small' argument.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Window is too small.");
             return;
         }
 

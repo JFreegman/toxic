@@ -55,17 +55,17 @@ extern struct user_settings *user_settings;
 
 
 /* Determines if window is large enough for a respective window type */
-#define WINDOW_SIZE_LARGE_SQUARE_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_SQUARE_Y))\
-                                                  && ((max_x) >= (GAME_MAX_SQUARE_X)))
+#define WINDOW_SIZE_SQUARE_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_SQUARE_Y_DEFAULT))\
+                                             && ((max_x) >= (GAME_MAX_SQUARE_X_DEFAULT)))
 
-#define WINDOW_SIZE_SMALL_SQUARE_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_SQUARE_Y_SMALL))\
-                                                  && ((max_x) >= (GAME_MAX_SQUARE_X_SMALL)))
+#define WINDOW_SIZE_LARGE_SQUARE_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_SQUARE_Y_LARGE))\
+                                                   && ((max_x) >= (GAME_MAX_SQUARE_X_LARGE)))
 
-#define WINDOW_SIZE_LARGE_RECT_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_RECT_Y))\
-                                                  && ((max_x) >= (GAME_MAX_RECT_X)))
+#define WINDOW_SIZE_RECT_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_RECT_Y_DEFAULT))\
+                                           && ((max_x) >= (GAME_MAX_RECT_X_DEFAULT)))
 
-#define WINDOW_SIZE_SMALL_RECT_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_RECT_Y_SMALL))\
-                                                  && ((max_x) >= (GAME_MAX_RECT_X_SMALL)))
+#define WINDOW_SIZE_LARGE_RECT_VALID(max_x, max_y)((((max_y) - 4) >= (GAME_MAX_RECT_Y_LARGE))\
+                                                 && ((max_x) >= (GAME_MAX_RECT_X_LARGE)))
 
 
 static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber);
@@ -229,29 +229,13 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
 }
 
 int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
-                    size_t length, bool force_small_window)
+                    size_t length)
 {
     int max_x;
     int max_y;
     getmaxyx(parent->window, max_y, max_x);
 
     max_y -= (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT);
-
-    int max_game_window_x = GAME_MAX_SQUARE_X;
-    int max_game_window_y = GAME_MAX_SQUARE_Y;
-
-    if (!force_small_window && !WINDOW_SIZE_LARGE_SQUARE_VALID(max_x, max_y)) {
-        return -1;
-    }
-
-    if (force_small_window) {
-        max_game_window_x = GAME_MAX_SQUARE_X_SMALL;
-        max_game_window_y = GAME_MAX_SQUARE_Y_SMALL;
-
-        if (!WINDOW_SIZE_SMALL_SQUARE_VALID(max_x, max_y)) {
-            return -1;
-        }
-    }
 
     ToxWindow *self = game_new_window(m, type, parent->num);
 
@@ -287,8 +271,6 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
 
     game->tox = m;
     game->window_shape = GW_ShapeSquare;
-    game->game_max_x = max_game_window_x;
-    game->game_max_y = max_game_window_y;
     game->parent_max_x = max_x;
     game->parent_max_y = max_y;
     game->update_interval = GAME_DEFAULT_UPDATE_INTERVAL;
@@ -327,28 +309,53 @@ int game_set_window_shape(GameData *game, GameWindowShape shape)
         return -2;
     }
 
-    if (shape == game->window_shape) {
-        return 0;
-    }
-
-    if (shape == GW_ShapeSquare) {
-        game->game_max_x = GAME_MAX_SQUARE_X;
-        return 0;
-    }
-
     const int max_x = game->parent_max_x;
     const int max_y = game->parent_max_y;
 
-    if (WINDOW_SIZE_LARGE_RECT_VALID(max_x, max_y)) {
-        game->game_max_x = GAME_MAX_RECT_X;
-        game->game_max_y = GAME_MAX_RECT_Y;
-        return 0;
-    }
+    switch (shape) {
+        case GW_ShapeSquare: {
+            if (WINDOW_SIZE_SQUARE_VALID(max_x, max_y)) {
+                game->game_max_x = GAME_MAX_SQUARE_X_DEFAULT;
+                game->game_max_y = GAME_MAX_SQUARE_Y_DEFAULT;
+                return 0;
+            }
 
-    if (WINDOW_SIZE_SMALL_RECT_VALID(max_x, max_y)) {
-        game->game_max_x = GAME_MAX_RECT_X_SMALL;
-        game->game_max_y = GAME_MAX_RECT_Y_SMALL;
-        return 0;
+            break;
+        }
+
+        case GW_ShapeSquareLarge: {
+            if (WINDOW_SIZE_LARGE_SQUARE_VALID(max_x, max_y)) {
+                game->game_max_x = GAME_MAX_SQUARE_X_LARGE;
+                game->game_max_y = GAME_MAX_SQUARE_Y_LARGE;
+                return 0;
+            }
+
+            break;
+        }
+
+        case GW_ShapeRectangle: {
+            if (WINDOW_SIZE_RECT_VALID(max_x, max_y)) {
+                game->game_max_x = GAME_MAX_RECT_X_DEFAULT;
+                game->game_max_y = GAME_MAX_RECT_Y_DEFAULT;
+                return 0;
+            }
+
+            break;
+        }
+
+        case GW_ShapeRectangleLarge: {
+            if (WINDOW_SIZE_LARGE_RECT_VALID(max_x, max_y)) {
+                game->game_max_x = GAME_MAX_RECT_X_LARGE;
+                game->game_max_y = GAME_MAX_RECT_Y_LARGE;
+                return 0;
+            }
+
+            break;
+        }
+
+        default: {
+            return -1;
+        }
     }
 
     return -1;

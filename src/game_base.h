@@ -33,21 +33,22 @@
 
 #define GAME_BORDER_COLOUR BAR_TEXT
 
-/* Max size of a default size square game window */
-#define GAME_MAX_SQUARE_Y 26
-#define GAME_MAX_SQUARE_X (GAME_MAX_SQUARE_Y * 2)
 
-/* Max size of a small square game window */
-#define GAME_MAX_SQUARE_Y_SMALL 18
-#define GAME_MAX_SQUARE_X_SMALL (GAME_MAX_SQUARE_Y_SMALL * 2)
+/* Max size of a default square game window */
+#define GAME_MAX_SQUARE_Y_DEFAULT 26
+#define GAME_MAX_SQUARE_X_DEFAULT (GAME_MAX_SQUARE_Y_DEFAULT * 2)
+
+/* Max size of a large square game window */
+#define GAME_MAX_SQUARE_Y_LARGE 52
+#define GAME_MAX_SQUARE_X_LARGE (GAME_MAX_SQUARE_Y_LARGE * 2)
 
 /* Max size of a default size rectangle game window */
-#define GAME_MAX_RECT_Y 24
-#define GAME_MAX_RECT_X (GAME_MAX_RECT_Y * 4)
+#define GAME_MAX_RECT_Y_DEFAULT 24
+#define GAME_MAX_RECT_X_DEFAULT (GAME_MAX_RECT_Y_DEFAULT * 4)
 
-/* Max size of a small rectangle game window */
-#define GAME_MAX_RECT_Y_SMALL 14
-#define GAME_MAX_RECT_X_SMALL (GAME_MAX_RECT_Y_SMALL * 4)
+/* Max size of a large rectangle game window */
+#define GAME_MAX_RECT_Y_LARGE 52
+#define GAME_MAX_RECT_X_LARGE (GAME_MAX_RECT_Y_LARGE * 4)
 
 /* Maximum length of a game message set with game_set_message() */
 #define GAME_MAX_MESSAGE_SIZE 64
@@ -56,7 +57,7 @@
 #define GAME_MESSAGE_DEFAULT_TIMEOUT 3
 
 
-/***** NETWORKING CONSTANTS *****/
+/***** START NETWORKING CONSTANTS *****/
 
 /* Header starts after custom packet type byte. Comprised of: NetworkVersion (1b) + GameType (1b) + id (4b) */
 #define GAME_PACKET_HEADER_SIZE (1 + 1 + sizeof(uint32_t))
@@ -69,6 +70,9 @@
 
 /* Current version of networking protocol */
 #define GAME_NETWORKING_VERSION 0x01
+
+/***** END NETWORKING CONSTANTS *****/
+
 
 typedef void cb_game_update_state(GameData *game, void *cb_data);
 typedef void cb_game_render_window(GameData *game, WINDOW *window, void *cb_data);
@@ -84,7 +88,9 @@ typedef enum GamePacketType {
 
 typedef enum GameWindowShape {
     GW_ShapeSquare = 0u,
+    GW_ShapeSquareLarge,
     GW_ShapeRectangle,
+    GW_ShapeRectangleLarge,
     GW_ShapeInvalid,
 } GameWindowShape;
 
@@ -210,8 +216,6 @@ void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_dat
  * `id` should be a unique integer to indentify the game instance. If we're being invited to a game
  *   this identifier should be sent via the invite packet.
  *
- * `force_small_window` will make the game window small.
- *
  * if `multiplayer_data` is non-null this indicates that we accepted a game invite from a contact.
  *   The data contains any information we need to initialize the game state.
  *
@@ -222,12 +226,12 @@ void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_dat
  * Return -4 on other failure.
  */
 int game_initialize(const ToxWindow *self, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
-                    size_t length, bool force_small_window);
+                    size_t length);
 
 /*
- * Sets game window to `shape` and attempts to adjust size for best fit.
+ * Sets game window to `shape`.
  *
- * This should be called in the game's initialize function.
+ * This must be called on game initialization.
  *
  * Return 0 on success.
  * Return -1 if window is too small or shape is invalid.
