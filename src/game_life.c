@@ -66,6 +66,7 @@ typedef struct LifeState {
     int        y_bottom_bound;
 
     short      display_candy;
+    int        colour;
 } LifeState;
 
 
@@ -117,6 +118,46 @@ static void life_toggle_display_candy(LifeState *state)
     state->display_candy = (state->display_candy + 1) % 3;  // magic number depends on life_get_display_char()
 }
 
+static void life_cycle_colour(LifeState *state)
+{
+    switch (state->colour) {
+        case RED: {
+            state->colour = YELLOW;
+            break;
+        }
+
+        case YELLOW: {
+            state->colour = GREEN;
+            break;
+        }
+
+        case GREEN: {
+            state->colour = CYAN;
+            break;
+        }
+
+        case CYAN: {
+            state->colour = BLUE;
+            break;
+        }
+
+        case BLUE: {
+            state->colour = MAGENTA;
+            break;
+        }
+
+        case MAGENTA: {
+            state->colour = RED;
+            break;
+        }
+
+        default: {
+            state->colour = RED;
+            break;
+        }
+    }
+}
+
 static Cell *life_get_cell_at_coords(const LifeState *state, const int x, const int y)
 {
     const int i = y - (state->y_top_bound - (LIFE_BOUNDARY_BUFFER / 2));
@@ -131,18 +172,20 @@ static Cell *life_get_cell_at_coords(const LifeState *state, const int x, const 
 
 static void life_draw_cells(const GameData *game, WINDOW *win, LifeState *state)
 {
+    wattron(win, A_BOLD | COLOR_PAIR(state->colour));
+
     for (int i = LIFE_BOUNDARY_BUFFER / 2; i < state->num_rows - (LIFE_BOUNDARY_BUFFER / 2); ++i) {
         for (int j = LIFE_BOUNDARY_BUFFER / 2; j < state->num_columns + 1 - (LIFE_BOUNDARY_BUFFER / 2); ++j) {
             Cell *cell = &state->cells[i][j];
 
             if (cell->alive) {
                 Coords coords = cell->coords;
-                wattron(win, A_BOLD | COLOR_PAIR(LIFE_CELL_DEFAULT_COLOUR));
                 mvwaddch(win, coords.y, coords.x, cell->display_char);
-                wattroff(win, A_BOLD | COLOR_PAIR(LIFE_CELL_DEFAULT_COLOUR));
             }
         }
     }
+
+    wattroff(win, A_BOLD | COLOR_PAIR(state->colour));
 }
 
 static void life_toggle_cell(LifeState *state)
@@ -157,7 +200,9 @@ static void life_toggle_cell(LifeState *state)
 }
 
 /*
- * Returns the number of live neighbours of `idx` cell.
+ * Returns the number of live neighbours of cell at `i` `j` position.
+ *
+ * Returns NULL if cell is touching a border.
  */
 static int life_get_live_neighbours(const LifeState *state, const int i, const int j)
 {
@@ -484,6 +529,11 @@ void life_cb_on_keypress(GameData *game, int key, void *cb_data)
             break;
         }
 
+        case '`': {
+            life_cycle_colour(state);
+            break;
+        }
+
         default: {
             return;
         }
@@ -581,6 +631,7 @@ static int life_init_state(GameData *game, LifeState *state)
     }
 
     state->speed = LIFE_DEFAULT_SPEED;
+    state->colour = LIFE_CELL_DEFAULT_COLOUR;
 
     life_restart(game, state);
 
