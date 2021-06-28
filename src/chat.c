@@ -771,7 +771,7 @@ void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const ui
         return;
     }
 
-    if (length < GAME_PACKET_HEADER_SIZE) {
+    if (length < GAME_PACKET_HEADER_SIZE || length > GAME_MAX_DATA_SIZE) {
         return;
     }
 

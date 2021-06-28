@@ -394,7 +394,7 @@ void game_kill(ToxWindow *self);
  *
  * `packet_type` should be GP_Invite for an invite packet or GP_Data for all other game data.
  */
-int game_send_packet(const GameData *game, const uint8_t *data, size_t length, GamePacketType packet_type);
+int game_packet_send(const GameData *game, const uint8_t *data, size_t length, GamePacketType packet_type);
 
 #endif // GAME_BASE
 

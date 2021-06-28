@@ -42,7 +42,7 @@
 #define CENT_MAX_NUM_SEGMENTS 12
 
 /* Get a free life every time we get this many points. Needs to be > the most points we can get in a single shot. */
-#define CENT_SCORE_ONE_UP 5000
+#define CENT_SCORE_ONE_UP 7000
 
 /* Max number of lives we can have */
 #define CENT_MAX_LIVES    6
@@ -52,6 +52,9 @@
 
 /* Max speed of an enemy agent */
 #define CENT_MAX_ENEMY_AGENT_SPEED 8
+
+/* Determines the overall speed of the game per game_set_update_interval() */
+#define CENT_GAME_UPDATE_INTERVAL 14
 
 /* How often a head that reaches the bottom can repdoduce */
 #define CENT_REPRODUCE_TIMEOUT 10
@@ -64,7 +67,7 @@
 #define CENT_BULLET_COLOUR    YELLOW
 #define CENT_BULLET_ATTR      A_BOLD
 #define CENT_BULLET_CHAR      '|'
-#define CENT_BULLET_SPEED     150
+#define CENT_BULLET_SPEED     300
 
 #define CENT_BLASTER_ATTR     A_BOLD
 #define CENT_BLASTER_CHAR     'U'
@@ -1730,7 +1733,7 @@ int centipede_initialize(GameData *game)
     game_show_lives(game, true);
     game_show_high_score(game, true);
     game_increment_level(game);
-    game_set_update_interval(game, 10);
+    game_set_update_interval(game, CENT_GAME_UPDATE_INTERVAL);
 
     if (cent_init_state(game, state) == -1) {
         free(state);

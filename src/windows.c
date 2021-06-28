@@ -457,7 +457,12 @@ void del_window(ToxWindow *w)
     refresh();
 
     if (num_active_windows > 0) {
+        if (active_window_index == 2) {    // if closing current window would bring us to friend list
+            set_next_window(-1);           // skip back to the home window instead. FIXME: magic numbers
+        }
+
         set_next_window(-1);
+
         --num_active_windows;
     }
 }
@@ -519,6 +524,12 @@ void on_window_resize(void)
 
             getmaxyx(w->window, y2, x2);
 
+            if (y2 <= 0 || x2 <= 0) {
+                fprintf(stderr, "Failed to resize game window: max_x: %d, max_y: %d\n", x2, y2);
+                delwin(w->window);
+                continue;
+            }
+
             w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, COLS, LINES - 2, 0);
             w->game->window = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
             continue;
@@ -549,7 +560,7 @@ void on_window_resize(void)
         if (y2 <= 0 || x2 <= 0) {
             fprintf(stderr, "Failed to resize window: max_x: %d, max_y: %d\n", x2, y2);
             delwin(w->window);
-            return;
+            continue;
         }
 
         if (w->show_peerlist) {
@@ -790,7 +801,6 @@ void draw_active_window(Tox *m)
 
         if (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab) {
             set_next_window(ch);
-            ch = KEY_F(2);
         }
 
         a->onKey(a, m, ch, false);
@@ -892,18 +902,30 @@ void kill_all_windows(Tox *m)
             continue;
         }
 
-        if (w->type == WINDOW_TYPE_CHAT) {
-            kill_chat_window(w, m);
-        } else if (w->type == WINDOW_TYPE_CONFERENCE) {
-            free_conference(w, w->num);
-        }
+        switch (w->type) {
+            case WINDOW_TYPE_CHAT: {
+                kill_chat_window(w, m);
+                break;
+            }
+
+            case WINDOW_TYPE_CONFERENCE: {
+                free_conference(w, w->num);
+                break;
+            }
 
 #ifdef GAMES
-        else if (w->type == WINDOW_TYPE_GAME) {
-            game_kill(w);
-        }
+
+            case WINDOW_TYPE_GAME: {
+                game_kill(w);
+                break;
+            }
 
 #endif // GAMES
+
+            default: {
+                break;
+            }
+        }
     }
 
     /* TODO: use enum instead of magic indices */

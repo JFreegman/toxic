@@ -18,3 +18,5 @@ build/*.o
 build/*.d
 apidoc/python/build
 *.vim
+*.tox
+*.nvim*

@@ -104,22 +104,28 @@ void game_util_move_coords(Direction direction, Coords *coords)
 {
     switch (direction) {
         case NORTH: {
-            --(coords->y);
+            if (coords->y > 0) {
+                --(coords->y);
+            }
+
             break;
         }
 
         case SOUTH: {
-            ++(coords->y);
+            ++(coords->y);  // Will rollover if you do something stupid
             break;
         }
 
         case EAST: {
-            ++(coords->x);
+            ++(coords->x);  // Will rollover if you do something stupid
             break;
         }
 
         case WEST: {
-            --(coords->x);
+            if (coords->x > 0) {
+                --(coords->x);
+            }
+
             break;
         }
 

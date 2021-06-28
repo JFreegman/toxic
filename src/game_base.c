@@ -162,13 +162,17 @@ void game_kill(ToxWindow *self)
 {
     GameData *game = self->game;
 
-    if (game->cb_game_kill) {
-        game->cb_game_kill(game, game->cb_game_kill_data);
+    if (game) {
+        if (game->cb_game_kill) {
+            game->cb_game_kill(game, game->cb_game_kill_data);
+        }
+
+        delwin(game->window);
+        free(game->messages);
+        free(game);
     }
 
-    delwin(game->window);
-    free(game->messages);
-    free(game);
+    kill_notifs(self->active_box);
     del_window(self);
 }
 
@@ -746,7 +750,7 @@ bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
         return true;
     }
 
-    if (!game->is_multiplayer && key == KEY_F(2)) {
+    if (key == KEY_F(2) && !game->is_multiplayer) {
         game_toggle_pause(self->game);
         return true;
     }
@@ -814,6 +818,8 @@ void game_onPacket(ToxWindow *self, Tox *m, uint32_t friendnumber, const uint8_t
     }
 
     if (data[0] != GAME_NETWORKING_VERSION) {
+        fprintf(stderr, "Game packet rejected: wrong networking version (got %d, expected %d)\n", data[0],
+                GAME_NETWORKING_VERSION);
         return;
     }
 
@@ -1081,7 +1087,7 @@ void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_dat
 /*
  * Wraps `packet` in a header comprised of the custom packet type, game type and game id.
  */
-static int game_wrap_packet(const GameData *game, uint8_t *packet, size_t size, GamePacketType packet_type)
+static int game_packet_wrap(const GameData *game, uint8_t *packet, size_t size, GamePacketType packet_type)
 {
     if (size < GAME_PACKET_HEADER_SIZE + 1) {
         return -1;
@@ -1100,7 +1106,7 @@ static int game_wrap_packet(const GameData *game, uint8_t *packet, size_t size, 
     return 0;
 }
 
-int game_send_packet(const GameData *game, const uint8_t *data, size_t length, GamePacketType packet_type)
+int game_packet_send(const GameData *game, const uint8_t *data, size_t length, GamePacketType packet_type)
 {
     if (length > GAME_MAX_DATA_SIZE) {
         return -1;
@@ -1108,7 +1114,7 @@ int game_send_packet(const GameData *game, const uint8_t *data, size_t length, G
 
     uint8_t packet[GAME_MAX_PACKET_SIZE];
 
-    if (game_wrap_packet(game, packet, sizeof(packet), packet_type) == -1) {
+    if (game_packet_wrap(game, packet, sizeof(packet), packet_type) == -1) {
         return -1;
     }
 
@@ -1124,5 +1130,5 @@ int game_send_packet(const GameData *game, const uint8_t *data, size_t length, G
         return -1;
     }
 
-    return -0;
+    return 0;
 }

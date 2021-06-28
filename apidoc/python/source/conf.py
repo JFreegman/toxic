@@ -152,6 +152,3 @@ texinfo_documents = [
      author, 'toxic_api', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

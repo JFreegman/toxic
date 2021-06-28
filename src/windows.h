@@ -310,5 +310,5 @@ void draw_window_bar(ToxWindow *self);
    call at least once per second */
 void refresh_inactive_windows(void);
 
-#endif // WINWDOWS_H
+#endif // WINDOWS_H
 
