@@ -24,6 +24,7 @@
 #define GAME_UTIL
 
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct Coords {
     int x;

@@ -131,11 +131,11 @@ mkdir -p "$BUILD_DIR"
 # Build Toxcore
 cd "$BUILD_DIR"
 
-TOXCORE_VERSION="0.2.12"
-TOXCORE_HASH="30ae3263c9b68d3bef06f799ba9d7a67e3fad447030625f0ffa4bb22684228b0"
+TOXCORE_VERSION="25a56c354937e9c8c4c50a64c3b4cfc099c34e29"
+TOXCORE_HASH="78749dccfd2e6ec95d59d7a07c882aa034754a9ff62113b95281927e71b42574"
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
-wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/TokTok/c-toxcore/archive/v$TOXCORE_VERSION.tar.gz"
+wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/TokTok/c-toxcore/archive/master.tar.gz"
 check_sha256 "$TOXCORE_HASH" "$TOXCORE_FILENAME"
 tar -o -xf "$TOXCORE_FILENAME"
 rm "$TOXCORE_FILENAME"
@@ -214,6 +214,7 @@ CFLAGS="-static" PKG_CONFIG_PATH="$BUILD_DIR/prefix-toxcore/lib64/pkgconfig:$BUI
   ENABLE_PYTHON=0 \
   ENABLE_RELEASE=1 \
   ENABLE_ASAN=0 \
+  DISABLE_GAMES=0 \
   install
 
 
@@ -295,3 +296,4 @@ mv "$PREPARE_ARTIFACT_DIR" "$PREPARE_ARTIFACT_DIR/../$ARTIFACT_NAME"
 tar -cJf "$ARTIFACT_NAME.tar.xz" "$ARTIFACT_NAME"
 mv "$ARTIFACT_NAME.tar.xz" "$ARTIFACT_DIR"
 chmod 777 -R "$ARTIFACT_DIR"
+
