@@ -1142,7 +1142,7 @@ void kill_all_windows(Tox *m)
             case WINDOW_TYPE_GROUPCHAT: {
                 exit_groupchat(w, m, w->num, user_settings->group_part_message,
                                strlen(user_settings->group_part_message));
-		break;
+                break;
             }
 
             default: {
