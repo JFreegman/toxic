@@ -131,11 +131,15 @@ mkdir -p "$BUILD_DIR"
 # Build Toxcore
 cd "$BUILD_DIR"
 
+# The git hash of the c-toxcore version we're using
 TOXCORE_VERSION="25a56c354937e9c8c4c50a64c3b4cfc099c34e29"
-TOXCORE_HASH="78749dccfd2e6ec95d59d7a07c882aa034754a9ff62113b95281927e71b42574"
+
+# The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
+TOXCORE_HASH="8448752e6286c747130254571fde2db8e2fc073a8116f9fff489ed53af546c0a"
+
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
-wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/TokTok/c-toxcore/archive/master.tar.gz"
+wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/TokTok/c-toxcore/archive/$TOXCORE_VERSION.tar.gz"
 check_sha256 "$TOXCORE_HASH" "$TOXCORE_FILENAME"
 tar -o -xf "$TOXCORE_FILENAME"
 rm "$TOXCORE_FILENAME"
@@ -160,8 +164,8 @@ cmake --build _build --target install
 # location with SSL_CERT_FILE env variable.
 cd "$BUILD_DIR"
 
-CURL_VERSION="7.74.0"
-CURL_HASH="e56b3921eeb7a2951959c02db0912b5fcd5fdba5aca071da819e1accf338bbd7"
+CURL_VERSION="7.77.0"
+CURL_HASH="b0a3428acb60fa59044c4d0baae4e4fc09ae9af1d8a3aa84b2e3fbcd99841f77"
 CURL_FILENAME="curl-$CURL_VERSION.tar.gz"
 
 wget --timeout=10 -O "$CURL_FILENAME" "https://curl.haxx.se/download/$CURL_FILENAME"
@@ -178,7 +182,8 @@ cd curl*
   --without-ca-path \
   --with-ca-fallback \
   --with-nghttp2 \
-  --with-brotli
+  --with-brotli \
+  --with-openssl
 make
 make install
 sed -i 's|-lbrotlidec |-lbrotlidec-static -lbrotlicommon-static |g' $BUILD_DIR/prefix-curl/lib/pkgconfig/libcurl.pc
