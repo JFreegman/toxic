@@ -540,20 +540,20 @@ static void game_draw_border(const GameData *game, const int max_x, const int ma
     const int x = (max_x - game_max_x) / 2;
     const int y = (max_y - game_max_y) / 2;
 
-    wattron(win, A_BOLD | COLOR_PAIR(GAME_BORDER_COLOUR));
+    wattron(win, COLOR_PAIR(GAME_BORDER_COLOUR));
 
-    mvwaddch(win, y, x, ' ');
-    mvwhline(win, y, x + 1, ' ', game_max_x - 1);
-    mvwvline(win, y + 1, x, ' ', game_max_y - 1);
-    mvwvline(win, y, x - 1, ' ', game_max_y + 1);
-    mvwaddch(win, y, x + game_max_x, ' ');
-    mvwvline(win, y + 1, x + game_max_x, ' ', game_max_y - 1);
-    mvwvline(win, y, x + game_max_x + 1, ' ', game_max_y + 1);
-    mvwaddch(win, y + game_max_y, x, ' ');
-    mvwhline(win, y + game_max_y, x + 1, ' ', game_max_x - 1);
-    mvwaddch(win, y + game_max_y, x + game_max_x, ' ');
+    mvwaddch(win, y, x, ACS_ULCORNER);
+    mvwhline(win, y, x + 1, ACS_HLINE, game_max_x - 1);
+    mvwvline(win, y + 1, x, ACS_VLINE, game_max_y - 1);
+    mvwvline(win, y, x - 1, ACS_VLINE, game_max_y + 1);
+    mvwaddch(win, y, x + game_max_x, ACS_URCORNER);
+    mvwvline(win, y + 1, x + game_max_x, ACS_VLINE, game_max_y - 1);
+    mvwvline(win, y, x + game_max_x + 1, ACS_VLINE, game_max_y + 1);
+    mvwaddch(win, y + game_max_y, x, ACS_LLCORNER);
+    mvwhline(win, y + game_max_y, x + 1, ACS_HLINE, game_max_x - 1);
+    mvwaddch(win, y + game_max_y, x + game_max_x, ACS_LRCORNER);
 
-    wattroff(win, A_BOLD | COLOR_PAIR(GAME_BORDER_COLOUR));
+    wattroff(win, COLOR_PAIR(GAME_BORDER_COLOUR));
 }
 
 static void game_draw_status(const GameData *game, const int max_x, const int max_y)
@@ -561,7 +561,7 @@ static void game_draw_status(const GameData *game, const int max_x, const int ma
     WINDOW *win = game->window;
 
     int x = ((max_x - game->game_max_x) / 2) - 1;
-    int y = ((max_y - game->game_max_y) / 2) - 1;
+    const int y = ((max_y - game->game_max_y) / 2) - 1;
 
     wattron(win, A_BOLD);
 

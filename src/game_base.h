@@ -31,7 +31,7 @@
 #include "game_util.h"
 #include "windows.h"
 
-#define GAME_BORDER_COLOUR BAR_TEXT
+#define GAME_BORDER_COLOUR BAR_SOLID
 
 
 /* Max size of a default square game window */

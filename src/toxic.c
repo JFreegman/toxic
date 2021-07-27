@@ -383,6 +383,7 @@ static void init_term(void)
         init_pair(BLACK_BG, COLOR_BLACK, bar_bg_color);
         init_pair(PURPLE_BG, COLOR_MAGENTA, bar_bg_color);
         init_pair(BAR_TEXT, bar_fg_color, bar_bg_color);
+        init_pair(BAR_SOLID, bar_bg_color, bar_bg_color);
         init_pair(BAR_ACCENT, bar_accent_color, bar_bg_color);
         init_pair(BAR_NOTIFY, bar_notify_color, bar_bg_color);
         init_pair(STATUS_ONLINE, COLOR_GREEN, bar_bg_color);

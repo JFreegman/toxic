@@ -72,6 +72,7 @@ typedef enum {
     STATUS_BUSY,
     STATUS_AWAY,
     BAR_NOTIFY,
+    BAR_SOLID,
 } C_COLOURS;
 
 /* tab alert types: lower types take priority (this relies on the order of C_COLOURS) */
