@@ -25,6 +25,15 @@
 
 #include <limits.h>
 
+//This includes NAME_MAX and PATH_MAX
+#ifdef __APPLE__
+#include <sys/sysinfo.h>
+#elif __linux__
+#include <linux/limits.h>
+#else
+#include <limits.h>//hope that this is correct for other systems.
+#endif
+
 #include "notify.h"
 #include "toxic.h"
 #include "windows.h"

@@ -25,10 +25,14 @@
 #include <string.h>
 
 #ifdef __APPLE__
-#include <sys/types.h>
 #include <sys/dir.h>
+#include <sys/sysinfo.h>
+#include <sys/types.h>
 #else
 #include <dirent.h>
+#ifdef __linux
+#include <linux/limits.h>//This includes NAME_MAX and PATH_MAX
+#endif /* __linux__ */
 #endif /* __APPLE__ */
 
 #include "configdir.h"

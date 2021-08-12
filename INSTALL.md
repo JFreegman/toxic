@@ -13,6 +13,7 @@
 | [Tox Core](https://github.com/toktok/c-toxcore)      | BASE                       | *None*              |
 | [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    |
 | [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       |
+| [Linux Headers](https://www.kernel.org)              | BASE                       | linux-headers-*     |
 | [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                |
 | [libcurl](http://curl.haxx.se/)                      | BASE                       | libcurl4-openssl-dev|
 | [libqrencode](https://fukuchi.org/works/qrencode/)   | QRCODE                     | libqrencode-dev     |

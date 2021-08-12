@@ -22,7 +22,12 @@
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
-
+//Include NAME_MAX and PATH_MAX
+#ifdef __APPLE__
+#include <sys/sysinfo.h>
+#elif __linux__
+#include <linux/limits.h>
+#endif
 #include <limits.h>
 
 #include <tox/tox.h>
