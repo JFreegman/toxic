@@ -174,7 +174,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /decline <id>              : Decline friend request\n");
     wprintw(win, "  /requests                  : List pending friend requests\n");
     wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
-    wprintw(win, "  /status <type> <msg>       : Set status with optional note\n");
+    wprintw(win, "  /status <type>             : Set status (Online, Busy, Away)\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /nick <nick>               : Set your nickname\n");
     wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
