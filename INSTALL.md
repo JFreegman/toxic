@@ -10,7 +10,7 @@
 ## Dependencies
 | Name                                                 | Needed by                  | Debian package      |
 |------------------------------------------------------|----------------------------|---------------------|
-| [Tox Core](https://github.com/toktok/c-toxcore)      | BASE                       | *None*              |
+| [Tox Core](https://github.com/toktok/c-toxcore)      | BASE                       | libtoxcore-dev      |
 | [NCurses](https://www.gnu.org/software/ncurses)      | BASE                       | libncursesw5-dev    |
 | [LibConfig](http://www.hyperrealm.com/libconfig)     | BASE                       | libconfig-dev       |
 | [GNUmake](https://www.gnu.org/software/make)         | BASE                       | make                |
@@ -55,8 +55,8 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
   * `DISABLE_X11=1` → Disable X11 support (needed for focus tracking)
   * `DISABLE_AV=1` → Disable audio call support
   * `DISABLE_SOUND_NOTIFY=1` → Disable sound notifications support
-  * `DISABLE_QRCODE` → Disable QR exporting support
-  * `DISABLE_QRPNG` → Disable support for exporting QR as PNG
+  * `DISABLE_QRCODE=1` → Disable QR exporting support
+  * `DISABLE_QRPNG=1` → Disable support for exporting QR as PNG
   * `DISABLE_DESKTOP_NOTIFY=1` → Disable desktop notifications support
   * `DISABLE_GAMES=1` → Disable support for games
   * `ENABLE_PYTHON=1` → Build toxic with Python scripting support
