@@ -1204,21 +1204,23 @@ static void parse_args(int argc, char *argv[])
     };
 
     const char *opts_str = "4bdehLotuxvc:f:l:n:r:p:P:T:";
-    int opt, indexptr;
-    long int port = 0;
+    int opt = 0;
+    int indexptr = 0;
 
     while ((opt = getopt_long(argc, argv, opts_str, long_opts, &indexptr)) != -1) {
         switch (opt) {
-            case '4':
+            case '4': {
                 arg_opts.use_ipv4 = 1;
                 break;
+            }
 
-            case 'b':
+            case 'b': {
                 arg_opts.debug = 1;
                 queue_init_message("stderr enabled");
                 break;
+            }
 
-            case 'c':
+            case 'c': {
                 if (optarg == NULL) {
                     queue_init_message("Invalid argument for option: %d", opt);
                     break;
@@ -1231,17 +1233,20 @@ static void parse_args(int argc, char *argv[])
                 }
 
                 break;
+            }
 
-            case 'd':
+            case 'd': {
                 arg_opts.default_locale = 1;
                 queue_init_message("Using default POSIX locale");
                 break;
+            }
 
-            case 'e':
+            case 'e': {
                 arg_opts.encrypt_data = 1;
                 break;
+            }
 
-            case 'f':
+            case 'f': {
                 if (optarg == NULL) {
                     queue_init_message("Invalid argument for option: %d", opt);
                     break;
@@ -1279,8 +1284,9 @@ static void parse_args(int argc, char *argv[])
                 queue_init_message("Using '%s' data file", DATA_FILE);
 
                 break;
+            }
 
-            case 'l':
+            case 'l': {
                 if (optarg) {
                     arg_opts.logging = true;
 
@@ -1300,13 +1306,15 @@ static void parse_args(int argc, char *argv[])
                 }
 
                 break;
+            }
 
-            case 'L':
+            case 'L': {
                 arg_opts.disable_local_discovery = 1;
                 queue_init_message("Local discovery disabled");
                 break;
+            }
 
-            case 'n':
+            case 'n': {
                 if (optarg == NULL) {
                     queue_init_message("Invalid argument for option: %d", opt);
                     break;
@@ -1314,48 +1322,38 @@ static void parse_args(int argc, char *argv[])
 
                 snprintf(arg_opts.nodes_path, sizeof(arg_opts.nodes_path), "%s", optarg);
                 break;
+            }
 
-            case 'o':
+            case 'o': {
                 arg_opts.no_connect = 1;
                 queue_init_message("DHT disabled");
                 break;
+            }
 
-            case 'p':
-                if (optarg == NULL) {
-                    queue_init_message("Invalid argument for option: %d", opt);
-                    break;
-                }
-
+            case 'p': {
                 arg_opts.proxy_type = TOX_PROXY_TYPE_SOCKS5;
-                snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
+            }
 
-                if (++optind > argc || argv[optind - 1][0] == '-') {
-                    exit_toxic_err("Proxy error", FATALERR_PROXY);
-                }
+            // Intentional fallthrough
 
-                port = strtol(argv[optind - 1], NULL, 10);
-
-                if (port <= 0 || port > MAX_PORT_RANGE) {
-                    exit_toxic_err("Proxy error", FATALERR_PROXY);
-                }
-
-                arg_opts.proxy_port = port;
-                break;
-
-            case 'P':
+            case 'P': {
                 if (optarg == NULL) {
                     queue_init_message("Invalid argument for option: %d", opt);
+                    arg_opts.proxy_type = TOX_PROXY_TYPE_NONE;
                     break;
                 }
 
-                arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
+                if (arg_opts.proxy_type == TOX_PROXY_TYPE_NONE) {
+                    arg_opts.proxy_type = TOX_PROXY_TYPE_HTTP;
+                }
+
                 snprintf(arg_opts.proxy_address, sizeof(arg_opts.proxy_address), "%s", optarg);
 
                 if (++optind > argc || argv[optind - 1][0] == '-') {
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
                 }
 
-                port = strtol(argv[optind - 1], NULL, 10);
+                int port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE) {
                     exit_toxic_err("Proxy error", FATALERR_PROXY);
@@ -1363,8 +1361,9 @@ static void parse_args(int argc, char *argv[])
 
                 arg_opts.proxy_port = port;
                 break;
+            }
 
-            case 'r':
+            case 'r': {
                 if (optarg == NULL) {
                     queue_init_message("Invalid argument for option: %d", opt);
                     break;
@@ -1377,18 +1376,20 @@ static void parse_args(int argc, char *argv[])
                 }
 
                 break;
+            }
 
-            case 't':
+            case 't': {
                 arg_opts.force_tcp = 1;
                 break;
+            }
 
-            case 'T':
+            case 'T': {
                 if (optarg == NULL) {
                     queue_init_message("Invalid argument for option: %d", opt);
                     break;
                 }
 
-                port = strtol(optarg, NULL, 10);
+                int port = strtol(optarg, NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE) {
                     port = MAX_PORT_RANGE;
@@ -1396,21 +1397,25 @@ static void parse_args(int argc, char *argv[])
 
                 arg_opts.tcp_port = port;
                 break;
+            }
 
-            case 'u':
+            case 'u': {
                 arg_opts.unencrypt_data = 1;
                 break;
+            }
 
-            case 'v':
+            case 'v': {
                 print_version();
                 exit(EXIT_SUCCESS);
+            }
 
             case 'h':
 
             // Intentional fallthrough
-            default:
+            default: {
                 print_usage();
                 exit(EXIT_SUCCESS);
+            }
         }
     }
 }
