@@ -1626,11 +1626,11 @@ static void chess_print_status(WINDOW *win, ChessState *state)
     }
 
     int x_mid = (board->x_left_bound + (CHESS_TILE_SIZE_X * (CHESS_BOARD_COLUMNS / 2))) - (strlen(message) / 2);
-    mvwprintw(win, board->y_top_bound  - 2, x_mid, message);
+    mvwprintw(win, board->y_top_bound  - 2, x_mid, "%s", message);
 
     if (state->message_length > 0) {
         x_mid = (board->x_left_bound + (CHESS_TILE_SIZE_X * (CHESS_BOARD_COLUMNS / 2))) - (state->message_length / 2);
-        mvwprintw(win, board->y_bottom_bound + 2, x_mid, state->status_message);
+        mvwprintw(win, board->y_bottom_bound + 2, x_mid, "%s", state->status_message);
     }
 
     wattroff(win, A_BOLD);
