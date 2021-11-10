@@ -1307,12 +1307,14 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
                 break;
         }
 
+        const char *connection_status_s = statusbar->connection == TOX_CONNECTION_TCP ? "TCP" : "UDP";
+
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " [");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, "%s", ONLINE_CHAR);
+        wprintw(statusbar->topline, "%s", connection_status_s);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
@@ -1342,7 +1344,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-        wprintw(statusbar->topline, "%s", OFFLINE_CHAR);
+        wprintw(statusbar->topline, "Offline");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
