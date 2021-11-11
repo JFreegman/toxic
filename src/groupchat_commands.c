@@ -271,29 +271,6 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     }
 }
 
-void cmd_mykey(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
-{
-    char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
-    char pk[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
-
-    TOX_ERR_GROUP_SELF_QUERY err;
-
-    if (!tox_group_self_get_public_key(m, self->num, (uint8_t *) pk, &err)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch your public key (error %d)", err);
-        return;
-    }
-
-    size_t i;
-
-    for (i = 0; i < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++i) {
-        char d[3];
-        snprintf(d, sizeof(d), "%02X", pk[i] & 0xff);
-        strcat(pk_string, d);
-    }
-
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", pk_string);
-}
-
 void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *passwd = NULL;

@@ -91,7 +91,6 @@ static const char *group_cmd_list[] = {
     "/log",
     "/mod",
     "/myid",
-    "/mykey",
 #ifdef QRCODE
     "/myqr",
 #endif /* QRCODE */
