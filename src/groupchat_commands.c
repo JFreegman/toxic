@@ -697,9 +697,21 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         strcat(pk_string, d);
     }
 
+
+    TOX_ERR_GROUP_PEER_QUERY conn_err;
+    Tox_Connection connection_type = tox_group_peer_get_connection_status(m, self->num, peer_id, &conn_err);
+
+    const char *connection_type_str = "Unknown";
+
+    if (conn_err == TOX_ERR_GROUP_PEER_QUERY_OK || connection_type != TOX_CONNECTION_NONE) {
+        connection_type_str = connection_type == TOX_CONNECTION_UDP ? "UDP" : "TCP";
+    }
+
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Whois for %s", nick);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Role: %s", role_str);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Status: %s", status_str);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Last active: %s", last_seen_str);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Connection status: %s", connection_type_str);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Public key: %s", pk_string);
 }
+
