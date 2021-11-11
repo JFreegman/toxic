@@ -285,6 +285,42 @@ static void help_draw_chat(ToxWindow *self)
     wnoutrefresh(win);
 }
 
+static void help_draw_groupchats(ToxWindow *self)
+{
+    WINDOW *win = self->help->win;
+
+    wmove(win, 1, 1);
+
+    wattron(win, A_BOLD | COLOR_PAIR(RED));
+    wprintw(win, "Groupchat commands:\n");
+    wattroff(win, A_BOLD | COLOR_PAIR(RED));
+
+    wprintw(win, "  /chatid                   : Print this group's ID\n");
+    wprintw(win, "  /close <m>                : Leave the group with an optional part message\n");
+    wprintw(win, "  /disconnect               : Disconnect from the group (credentials retained)\n");
+    wprintw(win, "  /ignore <name>            : Ignore a peer\n");
+    wprintw(win, "  /unignore <name>          : Unignore an ignored peer\n");
+    wprintw(win, "  /kick <name>              : Remove a peer from the group\n");
+    wprintw(win, "  /mod <name>               : Promote a peer to moderator\n");
+    wprintw(win, "  /mykey                    : Print your groupchat ID\n");
+    wprintw(win, "  /passwd <s>               : Set a password needed to join the group\n");
+    wprintw(win, "  /peerlimit <n>            : Set the maximum number of peers that can join\n");
+    wprintw(win, "  /privacy <type>           : Set the group privacy state: private | public\n");
+    wprintw(win, "  /rejoin                   : Reconnect to the groupchat\n");
+    wprintw(win, "  /silence <name>           : Silence a peer for the entire group\n");
+    wprintw(win, "  /unsilence <name>         : Unsilence a silenced peer\n");
+    wprintw(win, "  /status <type>            : Set your status\n");
+    wprintw(win, "  /topic <m>                : Set the group topic\n");
+    wprintw(win, "  /unmod <name>             : Demote a moderator\n");
+    wprintw(win, "  /whisper <name> <m>       : Send a private message to a peer\n");
+    wprintw(win, "  /whois <name>             : Print whois info for a peer\n");
+
+    help_draw_bottom_menu(win);
+
+    box(win, ACS_VLINE, ACS_HLINE);
+    wnoutrefresh(win);
+}
+
 static void help_draw_keys(ToxWindow *self)
 {
     WINDOW *win = self->help->win;
@@ -450,6 +486,11 @@ void help_onKey(ToxWindow *self, wint_t key)
             help_init_menu(self);
             self->help->type = HELP_MENU;
             break;
+
+        case L'r':
+            help_init_window(self, 24, 80);
+            self->help->type = HELP_GROUP;
+            break;
     }
 }
 
@@ -486,5 +527,9 @@ void help_onDraw(ToxWindow *self)
             help_draw_plugin(self);
             break;
 #endif /* PYTHON */
+
+        case HELP_GROUP:
+            help_draw_groupchats(self);
+            break;
     }
 }
