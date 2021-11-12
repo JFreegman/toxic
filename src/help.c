@@ -188,6 +188,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /conference <type>         : Create a conference where type: text | audio\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
+    wprintw(win, "  /group <name>              : Create a new group chat\n");
 #ifdef GAMES
     wprintw(win, "  /game                      : Play a game\n");
 #endif /* GAMES */
