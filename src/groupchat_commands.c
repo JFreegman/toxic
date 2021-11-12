@@ -81,7 +81,7 @@ void cmd_disconnect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
 void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -89,8 +89,10 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     uint32_t peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     TOX_ERR_GROUP_TOGGLE_IGNORE err;
@@ -118,7 +120,7 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -127,8 +129,10 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     uint32_t target_peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &target_peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &target_peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     TOX_ERR_GROUP_MOD_KICK_PEER err;
@@ -193,7 +197,7 @@ void cmd_list(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -201,8 +205,10 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     uint32_t target_peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &target_peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &target_peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     TOX_ERR_GROUP_SELF_QUERY s_err;
@@ -247,7 +253,7 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -255,8 +261,10 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     uint32_t target_peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &target_peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &target_peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     TOX_ERR_GROUP_SELF_QUERY s_err;
@@ -439,7 +447,7 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -447,8 +455,10 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
     uint32_t target_peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &target_peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &target_peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     TOX_ERR_GROUP_SELF_QUERY s_err;
@@ -493,7 +503,7 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -501,8 +511,10 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     uint32_t target_peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &target_peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &target_peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     if (tox_group_peer_get_role(m, self->num, target_peer_id, NULL) != TOX_GROUP_ROLE_OBSERVER) {
@@ -639,8 +651,10 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     uint32_t peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     TOX_ERR_GROUP_TOGGLE_IGNORE err;
@@ -683,8 +697,10 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     uint32_t peer_id;
 
     if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name '%s'.", nick);
-        return;
+        if (group_get_public_key_peer_id(self->num, nick, &peer_id) == -1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return;
+        }
     }
 
     int peer_index = get_peer_index(self->num, peer_id);

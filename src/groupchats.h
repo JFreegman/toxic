@@ -69,7 +69,6 @@ void exit_groupchat(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *p
 int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size_t length, Group_Join_Type join_type);
 void set_nick_all_groups(Tox *m, const char *new_nick, size_t length);
 void set_status_all_groups(Tox *m, uint8_t status);
-int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id);
 int get_peer_index(uint32_t groupnumber, uint32_t peer_id);
 void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t peer_id,
                                Tox_Group_Exit_Type exit_type,
@@ -78,6 +77,20 @@ void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, 
                                  uint32_t tgt_peer_id, TOX_GROUP_MOD_EVENT type);
 
 void groupchat_rejoin(ToxWindow *self, Tox *m);
+
+/* Gets the peer_id associated with nick.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure or if nick is not assigned to anyone in the group.
+ */
+int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id);
+
+/* Gets the peer_id associated with `public_key`.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure or if `public_key` is invalid.
+ */
+int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, uint32_t *peer_id);
 
 /* destroys and re-creates groupchat window */
 void redraw_groupchat_win(ToxWindow *self);

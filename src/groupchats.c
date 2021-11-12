@@ -465,6 +465,8 @@ static void sort_peerlist(uint32_t groupnumber)
 }
 
 /* Gets the peer_id associated with nick.
+ *
+ * Returns 0 on success.
  * Returns -1 on failure or if nick is not assigned to anyone in the group.
  */
 int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id)
@@ -476,11 +478,50 @@ int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *pee
     }
 
     for (size_t i = 0; i < chat->max_idx; ++i) {
-        if (chat->peer_list[i].active) {
-            if (strcmp(nick, chat->peer_list[i].name) == 0) {
-                *peer_id = chat->peer_list[i].peer_id;
-                return 0;
-            }
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (!peer->active) {
+            continue;
+        }
+
+        if (strcmp(nick, peer->name) == 0) {
+            *peer_id = peer->peer_id;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+/* Gets the peer_id associated with `public_key`.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure or if `public_key` is invalid.
+ */
+int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, uint32_t *peer_id)
+{
+    GroupChat *chat = get_groupchat(groupnumber);
+
+    if (!chat) {
+        return -1;
+    }
+
+    char key_bin[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
+
+    if (hex_string_to_bin(public_key, strlen(public_key), key_bin, sizeof(key_bin)) == -1) {
+        return -1;
+    }
+
+    for (size_t i = 0; i < chat->max_idx; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (!peer->active) {
+            continue;
+        }
+
+        if (memcmp(key_bin, peer->public_key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE) == 0) {
+            *peer_id = peer->peer_id;
+            return 0;
         }
     }
 
