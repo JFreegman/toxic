@@ -693,11 +693,11 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         return;
     }
 
-    const char *nick = argv[1];
+    const char *identifier = argv[1];
     uint32_t peer_id;
 
-    if (group_get_nick_peer_id(self->num, nick, &peer_id) == -1) {
-        if (group_get_public_key_peer_id(self->num, nick, &peer_id) == -1) {
+    if (group_get_nick_peer_id(self->num, identifier, &peer_id) == -1) {
+        if (group_get_public_key_peer_id(self->num, identifier, &peer_id) == -1) {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
             return;
         }
@@ -710,33 +710,35 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         return;
     }
 
+    GroupPeer *peer = &chat->peer_list[peer_index];
+
     const char *status_str = "Online";
 
-    if (chat->peer_list[peer_index].status == TOX_USER_STATUS_BUSY) {
+    if (peer->status == TOX_USER_STATUS_BUSY) {
         status_str = "Busy";
-    } else if (chat->peer_list[peer_index].status == TOX_USER_STATUS_AWAY) {
+    } else if (peer->status == TOX_USER_STATUS_AWAY) {
         status_str = "Away";
     }
 
     const char *role_str = "User";
 
-    if (chat->peer_list[peer_index].role == TOX_GROUP_ROLE_FOUNDER) {
+    if (peer->role == TOX_GROUP_ROLE_FOUNDER) {
         role_str = "Founder";
-    } else if (chat->peer_list[peer_index].role == TOX_GROUP_ROLE_MODERATOR) {
+    } else if (peer->role == TOX_GROUP_ROLE_MODERATOR) {
         role_str = "Moderator";
-    } else if (chat->peer_list[peer_index].role == TOX_GROUP_ROLE_OBSERVER) {
+    } else if (peer->role == TOX_GROUP_ROLE_OBSERVER) {
         role_str = "Observer";
     }
 
     char last_seen_str[128];
     get_elapsed_time_str_alt(last_seen_str, sizeof(last_seen_str),
-                             get_unix_time() - chat->peer_list[peer_index].last_active);
+                             get_unix_time() - peer->last_active);
 
     char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
 
     for (size_t i = 0; i < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++i) {
         char d[3];
-        snprintf(d, sizeof(d), "%02X", chat->peer_list[peer_index].public_key[i] & 0xff);
+        snprintf(d, sizeof(d), "%02X", peer->public_key[i] & 0xff);
         strcat(pk_string, d);
     }
 
@@ -749,11 +751,11 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         connection_type_str = connection_type == TOX_CONNECTION_UDP ? "UDP" : "TCP";
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Whois for %s", nick);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Public key: %s", pk_string);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Name: %s", peer->name);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Role: %s", role_str);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Status: %s", status_str);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Connection: %s", connection_type_str);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Last active: %s", last_seen_str);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Connection status: %s", connection_type_str);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Public key: %s", pk_string);
 }
 
