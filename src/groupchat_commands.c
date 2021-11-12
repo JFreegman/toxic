@@ -162,6 +162,34 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 }
 
+void cmd_list(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    GroupChat *chat = get_groupchat(self->num);
+
+    if (!chat) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch GroupChat object.");
+        return;
+    }
+
+    for (size_t i = 0; i < chat->max_idx; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (!peer->active) {
+            continue;
+        }
+
+        char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
+
+        for (size_t j = 0; j < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++j) {
+            char d[3];
+            snprintf(d, sizeof(d), "%02X", peer->public_key[j] & 0xff);
+            strcat(pk_string, d);
+        }
+
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "%s : %s", pk_string, peer->name);
+    }
+}
+
 void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
@@ -689,14 +717,12 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
                              get_unix_time() - chat->peer_list[peer_index].last_active);
 
     char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
-    size_t i;
 
-    for (i = 0; i < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++i) {
+    for (size_t i = 0; i < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++i) {
         char d[3];
         snprintf(d, sizeof(d), "%02X", chat->peer_list[peer_index].public_key[i] & 0xff);
         strcat(pk_string, d);
     }
-
 
     TOX_ERR_GROUP_PEER_QUERY conn_err;
     Tox_Connection connection_type = tox_group_peer_get_connection_status(m, self->num, peer_id, &conn_err);

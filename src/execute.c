@@ -127,6 +127,7 @@ static struct cmd_func groupchat_commands[] = {
     { "/disconnect",cmd_disconnect     },
     { "/ignore",    cmd_ignore         },
     { "/kick",      cmd_kick           },
+    { "/list",      cmd_list           },
     { "/mod",       cmd_mod            },
     { "/passwd",    cmd_set_passwd     },
     { "/peerlimit", cmd_set_peerlimit  },

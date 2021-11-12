@@ -88,6 +88,7 @@ static const char *group_cmd_list[] = {
     "/ignore",
     "/join",
     "/kick",
+    "/list",
     "/log",
     "/mod",
     "/myid",
