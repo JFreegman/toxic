@@ -482,13 +482,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     char name[TOX_GROUP_MAX_GROUP_NAME_LENGTH];
 
-    if (argv[1][0] == '\"') {    /* remove opening and closing quotes */
-        snprintf(name, sizeof(name), "%s", &argv[1][1]);
-        len -= 2;
-        name[len] = '\0';
-    } else {
-        snprintf(name, sizeof(name), "%s", argv[1]);
-    }
+    snprintf(name, sizeof(name), "%s", argv[1]);
 
     size_t nick_length = tox_self_get_name_size(m);
     char self_nick[TOX_MAX_NAME_LENGTH + 1];
