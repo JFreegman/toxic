@@ -331,7 +331,7 @@ int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size
             groupchats[i].active = true;
             groupchats[i].groupnumber = groupnumber;
             groupchats[i].num_peers = 0;
-            groupchats[i].time_connected = 0;
+            groupchats[i].time_connected = get_unix_time();
 
             if (i == max_groupchat_index) {
                 ++max_groupchat_index;
