@@ -491,6 +491,15 @@ void on_group_privacy_state(Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STAT
     }
 }
 
+void on_group_topic_lock(Tox *m, uint32_t groupnumber, TOX_GROUP_TOPIC_LOCK topic_lock, void *userdata)
+{
+    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i] != NULL && windows[i]->onGroupTopicLock != NULL) {
+            windows[i]->onGroupTopicLock(windows[i], m, groupnumber, topic_lock);
+        }
+    }
+}
+
 void on_group_password(Tox *m, uint32_t groupnumber, const uint8_t *password, size_t length, void *userdata)
 {
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {

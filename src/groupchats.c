@@ -89,6 +89,7 @@ static const char *group_cmd_list[] = {
     "/join",
     "/kick",
     "/list",
+    "/locktopic",
     "/log",
     "/mod",
     "/myid",
@@ -787,6 +788,23 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t grou
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the group to %s.", state_str);
+    write_to_log(tmp_event, "The founder", ctx->log, true);
+}
+
+static void groupchat_onGroupTopicLock(ToxWindow *self, Tox *m, uint32_t groupnumber, TOX_GROUP_TOPIC_LOCK topic_lock)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (self->num != groupnumber || !get_groupchat(groupnumber)) {
+        return;
+    }
+
+    const char *tlock_str = topic_lock == TOX_GROUP_TOPIC_LOCK_ENABLED ? "locked" : "unlocked";
+
+    line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has %s the topic.", tlock_str);
+
+    char tmp_event[MAX_STR_SIZE];
+    snprintf(tmp_event, sizeof(tmp_event), " %s the topic.", tlock_str);
     write_to_log(tmp_event, "The founder", ctx->log, true);
 }
 
@@ -1662,6 +1680,7 @@ static ToxWindow *new_group_chat(Tox *m, uint32_t groupnumber, const char *group
     ret->onGroupTopicChange = &groupchat_onGroupTopicChange;
     ret->onGroupPeerLimit = &groupchat_onGroupPeerLimit;
     ret->onGroupPrivacyState = &groupchat_onGroupPrivacyState;
+    ret->onGroupTopicLock = &groupchat_onGroupTopicLock;
     ret->onGroupPassword = &groupchat_onGroupPassword;
     ret->onGroupNickChange = &groupchat_onGroupNickChange;
     ret->onGroupStatusChange = &groupchat_onGroupStatusChange;

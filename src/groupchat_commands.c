@@ -444,6 +444,56 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     }
 }
 
+void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    TOX_GROUP_TOPIC_LOCK topic_lock;
+    const char *tlock_str = NULL;
+
+    if (argc < 1) {
+        TOX_ERR_GROUP_STATE_QUERIES err;
+        topic_lock = tox_group_get_topic_lock(m, self->num, &err);
+
+        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve topic lock (error %d).", err);
+            return;
+        }
+
+        tlock_str = topic_lock == TOX_GROUP_TOPIC_LOCK_ENABLED ? "Enabled" : "Disabled";
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Topic lock is %s.", tlock_str);
+        return;
+    }
+
+    tlock_str = argv[1];
+
+    if (strcasecmp(tlock_str, "on") != 0 && strcasecmp(tlock_str, "off") != 0) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Topic lock must be \"on\" or \"off\".");
+        return;
+    }
+
+    topic_lock = strcasecmp(tlock_str, "on") == 0 ? TOX_GROUP_TOPIC_LOCK_ENABLED : TOX_GROUP_TOPIC_LOCK_DISABLED;
+    const char *display_str = (topic_lock ==  TOX_GROUP_TOPIC_LOCK_ENABLED) ? "enabled" : "disabled";
+
+    TOX_ERR_GROUP_FOUNDER_SET_TOPIC_LOCK err;
+    tox_group_founder_set_topic_lock(m, self->num, topic_lock, &err);
+
+    switch (err) {
+        case TOX_ERR_GROUP_FOUNDER_SET_TOPIC_LOCK_OK: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Topic lock has been %s.", display_str);
+            return;
+        }
+
+        case TOX_ERR_GROUP_FOUNDER_SET_TOPIC_LOCK_PERMISSIONS: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the topic lock.");
+            return;
+        }
+
+        default: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Error setting topic lock (error %d).", err);
+            return;
+        }
+    }
+}
+
 void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {

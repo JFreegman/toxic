@@ -837,6 +837,7 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_topic(m, on_group_topic_change);
     tox_callback_group_peer_limit(m, on_group_peer_limit);
     tox_callback_group_privacy_state(m, on_group_privacy_state);
+    tox_callback_group_topic_lock(m, on_group_topic_lock);
     tox_callback_group_password(m, on_group_password);
     tox_callback_group_self_join(m, on_group_self_join);
     tox_callback_group_join_fail(m, on_group_rejected);

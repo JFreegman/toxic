@@ -204,6 +204,7 @@ struct ToxWindow {
     void(*onGroupTopicChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupPeerLimit)(ToxWindow *, Tox *, uint32_t, uint32_t);
     void(*onGroupPrivacyState)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_PRIVACY_STATE);
+    void(*onGroupTopicLock)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_TOPIC_LOCK);
     void(*onGroupPassword)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
     void(*onGroupSelfJoin)(ToxWindow *, Tox *, uint32_t);
     void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_JOIN_FAIL);
