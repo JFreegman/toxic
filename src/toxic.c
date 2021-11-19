@@ -1072,6 +1072,37 @@ static void do_toxic(Tox *m)
     pthread_mutex_unlock(&Winthread.lock);
 }
 
+/* Set interface refresh flag. This should be called whenever the interface changes.
+ *
+ * This function is not thread safe.
+ */
+void flag_interface_refresh(void)
+{
+    Winthread.flag_refresh = 1;
+    Winthread.last_refresh_flag = get_unix_time();
+}
+
+/* How long we wait to idle interface refreshing after last flag set. Should be no less than 2. */
+#define ACTIVE_WIN_REFRESH_TIMEOUT 2
+
+static void poll_interface_refresh_flag(void)
+{
+    pthread_mutex_lock(&Winthread.lock);
+
+    bool flag = Winthread.flag_refresh;
+    time_t t = Winthread.last_refresh_flag;
+
+    pthread_mutex_unlock(&Winthread.lock);
+
+    if (flag == 1 && timed_out(t, ACTIVE_WIN_REFRESH_TIMEOUT)) {
+        pthread_mutex_lock(&Winthread.lock);
+        Winthread.flag_refresh = 0;
+        pthread_mutex_unlock(&Winthread.lock);
+    }
+}
+
+
+/* How often we refresh windows that aren't focused */
 #define INACTIVE_WIN_REFRESH_RATE 10
 
 void *thread_winref(void *data)
@@ -1079,11 +1110,12 @@ void *thread_winref(void *data)
     Tox *m = (Tox *) data;
 
     uint8_t draw_count = 0;
+
     init_signal_catchers();
 
     while (true) {
-        draw_active_window(m);
         draw_count++;
+        draw_active_window(m);
 
         if (Winthread.flag_resize) {
             on_window_resize();
@@ -1097,6 +1129,8 @@ void *thread_winref(void *data)
             pthread_mutex_lock(&Winthread.lock);
             exit_toxic_success(m);
         }
+
+        poll_interface_refresh_flag();
     }
 }
 

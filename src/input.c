@@ -346,5 +346,9 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
         }
     }
 
+    if (match) {
+        flag_interface_refresh();
+    }
+
     return match;
 }

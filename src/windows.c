@@ -77,6 +77,8 @@ void on_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection c
             windows[i]->onConnectionChange(windows[i], m, friendnumber, connection_status);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata)
@@ -92,6 +94,8 @@ void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userd
             windows[i]->onTypingChange(windows[i], m, friendnumber, is_typing);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_friend_message(Tox *m, uint32_t friendnumber, Tox_Message_Type type, const uint8_t *string, size_t length,
@@ -123,6 +127,8 @@ void on_friend_name(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t
         }
     }
 
+    flag_interface_refresh();
+
     store_data(m, DATA_FILE);
 }
 
@@ -140,6 +146,8 @@ void on_friend_status_message(Tox *m, uint32_t friendnumber, const uint8_t *stri
             windows[i]->onStatusMessageChange(windows[i], friendnumber, msg, length);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_friend_status(Tox *m, uint32_t friendnumber, Tox_User_Status status, void *userdata)
@@ -151,6 +159,8 @@ void on_friend_status(Tox *m, uint32_t friendnumber, Tox_User_Status status, voi
             windows[i]->onStatusChange(windows[i], m, friendnumber, status);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_friend_added(Tox *m, uint32_t friendnumber, bool sort)
@@ -200,6 +210,8 @@ void on_conference_peer_list_changed(Tox *m, uint32_t conferencenumber, void *us
             windows[i]->onConferenceNameListChange(windows[i], m, conferencenumber);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_conference_peer_name(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *name,
@@ -423,11 +435,13 @@ void set_active_window_index(uint8_t index)
  */
 void set_next_window(int ch)
 {
+    uint8_t index = 0;
+
     if (ch == user_settings->key_next_tab) {
         for (uint8_t i = active_window_index + 1; i < MAX_WINDOWS_NUM; ++i) {
             if (windows[i] != NULL) {
-                set_active_window_index(i);
-                return;
+                index = i;
+                break;
             }
         }
     } else {
@@ -435,13 +449,15 @@ void set_next_window(int ch)
 
         for (uint8_t i = start; i > 0; --i) {
             if (windows[i] != NULL) {
-                set_active_window_index(i);
-                return;
+                index = i;
+                break;
             }
         }
     }
 
-    set_active_window_index(0);
+    set_active_window_index(index);
+
+    flag_interface_refresh();
 }
 
 /* Deletes window w and cleans up */
@@ -784,20 +800,39 @@ void draw_active_window(Tox *m)
     pthread_mutex_lock(&Winthread.lock);
     a->alert = WINDOW_ALERT_NONE;
     a->pending_messages = 0;
+    bool flag_refresh = Winthread.flag_refresh;
     pthread_mutex_unlock(&Winthread.lock);
 
-    touchwin(a->window);
-    a->onDraw(a, m);
-    wrefresh(a->window);
+    if (flag_refresh) {
+        touchwin(a->window);
+        a->onDraw(a, m);
+        wrefresh(a->window);
+    }
+#ifdef AUDIO
+    else if (a->is_call && timed_out(a->chatwin->infobox.lastupdate, 1)) {
+        touchwin(a->window);
+        a->onDraw(a, m);
+        wrefresh(a->window);
+    }
+#endif
 
 #ifdef GAMES
-
     if (a->type == WINDOW_TYPE_GAME) {
+        if (!flag_refresh) {  // we always want to be continously refreshing game windows
+            touchwin(a->window);
+            a->onDraw(a, m);
+            wrefresh(a->window);
+        }
+
         int ch = getch();
 
         if (ch == ERR) {
             return;
         }
+
+        pthread_mutex_lock(&Winthread.lock);
+        flag_interface_refresh();
+        pthread_mutex_unlock(&Winthread.lock);
 
         if (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab) {
             set_next_window(ch);
@@ -816,6 +851,10 @@ void draw_active_window(Tox *m)
     if (printable < 0) {
         return;
     }
+
+    pthread_mutex_lock(&Winthread.lock);
+    flag_interface_refresh();
+    pthread_mutex_unlock(&Winthread.lock);
 
     if (printable == 0 && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
         set_next_window((int) ch);

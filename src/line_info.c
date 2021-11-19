@@ -444,6 +444,8 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
     hst->queue[hst->queue_size++] = new_line;
 
+    flag_interface_refresh();
+
     return new_line->id;
 }
 
@@ -469,6 +471,8 @@ static void line_info_check_queue(ToxWindow *self)
     if (!self->scroll_pause) {
         line_info_reset_start(self, hst);
     }
+
+    flag_interface_refresh();
 }
 
 #define NOREAD_FLAG_TIMEOUT 5    /* seconds before a sent message with no read receipt is flagged as unread */
@@ -750,6 +754,8 @@ static bool line_info_screen_fit(ToxWindow *self, struct line_info *line)
 /* puts msg in specified line_info msg buffer */
 void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 {
+    flag_interface_refresh();
+
     struct line_info *line = self->chatwin->hst->line_end;
 
     while (line) {
@@ -853,6 +859,10 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
         line_info_reset_start(self, hst);
     } else {
         match = false;
+    }
+
+    if (match) {
+        flag_interface_refresh();
     }
 
     return match;

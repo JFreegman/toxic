@@ -117,13 +117,27 @@ static void refresh_progress_helper(ToxWindow *self, struct FileTransfer *ft)
     ft->last_line_progress = get_unix_time();
 }
 
-/* refreshes active file transfer status bars. */
-void refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnumber)
+/* refreshes active file transfer status bars.
+ *
+ * Return true if there is at least one active file transfer in either direction.
+ */
+bool refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnumber)
 {
+    bool active = false;
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        refresh_progress_helper(self, &Friends.list[friendnumber].file_receiver[i]);
-        refresh_progress_helper(self, &Friends.list[friendnumber].file_sender[i]);
+        struct FileTransfer *ft_r = &Friends.list[friendnumber].file_receiver[i];
+        struct FileTransfer *ft_s = &Friends.list[friendnumber].file_sender[i];
+
+        refresh_progress_helper(self, ft_r);
+        refresh_progress_helper(self, ft_s);
+
+        if (ft_r->state !=  FILE_TRANSFER_INACTIVE || ft_s->state != FILE_TRANSFER_INACTIVE) {
+            active = true;
+        }
     }
+
+    return active;
 }
 
 static void clear_file_transfer(struct FileTransfer *ft)

@@ -125,6 +125,8 @@ void on_self_connection_status(Tox *m, Tox_Connection connection_status, void *u
     UNUSED_VAR(userdata);
     StatusBar *statusbar = prompt->stb;
     statusbar->connection = connection_status;
+
+    flag_interface_refresh();
 }
 
 /* Updates own nick in prompt statusbar */
