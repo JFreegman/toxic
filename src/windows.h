@@ -103,6 +103,8 @@ struct Winthread {
     pthread_mutex_t lock;
     volatile sig_atomic_t sig_exit_toxic;
     volatile sig_atomic_t flag_resize;
+    volatile sig_atomic_t flag_refresh;
+    volatile sig_atomic_t flag_refresh_timeout;
 };
 
 struct cqueue_thread {

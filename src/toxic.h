@@ -102,6 +102,8 @@ typedef enum _FATAL_ERRS {
 void lock_status(void);
 void unlock_status(void);
 
+void flag_interface_change(unsigned int flag);
+
 void exit_toxic_success(Tox *m);
 void exit_toxic_err(const char *errmsg, int errcode);
 

@@ -1072,7 +1072,23 @@ static void do_toxic(Tox *m)
     pthread_mutex_unlock(&Winthread.lock);
 }
 
+/* How often we refresh windows that aren't focused */
 #define INACTIVE_WIN_REFRESH_RATE 10
+
+/* Set interface change flag. This should be called whenever the interface changes.
+ *
+ * `flag` should be a non-zero value if we need to redraw the window or 0 if we want to idle.
+ */
+void flag_interface_change(unsigned int flag)
+{
+    if (flag == 0 && timed_out(Winthread.flag_refresh_timeout, 1)) {
+        Winthread.flag_refresh = flag;
+    } else if (flag != 0) {
+        Winthread.flag_refresh = 1;
+    }
+
+    Winthread.flag_refresh_timeout = get_unix_time();
+}
 
 void *thread_winref(void *data)
 {
@@ -1082,8 +1098,8 @@ void *thread_winref(void *data)
     init_signal_catchers();
 
     while (true) {
-        draw_active_window(m);
         draw_count++;
+        draw_active_window(m);
 
         if (Winthread.flag_resize) {
             on_window_resize();
@@ -1469,6 +1485,8 @@ int main(int argc, char **argv)
 {
     /* Make sure all written files are read/writeable only by the current user. */
     umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+    flag_interface_change(1);
 
     srand(time(NULL)); // We use rand() for trivial/non-security related things
 

@@ -1072,12 +1072,11 @@ static void draw_infobox(ToxWindow *self)
 
     time_t curtime = get_unix_time();
 
-    /* update elapsed time string once per second */
-    if (curtime > infobox->lastupdate) {
+    /* update interface once per second */
+    if (timed_out(infobox->lastupdate, 1)) {
         get_elapsed_time_str(infobox->timestr, sizeof(infobox->timestr), curtime - infobox->starttime);
+        infobox->lastupdate = curtime;
     }
-
-    infobox->lastupdate = curtime;
 
     const char *in_is_muted = infobox->in_is_muted ? "yes" : "no";
     const char *out_is_muted = infobox->out_is_muted ? "yes" : "no";

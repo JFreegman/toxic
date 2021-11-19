@@ -444,6 +444,8 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
     hst->queue[hst->queue_size++] = new_line;
 
+    flag_interface_change(1);
+
     return new_line->id;
 }
 
@@ -454,6 +456,7 @@ static void line_info_check_queue(ToxWindow *self)
     struct line_info *line = line_info_ret_queue(hst);
 
     if (line == NULL) {
+        flag_interface_change(0);
         return;
     }
 
@@ -469,6 +472,8 @@ static void line_info_check_queue(ToxWindow *self)
     if (!self->scroll_pause) {
         line_info_reset_start(self, hst);
     }
+
+    flag_interface_change(1);
 }
 
 #define NOREAD_FLAG_TIMEOUT 5    /* seconds before a sent message with no read receipt is flagged as unread */
@@ -763,6 +768,8 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 
         line = line->prev;
     }
+
+    flag_interface_change(1);
 }
 
 static void line_info_scroll_up(ToxWindow *self, struct history *hst)
@@ -771,6 +778,8 @@ static void line_info_scroll_up(ToxWindow *self, struct history *hst)
         hst->line_start = hst->line_start->prev;
         self->scroll_pause = true;
     }
+
+    flag_interface_change(1);
 }
 
 static void line_info_scroll_down(ToxWindow *self, struct history *hst)
@@ -786,6 +795,8 @@ static void line_info_scroll_down(ToxWindow *self, struct history *hst)
     } else {
         line_info_reset_start(self, hst);
     }
+
+    flag_interface_change(1);
 }
 
 static void line_info_page_up(ToxWindow *self, struct history *hst)
@@ -805,6 +816,8 @@ static void line_info_page_up(ToxWindow *self, struct history *hst)
     }
 
     self->scroll_pause = true;
+
+    flag_interface_change(1);
 }
 
 static void line_info_page_down(ToxWindow *self, struct history *hst)
@@ -834,6 +847,8 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
         hst->line_start = next;
         next = hst->line_start->next;
     }
+
+    flag_interface_change(1);
 }
 
 bool line_info_onKey(ToxWindow *self, wint_t key)
@@ -855,6 +870,10 @@ bool line_info_onKey(ToxWindow *self, wint_t key)
         match = false;
     }
 
+    if (match) {
+        flag_interface_change(1);
+    }
+
     return match;
 }
 
@@ -862,4 +881,6 @@ void line_info_clear(struct history *hst)
 {
     hst->line_start = hst->line_end;
     hst->start_id = hst->line_start->id;
+
+    flag_interface_change(1);
 }
