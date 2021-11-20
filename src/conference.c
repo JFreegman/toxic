@@ -1334,7 +1334,7 @@ bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled)
     return true;
 }
 
-bool enable_conference_audio(Tox *tox, uint32_t conferencenum)
+bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
 {
     if (!toxav_groupchat_av_enabled(tox, conferencenum)) {
         if (toxav_groupchat_enable_av(tox, conferencenum, audio_conference_callback, NULL) != 0) {
@@ -1342,10 +1342,16 @@ bool enable_conference_audio(Tox *tox, uint32_t conferencenum)
         }
     }
 
-    return init_conference_audio_input(tox, conferencenum);
+    bool success = init_conference_audio_input(tox, conferencenum);
+
+    if (success) {
+        self->is_call = true;
+    }
+
+    return success;
 }
 
-bool disable_conference_audio(Tox *tox, uint32_t conferencenum)
+bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
 {
     ConferenceChat *chat = &conferences[conferencenum];
 
@@ -1358,7 +1364,13 @@ bool disable_conference_audio(Tox *tox, uint32_t conferencenum)
         chat->audio_enabled = false;
     }
 
-    return toxav_groupchat_disable_av(tox, conferencenum) == 0;
+    bool success = toxav_groupchat_disable_av(tox, conferencenum) == 0;
+
+    if (success) {
+        self->is_call = false;
+    }
+
+    return success;
 }
 
 bool conference_mute_self(uint32_t conferencenum)

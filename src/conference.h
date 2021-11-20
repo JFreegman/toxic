@@ -103,8 +103,8 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
         uint32_t maxpeers);
 
 bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
-bool enable_conference_audio(Tox *tox, uint32_t conferencenum);
-bool disable_conference_audio(Tox *tox, uint32_t conferencenum);
+bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum);
+bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum);
 bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled);
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum,
                                const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
