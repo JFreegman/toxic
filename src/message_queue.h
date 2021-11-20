@@ -28,8 +28,10 @@ struct cqueue_msg {
     size_t len;
     int line_id;
     time_t last_send_try;
+    time_t time_added;
     uint8_t type;
     int64_t receipt;
+    bool noread_flag;
     struct cqueue_msg *next;
     struct cqueue_msg *prev;
 };
@@ -47,6 +49,12 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
  * If a message fails to send the function will immediately return.
  */
 void cqueue_try_send(ToxWindow *self, Tox *m);
+
+/*
+ * Sets the noread flag for messages sent to the peer associated with `self` which have not
+ * received a receipt after a period of time.
+ */
+void cqueue_check_unread(ToxWindow *self);
 
 /* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
 void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt);

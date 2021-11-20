@@ -808,15 +808,18 @@ void draw_active_window(Tox *m)
         a->onDraw(a, m);
         wrefresh(a->window);
     }
+
 #ifdef AUDIO
     else if (a->is_call && timed_out(a->chatwin->infobox.lastupdate, 1)) {
         touchwin(a->window);
         a->onDraw(a, m);
         wrefresh(a->window);
     }
+
 #endif
 
 #ifdef GAMES
+
     if (a->type == WINDOW_TYPE_GAME) {
         if (!flag_refresh) {  // we always want to be continously refreshing game windows
             touchwin(a->window);

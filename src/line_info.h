@@ -96,6 +96,11 @@ void line_info_clear(struct history *hst);
 /* puts msg in specified line_info msg buffer */
 void line_info_set(ToxWindow *self, uint32_t id, char *msg);
 
+/* Return the line_info object associated with `id`.
+ * Return NULL if id cannot be found
+ */
+struct line_info *line_info_get(ToxWindow *self, uint32_t id);
+
 /* resets line_start (moves to end of chat history) */
 void line_info_reset_start(ToxWindow *self, struct history *hst);
 

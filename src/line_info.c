@@ -440,6 +440,10 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
     new_line->noread_flag = false;
     new_line->timestamp = get_unix_time();
 
+    if (type == OUT_MSG || type == OUT_ACTION) {
+        new_line->noread_flag = self->stb->connection == TOX_CONNECTION_NONE;
+    }
+
     line_info_init_line(self, new_line);
 
     hst->queue[hst->queue_size++] = new_line;
@@ -474,8 +478,6 @@ static void line_info_check_queue(ToxWindow *self)
 
     flag_interface_refresh();
 }
-
-#define NOREAD_FLAG_TIMEOUT 5    /* seconds before a sent message with no read receipt is flagged as unread */
 
 void line_info_print(ToxWindow *self)
 {
@@ -577,12 +579,6 @@ void line_info_print(ToxWindow *self)
                     wattroff(win, COLOR_PAIR(RED));
                 }
 
-                if (type == OUT_MSG && !line->read_flag) {
-                    if (timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
-                        line->noread_flag = true;
-                    }
-                }
-
                 waddch(win, '\n');
                 break;
 
@@ -601,12 +597,6 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s %s ", user_settings->line_normal, line->name1);
                 print_ret = print_wrap(win, line, max_x, max_y);
                 wattroff(win, COLOR_PAIR(YELLOW));
-
-                if (type == OUT_ACTION && !line->read_flag) {
-                    if (timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
-                        line->noread_flag = true;
-                    }
-                }
 
                 waddch(win, '\n');
                 break;
@@ -769,6 +759,24 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 
         line = line->prev;
     }
+}
+
+/* Return the line_info object associated with `id`.
+ * Return NULL if id cannot be found
+ */
+struct line_info *line_info_get(ToxWindow *self, uint32_t id)
+{
+    struct line_info *line = self->chatwin->hst->line_end;
+
+    while (line) {
+        if (line->id == id) {
+            return line;
+        }
+
+        line = line->prev;
+    }
+
+    return NULL;
 }
 
 static void line_info_scroll_up(ToxWindow *self, struct history *hst)

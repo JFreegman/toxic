@@ -59,6 +59,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
     new_m->type = type;
     new_m->line_id = line_id;
     new_m->last_send_try = 0;
+    new_m->time_added = get_unix_time();
     new_m->receipt = -1;
     new_m->next = NULL;
 
@@ -76,22 +77,18 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
 /* update line to show receipt was received after queue removal */
 static void cqueue_mark_read(ToxWindow *self, struct cqueue_msg *msg)
 {
-    struct line_info *line = self->chatwin->hst->line_end;
+    struct line_info *line = line_info_get(self, msg->line_id);
 
-    while (line) {
-        if (line->id != msg->line_id) {
-            line = line->prev;
-            continue;
-        }
-
-        line->type = msg->type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
-
-        if (line->noread_flag) {
-            line->noread_flag = false;
-            line->read_flag = true;
-        }
-
+    if (line == NULL) {
         return;
+    }
+
+    line->type = msg->type == OUT_ACTION ? OUT_ACTION_READ : OUT_MSG_READ;
+
+    if (line->noread_flag) {
+        line->noread_flag = false;
+        line->read_flag = true;
+        flag_interface_refresh();
     }
 }
 
@@ -152,6 +149,36 @@ static void cqueue_check_timeouts(struct cqueue_msg *msg)
     while (msg) {
         if (timed_out(msg->last_send_try, TRY_SEND_TIMEOUT)) {
             msg->receipt = -1;
+        }
+
+        msg = msg->next;
+    }
+}
+
+/*
+ * Sets the noread flag for messages sent to the peer associated with `self` which have not
+ * received a receipt after a period of time.
+ */
+#define NOREAD_TIMEOUT 5
+void cqueue_check_unread(ToxWindow *self)
+{
+    struct chat_queue *q = self->chatwin->cqueue;
+    struct cqueue_msg *msg = q->root;
+
+    while (msg) {
+        if (msg->noread_flag) {
+            msg = msg->next;
+            continue;
+        }
+
+        struct line_info *line = line_info_get(self, msg->line_id);
+
+        if (line != NULL) {
+            if (timed_out(msg->time_added, NOREAD_TIMEOUT)) {
+                line->noread_flag = true;
+                msg->noread_flag = true;
+                flag_interface_refresh();
+            }
         }
 
         msg = msg->next;
