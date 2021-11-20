@@ -309,6 +309,9 @@ ToxWindow *get_window_ptr(size_t i);
 ToxWindow *get_active_window(void);
 void draw_window_bar(ToxWindow *self);
 
+/* Returns the number of active windows of given type. */
+size_t get_num_active_windows_type(WINDOW_TYPE type);
+
 /* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */
 void refresh_inactive_windows(void);

@@ -934,6 +934,26 @@ int get_num_active_windows(void)
     return num_active_windows;
 }
 
+/* Returns the number of active windows of given type. */
+size_t get_num_active_windows_type(WINDOW_TYPE type)
+{
+    size_t count = 0;
+
+    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *w = windows[i];
+
+        if (w == NULL) {
+            continue;
+        }
+
+        if (w->type == type) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
 /* destroys all chat and conference windows (should only be called on shutdown) */
 void kill_all_windows(Tox *m)
 {

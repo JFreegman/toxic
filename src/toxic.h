@@ -50,6 +50,9 @@
 #define TIME_STR_SIZE 32
 #define COLOR_STR_SIZE 10 /* should fit every color option */
 
+#define NCURSES_DEFAULT_REFRESH_RATE 100
+#define NCURSES_GAME_REFRESH_RATE 25
+
 #ifndef MAX_PORT_RANGE
 #define MAX_PORT_RANGE 65535
 #endif
@@ -103,6 +106,9 @@ void lock_status(void);
 void unlock_status(void);
 
 void flag_interface_refresh(void);
+
+/* Sets ncurses refresh rate. Lower values make it refresh more often. */
+void set_window_refresh_rate(size_t refresh_rate);
 
 void exit_toxic_success(Tox *m);
 void exit_toxic_err(const char *errmsg, int errcode);

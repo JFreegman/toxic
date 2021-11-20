@@ -174,6 +174,10 @@ void game_kill(ToxWindow *self)
 
     kill_notifs(self->active_box);
     del_window(self);
+
+    if (get_num_active_windows_type(WINDOW_TYPE_GAME) == 0) {
+        set_window_refresh_rate(NCURSES_DEFAULT_REFRESH_RATE);
+    }
 }
 
 static void game_init_abort(const ToxWindow *parent, ToxWindow *self)
@@ -299,6 +303,8 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
     game->status = GS_Running;
 
     set_active_window_index(window_id);
+
+    set_window_refresh_rate(NCURSES_GAME_REFRESH_RATE);
 
     return 0;
 }

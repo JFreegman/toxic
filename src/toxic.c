@@ -239,6 +239,12 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
     }
 }
 
+/* Sets ncurses refresh rate. Lower values make it refresh more often. */
+void set_window_refresh_rate(size_t refresh_rate)
+{
+    timeout(refresh_rate);
+}
+
 static void init_term(void)
 {
 #if HAVE_WIDECHAR
@@ -256,7 +262,7 @@ static void init_term(void)
     keypad(stdscr, 1);
     noecho();
     nonl();
-    timeout(30);
+    set_window_refresh_rate(NCURSES_DEFAULT_REFRESH_RATE);
 
     if (has_colors()) {
         short bg_color = COLOR_BLACK;
@@ -435,9 +441,7 @@ static void cleanup_init_messages(void)
         return;
     }
 
-    int i;
-
-    for (i = 0; i < init_messages.num; ++i) {
+    for (int i = 0; i < init_messages.num; ++i) {
         free(init_messages.msgs[i]);
     }
 
@@ -446,19 +450,16 @@ static void cleanup_init_messages(void)
 
 static void print_init_messages(ToxWindow *toxwin)
 {
-    int i;
-
-    for (i = 0; i < init_messages.num; ++i) {
+    for (int i = 0; i < init_messages.num; ++i) {
         line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
     }
 }
 
 static void load_friendlist(Tox *m)
 {
-    size_t i;
     size_t numfriends = tox_self_get_friend_list_size(m);
 
-    for (i = 0; i < numfriends; ++i) {
+    for (size_t i = 0; i < numfriends; ++i) {
         friendlist_onFriendAdded(NULL, m, i, false);
     }
 
