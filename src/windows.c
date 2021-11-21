@@ -808,15 +808,13 @@ void draw_active_window(Tox *m)
         a->onDraw(a, m);
         wrefresh(a->window);
     }
-
 #ifdef AUDIO
     else if (a->is_call && timed_out(a->chatwin->infobox.lastupdate, 1)) {
         touchwin(a->window);
         a->onDraw(a, m);
         wrefresh(a->window);
     }
-
-#endif
+#endif  // AUDIO
 
 #ifdef GAMES
 

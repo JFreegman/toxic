@@ -318,7 +318,7 @@ void *do_playing(void *_p)
         has_looping = false;
 
         control_unlock();
-        sleep_thread(10000L);
+        sleep_thread(100000L);
     }
 
     pthread_exit(NULL);
