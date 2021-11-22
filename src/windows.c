@@ -428,6 +428,8 @@ void on_group_status_change(Tox *m, uint32_t groupnumber, uint32_t peer_id, TOX_
             windows[i]->onGroupStatusChange(windows[i], m, groupnumber, peer_id, status);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peer_id, void *userdata)
@@ -437,6 +439,8 @@ void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peer_id, void *us
             windows[i]->onGroupPeerJoin(windows[i], m, groupnumber, peer_id);
         }
     }
+
+    flag_interface_refresh();
 }
 
 void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peer_id, Tox_Group_Exit_Type exit_type,

@@ -683,17 +683,6 @@ void line_info_print(ToxWindow *self)
                     }
                 }
 
-                if (type == OUT_MSG && timed_out(line->timestamp, NOREAD_FLAG_TIMEOUT)) {
-                    wattron(win, COLOR_PAIR(RED));
-                    wprintw(win, " x", line->msg);
-                    wattroff(win, COLOR_PAIR(RED));
-
-                    if (line->noread_flag == false) {
-                        line->noread_flag = true;
-                        line->len += 2;
-                    }
-                }
-
                 wprintw(win, "\n", line->msg);
                 break;
             }
