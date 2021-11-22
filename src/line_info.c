@@ -448,8 +448,6 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
     hst->queue[hst->queue_size++] = new_line;
 
-    flag_interface_refresh();
-
     return new_line->id;
 }
 
@@ -475,8 +473,6 @@ static void line_info_check_queue(ToxWindow *self)
     if (!self->scroll_pause) {
         line_info_reset_start(self, hst);
     }
-
-    flag_interface_refresh();
 }
 
 void line_info_print(ToxWindow *self)
@@ -702,6 +698,8 @@ void line_info_print(ToxWindow *self)
 
         line = line->next;
     }
+
+    flag_interface_refresh();
 
     /* keep calling until queue is empty */
     if (hst->queue_size > 0) {

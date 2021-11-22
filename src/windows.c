@@ -433,7 +433,7 @@ void set_active_window_index(uint8_t index)
 /* Displays the next window if `ch` is equal to the next window key binding.
  * Otherwise displays the previous window.
  */
-void set_next_window(int ch)
+static void set_next_window(int ch)
 {
     uint8_t index = 0;
 
@@ -456,8 +456,6 @@ void set_next_window(int ch)
     }
 
     set_active_window_index(index);
-
-    flag_interface_refresh();
 }
 
 /* Deletes window w and cleans up */
@@ -955,7 +953,7 @@ size_t get_num_active_windows_type(WINDOW_TYPE type)
 /* destroys all chat and conference windows (should only be called on shutdown) */
 void kill_all_windows(Tox *m)
 {
-    for (uint8_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
+    for (size_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *w = windows[i];
 
         if (w == NULL) {
