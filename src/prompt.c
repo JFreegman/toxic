@@ -424,11 +424,14 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
 
         pthread_mutex_lock(&Winthread.lock);
+
         size_t slen = tox_self_get_status_message_size(m);
         tox_self_get_status_message(m, (uint8_t *) statusmsg);
+
         statusmsg[slen] = '\0';
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
+
         pthread_mutex_unlock(&Winthread.lock);
     }
 
@@ -438,24 +441,28 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     uint16_t maxlen = x2 - getcurx(statusbar->topline) - 3;
 
     pthread_mutex_lock(&Winthread.lock);
+    size_t statusmsg_len = statusbar->statusmsg_len;
+    pthread_mutex_unlock(&Winthread.lock);
 
-    if (statusbar->statusmsg_len > maxlen) {
-        statusbar->statusmsg[maxlen - 3] = '\0';
+    if (statusmsg_len > maxlen) {
+        pthread_mutex_lock(&Winthread.lock);
+        statusbar->statusmsg[maxlen - 3] = 0;
         strcat(statusbar->statusmsg, "...");
         statusbar->statusmsg_len = maxlen;
+        pthread_mutex_unlock(&Winthread.lock);
     }
 
-    if (statusbar->statusmsg[0]) {
+    if (statusmsg_len) {
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " | ");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
+        pthread_mutex_lock(&Winthread.lock);
         wprintw(statusbar->topline, "%s", statusbar->statusmsg);
+        pthread_mutex_unlock(&Winthread.lock);
         wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
     }
-
-    pthread_mutex_unlock(&Winthread.lock);
 
     int y;
     int x;

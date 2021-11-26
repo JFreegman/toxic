@@ -1285,13 +1285,19 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     /* Draw status bar */
     StatusBar *statusbar = self->stb;
+
+    pthread_mutex_lock(&Winthread.lock);
+    Tox_Connection connection = statusbar->connection;
+    Tox_User_Status status = statusbar->status;
+    pthread_mutex_unlock(&Winthread.lock);
+
     wmove(statusbar->topline, 0, 0);
 
     wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
     wprintw(statusbar->topline, " [");
     wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
-    switch (statusbar->connection) {
+    switch (connection) {
         case TOX_CONNECTION_TCP:
             wattron(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
             wprintw(statusbar->topline, "TCP");
@@ -1314,8 +1320,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
     wprintw(statusbar->topline, "]");
     wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-
-    Tox_User_Status status = statusbar->status;
 
     if (status != TOX_USER_STATUS_NONE) {
         const char *status_text = "ERROR";
@@ -1376,13 +1380,15 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH] = {'\0'};
 
         pthread_mutex_lock(&Winthread.lock);
+
         tox_friend_get_status_message(m, self->num, (uint8_t *) statusmsg, NULL);
         size_t s_len = tox_friend_get_status_message_size(m, self->num, NULL);
-        pthread_mutex_unlock(&Winthread.lock);
 
         filter_str(statusmsg, s_len);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
+
+        pthread_mutex_unlock(&Winthread.lock);
     }
 
     self->x = x2;
@@ -1390,19 +1396,27 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     /* Truncate note if it doesn't fit in statusbar */
     size_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 6;
 
-    if (statusbar->statusmsg_len > maxlen) {
-        statusbar->statusmsg[maxlen - 3] = '\0';
+    pthread_mutex_lock(&Winthread.lock);
+    size_t statusmsg_len = statusbar->statusmsg_len;
+    pthread_mutex_unlock(&Winthread.lock);
+
+    if (statusmsg_len > maxlen) {
+        pthread_mutex_lock(&Winthread.lock);
+        statusbar->statusmsg[maxlen - 3] = 0;
         strcat(statusbar->statusmsg, "...");
         statusbar->statusmsg_len = maxlen;
+        pthread_mutex_unlock(&Winthread.lock);
     }
 
-    if (statusbar->statusmsg[0]) {
+    if (statusmsg_len > 0) {
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " | ");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
+        pthread_mutex_lock(&Winthread.lock);
         wprintw(statusbar->topline, "%s ", statusbar->statusmsg);
+        pthread_mutex_unlock(&Winthread.lock);
     } else {
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
     }
@@ -1505,6 +1519,7 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
+
     statusbar->status = get_friend_status(self->num);
     statusbar->connection = get_friend_connection_status(self->num);
 
