@@ -1,0 +1,13 @@
+---
+cirrus-ci_task:
+  container:
+    image: toxchat/toktok-stack:0.0.13
+    cpu: 2
+    memory: 2G
+  configure_script:
+    - /src/workspace/tools/inject-repo toxic
+  test_all_script:
+    - bazel test -k
+        --remote_http_cache=http://$CIRRUS_HTTP_CACHE_HOST
+        --config=release
+        //toxic/...
