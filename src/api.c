@@ -106,7 +106,7 @@ void api_send(const char *msg)
 
     self_window = get_active_window();
 
-    strncpy((char *) self_window->chatwin->line, msg, sizeof(self_window->chatwin->line));
+    snprintf((char *) self_window->chatwin->line, sizeof(self_window->chatwin->line), "%s", msg);
     add_line_to_hist(self_window->chatwin);
     int id = line_info_add(self_window, true, name, NULL, OUT_MSG, 0, 0, "%s", msg);
     cqueue_add(self_window->chatwin->cqueue, msg, strlen(msg), OUT_MSG, id);
