@@ -1287,33 +1287,61 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     StatusBar *statusbar = self->stb;
     wmove(statusbar->topline, 0, 0);
 
-    /* Draw name, status and note in statusbar */
-    if (statusbar->connection != TOX_CONNECTION_NONE) {
+    wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+    wprintw(statusbar->topline, " [");
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+
+    switch (statusbar->connection) {
+        case TOX_CONNECTION_TCP:
+            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            wprintw(statusbar->topline, "TCP");
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            break;
+
+        case TOX_CONNECTION_UDP:
+            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            wprintw(statusbar->topline, "UDP");
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            break;
+
+        default:
+            wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
+            wprintw(statusbar->topline, "Offline");
+            wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
+            break;
+    }
+
+    wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+    wprintw(statusbar->topline, "]");
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+
+    Tox_User_Status status = statusbar->status;
+
+    if (status != TOX_USER_STATUS_NONE) {
+        const char *status_text = "ERROR";
         int colour = MAGENTA;
-        Tox_User_Status status = statusbar->status;
 
         switch (status) {
-            case TOX_USER_STATUS_NONE:
-                colour = STATUS_ONLINE;
-                break;
-
             case TOX_USER_STATUS_AWAY:
                 colour = STATUS_AWAY;
+                status_text = "Away";
                 break;
 
             case TOX_USER_STATUS_BUSY:
                 colour = STATUS_BUSY;
+                status_text = "Busy";
+                break;
+
+            default:
                 break;
         }
-
-        const char *connection_status_s = statusbar->connection == TOX_CONNECTION_TCP ? "TCP" : "UDP";
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, " [");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
-        wprintw(statusbar->topline, "%s", connection_status_s);
+        wprintw(statusbar->topline, "%s", status_text);
         wattroff(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
 
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
@@ -1338,20 +1366,8 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_TEXT));
         }
     } else {
-        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-        wprintw(statusbar->topline, " [");
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-        wprintw(statusbar->topline, "Offline");
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-
-        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-        wprintw(statusbar->topline, "] ");
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-
-        wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-        wprintw(statusbar->topline, "%s", statusbar->nick);
+        wprintw(statusbar->topline, " %s", statusbar->nick);
         wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
     }
 

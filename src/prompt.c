@@ -340,24 +340,50 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     Tox_User_Status status = statusbar->status;
     pthread_mutex_unlock(&Winthread.lock);
 
-    if (connection != TOX_CONNECTION_NONE) {
+    wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+    wprintw(statusbar->topline, " [");
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+
+    switch (connection) {
+        case TOX_CONNECTION_TCP:
+            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            wprintw(statusbar->topline, "TCP");
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            break;
+
+        case TOX_CONNECTION_UDP:
+            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            wprintw(statusbar->topline, "UDP");
+            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(STATUS_ONLINE));
+            break;
+
+        default:
+            wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
+            wprintw(statusbar->topline, "Offline");
+            wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
+            break;
+    }
+
+    wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+    wprintw(statusbar->topline, "]");
+    wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+
+    if (status != TOX_USER_STATUS_NONE) {
         int colour = MAGENTA;
         const char *status_text = "ERROR";
 
         switch (status) {
-            case TOX_USER_STATUS_NONE:
-                status_text = "Online";
-                colour = STATUS_ONLINE;
-                break;
-
             case TOX_USER_STATUS_AWAY:
-                status_text = "Away";
                 colour = STATUS_AWAY;
+                status_text = "Away";
                 break;
 
             case TOX_USER_STATUS_BUSY:
-                status_text = "Busy";
                 colour = STATUS_BUSY;
+                status_text = "Busy";
+                break;
+
+            default:
                 break;
         }
 
@@ -379,18 +405,6 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
         wprintw(statusbar->topline, " %s", statusbar->nick);
         pthread_mutex_unlock(&Winthread.lock);
     } else {
-        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-        wprintw(statusbar->topline, " [");
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-
-        wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-        wprintw(statusbar->topline, "Offline");
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-
-        wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-        wprintw(statusbar->topline, "]");
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
         pthread_mutex_lock(&Winthread.lock);
