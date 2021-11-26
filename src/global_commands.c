@@ -656,12 +656,9 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 {
     UNUSED_VAR(window);
 
-    if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
-        return;
-    }
+    const char *note = argc >= 1 ? argv[1] : "";
 
-    prompt_update_statusmessage(prompt, m, argv[1]);
+    prompt_update_statusmessage(prompt, m, note);
 }
 
 void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
