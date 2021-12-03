@@ -465,18 +465,21 @@ static void sort_peerlist(uint32_t groupnumber)
     qsort(chat->peer_list, chat->max_idx, sizeof(struct GroupPeer), peer_sort_cmp);
 }
 
-/* Gets the peer_id associated with nick.
+/* Puts the peer_id associated with nick in `peer_id`.
  *
  * Returns 0 on success.
- * Returns -1 on failure or if nick is not assigned to anyone in the group.
+ * Returns -1 if peer is not found.
+ * Returns -2 if there are more than one peers with nick.
  */
-int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id)
+static int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id)
 {
     GroupChat *chat = get_groupchat(groupnumber);
 
     if (!chat) {
         return -1;
     }
+
+    size_t count = 0;
 
     for (size_t i = 0; i < chat->max_idx; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
@@ -486,12 +489,15 @@ int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *pee
         }
 
         if (strcmp(nick, peer->name) == 0) {
+            if (++count > 1) {
+                return -2;
+            }
+
             *peer_id = peer->peer_id;
-            return 0;
         }
     }
 
-    return -1;
+    return 0;
 }
 
 /* Gets the peer_id associated with `public_key`.
@@ -527,6 +533,50 @@ int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, u
     }
 
     return -1;
+}
+
+/* Puts the peer_id associated with `identifier` in `peer_id`. The string may be
+ * either a nick or a public key.
+ *
+ * On failure, `peer_id` is set to (uint32_t)-1.
+ *
+ * This function is intended to be a helper for groupchat_commands.c and will print
+ * error messages to `self`.
+ * Return 0 on success.
+ * Return -1 if the identifier does not correspond with a peer in the group, or if
+ *   the identifier is a nick which is being used by multiple peers.
+ */
+int group_get_peer_id_of_identifier(ToxWindow *self, const char *identifier, uint32_t *peer_id)
+{
+    *peer_id = (uint32_t) -1;
+
+    if (group_get_public_key_peer_id(self->num, identifier, peer_id) == 0) {
+        return 0;
+    }
+
+    int ret = group_get_nick_peer_id(self->num, identifier, peer_id);
+
+    switch (ret) {
+        case 0: {
+            return 0;
+        }
+
+        case -1: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            return -1;
+        }
+
+        case -2: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "More than one peer is using this name. Specify the target's public key.");
+            *peer_id = (uint32_t) -1;
+            return -1;
+        }
+
+        default:
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Unspecified error.");
+            return -1;
+    }
 }
 
 static void groupchat_update_last_seen(uint32_t groupnumber, uint32_t peer_id)
@@ -1076,10 +1126,6 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, uint32_t groupnum
     const char *msg = NULL;
 
     switch (type) {
-        case TOX_GROUP_JOIN_FAIL_NAME_TAKEN:
-            msg = "Nick already in use. Change your nick and use the '/rejoin' command.";
-            break;
-
         case TOX_GROUP_JOIN_FAIL_PEER_LIMIT:
             msg = "Group is full. Try again with the '/rejoin' command.";
             break;

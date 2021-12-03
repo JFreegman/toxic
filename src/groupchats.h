@@ -78,12 +78,18 @@ void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, 
 
 void groupchat_rejoin(ToxWindow *self, Tox *m);
 
-/* Gets the peer_id associated with nick.
+/* Puts the peer_id associated with `identifier` in `peer_id`. The string may be
+ * either a nick or a public key.
  *
- * Returns 0 on success.
- * Returns -1 on failure or if nick is not assigned to anyone in the group.
+ * On failure, `peer_id` is set to (uint32_t)-1.
+ *
+ * This function is intended to be a helper for groupchat_commands.c and will print
+ * error messages to `self`.
+ * Return 0 on success.
+ * Return -1 if the identifier does not correspond with a peer in the group.
+ * Return -2 if the identifier is a nick and the nick is in use by multiple peers.
  */
-int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32_t *peer_id);
+int group_get_peer_id_of_identifier(ToxWindow *self, const char *identifier, uint32_t *peer_id);
 
 /* Gets the peer_id associated with `public_key`.
  *
