@@ -164,7 +164,7 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
 
     /* put all list matches in matches array */
     for (size_t i = 0; i < n_items; ++i) {
-        if (strncasecmp(list[i], sub, s_len) == 0) {
+        if (strncmp(list[i], sub, s_len) == 0) {
             snprintf(matches[n_matches++], MAX_STR_SIZE, "%s", list[i]);
         }
     }
