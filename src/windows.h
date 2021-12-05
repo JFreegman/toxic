@@ -98,6 +98,13 @@ typedef enum {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
+/*
+ * Used to control access to global variables via a mutex, as well as to handle signals.
+ * Any file, variable or data structure that is used by the UI/Window thread and any other thread
+ * must be guarded by `lock`.
+ *
+ * There should only ever be one instance of this struct.
+ */
 struct Winthread {
     pthread_t tid;
     pthread_mutex_t lock;

@@ -32,7 +32,7 @@
 
 #define PASSWORD_EVAL_MAX 512
 
-/* holds user setting values */
+/* Holds user setting values defined in the toxic config file. */
 struct user_settings {
     int autolog;           /* boolean */
     int alerts;            /* boolean */

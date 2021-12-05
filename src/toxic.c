@@ -101,6 +101,9 @@ struct Winthread Winthread;
 struct cqueue_thread cqueue_thread;
 struct av_thread av_thread;
 struct arg_opts arg_opts;
+
+// This struct is not thread safe. It should only ever be written to from the main thread
+// before any other thread that uses it is initialized.
 struct user_settings *user_settings = NULL;
 
 static struct user_password {
