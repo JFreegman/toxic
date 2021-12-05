@@ -204,7 +204,7 @@ static int start_transmission(ToxWindow *self, Call *call)
         return -1;
     }
 
-    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &self->num, false,
+    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &self->num,
                                           CallControl.audio_sample_rate, CallControl.audio_frame_duration, CallControl.audio_channels);
 
     if (error != de_None) {

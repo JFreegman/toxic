@@ -75,11 +75,9 @@ DeviceError set_source_position(uint32_t device_idx, float x, float y, float z);
 DeviceError set_al_device(DeviceType type, int32_t selection);
 
 /* Start device */
-DeviceError open_input_device(uint32_t *device_idx,
-                              DataHandleCallback cb, void *cb_data, bool enable_VAD,
+DeviceError open_input_device(uint32_t *device_idx, DataHandleCallback cb, void *cb_data,
                               uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
-DeviceError open_output_device(uint32_t *device_idx,
-                               uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+DeviceError open_output_device(uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
 
 /* Stop device */
 DeviceError close_device(DeviceType type, uint32_t device_idx);

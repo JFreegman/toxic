@@ -484,8 +484,7 @@ DeviceError set_al_device(DeviceType type, int32_t selection)
     return de_None;
 }
 
-static DeviceError open_device(DeviceType type, uint32_t *device_idx,
-                               DataHandleCallback cb, void *cb_data, bool enable_VAD,
+static DeviceError open_device(DeviceType type, uint32_t *device_idx, DataHandleCallback cb, void *cb_data,
                                uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
 {
     if (channels != 1 && channels != 2) {
@@ -530,7 +529,11 @@ static DeviceError open_device(DeviceType type, uint32_t *device_idx,
         device->cb = cb;
         device->cb_data = cb_data;
 #ifdef AUDIO
-        device->VAD_threshold = enable_VAD ? user_settings->VAD_threshold : 0.0f;
+
+        if (user_settings->VAD_threshold >= 0.0f) {
+            device->VAD_threshold = user_settings->VAD_threshold;
+        }
+
 #else
         device->VAD_threshold = 0.0f;
 #endif
@@ -547,21 +550,15 @@ static DeviceError open_device(DeviceType type, uint32_t *device_idx,
     return de_None;
 }
 
-DeviceError open_input_device(uint32_t *device_idx,
-                              DataHandleCallback cb, void *cb_data, bool enable_VAD,
-                              uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
+DeviceError open_input_device(uint32_t *device_idx, DataHandleCallback cb, void *cb_data, uint32_t sample_rate,
+                              uint32_t frame_duration, uint8_t channels)
 {
-    return open_device(input, device_idx,
-                       cb, cb_data, enable_VAD,
-                       sample_rate, frame_duration, channels);
+    return open_device(input, device_idx, cb, cb_data, sample_rate, frame_duration, channels);
 }
 
-DeviceError open_output_device(uint32_t *device_idx,
-                               uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
+DeviceError open_output_device(uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
 {
-    return open_device(output, device_idx,
-                       0, 0, 0,
-                       sample_rate, frame_duration, channels);
+    return open_device(output, device_idx, 0, 0, sample_rate, frame_duration, channels);
 }
 
 DeviceError close_device(DeviceType type, uint32_t device_idx)

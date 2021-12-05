@@ -1312,7 +1312,7 @@ bool init_conference_audio_input(Tox *tox, uint32_t conferencenum)
     int channels = user_settings->conference_audio_channels;
 
     bool success = (open_input_device(&chat->audio_in_idx,
-                                      conference_read_device_callback, &chat->audio_input_callback_data, true,
+                                      conference_read_device_callback, &chat->audio_input_callback_data,
                                       CONFAV_SAMPLE_RATE, CONFAV_FRAME_DURATION, channels)
                     == de_None);
 

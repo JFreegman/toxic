@@ -1034,7 +1034,7 @@ static void init_infobox(ToxWindow *self)
 
     ctx->infobox.win = newwin(INFOBOX_HEIGHT, INFOBOX_WIDTH + 1, 1, x2 - INFOBOX_WIDTH);
     ctx->infobox.starttime = get_unix_time();
-    ctx->infobox.vad_lvl = 0.0f;
+    ctx->infobox.vad_lvl = user_settings->VAD_threshold;
     ctx->infobox.active = true;
     strcpy(ctx->infobox.timestr, "00");
 }
