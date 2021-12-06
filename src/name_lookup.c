@@ -132,8 +132,10 @@ static int load_nameserver_list(const char *path)
             continue;
         }
 
-        snprintf(Nameservers.names[Nameservers.lines], sizeof(Nameservers.names[Nameservers.lines]), "%s", name);
-        int res = hex_string_to_bytes(Nameservers.keys[Nameservers.lines], SERVER_KEY_SIZE, keystr);
+        const size_t idx = Nameservers.lines;
+        snprintf(Nameservers.names[idx], sizeof(Nameservers.names[idx]), "%s", name);
+
+        int res = hex_string_to_bytes(Nameservers.keys[idx], SERVER_KEY_SIZE, keystr);
 
         if (res == -1) {
             continue;
@@ -231,7 +233,7 @@ static int process_response(struct Recv_Curl_Data *recv_data)
     memcpy(ID_string, IDstart + prefix_size, TOX_ADDRESS_SIZE * 2);
     ID_string[TOX_ADDRESS_SIZE * 2] = 0;
 
-    if (hex_string_to_bin(ID_string, strlen(ID_string), t_data.id_bin, sizeof(t_data.id_bin)) == -1) {
+    if (tox_pk_string_to_bytes(ID_string, strlen(ID_string), t_data.id_bin, sizeof(t_data.id_bin)) == -1) {
         return -1;
     }
 

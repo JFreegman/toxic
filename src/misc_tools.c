@@ -137,15 +137,18 @@ void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
 }
 
 /*
- * Converts a hexidecimal string of length hex_len to binary format and puts the result in output.
- * output_size must be exactly half of hex_len.
+ * Converts a hexidecimal string representation of a Tox public key to binary format and puts
+ * the result in output.
+ *
+ * `hex_len` must be exactly TOX_PUBLIC_KEY_SIZE * 2, and `output_size` must have room
+ * for TOX_PUBLIC_KEY_SIZE bytes.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size_t output_size)
+int tox_pk_string_to_bytes(const char *hex_string, size_t hex_len, char *output, size_t output_size)
 {
-    if (output_size == 0 || hex_len != output_size * 2) {
+    if (output_size != TOX_PUBLIC_KEY_SIZE || hex_len > output_size * 2) {
         return -1;
     }
 
@@ -157,6 +160,11 @@ int hex_string_to_bin(const char *hex_string, size_t hex_len, char *output, size
     return 0;
 }
 
+/* Convert a hexadecimcal string of length `size` to bytes and puts the result in `keystr`.
+ *
+ * Returns 0 on success.
+ * Returns -1 on failure.
+ */
 int hex_string_to_bytes(char *buf, int size, const char *keystr)
 {
     if (size % 2 != 0) {
@@ -179,10 +187,13 @@ int hex_string_to_bytes(char *buf, int size, const char *keystr)
 
 /* Converts a binary representation of a Tox ID into a string.
  *
+ * `bin_id_size` must be exactly TOX_ADDRESS_SIZE bytes in length, and
+ * `output_size` must be at least TOX_ADDRESS_SIZE * 2 + 1.
+ *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_t output_size)
+int tox_id_bytes_to_str(const char *bin_id, size_t bin_id_size, char *output, size_t output_size)
 {
     if (bin_id_size != TOX_ADDRESS_SIZE || output_size < (TOX_ADDRESS_SIZE * 2 + 1)) {
         return -1;
@@ -197,10 +208,13 @@ int bin_id_to_string(const char *bin_id, size_t bin_id_size, char *output, size_
 
 /* Converts a binary representation of a Tox public key into a string.
  *
+ * `bin_pubkey_size` must be exactly TOX_PUBLIC_KEY_SIZE bytes in size, and
+ * `output_size` must be at least TOX_PUBLIC_KEY_SIZE * 2 + 1.
+ *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int bin_pubkey_to_string(const uint8_t *bin_pubkey, size_t bin_pubkey_size, char *output, size_t output_size)
+int tox_pk_bytes_to_str(const uint8_t *bin_pubkey, size_t bin_pubkey_size, char *output, size_t output_size)
 {
     if (bin_pubkey_size != TOX_PUBLIC_KEY_SIZE || output_size < (TOX_PUBLIC_KEY_SIZE * 2 + 1)) {
         return -1;

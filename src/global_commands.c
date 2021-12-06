@@ -276,9 +276,9 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    char key_binary[TOX_PUBLIC_KEY_SIZE * 2 + 1];
+    char key_binary[TOX_PUBLIC_KEY_SIZE];
 
-    if (hex_string_to_bin(ascii_key, strlen(ascii_key), key_binary, TOX_PUBLIC_KEY_SIZE) == -1) {
+    if (tox_pk_string_to_bytes(ascii_key, strlen(ascii_key), key_binary, sizeof(key_binary)) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid key.");
         return;
     }
@@ -520,7 +520,7 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     char bin_id[TOX_ADDRESS_SIZE];
     tox_self_get_address(m, (uint8_t *) bin_id);
 
-    if (bin_id_to_string(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
+    if (tox_id_bytes_to_str(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to print ID.");
         return;
     }
@@ -537,7 +537,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     char bin_id[TOX_ADDRESS_SIZE];
     tox_self_get_address(m, (uint8_t *) bin_id);
 
-    if (bin_id_to_string(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
+    if (tox_id_bytes_to_str(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to create QR code.");
         return;
     }

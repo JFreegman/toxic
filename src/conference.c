@@ -510,8 +510,7 @@ static void conference_update_name_list(uint32_t conferencenum)
 
         if (peer->active) {
             memcpy(entry->name, peer->name, peer->name_length + 1);
-            bin_pubkey_to_string(peer->pubkey, sizeof(peer->pubkey),
-                                 entry->pubkey_str, sizeof(entry->pubkey_str));
+            tox_pk_bytes_to_str(peer->pubkey, sizeof(peer->pubkey), entry->pubkey_str, sizeof(entry->pubkey_str));
             entry->peernum = i;
             ++count;
         }

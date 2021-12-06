@@ -381,8 +381,11 @@ static long long int extract_val_last_pinged(const char *s)
  * Return number of bytes copied to key_buf on success.
  * Return -1 on failure.
  */
-static int extract_val_pk(const char *s, char *key_buf)
+static int extract_val_pk(const char *s, char *key_buf, size_t buf_length)
 {
+    if (buf_length < TOX_PUBLIC_KEY_SIZE * 2 + 1) {
+        return -1;
+    }
 
     int key_len = char_find(0, s, '"');
 
@@ -445,13 +448,13 @@ static int extract_node(const char *line, struct Node *node)
     }
 
     char key_string[TOX_PUBLIC_KEY_SIZE * 2 + 1];
-    int key_len = extract_val_pk(key_start + PK_JSON_KEY_LEN, key_string);
+    int key_len = extract_val_pk(key_start + PK_JSON_KEY_LEN, key_string, sizeof(key_string));
 
     if (key_len == -1) {
         return -6;
     }
 
-    if (hex_string_to_bin(key_string, key_len, node->key, TOX_PUBLIC_KEY_SIZE) == -1) {
+    if (tox_pk_string_to_bytes(key_string, key_len, node->key, sizeof(node->key)) == -1) {
         return -6;
     }
 
