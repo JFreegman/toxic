@@ -515,7 +515,7 @@ int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, u
 
     char key_bin[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
 
-    if (hex_string_to_bin(public_key, strlen(public_key), key_bin, sizeof(key_bin)) == -1) {
+    if (tox_pk_string_to_bytes(public_key, strlen(public_key), key_bin, sizeof(key_bin)) == -1) {
         return -1;
     }
 
