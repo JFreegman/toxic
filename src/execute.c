@@ -119,13 +119,14 @@ static struct cmd_func conference_commands[] = {
 
 
 #ifdef PYTHON
-#define SPECIAL_COMMANDS 7
+#define SPECIAL_COMMANDS 8
 #else
-#define SPECIAL_COMMANDS 6
+#define SPECIAL_COMMANDS 7
 #endif /* PYTHON */
 
 /* Special commands are commands that only take one argument even if it contains spaces */
 static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
+    "/add",
     "/avatar",
     "/nick",
     "/note",
@@ -219,9 +220,7 @@ static int parse_command(const char *input, char (*args)[MAX_STR_SIZE])
 static int do_command(WINDOW *w, ToxWindow *self, Tox *m, int num_args, struct cmd_func *commands,
                       char (*args)[MAX_STR_SIZE])
 {
-    int i;
-
-    for (i = 0; commands[i].name != NULL; ++i) {
+    for (size_t i = 0; commands[i].name != NULL; ++i) {
         if (strcmp(args[0], commands[i].name) == 0) {
             (commands[i].func)(w, self, m, num_args - 1, args);
             return 0;

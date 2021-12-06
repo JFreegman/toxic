@@ -157,22 +157,22 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         return;
     }
 
+    char msg[MAX_STR_SIZE] = {0};
+
     const char *id = argv[1];
-    char msg[MAX_STR_SIZE];
+    const size_t arg_length = strlen(id);
+    const bool is_tox_id = arg_length >= (2 * TOX_ADDRESS_SIZE);
 
-    if (argc > 1) {
-        if (argv[2][0] != '\"') {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Message must be enclosed in quotes.");
-            return;
+    if (is_tox_id) {
+        // we have to manually parse the message due to this command being a special case
+        int idx = char_find(0, id, ' ');
+
+        if (idx > 0 && idx < arg_length - 1) {
+            snprintf(msg, sizeof(msg), "%s", &id[idx + 1]);
         }
+    }
 
-        /* remove opening and closing quotes */
-        char tmp[MAX_STR_SIZE];
-        snprintf(tmp, sizeof(tmp), "%s", &argv[2][1]);
-        int len = strlen(tmp) - 1;
-        tmp[len] = '\0';
-        snprintf(msg, sizeof(msg), "%s", tmp);
-    } else {
+    if (!msg[0]) {
         char selfname[TOX_MAX_NAME_LENGTH];
         tox_self_get_name(m, (uint8_t *) selfname);
 
@@ -182,10 +182,9 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 
     char id_bin[TOX_ADDRESS_SIZE] = {0};
-    uint16_t id_len = (uint16_t) strlen(id);
 
     /* try to add tox ID */
-    if (id_len == 2 * TOX_ADDRESS_SIZE) {
+    if (is_tox_id) {
         size_t i;
         char xx[3];
         uint32_t x;
@@ -193,7 +192,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
             xx[0] = id[2 * i];
             xx[1] = id[2 * i + 1];
-            xx[2] = '\0';
+            xx[2] = 0;
 
             if (sscanf(xx, "%02x", &x) != 1) {
                 line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid Tox ID.");
