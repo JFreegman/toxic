@@ -161,18 +161,12 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     const char *id = argv[1];
     const size_t arg_length = strlen(id);
-    const bool is_tox_id = arg_length >= (2 * TOX_ADDRESS_SIZE);
+    const int space_idx = char_find(0, id, ' ');
 
-    if (is_tox_id) {
-        // we have to manually parse the message due to this command being a special case
-        int idx = char_find(0, id, ' ');
-
-        if (idx > 0 && idx < arg_length - 1) {
-            snprintf(msg, sizeof(msg), "%s", &id[idx + 1]);
-        }
-    }
-
-    if (!msg[0]) {
+    // we have to manually parse the message due to this command being a special case
+    if (space_idx > 0 && space_idx < arg_length - 1) {
+        snprintf(msg, sizeof(msg), "%s", &id[space_idx + 1]);
+    } else {
         char selfname[TOX_MAX_NAME_LENGTH];
         tox_self_get_name(m, (uint8_t *) selfname);
 
@@ -183,34 +177,34 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     char id_bin[TOX_ADDRESS_SIZE] = {0};
 
-    /* try to add tox ID */
-    if (is_tox_id) {
-        size_t i;
-        char xx[3];
-        uint32_t x;
+    const bool is_tox_id = (char_find(0, id, '@') == arg_length) && (arg_length >= TOX_ADDRESS_SIZE * 2);
 
-        for (i = 0; i < TOX_ADDRESS_SIZE; ++i) {
-            xx[0] = id[2 * i];
-            xx[1] = id[2 * i + 1];
-            xx[2] = 0;
+    if (!is_tox_id) {
+        name_lookup(self, m, id_bin, id, msg);
+    }
 
-            if (sscanf(xx, "%02x", &x) != 1) {
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid Tox ID.");
-                return;
-            }
+    char xx[3];
+    uint32_t x = 0;
 
-            id_bin[i] = x;
-        }
+    for (size_t i = 0; i < TOX_ADDRESS_SIZE; ++i) {
+        xx[0] = id[2 * i];
+        xx[1] = id[2 * i + 1];
+        xx[2] = 0;
 
-        if (friend_is_blocked(id_bin)) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Friend is in your block list.");
+        if (sscanf(xx, "%02x", &x) != 1) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid Tox ID.");
             return;
         }
 
-        cmd_add_helper(self, m, id_bin, msg);
-    } else {    /* assume id is a username@domain address and do http name server lookup */
-        name_lookup(self, m, id_bin, id, msg);
+        id_bin[i] = x;
     }
+
+    if (friend_is_blocked(id_bin)) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Friend is in your block list.");
+        return;
+    }
+
+    cmd_add_helper(self, m, id_bin, msg);
 }
 
 void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
