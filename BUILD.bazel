@@ -39,3 +39,9 @@ cc_binary(
         "//tools/config:osx": [],
     }),
 )
+
+sh_test(
+    name = "toxic_test",
+    srcs = [":toxic"],
+    args = ["--help"],
+)
