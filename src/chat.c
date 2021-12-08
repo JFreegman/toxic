@@ -1270,9 +1270,16 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     ChatContext *ctx = self->chatwin;
+    StatusBar *statusbar = self->stb;
 
     pthread_mutex_lock(&Winthread.lock);
+
     line_info_print(self);
+
+    Tox_Connection connection = statusbar->connection;
+    Tox_User_Status status = statusbar->status;
+    const bool is_typing = Friends.list[self->num].is_typing;
+
     pthread_mutex_unlock(&Winthread.lock);
 
     wclear(ctx->linewin);
@@ -1282,14 +1289,6 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     curs_set(1);
-
-    /* Draw status bar */
-    StatusBar *statusbar = self->stb;
-
-    pthread_mutex_lock(&Winthread.lock);
-    Tox_Connection connection = statusbar->connection;
-    Tox_User_Status status = statusbar->status;
-    pthread_mutex_unlock(&Winthread.lock);
 
     wmove(statusbar->topline, 0, 0);
 
@@ -1318,13 +1317,13 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     }
 
     wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-    wprintw(statusbar->topline, "]");
+    wprintw(statusbar->topline, "] ");
     wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
-    if (status != TOX_USER_STATUS_NONE) {
-        const char *status_text = "ERROR";
-        int colour = MAGENTA;
+    const char *status_text = "ERROR";
+    int colour = BAR_TEXT;
 
+    if (connection != TOX_CONNECTION_NONE) {
         switch (status) {
             case TOX_USER_STATUS_AWAY:
                 colour = STATUS_AWAY;
@@ -1339,9 +1338,11 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
             default:
                 break;
         }
+    }
 
+    if (colour != BAR_TEXT) {
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
-        wprintw(statusbar->topline, " [");
+        wprintw(statusbar->topline, "[");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
 
         wattron(statusbar->topline, COLOR_PAIR(colour) | A_BOLD);
@@ -1351,29 +1352,22 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
         wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
         wprintw(statusbar->topline, "] ");
         wattroff(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
+    }
 
-        pthread_mutex_lock(&Winthread.lock);
-        const bool is_typing = Friends.list[self->num].is_typing;
-        pthread_mutex_unlock(&Winthread.lock);
-
-        if (is_typing) {
-            wattron(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_NOTIFY));
-        } else {
-            wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-        }
-
-        wprintw(statusbar->topline, "%s", statusbar->nick);
-
-        if (is_typing) {
-            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_NOTIFY));
-        } else {
-            wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_TEXT));
-        }
+    if (is_typing) {
+        wattron(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_NOTIFY));
     } else {
         wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
-        wprintw(statusbar->topline, " %s", statusbar->nick);
-        wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
     }
+
+    wprintw(statusbar->topline, "%s", statusbar->nick);
+
+    if (is_typing) {
+        wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_NOTIFY));
+    } else {
+        wattroff(statusbar->topline, A_BOLD | COLOR_PAIR(BAR_TEXT));
+    }
+
 
     /* Reset statusbar->statusmsg on window resize */
     if (x2 != self->x) {
