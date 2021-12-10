@@ -530,7 +530,7 @@ static DeviceError open_device(DeviceType type, uint32_t *device_idx, DataHandle
         device->cb_data = cb_data;
 #ifdef AUDIO
 
-        if (user_settings->VAD_threshold >= 0.0f) {
+        if (user_settings->VAD_threshold >= 0.0) {
             device->VAD_threshold = user_settings->VAD_threshold;
         }
 

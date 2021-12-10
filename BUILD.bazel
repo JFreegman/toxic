@@ -18,6 +18,7 @@ cc_binary(
     copts = [
         "-std=gnu99",
         "-DAUDIO",
+        "-DGAMES",
         "-DPACKAGE_DATADIR='\"data\"'",
         "-DPYTHON",
         "-DQRCODE",
@@ -44,4 +45,5 @@ sh_test(
     name = "toxic_test",
     srcs = [":toxic"],
     args = ["--help"],
+    size = "small",
 )
