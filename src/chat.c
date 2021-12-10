@@ -798,12 +798,7 @@ void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const ui
         return;
     }
 
-    Friends.list[friend_number].game_invite.type = type;
-    Friends.list[friend_number].game_invite.id = id;
-    Friends.list[friend_number].game_invite.pending = true;
-
     uint32_t data_length = length - GAME_PACKET_HEADER_SIZE;
-    Friends.list[friend_number].game_invite.data_length = data_length;
 
     if (data_length > 0) {
         free(Friends.list[friend_number].game_invite.data);
@@ -817,6 +812,11 @@ void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const ui
         memcpy(buf, data + GAME_PACKET_HEADER_SIZE, data_length);
         Friends.list[friend_number].game_invite.data = buf;
     }
+
+    Friends.list[friend_number].game_invite.type = type;
+    Friends.list[friend_number].game_invite.id = id;
+    Friends.list[friend_number].game_invite.pending = true;
+    Friends.list[friend_number].game_invite.data_length = data_length;
 
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(m, name, friend_number);
