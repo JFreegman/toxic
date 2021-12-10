@@ -436,7 +436,11 @@ static bool chess_path_line_clear(Board *board, const Tile *from, const Tile *to
         return false;
     }
 
-    ChessCoords chess_coords;
+    ChessCoords chess_coords = (ChessCoords) {
+        0,
+        0
+    };
+
     size_t start;
     size_t end;
 
