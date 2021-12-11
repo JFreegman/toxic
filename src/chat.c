@@ -58,12 +58,6 @@
 #endif /* VIDEO */
 #endif /* AUDIO */
 
-extern char *DATA_FILE;
-extern FriendsList Friends;
-
-extern struct Winthread Winthread;
-extern struct user_settings *user_settings;
-
 #ifdef AUDIO
 static void init_infobox(ToxWindow *self);
 static void kill_infobox(ToxWindow *self);

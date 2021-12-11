@@ -63,8 +63,6 @@
 #include "toxic_strings.h"
 #include "windows.h"
 
-extern char *DATA_FILE;
-
 #define MAX_CONFERENCE_NUM (MAX_WINDOWS_NUM - 2)
 #define CONFERENCE_EVENT_WAIT 30
 

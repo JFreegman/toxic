@@ -37,6 +37,7 @@
 #include "log.h"
 #include "misc_tools.h"
 #include "notify.h"
+#include "prompt.h"
 #include "settings.h"
 #include "toxic.h"
 #include "windows.h"
@@ -45,13 +46,6 @@
 #include "audio_call.h"
 #endif
 
-
-extern char *DATA_FILE;
-extern char *BLOCK_FILE;
-extern ToxWindow *prompt;
-extern struct Winthread Winthread;
-extern struct user_settings *user_settings;
-extern struct arg_opts arg_opts;
 
 static uint8_t blocklist_view = 0;   /* 0 if we're in friendlist view, 1 if we're in blocklist view */
 

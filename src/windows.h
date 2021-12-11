@@ -114,6 +114,8 @@ struct Winthread {
     volatile sig_atomic_t last_refresh_flag;
 };
 
+extern struct Winthread Winthread;
+
 struct cqueue_thread {
     pthread_t tid;
 };
@@ -146,6 +148,8 @@ struct arg_opts {
 
     uint16_t tcp_port;
 };
+
+extern struct arg_opts arg_opts;
 
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
@@ -232,6 +236,8 @@ struct ToxWindow {
     WINDOW *window;
     WINDOW *window_bar;
 };
+
+extern ToxWindow *windows[MAX_WINDOWS_NUM];
 
 /* statusbar info holder */
 struct StatusBar {

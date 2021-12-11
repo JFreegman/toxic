@@ -33,9 +33,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern struct arg_opts arg_opts;
-extern struct Winthread Winthread;
-
 #define NAMESERVER_API_PATH "api"
 #define SERVER_KEY_SIZE 32
 #define MAX_SERVERS 50

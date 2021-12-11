@@ -74,7 +74,7 @@
 #ifdef VIDEO
 #include "video_call.h"
 #endif /* VIDEO */
-ToxAV *av;
+static ToxAV *av;
 #endif /* AUDIO */
 
 #ifdef PYTHON
@@ -98,8 +98,8 @@ ToxWindow *prompt = NULL;
 #define MAX_PASSWORD_LEN 64
 
 struct Winthread Winthread;
-struct cqueue_thread cqueue_thread;
-struct av_thread av_thread;
+static struct cqueue_thread cqueue_thread;
+static struct av_thread av_thread;
 struct arg_opts arg_opts;
 
 // This struct is not thread safe. It should only ever be written to from the main thread

@@ -96,6 +96,8 @@ struct user_settings {
 #endif
 };
 
+extern struct user_settings *user_settings;
+
 enum settings_values {
     AUTOLOG_OFF = 0,
     AUTOLOG_ON = 1,

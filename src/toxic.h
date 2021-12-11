@@ -145,5 +145,7 @@ void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userd
 void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata);
 void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata);
 
+extern char *DATA_FILE;
+extern char *BLOCK_FILE;
 
 #endif /* TOXIC_H */

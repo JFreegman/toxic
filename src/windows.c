@@ -41,15 +41,9 @@
 #include "game_base.h"
 #endif
 
-extern char *DATA_FILE;
-extern struct Winthread Winthread;
-
 ToxWindow *windows[MAX_WINDOWS_NUM];
 static uint8_t active_window_index;
 static int num_active_windows;
-
-extern ToxWindow *prompt;
-extern struct user_settings *user_settings;
 
 /* CALLBACKS START */
 void on_friend_request(Tox *m, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata)

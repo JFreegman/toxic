@@ -60,13 +60,7 @@
 #endif /* ALC_ALL_DEVICES_SPECIFIER */
 #endif /* __APPLE__ */
 
-extern FriendsList Friends;
-extern ToxWindow *windows[MAX_WINDOWS_NUM];
-
 struct CallControl CallControl;
-
-extern struct user_settings *user_settings;
-extern struct Winthread Winthread;
 
 void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
              void *user_data);

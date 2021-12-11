@@ -42,11 +42,6 @@
 #include "game_base.h"
 #endif
 
-extern char *DATA_FILE;
-extern ToxWindow *prompt;
-extern FriendsList Friends;
-extern FriendRequests FrndRequests;
-
 /* command functions */
 void cmd_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {

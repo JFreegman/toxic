@@ -40,6 +40,9 @@ typedef struct FriendRequests {
     struct friend_request request[MAX_FRIEND_REQUESTS];
 } FriendRequests;
 
+extern ToxWindow *prompt;
+extern FriendRequests FrndRequests;
+
 ToxWindow *new_prompt(void);
 
 void prep_prompt_win(void);

@@ -41,9 +41,6 @@ Tox              *user_tox;
 static WINDOW    *cur_window;
 static ToxWindow *self_window;
 
-extern FriendsList Friends;
-extern struct user_settings *user_settings;
-
 void api_display(const char *const msg)
 {
     if (msg == NULL) {

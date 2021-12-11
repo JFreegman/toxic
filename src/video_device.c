@@ -92,21 +92,21 @@ typedef struct VideoDevice {
 
 } VideoDevice;
 
-const char *dvideo_device_names[2];              /* Default device */
-char *video_devices_names[2][MAX_DEVICES]; /* Container of available devices */
-static int size[2];                        /* Size of above containers */
-VideoDevice *video_devices_running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
-uint32_t primary_video_device[2];          /* Primary device */
+static const char *dvideo_device_names[2];        /* Default device */
+static char *video_devices_names[2][MAX_DEVICES]; /* Container of available devices */
+static int size[2];                               /* Size of above containers */
+static VideoDevice *video_devices_running[2][MAX_DEVICES] = {{NULL}}; /* Running devices */
+static uint32_t primary_video_device[2];                              /* Primary device */
 
 static ToxAV *av = NULL;
 
 /* q_mutex */
 #define lock pthread_mutex_lock(&video_mutex)
 #define unlock pthread_mutex_unlock(&video_mutex)
-pthread_mutex_t video_mutex;
+static pthread_mutex_t video_mutex;
 
-bool video_thread_running = true,
-     video_thread_paused = true;                /* Thread control */
+static bool video_thread_running = true;
+static bool video_thread_paused = true;                /* Thread control */
 
 void *video_thread_poll(void *);
 

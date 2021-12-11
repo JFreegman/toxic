@@ -39,9 +39,7 @@
 #include "settings.h"
 #include "windows.h"
 
-extern struct arg_opts arg_opts;
 extern struct user_settings *user_settings;
-extern struct Winthread Winthread;
 
 /* URL that we get the JSON encoded nodes list from. */
 #define NODES_LIST_URL "https://nodes.tox.chat/json"
@@ -59,7 +57,6 @@ extern struct Winthread Winthread;
 
 #define IP_MAX_SIZE 45
 #define IP_MIN_SIZE 7
-#define PORT_MAX_SIZE 5
 
 #define LAST_SCAN_JSON_KEY "\"last_scan\":"
 #define LAST_SCAN_JSON_KEY_LEN (sizeof(LAST_SCAN_JSON_KEY) - 1)

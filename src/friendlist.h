@@ -101,6 +101,8 @@ typedef struct {
     ToxicFriend *list;
 } FriendsList;
 
+extern FriendsList Friends;
+
 ToxWindow *new_friendlist(void);
 void friendlist_onInit(ToxWindow *self, Tox *m);
 void disable_chatwin(uint32_t f_num);
