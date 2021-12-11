@@ -148,7 +148,7 @@ void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
  */
 int tox_pk_string_to_bytes(const char *hex_string, size_t hex_len, char *output, size_t output_size)
 {
-    if (output_size != TOX_PUBLIC_KEY_SIZE || hex_len > output_size * 2) {
+    if (output_size != TOX_PUBLIC_KEY_SIZE || hex_len != output_size * 2) {
         return -1;
     }
 
