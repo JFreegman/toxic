@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install libraries
+      - name: Install dependencies
         run:
           sudo apt-get update &&
           sudo apt-get install -y --no-install-recommends
@@ -24,11 +24,9 @@ jobs:
             libqrencode-dev
             libsodium-dev
             libvpx-dev
+            libx11-dev
             python3-dev
-            pkg-config
-
-      - name: Install toxcore
-        run:
+            pkg-config &&
           git clone --depth=1 https://github.com/TokTok/c-toxcore &&
           cd c-toxcore &&
           cmake . -B_build -DBOOTSTRAP_DAEMON=OFF &&
@@ -38,3 +36,68 @@ jobs:
 
       - name: Build toxic
         run: make -j4
+
+  infer:
+    runs-on: ubuntu-latest
+    container: toxchat/infer
+    steps:
+      - name: Install git
+        run:
+          apt-get update &&
+          DEBIAN_FRONTEND=noninteractive
+          apt-get install -y --no-install-recommends
+            git
+      - name: Install dependencies
+        run:
+          apt-get update &&
+          apt-get install -y --no-install-recommends
+            cmake
+            g++
+            libalut-dev
+            libconfig-dev
+            libcurl4-gnutls-dev
+            libncurses-dev
+            libnotify-dev
+            libopenal-dev
+            libopus-dev
+            libqrencode-dev
+            libsodium-dev
+            libvpx-dev
+            libx11-dev
+            make
+            python3-dev
+            pkg-config &&
+          git clone --depth=1 https://github.com/TokTok/c-toxcore &&
+          cd c-toxcore &&
+          cmake . -B_build -DBOOTSTRAP_DAEMON=OFF &&
+          cd _build &&
+          make -j4 &&
+          make install
+      - uses: actions/checkout@v2
+
+      - name: Run infer
+        run:
+          infer --no-progress-bar -- cc src/*.c
+            -fsyntax-only
+            $(python3-config --includes --ldflags)
+            $(pkg-config --cflags --libs
+              freealut
+              libconfig
+              libcurl
+              libnotify
+              libpng
+              libqrencode
+              ncurses
+              openal
+              python3
+              toxcore
+              vpx
+              x11)
+            -DAUDIO
+            -DBOX_NOTIFY
+            -DGAMES
+            -DPACKAGE_DATADIR='""'
+            -DPYTHON
+            -DQRCODE
+            -DSOUND_NOTIFY
+            -DVIDEO

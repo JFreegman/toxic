@@ -15,3 +15,4 @@ branches:
           - cirrus-ci
           - Codacy Static Code Analysis
           - code-review/reviewable
+          - infer
