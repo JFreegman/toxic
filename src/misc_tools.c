@@ -288,7 +288,7 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2)
 /* case-insensitive string compare function for use with qsort */
 int qsort_ptr_char_array_helper(const void *str1, const void *str2)
 {
-    return strcasecmp(*(char **)str1, *(char **)str2);
+    return strcasecmp(*(const char *const *)str1, *(const char *const *)str2);
 }
 
 static const char invalid_chars[] = {'/', '\n', '\t', '\v', '\r', '\0'};

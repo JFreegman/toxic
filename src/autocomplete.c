@@ -56,7 +56,7 @@ static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matc
  *
  * Returns the length of the match.
  */
-static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, const char **matches, size_t n_items,
+static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, const char *const *matches, size_t n_items,
                             size_t max_size)
 {
     UNUSED_VAR(self);
@@ -96,7 +96,7 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, const
  *
  * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-static int complete_line_helper(ToxWindow *self, const char **list, const size_t n_items, bool dir_search)
+static int complete_line_helper(ToxWindow *self, const char *const *list, const size_t n_items, bool dir_search)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -181,7 +181,7 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
     }
 
     char match[MAX_STR_SIZE];
-    size_t match_len = get_str_match(self, match, sizeof(match), (const char **) matches, n_matches, MAX_STR_SIZE);
+    size_t match_len = get_str_match(self, match, sizeof(match), (const char *const *) matches, n_matches, MAX_STR_SIZE);
 
     free_ptr_array((void **) matches);
 
@@ -259,12 +259,12 @@ static int complete_line_helper(ToxWindow *self, const char **list, const size_t
     return diff;
 }
 
-int complete_line(ToxWindow *self, const char **list, size_t n_items)
+int complete_line(ToxWindow *self, const char *const *list, size_t n_items)
 {
     return complete_line_helper(self, list, n_items, false);
 }
 
-static int complete_path(ToxWindow *self, const char **list, const size_t n_items)
+static int complete_path(ToxWindow *self, const char *const *list, const size_t n_items)
 {
     return complete_line_helper(self, list, n_items, true);
 }
@@ -385,7 +385,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
         print_ac_matches(self, m, dirnames, dircount);
     }
 
-    int ret = complete_path(self, (const char **) dirnames, dircount);
+    int ret = complete_path(self, (const char *const *) dirnames, dircount);
 
     free_ptr_array((void **) dirnames);
 

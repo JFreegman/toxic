@@ -93,7 +93,7 @@ typedef struct VideoDevice {
 } VideoDevice;
 
 const char *dvideo_device_names[2];              /* Default device */
-const char *video_devices_names[2][MAX_DEVICES]; /* Container of available devices */
+char *video_devices_names[2][MAX_DEVICES]; /* Container of available devices */
 static int size[2];                        /* Size of above containers */
 VideoDevice *video_devices_running[2][MAX_DEVICES] = {{NULL}};     /* Running devices */
 uint32_t primary_video_device[2];          /* Primary device */
@@ -187,7 +187,7 @@ VideoDeviceError init_video_devices(void)
 
 #if defined(__OSX__) || defined(__APPLE__)
 
-    if (osx_video_init((char **)video_devices_names[vdt_input], &size[vdt_input]) != 0) {
+    if (osx_video_init(&video_devices_names[vdt_input][0], &size[vdt_input]) != 0) {
         return vde_InternalError;
     }
 
@@ -229,6 +229,9 @@ VideoDeviceError init_video_devices(void)
 #endif
 
     size[vdt_output] = 1;
+    // TODO(iphydf): String literals are const char *. This may need to be
+    // copied, or if we're not owning any output device names, it should be
+    // const and video_devices_names needs to be split.
     char *video_output_name = "Toxic Video Receiver";
     video_devices_names[vdt_output][0] = video_output_name;
 
@@ -262,7 +265,7 @@ VideoDeviceError terminate_video_devices(void)
     int i;
 
     for (i = 0; i < size[vdt_input]; ++i) {
-        free((void *)video_devices_names[vdt_input][i]);
+        free(video_devices_names[vdt_input][i]);
     }
 
     if (pthread_mutex_destroy(&video_mutex) != 0) {

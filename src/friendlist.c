@@ -321,11 +321,11 @@ int load_blocklist(char *path)
 #define S_WEIGHT 100000
 static int index_name_cmp(const void *n1, const void *n2)
 {
-    int res = qsort_strcasecmp_hlpr(Friends.list[*(int *) n1].name, Friends.list[*(int *) n2].name);
+    int res = qsort_strcasecmp_hlpr(Friends.list[*(const int *) n1].name, Friends.list[*(const int *) n2].name);
 
     /* Use weight to make qsort always put online friends before offline */
-    res = Friends.list[*(int *) n1].connection_status ? (res - S_WEIGHT) : (res + S_WEIGHT);
-    res = Friends.list[*(int *) n2].connection_status ? (res + S_WEIGHT) : (res - S_WEIGHT);
+    res = Friends.list[*(const int *) n1].connection_status ? (res - S_WEIGHT) : (res + S_WEIGHT);
+    res = Friends.list[*(const int *) n2].connection_status ? (res + S_WEIGHT) : (res - S_WEIGHT);
 
     return res;
 }
@@ -349,7 +349,7 @@ void sort_friendlist_index(void)
 
 static int index_name_cmp_block(const void *n1, const void *n2)
 {
-    return qsort_strcasecmp_hlpr(Blocked.list[*(int *) n1].name, Blocked.list[*(int *) n2].name);
+    return qsort_strcasecmp_hlpr(Blocked.list[*(const int *) n1].name, Blocked.list[*(const int *) n2].name);
 }
 
 static void sort_blocklist_index(void)

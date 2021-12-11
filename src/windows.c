@@ -196,7 +196,7 @@ void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type typ
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onConferenceInvite != NULL) {
-            windows[i]->onConferenceInvite(windows[i], m, friendnumber, type, (char *) conference_pub_key, length);
+            windows[i]->onConferenceInvite(windows[i], m, friendnumber, type, (const char *) conference_pub_key, length);
         }
     }
 }
@@ -281,7 +281,7 @@ void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onFileRecvChunk != NULL) {
-            windows[i]->onFileRecvChunk(windows[i], m, friendnumber, filenumber, position, (char *) data, length);
+            windows[i]->onFileRecvChunk(windows[i], m, friendnumber, filenumber, position, (const char *) data, length);
         }
     }
 }
@@ -322,7 +322,7 @@ void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t k
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onFileRecv != NULL) {
-            windows[i]->onFileRecv(windows[i], m, friendnumber, filenumber, file_size, (char *) filename,
+            windows[i]->onFileRecv(windows[i], m, friendnumber, filenumber, file_size, (const char *) filename,
                                    filename_length);
         }
     }
