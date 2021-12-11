@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  latest:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,9 +15,13 @@ jobs:
         run:
           sudo apt-get update &&
           sudo apt-get install -y --no-install-recommends
+            libalut-dev
+            libconfig-dev
+            libcurl4-gnutls-dev
             libnotify-dev
             libopenal-dev
             libopus-dev
+            libqrencode-dev
             libsodium-dev
             libvpx-dev
             python3-dev
@@ -27,9 +31,10 @@ jobs:
         run:
           git clone --depth=1 https://github.com/TokTok/c-toxcore &&
           cd c-toxcore &&
-          cmake . -B_build &&
-          make -C _build
-          sudo make -C _build install
+          cmake . -B_build -DBOOTSTRAP_DAEMON=OFF &&
+          cd _build &&
+          make -j4 &&
+          sudo make install
 
       - name: Build toxic
-        run: make
+        run: make -j4

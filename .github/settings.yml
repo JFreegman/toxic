@@ -11,6 +11,7 @@ branches:
     protection:
       required_status_checks:
         contexts:
+          - build
           - cirrus-ci
           - Codacy Static Code Analysis
           - code-review/reviewable
