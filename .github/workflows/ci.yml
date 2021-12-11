@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install libraries
+        run:
+          sudo apt-get update &&
+          sudo apt-get install -y --no-install-recommends
+            libnotify-dev
+            libopenal-dev
+            libopus-dev
+            libsodium-dev
+            libvpx-dev
+            python3-dev
+            pkg-config
+
+      - name: Install toxcore
+        run:
+          git clone --depth=1 https://github.com/TokTok/c-toxcore &&
+          cd c-toxcore &&
+          cmake . -B_build &&
+          make -C _build
+          sudo make -C _build install
+
+      - name: Build toxic
+        run: make
