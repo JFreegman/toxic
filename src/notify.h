@@ -77,7 +77,7 @@ int box_silent_notify(ToxWindow *self, uint64_t flags, int *id_indicator, const 
 int box_silent_notify2(ToxWindow *self, uint64_t flags, int id, const char *format, ...);
 
 #ifdef SOUND_NOTIFY
-int set_sound(Notification sound, const char *value);
+bool set_sound(Notification sound, const char *value);
 #endif /* SOUND_NOTIFY */
 
 #endif /* NOTIFY_H */

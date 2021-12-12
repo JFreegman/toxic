@@ -209,12 +209,24 @@ VideoDeviceError init_video_devices(void)
             /* Query V4L for capture capabilities */
             if (-1 != ioctl(fd, VIDIOC_QUERYCAP, &cap)) {
                 video_input_name = (char *)malloc(strlen((const char *)cap.card) + strlen(device_address) + 4);
+
+                if (video_input_name == NULL) {
+                    close(fd);
+                    return vde_InternalError;
+                }
+
                 strcpy(video_input_name, (char *)cap.card);
                 strcat(video_input_name, " (");
                 strcat(video_input_name, (char *)device_address);
                 strcat(video_input_name, ")");
             } else {
                 video_input_name = (char *)malloc(strlen(device_address) + 3);
+
+                if (video_input_name == NULL) {
+                    close(fd);
+                    return vde_InternalError;
+                }
+
                 strcpy(video_input_name, "(");
                 strcat(video_input_name, device_address);
                 strcat(video_input_name, ")");

@@ -489,16 +489,27 @@ void terminate_notify(void)
 }
 
 #ifdef SOUND_NOTIFY
-int set_sound(Notification sound, const char *value)
+
+/*
+ * Sets notification sound designated by `sound` to file path `value`.
+ *
+ * Return true if the sound is successfully set.
+ */
+bool set_sound(Notification sound, const char *value)
 {
     if (sound == silent) {
-        return 0;
+        return false;
     }
 
     free(Control.sounds[sound]);
 
     size_t len = strlen(value) + 1;
     Control.sounds[sound] = calloc(len, 1);
+
+    if (Control.sounds[sound] == NULL) {
+        return false;
+    }
+
     memcpy(Control.sounds[sound], value, len);
 
     struct stat buf;
