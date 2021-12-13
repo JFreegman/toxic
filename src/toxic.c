@@ -99,8 +99,11 @@ ToxWindow *prompt = NULL;
 
 struct Winthread Winthread;
 static struct cqueue_thread cqueue_thread;
-static struct av_thread av_thread;
 struct arg_opts arg_opts;
+
+#ifdef AUDIO
+static struct av_thread av_thread;
+#endif
 
 // This struct is not thread safe. It should only ever be written to from the main thread
 // before any other thread that uses it is initialized.
