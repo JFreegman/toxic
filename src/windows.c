@@ -685,9 +685,9 @@ void draw_window_bar(ToxWindow *self)
 
     int cur_x;
     int cur_y;
-    UNUSED_VAR(cur_y);
-
     getyx(win, cur_y, cur_x);
+
+    UNUSED_VAR(cur_y);
 
     wattron(win, COLOR_PAIR(BAR_TEXT));
     mvwhline(win, 0, cur_x, ' ', COLS - cur_x);

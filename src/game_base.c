@@ -517,9 +517,9 @@ static void game_draw_help_bar(const GameData *game, WINDOW *win)
 {
     int max_x;
     int max_y;
-    UNUSED_VAR(max_x);
-
     getmaxyx(win, max_y, max_x);
+
+    UNUSED_VAR(max_x);
 
     wmove(win, max_y - 1, 1);
 
@@ -937,9 +937,9 @@ int game_y_bottom_bound(const GameData *game)
 {
     int max_x;
     int max_y;
-    UNUSED_VAR(max_x);
-
     getmaxyx(game->window, max_y, max_x);
+
+    UNUSED_VAR(max_x);
 
     return ((max_y + game->game_max_y) / 2) - 1;
 }
@@ -948,9 +948,9 @@ int game_y_top_bound(const GameData *game)
 {
     int max_x;
     int max_y;
-    UNUSED_VAR(max_x);
-
     getmaxyx(game->window, max_y, max_x);
+
+    UNUSED_VAR(max_x);
 
     return ((max_y - game->game_max_y) / 2) + 1;
 }
@@ -959,9 +959,9 @@ int game_x_right_bound(const GameData *game)
 {
     int max_x;
     int max_y;
-    UNUSED_VAR(max_y);
-
     getmaxyx(game->window, max_y, max_x);
+
+    UNUSED_VAR(max_y);
 
     return ((max_x + game->game_max_x) / 2) - 1;
 }
@@ -970,9 +970,9 @@ int game_x_left_bound(const GameData *game)
 {
     int max_x;
     int max_y;
-    UNUSED_VAR(max_y);
-
     getmaxyx(game->window, max_y, max_x);
+
+    UNUSED_VAR(max_y);
 
     return ((max_x - game->game_max_x) / 2) + 1;
 }

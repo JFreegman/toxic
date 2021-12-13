@@ -148,8 +148,9 @@ static int print_n_chars(WINDOW *win, const char *s, size_t n, int max_y)
 
             int x;
             int y;
-            UNUSED_VAR(x);
             getyx(win, y, x);
+
+            UNUSED_VAR(x);
 
             // make sure cursor will wrap correctly after newline to prevent display bugs
             if (y + 1 >= max_y) {
@@ -324,9 +325,9 @@ static void line_info_init_line(ToxWindow *self, struct line_info *line)
 {
     int y2;
     int x2;
-    UNUSED_VAR(y2);
-
     getmaxyx(self->window, y2, x2);
+
+    UNUSED_VAR(y2);
 
     const int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT;
     const int max_x = self->show_peerlist ? x2 - 1 - SIDEBAR_WIDTH : x2;
@@ -522,9 +523,9 @@ void line_info_print(ToxWindow *self)
     while (line && numlines++ <= max_y && print_ret == 0) {
         int y;
         int x;
-        UNUSED_VAR(y);
-
         getyx(win, y, x);
+
+        UNUSED_VAR(y);
 
         if (x > 0) { // Prevents us from printing off the screen
             break;

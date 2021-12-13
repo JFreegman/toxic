@@ -804,11 +804,13 @@ static bool chess_mock_move_valid(ChessState *state, const Player *player, Tile 
 {
     Board *board = &state->board;
 
+    const bool en_passant = player->en_passant_move_number == -1;
     bool in_check = false;
     Tile *ep_tile = NULL;
     Piece ep_piece;
+    memset(&ep_piece, 0, sizeof(ep_piece));
 
-    if (player->en_passant_move_number == -1) {  // remove piece that was captured via en passant
+    if (en_passant) {  // remove piece that was captured via en passant
         ChessCoords ep_coords;
         ep_coords.N = player->colour == White ? to->chess_coords.N - 1 : to->chess_coords.N + 1;
         ep_coords.L = to->chess_coords.L;
@@ -819,7 +821,7 @@ static bool chess_mock_move_valid(ChessState *state, const Player *player, Tile 
         }
 
         chess_copy_piece(&ep_piece, &ep_tile->piece);
-        ep_tile->piece.type = NoPiece;
+        ep_tile->piece.type = NoPiece;  // temporarily remove piece
     }
 
     Piece from_piece;
@@ -835,8 +837,8 @@ static bool chess_mock_move_valid(ChessState *state, const Player *player, Tile 
     from->piece.type = from_piece.type;
     chess_copy_piece(&to->piece, &to_piece);
 
-    if (player->en_passant_move_number == -1) {
-        ep_tile->piece.type = ep_piece.type;
+    if (en_passant) {
+        ep_tile->piece.type = ep_piece.type;  // reset piece to original state
     }
 
     return !in_check;

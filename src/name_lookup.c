@@ -108,14 +108,15 @@ static int load_nameserver_list(const char *path)
     char line[MAX_SERVER_LINE];
 
     while (fgets(line, sizeof(line), fp) && Nameservers.lines < MAX_SERVERS) {
-        int linelen = strlen(line);
+        size_t linelen = strlen(line);
 
         if (linelen < SERVER_KEY_SIZE * 2 + 5) {
             continue;
         }
 
         if (line[linelen - 1] == '\n') {
-            line[--linelen] = '\0';
+            --linelen;
+            line[linelen] = '\0';
         }
 
         const char *name = strtok(line, " ");
