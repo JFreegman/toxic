@@ -779,6 +779,11 @@ static void chat_onGroupInvite(ToxWindow *self, Tox *m, uint32_t friendnumber, c
     }
 
     Friends.list[friendnumber].group_invite.data = malloc(length * sizeof(uint8_t));
+
+    if (Friends.list[friendnumber].group_invite.data == NULL) {
+        return;
+    }
+
     memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
     Friends.list[friendnumber].group_invite.length = length;
 
