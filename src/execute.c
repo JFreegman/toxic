@@ -117,15 +117,8 @@ static struct cmd_func conference_commands[] = {
     { NULL,         NULL             },
 };
 
-
-#ifdef PYTHON
-#define SPECIAL_COMMANDS 8
-#else
-#define SPECIAL_COMMANDS 7
-#endif /* PYTHON */
-
 /* Special commands are commands that only take one argument even if it contains spaces */
-static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
+static const char special_commands[][MAX_CMDNAME_SIZE] = {
     "/add",
     "/avatar",
     "/nick",
@@ -136,6 +129,7 @@ static const char special_commands[SPECIAL_COMMANDS][MAX_CMDNAME_SIZE] = {
     "/sendfile",
     "/title",
     "/mute",
+    "",
 };
 
 /* Returns true if input command is in the special_commands array. */
@@ -143,7 +137,7 @@ static bool is_special_command(const char *input)
 {
     const int s = char_find(0, input, ' ');
 
-    for (int i = 0; i < SPECIAL_COMMANDS; ++i) {
+    for (int i = 0; special_commands[i][0] != '\0'; ++i) {
         if (strncmp(input, special_commands[i], s) == 0) {
             return true;
         }
