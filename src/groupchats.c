@@ -204,7 +204,7 @@ void groupchat_rejoin(ToxWindow *self, Tox *m)
         return;
     }
 
-    for (size_t i = 0; i < chat->max_idx; ++i) {
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
         clear_peer(&chat->peer_list[i]);
     }
 
@@ -481,7 +481,7 @@ static int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32
 
     size_t count = 0;
 
-    for (size_t i = 0; i < chat->max_idx; ++i) {
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
 
         if (!peer->active) {
@@ -519,7 +519,7 @@ int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, u
         return -1;
     }
 
-    for (size_t i = 0; i < chat->max_idx; ++i) {
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
         GroupPeer *peer = &chat->peer_list[i];
 
         if (!peer->active) {
@@ -1142,6 +1142,30 @@ static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, uint32_t groupnum
     line_info_add(self, true, NULL, NULL, SYS_MSG, 0, RED, "-!- %s", msg);
 }
 
+static void groupchat_update_roles(Tox *m, uint32_t groupnumber)
+{
+    GroupChat *chat = get_groupchat(groupnumber);
+
+    if (!chat) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < chat->max_idx; ++i) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (!peer->active) {
+            continue;
+        }
+
+        TOX_ERR_GROUP_PEER_QUERY err;
+        TOX_GROUP_ROLE role = tox_group_peer_get_role(m, groupnumber, peer->peer_id, &err);
+
+        if (err == TOX_ERR_GROUP_PEER_QUERY_OK) {
+            peer->role = role;
+        }
+    }
+}
+
 void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t src_peer_id,
                                  uint32_t tgt_peer_id, TOX_GROUP_MOD_EVENT type)
 {
@@ -1164,6 +1188,7 @@ void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, 
     int tgt_index = get_peer_index(groupnumber, tgt_peer_id);
 
     if (tgt_index < 0) {
+        groupchat_update_roles(m, groupnumber);
         return;
     }
 
