@@ -44,9 +44,7 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    size_t i;
-
-    for (i = 0; i < TOX_GROUP_CHAT_ID_SIZE; ++i) {
+    for (size_t i = 0; i < TOX_GROUP_CHAT_ID_SIZE; ++i) {
         char xx[3];
         snprintf(xx, sizeof(xx), "%02X", chat_public_key[i] & 0xff);
         strcat(chatid, xx);
@@ -105,6 +103,11 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
             return;
         }
 
+        case TOX_ERR_GROUP_TOGGLE_IGNORE_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
+            return;
+        }
+
         default: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to toggle ignore on %s (error %d).", nick, err);
             return;
@@ -149,6 +152,11 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
         case TOX_ERR_GROUP_MOD_KICK_PEER_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "You cannot kick yourself.");
+            return;
+        }
+
+        case TOX_ERR_GROUP_MOD_KICK_PEER_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Specified nick or public key is invalid.");
             return;
         }
 
@@ -234,6 +242,11 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
             return;
         }
 
+        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
+            return;
+        }
+
         default: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Failed to promote peer to moderator (error %d).", err);
             return;
@@ -284,6 +297,11 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
 
         case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot remove your own moderator status.");
+            return;
+        }
+
+        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
 
@@ -476,7 +494,7 @@ void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Tox *m, int argc, char 
         }
 
         default: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Error setting topic lock (error %d).", err);
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Error setting topic lock (%d).", err);
             return;
         }
     }
@@ -525,6 +543,11 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
 
         case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot silence yourself.");
+            return;
+        }
+
+        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
 
@@ -583,6 +606,11 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
         case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot unsilence yourself.");
+            return;
+        }
+
+        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
 
@@ -656,6 +684,11 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
             return;
         }
 
+        case TOX_ERR_GROUP_TOPIC_SET_DISCONNECTED: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You are disconnected from the group.");
+            return;
+        }
+
         default: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set the topic (error %d).", err);
             return;
@@ -696,6 +729,11 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
         case TOX_ERR_GROUP_TOGGLE_IGNORE_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot unignore yourself.");
+            return;
+        }
+
+        case TOX_ERR_GROUP_TOGGLE_IGNORE_PEER_NOT_FOUND: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
 
