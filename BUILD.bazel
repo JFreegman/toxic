@@ -43,7 +43,7 @@ cc_binary(
 
 sh_test(
     name = "toxic_test",
+    size = "small",
     srcs = [":toxic"],
     args = ["--help"],
-    size = "small",
 )
