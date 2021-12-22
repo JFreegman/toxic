@@ -692,6 +692,9 @@ static void select_friend(wint_t key, int *selected, int num)
 
 static void delete_friend(Tox *m, uint32_t f_num)
 {
+    kill_all_file_transfers_friend(m, f_num);
+    kill_avatar_file_transfers_friend(m, f_num);
+
     Tox_Err_Friend_Delete err;
 
     if (tox_friend_delete(m, f_num, &err) != true) {
@@ -840,9 +843,7 @@ void block_friend(Tox *m, uint32_t fnum)
     realloc_blocklist(Blocked.max_idx + 1);
     clear_blocklist_index(Blocked.max_idx);
 
-    int i;
-
-    for (i = 0; i <= Blocked.max_idx; ++i) {
+    for (int i = 0; i <= Blocked.max_idx; ++i) {
         if (Blocked.list[i].active) {
             continue;
         }

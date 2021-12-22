@@ -349,7 +349,11 @@ void close_file_transfer(ToxWindow *self, Tox *m, FileTransfer *ft, int CTRL, co
     }
 
     if (CTRL >= 0) {
-        tox_file_control(m, ft->friendnumber, ft->filenumber, (Tox_File_Control) CTRL, NULL);
+        Tox_Err_File_Control err;
+
+        if (!tox_file_control(m, ft->friendnumber, ft->filenumber, (Tox_File_Control) CTRL, &err)) {
+            fprintf(stderr, "Failed to cancel file transfer: %d\n", err);
+        }
     }
 
     if (message && self) {
