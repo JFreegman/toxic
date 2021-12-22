@@ -54,7 +54,13 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         return;
     }
 
-    struct FileTransfer *ft = NULL;
+    // first check transfer queue
+    if (file_send_queue_remove(self->num, idx) == 0) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Pending file transfer removed from queue");
+        return;
+    }
+
+    FileTransfer *ft = NULL;
 
     /* cancel an incoming file transfer */
     if (strcasecmp(inoutstr, "in") == 0) {
@@ -239,7 +245,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
+    FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
 
     if (!ft) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
@@ -324,7 +330,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     FILE *file_to_send = fopen(path, "r");
 
     if (file_to_send == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File not found.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File `%s` not found.", path);
         return;
     }
 
@@ -347,7 +353,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         goto on_send_error;
     }
 
-    struct FileTransfer *ft = new_file_transfer(self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
+    FileTransfer *ft = new_file_transfer(self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
 
     if (!ft) {
         err = TOX_ERR_FILE_SEND_TOO_MANY;
@@ -367,29 +373,62 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
 on_send_error:
 
+    fclose(file_to_send);
+
     switch (err) {
-        case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND:
+        case TOX_ERR_FILE_SEND_FRIEND_NOT_FOUND: {
             errmsg = "File transfer failed: Invalid friend.";
             break;
+        }
 
-        case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED:
-            errmsg = "File transfer failed: Friend is offline.";
-            break;
+        case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED: {
+            int queue_idx = file_send_queue_add(self->num, path, path_len);
 
-        case TOX_ERR_FILE_SEND_NAME_TOO_LONG:
+            char msg[MAX_STR_SIZE];
+
+            switch (queue_idx) {
+                case -1: {
+                    snprintf(msg, sizeof(msg), "Invalid file name: path is null or length is zero.");
+                    break;
+                }
+
+                case -2: {
+                    snprintf(msg, sizeof(msg), "File name is too long.");
+                    break;
+                }
+
+                case -3: {
+                    snprintf(msg, sizeof(msg), "File send queue is full.");
+                    break;
+                }
+
+                default: {
+                    snprintf(msg, sizeof(msg), "File transfer queued. Type \"/cancel out %d\" to cancel.", queue_idx);
+                    break;
+                }
+            }
+
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+
+            return;
+        }
+
+        case TOX_ERR_FILE_SEND_NAME_TOO_LONG: {
             errmsg = "File transfer failed: Filename is too long.";
             break;
+        }
 
-        case TOX_ERR_FILE_SEND_TOO_MANY:
+        case TOX_ERR_FILE_SEND_TOO_MANY: {
             errmsg = "File transfer failed: Too many concurrent file transfers.";
             break;
+        }
 
-        default:
+        default: {
             errmsg = "File transfer failed.";
             break;
+        }
     }
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
     tox_file_control(m, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
-    fclose(file_to_send);
 }

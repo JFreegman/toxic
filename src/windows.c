@@ -244,7 +244,7 @@ void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, u
 {
     UNUSED_VAR(userdata);
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+    FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
 
     if (!ft) {
         return;
@@ -267,7 +267,7 @@ void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint
 {
     UNUSED_VAR(userdata);
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+    FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
 
     if (!ft) {
         return;
@@ -285,7 +285,7 @@ void on_file_recv_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, To
 {
     UNUSED_VAR(userdata);
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+    FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
 
     if (!ft) {
         return;

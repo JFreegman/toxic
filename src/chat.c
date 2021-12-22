@@ -248,6 +248,7 @@ static void chat_onConnectionChange(ToxWindow *self, Tox *m, uint32_t num, Tox_C
 
     if (prev_status == TOX_CONNECTION_NONE) {
         chat_resume_file_senders(self, m, num);
+        file_send_queue_check(self, m, self->num);
 
         msg = "has come online";
         line_info_add(self, true, nick, NULL, CONNECTION, 0, GREEN, msg);

@@ -29,9 +29,9 @@
 #include "toxic.h"
 #include "windows.h"
 
-#define KiB 1024
-#define MiB 1048576       /* 1024^2 */
-#define GiB 1073741824    /* 1024^3 */
+#define KiB (uint32_t)  1024
+#define MiB (uint32_t) (1024 << 10)  /* 1024^2 */
+#define GiB (uint32_t) (1024 << 20)  /* 1024^3 */
 
 #define MAX_FILES 32
 
@@ -47,7 +47,7 @@ typedef enum FILE_TRANSFER_DIRECTION {
     FILE_TRANSFER_RECV
 } FILE_TRANSFER_DIRECTION;
 
-struct FileTransfer {
+typedef struct FileTransfer {
     ToxWindow *window;
     FILE *file;
     FILE_TRANSFER_STATE state;
@@ -63,7 +63,15 @@ struct FileTransfer {
     time_t   last_line_progress;   /* The last time we updated the progress bar */
     uint32_t line_id;
     uint8_t  file_id[TOX_FILE_ID_LENGTH];
-};
+} FileTransfer;
+
+typedef struct PendingFileTransfer {
+    char      file_path[TOX_MAX_FILENAME_LENGTH + 1];
+    size_t    length;
+    uint32_t  friendnumber;
+    bool      pending;
+} PendingFileTransfer;
+
 
 /* creates initial progress line that will be updated during file transfer.
    progline must be at lesat MAX_STR_SIZE bytes */
@@ -95,6 +103,31 @@ struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnumber, uint3
  */
 struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnumber, uint32_t filenumber,
                                        FILE_TRANSFER_DIRECTION direction, uint8_t type);
+
+/* Adds a file designated by `file_path` of length `length` to the file transfer queue.
+ *
+ * Items in this queue will be automatically sent to the contact designated by `friendnumber`
+ * as soon as they appear online. The item will then be removed from the queue whether
+ * or not the transfer successfully initiates.
+ *
+ * If the ToxWindow associated with this friend is closed, all queued items will be
+ * discarded.
+ *
+ * Return the queue index on success.
+ * Return -1 if the length is invalid.
+ * Return -2 if the send queue is full.
+ */
+int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t length);
+
+/* Initiates all file transfers from the file send queue for friend designated by `friendnumber`. */
+void file_send_queue_check(ToxWindow *self, Tox *m, uint32_t friendnumber);
+
+/* Removes the `index`-th item from the file send queue for `friendnumber`.
+ *
+ * Return 0 if a pending transfer was successfully removed
+ * Return -1 if index does not designate a pending file transfer.
+ */
+int file_send_queue_remove(uint32_t friendnumber, size_t index);
 
 /* Closes file transfer ft.
  *

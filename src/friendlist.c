@@ -1107,14 +1107,14 @@ static void friendlist_onDraw(ToxWindow *self, Tox *m)
 
     /* Determine which portion of friendlist to draw based on current position */
     pthread_mutex_lock(&Winthread.lock);
-    int page = Friends.num_selected / (y2 - FLIST_OFST);
+    const int page = Friends.num_selected / (y2 - FLIST_OFST);
     pthread_mutex_unlock(&Winthread.lock);
 
-    int start = (y2 - FLIST_OFST) * page;
-    int end = y2 - FLIST_OFST + start;
+    const int start = (y2 - FLIST_OFST) * page;
+    const int end = y2 - FLIST_OFST + start;
 
     pthread_mutex_lock(&Winthread.lock);
-    size_t num_friends = Friends.num_friends;
+    const size_t num_friends = Friends.num_friends;
     pthread_mutex_unlock(&Winthread.lock);
 
     int i;

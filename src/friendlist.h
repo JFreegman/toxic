@@ -79,8 +79,9 @@ typedef struct {
     struct GameInvite game_invite;
 #endif
 
-    struct FileTransfer file_receiver[MAX_FILES];
-    struct FileTransfer file_sender[MAX_FILES];
+    FileTransfer file_receiver[MAX_FILES];
+    FileTransfer file_sender[MAX_FILES];
+    PendingFileTransfer file_send_queue[MAX_FILES];
 } ToxicFriend;
 
 typedef struct {
