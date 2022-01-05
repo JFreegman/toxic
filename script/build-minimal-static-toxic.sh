@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2021 Maxim Biro <nurupo.contributions@gmail.com>
+# Copyright (c) 2021-2022 Maxim Biro <nurupo.contributions@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,8 +36,19 @@
 #
 # that would use Toxic code from /home/jfreegman/git/toxic and place the build
 # artifact at /tmp/artifact.
-# You can change between amd64/alpine:latest and i386/alpine:latest, for 64-bit
-# and 32-bit builds.
+#
+# You can change between:
+#   amd64/alpine:latest,
+#   i386/alpine:latest,
+#   arm64v8/alpine:latest,
+#   arm32v7/alpine:latest,
+#   arm32v6/alpine:latest,
+#   ppc64le/alpine:latest,
+#   s390x/alpine:latest,
+#   etc.
+# as long as your system can run foreign architecture binaries, e.g. via qemu
+# static bins and binfmt (install qemu-user-static package on Debian/Ubuntu).
+#
 #
 # To debug, run:
 #
