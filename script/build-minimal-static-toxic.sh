@@ -64,12 +64,6 @@ set -eu
 ARTIFACT_DIR="/artifact"
 TOXIC_SRC_DIR="/toxic"
 
-# Make sure we run in the expected environment
-if ! grep -q 'docker' /proc/1/cgroup
-then
-  echo "Error: This script should be run inside a disposable Docker container as it might modify system files in ways that would break a real system."
-  exit 1
-fi
 
 if [ ! -f /etc/os-release ] || ! grep -qi 'Alpine Linux' /etc/os-release
 then
