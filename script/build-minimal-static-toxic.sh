@@ -191,7 +191,8 @@ cd curl*
   --with-openssl
 make
 make install
-sed -i 's|-lbrotlidec |-lbrotlidec-static -lbrotlicommon-static |g' $BUILD_DIR/prefix-curl/lib/pkgconfig/libcurl.pc
+sed -i 's|-lbrotlidec |-lbrotlidec -lbrotlicommon |g' $BUILD_DIR/prefix-curl/lib/pkgconfig/libcurl.pc
+
 
 # Build Toxic
 cd "$BUILD_DIR"
