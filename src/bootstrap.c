@@ -79,6 +79,18 @@ extern struct user_settings *user_settings;
 /* Maximum allowable size of the nodes list */
 #define MAX_NODELIST_SIZE (MAX_RECV_CURL_DATA_SIZE)
 
+// TODO(Jfreegman): Remove this before production
+static uint8_t const TESTNET_KEY[] = {
+    0x79, 0xCA, 0xDA, 0x49, 0x74, 0xB0, 0x92, 0x6F,
+    0x28, 0x6F, 0x02, 0x5C, 0xD5, 0xFF, 0xDF, 0x3E,
+    0x65, 0x4A, 0x37, 0x58, 0xC5, 0x3E, 0x02, 0x73,
+    0xEC, 0xFC, 0x4D, 0x12, 0xC2, 0x1D, 0xCA, 0x48,
+};
+
+// TODO(Jfreegman): Remove this before production
+#define TESTNET_PORT 33445
+
+#define TESTNET_IP "172.93.52.70"
 
 static struct Thread_Data {
     pthread_t tid;
@@ -277,7 +289,7 @@ on_exit:
 static int update_DHT_nodeslist(const char *nodes_path)
 {
     if (NODES_LIST_URL == 0) {  // TODO: Remove this when NGC merges with mainnet
-        fprintf(stderr, "Skipping DHT Nodes list fetching\n");
+        fprintf(stderr, "Skipping DHT Nodes list fetching (remove before production)\n");
         return 0;
     }
 
@@ -561,6 +573,18 @@ on_exit:
  */
 int load_DHT_nodeslist(void)
 {
+    // TODO(Jfreegman): Remove this before production
+    fprintf(stderr, "Adding NGC testnet node - remove this before production\n");
+
+    struct Node *node = &Nodes.list[0];
+    node->have_ip4 = true;
+    node->port = TESTNET_PORT;
+    memcpy(node->key, TESTNET_KEY, sizeof(TESTNET_KEY));
+    memcpy(node->ip4, TESTNET_IP, sizeof(TESTNET_IP));
+    Nodes.count = 1;
+
+    return 0;
+
     if (thread_data.active) {
         return -1;
     }
