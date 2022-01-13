@@ -37,6 +37,22 @@ jobs:
       - name: Build toxic
         run: make -j4
 
+  build-static:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build minimal static toxic binary
+        run: docker run --rm
+          -v /tmp/artifact:/artifact
+          -v $PWD:/toxic
+          amd64/alpine:latest
+          sh -c 'yes | /toxic/script/build-minimal-static-toxic.sh'
+      - name: Display binary checksum
+        run: |
+          tar Jxf /tmp/artifact/toxic-minimal-static-musl_linux_x86-64.tar.xz
+          sha256sum toxic-minimal-static-musl_linux_x86-64/toxic
+
   infer:
     runs-on: ubuntu-latest
     container: toxchat/infer

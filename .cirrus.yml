@@ -1,7 +1,7 @@
 ---
 cirrus-ci_task:
   container:
-    image: toxchat/toktok-stack:0.0.31-third_party
+    image: toxchat/toktok-stack:0.0.31-release
     cpu: 2
     memory: 2G
   configure_script:
@@ -9,5 +9,4 @@ cirrus-ci_task:
   test_all_script:
     - cd /src/workspace && bazel test -k
         --remote_http_cache=http://$CIRRUS_HTTP_CACHE_HOST
-        --config=release
         //toxic/...
