@@ -676,8 +676,10 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     FILE *filecheck = NULL;
     int count = 1;
 
-    while ((filecheck = fopen(file_path, "r"))) {
-        fclose(filecheck);
+    while ((filecheck = fopen(file_path, "r")) || file_transfer_recv_path_exists(file_path)) {
+        if (filecheck) {
+            fclose(filecheck);
+        }
 
         file_path[path_len] = '\0';
         char d[5];

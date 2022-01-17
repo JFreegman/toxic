@@ -45,9 +45,8 @@ extern FriendsList Friends;
 void init_progress_bar(char *progline)
 {
     strcpy(progline, "0% [");
-    int i;
 
-    for (i = 0; i < NUM_PROG_MARKS; ++i) {
+    for (size_t i = 0; i < NUM_PROG_MARKS; ++i) {
         strcat(progline, "-");
     }
 
@@ -396,4 +395,27 @@ void kill_all_file_transfers(Tox *m)
     for (size_t i = 0; i < Friends.max_idx; ++i) {
         kill_all_file_transfers_friend(m, Friends.list[i].num);
     }
+}
+
+bool file_transfer_recv_path_exists(const char *path)
+{
+    for (size_t friendnumber = 0; friendnumber < Friends.max_idx; ++friendnumber) {
+        if (!Friends.list[friendnumber].active) {
+            continue;
+        }
+
+        for (size_t i = 0; i < MAX_FILES; ++i) {
+            FileTransfer *ft = &Friends.list[friendnumber].file_receiver[i];
+
+            if (ft->state == FILE_TRANSFER_INACTIVE) {
+                continue;
+            }
+
+            if (strcmp(path, ft->file_path) == 0) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

@@ -145,4 +145,7 @@ void kill_all_file_transfers_friend(Tox *m, uint32_t friendnumber);
 
 void kill_all_file_transfers(Tox *m);
 
+/* Return true if any pending or active file receiver has the path `path`. */
+bool file_transfer_recv_path_exists(const char *path);
+
 #endif /* FILE_TRANSFERS_H */
