@@ -62,21 +62,21 @@ static int get_log_path(char *dest, int destsize, const char *name, const char *
 
     /* first 6 bytes of selfkey */
     char self_id[32] = {0};
-    path_len += KEY_IDENT_DIGITS * 2;
+    path_len += KEY_IDENT_BYTES;
     sprintf(&self_id[0], "%02X", selfkey[0] & 0xff);
     sprintf(&self_id[2], "%02X", selfkey[1] & 0xff);
     sprintf(&self_id[4], "%02X", selfkey[2] & 0xff);
-    self_id[KEY_IDENT_DIGITS * 2] = '\0';
+    self_id[KEY_IDENT_BYTES] = '\0';
 
     char other_id[32] = {0};
 
     if (otherkey) {
         /* first 6 bytes of otherkey */
-        path_len += KEY_IDENT_DIGITS * 2;
+        path_len += KEY_IDENT_BYTES;
         sprintf(&other_id[0], "%02X", otherkey[0] & 0xff);
         sprintf(&other_id[2], "%02X", otherkey[1] & 0xff);
         sprintf(&other_id[4], "%02X", otherkey[2] & 0xff);
-        other_id[KEY_IDENT_DIGITS * 2] = '\0';
+        other_id[KEY_IDENT_BYTES] = '\0';
     }
 
     if (path_len >= destsize) {

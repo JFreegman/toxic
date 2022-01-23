@@ -1385,7 +1385,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    size_t maxlen = x2 - getcurx(statusbar->topline) - (KEY_IDENT_DIGITS * 2) - 6;
+    size_t maxlen = x2 - getcurx(statusbar->topline) - KEY_IDENT_BYTES - 6;
 
     pthread_mutex_lock(&Winthread.lock);
     size_t statusmsg_len = statusbar->statusmsg_len;
@@ -1416,10 +1416,10 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
     int s_x;
     getyx(statusbar->topline, s_y, s_x);
 
-    mvwhline(statusbar->topline, s_y, s_x, ' ', x2 - s_x - (KEY_IDENT_DIGITS * 2) - 3);
+    mvwhline(statusbar->topline, s_y, s_x, ' ', x2 - s_x - KEY_IDENT_BYTES  - 3);
     wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
-    wmove(statusbar->topline, 0, x2 - (KEY_IDENT_DIGITS * 2) - 3);
+    wmove(statusbar->topline, 0, x2 - KEY_IDENT_BYTES  - 3);
 
     wattron(statusbar->topline, COLOR_PAIR(BAR_ACCENT));
     wprintw(statusbar->topline, "{");
@@ -1427,7 +1427,7 @@ static void chat_onDraw(ToxWindow *self, Tox *m)
 
     wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
-    for (size_t i = 0; i < KEY_IDENT_DIGITS; ++i) {
+    for (size_t i = 0; i < KEY_IDENT_BYTES / 2; ++i) {
         wprintw(statusbar->topline, "%02X", Friends.list[self->num].pub_key[i] & 0xff);
     }
 

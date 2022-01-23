@@ -175,9 +175,7 @@ static int add_friend_request(const char *public_key, const char *data)
         return -1;
     }
 
-    int i;
-
-    for (i = 0; i <= FrndRequests.max_idx; ++i) {
+    for (int i = 0; i <= FrndRequests.max_idx; ++i) {
         if (!FrndRequests.request[i].active) {
             FrndRequests.request[i].active = true;
             memcpy(FrndRequests.request[i].key, public_key, TOX_PUBLIC_KEY_SIZE);
@@ -526,6 +524,26 @@ static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnu
     }
 }
 
+/**
+ * Return true is the first 3 bytes of `key` are identical to any other contact in the contact list.
+ */
+static bool key_is_similar(const char *key)
+{
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
+        const ToxicFriend *friend = &Friends.list[i];
+
+        if (!friend->active) {
+            continue;
+        }
+
+        if (memcmp(friend->pub_key, key, KEY_IDENT_BYTES / 2) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data, size_t length)
 {
     UNUSED_VAR(m);
@@ -535,6 +553,13 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
 
     line_info_add(self, true, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
     write_to_log("Friend request with the message '%s'", "", ctx->log, true);
+
+    if (key_is_similar(key)) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED,
+                      "WARNING: This contact's public key is suspiciously similar to that of another contact ");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED,
+                      "in your list. This may be an impersonation attempt, or it may have occurred by chance.");
+    }
 
     int n = add_friend_request(key, data);
 
