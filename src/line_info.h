@@ -46,11 +46,11 @@ typedef enum LINE_TYPE {
 } LINE_TYPE;
 
 struct line_info {
-    char timestr[TIME_STR_SIZE];
-    char name1[TOXIC_MAX_NAME_LENGTH + 1];
-    char name2[TOXIC_MAX_NAME_LENGTH + 1];
-    char msg[MAX_LINE_INFO_MSG_SIZE];
-    time_t timestamp;
+    char    timestr[TIME_STR_SIZE];
+    char    name1[TOXIC_MAX_NAME_LENGTH + 1];
+    char    name2[TOXIC_MAX_NAME_LENGTH + 1];
+    wchar_t msg[MAX_LINE_INFO_MSG_SIZE];
+    time_t  timestamp;
     uint8_t type;
     uint8_t bold;
     uint8_t colour;
@@ -58,7 +58,7 @@ struct line_info {
     bool    read_flag;     /* true if a message has been flagged as read */
     uint32_t id;
     uint16_t len;        /* combined length of entire line */
-    uint16_t msg_len;    /* length of the message */
+    uint16_t msg_width;    /* width of the message */
     uint16_t format_lines;  /* number of lines the combined string takes up (dynamically set) */
 
     struct line_info *prev;

@@ -20,6 +20,10 @@
  *
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE    /* needed for wcswidth() */
+#endif
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -137,13 +141,13 @@ static struct line_info *line_info_ret_queue(struct history *hst)
  * Return 0 if string does not contain a newline byte.
  * Return -1 if printing was aborted.
  */
-static int print_n_chars(WINDOW *win, const char *s, size_t n, int max_y)
+static int print_n_chars(WINDOW *win, const wchar_t *s, size_t n, int max_y)
 {
     bool newline = false;
-    char ch;
+    wchar_t ch;
 
     for (size_t i = 0; i < n && (ch = s[i]); ++i) {
-        if (ch == '\n') {
+        if (ch == L'\n') {
             newline = true;
 
             int x;
@@ -159,7 +163,17 @@ static int print_n_chars(WINDOW *win, const char *s, size_t n, int max_y)
         }
 
         if (win) {
-            wprintw(win, "%c", ch);
+#ifdef HAVE_WIDECHAR
+            waddnwstr(win, &ch, 1);
+#else
+            char b;
+
+            if (wcstombs(&b, &ch, sizeof(char)) != 1) {
+                continue;
+            }
+
+            wprintw(win, "%c", b);
+#endif  // HAVE_WIDECHAR
         }
     }
 
@@ -169,10 +183,10 @@ static int print_n_chars(WINDOW *win, const char *s, size_t n, int max_y)
 /* Returns the index of the last space character in `s` found before `limit`.
  * Returns -1 if no space is found.
  */
-static int rspace_index(const char *s, int limit)
+static int rspace_index(const wchar_t *s, int limit)
 {
     for (int i = limit; i >= 0; --i) {
-        if (s[i] == ' ') {
+        if (s[i] == L' ') {
             return i;
         }
     }
@@ -183,12 +197,12 @@ static int rspace_index(const char *s, int limit)
 /* Returns the first index in `s` containing a newline byte found before `limit`.
  * Returns -1 if no newline  is found.
  */
-static int newline_index(const char *s, int limit)
+static int newline_index(const wchar_t *s, int limit)
 {
-    char ch;
+    wchar_t ch;
 
     for (int i = 0; i < limit && (ch = s[i]); ++i) {
-        if (ch == '\n') {
+        if (ch == L'\n') {
             return i;
         }
     }
@@ -197,13 +211,13 @@ static int newline_index(const char *s, int limit)
 }
 
 /* Returns the number of newline bytes in `s` */
-static unsigned int newline_count(const char *s)
+static unsigned int newline_count(const wchar_t *s)
 {
-    char ch;
+    wchar_t ch;
     unsigned int count = 0;
 
     for (size_t i = 0; (ch = s[i]); ++i) {
-        if (ch == '\n') {
+        if (ch == L'\n') {
             ++count;
         }
     }
@@ -226,10 +240,10 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
     int y;
     UNUSED_VAR(y);
 
-    const char *msg = line->msg;
-    uint16_t length = line->msg_len;
+    const wchar_t *msg = line->msg;
+    uint16_t length = line->msg_width;
     uint16_t lines = 0;
-    const int x_start = line->len - line->msg_len - 1;  // manually keep track of x position because ncurses sucks
+    const int x_start = line->len - line->msg_width - 1;  // manually keep track of x position because ncurses sucks
     int x_limit = max_x - x_start;
 
     if (x_limit <= 1) {
@@ -246,7 +260,7 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
         }
 
         if (length < x_limit) {
-            int p_ret = print_n_chars(win, msg, length, max_y);
+            const int p_ret = print_n_chars(win, msg, length, max_y);
 
             if (p_ret == 1) {
                 lines += newline_count(msg);
@@ -258,7 +272,7 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
             break;
         }
 
-        int newline_idx = newline_index(msg, x_limit - 1);
+        const int newline_idx = newline_index(msg, x_limit - 1);
 
         if (newline_idx >= 0) {
             if (print_n_chars(win, msg, newline_idx + 1, max_y) == -1) {
@@ -272,7 +286,7 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
             continue;
         }
 
-        int space_idx = rspace_index(msg, x_limit - 1);
+        const int space_idx = rspace_index(msg, x_limit - 1);
 
         if (space_idx >= 1) {
             if (print_n_chars(win, msg, space_idx, max_y) == -1) {
@@ -319,6 +333,34 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
     line->format_lines = lines;
 
     return 0;
+}
+
+/* Converts `msg` into a widechar string and puts the result in `buf`.
+ *
+ * Returns the widechar width of the string.
+ */
+static uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg)
+{
+    if (msg == NULL || msg[0] == '\0') {
+        return 0;
+    }
+
+    uint16_t width = 0;
+
+    const wint_t wc_msg_len = mbs_to_wcs_buf(buf, msg, buf_size);
+
+    if (wc_msg_len > 0 && wc_msg_len < buf_size) {
+        buf[wc_msg_len] = L'\0';
+        width = (uint16_t) wcswidth(buf, wc_msg_len);
+    } else {
+        fprintf(stderr, "Failed to convert string '%s' to widechar\n", msg);
+        const wchar_t *err = L"Failed to parse message";
+        width = wcslen(err);
+        wmemcpy(buf, err, width);
+        buf[width] = L'\0';
+    }
+
+    return width;
 }
 
 static void line_info_init_line(ToxWindow *self, struct line_info *line)
@@ -409,13 +451,8 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
             break;
     }
 
-    uint16_t msg_len = 0;
-
-    if (frmt_msg[0]) {
-        snprintf(new_line->msg, sizeof(new_line->msg), "%s", frmt_msg);
-        msg_len = strlen(new_line->msg);
-        len += msg_len;
-    }
+    const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg), frmt_msg);
+    len += msg_width;
 
     if (show_timestamp) {
         get_time_str(new_line->timestr, sizeof(new_line->timestr));
@@ -434,7 +471,7 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
     new_line->id = (hst->line_end->id + 1 + hst->queue_size) % INT_MAX;
     new_line->len = len;
-    new_line->msg_len = msg_len;
+    new_line->msg_width = msg_width;
     new_line->type = type;
     new_line->bold = bold;
     new_line->colour = colour;
@@ -518,9 +555,8 @@ void line_info_print(ToxWindow *self)
     const int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT;
     const int max_x = self->show_peerlist ? x2 - 1 - SIDEBAR_WIDTH : x2;
     uint16_t numlines = line->format_lines;
-    int print_ret = 0;
 
-    while (line && numlines++ <= max_y && print_ret == 0) {
+    while (line && numlines++ <= max_y) {
         int y;
         int x;
         getyx(win, y, x);
@@ -568,7 +604,7 @@ void line_info_print(ToxWindow *self)
                     wattron(win, COLOR_PAIR(RED));
                 }
 
-                print_ret = print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, max_x, max_y);
 
                 if (line->msg[0] == '>') {
                     wattroff(win, COLOR_PAIR(GREEN));
@@ -592,7 +628,7 @@ void line_info_print(ToxWindow *self)
 
                 wattron(win, COLOR_PAIR(YELLOW));
                 wprintw(win, "%s %s ", user_settings->line_normal, line->name1);
-                print_ret = print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, max_x, max_y);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
                 waddch(win, '\n');
@@ -613,7 +649,7 @@ void line_info_print(ToxWindow *self)
                     wattron(win, COLOR_PAIR(line->colour));
                 }
 
-                print_ret = print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, max_x, max_y);
                 waddch(win, '\n');
 
                 if (line->bold) {
@@ -632,7 +668,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(GREEN));
 
                 if (line->msg[0]) {
-                    print_ret = print_wrap(win, line, max_x, max_y);
+                    print_wrap(win, line, max_x, max_y);
                 }
 
                 waddch(win, '\n');
@@ -650,7 +686,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_ret = print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, max_x, max_y);
                 waddch(win, '\n');
 
                 wattroff(win, COLOR_PAIR(line->colour));
@@ -669,7 +705,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_ret = print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, max_x, max_y);
                 waddch(win, '\n');
 
                 wattroff(win, COLOR_PAIR(line->colour));
@@ -687,7 +723,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_ret = print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, max_x, max_y);
 
                 wattron(win, A_BOLD);
                 wprintw(win, "%s\n", line->name2);
@@ -749,10 +785,9 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 
     while (line) {
         if (line->id == id) {
-            size_t new_len = strlen(msg);
-            line->len = line->len - line->msg_len + new_len;
-            line->msg_len = new_len;
-            snprintf(line->msg, sizeof(line->msg), "%s", msg);
+            const uint16_t new_width = line_info_add_msg(line->msg, sizeof(line->msg), msg);
+            line->len = line->len - line->msg_width + new_width;
+            line->msg_width = new_width;
             return;
         }
 

@@ -23,6 +23,10 @@
 #ifndef TOXIC_H
 #define TOXIC_H
 
+#ifndef NCURSES_WIDECHAR
+#define NCURSES_WIDECHAR 1
+#endif
+
 #ifndef TOXICVER
 #define TOXICVER "NOVERS"    /* Use the -D flag to set this */
 #endif
