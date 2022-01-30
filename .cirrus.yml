@@ -1,7 +1,7 @@
 ---
-cirrus-ci_task:
+bazel-opt_task:
   container:
-    image: toxchat/toktok-stack:0.0.31-release
+    image: toxchat/toktok-stack:latest-release
     cpu: 2
     memory: 2G
   configure_script:

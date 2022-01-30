@@ -13,7 +13,7 @@ branches:
         contexts:
           - build
           - build-static
-          - cirrus-ci
+          - bazel-opt
           - Codacy Static Code Analysis
           - code-review/reviewable
           - infer
