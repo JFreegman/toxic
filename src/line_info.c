@@ -593,22 +593,22 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
-                if (line->msg[0] == 0) {
+                if (line->msg[0] == L'\0') {
                     waddch(win, '\n');
                     break;
                 }
 
-                if (line->msg[0] == '>') {
+                if (line->msg[0] == L'>') {
                     wattron(win, COLOR_PAIR(GREEN));
-                } else if (line->msg[0] == '<') {
+                } else if (line->msg[0] == L'<') {
                     wattron(win, COLOR_PAIR(RED));
                 }
 
                 print_wrap(win, line, max_x, max_y);
 
-                if (line->msg[0] == '>') {
+                if (line->msg[0] == L'>') {
                     wattroff(win, COLOR_PAIR(GREEN));
-                } else if (line->msg[0] == '<') {
+                } else if (line->msg[0] == L'<') {
                     wattroff(win, COLOR_PAIR(RED));
                 }
 
@@ -667,7 +667,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "$ ");
                 wattroff(win, COLOR_PAIR(GREEN));
 
-                if (line->msg[0]) {
+                if (line->msg[0] != L'\0') {
                     print_wrap(win, line, max_x, max_y);
                 }
 
