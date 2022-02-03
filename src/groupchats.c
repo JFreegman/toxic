@@ -196,7 +196,7 @@ void groupchat_rejoin(ToxWindow *self, Tox *m)
         return;
     }
 
-    TOX_ERR_GROUP_SELF_QUERY s_err;
+    Tox_Err_Group_Self_Query s_err;
     uint32_t self_peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -290,7 +290,7 @@ static void init_groupchat_log(ToxWindow *self, Tox *m, uint32_t groupnumber)
 
     char chat_id[TOX_GROUP_CHAT_ID_SIZE];
 
-    TOX_ERR_GROUP_STATE_QUERIES err;
+    Tox_Err_Group_State_Queries err;
 
     if (!tox_group_get_chat_id(m, groupnumber, (uint8_t *)chat_id, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch chat id. Logging disabled. (error: %d)", err);
@@ -341,7 +341,7 @@ int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size
             set_active_window_index(groupchats[i].chatwin);
             store_data(m, DATA_FILE);
 
-            TOX_ERR_GROUP_SELF_QUERY err;
+            Tox_Err_Group_Self_Query err;
             uint32_t peer_id = tox_group_self_get_peer_id(m, groupnumber, &err);
 
             if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -375,7 +375,7 @@ void set_nick_all_groups(Tox *m, const char *new_nick, size_t length)
             char old_nick[TOX_MAX_NAME_LENGTH + 1];
             size_t old_length = get_group_self_nick_truncate(m, old_nick, self->num);
 
-            TOX_ERR_GROUP_SELF_NAME_SET err;
+            Tox_Err_Group_Self_Name_Set err;
             tox_group_self_set_name(m, groupchats[i].groupnumber, (uint8_t *) new_nick, length, &err);
 
             switch (err) {
@@ -411,7 +411,7 @@ void set_status_all_groups(Tox *m, uint8_t status)
                 continue;
             }
 
-            TOX_ERR_GROUP_SELF_QUERY s_err;
+            Tox_Err_Group_Self_Query s_err;
             uint32_t self_peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
             if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -823,7 +823,7 @@ static void groupchat_onGroupPeerLimit(ToxWindow *self, Tox *m, uint32_t groupnu
     write_to_log(tmp_event, "The founder", ctx->log, true);
 }
 
-static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE state)
+static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t groupnumber, Tox_Group_Privacy_State state)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -841,7 +841,7 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t grou
     write_to_log(tmp_event, "The founder", ctx->log, true);
 }
 
-static void groupchat_onGroupTopicLock(ToxWindow *self, Tox *m, uint32_t groupnumber, TOX_GROUP_TOPIC_LOCK topic_lock)
+static void groupchat_onGroupTopicLock(ToxWindow *self, Tox *m, uint32_t groupnumber, Tox_Group_Topic_Lock topic_lock)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -1030,7 +1030,7 @@ static void groupchat_set_group_name(ToxWindow *self, Tox *m, uint32_t groupnumb
         return;
     }
 
-    TOX_ERR_GROUP_STATE_QUERIES err;
+    Tox_Err_Group_State_Queries err;
     size_t len = tox_group_get_name_size(m, groupnumber, &err);
 
     if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
@@ -1070,7 +1070,7 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum
 
     char topic[TOX_GROUP_MAX_TOPIC_LENGTH + 1];
 
-    TOX_ERR_GROUP_STATE_QUERIES err;
+    Tox_Err_Group_State_Queries err;
     size_t topic_length = tox_group_get_topic_size(m, groupnumber, &err);
 
     if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
@@ -1093,8 +1093,8 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum
     }
 
     /* Update own role since it may have changed while we were offline */
-    TOX_ERR_GROUP_SELF_QUERY s_err;
-    TOX_GROUP_ROLE role = tox_group_self_get_role(m, groupnumber, &s_err);
+    Tox_Err_Group_Self_Query s_err;
+    Tox_Group_Role role = tox_group_self_get_role(m, groupnumber, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
         return;
@@ -1117,7 +1117,7 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Tox *m, uint32_t groupnum
     sort_peerlist(groupnumber);
 }
 
-static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL type)
+static void groupchat_onGroupRejected(ToxWindow *self, Tox *m, uint32_t groupnumber, Tox_Group_Join_Fail type)
 {
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
         return;
@@ -1157,8 +1157,8 @@ static void groupchat_update_roles(Tox *m, uint32_t groupnumber)
             continue;
         }
 
-        TOX_ERR_GROUP_PEER_QUERY err;
-        TOX_GROUP_ROLE role = tox_group_peer_get_role(m, groupnumber, peer->peer_id, &err);
+        Tox_Err_Group_Peer_Query err;
+        Tox_Group_Role role = tox_group_peer_get_role(m, groupnumber, peer->peer_id, &err);
 
         if (err == TOX_ERR_GROUP_PEER_QUERY_OK) {
             peer->role = role;
@@ -1167,7 +1167,7 @@ static void groupchat_update_roles(Tox *m, uint32_t groupnumber)
 }
 
 void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t src_peer_id,
-                                 uint32_t tgt_peer_id, TOX_GROUP_MOD_EVENT type)
+                                 uint32_t tgt_peer_id, Tox_Group_Mod_Event type)
 {
     if (self->num != groupnumber) {
         return;
@@ -1238,7 +1238,7 @@ static void groupchat_onGroupSelfNickChange(ToxWindow *self, Tox *m, uint32_t gr
         return;
     }
 
-    TOX_ERR_GROUP_SELF_QUERY s_err;
+    Tox_Err_Group_Self_Query s_err;
     uint32_t peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -1328,7 +1328,7 @@ static void send_group_message(ToxWindow *self, Tox *m, uint32_t groupnumber, co
         return;
     }
 
-    TOX_ERR_GROUP_SEND_MESSAGE err;
+    Tox_Err_Group_Send_Message err;
 
     if (!tox_group_send_message(m, groupnumber, type, (uint8_t *) msg, strlen(msg), &err)) {
         if (err == TOX_ERR_GROUP_SEND_MESSAGE_PERMISSIONS) {
@@ -1405,7 +1405,7 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnumbe
 
     const char *msg = data + name_length + 1;
 
-    TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE err;
+    Tox_Err_Group_Send_Private_Message err;
 
     if (!tox_group_send_private_message(m, groupnumber, peer_id, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) msg, msg_len, &err)) {
         if (err == TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE_PERMISSIONS) {

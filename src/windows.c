@@ -486,7 +486,7 @@ void on_group_peer_limit(Tox *m, uint32_t groupnumber, uint32_t peer_limit, void
     }
 }
 
-void on_group_privacy_state(Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STATE privacy_state, void *userdata)
+void on_group_privacy_state(Tox *m, uint32_t groupnumber, Tox_Group_Privacy_State privacy_state, void *userdata)
 {
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupPrivacyState != NULL) {
@@ -495,7 +495,7 @@ void on_group_privacy_state(Tox *m, uint32_t groupnumber, TOX_GROUP_PRIVACY_STAT
     }
 }
 
-void on_group_topic_lock(Tox *m, uint32_t groupnumber, TOX_GROUP_TOPIC_LOCK topic_lock, void *userdata)
+void on_group_topic_lock(Tox *m, uint32_t groupnumber, Tox_Group_Topic_Lock topic_lock, void *userdata)
 {
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupTopicLock != NULL) {
@@ -536,7 +536,7 @@ void on_group_self_join(Tox *m, uint32_t groupnumber, void *userdata)
     }
 }
 
-void on_group_rejected(Tox *m, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL type, void *userdata)
+void on_group_rejected(Tox *m, uint32_t groupnumber, Tox_Group_Join_Fail type, void *userdata)
 {
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupRejected != NULL) {
@@ -546,7 +546,7 @@ void on_group_rejected(Tox *m, uint32_t groupnumber, TOX_GROUP_JOIN_FAIL type, v
 }
 
 void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peer_id, uint32_t target_peer_id,
-                         TOX_GROUP_MOD_EVENT type, void *userdata)
+                         Tox_Group_Mod_Event type, void *userdata)
 {
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupModeration != NULL) {

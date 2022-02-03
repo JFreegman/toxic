@@ -204,7 +204,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     tox_self_get_name(m, (uint8_t *) self_nick);
     self_nick[nick_len] = '\0';
 
-    TOX_ERR_GROUP_INVITE_ACCEPT err;
+    Tox_Err_Group_Invite_Accept err;
     uint32_t groupnumber = tox_group_invite_accept(m, self->num, Friends.list[self->num].group_invite.data,
                            Friends.list[self->num].group_invite.length, (const uint8_t *) self_nick, nick_len,
                            (const uint8_t *) passwd, passwd_len, &err);
@@ -240,7 +240,7 @@ void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         return;
     }
 
-    TOX_ERR_GROUP_INVITE_FRIEND err;
+    Tox_Err_Group_Invite_Friend err;
 
     if (!tox_group_invite_friend(m, groupnumber, self->num, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d).", err);

@@ -37,7 +37,7 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     char chatid[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
     char chat_public_key[TOX_GROUP_CHAT_ID_SIZE];
 
-    TOX_ERR_GROUP_STATE_QUERIES err;
+    Tox_Err_Group_State_Queries err;
 
     if (!tox_group_get_chat_id(m, self->num, (uint8_t *) chat_public_key, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve the Chat ID (error %d).", err);
@@ -90,7 +90,7 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    TOX_ERR_GROUP_TOGGLE_IGNORE err;
+    Tox_Err_Group_Toggle_Ignore err;
     tox_group_toggle_ignore(m, self->num, peer_id, true, &err);
 
     switch (err) {
@@ -132,7 +132,7 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    TOX_ERR_GROUP_MOD_KICK_PEER err;
+    Tox_Err_Group_Mod_Kick_Peer err;
     tox_group_mod_kick_peer(m, self->num, target_peer_id, &err);
 
     switch (err) {
@@ -210,7 +210,7 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         return;
     }
 
-    TOX_ERR_GROUP_SELF_QUERY s_err;
+    Tox_Err_Group_Self_Query s_err;
     uint32_t self_peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -218,7 +218,7 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
         return;
     }
 
-    TOX_ERR_GROUP_MOD_SET_ROLE err;
+    Tox_Err_Group_Mod_Set_Role err;
     tox_group_mod_set_role(m, self->num, target_peer_id, TOX_GROUP_ROLE_MODERATOR, &err);
 
     switch (err) {
@@ -268,7 +268,7 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         return;
     }
 
-    TOX_ERR_GROUP_SELF_QUERY s_err;
+    Tox_Err_Group_Self_Query s_err;
     uint32_t self_peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -281,7 +281,7 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
         return;
     }
 
-    TOX_ERR_GROUP_MOD_SET_ROLE err;
+    Tox_Err_Group_Mod_Set_Role err;
     tox_group_mod_set_role(m, self->num, target_peer_id, TOX_GROUP_ROLE_USER, &err);
 
     switch (err) {
@@ -323,7 +323,7 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
         len = strlen(passwd);
     }
 
-    TOX_ERR_GROUP_FOUNDER_SET_PASSWORD err;
+    Tox_Err_Group_Founder_Set_Password err;
     tox_group_founder_set_password(m, self->num, (uint8_t *) passwd, len, &err);
 
     switch (err) {
@@ -360,7 +360,7 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     int maxpeers = 0;
 
     if (argc < 1) {
-        TOX_ERR_GROUP_STATE_QUERIES err;
+        Tox_Err_Group_State_Queries err;
         uint32_t maxpeers = tox_group_get_peer_limit(m, self->num, &err);
 
         if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
@@ -379,7 +379,7 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
         return;
     }
 
-    TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT err;
+    Tox_Err_Group_Founder_Set_Peer_Limit err;
     tox_group_founder_set_peer_limit(m, self->num, maxpeers, &err);
 
     switch (err) {
@@ -403,10 +403,10 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
 void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *pstate_str = NULL;
-    TOX_GROUP_PRIVACY_STATE privacy_state;
+    Tox_Group_Privacy_State privacy_state;
 
     if (argc < 1) {
-        TOX_ERR_GROUP_STATE_QUERIES err;
+        Tox_Err_Group_State_Queries err;
         privacy_state = tox_group_get_privacy_state(m, self->num, &err);
 
         if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
@@ -429,7 +429,7 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
     privacy_state = strcasecmp(pstate_str,
                                "private") == 0 ? TOX_GROUP_PRIVACY_STATE_PRIVATE : TOX_GROUP_PRIVACY_STATE_PUBLIC;
 
-    TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE err;
+    Tox_Err_Group_Founder_Set_Privacy_State err;
     tox_group_founder_set_privacy_state(m, self->num, privacy_state, &err);
 
     switch (err) {
@@ -452,11 +452,11 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*a
 
 void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    TOX_GROUP_TOPIC_LOCK topic_lock;
+    Tox_Group_Topic_Lock topic_lock;
     const char *tlock_str = NULL;
 
     if (argc < 1) {
-        TOX_ERR_GROUP_STATE_QUERIES err;
+        Tox_Err_Group_State_Queries err;
         topic_lock = tox_group_get_topic_lock(m, self->num, &err);
 
         if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
@@ -479,7 +479,7 @@ void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Tox *m, int argc, char 
     topic_lock = strcasecmp(tlock_str, "on") == 0 ? TOX_GROUP_TOPIC_LOCK_ENABLED : TOX_GROUP_TOPIC_LOCK_DISABLED;
     const char *display_str = (topic_lock ==  TOX_GROUP_TOPIC_LOCK_ENABLED) ? "enabled" : "disabled";
 
-    TOX_ERR_GROUP_FOUNDER_SET_TOPIC_LOCK err;
+    Tox_Err_Group_Founder_Set_Topic_Lock err;
     tox_group_founder_set_topic_lock(m, self->num, topic_lock, &err);
 
     switch (err) {
@@ -514,7 +514,7 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    TOX_ERR_GROUP_SELF_QUERY s_err;
+    Tox_Err_Group_Self_Query s_err;
     uint32_t self_peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -522,7 +522,7 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)
         return;
     }
 
-    TOX_ERR_GROUP_MOD_SET_ROLE err;
+    Tox_Err_Group_Mod_Set_Role err;
     tox_group_mod_set_role(m, self->num, target_peer_id, TOX_GROUP_ROLE_OBSERVER, &err);
 
     switch (err) {
@@ -577,7 +577,7 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    TOX_ERR_GROUP_SELF_QUERY s_err;
+    Tox_Err_Group_Self_Query s_err;
     uint32_t self_peer_id = tox_group_self_get_peer_id(m, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
@@ -585,7 +585,7 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
         return;
     }
 
-    TOX_ERR_GROUP_MOD_SET_ROLE err;
+    Tox_Err_Group_Mod_Set_Role err;
     tox_group_mod_set_role(m, self->num, target_peer_id, TOX_GROUP_ROLE_USER, &err);
 
     switch (err) {
@@ -623,7 +623,7 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    TOX_ERR_GROUP_RECONNECT err;
+    Tox_Err_Group_Reconnect err;
 
     if (!tox_group_reconnect(m, self->num, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to rejoin group (error %d).", err);
@@ -638,7 +638,7 @@ void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
 void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        TOX_ERR_GROUP_STATE_QUERIES err;
+        Tox_Err_Group_State_Queries err;
         size_t tlen = tox_group_get_topic_size(m, self->num, &err);
 
         if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
@@ -665,7 +665,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
     const char *topic = argv[1];
 
-    TOX_ERR_GROUP_TOPIC_SET err;
+    Tox_Err_Group_Topic_Set err;
     tox_group_set_topic(m, self->num, (uint8_t *) topic, strlen(topic), &err);
 
     switch (err) {
@@ -719,7 +719,7 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    TOX_ERR_GROUP_TOGGLE_IGNORE err;
+    Tox_Err_Group_Toggle_Ignore err;
     tox_group_toggle_ignore(m, self->num, peer_id, false, &err);
 
     switch (err) {
@@ -820,7 +820,7 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
             strcat(pk_string, d);
         }
 
-        TOX_ERR_GROUP_PEER_QUERY conn_err;
+        Tox_Err_Group_Peer_Query conn_err;
         Tox_Connection connection_type = tox_group_peer_get_connection_status(m, self->num, peer_id, &conn_err);
 
         const char *connection_type_str = "Unknown";

@@ -197,18 +197,18 @@ struct ToxWindow {
     void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
     void(*onGroupPrivateMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupPeerJoin)(ToxWindow *, Tox *, uint32_t, uint32_t);
-    void(*onGroupPeerExit)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_GROUP_EXIT_TYPE, const char *, size_t, const char *,
+    void(*onGroupPeerExit)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_Group_Exit_Type, const char *, size_t, const char *,
                            size_t);
     void(*onGroupNickChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupStatusChange)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_USER_STATUS);
     void(*onGroupTopicChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupPeerLimit)(ToxWindow *, Tox *, uint32_t, uint32_t);
-    void(*onGroupPrivacyState)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_PRIVACY_STATE);
-    void(*onGroupTopicLock)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_TOPIC_LOCK);
+    void(*onGroupPrivacyState)(ToxWindow *, Tox *, uint32_t, Tox_Group_Privacy_State);
+    void(*onGroupTopicLock)(ToxWindow *, Tox *, uint32_t, Tox_Group_Topic_Lock);
     void(*onGroupPassword)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
     void(*onGroupSelfJoin)(ToxWindow *, Tox *, uint32_t);
-    void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, TOX_GROUP_JOIN_FAIL);
-    void(*onGroupModeration)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, TOX_GROUP_MOD_EVENT);
+    void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, Tox_Group_Join_Fail);
+    void(*onGroupModeration)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, Tox_Group_Mod_Event);
 
 #ifdef AUDIO
 

@@ -45,7 +45,7 @@ typedef struct GroupPeer {
     uint32_t         peer_id;
     uint8_t          public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
     TOX_USER_STATUS  status;
-    TOX_GROUP_ROLE   role;
+    Tox_Group_Role   role;
     uint64_t         last_active;
 } GroupPeer;
 
@@ -74,7 +74,7 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, ui
                                Tox_Group_Exit_Type exit_type,
                                const char *name, size_t name_len, const char *partmessage, size_t len);
 void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t src_peer_id,
-                                 uint32_t tgt_peer_id, TOX_GROUP_MOD_EVENT type);
+                                 uint32_t tgt_peer_id, Tox_Group_Mod_Event type);
 
 void groupchat_rejoin(ToxWindow *self, Tox *m);
 

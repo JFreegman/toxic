@@ -497,7 +497,7 @@ on_error:
 /* same as get_nick_truncate but for groupchats */
 size_t get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, uint32_t groupnum)
 {
-    TOX_ERR_GROUP_PEER_QUERY err;
+    Tox_Err_Group_Peer_Query err;
     size_t len = tox_group_peer_get_name_size(m, groupnum, peer_id, &err);
 
     if (err != TOX_ERR_GROUP_PEER_QUERY_OK || len == 0) {
@@ -523,7 +523,7 @@ size_t get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, uint32_t gro
 /* same as get_group_nick_truncate() but for self. */
 size_t get_group_self_nick_truncate(Tox *m, char *buf, uint32_t groupnum)
 {
-    TOX_ERR_GROUP_SELF_QUERY err;
+    Tox_Err_Group_Self_Query err;
     size_t len = tox_group_self_get_name_size(m, groupnum, &err);
 
     if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {

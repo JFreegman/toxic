@@ -489,7 +489,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     tox_self_get_name(m, (uint8_t *) self_nick);
     self_nick[nick_length] = '\0';
 
-    TOX_ERR_GROUP_NEW err;
+    Tox_Err_Group_New err;
     uint32_t groupnumber = tox_group_new(m, TOX_GROUP_PRIVACY_STATE_PUBLIC, (const uint8_t *) name, len,
                                          (const uint8_t *) self_nick, nick_length, &err);
 
@@ -578,7 +578,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     tox_self_get_name(m, (uint8_t *) self_nick);
     self_nick[nick_length] = '\0';
 
-    TOX_ERR_GROUP_JOIN err;
+    Tox_Err_Group_Join err;
     uint32_t groupnumber = tox_group_join(m, (uint8_t *) id_bin, (const uint8_t *) self_nick, nick_length,
                                           (const uint8_t *) passwd, passwd_len, &err);
 
