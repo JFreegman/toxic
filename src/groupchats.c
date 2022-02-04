@@ -931,29 +931,32 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum
     clear_peer(&chat->peer_list[chat->max_idx]);
 
     for (uint32_t i = 0; i <= chat->max_idx; ++i) {
-        if (chat->peer_list[i].active) {
+        GroupPeer *peer = &chat->peer_list[i];
+
+        if (peer->active) {
             continue;
         }
 
         ++chat->num_peers;
 
-        chat->peer_list[i].active = true;
-        chat->peer_list[i].peer_id = peer_id;
-        get_group_nick_truncate(m, chat->peer_list[i].name, peer_id, groupnumber);
-        chat->peer_list[i].name_length  = strlen(chat->peer_list[i].name);
-        chat->peer_list[i].status = tox_group_peer_get_status(m, groupnumber, peer_id, NULL);
-        chat->peer_list[i].role = tox_group_peer_get_role(m, groupnumber, peer_id, NULL);
-        chat->peer_list[i].last_active = get_unix_time();
-        tox_group_peer_get_public_key(m, groupnumber, peer_id, (uint8_t *) chat->peer_list[i].public_key, NULL);
+        peer->active = true;
+        peer->peer_id = peer_id;
+        get_group_nick_truncate(m, peer->name, peer_id, groupnumber);
+        peer->name_length = strlen(peer->name);
+        snprintf(peer->prev_name, sizeof(peer->prev_name), "%s", peer->name);
+        peer->status = tox_group_peer_get_status(m, groupnumber, peer_id, NULL);
+        peer->role = tox_group_peer_get_role(m, groupnumber, peer_id, NULL);
+        peer->last_active = get_unix_time();
+        tox_group_peer_get_public_key(m, groupnumber, peer_id, (uint8_t *) peer->public_key, NULL);
 
         if (i == chat->max_idx) {
             ++chat->max_idx;
         }
 
         if (timed_out(chat->time_connected, 7)) {   /* ignore join messages when we first connect to the group */
-            line_info_add(self, true, chat->peer_list[i].name, NULL, CONNECTION, 0, GREEN, "has joined the room");
+            line_info_add(self, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
-            write_to_log("has joined the room", chat->peer_list[i].name, self->chatwin->log, true);
+            write_to_log("has joined the room", peer->name, self->chatwin->log, true);
             sound_notify(self, silent, NT_WNDALERT_2, NULL);
         }
 
@@ -1283,15 +1286,16 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Tox *m, uint32_t groupn
 
     groupchat_update_last_seen(groupnumber, peer_id);
 
-    char oldnick[TOX_MAX_NAME_LENGTH + 1];
-    get_group_nick_truncate(m, oldnick, peer_id, groupnumber);
+    GroupPeer *peer = &chat->peer_list[peer_index];
 
     length = MIN(length, TOX_MAX_NAME_LENGTH - 1);
-    memcpy(chat->peer_list[peer_index].name, new_nick, length);
-    chat->peer_list[peer_index].name[length] = 0;
-    chat->peer_list[peer_index].name_length = length;
+    memcpy(peer->name, new_nick, length);
+    peer->name[length] = 0;
+    peer->name_length = length;
 
-    line_info_add(self, true, oldnick, chat->peer_list[peer_index].name, NAME_CHANGE, 0, MAGENTA, " is now known as ");
+    line_info_add(self, true, peer->prev_name, peer->name, NAME_CHANGE, 0, MAGENTA, " is now known as ");
+
+    snprintf(peer->prev_name, sizeof(peer->prev_name), "%s", peer->name);
 
     group_update_name_list(groupnumber);
 }
