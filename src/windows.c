@@ -555,6 +555,15 @@ void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peer_id, 
     }
 }
 
+void on_group_voice_state(Tox *m, uint32_t groupnumber, Tox_Group_Voice_State voice_state, void *userdata)
+{
+    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        if (windows[i] != NULL && windows[i]->onGroupVoiceState != NULL) {
+            windows[i]->onGroupVoiceState(windows[i], m, groupnumber, voice_state);
+        }
+    }
+}
+
 /* CALLBACKS END */
 
 int add_window(Tox *m, ToxWindow *w)

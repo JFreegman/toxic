@@ -139,6 +139,7 @@ static struct cmd_func groupchat_commands[] = {
     { "/unignore",  cmd_unignore       },
     { "/unmod",     cmd_unmod          },
     { "/unsilence", cmd_unsilence      },
+    { "/voice",     cmd_set_voice      },
     { "/whois",     cmd_whois          },
 #ifdef AUDIO
     { "/mute",      cmd_mute           },

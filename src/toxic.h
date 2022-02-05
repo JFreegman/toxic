@@ -173,6 +173,7 @@ void on_group_self_join(Tox *m, uint32_t groupnumber, void *userdata);
 void on_group_rejected(Tox *m, uint32_t groupnumber, Tox_Group_Join_Fail type, void *userdata);
 void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
                          Tox_Group_Mod_Event type, void *userdata);
+void on_group_voice_state(Tox *m, uint32_t groupnumber, Tox_Group_Voice_State voice_state, void *userdata);
 
 extern char *DATA_FILE;
 extern char *BLOCK_FILE;

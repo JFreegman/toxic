@@ -114,6 +114,7 @@ static const char *group_cmd_list[] = {
     "/unignore",
     "/unmod",
     "/unsilence",
+    "/voice",
     "/whisper",
     "/whois",
 #ifdef AUDIO
@@ -841,6 +842,43 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Tox *m, uint32_t grou
     write_to_log(tmp_event, "The founder", ctx->log, true);
 }
 
+void groupchat_onGroupVoiceState(ToxWindow *self, Tox *m, uint32_t groupnumber, Tox_Group_Voice_State voice_state)
+{
+    ChatContext *ctx = self->chatwin;
+
+    if (self->num != groupnumber || !get_groupchat(groupnumber)) {
+        return;
+    }
+
+    char tmp_event[MAX_STR_SIZE];
+
+    switch (voice_state) {
+        case TOX_GROUP_VOICE_STATE_ALL: {
+            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Voice: Everyone may speak");
+            snprintf(tmp_event, sizeof(tmp_event), " set the voice state to ALL.");
+            break;
+        }
+
+        case TOX_GROUP_VOICE_STATE_MODERATOR: {
+            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE,
+                          "-!- Voice: Only moderators and the founder may speak");
+            snprintf(tmp_event, sizeof(tmp_event), " set the voice state to MODERATOR.");
+            break;
+        }
+
+        case TOX_GROUP_VOICE_STATE_FOUNDER: {
+            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Voice: Only the founder may speak.");
+            snprintf(tmp_event, sizeof(tmp_event), " set the voice state to FOUNDER.");
+            break;
+        }
+
+        default:
+            return;
+    }
+
+    write_to_log(tmp_event, "The founder", ctx->log, true);
+}
+
 static void groupchat_onGroupTopicLock(ToxWindow *self, Tox *m, uint32_t groupnumber, Tox_Group_Topic_Lock topic_lock)
 {
     ChatContext *ctx = self->chatwin;
@@ -1336,7 +1374,13 @@ static void send_group_message(ToxWindow *self, Tox *m, uint32_t groupnumber, co
 
     if (!tox_group_send_message(m, groupnumber, type, (uint8_t *) msg, strlen(msg), &err)) {
         if (err == TOX_ERR_GROUP_SEND_MESSAGE_PERMISSIONS) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
+            const Tox_Group_Role role = tox_group_self_get_role(m, groupnumber, NULL);
+
+            if (role == TOX_GROUP_ROLE_OBSERVER) {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
+            } else {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You do not have voice.");
+            }
         } else {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (Error %d).", err);
         }
@@ -1411,11 +1455,12 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnumbe
 
     Tox_Err_Group_Send_Private_Message err;
 
-    if (!tox_group_send_private_message(m, groupnumber, peer_id, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) msg, msg_len, &err)) {
+    if (!tox_group_send_private_message(m, groupnumber, peer_id, TOX_MESSAGE_TYPE_NORMAL,
+                                        (uint8_t *) msg, msg_len, &err)) {
         if (err == TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE_PERMISSIONS) {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
         } else {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send private message.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send private message (%d)", err);
         }
 
         return;
@@ -1762,6 +1807,7 @@ static ToxWindow *new_group_chat(Tox *m, uint32_t groupnumber, const char *group
     ret->onGroupSelfJoin = &groupchat_onGroupSelfJoin;
     ret->onGroupRejected = &groupchat_onGroupRejected;
     ret->onGroupModeration = &groupchat_onGroupModeration;
+    ret->onGroupVoiceState = &groupchat_onGroupVoiceState;
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     Help *help = calloc(1, sizeof(Help));

@@ -842,6 +842,7 @@ static void init_tox_callbacks(Tox *m)
     tox_callback_group_self_join(m, on_group_self_join);
     tox_callback_group_join_fail(m, on_group_rejected);
     tox_callback_group_moderation(m, on_group_moderation);
+    tox_callback_group_voice_state(m, on_group_voice_state);
 }
 
 static void init_tox_options(struct Tox_Options *tox_opts)

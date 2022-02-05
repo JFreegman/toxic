@@ -307,13 +307,14 @@ static void help_draw_groupchats(ToxWindow *self)
     wprintw(win, "  /mod <name>               : Promote a peer to moderator\n");
     wprintw(win, "  /passwd <s>               : Set a password needed to join the group\n");
     wprintw(win, "  /peerlimit <n>            : Set the maximum number of peers that can join\n");
-    wprintw(win, "  /privacy <type>           : Set the group privacy state: private | public\n");
+    wprintw(win, "  /privacy <state>          : Set the privacy state: private | public\n");
     wprintw(win, "  /rejoin                   : Reconnect to the groupchat\n");
     wprintw(win, "  /silence <name>           : Silence a peer for the entire group\n");
     wprintw(win, "  /unsilence <name>         : Unsilence a silenced peer\n");
     wprintw(win, "  /status <type>            : Set your status\n");
     wprintw(win, "  /topic <m>                : Set the group topic\n");
     wprintw(win, "  /unmod <name>             : Demote a moderator\n");
+    wprintw(win, "  /voice <state>            : Set the voice state: all | mod | founder\n");
     wprintw(win, "  /whisper <name> <m>       : Send a private message to a peer\n");
     wprintw(win, "  /whois <name>             : Print whois info for a peer\n");
 
@@ -490,7 +491,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'r':
-            help_init_window(self, 25, 80);
+            help_init_window(self, 26, 80);
             self->help->type = HELP_GROUP;
             break;
     }

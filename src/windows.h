@@ -209,6 +209,7 @@ struct ToxWindow {
     void(*onGroupSelfJoin)(ToxWindow *, Tox *, uint32_t);
     void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, Tox_Group_Join_Fail);
     void(*onGroupModeration)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, Tox_Group_Mod_Event);
+    void(*onGroupVoiceState)(ToxWindow *, Tox *, uint32_t, Tox_Group_Voice_State);
 
 #ifdef AUDIO
 

@@ -400,6 +400,78 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     }
 }
 
+void cmd_set_voice(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    Tox_Group_Voice_State voice_state;
+
+    if (argc < 1) {
+        Tox_Err_Group_State_Queries err;
+        voice_state = tox_group_get_voice_state(m, self->num, &err);
+
+        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve voice state (error %d).", err);
+            return;
+        }
+
+        switch (voice_state) {
+            case TOX_GROUP_VOICE_STATE_ALL: {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Voice state is set to ALL");
+                break;
+            }
+
+            case TOX_GROUP_VOICE_STATE_MODERATOR: {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Voice state is set to MODERATOR");
+                break;
+            }
+
+            case TOX_GROUP_VOICE_STATE_FOUNDER: {
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Voice state is set to FOUNDER");
+                break;
+            }
+
+            default:
+                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Error: Unknown voice state: %d", voice_state);
+                return;
+        }
+
+        return;
+    }
+
+    const char *vstate_str = argv[1];
+
+    if (strcasecmp(vstate_str, "mod") == 0) {
+        voice_state = TOX_GROUP_VOICE_STATE_MODERATOR;
+    } else if (strcasecmp(vstate_str, "founder") == 0) {
+        voice_state = TOX_GROUP_VOICE_STATE_FOUNDER;
+    } else if (strcasecmp(vstate_str, "all") == 0) {
+        voice_state = TOX_GROUP_VOICE_STATE_ALL;
+    } else {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "voice state must be \"all\", \"mod\", or \"founder\".");
+        return;
+    }
+
+    Tox_Err_Group_Founder_Set_Voice_State err;
+    tox_group_founder_set_voice_state(m, self->num, voice_state, &err);
+
+    switch (err) {
+        case TOX_ERR_GROUP_FOUNDER_SET_VOICE_STATE_OK: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Voice state has been set to %s.", vstate_str);
+            return;
+        }
+
+        case TOX_ERR_GROUP_FOUNDER_SET_VOICE_STATE_PERMISSIONS: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to set the voice state.");
+            return;
+        }
+
+        default: {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Error setting voice state (error %d).", err);
+            return;
+        }
+    }
+}
+
 void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     const char *pstate_str = NULL;
