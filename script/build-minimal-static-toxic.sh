@@ -64,7 +64,6 @@ set -eu
 ARTIFACT_DIR="/artifact"
 TOXIC_SRC_DIR="/toxic"
 
-
 if [ ! -f /etc/os-release ] || ! grep -qi 'Alpine Linux' /etc/os-release
 then
   echo "Error: This script expects to be run on Alpine Linux."
@@ -137,10 +136,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="v0.2.13"
+TOXCORE_VERSION="v0.2.15"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="67114fa57504c58b695f5dce8ef85124d555f2c3c353d0d2615e6d4845114ab8"
+TOXCORE_HASH="577e23fe52f8be6739a9fffb2b16bfefd3a0ef4994d0714cb28a1ecca3669ca6"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
@@ -169,8 +168,8 @@ cmake --build _build --target install
 # location with SSL_CERT_FILE env variable.
 cd "$BUILD_DIR"
 
-CURL_VERSION="7.80.0"
-CURL_HASH="dab997c9b08cb4a636a03f2f7f985eaba33279c1c52692430018fae4a4878dc7"
+CURL_VERSION="7.81.0"
+CURL_HASH="ac8e1087711084548d788ef18b9b732c8de887457b81f616fc681d1044b32f98"
 CURL_FILENAME="curl-$CURL_VERSION.tar.gz"
 
 wget --timeout=10 -O "$CURL_FILENAME" "https://curl.haxx.se/download/$CURL_FILENAME"
@@ -307,4 +306,3 @@ mv "$PREPARE_ARTIFACT_DIR" "$PREPARE_ARTIFACT_DIR/../$ARTIFACT_NAME"
 tar -cJf "$ARTIFACT_NAME.tar.xz" "$ARTIFACT_NAME"
 mv "$ARTIFACT_NAME.tar.xz" "$ARTIFACT_DIR"
 chmod 777 -R "$ARTIFACT_DIR"
-
