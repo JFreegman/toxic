@@ -114,6 +114,7 @@ apk add \
     libsodium-dev \
     libsodium-static \
     linux-headers \
+    msgpack-c-dev \
     ncurses-dev \
     ncurses-static \
     ncurses-terminfo \
@@ -136,10 +137,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="v0.2.15"
+TOXCORE_VERSION="v0.2.16"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="577e23fe52f8be6739a9fffb2b16bfefd3a0ef4994d0714cb28a1ecca3669ca6"
+TOXCORE_HASH="653aa42654b607f0940cecfac873e9ce55605119a90d1dc454d1090ff6ca29c0"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
