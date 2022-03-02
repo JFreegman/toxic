@@ -345,22 +345,25 @@ static uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg
         return 0;
     }
 
-    uint16_t width = 0;
-
     const wint_t wc_msg_len = mbs_to_wcs_buf(buf, msg, buf_size);
 
     if (wc_msg_len > 0 && wc_msg_len < buf_size) {
         buf[wc_msg_len] = L'\0';
-        width = (uint16_t) wcswidth(buf, wc_msg_len);
+        int width = wcswidth(buf, wc_msg_len);
+
+        if (width == -1) {  // the best we can do on failure is to fall back to strlen
+            width = strlen(msg);
+        }
+
+        return (uint16_t)width;
     } else {
         fprintf(stderr, "Failed to convert string '%s' to widechar\n", msg);
         const wchar_t *err = L"Failed to parse message";
-        width = wcslen(err);
+        uint16_t width = (uint16_t)wcslen(err);
         wmemcpy(buf, err, width);
         buf[width] = L'\0';
+        return width;
     }
-
-    return width;
 }
 
 static void line_info_init_line(ToxWindow *self, struct line_info *line)
