@@ -92,6 +92,16 @@ static uint8_t const TESTNET_KEY[] = {
 
 #define TESTNET_IP "172.93.52.70"
 
+static uint8_t const TESTNET_KEY2[] = {
+    0x7C, 0x26, 0x68, 0x85, 0xC1, 0x63, 0x7D, 0x39,
+    0x1C, 0x7C, 0x64, 0xE1, 0x73, 0x64, 0x96, 0x08,
+    0xD0, 0x32, 0xA2, 0x48, 0xCD, 0xBD, 0xCA, 0xD1,
+    0x66, 0x40, 0xEB, 0xC3, 0xED, 0xC6, 0xF7, 0x23,
+};
+
+#define TESTNET_PORT2 39445
+#define TESTNET_IP2 "tox.plastiras.org"
+
 static struct Thread_Data {
     pthread_t tid;
     pthread_attr_t attr;
@@ -581,7 +591,14 @@ int load_DHT_nodeslist(void)
     node->port = TESTNET_PORT;
     memcpy(node->key, TESTNET_KEY, sizeof(TESTNET_KEY));
     memcpy(node->ip4, TESTNET_IP, sizeof(TESTNET_IP));
-    Nodes.count = 1;
+
+    struct Node *node2 = &Nodes.list[1];
+    node2->have_ip4 = true;
+    node2->port = TESTNET_PORT2;
+    memcpy(node2->key, TESTNET_KEY2, sizeof(TESTNET_KEY2));
+    memcpy(node2->ip4, TESTNET_IP2, sizeof(TESTNET_IP2));
+
+    Nodes.count = 2;
 
 #if 0
     if (thread_data.active) {
