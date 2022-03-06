@@ -230,20 +230,45 @@ void exit_toxic_err(const char *errmsg, int errcode)
     exit(EXIT_FAILURE);
 }
 
-void cb_toxcore_logger(Tox *m, Tox_Log_Level level, const char *file, uint32_t line, const char *func,
+static const char *tox_log_level_show(Tox_Log_Level level)
+{
+    switch (level) {
+        case TOX_LOG_LEVEL_TRACE:
+            return "TRACE";
+
+        case TOX_LOG_LEVEL_DEBUG:
+            return "DEBUG";
+
+        case TOX_LOG_LEVEL_INFO:
+            return "INFO";
+
+        case TOX_LOG_LEVEL_WARNING:
+            return "WARNING";
+
+        case TOX_LOG_LEVEL_ERROR:
+            return "ERROR";
+    }
+
+    return "<invalid>";
+}
+
+void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
                        const char *message, void *user_data)
 {
-    UNUSED_VAR(user_data);
-    UNUSED_VAR(file);
     UNUSED_VAR(m);
 
-    if (user_data) {
-        FILE *fp = (FILE *)user_data;
-        fprintf(fp, "[%d] %u:%s() - %s\n", level, line, func, message);
-        fflush(fp);
-    } else {
-        fprintf(stderr, "[%d] %u:%s() - %s\n", level, line, func, message);
+    if (level == TOX_LOG_LEVEL_TRACE) {
+        return;
     }
+
+    FILE *fp = (FILE *)user_data;
+
+    if (!fp) {
+        fp = stderr;
+    }
+
+    fprintf(fp, "[%c] %s:%u(%s) - %s\n", tox_log_level_show(level)[0], file, line, func, message);
+    fflush(fp);
 }
 
 /* Sets ncurses refresh rate. Lower values make it refresh more often. */
