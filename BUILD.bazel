@@ -21,6 +21,7 @@ cc_binary(
         "-std=gnu99",
         "-DAUDIO",
         "-DGAMES",
+        "-DHAVE_WIDECHAR",
         "-DPACKAGE_DATADIR='\"data\"'",
         "-DPYTHON",
         "-DQRCODE",

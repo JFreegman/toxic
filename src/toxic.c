@@ -267,7 +267,12 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
         fp = stderr;
     }
 
-    fprintf(fp, "[%c] %s:%u(%s) - %s\n", tox_log_level_show(level)[0], file, line, func, message);
+    const time_t t = time(NULL);
+    struct tm *tmp = gmtime(&t);
+    char timestamp[200];
+    strftime(timestamp, sizeof(timestamp), "%F %T", tmp);
+
+    fprintf(fp, "[%c] %s %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, file, line, func, message);
     fflush(fp);
 }
 
