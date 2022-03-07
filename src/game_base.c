@@ -1129,7 +1129,7 @@ int game_packet_send(const GameData *game, const uint8_t *data, size_t length, G
     memcpy(packet + 1 + GAME_PACKET_HEADER_SIZE, data, length);
     packet_length += length;
 
-    TOX_ERR_FRIEND_CUSTOM_PACKET err;
+    Tox_Err_Friend_Custom_Packet err;
 
     if (!tox_friend_send_lossless_packet(game->tox, game->friend_number, packet, packet_length, &err)) {
         fprintf(stderr, "failed to send game packet: error %d\n", err);

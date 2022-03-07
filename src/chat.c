@@ -130,7 +130,7 @@ static void set_self_typingstatus(ToxWindow *self, Tox *m, bool is_typing)
 
     ChatContext *ctx = self->chatwin;
 
-    TOX_ERR_SET_TYPING err;
+    Tox_Err_Set_Typing err;
     tox_self_set_typing(m, self->num, is_typing, &err);
 
     if (err != TOX_ERR_SET_TYPING_OK) {

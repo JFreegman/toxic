@@ -229,7 +229,7 @@ void exit_toxic_err(const char *errmsg, int errcode)
     exit(EXIT_FAILURE);
 }
 
-void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
+void cb_toxcore_logger(Tox *m, Tox_Log_Level level, const char *file, uint32_t line, const char *func,
                        const char *message, void *user_data)
 {
     UNUSED_VAR(user_data);

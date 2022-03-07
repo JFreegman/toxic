@@ -203,7 +203,7 @@ void cqueue_try_send(ToxWindow *self, Tox *m)
             return;
         }
 
-        TOX_ERR_FRIEND_SEND_MESSAGE err;
+        Tox_Err_Friend_Send_Message err;
         Tox_Message_Type type = msg->type == OUT_MSG ? TOX_MESSAGE_TYPE_NORMAL : TOX_MESSAGE_TYPE_ACTION;
         uint32_t receipt = tox_friend_send_message(m, self->num, type, (uint8_t *) msg->message, msg->len, &err);
 
