@@ -37,6 +37,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <time.h>
@@ -267,12 +268,14 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
         fp = stderr;
     }
 
-    const time_t t = time(NULL);
-    struct tm *tmp = gmtime(&t);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    struct tm tmp;
+    gmtime_r(&tv.tv_sec, &tmp);
     char timestamp[200];
-    strftime(timestamp, sizeof(timestamp), "%F %T", tmp);
+    strftime(timestamp, sizeof(timestamp), "%F %T", &tmp);
 
-    fprintf(fp, "[%c] %s %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, file, line, func, message);
+    fprintf(fp, "%c %s.%06ld %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, tv.tv_usec, file, line, func, message);
     fflush(fp);
 }
 
