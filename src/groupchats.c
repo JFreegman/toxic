@@ -991,7 +991,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum
             ++chat->max_idx;
         }
 
-        if (timed_out(chat->time_connected, 7)) {   /* ignore join messages when we first connect to the group */
+        if (timed_out(chat->time_connected, 60)) {   /* ignore join messages when we first connect to the group */
             line_info_add(self, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
             write_to_log("has joined the room", peer->name, self->chatwin->log, true);
