@@ -593,10 +593,10 @@ int load_DHT_nodeslist(void)
     memcpy(node->ip4, TESTNET_IP, sizeof(TESTNET_IP));
 
     struct Node *node2 = &Nodes.list[1];
-    node2->have_ip6 = true;
+    node2->have_ip4 = true;
     node2->port = TESTNET_PORT2;
     memcpy(node2->key, TESTNET_KEY2, sizeof(TESTNET_KEY2));
-    memcpy(node2->ip6, TESTNET_IP2, sizeof(TESTNET_IP2));
+    memcpy(node2->ip4, TESTNET_IP2, sizeof(TESTNET_IP2));
 
     Nodes.count = 2;
 
