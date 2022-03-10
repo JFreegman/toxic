@@ -68,7 +68,7 @@ static int max_groupchat_index = 0;
 extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
-#define GROUP_SIDEBAR_OFFSET 2    /* Offset for the peer number box at the top of the statusbar */
+#define GROUP_SIDEBAR_OFFSET 3    /* Offset for the peer number box at the top of the statusbar */
 
 /* groupchat command names used for tab completion. */
 static const char *group_cmd_list[] = {
@@ -1669,14 +1669,15 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
         wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
 
-        int maxlines = y2 - GROUP_SIDEBAR_OFFSET - CHATBOX_HEIGHT;
-        uint32_t i, offset = 0;
+        const int maxlines = y2 - GROUP_SIDEBAR_OFFSET - CHATBOX_HEIGHT;
+        uint32_t offset = 0;
 
         pthread_mutex_lock(&Winthread.lock);
-        uint32_t max_idx = chat->max_idx;
+        const uint32_t max_idx = chat->max_idx;
+        const uint32_t start = chat->side_pos;
         pthread_mutex_unlock(&Winthread.lock);
 
-        for (i = 0; i < max_idx && i < maxlines; ++i) {
+        for (uint32_t i = start; i < max_idx && i < maxlines; ++i) {
             pthread_mutex_lock(&Winthread.lock);
 
             if (!chat->peer_list[i].active) {
@@ -1686,22 +1687,21 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
             wmove(ctx->sidebar, offset + 2, 1);
 
-            int p = i + chat->side_pos;
-            int maxlen_offset = chat->peer_list[p].role == TOX_GROUP_ROLE_USER ? 2 : 3;
+            const int maxlen_offset = chat->peer_list[i].role == TOX_GROUP_ROLE_USER ? 2 : 3;
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
-            int maxlen = SIDEBAR_WIDTH - maxlen_offset;
+            const int maxlen = SIDEBAR_WIDTH - maxlen_offset;
 
-            memcpy(tmpnck, chat->peer_list[p].name, maxlen);
+            memcpy(tmpnck, chat->peer_list[i].name, maxlen);
 
             tmpnck[maxlen] = '\0';
 
             int namecolour = WHITE;
 
-            if (chat->peer_list[p].status == TOX_USER_STATUS_AWAY) {
+            if (chat->peer_list[i].status == TOX_USER_STATUS_AWAY) {
                 namecolour = YELLOW;
-            } else if (chat->peer_list[p].status == TOX_USER_STATUS_BUSY) {
+            } else if (chat->peer_list[i].status == TOX_USER_STATUS_BUSY) {
                 namecolour = RED;
             }
 
@@ -1709,13 +1709,13 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
             const char *rolesig = "";
             int rolecolour = WHITE;
 
-            if (chat->peer_list[p].role == TOX_GROUP_ROLE_FOUNDER) {
+            if (chat->peer_list[i].role == TOX_GROUP_ROLE_FOUNDER) {
                 rolesig = "&";
                 rolecolour = BLUE;
-            } else if (chat->peer_list[p].role == TOX_GROUP_ROLE_MODERATOR) {
+            } else if (chat->peer_list[i].role == TOX_GROUP_ROLE_MODERATOR) {
                 rolesig = "+";
                 rolecolour = GREEN;
-            } else if (chat->peer_list[p].role == TOX_GROUP_ROLE_OBSERVER) {
+            } else if (chat->peer_list[i].role == TOX_GROUP_ROLE_OBSERVER) {
                 rolesig = "-";
                 rolecolour = MAGENTA;
             }
