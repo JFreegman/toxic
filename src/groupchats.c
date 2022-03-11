@@ -1677,7 +1677,7 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         const uint32_t start = chat->side_pos;
         pthread_mutex_unlock(&Winthread.lock);
 
-        for (uint32_t i = start; i < max_idx && i < maxlines; ++i) {
+        for (uint32_t i = start; i < max_idx && offset < maxlines; ++i) {
             pthread_mutex_lock(&Winthread.lock);
 
             if (!chat->peer_list[i].active) {
