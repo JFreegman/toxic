@@ -143,11 +143,14 @@ static struct line_info *line_info_ret_queue(struct history *hst)
  */
 static int print_n_chars(WINDOW *win, const wchar_t *s, size_t n, int max_y)
 {
+    // we use an array to represent a single wchar in order to get around an ncurses
+    // bug with waddnwstr() that overreads the memory address by one byte when
+    // supplied with a single wchar.
+    wchar_t ch[2] = {0};
     bool newline = false;
-    wchar_t ch;
 
-    for (size_t i = 0; i < n && (ch = s[i]); ++i) {
-        if (ch == L'\n') {
+    for (size_t i = 0; i < n && (ch[0] = s[i]); ++i) {
+        if (ch[0] == L'\n') {
             newline = true;
 
             int x;
@@ -164,11 +167,11 @@ static int print_n_chars(WINDOW *win, const wchar_t *s, size_t n, int max_y)
 
         if (win) {
 #ifdef HAVE_WIDECHAR
-            waddnwstr(win, &ch, 1);
+            waddnwstr(win, ch, 1);
 #else
             char b;
 
-            if (wcstombs(&b, &ch, sizeof(char)) != 1) {
+            if (wcstombs(&b, ch, sizeof(char)) != 1) {
                 continue;
             }
 
