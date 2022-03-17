@@ -20,9 +20,10 @@
  *
  */
 
+#include "api.h"
+
 #ifdef PYTHON
 #include <Python.h>
-#include "api.h"
 
 #include "execute.h"
 
