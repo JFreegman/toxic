@@ -48,7 +48,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
         return;
     }
 
-    struct cqueue_msg *new_m = malloc(sizeof(struct cqueue_msg));
+    struct cqueue_msg *new_m = calloc(1, sizeof(struct cqueue_msg));
 
     if (new_m == NULL) {
         exit_toxic_err("failed in cqueue_message", FATALERR_MEMORY);
@@ -62,6 +62,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
     new_m->time_added = get_unix_time();
     new_m->receipt = -1;
     new_m->next = NULL;
+    new_m->noread_flag = false;
 
     if (q->root == NULL) {
         new_m->prev = NULL;
