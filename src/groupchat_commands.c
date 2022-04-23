@@ -90,20 +90,20 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
         return;
     }
 
-    Tox_Err_Group_Toggle_Ignore err;
-    tox_group_toggle_ignore(m, self->num, peer_id, true, &err);
+    Tox_Err_Group_Set_Ignore err;
+    tox_group_set_ignore(m, self->num, peer_id, true, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_TOGGLE_IGNORE_OK: {
+        case TOX_ERR_GROUP_SET_IGNORE_OK: {
             break;
         }
 
-        case TOX_ERR_GROUP_TOGGLE_IGNORE_SELF: {
+        case TOX_ERR_GROUP_SET_IGNORE_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot ignore yourself.");
             return;
         }
 
-        case TOX_ERR_GROUP_TOGGLE_IGNORE_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_SET_IGNORE_PEER_NOT_FOUND: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
@@ -791,20 +791,20 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
         return;
     }
 
-    Tox_Err_Group_Toggle_Ignore err;
-    tox_group_toggle_ignore(m, self->num, peer_id, false, &err);
+    Tox_Err_Group_Set_Ignore err;
+    tox_group_set_ignore(m, self->num, peer_id, false, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_TOGGLE_IGNORE_OK: {
+        case TOX_ERR_GROUP_SET_IGNORE_OK: {
             break;
         }
 
-        case TOX_ERR_GROUP_TOGGLE_IGNORE_SELF: {
+        case TOX_ERR_GROUP_SET_IGNORE_SELF: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot unignore yourself.");
             return;
         }
 
-        case TOX_ERR_GROUP_TOGGLE_IGNORE_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_SET_IGNORE_PEER_NOT_FOUND: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
