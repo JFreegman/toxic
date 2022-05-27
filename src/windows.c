@@ -395,7 +395,7 @@ void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, 
 }
 
 void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type,
-                      const uint8_t *message, size_t length, void *userdata)
+                      const uint8_t *message, size_t length, uint32_t pseudo_msg_id, void *userdata)
 {
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) message, length);
