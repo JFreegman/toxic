@@ -152,7 +152,7 @@ void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, 
                      const uint8_t *group_name,
                      size_t group_name_length, void *userdata);
 void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
-                      const uint8_t *message, size_t length, void *userdata);
+                      const uint8_t *message, size_t length, uint32_t message_id, void *userdata);
 void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
                               const uint8_t *message, size_t length,
                               void *userdata);
