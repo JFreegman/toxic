@@ -991,7 +991,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum
             ++chat->max_idx;
         }
 
-        if (timed_out(chat->time_connected, 60)) {   /* ignore join messages when we first connect to the group */
+        if (timed_out(chat->time_connected, 60) && user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {   /* ignore join messages when we first connect to the group */
             line_info_add(self, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
             write_to_log("has joined the room", peer->name, self->chatwin->log, true);
@@ -1027,6 +1027,8 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, ui
         if (length > 0) {
             line_info_add(self, true, name, NULL, DISCONNECTION, 0, RED, "[Quit]: %s", part_message);
             snprintf(log_str, sizeof(log_str), "has left the room (%s)", part_message);
+        } else if (user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_OFF) {
+
         } else {
             const char *exit_string = get_group_exit_string(exit_type);
             line_info_add(self, true, name, NULL, DISCONNECTION, 0, RED, "[%s]", exit_string);

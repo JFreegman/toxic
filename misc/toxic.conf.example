@@ -56,6 +56,9 @@ ui = {
   // true to show friend connection change messages on the home screen
   show_connection_msg=true;
 
+  // true to show peer connection change messages in groups(setting to false does not include user quit messages)
+  show_group_connection_msg=true;
+
   // How often in days to update the DHT nodes list. (0 to disable updates)
   nodeslist_update_freq=7;
 

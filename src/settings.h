@@ -54,6 +54,7 @@ struct user_settings {
     int show_typing_other; /* boolean */
     int show_welcome_msg;  /* boolean */
     int show_connection_msg;  /* boolean */
+    int show_group_connection_msg;  /* boolean */
     int nodeslist_update_freq;  /* int (<= 0 to disable updates) */
     int autosave_freq; /* int (<= 0 to disable autosave) */
 
@@ -121,6 +122,9 @@ enum settings_values {
 
     SHOW_CONNECTION_MSG_OFF = 0,
     SHOW_CONNECTION_MSG_ON = 1,
+
+    SHOW_GROUP_CONNECTION_MSG_OFF = 0,
+    SHOW_GROUP_CONNECTION_MSG_ON = 1,
 
     DFLT_HST_SIZE = 700,
 

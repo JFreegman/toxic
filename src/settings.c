@@ -63,6 +63,7 @@ static struct ui_strings {
     const char *show_typing_other;
     const char *show_welcome_msg;
     const char *show_connection_msg;
+    const char *show_group_connection_msg;
     const char *nodeslist_update_freq;
     const char *autosave_freq;
 
@@ -99,6 +100,7 @@ static struct ui_strings {
     "show_typing_other",
     "show_welcome_msg",
     "show_connection_msg",
+    "show_group_connection_msg",
     "nodeslist_update_freq",
     "autosave_freq",
     "line_join",
@@ -136,6 +138,7 @@ static void ui_defaults(struct user_settings *settings)
     settings->show_typing_other = SHOW_TYPING_ON;
     settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
     settings->show_connection_msg = SHOW_CONNECTION_MSG_ON;
+    settings->show_group_connection_msg = SHOW_GROUP_CONNECTION_MSG_ON;
     settings->nodeslist_update_freq = 1;
     settings->autosave_freq = 600;
 
@@ -405,6 +408,7 @@ int settings_load(struct user_settings *s, const char *patharg)
         config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
         config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
         config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &s->show_connection_msg);
+        config_setting_lookup_bool(setting, ui_strings.show_group_connection_msg, &s->show_group_connection_msg);
 
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
         config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
