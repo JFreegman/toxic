@@ -1033,7 +1033,10 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, ui
             snprintf(log_str, sizeof(log_str), "[%s]", exit_string);
         }
 
-        write_to_log(log_str, name, self->chatwin->log, true);
+        if (user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
+            write_to_log(log_str, name, self->chatwin->log, true);
+        }
+        
         sound_notify(self, silent, NT_WNDALERT_2, NULL);
     }
 
