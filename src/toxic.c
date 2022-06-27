@@ -269,13 +269,20 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
     }
 
     struct timeval tv;
+
     gettimeofday(&tv, NULL);
+
     struct tm tmp;
+
     gmtime_r(&tv.tv_sec, &tmp);
+
     char timestamp[200];
+
     strftime(timestamp, sizeof(timestamp), "%F %T", &tmp);
 
-    fprintf(fp, "%c %s.%06ld %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, tv.tv_usec, file, line, func, message);
+    fprintf(fp, "%c %s.%06ld %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, tv.tv_usec, file, line, func,
+            message);
+
     fflush(fp);
 }
 

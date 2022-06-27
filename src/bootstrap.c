@@ -601,6 +601,7 @@ int load_DHT_nodeslist(void)
     Nodes.count = 2;
 
 #if 0
+
     if (thread_data.active) {
         return -1;
     }
@@ -623,6 +624,7 @@ int load_DHT_nodeslist(void)
         thread_data.active = false;
         return -5;
     }
+
 #endif
 
     return 0;
