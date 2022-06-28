@@ -1029,17 +1029,16 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, ui
         if (length > 0) {
             line_info_add(self, true, name, NULL, DISCONNECTION, 0, RED, "[Quit]: %s", part_message);
             snprintf(log_str, sizeof(log_str), "has left the room (%s)", part_message);
+            write_to_log(log_str, name, self->chatwin->log, true);
+            sound_notify(self, silent, NT_WNDALERT_2, NULL);
         } else if (user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
             const char *exit_string = get_group_exit_string(exit_type);
             line_info_add(self, true, name, NULL, DISCONNECTION, 0, RED, "[%s]", exit_string);
             snprintf(log_str, sizeof(log_str), "[%s]", exit_string);
-        }
-
-        if (user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
             write_to_log(log_str, name, self->chatwin->log, true);
+            sound_notify(self, silent, NT_WNDALERT_2, NULL);
         }
 
-        sound_notify(self, silent, NT_WNDALERT_2, NULL);
     }
 
     int peer_index = get_peer_index(groupnumber, peer_id);
