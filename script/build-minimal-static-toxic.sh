@@ -114,7 +114,6 @@ apk add \
     libsodium-dev \
     libsodium-static \
     linux-headers \
-    msgpack-c-dev \
     ncurses-dev \
     ncurses-static \
     ncurses-terminfo \
@@ -137,20 +136,27 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="v0.2.16"
+TOXCORE_VERSION="02996f06850fb565fa5520cb4e1daa8c616b41c1"
 
-# The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="653aa42654b607f0940cecfac873e9ce55605119a90d1dc454d1090ff6ca29c0"
+TOXCORE_FILENAME="toxcore-$TOXCORE_VERSION.tar.gz"
 
-TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
-
-wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/TokTok/c-toxcore/archive/$TOXCORE_VERSION.tar.gz"
-check_sha256 "$TOXCORE_HASH" "$TOXCORE_FILENAME"
+wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/JFreegman/toxcore/archive/$TOXCORE_VERSION.tar.gz"
 tar -o -xf "$TOXCORE_FILENAME"
 rm "$TOXCORE_FILENAME"
-cd c-toxcore*
+
+cd toxcore*
+mkdir -p "third_party" && cd "third_party"
+
+CMP_VERSION="074e0df43e8a61ea938c4f77f65d1fbccc0c3bf9"
+CMP_FILENAME="cmp-$CMP_VERSION.tar.gz"
+wget --timeout=10 -O "$CMP_FILENAME" "https://github.com/TokTok/cmp/archive/$CMP_VERSION.tar.gz"
+tar -o -xf "$CMP_FILENAME"
+
+mv cmp\-*/* "cmp/"
+cd ..
 
 cmake -B_build -H. \
+      -DUSE_TEST_NETWORK=ON \
       -DENABLE_STATIC=ON \
       -DENABLE_SHARED=OFF \
       -DCMAKE_BUILD_TYPE=Release \
