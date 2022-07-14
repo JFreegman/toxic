@@ -385,11 +385,6 @@ void set_nick_all_groups(Tox *m, const char *new_nick, size_t length)
                     break;
                 }
 
-                case TOX_ERR_GROUP_SELF_NAME_SET_TAKEN: {
-                    line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- That nick is already in use.");
-                    break;
-                }
-
                 default: {
                     if (groupchats[i].time_connected > 0) {
                         line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err);
