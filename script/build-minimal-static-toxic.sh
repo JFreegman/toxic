@@ -136,12 +136,12 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="v0.2.16"
+TOXCORE_VERSION="0a277b52ea22fe297a8487ac05a0c507a74c6480"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="653aa42654b607f0940cecfac873e9ce55605119a90d1dc454d1090ff6ca29c0"
+TOXCORE_HASH="a63f3d8c9ee8bf51dd40fd0035914a73b4214e8d314c06f38a366c79c20278fb"
 
-TOXCORE_FILENAME="toxcore-$TOXCORE_VERSION.tar.gz"
+TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
 wget --timeout=10 -O "$TOXCORE_FILENAME" "https://github.com/TokTok/c-toxcore/archive/$TOXCORE_VERSION.tar.gz"
 check_sha256 "$TOXCORE_HASH" "$TOXCORE_FILENAME"
@@ -157,7 +157,7 @@ CMP_FILENAME="cmp-$CMP_VERSION.tar.gz"
 wget --timeout=10 -O "$CMP_FILENAME" "https://github.com/TokTok/cmp/archive/$CMP_VERSION.tar.gz"
 tar -o -xf "$CMP_FILENAME"
 
-mkdir cmp && mv cmp\-*/* "cmp/"
+mv cmp\-*/* "cmp/"
 cd ..
 
 cmake -B_build -H. \
