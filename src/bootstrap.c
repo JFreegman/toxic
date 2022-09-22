@@ -79,29 +79,6 @@ extern struct user_settings *user_settings;
 /* Maximum allowable size of the nodes list */
 #define MAX_NODELIST_SIZE (MAX_RECV_CURL_DATA_SIZE)
 
-// TODO(Jfreegman): Remove this before production
-static uint8_t const TESTNET_KEY[] = {
-    0x79, 0xCA, 0xDA, 0x49, 0x74, 0xB0, 0x92, 0x6F,
-    0x28, 0x6F, 0x02, 0x5C, 0xD5, 0xFF, 0xDF, 0x3E,
-    0x65, 0x4A, 0x37, 0x58, 0xC5, 0x3E, 0x02, 0x73,
-    0xEC, 0xFC, 0x4D, 0x12, 0xC2, 0x1D, 0xCA, 0x48,
-};
-
-// TODO(Jfreegman): Remove this before production
-#define TESTNET_PORT 33445
-
-#define TESTNET_IP "172.93.52.70"
-
-static uint8_t const TESTNET_KEY2[] = {
-    0x5E, 0x47, 0xBA, 0x1D, 0xC3, 0x91, 0x3E, 0xB2,
-    0xCB, 0xF2, 0xD6, 0x4C, 0xE4, 0xF2, 0x3D, 0x8B,
-    0xFE, 0x53, 0x91, 0xBF, 0xAB, 0xE5, 0xC4, 0x3C,
-    0x5B, 0xAD, 0x13, 0xF0, 0xA4, 0x14, 0xCD, 0x77,
-};
-
-#define TESTNET_PORT2 38445
-#define TESTNET_IP2 "tox.plastiras.org"
-
 static struct Thread_Data {
     pthread_t tid;
     pthread_attr_t attr;
@@ -583,25 +560,6 @@ on_exit:
  */
 int load_DHT_nodeslist(void)
 {
-    // TODO(Jfreegman): Remove this before production
-    fprintf(stderr, "Adding NGC testnet node - remove this before production\n");
-
-    struct Node *node = &Nodes.list[0];
-    node->have_ip4 = true;
-    node->port = TESTNET_PORT;
-    memcpy(node->key, TESTNET_KEY, sizeof(TESTNET_KEY));
-    memcpy(node->ip4, TESTNET_IP, sizeof(TESTNET_IP));
-
-    struct Node *node2 = &Nodes.list[1];
-    node2->have_ip4 = true;
-    node2->port = TESTNET_PORT2;
-    memcpy(node2->key, TESTNET_KEY2, sizeof(TESTNET_KEY2));
-    memcpy(node2->ip4, TESTNET_IP2, sizeof(TESTNET_IP2));
-
-    Nodes.count = 2;
-
-#if 0
-
     if (thread_data.active) {
         return -1;
     }
@@ -624,8 +582,6 @@ int load_DHT_nodeslist(void)
         thread_data.active = false;
         return -5;
     }
-
-#endif
 
     return 0;
 }
