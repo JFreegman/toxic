@@ -28,7 +28,7 @@ jobs:
             libx11-dev
             python3-dev
             pkg-config &&
-          git clone --depth=1 https://github.com/TokTok/c-toxcore &&
+          git clone --depth=1 --recursive https://github.com/TokTok/c-toxcore &&
           cd c-toxcore &&
           cmake . -B_build -DBOOTSTRAP_DAEMON=OFF &&
           cd _build &&
@@ -85,7 +85,7 @@ jobs:
             make
             python3-dev
             pkg-config &&
-          git clone --depth=1 https://github.com/TokTok/c-toxcore &&
+          git clone --depth=1 --recursive https://github.com/TokTok/c-toxcore &&
           cd c-toxcore &&
           cmake . -B_build -DBOOTSTRAP_DAEMON=OFF &&
           cd _build &&
