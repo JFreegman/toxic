@@ -475,6 +475,10 @@ static int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32
         return -1;
     }
 
+    if (nick == NULL) {
+        return -1;
+    }
+
     size_t count = 0;
 
     for (uint32_t i = 0; i < chat->max_idx; ++i) {
@@ -493,7 +497,7 @@ static int group_get_nick_peer_id(uint32_t groupnumber, const char *nick, uint32
         }
     }
 
-    return 0;
+    return count > 0 ? 0 : -1;
 }
 
 /* Gets the peer_id associated with `public_key`.
@@ -509,9 +513,17 @@ int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, u
         return -1;
     }
 
+    if (public_key == NULL) {
+        return -1;
+    }
+
+    if (strlen(public_key) < TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2) {
+        return -1;
+    }
+
     char key_bin[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
 
-    if (tox_pk_string_to_bytes(public_key, strlen(public_key), key_bin, sizeof(key_bin)) == -1) {
+    if (tox_pk_string_to_bytes(public_key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2, key_bin, sizeof(key_bin)) == -1) {
         return -1;
     }
 
@@ -1415,7 +1427,6 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnumbe
         return;
     }
 
-    uint32_t peer_id = 0;
     uint32_t name_length = 0;
     const char *nick = NULL;
 
@@ -1433,13 +1444,23 @@ static void send_group_prvt_message(ToxWindow *self, Tox *m, uint32_t groupnumbe
             if (chat->peer_list[i].name_length > name_length) {
                 name_length = chat->peer_list[i].name_length;
                 nick = chat->peer_list[i].name;
-                peer_id = chat->peer_list[i].peer_id;
             }
         }
     }
 
     if (nick == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid peer name.");
+        if (data_len < TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2) {
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid nick.");
+            return;
+        }
+
+        nick = data;
+        name_length = TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2;
+    }
+
+    uint32_t peer_id;
+
+    if (group_get_peer_id_of_identifier(self, nick, &peer_id) != 0) {
         return;
     }
 
