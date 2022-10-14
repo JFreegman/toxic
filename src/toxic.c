@@ -258,10 +258,6 @@ void cb_toxcore_logger(Tox *m, TOX_LOG_LEVEL level, const char *file, uint32_t l
 {
     UNUSED_VAR(m);
 
-    if (level == TOX_LOG_LEVEL_TRACE) {
-        return;
-    }
-
     FILE *fp = (FILE *)user_data;
 
     if (!fp) {
