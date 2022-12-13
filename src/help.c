@@ -188,6 +188,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
     wprintw(win, "  /group <name>              : Create a new group chat\n");
+    wprintw(win, "  /join <chatid>             : Join a groupchat using a Chat ID\n");
 #ifdef GAMES
     wprintw(win, "  /game                      : Play a game\n");
 #endif /* GAMES */
@@ -245,8 +246,10 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "Chat Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /invite <n>                : Invite contact to a conference \n");
-    wprintw(win, "  /join                      : Join a pending conference\n");
+    wprintw(win, "  /cinvite <n>               : Invite contact to a conference \n");
+    wprintw(win, "  /cjoin                     : Join a pending conference\n");
+    wprintw(win, "  /invite <n>                : Invite contact to a groupchat \n");
+    wprintw(win, "  /gaccept <password>        : Accept a pending groupchat invite\n");
     wprintw(win, "  /sendfile <path>           : Send a file\n");
     wprintw(win, "  /savefile <id>             : Receive a file\n");
     wprintw(win, "  /cancel <type> <id>        : Cancel file transfer where type: in|out\n");
@@ -435,13 +438,13 @@ void help_onKey(ToxWindow *self, wint_t key)
 #elif AUDIO
             help_init_window(self, 21, 80);
 #else
-            help_init_window(self, 11, 80);
+            help_init_window(self, 13, 80);
 #endif
             self->help->type = HELP_CHAT;
             break;
 
         case L'g':
-            height = 22;
+            height = 23;
 #ifdef VIDEO
             height += 8;
 #elif AUDIO
