@@ -1679,7 +1679,15 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
         wattron(ctx->sidebar, A_BOLD);
 
         pthread_mutex_lock(&Winthread.lock);
-        wprintw(ctx->sidebar, "Peers: %d\n", chat->num_peers);
+
+        if (chat->num_peers > 1) {
+            wprintw(ctx->sidebar, "Peers: %d\n", chat->num_peers);
+        } else if (tox_group_is_connected(m, self->num, NULL)) {
+            wprintw(ctx->sidebar, "Connecting...\n");
+        } else {
+            wprintw(ctx->sidebar, "Disconnected\n");
+        }
+
         pthread_mutex_unlock(&Winthread.lock);
 
         wattroff(ctx->sidebar, A_BOLD);
