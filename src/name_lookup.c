@@ -365,7 +365,7 @@ on_exit:
 void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message)
 {
     if (t_data.disabled) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "name lookups are disabled.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "nameservers list is empty or does not exist.");
         return;
     }
 
