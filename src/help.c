@@ -433,18 +433,21 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'c':
+            height = 12;
 #ifdef VIDEO
-            help_init_window(self, 26, 80);
+            height += 15;
 #elif AUDIO
-            help_init_window(self, 21, 80);
-#else
-            help_init_window(self, 13, 80);
+            height += 5;
 #endif
+#ifdef GAMES
+            height += 1;
+#endif
+            help_init_window(self, height, 80);
             self->help->type = HELP_CHAT;
             break;
 
         case L'g':
-            height = 23;
+            height = 24;
 #ifdef VIDEO
             height += 8;
 #elif AUDIO
