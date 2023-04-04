@@ -130,6 +130,7 @@ static struct cmd_func groupchat_commands[] = {
     { "/list",      cmd_list           },
     { "/locktopic", cmd_set_topic_lock },
     { "/mod",       cmd_mod            },
+    { "/nick",      cmd_group_nick     },
     { "/passwd",    cmd_set_passwd     },
     { "/peerlimit", cmd_set_peerlimit  },
     { "/privacy",   cmd_set_privacy    },

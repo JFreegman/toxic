@@ -363,39 +363,74 @@ int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size
     return -1;
 }
 
-void set_nick_all_groups(Tox *m, const char *new_nick, size_t length)
+void set_nick_this_group(ToxWindow *self, Tox *m, const char *new_nick, size_t length)
 {
-    for (int i = 0; i < max_groupchat_index; ++i) {
-        if (groupchats[i].active) {
-            ToxWindow *self = get_window_ptr(groupchats[i].chatwin);
+    if (self == NULL) {
+        return;
+    }
 
-            if (!self) {
-                continue;
+    char old_nick[TOX_MAX_NAME_LENGTH + 1];
+    size_t old_length = get_group_self_nick_truncate(m, old_nick, self->num);
+
+    Tox_Err_Group_Self_Name_Set err;
+    tox_group_self_set_name(m, self->num, (uint8_t *) new_nick, length, &err);
+
+    GroupChat *chat = get_groupchat(self->num);
+
+    if (chat == NULL) {
+        line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick: invalid groupnumber");
+        return;
+    }
+
+    switch (err) {
+        case TOX_ERR_GROUP_SELF_NAME_SET_OK: {
+            groupchat_onGroupSelfNickChange(self, m, self->num, old_nick, old_length, new_nick, length);
+            break;
+        }
+
+        default: {
+            if (chat->time_connected > 0) {
+                line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err);
             }
 
-            char old_nick[TOX_MAX_NAME_LENGTH + 1];
-            size_t old_length = get_group_self_nick_truncate(m, old_nick, self->num);
-
-            Tox_Err_Group_Self_Name_Set err;
-            tox_group_self_set_name(m, groupchats[i].groupnumber, (uint8_t *) new_nick, length, &err);
-
-            switch (err) {
-                case TOX_ERR_GROUP_SELF_NAME_SET_OK: {
-                    groupchat_onGroupSelfNickChange(self, m, self->num, old_nick, old_length, new_nick, length);
-                    break;
-                }
-
-                default: {
-                    if (groupchats[i].time_connected > 0) {
-                        line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err);
-                    }
-
-                    break;
-                }
-            }
+            break;
         }
     }
 }
+
+/* void set_nick_all_groups(Tox *m, const char *new_nick, size_t length) */
+/* { */
+/*     for (int i = 0; i < max_groupchat_index; ++i) { */
+/*         if (groupchats[i].active) { */
+/*             ToxWindow *self = get_window_ptr(groupchats[i].chatwin); */
+
+/*             if (!self) { */
+/*                 continue; */
+/*             } */
+
+/*             char old_nick[TOX_MAX_NAME_LENGTH + 1]; */
+/*             size_t old_length = get_group_self_nick_truncate(m, old_nick, self->num); */
+
+/*             Tox_Err_Group_Self_Name_Set err; */
+/*             tox_group_self_set_name(m, groupchats[i].groupnumber, (uint8_t *) new_nick, length, &err); */
+
+/*             switch (err) { */
+/*                 case TOX_ERR_GROUP_SELF_NAME_SET_OK: { */
+/*                     groupchat_onGroupSelfNickChange(self, m, self->num, old_nick, old_length, new_nick, length); */
+/*                     break; */
+/*                 } */
+
+/*                 default: { */
+/*                     if (groupchats[i].time_connected > 0) { */
+/*                         line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err); */
+/*                     } */
+
+/*                     break; */
+/*                 } */
+/*             } */
+/*         } */
+/*     } */
+/* } */
 
 void set_status_all_groups(Tox *m, uint8_t status)
 {

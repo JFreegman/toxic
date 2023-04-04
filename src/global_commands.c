@@ -777,7 +777,6 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
     tox_self_set_name(m, (uint8_t *) nick, len, NULL);
     prompt_update_nick(prompt, nick);
-    set_nick_all_groups(m, nick, len);
 
     store_data(m, DATA_FILE);
 }

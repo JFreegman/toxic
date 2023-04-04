@@ -76,6 +76,32 @@ void cmd_disconnect(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     }
 }
 
+void cmd_group_nick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+    if (argc < 1) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
+        return;
+    }
+
+    char nick[MAX_STR_SIZE];
+    snprintf(nick, sizeof(nick), "%s", argv[1]);
+    size_t len = strlen(nick);
+
+    if (!valid_nick(nick)) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid name.");
+        return;
+    }
+
+    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    nick[len] = '\0';
+
+    set_nick_this_group(self, m, nick, len);
+
+    store_data(m, DATA_FILE);
+}
+
 void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {

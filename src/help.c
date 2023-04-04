@@ -183,7 +183,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /requests                  : List pending friend requests\n");
     wprintw(win, "  /status <type>             : Set status (Online, Busy, Away)\n");
     wprintw(win, "  /note <msg>                : Set a personal note\n");
-    wprintw(win, "  /nick <nick>               : Set your nickname\n");
+    wprintw(win, "  /nick <name>               : Set your global name (doesn't affect groups)\n");
     wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
     wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
@@ -307,6 +307,7 @@ static void help_draw_groupchats(ToxWindow *self)
     wprintw(win, "  /list                     : Print a list of peers currently in the group\n");
     wprintw(win, "  /locktopic                : Set the topic lock: on | off\n");
     wprintw(win, "  /mod <name>               : Promote a peer to moderator\n");
+    wprintw(win, "  /nick <name>              : Set your name for this group only\n");
     wprintw(win, "  /passwd <s>               : Set a password needed to join the group\n");
     wprintw(win, "  /peerlimit <n>            : Set the maximum number of peers that can join\n");
     wprintw(win, "  /privacy <state>          : Set the privacy state: private | public\n");
@@ -496,7 +497,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'r':
-            help_init_window(self, 26, 80);
+            help_init_window(self, 27, 80);
             self->help->type = HELP_GROUP;
             break;
     }
