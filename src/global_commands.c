@@ -173,10 +173,16 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
 
     char id_bin[TOX_ADDRESS_SIZE] = {0};
 
-    const bool is_tox_id = (char_find(0, id, '@') == arg_length) && (arg_length >= TOX_ADDRESS_SIZE * 2);
+    const bool is_domain = char_find(0, id, '@') != arg_length;
+    const bool valid_id_size = arg_length >= TOX_ADDRESS_SIZE * 2;  // arg_length may include invite message
 
-    if (!is_tox_id) {
-        name_lookup(self, m, id_bin, id, msg);
+    if (is_domain) {
+        if (!name_lookup(self, m, id_bin, id, msg)) {
+            return;
+        }
+    } else if (!valid_id_size) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid Tox ID.");
+        return;
     }
 
     char xx[3];

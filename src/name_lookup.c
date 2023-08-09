@@ -362,16 +362,20 @@ on_exit:
     return 0;
 }
 
-void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message)
+/* Attempts to do a tox name lookup.
+ *
+ * Returns true on success.
+ */
+bool name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message)
 {
     if (t_data.disabled) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "nameservers list is empty or does not exist.");
-        return;
+        return false;
     }
 
     if (t_data.busy) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Please wait for previous name lookup to finish.");
-        return;
+        return false;
     }
 
     snprintf(t_data.id_bin, sizeof(t_data.id_bin), "%s", id_bin);
@@ -384,22 +388,24 @@ void name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, 
     if (pthread_attr_init(&lookup_thread.attr) != 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to init");
         clear_thread_data();
-        return;
+        return false;
     }
 
     if (pthread_attr_setdetachstate(&lookup_thread.attr, PTHREAD_CREATE_DETACHED) != 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to set");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
-        return;
+        return false;
     }
 
     if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, NULL) != 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
-        return;
+        return false;
     }
+
+    return true;
 }
 
 /* Initializes http based name lookups. Note: This function must be called only once before additional

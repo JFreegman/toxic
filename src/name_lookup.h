@@ -23,14 +23,19 @@
 #ifndef NAME_LOOKUP
 #define NAME_LOOKUP
 
-/* Initializes http based name lookups. Note: This function must be called only once before additional
- * threads are spawned.
+/* Initializes http based name lookups.
+ *
+ * Note: This function must be called only once before additional threads are spawned.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
 int name_lookup_init(int curl_init_status);
 
-int name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message);
+/* Attempts to do a tox name lookup.
+ *
+ * Returns true on success.
+ */
+bool name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message);
 
 #endif /* NAME_LOOKUP */
