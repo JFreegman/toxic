@@ -114,8 +114,8 @@ void flag_interface_refresh(void);
 /* Sets ncurses refresh rate. Lower values make it refresh more often. */
 void set_window_refresh_rate(size_t refresh_rate);
 
-void exit_toxic_success(Tox *m);
-void exit_toxic_err(const char *errmsg, int errcode);
+void exit_toxic_success(Tox *m) __attribute__((__noreturn__));
+void exit_toxic_err(const char *errmsg, int errcode) __attribute__((__noreturn__));
 
 int store_data(Tox *m, const char *path);
 
