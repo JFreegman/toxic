@@ -157,7 +157,7 @@ CMP_FILENAME="cmp-$CMP_VERSION.tar.gz"
 wget --timeout=10 -O "$CMP_FILENAME" "https://github.com/TokTok/cmp/archive/$CMP_VERSION.tar.gz"
 tar -o -xf "$CMP_FILENAME"
 
-mv cmp\-*/* "cmp/"
+mv cmp-*/* 'cmp/'
 cd ..
 
 cmake -B_build -H. \
