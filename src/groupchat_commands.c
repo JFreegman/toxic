@@ -141,6 +141,8 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     }
 
     line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
+
+    group_toggle_peer_ignore(self->num, peer_id, true);
 }
 
 void cmd_kick(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
@@ -842,6 +844,8 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     }
 
     line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- You are no longer ignoring %s", nick);
+
+    group_toggle_peer_ignore(self->num, peer_id, false);
 }
 
 void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])

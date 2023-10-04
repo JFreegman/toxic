@@ -138,6 +138,7 @@ static void groupchat_onGroupStatusChange(ToxWindow *self, Tox *m, uint32_t grou
         TOX_USER_STATUS status);
 static void groupchat_onGroupSelfNickChange(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *old_nick,
         size_t old_length, const char *new_nick, size_t length);
+static void ignore_list_cleanup(GroupChat *chat);
 
 /*
  * Return a GroupChat pointer associated with groupnumber.
@@ -239,6 +240,8 @@ static void close_groupchat(ToxWindow *self, Tox *m, uint32_t groupnumber)
     if (!chat) {
         return;
     }
+
+    ignore_list_cleanup(chat);
 
     realloc_peer_list(groupnumber, 0);
 
@@ -661,6 +664,131 @@ int get_peer_index(uint32_t groupnumber, uint32_t peer_id)
     return -1;
 }
 
+/**
+ * Return true if `key` is in the ignored list.
+ */
+static bool peer_is_ignored(const GroupChat *chat, const uint8_t *key)
+{
+    for (uint16_t i = 0; i < chat->num_ignored; ++i) {
+        if (memcmp(chat->ignored_list[i], key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool ignore_list_add_key(GroupChat *chat, const uint8_t *key)
+{
+    uint8_t **tmp_list = (uint8_t **)realloc(chat->ignored_list, (chat->num_ignored + 1) * sizeof(uint8_t *));
+
+    if (tmp_list == NULL) {
+        return false;
+    }
+
+    chat->ignored_list = tmp_list;
+
+    tmp_list[chat->num_ignored] = (uint8_t *)malloc(sizeof(uint8_t) * TOX_GROUP_PEER_PUBLIC_KEY_SIZE);
+
+    if (tmp_list[chat->num_ignored] == NULL) {
+        return false;
+    }
+
+    memcpy(tmp_list[chat->num_ignored], key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE);
+    ++chat->num_ignored;
+
+    return true;
+}
+
+static void ignore_list_cleanup(GroupChat *chat)
+{
+    for (uint16_t i = 0; i < chat->num_ignored; ++i) {
+        if (chat->ignored_list[i] != NULL) {
+            free(chat->ignored_list[i]);
+        }
+    }
+
+    free(chat->ignored_list);
+    chat->ignored_list = NULL;
+    chat->num_ignored = 0;
+}
+
+static bool ignore_list_rm_key(GroupChat *chat, const uint8_t *key)
+{
+    if (chat->num_ignored == 0) {
+        return false;
+    }
+
+    int32_t idx = -1;
+
+    for (uint16_t i = 0; i < chat->num_ignored; ++i) {
+        if (memcmp(chat->ignored_list[i], key, TOX_GROUP_PEER_PUBLIC_KEY_SIZE) == 0) {
+            idx = i;
+            break;
+        }
+    }
+
+    if (idx == -1) {
+        fprintf(stderr, "Key not found in ignore list\n");
+        return false;
+    }
+
+    if ((chat->num_ignored - 1) == 0) {
+        ignore_list_cleanup(chat);
+        return true;
+    }
+
+    --chat->num_ignored;
+
+    if (idx != chat->num_ignored) {
+        memcpy(chat->ignored_list[idx], chat->ignored_list[chat->num_ignored], TOX_GROUP_PEER_PUBLIC_KEY_SIZE);
+    }
+
+    free(chat->ignored_list[chat->num_ignored]);
+
+    uint8_t **tmp_list = realloc(chat->ignored_list, chat->num_ignored * sizeof(uint8_t *));
+
+    if (tmp_list == NULL) {
+        return false;
+    }
+
+    chat->ignored_list = tmp_list;
+
+    return true;
+}
+
+void group_toggle_peer_ignore(uint32_t groupnumber, int peer_id, bool ignore)
+{
+    int peer_index = get_peer_index(groupnumber, peer_id);
+
+    if (peer_index < 0) {
+        fprintf(stderr, "Failed to find peer index (group_toggle_peer_ignore())\n");
+        return;
+    }
+
+    GroupChat *chat = get_groupchat(groupnumber);
+
+    if (!chat) {
+        return;
+    }
+
+    GroupPeer *peer = &chat->peer_list[peer_index];
+
+    peer->is_ignored = ignore;
+
+    bool ret;
+
+    if (ignore) {
+        ret = ignore_list_add_key(chat, peer->public_key);
+    } else {
+        ret = ignore_list_rm_key(chat, peer->public_key);
+    }
+
+    if (!ret) {
+        fprintf(stderr, "Client failed to modify ignore list\n");
+    }
+}
+
 static void group_update_name_list(uint32_t groupnumber)
 {
     GroupChat *chat = get_groupchat(groupnumber);
@@ -1027,7 +1155,12 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Tox *m, uint32_t groupnum
         peer->status = tox_group_peer_get_status(m, groupnumber, peer_id, NULL);
         peer->role = tox_group_peer_get_role(m, groupnumber, peer_id, NULL);
         peer->last_active = get_unix_time();
-        tox_group_peer_get_public_key(m, groupnumber, peer_id, (uint8_t *) peer->public_key, NULL);
+        tox_group_peer_get_public_key(m, groupnumber, peer_id, (uint8_t *)peer->public_key, NULL);
+        peer->is_ignored = peer_is_ignored(chat, peer->public_key);
+
+        if (peer->is_ignored) {
+            tox_group_set_ignore(m, groupnumber, peer_id, true, NULL);
+        }
 
         if (i == chat->max_idx) {
             ++chat->max_idx;
@@ -1750,7 +1883,12 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
 
             wmove(ctx->sidebar, offset + 2, 1);
 
-            const int maxlen_offset = chat->peer_list[i].role == TOX_GROUP_ROLE_USER ? 2 : 3;
+            const bool is_ignored = chat->peer_list[i].is_ignored;
+            uint16_t maxlen_offset = chat->peer_list[i].role == TOX_GROUP_ROLE_USER ? 2 : 3;
+
+            if (is_ignored) {
+                ++maxlen_offset;
+            }
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
@@ -1784,6 +1922,12 @@ static void groupchat_onDraw(ToxWindow *self, Tox *m)
             }
 
             pthread_mutex_unlock(&Winthread.lock);
+
+            if (is_ignored) {
+                wattron(ctx->sidebar, COLOR_PAIR(RED) | A_BOLD);
+                wprintw(ctx->sidebar, "#");
+                wattroff(ctx->sidebar, COLOR_PAIR(RED) | A_BOLD);
+            }
 
             wattron(ctx->sidebar, COLOR_PAIR(rolecolour) | A_BOLD);
             wprintw(ctx->sidebar, "%s", rolesig);
