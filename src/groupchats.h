@@ -47,6 +47,7 @@ typedef struct GroupPeer {
     uint8_t          public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
     TOX_USER_STATUS  status;
     Tox_Group_Role   role;
+    bool             is_ignored;
     uint64_t         last_active;
 } GroupPeer;
 
@@ -55,6 +56,9 @@ typedef struct {
     char       **name_list;   /* List of peer names, needed for tab completion */
     uint32_t   num_peers;     /* Number of peers in the chat/name_list array */
     uint32_t   max_idx;       /* Maximum peer list index - 1 */
+
+    uint8_t    **ignored_list; /* List of keys of peers that we're ignoring */
+    uint16_t   num_ignored;
 
     char       group_name[TOX_GROUP_MAX_GROUP_NAME_LENGTH + 1];
     size_t     group_name_length;
@@ -107,5 +111,10 @@ void redraw_groupchat_win(ToxWindow *self);
  * Return NULL if groupnumber is invalid.
  */
 GroupChat *get_groupchat(uint32_t groupnumber);
+
+/**
+ * Toggles the ignore status of the peer associated with `peer_id`.
+ */
+void group_toggle_peer_ignore(uint32_t groupnumber, int peer_id, bool ignore);
 
 #endif /* #define GROUPCHATS_H */
