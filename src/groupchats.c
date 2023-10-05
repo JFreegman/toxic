@@ -117,12 +117,6 @@ static const char *group_cmd_list[] = {
     "/voice",
     "/whisper",
     "/whois",
-#ifdef AUDIO
-    "/lsdev",
-    "/sdev",
-    "/mute",
-    "/sense",
-#endif /* AUDIO */
 };
 
 GroupChat groupchats[MAX_GROUPCHAT_NUM];
