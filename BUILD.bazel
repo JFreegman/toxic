@@ -18,7 +18,7 @@ cc_binary(
         "//tools/config:osx": [],
     }),
     copts = [
-        "-std=gnu99",
+        "-D_DEFAULT_SOURCE",
         "-DAUDIO",
         "-DGAMES",
         "-DHAVE_WIDECHAR",
