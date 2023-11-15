@@ -277,6 +277,7 @@ echo '#!/usr/bin/env sh
 DEBIAN_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 RHEL_SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
 OPENSUSE_CERT_FILE=/etc/ssl/ca-bundle.pem
+TERMUX_CERT_FILE=/data/data/com.termux/files/usr/etc/tls/cert.pem
 
 if [ ! -f "$SSL_CERT_FILE" ] ; then
   if [ -f "$DEBIAN_SSL_CERT_FILE" ] ; then
@@ -285,6 +286,8 @@ if [ ! -f "$SSL_CERT_FILE" ] ; then
     SSL_CERT_FILE="$RHEL_SSL_CERT_FILE"
   elif [ -f "$OPENSUSE_CERT_FILE" ] ; then
     SSL_CERT_FILE="$OPENSUSE_CERT_FILE"
+  elif [ -f "$TERMUX_CERT_FILE" ] ; then
+    SSL_CERT_FILE="$TERMUX_CERT_FILE"
   fi
 fi
 
