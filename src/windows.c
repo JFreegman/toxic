@@ -1008,9 +1008,9 @@ void draw_active_window(Tox *m)
 
         int ch = getch();
 
-        if (ch == ERR) {
-            return;
-        }
+/*         if (ch == ERR) { */
+/*             return; */
+/*         } */
 
         pthread_mutex_lock(&Winthread.lock);
         flag_interface_refresh();

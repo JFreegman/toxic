@@ -480,6 +480,7 @@ int game_set_message(GameData *game, const char *message, size_t length, Directi
     int max_y;
     getmaxyx(game->window, max_y, max_x);
 
+
     if (coords->x > max_x || coords->x < 0 || coords->y > max_y || coords->y < 0) {
         return -1;
     }
@@ -785,7 +786,7 @@ bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
 
     GameData *game = self->game;
 
-    if (key == KEY_F(9)) {
+    if (key == KEY_F(9) || game->status == GS_Finished) {
         game_kill(self);
         return true;
     }

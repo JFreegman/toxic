@@ -32,6 +32,7 @@
 #include <wchar.h>
 
 #include "autocomplete.h"
+#include "chat_commands.h"
 #include "execute.h"
 #include "file_transfers.h"
 #include "friendlist.h"
@@ -877,7 +878,9 @@ void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const ui
 
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to a game of %s.", name, game_string);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/play\" to join the game.");
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "auto-joining game");
+
+    cmd_game_join(self->window, self, m, 0, NULL);
 }
 
 #endif // GAMES

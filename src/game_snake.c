@@ -100,7 +100,7 @@
 #define SNAKE_ONLINE_SNAKE_SPEED 8
 
 /* Set to true to have the host controlled by a naive AI bot */
-#define USE_AI false
+#define USE_AI true
 
 #define SNAKE_ONLINE_VERSION 0x01u
 
@@ -824,7 +824,7 @@ static void snake_move(GameData *game, SnakeState *state, TIME_MS cur_time)
         return;
     }
 
-    if (USE_AI && state->self_host) {
+    if (USE_AI && !state->self_host) {
         snake_naive_ai(game, state);
     }
 
