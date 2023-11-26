@@ -214,10 +214,13 @@ void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_dat
  * `type` must be a valid GameType.
  *
  * `id` should be a unique integer to indentify the game instance. If we're being invited to a game
- *   this identifier should be sent via the invite packet.
+ *  this identifier should be sent via the invite packet.
  *
- * if `multiplayer_data` is non-null this indicates that we accepted a game invite from a contact.
- *   The data contains any information we need to initialize the game state.
+ * if `multiplayer_data` is non-null it contains information that we received from the inviter
+ * necessary to initialize the game state.
+ *
+ * if `self_host` is true, the caller is the host of the game. If the game is not initialized from a
+ * friend's chat window this parameter has no effect.
  *
  * Return 0 on success.
  * Return -1 if screen is too small.
@@ -226,7 +229,7 @@ void game_set_cb_on_packet(GameData *game, cb_game_on_packet *func, void *cb_dat
  * Return -4 on other failure.
  */
 int game_initialize(const ToxWindow *self, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
-                    size_t length);
+                    size_t length, bool self_host);
 
 /*
  * Sets game window to `shape`.

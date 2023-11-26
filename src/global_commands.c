@@ -363,7 +363,7 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     }
 
     uint32_t id = rand();
-    int ret = game_initialize(self, m, type, id, NULL, 0);
+    int ret = game_initialize(self, m, type, id, NULL, 0, true);
 
     switch (ret) {
         case 0: {

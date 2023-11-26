@@ -203,7 +203,7 @@ static void game_toggle_pause(GameData *game)
     }
 }
 
-static int game_initialize_type(GameData *game, const uint8_t *data, size_t length)
+static int game_initialize_type(GameData *game, const uint8_t *data, size_t length, bool self_host)
 {
     int ret = -3;
 
@@ -219,7 +219,7 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
         }
 
         case GT_Chess: {
-            ret = chess_initialize(game, data, length);
+            ret = chess_initialize(game, data, length, self_host);
             break;
         }
 
@@ -237,7 +237,7 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
 }
 
 int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
-                    size_t length)
+                    size_t length, bool self_host)
 {
     int max_x;
     int max_y;
@@ -293,7 +293,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
         return -4;
     }
 
-    int init_ret = game_initialize_type(game, multiplayer_data, length);
+    int init_ret = game_initialize_type(game, multiplayer_data, length, self_host);
 
     if (init_ret < 0) {
         game_init_abort(parent, self);
@@ -506,7 +506,7 @@ static int game_restart(GameData *game)
 
     game_clear_all_messages(game);
 
-    if (game_initialize_type(game, NULL, 0) == -1) {
+    if (game_initialize_type(game, NULL, 0, false) == -1) {
         return -1;
     }
 

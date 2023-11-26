@@ -28,17 +28,17 @@
 /*
  * Initializes chess game state.
  *
- * If `init_data` is non-null, this indicates that we were invited to the game.
+ * If `self_host` is false, this indicates that we were invited to the game.
  *
- * If we're the inviter, we send an invite packet after initialization. If we're the
- * invitee, we send a handshake response packet to the inviter.
+ * `init_data` of length `length` is the game data sent to us by the inviter
+ * needed to start the game.
  *
  * Return 0 on success.
  * Return -1 if window is too small.
  * Return -2 on network related error.
  * Return -3 on other error.
  */
-int chess_initialize(GameData *game, const uint8_t *init_data, size_t length);
+int chess_initialize(GameData *game, const uint8_t *init_data, size_t length, bool self_host);
 
 #endif // GAME_CHESS
 

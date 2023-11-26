@@ -272,7 +272,7 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     uint8_t *data = Friends.list[self->num].game_invite.data;
     size_t length = Friends.list[self->num].game_invite.data_length;
 
-    int ret = game_initialize(self, m, type, id, data, length);
+    int ret = game_initialize(self, m, type, id, data, length, false);
 
     switch (ret) {
         case 0: {
