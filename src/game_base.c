@@ -123,9 +123,23 @@ void game_list_print(ToxWindow *self)
     }
 }
 
-bool game_type_is_multiplayer(GameType type)
+bool game_type_has_multiplayer(GameType type)
+{
+    return type == GT_Chess || type == GT_Snake;
+}
+
+static bool game_type_is_multi_only(GameType type)
 {
     return type == GT_Chess;
+}
+
+static bool game_type_is_multi_and_single(const ToxWindow *window, GameType type)
+{
+    if (window->type != WINDOW_TYPE_CHAT) {
+        return false;
+    }
+
+    return type == GT_Snake;
 }
 
 /*
@@ -209,7 +223,7 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
 
     switch (game->type) {
         case GT_Snake: {
-            ret = snake_initialize(game);
+            ret = snake_initialize(game, game->is_multiplayer, self_host);
             break;
         }
 
@@ -261,7 +275,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
         return -4;
     }
 
-    game->is_multiplayer = game_type_is_multiplayer(type);
+    game->is_multiplayer = game_type_is_multi_only(type) || game_type_is_multi_and_single(parent, type);
 
     if (game->is_multiplayer) {
         if (parent->type != WINDOW_TYPE_CHAT) {
@@ -461,6 +475,14 @@ int game_set_message(GameData *game, const char *message, size_t length, Directi
         return -1;
     }
 
+    int max_x;
+    int max_y;
+    getmaxyx(game->window, max_y, max_x);
+
+    if (coords->x > max_x || coords->x < 0 || coords->y > max_y || coords->y < 0) {
+        return -1;
+    }
+
     GameMessage *m = game_get_new_message_holder(game);
 
     if (m == NULL) {
@@ -603,17 +625,28 @@ static void game_draw_game_over(const GameData *game)
     const int x = max_x / 2;
     const int y = max_y / 2;
 
-    const char *message = "GAME OVER!";
+    const char *message;
+    int colour = RED;
+
+    if (game->is_multiplayer) {
+        message = game->winner ? "You win!" : "You lose!";
+        colour = game->winner ? YELLOW : RED;
+    } else {
+        message = "GAME OVER!";
+    }
+
     size_t length = strlen(message);
 
-    wattron(win, A_BOLD | COLOR_PAIR(RED));
+    wattron(win, A_BOLD | COLOR_PAIR(colour));
     mvwprintw(win, y - 1, x - (length / 2), "%s", message);
-    wattroff(win, A_BOLD | COLOR_PAIR(RED));
+    wattroff(win, A_BOLD | COLOR_PAIR(colour));
 
-    message = "Press F5 to play again";
-    length = strlen(message);
+    if (!game->is_multiplayer) {
+        message = "Press F5 to play again";
+        length = strlen(message);
 
-    mvwprintw(win, y + 1, x - (length / 2), "%s", message);
+        mvwprintw(win, y + 1, x - (length / 2), "%s", message);
+    }
 }
 
 static void game_draw_pause_screen(const GameData *game)
@@ -881,7 +914,7 @@ static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber)
 
     ret->active_box = -1;
 
-    if (game_type_is_multiplayer(type)) {
+    if (game_type_is_multi_only(type)) {
         char nick[TOX_MAX_NAME_LENGTH];
         get_nick_truncate(m, nick, friendnumber);
 
@@ -1040,6 +1073,13 @@ void game_set_status(GameData *game, GameStatus status)
 {
     if (status < GS_Invalid) {
         game->status = status;
+    }
+}
+
+void game_set_winner(GameData *game, bool winner)
+{
+    if (game->status == GS_Finished) {
+        game->winner = winner;
     }
 }
 

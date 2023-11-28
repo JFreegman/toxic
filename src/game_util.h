@@ -91,6 +91,18 @@ void game_util_move_coords(Direction direction, Coords *coords);
 int game_util_random_colour(void);
 
 /*
+ * Converts relative window coordinates to static game board coordinates
+ * and puts the result in `coords`.
+ */
+void game_util_win_coords_to_board(int win_x, int win_y, int x_left_bound, int y_top_bound, Coords *coords);
+
+/*
+ * Converts static game board coordinates to relative window coordinates
+ * and puts the result in `coords.
+ */
+void game_util_board_to_win_coords(int board_x, int board_y, int x_left_bound, int y_top_bound, Coords *coords);
+
+/*
  * Packs an unsigned 32 bit integer `v` into `bytes`.
  */
 size_t game_util_pack_u32(uint8_t *bytes, uint32_t v);

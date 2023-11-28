@@ -130,7 +130,6 @@ void game_util_move_coords(Direction direction, Coords *coords)
         }
 
         default: {
-            fprintf(stderr, "Warning: tried to move in an invalid direction\n");
             return;
         }
     }
@@ -162,6 +161,22 @@ int game_util_random_colour(void)
         default:  // impossible
             return RED;
     }
+}
+
+void game_util_win_coords_to_board(int win_x, int win_y, int x_left_bound, int y_top_bound, Coords *coords)
+{
+    *coords = (Coords) {
+        win_x - x_left_bound,
+              win_y - y_top_bound
+    };
+}
+
+void game_util_board_to_win_coords(int board_x, int board_y, int x_left_bound, int y_top_bound, Coords *coords)
+{
+    *coords = (Coords) {
+        board_x + x_left_bound,
+                board_y + y_top_bound
+    };
 }
 
 static size_t net_pack_u16(uint8_t *bytes, uint16_t v)

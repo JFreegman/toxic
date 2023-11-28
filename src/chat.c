@@ -824,7 +824,7 @@ void chat_onGameInvite(ToxWindow *self, Tox *m, uint32_t friend_number, const ui
 
     GameType type = data[1];
 
-    if (!game_type_is_multiplayer(type)) {
+    if (!game_type_has_multiplayer(type)) {
         return;
     }
 

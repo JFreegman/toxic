@@ -133,7 +133,9 @@ struct GameData {
     size_t     level;
     GameStatus status;
     GameType   type;
+
     bool       is_multiplayer;
+    bool       winner;  // true if you won the game
 
     bool       show_lives;
     bool       show_score;
@@ -260,7 +262,7 @@ void game_list_print(ToxWindow *self);
 /*
  * Return true if game `type` has a multiplayer mode.
  */
-bool game_type_is_multiplayer(GameType type);
+bool game_type_has_multiplayer(GameType type);
 
 /*
  * Returns true if coordinates designated by `x` and `y` are within the game window boundaries.
@@ -343,6 +345,11 @@ size_t game_get_current_level(const GameData *game);
  * Sets the game status to `status`.
  */
 void game_set_status(GameData *game, GameStatus status);
+
+/*
+ * Sets winner flag. This should only be called when the game status is set to finished.
+ */
+void game_set_winner(GameData *game, bool winner);
 
 /*
  * Sets the game base update interval.

@@ -25,6 +25,13 @@
 
 #include "game_base.h"
 
-int snake_initialize(GameData *game);
+/**
+ * Initializes a game of snake.
+ *
+ * `is_online` should be true if the game is multipayer.
+ * `self_host` should be true for the one sending the game invite, and
+ *    false for the one who received the game invite.
+ */
+int snake_initialize(GameData *game, bool is_online, bool self_host);
 
 #endif // GAME_SNAKE

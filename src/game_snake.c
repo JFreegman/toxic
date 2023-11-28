@@ -94,6 +94,30 @@
 
 #define SNAKE_POWERUP_CHAR   'P'
 
+/* Multiplayer constants */
+#define SNAKE_HEAD_OTHER_COLOUR BLUE
+#define SNAKE_BODY_OTHER_COLOUR MAGENTA
+#define SNAKE_ONLINE_SNAKE_SPEED 8
+
+/* Set to true to have the host controlled by a naive AI bot */
+#define USE_AI false
+
+#define SNAKE_ONLINE_VERSION 0x01u
+
+
+typedef enum SnakeOnlienStatus {
+    SnakeStatusInitializing = 0u,
+    SnakeStatusPlaying,
+    SnakeStatusFinished,
+} SnakeOnlineStatus;
+
+typedef enum SnakePacketType {
+    SNAKE_PACKET_INVITE_REQUEST  = 0x0A,
+    SNAKE_PACKET_INVITE_RESPONSE = 0x0B,
+    SNAKE_PACKET_STATE           = 0x0C,
+    SNAKE_PACKET_ABORT           = 0x0D,
+} SnakePacketType;
+
 typedef struct NasaAgent {
     Coords      coords;
     bool        is_alive;
@@ -108,7 +132,8 @@ typedef struct NasaAgent {
 typedef struct Snake {
     Coords      coords;
     char        display_char;
-    int         colour;
+    int         head_colour;
+    int         body_colour;
     int         attributes;
 } Snake;
 
@@ -137,7 +162,27 @@ typedef struct SnakeState {
 
     TIME_MS     last_draw_update;
     bool        game_over;
+
+    // Multiplayer
+    int         x_left_bound;
+    int         y_top_bound;
+
+    bool        is_online;
+    bool        self_host;
+    bool        send_flag;  // true if it's our turn to send a packet
+    SnakeOnlineStatus status;
+
+    Snake       *other_snake;
+    size_t      other_snake_length;
+    Direction   other_direction;
 } SnakeState;
+
+
+static bool snake_packet_send_state(const GameData *game, SnakeState *state);
+static bool snake_packet_invite_request(const GameData *game);
+static bool snake_packet_invite_respond(const GameData *game, const SnakeState *state);
+static bool snake_packet_abort(const GameData *game);
+static void snake_cb_on_packet(GameData *game, const uint8_t *data, size_t length, void *cb_data);
 
 
 static void snake_create_points_message(GameData *game, Direction dir, long int points, const Coords *coords)
@@ -153,21 +198,22 @@ static void snake_create_points_message(GameData *game, Direction dir, long int 
 static void snake_create_message(GameData *game, Direction dir, const char *message, int attributes,
                                  int colour, TIME_S timeout, const Coords *coords, bool priority)
 {
-    if (game_set_message(game, message, strlen(message), dir, attributes, colour, timeout, coords, false, priority) == -1) {
+    if (game_set_message(game, message, strlen(message), dir, attributes, colour,
+                         timeout, coords, false, priority) == -1) {
         fprintf(stderr, "failed to set message\n");
     }
 }
 
-static Coords *snake_get_head_coords(const SnakeState *state)
+static Coords *snake_get_head_coords(Snake *snake)
 {
-    return &state->snake[0].coords;
+    return &snake->coords;
 }
 
-static void snake_set_head_char(SnakeState *state)
+static void snake_set_head_char(Snake *snake, Direction dir)
 {
-    Snake *snake_head = &state->snake[0];
+    Snake *snake_head = snake;
 
-    switch (state->direction) {
+    switch (dir) {
         case NORTH:
             snake_head->display_char = '^';
             break;
@@ -190,13 +236,16 @@ static void snake_set_head_char(SnakeState *state)
     }
 }
 
-static bool snake_validate_direction(const SnakeState *state, Direction dir)
+/*
+ * Return true if `new_dir` is a valid direction relative to `old_dir`.
+ */
+static bool snake_validate_direction(const Direction old_dir, const Direction new_dir)
 {
-    if (!GAME_UTIL_DIRECTION_VALID(dir)) {
+    if (!GAME_UTIL_DIRECTION_VALID(new_dir)) {
         return false;
     }
 
-    const int diff = abs((int)state->direction - (int)dir);
+    const int diff = abs((int)old_dir - (int)new_dir);
 
     return diff != 1;
 }
@@ -217,9 +266,9 @@ static void snake_update_direction(SnakeState *state)
             continue;
         }
 
-        if (snake_validate_direction(state, dir)) {
+        if (snake_validate_direction(state->direction, dir)) {
             state->direction = dir;
-            snake_set_head_char(state);
+            snake_set_head_char(state->snake, state->direction);
             state->key_press_queue[i] = 0;
             state->keys_skip_counter = 0;
             break;
@@ -247,7 +296,7 @@ static void snake_set_key_press(SnakeState *state, int key)
 
 static void snake_update_score(GameData *game, const SnakeState *state, long int points)
 {
-    const Coords *head = snake_get_head_coords(state);
+    const Coords *head = snake_get_head_coords(state->snake);
 
     snake_create_points_message(game, state->direction, points, head);
 
@@ -260,12 +309,12 @@ static long int snake_get_move_points(const SnakeState *state)
 }
 
 /* Return true if snake body is occupying given coordinates */
-static bool snake_coords_contain_body(const SnakeState *state, const Coords *coords)
+static bool snake_coords_contain_body(const Snake *snake, int snake_length, const Coords *coords)
 {
-    for (size_t i = 1; i < state->snake_length; ++i) {
-        Coords snake_coords = state->snake[i].coords;
+    for (size_t i = 1; i < snake_length; ++i) {
+        const Coords *snake_coords = &snake[i].coords;
 
-        if (COORDINATES_OVERLAP(coords->x, coords->y, snake_coords.x, snake_coords.y)) {
+        if (COORDINATES_OVERLAP(coords->x, coords->y, snake_coords->x, snake_coords->y)) {
             return true;
         }
     }
@@ -275,8 +324,8 @@ static bool snake_coords_contain_body(const SnakeState *state, const Coords *coo
 
 static bool snake_self_consume(const SnakeState *state)
 {
-    const Coords *head = snake_get_head_coords(state);
-    return snake_coords_contain_body(state, head);
+    const Coords *head = snake_get_head_coords(state->snake);
+    return snake_coords_contain_body(state->snake, state->snake_length, head);
 }
 
 /*
@@ -331,30 +380,6 @@ static bool snake_agent_caught(GameData *game, SnakeState *state, const Coords *
     return false;
 }
 
-static bool snake_state_valid(GameData *game, SnakeState *state)
-{
-    const Coords *head = snake_get_head_coords(state);
-
-    if (!game_coordinates_in_bounds(game, head->x, head->y)) {
-        snake_create_message(game, state->direction, "Ouch!", A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, head, true);
-        return false;
-    }
-
-    if (snake_self_consume(state)) {
-        snake_create_message(game, state->direction, "Tastes like chicken", A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, head,
-                             true);
-        return false;
-    }
-
-    if (snake_agent_caught(game, state, head)) {
-        snake_create_message(game, state->direction, "ARGH they got me!", A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, head,
-                             true);
-        return false;
-    }
-
-    return true;
-}
-
 /*
  * Sets colour and attributes for entire snake except head.
  *
@@ -365,61 +390,178 @@ static void snake_set_body_attributes(Snake *snake, size_t length, int colour, i
     for (size_t i = 1; i < length; ++i) {
         Snake *body = &snake[i];
 
-        if (colour == -1) {
-            body->colour = game_util_random_colour();
+        if (colour < 0) {
+            body->head_colour = game_util_random_colour();
         } else {
-            body->colour = colour;
+            body->head_colour = colour;
         }
 
         body->attributes = attributes;
     }
 }
 
-static void snake_move_body(SnakeState *state)
+static void snake_game_over(SnakeState *state, Snake *snake, size_t snake_length)
 {
-    for (size_t i = state->snake_length - 1; i > 0; --i) {
-        Coords *curr = &state->snake[i].coords;
-        Coords prev = state->snake[i - 1].coords;
-        curr->x = prev.x;
-        curr->y = prev.y;
+    state->game_over = true;
+    state->status = SnakeStatusFinished;
+    state->has_powerup = false;
+
+    Snake *head = snake;
+    head->head_colour = SNAKE_DEAD_BODY_COLOUR;
+    head->attributes = A_BOLD | A_BLINK;
+
+    snake_set_body_attributes(snake, snake_length, SNAKE_DEAD_BODY_COLOUR, A_BOLD | A_BLINK);
+}
+
+/*
+ * Return true if the game can be continued from the current game state.
+ *
+ * If `testrun` is true, the game state won't be modified and snakes will
+ * not create messages.
+ */
+static bool snake_state_valid(GameData *game, SnakeState *state, bool testrun)
+{
+    const Coords *head = snake_get_head_coords(state->snake);
+
+    if (!game_coordinates_in_bounds(game, head->x, head->y)) {
+        if (!testrun) {
+            snake_create_message(game, state->direction, "Ouch!", A_BOLD, WHITE,
+                                 SNAKE_DEFAULT_MESSAGE_TIMER, head, true);
+        }
+
+        return false;
     }
+
+    if (snake_self_consume(state)) {
+        if (!testrun) {
+            snake_create_message(game, state->direction, "Tastes like chicken", A_BOLD, WHITE,
+                                 SNAKE_DEFAULT_MESSAGE_TIMER, head, true);
+        }
+
+        return false;
+    }
+
+    if (snake_agent_caught(game, state, head)) {
+        if (!testrun) {
+            snake_create_message(game, state->direction, "ARGH they got me!", A_BOLD, WHITE,
+                                 SNAKE_DEFAULT_MESSAGE_TIMER, head, true);
+        }
+
+        return false;
+    }
+
+    if (!state->is_online) {
+        return true;
+    }
+
+    const Coords *other_head = snake_get_head_coords(state->other_snake);
+
+    if (snake_coords_contain_body(state->other_snake, state->other_snake_length, head)) {
+        if (!testrun) {
+            snake_create_message(game, state->direction, "AAAAA my tooth!", A_BOLD, WHITE,
+                                 SNAKE_DEFAULT_MESSAGE_TIMER, other_head, true);
+        }
+
+        return false;
+    }
+
+    if (COORDINATES_OVERLAP(other_head->x, other_head->y, head->x, head->y)) {
+        if (!testrun) {
+            snake_create_message(game, state->direction, "Ouch!",
+                                 A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_head, true);
+            snake_create_message(game, state->direction, "Ouch!",
+                                 A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, head, true);
+            snake_game_over(state, state->other_snake, state->other_snake_length);
+        }
+
+        return false;
+    }
+
+    return true;
 }
 
-static void snake_move_head(SnakeState *state)
+static void snake_move_body(Snake *snake, size_t length)
 {
-    Coords *head = snake_get_head_coords(state);
-    game_util_move_coords(state->direction, head);
-}
-
-static void snake_grow(SnakeState *state)
-{
-    size_t index = state->snake_length;
-
-    if (index >= SNAKE_MAX_SNAKE_LENGTH) {
+    if (length == 0) {
         return;
     }
 
-    state->snake[index].coords.x = -1;
-    state->snake[index].coords.y = -1;
-    state->snake[index].display_char = SNAKE_BODY_CHAR;
-    state->snake[index].colour = SNAKE_BODY_COLOUR;
-    state->snake[index].attributes = A_BOLD;
+    for (size_t i = length - 1; i > 0; --i) {
+        const Coords *prev = &snake[i - 1].coords;
+        Coords *curr = &snake[i].coords;
+        curr->x = prev->x;
+        curr->y = prev->y;
+    }
+}
 
-    state->snake_length = index + 1;
+static void snake_move_head(Snake *snake, const Direction dir)
+{
+    Coords *head = snake_get_head_coords(snake);
+    game_util_move_coords(dir, head);
+}
+
+static void snake_grow(Snake *snake, size_t *length)
+{
+    size_t index = *length;
+
+    if (*length >= SNAKE_MAX_SNAKE_LENGTH) {
+        return;
+    }
+
+    snake[index].coords.x = -1;
+    snake[index].coords.y = -1;
+    snake[index].display_char = SNAKE_BODY_CHAR;
+    snake[index].head_colour = snake->body_colour;
+    snake[index].attributes = A_BOLD;
+
+    *length = index + 1;
+}
+
+/*
+ * Return true if food overlaps with any segment of snake.
+ */
+static bool snake_food_overlaps_snake(const Snake *snake, const size_t length, const Coords *food)
+{
+    for (size_t i = 0; i < length; ++i) {
+        if (COORDINATES_OVERLAP(snake[i].coords.x, snake[i].coords.y, food->x, food->y)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*
+ * Tries to put the food in random coordinates that are not occupied by a snake.
+ * If the board is full this might give up after a few tries, in which case the
+ * food will be placed in a random coordinate that overlaps with a snake segment.
+ *
+ * TODO: make this never fail.
+ */
+static void snake_get_random_food_coords(const GameData *game, SnakeState *state)
+{
+    for (size_t tries = 0; tries < 3; ++tries) {
+        game_random_coords(game, &state->food);
+
+        if (!snake_food_overlaps_snake(state->snake, state->snake_length, &state->food)
+                && !snake_food_overlaps_snake(state->other_snake, state->other_snake_length, &state->food)) {
+            return;
+        }
+    }
 }
 
 static long int snake_check_food(const GameData *game, SnakeState *state)
 {
     Coords *food = &state->food;
-    const Coords *head = snake_get_head_coords(state);
+    const Coords *head = snake_get_head_coords(state->snake);
 
     if (!COORDINATES_OVERLAP(head->x, head->y, food->x, food->y)) {
         return 0;
     }
 
-    snake_grow(state);
+    snake_grow(state->snake, &state->snake_length);
 
-    game_random_coords(game, food);
+    snake_get_random_food_coords(game, state);
 
     return snake_get_move_points(state);
 }
@@ -427,7 +569,7 @@ static long int snake_check_food(const GameData *game, SnakeState *state)
 static long int snake_check_powerup(GameData *game, SnakeState *state)
 {
     Coords *powerup = &state->powerup;
-    const Coords *head = snake_get_head_coords(state);
+    const Coords *head = snake_get_head_coords(state->snake);
 
     if (!COORDINATES_OVERLAP(head->x, head->y, powerup->x, powerup->y)) {
         return 0;
@@ -489,7 +631,7 @@ static void snake_initialize_agent(SnakeState *state, const Coords *coords)
 static void snake_dispatch_new_agent(const GameData *game, SnakeState *state)
 {
     Coords new_coords;
-    const Coords *head = snake_get_head_coords(state);
+    const Coords *head = snake_get_head_coords(state->snake);
 
     size_t tries = 0;
 
@@ -530,7 +672,7 @@ static void snake_do_powerup(const GameData *game, SnakeState *state)
     if (timed_out(state->powerup_timer, SNAKE_POWERUP_TIMER)) {
         state->last_powerup_time = get_unix_time();
         state->has_powerup = false;
-        snake_set_body_attributes(state->snake, state->snake_length, SNAKE_BODY_COLOUR, A_BOLD);
+        snake_set_body_attributes(state->snake, state->snake_length, state->snake->body_colour, A_BOLD);
     }
 }
 
@@ -586,14 +728,88 @@ static void snake_do_points_update(GameData *game, SnakeState *state, long int p
     snake_dispatch_new_agent(game, state);
 }
 
-static void snake_game_over(SnakeState *state)
+/*
+ * Return a score >= 0 of the current state based on the proximity of the snake to the food after
+ * moving one step towards `new_dir`.
+ *
+ * Return -1 if the snake dies or `new_dir` is an invalid direction.
+ */
+static int snake_state_score(GameData *game, SnakeState *state, const Snake *old_snake, Direction new_dir)
 {
-    state->game_over = true;
-    state->has_powerup = false;
-    state->snake[0].colour = SNAKE_DEAD_BODY_COLOUR;
-    state->snake[0].attributes = A_BOLD | A_BLINK;
+    if (!snake_validate_direction(state->direction, new_dir)) {
+        return -1;
+    }
 
-    snake_set_body_attributes(state->snake, state->snake_length, SNAKE_DEAD_BODY_COLOUR, A_BOLD | A_BLINK);
+    const Direction old_dir = state->direction;
+    state->direction = new_dir;
+
+    snake_move_body(state->snake, state->snake_length);
+    snake_move_head(state->snake, state->direction);
+
+    if (!snake_state_valid(game, state, true)) {
+        state->direction = old_dir;
+        return -1;
+    }
+
+    state->direction = old_dir;
+
+    const Coords *head = snake_get_head_coords(state->snake);
+
+    const int x_diff = abs(head->x - state->food.x);
+    const int y_diff = abs(head->y - state->food.y);
+
+    return 1000 - (x_diff + y_diff);
+}
+
+/*
+ * Moves snake towards food and tries not to die.
+ */
+static void snake_naive_ai(GameData *game, SnakeState *state)
+{
+    int best_score = -1;
+    size_t new_dir = state->direction;
+
+    Snake *old_snake = calloc(1, SNAKE_MAX_SNAKE_LENGTH * sizeof(Snake));
+
+    if (old_snake == NULL) {
+        return;
+    }
+
+    memcpy(old_snake, state->snake, sizeof(Snake) * SNAKE_MAX_SNAKE_LENGTH);
+
+    for (size_t dir = 0; dir < INVALID_DIRECTION; ++dir) {
+        const int new_score = snake_state_score(game, state, old_snake, dir);
+
+        if (new_score > best_score) {
+            best_score = new_score;
+            new_dir = dir;
+        }
+
+        memcpy(state->snake, old_snake, sizeof(Snake) * SNAKE_MAX_SNAKE_LENGTH);
+    }
+
+    free(old_snake);
+
+    switch (new_dir) {
+        case NORTH:
+            snake_set_key_press(state, KEY_UP);
+            break;
+
+        case SOUTH:
+            snake_set_key_press(state, KEY_DOWN);
+            break;
+
+        case EAST:
+            snake_set_key_press(state, KEY_RIGHT);
+            break;
+
+        case WEST:
+            snake_set_key_press(state, KEY_LEFT);
+            break;
+
+        default:
+            break;
+    }
 }
 
 static void snake_move(GameData *game, SnakeState *state, TIME_MS cur_time)
@@ -604,22 +820,39 @@ static void snake_move(GameData *game, SnakeState *state, TIME_MS cur_time)
         return;
     }
 
+    if (state->is_online && !state->send_flag) {
+        return;
+    }
+
+    if (USE_AI && state->self_host) {
+        snake_naive_ai(game, state);
+    }
+
     state->snake_time_last_moved = cur_time;
 
     snake_update_direction(state);
-    snake_move_body(state);
-    snake_move_head(state);
+    snake_move_body(state->snake, state->snake_length);
+    snake_move_head(state->snake, state->direction);
 
-    if (!snake_state_valid(game, state)) {
-        snake_game_over(state);
+    if (!snake_state_valid(game, state, false)) {
+        if (state->is_online) {
+            snake_packet_send_state(game, state);
+        }
+
+        snake_game_over(state, state->snake, state->snake_length);
         game_set_status(game, GS_Finished);
+        game_set_winner(game, false);
         return;
     }
 
     long int points = snake_check_food(game, state) + snake_check_powerup(game, state);
 
-    if (points > 0) {
+    if (!state->is_online && points > 0) {
         snake_do_points_update(game, state, points);
+    }
+
+    if (state->is_online && !snake_packet_send_state(game, state)) {
+        fprintf(stderr, "failed to send state\n");
     }
 }
 
@@ -631,7 +864,7 @@ static void snake_move(GameData *game, SnakeState *state, TIME_MS cur_time)
  */
 static void snake_agent_move(GameData *game, SnakeState *state, TIME_MS cur_time)
 {
-    const Coords *head = snake_get_head_coords(state);
+    const Coords *head = snake_get_head_coords(state->snake);
 
     for (size_t i = 0; i < state->agent_list_size; ++i) {
         NasaAgent *agent = &state->agents[i];
@@ -664,7 +897,7 @@ static void snake_agent_move(GameData *game, SnakeState *state, TIME_MS cur_time
             continue;
         }
 
-        if (snake_coords_contain_body(state, &new_coords)) {
+        if (snake_coords_contain_body(state->snake, state->snake_length, &new_coords)) {
             continue;
         }
 
@@ -676,7 +909,7 @@ static void snake_agent_move(GameData *game, SnakeState *state, TIME_MS cur_time
         coords->y = new_coords.y;
 
         if (!state->has_powerup && COORDINATES_OVERLAP(head->x, head->y, new_coords.x, new_coords.y)) {
-            snake_game_over(state);
+            snake_game_over(state, state->snake, state->snake_length);
             game_set_status(game, GS_Finished);
             return;
         }
@@ -691,34 +924,38 @@ static void snake_update_frames(const GameData *game, SnakeState *state, TIME_MS
 
     state->last_draw_update = cur_time;
 
-    if (state->has_powerup) {
+    if (!state->is_online && state->has_powerup) {
         const int time_left = SNAKE_POWERUP_TIMER - (get_unix_time() - state->powerup_timer);
 
         if (time_left <= 5 && time_left % 2 == 0) {
-            snake_set_body_attributes(state->snake, state->snake_length, SNAKE_BODY_COLOUR, A_BOLD);
+            snake_set_body_attributes(state->snake, state->snake_length, state->snake->body_colour, A_BOLD);
         } else {
             snake_set_body_attributes(state->snake, state->snake_length, -1, A_BOLD);
         }
     }
 }
 
-static void snake_draw_self(WINDOW *win, const SnakeState *state)
+static void snake_draw_snake(WINDOW *win, const Snake *snake, size_t length)
 {
-    for (size_t i = 0; i < state->snake_length; ++i) {
-        const Snake *body = &state->snake[i];
+    for (size_t i = 0; i < length; ++i) {
+        const Snake *body = &snake[i];
 
         if (body->coords.x <= 0 || body->coords.y <= 0) {
             continue;
         }
 
-        wattron(win, body->attributes | COLOR_PAIR(body->colour));
+        wattron(win, body->attributes | COLOR_PAIR(body->head_colour));
         mvwaddch(win, body->coords.y, body->coords.x, body->display_char);
-        wattroff(win, body->attributes | COLOR_PAIR(body->colour));
+        wattroff(win, body->attributes | COLOR_PAIR(body->head_colour));
     }
 }
 
 static void snake_draw_food(WINDOW *win, const SnakeState *state)
 {
+    if (state->is_online && state->status != SnakeStatusPlaying) {
+        return;
+    }
+
     wattron(win, A_BOLD | COLOR_PAIR(SNAKE_FOOD_COLOUR));
     mvwaddch(win, state->food.y, state->food.x, SNAKE_FOOD_CHAR);
     wattroff(win, A_BOLD | COLOR_PAIR(SNAKE_FOOD_COLOUR));
@@ -754,18 +991,23 @@ static void snake_draw_powerup(WINDOW *win, const SnakeState *state)
 
 void snake_cb_update_game_state(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    if (cb_data == NULL) {
         return;
     }
 
-    SnakeState *state = (SnakeState *)cb_data;
-
     TIME_MS cur_time = get_time_millis();
 
-    snake_do_powerup(game, state);
-    snake_agent_move(game, state, cur_time);
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (!state->is_online) {
+        snake_decay_points(game, state);
+        snake_do_powerup(game, state);
+        snake_agent_move(game, state, cur_time);
+    } else if (state->status != SnakeStatusPlaying) {
+        return;
+    }
+
     snake_move(game, state, cur_time);
-    snake_decay_points(game, state);
 
     if (!state->game_over) {
         snake_update_frames(game, state, cur_time);
@@ -774,28 +1016,39 @@ void snake_cb_update_game_state(GameData *game, void *cb_data)
 
 void snake_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
-    if (!cb_data) {
+    if (cb_data == NULL) {
         return;
     }
 
     SnakeState *state = (SnakeState *)cb_data;
 
     snake_draw_food(win, state);
-    snake_draw_powerup(win, state);
-    snake_draw_agent(win, state);
-    snake_draw_self(win, state);
+
+    if (!state->is_online) {
+        snake_draw_powerup(win, state);
+        snake_draw_agent(win, state);
+    } else {
+        snake_draw_snake(win, state->other_snake, state->other_snake_length);
+    }
+
+    snake_draw_snake(win, state->snake, state->snake_length);
 }
 
 void snake_cb_kill(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    if (cb_data == NULL) {
         return;
     }
 
     SnakeState *state = (SnakeState *)cb_data;
 
+    if (state->is_online && state->status == SnakeStatusPlaying) {
+        snake_packet_abort(game);
+    }
+
     free(state->snake);
     free(state->agents);
+    free(state->other_snake);
     free(state);
 
     game_set_cb_update_state(game, NULL, NULL);
@@ -807,7 +1060,7 @@ void snake_cb_kill(GameData *game, void *cb_data)
 
 void snake_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
-    if (!cb_data) {
+    if (cb_data == NULL) {
         return;
     }
 
@@ -820,7 +1073,7 @@ void snake_cb_pause(GameData *game, bool is_paused, void *cb_data)
 {
     UNUSED_VAR(game);
 
-    if (!cb_data) {
+    if (cb_data == NULL) {
         return;
     }
 
@@ -836,19 +1089,64 @@ void snake_cb_pause(GameData *game, bool is_paused, void *cb_data)
     }
 }
 
-static void snake_initialize_snake_head(const GameData *game, Snake *snake)
+static void snake_initialize_snake_head(const GameData *game, SnakeState *state, bool is_online, bool self_host)
 {
     int max_x;
     int max_y;
     game_max_x_y(game, &max_x, &max_y);
 
-    snake[0].coords.x = max_x / 2;
-    snake[0].coords.y = max_y / 2;
-    snake[0].colour = SNAKE_HEAD_COLOUR;
-    snake[0].attributes = A_BOLD;
+    state->snake_length = 1;
+
+    Snake *head = state->snake;
+
+    head->body_colour = SNAKE_BODY_COLOUR;
+    head->head_colour = SNAKE_HEAD_COLOUR;
+    head->attributes = A_BOLD;
+
+    if (!is_online) {
+        head->coords.x = max_x / 2;
+        head->coords.y = max_y / 2;
+        state->direction = SOUTH;
+        snake_set_head_char(head, SOUTH);
+        return;
+    }
+
+    state->other_snake_length = 1;
+
+    Snake *other_head = state->other_snake;
+
+    other_head->body_colour = SNAKE_BODY_OTHER_COLOUR;
+    other_head->head_colour = SNAKE_HEAD_OTHER_COLOUR;
+    other_head->attributes = A_BOLD;
+
+    int self_x = max_x / 2 - 2;
+    int self_y = max_y / 2 + 2;
+    int other_x = max_x / 2 + 2;
+    int other_y = max_y / 2 - 2;
+    Direction self_dir = NORTH;
+    Direction other_dir = SOUTH;
+
+    if (!self_host) {
+        other_x = max_x / 2 - 2;
+        other_y = max_y / 2 + 2;
+        self_x = max_x / 2 + 2;
+        self_y = max_y / 2 - 2;
+        self_dir = SOUTH;
+        other_dir = NORTH;
+    }
+
+    head->coords.x = self_x;
+    head->coords.y = self_y;
+    state->direction = self_dir;
+    snake_set_head_char(head, self_dir);
+
+    other_head->coords.x = other_x;
+    other_head->coords.y = other_y;
+    state->other_direction = other_dir;
+    snake_set_head_char(other_head, other_dir);
 }
 
-int snake_initialize(GameData *game)
+int snake_initialize(GameData *game, bool is_online, bool self_host)
 {
     // note: if this changes we must update SNAKE_MAX_SNAKE_LENGTH and SNAKE_AGENT_MAX_LIST_SIZE
     if (game_set_window_shape(game, GW_ShapeSquare) == -1) {
@@ -863,44 +1161,504 @@ int snake_initialize(GameData *game)
 
     state->snake = calloc(1, SNAKE_MAX_SNAKE_LENGTH * sizeof(Snake));
 
+    int err = -4;
+
     if (state->snake == NULL) {
         free(state);
-        return -1;
+        goto on_error;
     }
 
     state->agents = calloc(1, SNAKE_AGENT_MAX_LIST_SIZE * sizeof(NasaAgent));
 
     if (state->agents == NULL) {
-        free(state->snake);
-        free(state);
-        return -1;
+        goto on_error;
     }
 
-    snake_initialize_snake_head(game, state->snake);
+    state->is_online = is_online;
+    state->self_host = self_host;
 
-    state->snake_speed = SNAKE_DEFAULT_SNAKE_SPEED;
-    state->snake_length = 1;
-    state->direction = NORTH;
-    snake_set_head_char(state);
+    state->snake_speed = is_online ? SNAKE_ONLINE_SNAKE_SPEED : SNAKE_DEFAULT_SNAKE_SPEED;
 
     state->powerup.x = -1;
     state->powerup.y = -1;
 
     state->last_powerup_time = get_unix_time();
 
-    game_show_level(game, true);
-    game_show_score(game, true);
-    game_show_high_score(game, true);
+    game_show_level(game, !is_online);
+    game_show_score(game, !is_online);
+    game_show_high_score(game, !is_online);
 
     game_increment_level(game);
     game_set_update_interval(game, SNAKE_DEFAULT_UPDATE_INTERVAL);
     game_random_coords(game, &state->food);
 
+    if (!state->is_online) {
+        snake_set_head_char(state->snake, SOUTH);
+    } else {
+        state->other_snake = calloc(1, SNAKE_MAX_SNAKE_LENGTH * sizeof(Snake));
+
+        if (state->other_snake == NULL) {
+            goto on_error;
+        }
+    }
+
+    snake_initialize_snake_head(game, state, state->is_online, state->self_host);
+
     game_set_cb_update_state(game, snake_cb_update_game_state, state);
     game_set_cb_render_window(game, snake_cb_render_window, state);
     game_set_cb_on_keypress(game, snake_cb_on_keypress, state);
-    game_set_cb_kill(game, snake_cb_kill, state);
     game_set_cb_on_pause(game, snake_cb_pause, state);
 
+    state->x_left_bound = game_x_left_bound(game);
+    state->y_top_bound = game_y_top_bound(game);
+
+    if (!state->is_online) {
+        game_set_cb_kill(game, snake_cb_kill, state);
+        return 0;
+    }
+
+    if (state->self_host) {
+        state->status = SnakeStatusInitializing;
+
+        if (!snake_packet_invite_request(game)) {
+            err = -2;
+            goto on_error;
+        }
+    } else {
+        state->status = SnakeStatusPlaying;
+
+        if (!snake_packet_invite_respond(game, state)) {
+            err = -2;
+            goto on_error;
+        }
+    }
+
+    game_set_cb_kill(game, snake_cb_kill, state);
+    game_set_cb_on_packet(game, snake_cb_on_packet, state);
+
     return 0;
+
+on_error:
+    free(state->snake);
+    free(state->other_snake);
+    free(state->agents);
+    free(state);
+    return err;
 }
+
+/**
+ * START MULTIPLAYER
+ */
+
+/*
+ * Sends an invite response packet to friend. Packet is comprised of:
+ * [
+ *  invite_type   (1 byte)
+ *  snake_version (1 byte)
+ *  food x coords (4 bytes)
+ *  food y coords (4 bytes)
+ *
+ *  Return true on success.
+ * ]
+ */
+#define SNAKE_PACKET_INVITE_RESPONSE_LENGTH (1 + 1 + sizeof(uint32_t) + sizeof(uint32_t))
+static bool snake_packet_invite_respond(const GameData *game, const SnakeState *state)
+{
+    size_t length = 0;
+
+    uint8_t data[SNAKE_PACKET_INVITE_RESPONSE_LENGTH];
+    data[length] = SNAKE_PACKET_INVITE_RESPONSE;
+    ++length;
+
+    data[length] = SNAKE_ONLINE_VERSION;
+    ++length;
+
+    Coords food_coords;
+    game_util_win_coords_to_board(state->food.x, state->food.y, state->x_left_bound, state->y_top_bound,
+                                  &food_coords);
+
+    game_util_pack_u32(data + length, food_coords.x);
+    length += sizeof(uint32_t);
+
+    game_util_pack_u32(data + length, food_coords.y);
+    length += sizeof(uint32_t);
+
+    if (game_packet_send(game, data, length, GP_Data) == 0) {
+        return length == SNAKE_PACKET_INVITE_RESPONSE_LENGTH;
+    }
+
+    return false;
+}
+
+/*
+ * Sends an invite request packet to friend. Packet is comprised of:
+ * [
+ *  invite_type (1 byte)
+ * ]
+ *
+ * Return true on success.
+ */
+#define SNAKE_PACKET_INVITE_REQUEST_LENGTH 1
+static bool snake_packet_invite_request(const GameData *game)
+{
+    uint8_t data[SNAKE_PACKET_INVITE_REQUEST_LENGTH];
+    data[0] = SNAKE_PACKET_INVITE_REQUEST;
+
+    return game_packet_send(game, data, sizeof(data), GP_Invite) == 0;
+}
+
+/*
+ * Sends an abort packet to friend.
+ *
+ * Return true on success.
+ */
+#define SNAKE_PACKET_ABORT_LENGTH 1
+static bool snake_packet_abort(const GameData *game)
+{
+    uint8_t data[SNAKE_PACKET_ABORT_LENGTH];
+    data[0] = SNAKE_PACKET_ABORT;
+
+    return game_packet_send(game, data, sizeof(data), GP_Data) == 0;
+}
+
+/*
+ * Return true if the received state is valid.
+ */
+static bool snake_recv_state_valid(GameData *game, SnakeState *state, Direction other_dir,
+                                   const Coords *other_coords, const Coords *food_coords)
+{
+    if (state->other_direction != other_dir &&
+            !snake_validate_direction(state->other_direction, other_dir)) {
+        snake_create_message(game, state->direction, "I think I'm lost...",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+        fprintf(stderr, "Invalid other direction %d\n", other_dir);
+        return false;
+    }
+
+    if (!game_coordinates_in_bounds(game, food_coords->x, food_coords->y)) {
+        snake_create_message(game, other_dir, "I'm not feeling so well",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+        fprintf(stderr, "Invalid food coords: %d %d\n", food_coords->x, food_coords->y);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Return true if the received state indicates that the game is over.
+ */
+static bool snake_recv_state_game_over(GameData *game, SnakeState *state, const Coords *other_coords,
+                                       Direction other_dir)
+{
+    if (!game_coordinates_in_bounds(game, other_coords->x, other_coords->y)) {
+        snake_create_message(game, other_dir, "Ouch!",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+        game_set_status(game, GS_Finished);
+        game_set_winner(game, true);
+        return true;
+    }
+
+    if (snake_coords_contain_body(state->other_snake, state->other_snake_length, other_coords)) {
+        snake_create_message(game, other_dir, "Tastes like chicken!",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+        game_set_status(game, GS_Finished);
+        game_set_winner(game, true);
+        return true;
+    }
+
+    if (snake_coords_contain_body(state->snake, state->snake_length, other_coords)) {
+        snake_create_message(game, other_dir, "AAAAA my tooth!",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+        game_set_status(game, GS_Finished);
+        game_set_winner(game, true);
+        return true;
+    }
+
+    const Coords *self_head = snake_get_head_coords(state->snake);
+
+    if (COORDINATES_OVERLAP(other_coords->x, other_coords->y, self_head->x, self_head->y)) {
+        snake_create_message(game, other_dir, "Ouch!",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+        snake_create_message(game, state->direction, "Ouch!",
+                             A_BOLD, WHITE, SNAKE_DEFAULT_MESSAGE_TIMER, self_head, true);
+        game_set_status(game, GS_Finished);
+        game_set_winner(game, false);
+        snake_game_over(state, state->snake, state->snake_length);
+        return true;
+    }
+
+    return false;
+}
+
+/*
+ * Applies the game state given to us by the other player.
+ *
+ * Return true if state is valid.
+ */
+static bool snake_apply_state(GameData *game, SnakeState *state, Direction other_direction,
+                              const Coords *other_coords, const Coords *food_coords)
+
+{
+    if (state->status == SnakeStatusFinished) {
+        return false;
+    }
+
+    if (!snake_recv_state_valid(game, state, other_direction, other_coords, food_coords)) {
+        snake_game_over(state, state->other_snake, state->other_snake_length);
+        game_set_status(game, GS_Finished);
+        game_set_winner(game, true);
+        return false;
+    }
+
+    state->other_direction = other_direction;
+    snake_set_head_char(state->other_snake, state->other_direction);
+    snake_move_body(state->other_snake, state->other_snake_length);
+    snake_move_head(state->other_snake, state->other_direction);
+
+    if (snake_recv_state_game_over(game, state, other_coords, other_direction)) {
+        snake_game_over(state, state->other_snake, state->other_snake_length);
+        return true;
+    }
+
+    if (COORDINATES_OVERLAP(other_coords->x, other_coords->y, state->food.x, state->food.y)) {
+        snake_grow(state->other_snake, &state->other_snake_length);
+        memcpy(&state->food, food_coords, sizeof(Coords));
+    } else if (!COORDINATES_OVERLAP(state->food.x, state->food.y, food_coords->x, food_coords->y)) {
+        fprintf(stderr, "Warning: Food coordinates don't overlap\n");
+    }
+
+    return true;
+}
+
+/*
+ * Send your current game state to the other peer. This packet includes:
+ * [
+ *  packet_type    (1 byte)
+ *  self direction (1 byte)
+ *  self x coord   (4 bytes)
+ *  self y coord   (4 bytes)
+ *  food x coord   (4 bytes)
+ *  food y coord   (4 bytes)
+ * ]
+ *
+ * Return true on success.
+ */
+#define SNAKE_PACKET_STATE_LENGTH (1 + 1 + (sizeof(uint32_t) * 4))
+static bool snake_packet_send_state(const GameData *game, SnakeState *state)
+{
+    // Convert our relative coordinates to real coordinates before sending
+    const Snake *snake = state->snake;
+
+    Coords snake_coords;
+    game_util_win_coords_to_board(snake->coords.x, snake->coords.y, state->x_left_bound, state->y_top_bound,
+                                  &snake_coords);
+
+    Coords food_coords;
+    game_util_win_coords_to_board(state->food.x, state->food.y, state->x_left_bound, state->y_top_bound,
+                                  &food_coords);
+
+    uint8_t data[SNAKE_PACKET_STATE_LENGTH];
+
+    size_t length = 0;
+    data[length] = SNAKE_PACKET_STATE;
+    ++length;
+
+    data[length] = (uint8_t)state->direction;
+    ++length;
+
+    game_util_pack_u32(data + length, snake_coords.x);
+    length += sizeof(uint32_t);
+
+    game_util_pack_u32(data + length, snake_coords.y);
+    length += sizeof(uint32_t);
+
+    game_util_pack_u32(data + length, food_coords.x);
+    length += sizeof(uint32_t);
+
+    game_util_pack_u32(data + length, food_coords.y);
+    length += sizeof(uint32_t);
+
+    if (game_packet_send(game, data, length, GP_Data) == 0) {
+        state->send_flag = false;
+        return length == SNAKE_PACKET_STATE_LENGTH;
+    }
+
+
+    return false;
+}
+
+/*
+ * Handles a state packet and updates the game state accordingly.
+ *
+ * Return true on success.
+ */
+static bool snake_handle_state_packet(GameData *game, SnakeState *state, const uint8_t *data, size_t length)
+{
+    size_t unpacked = 0;
+
+    const Direction other_direction = (Direction)data[unpacked];
+    ++unpacked;
+
+    uint32_t other_x_coord;
+    uint32_t other_y_coord;
+    uint32_t food_x_coord;
+    uint32_t food_y_coord;
+
+    game_util_unpack_u32(data + unpacked, &other_x_coord);
+    unpacked += sizeof(uint32_t);
+
+    game_util_unpack_u32(data + unpacked, &other_y_coord);
+    unpacked += sizeof(uint32_t);
+
+    game_util_unpack_u32(data + unpacked, &food_x_coord);
+    unpacked += sizeof(uint32_t);
+
+    game_util_unpack_u32(data + unpacked, &food_y_coord);
+    unpacked += sizeof(uint32_t);
+
+    Coords other_coords;
+    game_util_board_to_win_coords(other_x_coord, other_y_coord, state->x_left_bound, state->y_top_bound,
+                                  &other_coords);
+    Coords food_coords;
+    game_util_board_to_win_coords(food_x_coord, food_y_coord, state->x_left_bound, state->y_top_bound,
+                                  &food_coords);
+
+    if (!snake_apply_state(game, state, other_direction, &other_coords, &food_coords)) {
+        return false;
+    }
+
+    return unpacked == SNAKE_PACKET_STATE_LENGTH - 1;
+}
+
+static bool snake_handle_invite_response(const GameData *game, SnakeState *state, const uint8_t *data, size_t length)
+{
+    uint32_t food_x_coord;
+    uint32_t food_y_coord;
+
+    size_t unpacked = 0;
+    uint8_t snake_version = data[0];
+    unpacked += 1;
+
+    if (snake_version != SNAKE_ONLINE_VERSION) {
+        fprintf(stderr, "Snake versions are incompatible: yours: %u, theirs: %u\n",
+                SNAKE_ONLINE_VERSION, snake_version);
+        return false;
+    }
+
+    game_util_unpack_u32(data + unpacked, &food_x_coord);
+    unpacked += sizeof(uint32_t);
+
+    game_util_unpack_u32(data + unpacked, &food_y_coord);
+    unpacked += sizeof(uint32_t);
+
+    Coords food_coords;
+    game_util_board_to_win_coords(food_x_coord, food_y_coord, state->x_left_bound, state->y_top_bound,
+                                  &food_coords);
+
+    if (!game_coordinates_in_bounds(game, food_coords.x, food_coords.y)) {
+        fprintf(stderr, "invalid food coords on initialization (x %d, y %d)\n", food_coords.x, food_coords.y);
+        return false;
+    }
+
+    memcpy(&state->food, &food_coords, sizeof(food_coords));
+
+    state->status = SnakeStatusPlaying;
+
+    return unpacked == SNAKE_PACKET_INVITE_RESPONSE_LENGTH - 1;
+}
+
+static void snake_handle_abort_packet(GameData *game, SnakeState *state)
+{
+    snake_game_over(state, state->other_snake, state->other_snake_length);
+    game_set_status(game, GS_Finished);
+    game_set_winner(game, true);
+
+    const Coords *other_coords = snake_get_head_coords(state->other_snake);
+    snake_create_message(game, state->direction, "I'm scared",  A_BOLD, WHITE,
+                         SNAKE_DEFAULT_MESSAGE_TIMER, other_coords, true);
+}
+
+static void snake_cb_on_packet(GameData *game, const uint8_t *data, size_t length, void *cb_data)
+{
+    if (length == 0 || data == NULL) {
+        return;
+    }
+
+    if (cb_data == NULL) {
+        return;
+    }
+
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (!state->is_online) {
+        return;
+    }
+
+    SnakePacketType type = data[0];
+
+    switch (type) {
+        case SNAKE_PACKET_INVITE_RESPONSE: {
+            if (length != SNAKE_PACKET_INVITE_RESPONSE_LENGTH) {
+                fprintf(stderr, "Got invalid length invite response (%zu)\n", length);
+                break;
+            }
+
+            if (state->status != SnakeStatusInitializing) {
+                fprintf(stderr, "Got unsolicited snake invite response\n");
+                break;
+            }
+
+            if (!snake_handle_invite_response(game, state, data + 1, length - 1)) {
+                fprintf(stderr, "Failed to handle invite response\n");
+                break;
+            }
+
+            state->send_flag = true;
+            break;
+        }
+
+        case SNAKE_PACKET_STATE: {
+            if (state->status != SnakeStatusPlaying) {
+                fprintf(stderr, "Got state packet but status is %d\n", state->status);
+                break;
+            }
+
+            if (length != SNAKE_PACKET_STATE_LENGTH) {
+                snake_handle_abort_packet(game, state);
+                fprintf(stderr, "Got invalid state packet length (%zu)\n", length);
+                break;
+            }
+
+            if (state->send_flag) {
+                fprintf(stderr, "Got multiple state packets before responding\n");
+                break;
+            }
+
+            if (!snake_handle_state_packet(game, state, data + 1, length - 1)) {
+                fprintf(stderr, "Failed to handle snake packet\n");
+                break;
+            }
+
+            state->send_flag = true;
+            break;
+        }
+
+        case SNAKE_PACKET_ABORT: {
+            if (state->status != SnakeStatusPlaying) {
+                break;
+            }
+
+            snake_handle_abort_packet(game, state);
+            break;
+        }
+
+        default: {
+            return;
+        }
+    }
+}
+
+/**
+ * END MULTIPLAYER
+ */
