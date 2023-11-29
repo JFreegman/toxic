@@ -37,6 +37,40 @@
 extern ToxWindow *prompt;
 extern FriendsList Friends;
 
+void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+    UNUSED_VAR(m);
+
+    const char *msg;
+    const bool auto_accept_files = friend_get_auto_accept_files(self->num);
+
+    if (argc == 0) {
+        if (auto_accept_files) {
+            msg = "Auto-file accept for this friend is enabled; type \"/autoaccept off\" to disable";
+        } else {
+            msg = "Auto-file accept for this friend is disabled; type \"/autoaccept on\" to enable";
+        }
+
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+        return;
+    }
+
+    const char *option = argv[1];
+
+    if (!strcmp(option, "1") || !strcmp(option, "on")) {
+        friend_set_auto_file_accept(self->num, true);
+        msg = "Auto-accepting file transfers has been enabled for this friend";
+    } else if (!strcmp(option, "0") || !strcmp(option, "off")) {
+        friend_set_auto_file_accept(self->num, false);
+        msg = "Auto-accepting file transfers has been disabled for this friend";
+    } else {
+        msg = "Invalid option. Use \"/autoaccept on\" and \"/autoaccept off\" to toggle auto-file accept";
+    }
+
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+}
+
 void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -313,19 +347,19 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     long int idx = strtol(argv[1], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[1], "0")) || idx < 0 || idx >= MAX_FILES) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld", idx);
         return;
     }
 
     FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
 
     if (!ft) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
         return;
     }
 
     if (ft->state != FILE_TRANSFER_PENDING) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with that ID.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
         return;
     }
 
@@ -344,12 +378,13 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx, ft->file_path);
 
-    /* prep progress bar line */
+    const bool auto_accept_files = friend_get_auto_accept_files(self->num);
+    const uint32_t line_skip = auto_accept_files ? 4 : 2;
+
     char progline[MAX_STR_SIZE];
     init_progress_bar(progline);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
-
-    ft->line_id = self->chatwin->hst->line_end->id + 2;
+    ft->line_id = self->chatwin->hst->line_end->id + line_skip;
     ft->state = FILE_TRANSFER_STARTED;
 
     return;

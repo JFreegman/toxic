@@ -83,6 +83,7 @@ static struct cmd_func global_commands[] = {
 };
 
 static struct cmd_func chat_commands[] = {
+    { "/autoaccept", cmd_autoaccept_files  },
     { "/cancel",    cmd_cancelfile        },
     { "/cinvite",   cmd_conference_invite },
     { "/cjoin",     cmd_conference_join   },

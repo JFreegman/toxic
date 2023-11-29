@@ -502,6 +502,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort)
         Friends.list[i].num = num;
         Friends.list[i].active = true;
         Friends.list[i].chatwin = -1;
+        Friends.list[i].auto_accept_files = false;  // do not change
         Friends.list[i].connection_status = TOX_CONNECTION_NONE;
         Friends.list[i].status = TOX_USER_STATUS_NONE;
         Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
@@ -1344,6 +1345,10 @@ void friendlist_onInit(ToxWindow *self, Tox *m)
 
 void disable_chatwin(uint32_t f_num)
 {
+    if (f_num >= Friends.max_idx) {
+        return;
+    }
+
     Friends.list[f_num].chatwin = -1;
 }
 
@@ -1381,12 +1386,20 @@ static void friendlist_onAV(ToxWindow *self, ToxAV *av, uint32_t friend_number, 
 /* Returns a friend's status */
 Tox_User_Status get_friend_status(uint32_t friendnumber)
 {
+    if (friendnumber >= Friends.max_idx) {
+        return TOX_USER_STATUS_NONE;
+    }
+
     return Friends.list[friendnumber].status;
 }
 
 /* Returns a friend's connection status */
 Tox_Connection get_friend_connection_status(uint32_t friendnumber)
 {
+    if (friendnumber >= Friends.max_idx) {
+        return TOX_CONNECTION_NONE;
+    }
+
     return Friends.list[friendnumber].connection_status;
 }
 
@@ -1408,6 +1421,24 @@ bool friend_is_blocked(const char *public_key)
     }
 
     return false;
+}
+
+void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept)
+{
+    if (friendnumber >= Friends.max_idx) {
+        return;
+    }
+
+    Friends.list[friendnumber].auto_accept_files = auto_accept;
+}
+
+bool friend_get_auto_accept_files(uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        return false;
+    }
+
+    return Friends.list[friendnumber].auto_accept_files;
 }
 
 ToxWindow *new_friendlist(void)

@@ -75,6 +75,7 @@ typedef struct {
     Tox_Connection connection_status;
     bool is_typing;
     bool logging_on;    /* saves preference for friend irrespective of global settings */
+    bool auto_accept_files;  /* default should always be false */
     Tox_User_Status status;
 
     struct LastOnline last_online;
@@ -130,5 +131,15 @@ void sort_friendlist_index(void);
  * `public_key` must be at least TOX_PUBLIC_KEY_SIZE bytes.
  */
 bool friend_is_blocked(const char *public_key);
+
+/*
+ * Enable or disable auto-accepting file transfers for this friend.
+ */
+void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept);
+
+/*
+ * Return true if auto-accepting file transfers is enabled for this friend.
+ */
+bool friend_get_auto_accept_files(uint32_t friendnumber);
 
 #endif /* end of include guard: FRIENDLIST_H */

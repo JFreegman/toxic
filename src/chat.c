@@ -67,6 +67,7 @@ static void kill_infobox(ToxWindow *self);
 static const char *chat_cmd_list[] = {
     "/accept",
     "/add",
+    "/autoaccept",
     "/avatar",
     "/cancel",
     "/cinvite",
@@ -506,17 +507,12 @@ static void chat_onFileControl(ToxWindow *self, Tox *m, uint32_t friendnum, uint
     }
 
     switch (control) {
-        case TOX_FILE_CONTROL_RESUME: {
-            /* transfer is accepted */
+        case TOX_FILE_CONTROL_RESUME: {    /* transfer is accepted */
             if (ft->state == FILE_TRANSFER_PENDING) {
                 ft->state = FILE_TRANSFER_STARTED;
                 line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%zu] for '%s' accepted.",
                               ft->index, ft->file_name);
-                char progline[MAX_STR_SIZE];
-                init_progress_bar(progline);
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
                 sound_notify(self, silent, NT_NOFOCUS | user_settings->bell_on_filetrans_accept | NT_WNDALERT_2, NULL);
-                ft->line_id = self->chatwin->hst->line_end->id + 2;
             } else if (ft->state == FILE_TRANSFER_PAUSED) {    /* transfer is resumed */
                 ft->state = FILE_TRANSFER_STARTED;
             }
@@ -706,8 +702,6 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
         }
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type '/savefile %zu' to accept the file transfer.", ft->index);
-
     ft->file_size = file_size;
     snprintf(ft->file_path, sizeof(ft->file_path), "%s", file_path);
     snprintf(ft->file_name, sizeof(ft->file_name), "%s", filename);
@@ -721,6 +715,19 @@ static void chat_onFileRecv(ToxWindow *self, Tox *m, uint32_t friendnum, uint32_
     } else {
         box_notify(self, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_filetrans,
                    &self->active_box, self->name, "Incoming file: %s", filename);
+    }
+
+    const bool auto_accept_files = friend_get_auto_accept_files(friendnum);
+
+    if (auto_accept_files) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Auto-accepting file transfer %zu", ft->index);
+
+        char cmd[MAX_STR_SIZE];
+        snprintf(cmd, sizeof(cmd), "/savefile %zu", ft->index);
+        execute(self->window, self, m, cmd, CHAT_COMMAND_MODE);
+    } else {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Type '/savefile %zu' to accept the file transfer.", ft->index);
     }
 }
 
@@ -1596,6 +1603,8 @@ static void chat_onInit(ToxWindow *self, Tox *m)
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+
+    line_info_print(self);
 }
 
 ToxWindow *new_chat(Tox *m, uint32_t friendnum)

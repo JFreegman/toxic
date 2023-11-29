@@ -185,7 +185,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /note <msg>                : Set a personal note\n");
     wprintw(win, "  /nick <name>               : Set your global name (doesn't affect groups)\n");
     wprintw(win, "  /nospam <value>            : Change part of your Tox ID to stop spam\n");
-    wprintw(win, "  /log <on> or <off>         : Enable/disable logging\n");
+    wprintw(win, "  /log <on>|<off>            : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
     wprintw(win, "  /group <name>              : Create a new group chat\n");
     wprintw(win, "  /join <chatid>             : Join a groupchat using a Chat ID\n");
@@ -195,7 +195,7 @@ static void help_draw_global(ToxWindow *self)
 
 #ifdef QRCODE
 #ifdef QRPNG
-    wprintw(win, "  /myqr <txt> or <png>       : Print your Tox ID's QR code to a file.\n");
+    wprintw(win, "  /myqr <txt>|<png>          : Print your Tox ID's QR code to a file.\n");
 #else
     wprintw(win, "  /myqr                      : Print your Tox ID's QR code to a file.\n");
 #endif /* QRPNG */
@@ -246,6 +246,7 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "Chat Commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
+    wprintw(win, "  /autoaccept <on>|<off>     : Toggle auto-accepting file transfers\n");
     wprintw(win, "  /cinvite <n>               : Invite contact to a conference \n");
     wprintw(win, "  /cjoin                     : Join a pending conference\n");
     wprintw(win, "  /invite <n>                : Invite contact to a groupchat \n");
@@ -363,16 +364,16 @@ static void help_draw_conference(ToxWindow *self)
     wprintw(win, "Conference commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
-    wprintw(win, "  /title <msg>               : Show/set conference title\n");
+    wprintw(win, "  /title <msg>            : Show/set conference title\n");
 #ifdef AUDIO
     wattron(win, A_BOLD);
     wprintw(win, "\n Audio:\n");
     wattroff(win, A_BOLD);
-    wprintw(win, "  /audio <on> or <off>       : Enable/disable audio in an audio conference\n");
-    wprintw(win, "  /mute                      : Toggle self audio mute status\n");
-    wprintw(win, "  /mute <nick> or <pubkey>   : Toggle peer audio mute status\n");
-    wprintw(win, "  /ptt <on> or <off>         : Toggle audio input Push-To-Talk (F2 to activate)\n");
-    wprintw(win, "  /sense <n>                 : VAD sensitivity threshold\n\n");
+    wprintw(win, "  /audio <on>|<off>       : Enable/disable audio in an audio conference\n");
+    wprintw(win, "  /mute                   : Toggle self audio mute status\n");
+    wprintw(win, "  /mute <nick>|<pubkey>   : Toggle peer audio mute status\n");
+    wprintw(win, "  /ptt <on>|<off>         : Toggle audio input Push-To-Talk (F2 to activate)\n");
+    wprintw(win, "  /sense <n>              : VAD sensitivity threshold\n\n");
 #endif
 
     help_draw_bottom_menu(win);
@@ -434,7 +435,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'c':
-            height = 12;
+            height = 13;
 #ifdef VIDEO
             height += 15;
 #elif AUDIO
