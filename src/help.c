@@ -188,7 +188,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /log <on>|<off>            : Enable/disable logging\n");
     wprintw(win, "  /myid                      : Print your Tox ID\n");
     wprintw(win, "  /group <name>              : Create a new group chat\n");
-    wprintw(win, "  /join <chatid>             : Join a groupchat using a Chat ID\n");
+    wprintw(win, "  /join <chatid>             : Join a public groupchat using a Chat ID\n");
 #ifdef GAMES
     wprintw(win, "  /game                      : Play a game\n");
 #endif /* GAMES */
@@ -302,25 +302,25 @@ static void help_draw_groupchats(ToxWindow *self)
     wprintw(win, "  /chatid                   : Print this group's ID\n");
     wprintw(win, "  /close <m>                : Leave the group with an optional part message\n");
     wprintw(win, "  /disconnect               : Disconnect from the group (credentials retained)\n");
-    wprintw(win, "  /ignore <name>            : Ignore a peer\n");
-    wprintw(win, "  /unignore <name>          : Unignore an ignored peer\n");
-    wprintw(win, "  /kick <name>              : Remove a peer from the group\n");
+    wprintw(win, "  /ignore <name>|<key>      : Ignore a peer\n");
+    wprintw(win, "  /unignore <name>|<key>    : Unignore a peer\n");
+    wprintw(win, "  /kick <name>|<key>        : Remove a peer from the group\n");
     wprintw(win, "  /list                     : Print a list of peers currently in the group\n");
     wprintw(win, "  /locktopic                : Set the topic lock: on | off\n");
-    wprintw(win, "  /mod <name>               : Promote a peer to moderator\n");
-    wprintw(win, "  /nick <name>              : Set your name for this group only\n");
-    wprintw(win, "  /passwd <s>               : Set a password needed to join the group\n");
+    wprintw(win, "  /mod <name>|<key>         : Promote a peer to moderator\n");
+    wprintw(win, "  /nick <name>              : Set your name (for this group only)\n");
+    wprintw(win, "  /passwd <s>               : Set a password to join the group\n");
     wprintw(win, "  /peerlimit <n>            : Set the maximum number of peers that can join\n");
     wprintw(win, "  /privacy <state>          : Set the privacy state: private | public\n");
-    wprintw(win, "  /rejoin                   : Reconnect to the groupchat\n");
-    wprintw(win, "  /silence <name>           : Silence a peer for the entire group\n");
-    wprintw(win, "  /unsilence <name>         : Unsilence a silenced peer\n");
-    wprintw(win, "  /status <type>            : Set your status\n");
-    wprintw(win, "  /topic <m>                : Set the group topic\n");
-    wprintw(win, "  /unmod <name>             : Demote a moderator\n");
+    wprintw(win, "  /rejoin                   : Reconnect to the group\n");
+    wprintw(win, "  /silence <name>|<key>     : Silence a peer for the entire group\n");
+    wprintw(win, "  /unsilence <name>|<key>   : Unsilence a silenced peer\n");
+    wprintw(win, "  /status <type>            : Set your status (client-wide)\n");
+    wprintw(win, "  /topic <m>                : Set the topic\n");
+    wprintw(win, "  /unmod <name>|<key>       : Demote a moderator\n");
     wprintw(win, "  /voice <state>            : Set the voice state: all | mod | founder\n");
-    wprintw(win, "  /whisper <name> <m>       : Send a private message to a peer\n");
-    wprintw(win, "  /whois <name>             : Print whois info for a peer\n");
+    wprintw(win, "  /whisper <name>|<key> <m> : Send a private message to a peer\n");
+    wprintw(win, "  /whois <name>|<key>       : Display whois info for a peer\n");
 
     help_draw_bottom_menu(win);
 
@@ -342,8 +342,8 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Page Up and Page Down     : Scroll window history one line\n");
     wprintw(win, "  Ctrl+F and Ctrl+V         : Scroll window history half a page\n");
     wprintw(win, "  Ctrl+H                    : Move to the bottom of window history\n");
-    wprintw(win, "  Ctrl+up and Ctrl+down     : Scroll peer list in conference\n");
-    wprintw(win, "  Ctrl+B                    : Toggle the conference peerlist\n");
+    wprintw(win, "  Ctrl+up and Ctrl+down     : Scroll groupchat/conference peer list\n");
+    wprintw(win, "  Ctrl+B                    : Toggle groupchat/conference peer list\n");
     wprintw(win, "  Ctrl+J                    : Insert new line\n");
     wprintw(win, "  Ctrl+T                    : Toggle paste mode\n\n");
     wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");

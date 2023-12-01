@@ -608,7 +608,9 @@ int group_get_peer_id_of_identifier(ToxWindow *self, const char *identifier, uin
 
         case -2: {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
-                          "More than one peer is using this name. Specify the target's public key.");
+                          "More than one peer is using this name; specify the target's public key.");
+            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Use the /whois or /list command to determine the key.");
             *peer_id = (uint32_t) -1;
             return -1;
         }

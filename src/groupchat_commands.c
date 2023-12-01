@@ -808,7 +808,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
@@ -851,7 +851,7 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer must be specified.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
     }
 
