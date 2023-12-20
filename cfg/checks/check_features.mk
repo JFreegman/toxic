@@ -28,34 +28,40 @@ ifneq ($(GAMES), disabled)
     -include $(CHECKS_DIR)/games.mk
 endif
 
-# Check if we want build sound notifications support
+# Check if we want to build with sound notifications support
 SND_NOTIFY := $(shell if [ -z "$(DISABLE_SOUND_NOTIFY)" ] || [ "$(DISABLE_SOUND_NOTIFY)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(SND_NOTIFY), disabled)
     -include $(CHECKS_DIR)/sound_notifications.mk
 endif
 
-# Check if we want build desktop notifications support
+# Check if we want to build with desktop notifications support
 DESK_NOTIFY := $(shell if [ -z "$(DISABLE_DESKTOP_NOTIFY)" ] || [ "$(DISABLE_DESKTOP_NOTIFY)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(DESK_NOTIFY), disabled)
     -include $(CHECKS_DIR)/desktop_notifications.mk
 endif
 
-# Check if we want build QR export support
+# Check if we want to build with QR export support
 QR_CODE := $(shell if [ -z "$(DISABLE_QRCODE)" ] || [ "$(DISABLE_QRCODE)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(QR_CODE), disabled)
     -include $(CHECKS_DIR)/qr.mk
 endif
 
-# Check if we want build QR exported as PNG support
+# Check if we want to build with QR exported as PNG support
 QR_PNG := $(shell if [ -z "$(DISABLE_QRPNG)" ] || [ "$(DISABLE_QRPNG)" = "0" ] ; then echo enabled ; else echo disabled ; fi)
 ifneq ($(QR_PNG), disabled)
     -include $(CHECKS_DIR)/qr_png.mk
 endif
 
-# Check if we want build Python scripting support
+# Check if we want to build with Python scripting support
 PYTHON := $(shell if [ -z "$(ENABLE_PYTHON)" ] || [ "$(ENABLE_PYTHON)" = "0" ] ; then echo disabled ; else echo enabled ; fi)
 ifneq ($(PYTHON), disabled)
     -include $(CHECKS_DIR)/python.mk
+endif
+
+# Check if we want to build with tox experimental libaries
+TOX_EXPERIMENTAL := $(shell if [ -z "$(ENABLE_TOX_EXPERIMENTAL)" ] || [ "$(ENABLE_TOX_EXPERIMENTAL)" = "0" ] ; then echo disabled; else echo enabled; fi)
+ifneq ($(TOX_EXPERIMENTAL), disabled)
+    -include $(CHECKS_DIR)/tox_experimental.mk
 endif
 
 # Check if we can build Toxic

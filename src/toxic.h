@@ -44,6 +44,10 @@
 
 #include <tox/tox.h>
 
+#ifdef TOX_EXPERIMENTAL
+#include <tox/tox_private.h>
+#endif
+
 #define UNKNOWN_NAME "Anonymous"
 #define DEFAULT_TOX_NAME "Tox User"   /* should always be the same as toxcore's default name */
 

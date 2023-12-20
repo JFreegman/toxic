@@ -922,20 +922,41 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
             strcat(pk_string, d);
         }
 
-        Tox_Err_Group_Peer_Query conn_err;
-        Tox_Connection connection_type = tox_group_peer_get_connection_status(m, self->num, peer_id, &conn_err);
+        Tox_Err_Group_Peer_Query err;
+        Tox_Connection connection_type = tox_group_peer_get_connection_status(m, self->num, peer_id, &err);
 
-        const char *connection_type_str = "Unknown";
+        const char *connection_type_str = "-";
 
-        if (conn_err == TOX_ERR_GROUP_PEER_QUERY_OK || connection_type != TOX_CONNECTION_NONE) {
+        if (err == TOX_ERR_GROUP_PEER_QUERY_OK || connection_type != TOX_CONNECTION_NONE) {
             connection_type_str = connection_type == TOX_CONNECTION_UDP ? "UDP" : "TCP";
         }
+
+#ifdef TOX_EXPERIMENTAL
+        char ip_addr[TOX_GROUP_PEER_IP_STRING_MAX_LENGTH] = {0};
+        const bool ip_ret = tox_group_peer_get_ip_address(m, self->num, peer_id, (uint8_t *)ip_addr, &err);
+
+        if (!ip_ret) {
+            snprintf(ip_addr, sizeof(ip_addr), "Error %d", err);
+        } else {
+            size_t ip_addr_len = tox_group_peer_get_ip_address_size(m, self->num, peer_id, &err);
+
+            if (err != TOX_ERR_GROUP_PEER_QUERY_OK) {
+                snprintf(ip_addr, sizeof(ip_addr), "Error %d", err);
+            } else {
+                ip_addr[ip_addr_len] = '\0';
+            }
+        }
+
+#endif  // TOX_EXPERIMENTAL
 
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Public key: %s", pk_string);
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Name: %s", peer->name);
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Role: %s", role_str);
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Status: %s", status_str);
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Connection: %s", connection_type_str);
+#ifdef TOX_EXPERIMENTAL
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "IP Address: %s", ip_addr);
+#endif
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Last active: %s", last_seen_str);
     }
 }

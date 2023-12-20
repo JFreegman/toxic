@@ -136,10 +136,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="172f279dc0647a538b30e62c96bab8bb1b0c8960"
+TOXCORE_VERSION="b2315c50e0838687cd328838f1475be095b358f4"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="9884d4ad9b80917e22495c2ebe7a76c509fb98c61031824562883225e66684ae"
+TOXCORE_HASH="acad3fee6cb88fc2c9b2f17e06cb788467477a7a336475c2fcc8f35e54a3248d"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
@@ -237,6 +237,7 @@ CFLAGS="-static" PKG_CONFIG_PATH="$BUILD_DIR/prefix-toxcore/lib64/pkgconfig:$BUI
   ENABLE_RELEASE=1 \
   ENABLE_ASAN=0 \
   DISABLE_GAMES=0 \
+  ENABLE_TOX_EXPERIMENTAL=1 \
   install
 
 

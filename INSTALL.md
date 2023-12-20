@@ -61,7 +61,8 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
   * `DISABLE_GAMES=1` → Disable support for games
   * `ENABLE_PYTHON=1` → Build toxic with Python scripting support
   * `ENABLE_RELEASE=1` → Build toxic without debug symbols and with full compiler optimizations
-  * `ENABLE_ASAN=1` → Build toxic with LLVM Address Sanitizer enabled
+  * `ENABLE_ASAN=1` → Build toxic with LLVM Address Sanitizer enabled (reduces performance but increases security)
+  * `ENABLE_TOX_EXPERIMENTAL=1` → Build with support for Tox's experimental API functionality
 
 * `DESTDIR=""` Specifies the base install directory for binaries and data files (e.g.: DESTDIR="/tmp/build/pkg")
 
