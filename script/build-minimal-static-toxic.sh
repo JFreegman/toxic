@@ -136,10 +136,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="b2315c50e0838687cd328838f1475be095b358f4"
+TOXCORE_VERSION="425216d9eca8b3c2afd48e52c04c6226b920303a"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="acad3fee6cb88fc2c9b2f17e06cb788467477a7a336475c2fcc8f35e54a3248d"
+TOXCORE_HASH="f1723d1e5a6ae8e99a22098f057686523b69b06fd4958c2ef8740dfd7350c2f5"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
@@ -180,8 +180,8 @@ cmake --build _build --target install
 # location with SSL_CERT_FILE env variable.
 cd "$BUILD_DIR"
 
-CURL_VERSION="7.88.1"
-CURL_HASH="cdb38b72e36bc5d33d5b8810f8018ece1baa29a8f215b4495e495ded82bbf3c7"
+CURL_VERSION="8.5.0"
+CURL_HASH="05fc17ff25b793a437a0906e0484b82172a9f4de02be5ed447e0cab8c3475add"
 CURL_FILENAME="curl-$CURL_VERSION.tar.gz"
 
 wget --timeout=10 -O "$CURL_FILENAME" "https://curl.haxx.se/download/$CURL_FILENAME"
