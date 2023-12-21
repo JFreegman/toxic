@@ -1164,7 +1164,6 @@ int snake_initialize(GameData *game, bool is_online, bool self_host)
     int err = -4;
 
     if (state->snake == NULL) {
-        free(state);
         goto on_error;
     }
 
