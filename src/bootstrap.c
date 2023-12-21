@@ -212,12 +212,47 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "charsets: utf-8");
 
-    curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(c_handle, CURLOPT_URL, NODES_LIST_URL);
-    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
-    curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
-    curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-    curl_easy_setopt(c_handle, CURLOPT_HTTPGET, 1L);
+    int ret = curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
+
+    if (ret != CURLE_OK) {
+        fprintf(stderr, "Failed to set http headers (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_URL, NODES_LIST_URL);
+
+    if (ret != CURLE_OK) {
+        fprintf(stderr, "Failed to set url (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
+
+    if (ret != CURLE_OK) {
+        fprintf(stderr, "Failed to set write function callback (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
+
+    if (ret != CURLE_OK) {
+        fprintf(stderr, "Failed to set write data (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+    if (ret != CURLE_OK) {
+        fprintf(stderr, "Failed to set useragent (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_HTTPGET, 1L);
+
+    if (ret != CURLE_OK) {
+        fprintf(stderr, "Failed to set get request (libcurl error %d)", ret);
+        goto on_exit;
+    }
 
     int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
 
@@ -226,7 +261,7 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
         goto on_exit;
     }
 
-    int ret = curl_easy_setopt(c_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+    ret = curl_easy_setopt(c_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     if (ret != CURLE_OK) {
         fprintf(stderr, "TLSv1.2 could not be set (libcurl error %d)", ret);

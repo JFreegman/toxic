@@ -289,17 +289,47 @@ void *lookup_thread_func(void *data)
 
     headers = curl_slist_append(headers, "charsets: utf-8");
 
-    curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
+    int ret = curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
 
-    curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set http headers (libcurl error %d)", ret);
+        goto on_exit;
+    }
 
-    curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
+    ret = curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
 
-    curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set url (libcurl error %d)", ret);
+        goto on_exit;
+    }
 
-    curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    ret = curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
 
-    curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set write function callback (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set write data (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set useragent (libcurl error %d)", ret);
+        goto on_exit;
+    }
+
+    ret = curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
+
+    if (ret != CURLE_OK) {
+        lookup_error(self, "Failed to set post data (libcurl error %d)", ret);
+        goto on_exit;
+    }
 
     int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
 
@@ -308,7 +338,7 @@ void *lookup_thread_func(void *data)
         goto on_exit;
     }
 
-    int ret = curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
+    ret = curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
     if (ret != CURLE_OK) {
         lookup_error(self, "TLS could not be enabled (libcurl error %d)", ret);
