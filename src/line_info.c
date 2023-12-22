@@ -656,10 +656,7 @@ void line_info_print(ToxWindow *self)
                 }
 
                 wattron(win, COLOR_PAIR(nameclr));
-                wprintw(win, "%s %s: ", (type != OUT_PRVT_MSG && type != IN_PRVT_MSG) ?
-                        user_settings->line_normal :
-                        user_settings->line_special,
-                        line->name1);
+                wprintw(win, "%s %s: ", user_settings->line_special, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
                 if (line->msg[0] == '>') {
