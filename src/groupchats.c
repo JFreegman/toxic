@@ -213,16 +213,24 @@ void groupchat_rejoin(ToxWindow *self, Tox *m)
 
 static void kill_groupchat_window(ToxWindow *self)
 {
+    if (self == NULL) {
+        return;
+    }
+
     ChatContext *ctx = self->chatwin;
 
-    log_disable(ctx->log);
-    line_info_cleanup(ctx->hst);
-    delwin(ctx->linewin);
-    delwin(ctx->history);
-    delwin(ctx->sidebar);
-    free(ctx->log);
-    free(ctx);
+    if (ctx != NULL) {
+        log_disable(ctx->log);
+        line_info_cleanup(ctx->hst);
+        delwin(ctx->linewin);
+        delwin(ctx->history);
+        delwin(ctx->sidebar);
+        free(ctx->log);
+        free(ctx);
+    }
+
     free(self->help);
+    kill_notifs(self->active_box);
     del_window(self);
 }
 
@@ -356,6 +364,8 @@ int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size
             return 0;
         }
     }
+
+    kill_groupchat_window(self);
 
     return -1;
 }

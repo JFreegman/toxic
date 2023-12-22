@@ -85,6 +85,10 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
 
 void line_info_cleanup(struct history *hst)
 {
+    if (hst == NULL) {
+        return;
+    }
+
     struct line_info *tmp1 = hst->line_root;
 
     while (tmp1) {
