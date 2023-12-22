@@ -624,16 +624,18 @@ int load_DHT_nodeslist(void)
 static void DHT_bootstrap(Tox *m)
 {
     pthread_mutex_lock(&thread_data.lock);
-    const size_t num_nodes = Nodes.count;
+    size_t num_nodes = Nodes.count;
     pthread_mutex_unlock(&thread_data.lock);
 
     if (num_nodes == 0) {
         return;
     }
 
+    size_t i;
+
     pthread_mutex_lock(&thread_data.lock);
 
-    for (size_t i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
+    for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
         struct Node *node = &Nodes.list[rand() % Nodes.count];
         const char *addr = node->have_ip4 ? node->ip4 : node->ip6;
 

@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "game_util.h"
+#include "misc_tools.h"
 #include "toxic.h"
 #include "windows.h"
 
@@ -80,7 +81,7 @@ Direction game_util_move_towards(const Coords *coords_a, const Coords *coords_b,
 
 Direction game_util_random_direction(void)
 {
-    int r = rand() % 4;
+    const unsigned int r = rand_range_not_secure(4);
 
     switch (r) {
         case 0:
@@ -137,7 +138,7 @@ void game_util_move_coords(Direction direction, Coords *coords)
 
 int game_util_random_colour(void)
 {
-    int r = rand() % 6;
+    const unsigned int r = rand_range_not_secure(6);
 
     switch (r) {
         case 0:

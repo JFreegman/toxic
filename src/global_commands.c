@@ -362,8 +362,8 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
         return;
     }
 
-    uint32_t id = rand();
-    int ret = game_initialize(self, m, type, id, NULL, 0, true);
+    const unsigned int id = rand_not_secure();
+    const int ret = game_initialize(self, m, type, (uint32_t)id, NULL, 0, true);
 
     switch (ret) {
         case 0: {
@@ -798,7 +798,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
 
 void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    long int nospam = rand();
+    long int nospam = (long int)rand_not_secure();  // the nospam isn't cryptographically sensitive
 
     if (argc > 0) {
         nospam = strtol(argv[1], NULL, 16);

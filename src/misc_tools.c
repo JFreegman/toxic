@@ -737,3 +737,17 @@ void **malloc_ptr_array(size_t length, size_t bytes)
 
     return arr;
 }
+
+unsigned int rand_range_not_secure(unsigned int upper_bound)
+{
+    const unsigned int n = (unsigned int)rand();
+
+    return n % MIN(RAND_MAX, upper_bound);
+}
+
+unsigned int rand_not_secure(void)
+{
+    const unsigned int n = (unsigned int)rand();
+
+    return n;
+}

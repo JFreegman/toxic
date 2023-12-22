@@ -235,4 +235,19 @@ void free_ptr_array(void **arr);
  */
 void **malloc_ptr_array(size_t length, size_t bytes);
 
+/*
+ * Returns a non-cryptographically secure random unsigned integer between zero and `upper_bound`
+ * which is limited by RAND_MAX.
+ *
+ * This function should only be used for non-crypto related things.
+ */
+unsigned int rand_range_not_secure(unsigned int upper_bound);
+
+/*
+ * Returns a non-cryptographically secure random unsigned integer between zero and RAND_MAX.
+ *
+ * This function should only be used for non-crypto related things.
+ */
+unsigned int rand_not_secure(void);
+
 #endif /* MISC_TOOLS_H */

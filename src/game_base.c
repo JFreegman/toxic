@@ -967,8 +967,8 @@ void game_random_coords(const GameData *game, Coords *coords)
     const int y_top_bound    = ((max_y - game_max_y) / 2) + 1;
     const int y_bottom_bound = ((max_y + game_max_y) / 2) - 1;
 
-    coords->x = (rand() % (x_right_bound - x_left_bound + 1)) + x_left_bound;
-    coords->y = (rand() % (y_bottom_bound - y_top_bound + 1)) + y_top_bound;
+    coords->x = (int)rand_range_not_secure(x_right_bound - x_left_bound + 1) + x_left_bound;
+    coords->y = (int)rand_range_not_secure(y_bottom_bound - y_top_bound + 1) + y_top_bound;
 }
 
 void game_max_x_y(const GameData *game, int *x, int *y)

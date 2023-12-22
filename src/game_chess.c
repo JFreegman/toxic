@@ -2118,7 +2118,7 @@ int chess_initialize(GameData *game, const uint8_t *init_data, size_t length, bo
         return -3;
     }
 
-    bool self_is_white = rand() % 2 == 0;
+    bool self_is_white = rand_range_not_secure(2) == 0;
 
     if (!self_host) {
         if (length != CHESS_PACKET_SEND_INVITE_LENGTH) {
