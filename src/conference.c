@@ -142,15 +142,22 @@ void conference_set_title(ToxWindow *self, uint32_t conferencesnum, const char *
 
 static void kill_conference_window(ToxWindow *self)
 {
+    if (self == NULL) {
+        return;
+    }
+
     ChatContext *ctx = self->chatwin;
 
-    log_disable(ctx->log);
-    line_info_cleanup(ctx->hst);
-    delwin(ctx->linewin);
-    delwin(ctx->history);
-    delwin(ctx->sidebar);
-    free(ctx->log);
-    free(ctx);
+    if (ctx != NULL) {
+        log_disable(ctx->log);
+        line_info_cleanup(ctx->hst);
+        delwin(ctx->linewin);
+        delwin(ctx->history);
+        delwin(ctx->sidebar);
+        free(ctx->log);
+        free(ctx);
+    }
+
     free(self->help);
     kill_notifs(self->active_box);
     del_window(self);
