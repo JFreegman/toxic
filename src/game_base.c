@@ -20,6 +20,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -918,7 +919,16 @@ static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber)
         char nick[TOX_MAX_NAME_LENGTH];
         get_nick_truncate(m, nick, friendnumber);
 
-        snprintf(ret->name, sizeof(ret->name), "%s (%s)", window_name, nick);
+        char buf[sizeof(nick) + sizeof(ret->name) + 4];
+        snprintf(buf, sizeof(buf), "%s (%s)", window_name, nick);
+
+        const size_t name_size = sizeof(ret->name);
+
+        assert(name_size != 0 && name_size <= sizeof(buf));
+
+        buf[name_size - 1] = '\0';
+
+        snprintf(ret->name, name_size, "%s", buf);
     } else {
         snprintf(ret->name, sizeof(ret->name), "%s", window_name);
     }
