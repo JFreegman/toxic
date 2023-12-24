@@ -267,7 +267,6 @@ int wstring_is_empty(const wchar_t *string)
     return string[0] == L'\0';
 }
 
-/* convert a multibyte string to a wide character string and puts in buf. */
 int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
 {
     size_t len = mbstowcs(NULL, string, 0) + 1;
@@ -283,7 +282,6 @@ int mbs_to_wcs_buf(wchar_t *buf, const char *string, size_t n)
     return len;
 }
 
-/* converts wide character string into a multibyte string and puts in buf. */
 int wcs_to_mbs_buf(char *buf, const wchar_t *string, size_t n)
 {
     size_t len = wcstombs(NULL, string, 0) + 1;

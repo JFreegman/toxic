@@ -343,7 +343,10 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
     return 0;
 }
 
-/* Converts `msg` into a widechar string and puts the result in `buf`.
+/* Converts the multibyte string `msg` into a wide character string and puts
+ * the result in `buf`.
+ *
+ * `buf_size` is the number of wide characters that `buf` can hold.
  *
  * Returns the widechar width of the string.
  */
@@ -353,13 +356,13 @@ static uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg
         return 0;
     }
 
-    const wint_t wc_msg_len = mbs_to_wcs_buf(buf, msg, buf_size);
+    const int wc_msg_len = mbs_to_wcs_buf(buf, msg, buf_size);
 
     if (wc_msg_len > 0 && wc_msg_len < buf_size) {
         buf[wc_msg_len] = L'\0';
         int width = wcswidth(buf, wc_msg_len);
 
-        if (width == -1) {  // the best we can do on failure is to fall back to strlen
+        if (width < 0 || width > UINT16_MAX) {  // the best we can do on failure is to fall back to strlen
             width = strlen(msg);
         }
 
@@ -473,7 +476,7 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
             break;
     }
 
-    const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg), frmt_msg);
+    const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg) / sizeof(wchar_t), frmt_msg);
     len += msg_width;
 
     if (show_timestamp) {
@@ -853,7 +856,7 @@ void line_info_set(ToxWindow *self, uint32_t id, char *msg)
 
     while (line) {
         if (line->id == id) {
-            const uint16_t new_width = line_info_add_msg(line->msg, sizeof(line->msg), msg);
+            const uint16_t new_width = line_info_add_msg(line->msg, sizeof(line->msg) / sizeof(wchar_t), msg);
             line->len = line->len - line->msg_width + new_width;
             line->msg_width = new_width;
             return;
