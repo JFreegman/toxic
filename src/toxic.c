@@ -1627,7 +1627,7 @@ int main(int argc, char **argv)
     } else if (nameserver_ret == -2) {
         queue_init_message("Name lookup server list could not be found.");
     } else if (nameserver_ret == -3) {
-        queue_init_message("Name lookup server list does not contain any valid entries.");
+        fprintf(stderr, "Name lookup server list does not contain any valid entries\n");
     }
 
 #ifdef X11
