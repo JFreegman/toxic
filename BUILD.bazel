@@ -3,6 +3,12 @@ load("//tools/project:build_defs.bzl", "project")
 
 project()
 
+AV_SRCS = [
+    "src/audio*.c",
+    "src/video*.c",
+    "src/x11*.c",
+]
+
 cc_binary(
     name = "toxic",
     srcs = glob(
@@ -10,35 +16,39 @@ cc_binary(
             "src/*.c",
             "src/*.h",
         ],
-        exclude = ["src/video*"],
+        exclude = AV_SRCS,
     ) + select({
-        "//tools/config:linux": glob(["src/video*"]),
-        "//tools/config:osx": [],
+        "//tools/config:linux-x86_64": glob(AV_SRCS),
+        "//conditions:default": [],
     }),
     copts = [
         "-D_DEFAULT_SOURCE",
-        "-DAUDIO",
         "-DGAMES",
         "-DHAVE_WIDECHAR",
         "-DPACKAGE_DATADIR='\"data\"'",
-        "-DPYTHON",
         "-DQRCODE",
     ] + select({
-        "//tools/config:linux": ["-DVIDEO"],
-        "//tools/config:osx": [],
+        "//tools/config:linux-x86_64": [
+            "-DAUDIO",
+            "-DVIDEO",
+            "-DPYTHON",
+        ],
+        "//conditions:default": [],
     }),
     deps = [
         "//c-toxcore",
         "@curl",
         "@libconfig",
         "@libqrencode",
-        "@libvpx",
         "@ncurses",
-        "@openal",
-        "@python3//:python",
     ] + select({
-        "//tools/config:linux": ["@x11"],
-        "//tools/config:osx": [],
+        "//tools/config:linux-x86_64": [
+            "@libvpx",
+            "@openal",
+            "@python3//:python",
+            "@x11",
+        ],
+        "//conditions:default": [],
     }),
 )
 
