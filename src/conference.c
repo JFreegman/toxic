@@ -1348,7 +1348,13 @@ bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
         }
     }
 
-    bool success = init_conference_audio_input(tox, conferencenum);
+    const ConferenceChat *chat = &conferences[conferencenum];
+
+    if (chat->audio_enabled) {
+        return true;
+    }
+
+    const bool success = init_conference_audio_input(tox, conferencenum);
 
     if (success) {
         self->is_call = true;
@@ -1368,9 +1374,11 @@ bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
     if (chat->audio_enabled) {
         close_device(input, chat->audio_in_idx);
         chat->audio_enabled = false;
+    } else {
+        return true;
     }
 
-    bool success = toxav_groupchat_disable_av(tox, conferencenum) == 0;
+    const bool success = toxav_groupchat_disable_av(tox, conferencenum) == 0;
 
     if (success) {
         self->is_call = false;

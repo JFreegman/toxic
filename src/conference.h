@@ -102,9 +102,19 @@ int conference_enable_logging(ToxWindow *self, Tox *m, uint32_t conferencenum, s
 uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *prefix, NameListEntry **entries,
         uint32_t maxpeers);
 
-bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
+/* Enable audio in a conference.
+ *
+ * Return true on success or if audio is already enabled.
+ */
 bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum);
+
+/* Disable audio in a conference.
+ *
+ * Return true on success or if audio is already disabled.
+ */
 bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum);
+
+bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
 bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled);
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum,
                                const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t
