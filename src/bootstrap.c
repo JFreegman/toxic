@@ -557,10 +557,14 @@ void *load_nodeslist_thread(void *data)
         pthread_mutex_unlock(&thread_data.lock);
     }
 
+    pthread_mutex_lock(&thread_data.lock);
+    const size_t num_nodes = Nodes.count;
+    pthread_mutex_unlock(&thread_data.lock);
+
     /* If nodeslist does not contain any valid entries we set the last_scan value
      * to 0 so that it will fetch a new list the next time this function is called.
      */
-    if (Nodes.count == 0) {
+    if (num_nodes == 0) {
         const char *s = "{\"last_scan\":0}";
         rewind(fp);
         fwrite(s, strlen(s), 1, fp);  // Not much we can do if it fails
@@ -620,18 +624,16 @@ int load_DHT_nodeslist(void)
 static void DHT_bootstrap(Tox *m)
 {
     pthread_mutex_lock(&thread_data.lock);
-    size_t num_nodes = Nodes.count;
+    const size_t num_nodes = Nodes.count;
     pthread_mutex_unlock(&thread_data.lock);
 
     if (num_nodes == 0) {
         return;
     }
 
-    size_t i;
-
     pthread_mutex_lock(&thread_data.lock);
 
-    for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
+    for (size_t i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
         struct Node *node = &Nodes.list[rand() % Nodes.count];
         const char *addr = node->have_ip4 ? node->ip4 : node->ip6;
 
