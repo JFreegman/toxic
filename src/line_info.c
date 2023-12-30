@@ -650,13 +650,7 @@ void line_info_print(ToxWindow *self)
                 wprintw(win, "%s ", line->timestr);
                 wattroff(win, COLOR_PAIR(BLUE));
 
-                int nameclr = GREEN;
-
-                if (line->colour) {
-                    nameclr = line->colour;
-                } else if (type == IN_MSG) {
-                    nameclr = CYAN;
-                }
+                const int nameclr = line->colour ? line->colour : GREEN;
 
                 wattron(win, COLOR_PAIR(nameclr));
                 wprintw(win, "%s %s: ", user_settings->line_special, line->name1);

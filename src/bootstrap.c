@@ -280,7 +280,13 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
     if (ret != CURLE_OK) {
         /* If system doesn't support any of the specified ciphers suites, fall back to default */
         if (ret == CURLE_SSL_CIPHER) {
-            curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, NULL);
+            ret = curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, NULL);
+
+            if (ret != CURLE_OK) {
+                fprintf(stderr, "Failed to set SSL cipher list (libcurl error %d)\n", ret);
+                goto on_exit;
+            }
+
             ret = curl_easy_perform(c_handle);
         }
 
@@ -631,12 +637,12 @@ static void DHT_bootstrap(Tox *m)
         return;
     }
 
-    size_t i;
-
     pthread_mutex_lock(&thread_data.lock);
 
-    for (i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
-        struct Node *node = &Nodes.list[rand() % Nodes.count];
+    for (size_t i = 0; i < NUM_BOOTSTRAP_NODES; ++i) {
+        const unsigned int idx = rand_range_not_secure(Nodes.count);
+        struct Node *node = &Nodes.list[idx];
+
         const char *addr = node->have_ip4 ? node->ip4 : node->ip6;
 
         if (!addr) {

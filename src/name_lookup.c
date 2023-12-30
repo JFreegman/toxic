@@ -364,7 +364,13 @@ void *lookup_thread_func(void *data)
     if (ret != CURLE_OK) {
         /* If system doesn't support any of the specified ciphers suites, fall back to default */
         if (ret == CURLE_SSL_CIPHER) {
-            curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, NULL);
+            ret = curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, NULL);
+
+            if (ret != CURLE_OK) {
+                lookup_error(self, "Failed to set TLS cipher list (libcurl error %d)", ret);
+                goto on_exit;
+            }
+
             ret = curl_easy_perform(c_handle);
         }
 
