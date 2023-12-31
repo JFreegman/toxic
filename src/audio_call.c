@@ -39,7 +39,6 @@
 #include "video_call.h"
 #endif /* VIDEO */
 
-#include <assert.h>
 #include <curses.h>
 #include <pthread.h>
 #include <stdbool.h>

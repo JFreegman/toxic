@@ -36,7 +36,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <assert.h>
 
 /*
  * Helper video format functions

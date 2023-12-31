@@ -33,7 +33,6 @@
 #include <AL/alext.h>
 #endif /* ALC_ALL_DEVICES_SPECIFIER */
 
-#include <assert.h>
 #include <math.h>
 #include <pthread.h>
 #include <stdbool.h>

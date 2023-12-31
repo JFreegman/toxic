@@ -24,7 +24,6 @@
 #define _GNU_SOURCE    /* needed for wcswidth() */
 #endif
 
-#include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>

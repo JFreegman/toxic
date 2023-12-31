@@ -30,7 +30,6 @@
 #include "video_device.h"
 #include "windows.h"
 
-#include <assert.h>
 #include <curses.h>
 #include <pthread.h>
 #include <stdbool.h>
