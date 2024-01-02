@@ -1020,7 +1020,7 @@ void draw_active_window(Tox *m)
             set_next_window(ch);
         }
 
-        a->onKey(a, m, ch, false);
+        a->onKey(a, m, ch, false);  // we lock only when necessary in the onKey callback
 
         return;
     }

@@ -307,7 +307,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
         return -4;
     }
 
-    int init_ret = game_initialize_type(game, multiplayer_data, length, self_host);
+    const int init_ret = game_initialize_type(game, multiplayer_data, length, self_host);
 
     if (init_ret < 0) {
         game_init_abort(parent, self);
@@ -785,7 +785,9 @@ bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
     GameData *game = self->game;
 
     if (key == KEY_F(9)) {
+        pthread_mutex_lock(&Winthread.lock);
         game_kill(self);
+        pthread_mutex_unlock(&Winthread.lock);
         return true;
     }
 
