@@ -136,10 +136,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="425216d9eca8b3c2afd48e52c04c6226b920303a"
+TOXCORE_VERSION="ebafd51be77821e062f145506b9c9ab9114591b3"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="f1723d1e5a6ae8e99a22098f057686523b69b06fd4958c2ef8740dfd7350c2f5"
+TOXCORE_HASH="5187c2ecc833bc7a4b056e7b4c0b07504a4dedbb35d644a049c7cf3292d9ae8f"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
