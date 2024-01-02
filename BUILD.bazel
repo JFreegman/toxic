@@ -1,7 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("//tools/project:build_defs.bzl", "project")
 
-project()
+project(license = "gpl3-https")
 
 AV_SRCS = [
     "src/audio*.c",
