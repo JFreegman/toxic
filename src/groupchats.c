@@ -1556,8 +1556,9 @@ static void send_group_message(ToxWindow *self, Tox *m, uint32_t groupnumber, co
     }
 
     Tox_Err_Group_Send_Message err;
+    tox_group_send_message(m, groupnumber, type, (uint8_t *) msg, strlen(msg), &err);
 
-    if (!tox_group_send_message(m, groupnumber, type, (uint8_t *) msg, strlen(msg), NULL, &err)) {
+    if (err != TOX_ERR_GROUP_SEND_MESSAGE_OK) {
         if (err == TOX_ERR_GROUP_SEND_MESSAGE_PERMISSIONS) {
             const Tox_Group_Role role = tox_group_self_get_role(m, groupnumber, NULL);
 
