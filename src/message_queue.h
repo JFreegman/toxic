@@ -1,7 +1,7 @@
 /*  message_queue.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -48,7 +48,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
  * Tries to send all messages in the send queue in sequential order.
  * If a message fails to send the function will immediately return.
  */
-void cqueue_try_send(ToxWindow *self, Tox *m);
+void cqueue_try_send(ToxWindow *self, Tox *tox);
 
 /*
  * Sets the noread flag for messages sent to the peer associated with `self` which have not
@@ -57,6 +57,6 @@ void cqueue_try_send(ToxWindow *self, Tox *m);
 void cqueue_check_unread(ToxWindow *self);
 
 /* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
-void cqueue_remove(ToxWindow *self, Tox *m, uint32_t receipt);
+void cqueue_remove(ToxWindow *self, Tox *tox, uint32_t receipt);
 
 #endif /* MESSAGE_QUEUE_H */

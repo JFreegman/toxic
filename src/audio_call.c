@@ -1,7 +1,7 @@
 /*  audio_call.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -67,7 +67,7 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
 void on_audio_receive_frame(ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
                             uint8_t channels, uint32_t sampling_rate, void *user_data);
 
-void callback_recv_invite(Tox *m, uint32_t friend_number);
+void callback_recv_invite(Tox *tox, uint32_t friend_number);
 void callback_recv_ringing(uint32_t friend_number);
 void callback_recv_starting(uint32_t friend_number);
 void callback_recv_ending(uint32_t friend_number);
@@ -300,7 +300,7 @@ void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 {
     UNUSED_VAR(av);
 
-    Tox *m = (Tox *) user_data;
+    Tox *tox = (Tox *) user_data;
 
     Call *call = &CallControl.calls[friend_number];
     init_call(call);
@@ -315,7 +315,7 @@ void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
         call->state |= TOXAV_FRIEND_CALL_STATE_SENDING_V;
     }
 
-    callback_recv_invite(m, friend_number);
+    callback_recv_invite(tox, friend_number);
 }
 
 void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
@@ -394,7 +394,7 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
     toxav_audio_set_bit_rate(av, friend_number, audio_bit_rate, NULL);
 }
 
-void callback_recv_invite(Tox *m, uint32_t friend_number)
+void callback_recv_invite(Tox *tox, uint32_t friend_number)
 {
     if (friend_number >= Friends.max_idx) {
         return;
@@ -405,7 +405,7 @@ void callback_recv_invite(Tox *m, uint32_t friend_number)
             return;
         }
 
-        Friends.list[friend_number].chatwin = add_window(m, new_chat(m, Friends.list[friend_number].num));
+        Friends.list[friend_number].chatwin = add_window(tox, new_chat(tox, Friends.list[friend_number].num));
     }
 
     const Call *call = &CallControl.calls[friend_number];
@@ -499,10 +499,10 @@ void callback_call_ended(uint32_t friend_number)
 /*
  * Commands from chat_commands.h
  */
-void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_call(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
     if (argc != 0) {
@@ -532,10 +532,10 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     place_call(self);
 }
 
-void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_answer(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
     Toxav_Err_Answer error;
@@ -579,10 +579,10 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     callback_recv_starting(self->num);
 }
 
-void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_reject(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
     if (argc != 0) {
@@ -610,10 +610,10 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     callback_call_rejected(self->num);
 }
 
-void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
     if (!CallControl.av) {
@@ -636,10 +636,10 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[
     stop_current_call(self);
 }
 
-void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc != 1) {
         if (argc < 1) {
@@ -673,10 +673,10 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
 }
 
 /* This changes primary device only */
-void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc != 2) {
         if (argc < 1) {
@@ -720,10 +720,10 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (
     }
 }
 
-void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_mute(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc != 1) {
         print_err(self, "Specify type: \"/mute in\" or \"/mute out\".");
@@ -762,10 +762,10 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MA
     return;
 }
 
-void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_sense(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc != 1) {
         if (argc < 1) {
@@ -796,10 +796,10 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     return;
 }
 
-void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     Call *call = &CallControl.calls[self->num];
 

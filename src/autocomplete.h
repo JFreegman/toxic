@@ -1,7 +1,7 @@
 /*  autocomplete.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -47,6 +47,6 @@ int complete_line(ToxWindow *self, const char **list, size_t n_items);
  * Returns the diff between old len and new len of ctx->line on success.
  * Returns -1 if no matches or more than one match.
  */
-int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd);
+int dir_match(ToxWindow *self, Tox *tox, const wchar_t *line, const wchar_t *cmd);
 
 #endif /* AUTOCOMPLETE_H */

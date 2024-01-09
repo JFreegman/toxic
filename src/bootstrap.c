@@ -1,7 +1,7 @@
 /*  bootstrap.c
  *
  *
- *  Copyright (C) 2016 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -627,7 +627,7 @@ int load_DHT_nodeslist(void)
 }
 
 /* Connects to NUM_BOOTSTRAP_NODES random DHT nodes listed in the DHTnodes file. */
-static void DHT_bootstrap(Tox *m)
+static void DHT_bootstrap(Tox *tox)
 {
     pthread_mutex_lock(&thread_data.lock);
     size_t num_nodes = Nodes.count;
@@ -650,13 +650,13 @@ static void DHT_bootstrap(Tox *m)
         }
 
         Tox_Err_Bootstrap err;
-        tox_bootstrap(m, addr, node->port, (uint8_t *) node->key, &err);
+        tox_bootstrap(tox, addr, node->port, (uint8_t *) node->key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
             fprintf(stderr, "Failed to bootstrap %s:%d\n", addr, node->port);
         }
 
-        tox_add_tcp_relay(m, addr, node->port, (uint8_t *) node->key, &err);
+        tox_add_tcp_relay(tox, addr, node->port, (uint8_t *) node->key, &err);
 
         if (err != TOX_ERR_BOOTSTRAP_OK) {
             fprintf(stderr, "Failed to add TCP relay %s:%d\n", addr, node->port);
@@ -667,13 +667,13 @@ static void DHT_bootstrap(Tox *m)
 }
 
 /* Manages connection to the Tox DHT network. */
-void do_tox_connection(Tox *m)
+void do_tox_connection(Tox *tox)
 {
     static time_t last_bootstrap_time = 0;
     bool connected = prompt_selfConnectionStatus() != TOX_CONNECTION_NONE;
 
     if (!connected && timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL)) {
-        DHT_bootstrap(m);
+        DHT_bootstrap(tox);
         last_bootstrap_time = get_unix_time();
     }
 }

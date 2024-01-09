@@ -1,7 +1,7 @@
 /*  misc_tools.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -440,15 +440,15 @@ void str_to_lower(char *str)
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
    if toxcore API call fails, put UNKNOWN_NAME in buf
    Returns nick len */
-size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum)
+size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum)
 {
     Tox_Err_Friend_Query err;
-    size_t len = tox_friend_get_name_size(m, friendnum, &err);
+    size_t len = tox_friend_get_name_size(tox, friendnum, &err);
 
     if (err != TOX_ERR_FRIEND_QUERY_OK) {
         goto on_error;
     } else {
-        if (!tox_friend_get_name(m, friendnum, (uint8_t *) buf, NULL)) {
+        if (!tox_friend_get_name(tox, friendnum, (uint8_t *) buf, NULL)) {
             goto on_error;
         }
     }
@@ -466,15 +466,15 @@ on_error:
 }
 
 /* same as get_nick_truncate but for conferences */
-int get_conference_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t conferencenum)
+int get_conference_nick_truncate(Tox *tox, char *buf, uint32_t peernum, uint32_t conferencenum)
 {
     Tox_Err_Conference_Peer_Query err;
-    size_t len = tox_conference_peer_get_name_size(m, conferencenum, peernum, &err);
+    size_t len = tox_conference_peer_get_name_size(tox, conferencenum, peernum, &err);
 
     if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
         goto on_error;
     } else {
-        if (!tox_conference_peer_get_name(m, conferencenum, peernum, (uint8_t *) buf, NULL)) {
+        if (!tox_conference_peer_get_name(tox, conferencenum, peernum, (uint8_t *) buf, NULL)) {
             goto on_error;
         }
     }
@@ -493,16 +493,16 @@ on_error:
 }
 
 /* same as get_nick_truncate but for groupchats */
-size_t get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, uint32_t groupnum)
+size_t get_group_nick_truncate(Tox *tox, char *buf, uint32_t peer_id, uint32_t groupnum)
 {
     Tox_Err_Group_Peer_Query err;
-    size_t len = tox_group_peer_get_name_size(m, groupnum, peer_id, &err);
+    size_t len = tox_group_peer_get_name_size(tox, groupnum, peer_id, &err);
 
     if (err != TOX_ERR_GROUP_PEER_QUERY_OK || len == 0) {
         strcpy(buf, UNKNOWN_NAME);
         len = strlen(UNKNOWN_NAME);
     } else {
-        tox_group_peer_get_name(m, groupnum, peer_id, (uint8_t *) buf, &err);
+        tox_group_peer_get_name(tox, groupnum, peer_id, (uint8_t *) buf, &err);
 
         if (err != TOX_ERR_GROUP_PEER_QUERY_OK) {
             strcpy(buf, UNKNOWN_NAME);
@@ -519,16 +519,16 @@ size_t get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, uint32_t gro
 }
 
 /* same as get_group_nick_truncate() but for self. */
-size_t get_group_self_nick_truncate(Tox *m, char *buf, uint32_t groupnum)
+size_t get_group_self_nick_truncate(Tox *tox, char *buf, uint32_t groupnum)
 {
     Tox_Err_Group_Self_Query err;
-    size_t len = tox_group_self_get_name_size(m, groupnum, &err);
+    size_t len = tox_group_self_get_name_size(tox, groupnum, &err);
 
     if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
         strcpy(buf, UNKNOWN_NAME);
         len = strlen(UNKNOWN_NAME);
     } else {
-        tox_group_self_get_name(m, groupnum, (uint8_t *) buf, &err);
+        tox_group_self_get_name(tox, groupnum, (uint8_t *) buf, &err);
 
         if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
             strcpy(buf, UNKNOWN_NAME);

@@ -1,7 +1,7 @@
 /*  prompt.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -121,9 +121,9 @@ void kill_prompt_window(ToxWindow *self)
 }
 
 /* callback: Updates own connection status in prompt statusbar */
-void on_self_connection_status(Tox *m, Tox_Connection connection_status, void *userdata)
+void on_self_connection_status(Tox *tox, Tox_Connection connection_status, void *userdata)
 {
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(userdata);
     StatusBar *statusbar = prompt->stb;
     statusbar->connection = connection_status;
@@ -140,7 +140,7 @@ void prompt_update_nick(ToxWindow *prompt, const char *nick)
 }
 
 /* Updates own statusmessage */
-void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusmsg)
+void prompt_update_statusmessage(ToxWindow *prompt, Tox *tox, const char *statusmsg)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -148,7 +148,7 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusms
     statusbar->statusmsg_len = len;
 
     Tox_Err_Set_Info err;
-    tox_self_set_status_message(m, (const uint8_t *) statusmsg, len, &err);
+    tox_self_set_status_message(tox, (const uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK) {
         line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
@@ -199,7 +199,7 @@ static int add_friend_request(const char *public_key, const char *data)
 /*
  * Return true if input is recognized by handler
  */
-static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
+static bool prompt_onKey(ToxWindow *self, Tox *tox, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -245,12 +245,12 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
             int diff = -1;
 
             if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
-                diff = dir_match(self, m, ctx->line, L"/avatar");
+                diff = dir_match(self, tox, ctx->line, L"/avatar");
             }
 
 #ifdef PYTHON
             else if (wcsncmp(ctx->line, L"/run ", wcslen(L"/run ")) == 0) {
-                diff = dir_match(self, m, ctx->line, L"/run");
+                diff = dir_match(self, tox, ctx->line, L"/run");
             }
 
 #endif
@@ -295,7 +295,7 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     line_info_add(self, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
                 }
 
-                execute(ctx->history, self, m, line, GLOBAL_COMMAND_MODE);
+                execute(ctx->history, self, tox, line, GLOBAL_COMMAND_MODE);
             }
         }
 
@@ -307,7 +307,7 @@ static bool prompt_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     return input_ret;
 }
 
-static void prompt_onDraw(ToxWindow *self, Tox *m)
+static void prompt_onDraw(ToxWindow *self, Tox *tox)
 {
     int x2;
     int y2;
@@ -425,8 +425,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
 
         pthread_mutex_lock(&Winthread.lock);
 
-        size_t slen = tox_self_get_status_message_size(m);
-        tox_self_get_status_message(m, (uint8_t *) statusmsg);
+        size_t slen = tox_self_get_status_message_size(tox);
+        tox_self_get_status_message(tox, (uint8_t *) statusmsg);
 
         statusmsg[slen] = '\0';
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -482,12 +482,12 @@ static void prompt_onDraw(ToxWindow *self, Tox *m)
     }
 }
 
-static void prompt_onConnectionChange(ToxWindow *self, Tox *m, uint32_t friendnum, Tox_Connection connection_status)
+static void prompt_onConnectionChange(ToxWindow *self, Tox *tox, uint32_t friendnum, Tox_Connection connection_status)
 {
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH] = {0};    /* stop removing this initiation */
-    get_nick_truncate(m, nick, friendnum);
+    get_nick_truncate(tox, nick, friendnum);
 
     if (!nick[0]) {
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
@@ -546,9 +546,9 @@ static bool key_is_similar(const char *key)
     return false;
 }
 
-static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, const char *data, size_t length)
+static void prompt_onFriendRequest(ToxWindow *self, Tox *tox, const char *key, const char *data, size_t length)
 {
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(length);
 
     ChatContext *ctx = self->chatwin;
@@ -575,7 +575,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *m, const char *key, con
     sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
-void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
+void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
@@ -594,13 +594,13 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
     char nick[TOX_MAX_NAME_LENGTH];
     char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
 
-    size_t n_len = tox_self_get_name_size(m);
-    tox_self_get_name(m, (uint8_t *) nick);
+    size_t n_len = tox_self_get_name_size(tox);
+    tox_self_get_name(tox, (uint8_t *) nick);
 
-    size_t s_len = tox_self_get_status_message_size(m);
-    tox_self_get_status_message(m, (uint8_t *) statusmsg);
+    size_t s_len = tox_self_get_status_message_size(tox);
+    tox_self_get_status_message(tox, (uint8_t *) statusmsg);
 
-    Tox_User_Status status = tox_self_get_status(m);
+    Tox_User_Status status = tox_self_get_status(tox);
 
     nick[n_len] = '\0';
     statusmsg[s_len] = '\0';
@@ -611,7 +611,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run)
         statusmsg[s_len] = '\0';
     }
 
-    prompt_update_statusmessage(prompt, m, statusmsg);
+    prompt_update_statusmessage(prompt, tox, statusmsg);
     prompt_update_status(prompt, status);
     prompt_update_nick(prompt, nick);
 
@@ -635,12 +635,12 @@ static void print_welcome_msg(ToxWindow *self)
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
-static void prompt_init_log(ToxWindow *self, Tox *m, const char *self_name)
+static void prompt_init_log(ToxWindow *self, Tox *tox, const char *self_name)
 {
     ChatContext *ctx = self->chatwin;
 
     char myid[TOX_ADDRESS_SIZE];
-    tox_self_get_address(m, (uint8_t *) myid);
+    tox_self_get_address(tox, (uint8_t *) myid);
 
     if (log_init(ctx->log, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
@@ -654,7 +654,7 @@ static void prompt_init_log(ToxWindow *self, Tox *m, const char *self_name)
     }
 }
 
-static void prompt_onInit(ToxWindow *self, Tox *m)
+static void prompt_onInit(ToxWindow *self, Tox *tox)
 {
     curs_set(1);
 
@@ -681,7 +681,7 @@ static void prompt_onInit(ToxWindow *self, Tox *m)
 
     line_info_init(ctx->hst);
 
-    prompt_init_log(self, m, self->name);
+    prompt_init_log(self, tox, self->name);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);

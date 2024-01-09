@@ -1,7 +1,7 @@
 /*  chat_commands.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -37,10 +37,10 @@
 extern ToxWindow *prompt;
 extern FriendsList Friends;
 
-void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     const char *msg;
     const bool auto_accept_files = friend_get_auto_accept_files(self->num);
@@ -71,7 +71,7 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Tox *m, int argc, cha
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
-void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -118,10 +118,10 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*ar
     }
 
     snprintf(msg, sizeof(msg), "File transfer for '%s' aborted.", ft->file_name);
-    close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
+    close_file_transfer(self, tox, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
 }
 
-void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -139,7 +139,7 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
 
     Tox_Err_Conference_Invite err;
 
-    if (!tox_conference_invite(m, self->num, conferencenum, &err)) {
+    if (!tox_conference_invite(tox, self->num, conferencenum, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to conference (error %d)", err);
         return;
     }
@@ -147,7 +147,7 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, ch
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.", conferencenum);
 }
 
-void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
     UNUSED_VAR(argc);
@@ -171,7 +171,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
 
     if (type == TOX_CONFERENCE_TYPE_TEXT) {
         Tox_Err_Conference_Join err;
-        conferencenum = tox_conference_join(m, self->num, (const uint8_t *) conferencekey, length, &err);
+        conferencenum = tox_conference_join(tox, self->num, (const uint8_t *) conferencekey, length, &err);
 
         if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
@@ -179,7 +179,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         }
     } else if (type == TOX_CONFERENCE_TYPE_AV) {
 #ifdef AUDIO
-        conferencenum = toxav_join_av_groupchat(m, self->num, (const uint8_t *) conferencekey, length,
+        conferencenum = toxav_join_av_groupchat(tox, self->num, (const uint8_t *) conferencekey, length,
                                                 audio_conference_callback, NULL);
 
         if (conferencenum == (uint32_t) -1) {
@@ -196,16 +196,16 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
         return;
     }
 
-    if (init_conference_win(m, conferencenum, type, NULL, 0) == -1) {
+    if (init_conference_win(tox, conferencenum, type, NULL, 0) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
-        tox_conference_delete(m, conferencenum, NULL);
+        tox_conference_delete(tox, conferencenum, NULL);
         return;
     }
 
 #ifdef AUDIO
 
     if (type == TOX_CONFERENCE_TYPE_AV) {
-        if (!init_conference_audio_input(m, conferencenum)) {
+        if (!init_conference_audio_input(tox, conferencenum)) {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
         }
     }
@@ -213,7 +213,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
 #endif
 }
 
-void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
@@ -233,13 +233,13 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         passwd_len = strlen(passwd);
     }
 
-    size_t nick_len = tox_self_get_name_size(m);
+    size_t nick_len = tox_self_get_name_size(tox);
     char self_nick[TOX_MAX_NAME_LENGTH + 1];
-    tox_self_get_name(m, (uint8_t *) self_nick);
+    tox_self_get_name(tox, (uint8_t *) self_nick);
     self_nick[nick_len] = '\0';
 
     Tox_Err_Group_Invite_Accept err;
-    uint32_t groupnumber = tox_group_invite_accept(m, self->num, Friends.list[self->num].group_invite.data,
+    uint32_t groupnumber = tox_group_invite_accept(tox, self->num, Friends.list[self->num].group_invite.data,
                            Friends.list[self->num].group_invite.length, (const uint8_t *) self_nick, nick_len,
                            (const uint8_t *) passwd, passwd_len, &err);
 
@@ -253,14 +253,14 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         return;
     }
 
-    if (init_groupchat_win(m, groupnumber, NULL, 0, Group_Join_Type_Join) == -1) {
+    if (init_groupchat_win(tox, groupnumber, NULL, 0, Group_Join_Type_Join) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
-        tox_group_leave(m, groupnumber, NULL, 0, NULL);
+        tox_group_leave(tox, groupnumber, NULL, 0, NULL);
         return;
     }
 }
 
-void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
@@ -276,7 +276,7 @@ void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
 
     Tox_Err_Group_Invite_Friend err;
 
-    if (!tox_group_invite_friend(m, groupnumber, self->num, &err)) {
+    if (!tox_group_invite_friend(tox, groupnumber, self->num, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d).", err);
         return;
     }
@@ -286,10 +286,10 @@ void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
 
 #ifdef GAMES
 
-void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (!Friends.list[self->num].game_invite.pending) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
@@ -306,7 +306,7 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
     uint8_t *data = Friends.list[self->num].game_invite.data;
     size_t length = Friends.list[self->num].game_invite.data_length;
 
-    int ret = game_initialize(self, m, type, id, data, length, false);
+    int ret = game_initialize(self, tox, type, id, data, length, false);
 
     switch (ret) {
         case 0: {
@@ -335,7 +335,7 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*arg
 
 #endif // GAMES
 
-void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -365,12 +365,12 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
 
     if ((ft->file = fopen(ft->file_path, "a")) == NULL) {
         const char *msg =  "File transfer failed: Invalid download path.";
-        close_file_transfer(self, m, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        close_file_transfer(self, tox, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
         return;
     }
 
     Tox_Err_File_Control err;
-    tox_file_control(m, self->num, ft->filenumber, TOX_FILE_CONTROL_RESUME, &err);
+    tox_file_control(tox, self->num, ft->filenumber, TOX_FILE_CONTROL_RESUME, &err);
 
     if (err != TOX_ERR_FILE_CONTROL_OK) {
         goto on_recv_error;
@@ -414,7 +414,7 @@ on_recv_error:
     }
 }
 
-void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -453,7 +453,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     size_t namelen = get_file_name(file_name, sizeof(file_name), path);
 
     Tox_Err_File_Send err;
-    uint32_t filenum = tox_file_send(m, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
+    uint32_t filenum = tox_file_send(tox, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
                                      (uint8_t *) file_name, namelen, &err);
 
     if (err != TOX_ERR_FILE_SEND_OK) {
@@ -470,7 +470,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv
     memcpy(ft->file_name, file_name, namelen + 1);
     ft->file = file_to_send;
     ft->file_size = filesize;
-    tox_file_get_file_id(m, self->num, filenum, ft->file_id, NULL);
+    tox_file_get_file_id(tox, self->num, filenum, ft->file_id, NULL);
 
     char sizestr[32];
     bytes_convert_str(sizestr, sizeof(sizestr), filesize);
@@ -537,5 +537,5 @@ on_send_error:
     }
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
-    tox_file_control(m, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
+    tox_file_control(tox, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
 }

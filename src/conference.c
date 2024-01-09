@@ -1,7 +1,7 @@
 /*  conference.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -162,15 +162,15 @@ static void kill_conference_window(ToxWindow *self)
     del_window(self);
 }
 
-static void init_conference_logging(ToxWindow *self, Tox *m, uint32_t conferencenum)
+static void init_conference_logging(ToxWindow *self, Tox *tox, uint32_t conferencenum)
 {
     ChatContext *ctx = self->chatwin;
 
     char my_id[TOX_ADDRESS_SIZE];
-    tox_self_get_address(m, (uint8_t *) my_id);
+    tox_self_get_address(tox, (uint8_t *) my_id);
 
     char conference_id[TOX_CONFERENCE_ID_SIZE];
-    tox_conference_get_id(m, conferencenum, (uint8_t *) conference_id);
+    tox_conference_get_id(tox, conferencenum, (uint8_t *) conference_id);
 
     if (log_init(ctx->log, conferences[self->num].title, my_id, conference_id, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
@@ -187,10 +187,10 @@ static void init_conference_logging(ToxWindow *self, Tox *m, uint32_t conference
         }
     }
 
-    execute(ctx->history, self, m, "/log", GLOBAL_COMMAND_MODE);  // print log state to screen
+    execute(ctx->history, self, tox, "/log", GLOBAL_COMMAND_MODE);  // print log state to screen
 }
 
-int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
+int init_conference_win(Tox *tox, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
 {
     if (conferencenum > MAX_CONFERENCE_NUM) {
         return -1;
@@ -205,7 +205,7 @@ int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char
             // probably it so happens that this will (at least typically) be
             // the case, because toxic and tox maintain the indices in
             // parallel ways. But it isn't guaranteed by the API.
-            conferences[i].chatwin = add_window(m, self);
+            conferences[i].chatwin = add_window(tox, self);
             conferences[i].active = true;
             conferences[i].num_peers = 0;
             conferences[i].type = type;
@@ -221,7 +221,7 @@ int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char
 
             conference_set_title(self, conferencenum, title, length);
 
-            init_conference_logging(self, m, conferencenum);
+            init_conference_logging(self, tox, conferencenum);
 
             if (i == max_conference_index) {
                 ++max_conference_index;
@@ -285,13 +285,13 @@ void free_conference(ToxWindow *self, uint32_t conferencenum)
     kill_conference_window(self);
 }
 
-static void delete_conference(ToxWindow *self, Tox *m, uint32_t conferencenum)
+static void delete_conference(ToxWindow *self, Tox *tox, uint32_t conferencenum)
 {
-    tox_conference_delete(m, conferencenum, NULL);
+    tox_conference_delete(tox, conferencenum, NULL);
     free_conference(self, conferencenum);
 }
 
-void conference_rename_log_path(Tox *m, uint32_t conferencenum, const char *new_title)
+void conference_rename_log_path(Tox *tox, uint32_t conferencenum, const char *new_title)
 {
     ConferenceChat *chat = &conferences[conferencenum];
 
@@ -300,10 +300,10 @@ void conference_rename_log_path(Tox *m, uint32_t conferencenum, const char *new_
     }
 
     char myid[TOX_ADDRESS_SIZE];
-    tox_self_get_address(m, (uint8_t *) myid);
+    tox_self_get_address(tox, (uint8_t *) myid);
 
     char conference_id[TOX_CONFERENCE_ID_SIZE];
-    tox_conference_get_id(m, conferencenum, (uint8_t *) conference_id);
+    tox_conference_get_id(tox, conferencenum, (uint8_t *) conference_id);
 
     if (rename_logfile(chat->title, new_title, myid, conference_id, chat->chatwin) != 0) {
         fprintf(stderr, "Failed to rename conference log to `%s`\n", new_title);
@@ -352,7 +352,7 @@ void redraw_conference_win(ToxWindow *self)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-static void conference_onConferenceMessage(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t peernum,
+static void conference_onConferenceMessage(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t peernum,
         Tox_Message_Type type, const char *msg, size_t len)
 {
     UNUSED_VAR(len);
@@ -364,12 +364,12 @@ static void conference_onConferenceMessage(ToxWindow *self, Tox *m, uint32_t con
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    get_conference_nick_truncate(m, nick, peernum, conferencenum);
+    get_conference_nick_truncate(tox, nick, peernum, conferencenum);
 
     char selfnick[TOX_MAX_NAME_LENGTH];
-    tox_self_get_name(m, (uint8_t *) selfnick);
+    tox_self_get_name(tox, (uint8_t *) selfnick);
 
-    size_t sn_len = tox_self_get_name_size(m);
+    size_t sn_len = tox_self_get_name_size(tox);
     selfnick[sn_len] = '\0';
 
     int nick_clr = strcmp(nick, selfnick) == 0 ? GREEN : CYAN;
@@ -393,7 +393,7 @@ static void conference_onConferenceMessage(ToxWindow *self, Tox *m, uint32_t con
     write_to_log(msg, nick, ctx->log, false);
 }
 
-static void conference_onConferenceTitleChange(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t peernum,
+static void conference_onConferenceTitleChange(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t peernum,
         const char *title,
         size_t length)
 {
@@ -409,7 +409,7 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Tox *m, uint32_t
         return;
     }
 
-    conference_rename_log_path(m, conferencenum, title);  // must be called first
+    conference_rename_log_path(tox, conferencenum, title);  // must be called first
 
     conference_set_title(self, conferencenum, title, length);
 
@@ -419,7 +419,7 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Tox *m, uint32_t
     }
 
     char nick[TOX_MAX_NAME_LENGTH];
-    get_conference_nick_truncate(m, nick, peernum, conferencenum);
+    get_conference_nick_truncate(tox, nick, peernum, conferencenum);
     line_info_add(self, true, nick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
 
     char tmp_event[MAX_STR_SIZE];
@@ -596,7 +596,7 @@ static void conference_enable_push_to_talk(ConferenceChat *chat)
     chat->ptt_last_pushed = get_unix_time();
 }
 
-static void set_peer_audio_position(Tox *m, uint32_t conferencenum, uint32_t peernum)
+static void set_peer_audio_position(Tox *tox, uint32_t conferencenum, uint32_t peernum)
 {
     ConferenceChat *chat = &conferences[conferencenum];
     ConferencePeer *peer = &chat->peer_list[peernum];
@@ -611,7 +611,7 @@ static void set_peer_audio_position(Tox *m, uint32_t conferencenum, uint32_t pee
     uint32_t peer_posn = peernum;
 
     for (uint32_t i = 0; i < chat->num_peers; ++i) {
-        if (tox_conference_peer_number_is_ours(m, conferencenum, peernum, NULL)) {
+        if (tox_conference_peer_number_is_ours(tox, conferencenum, peernum, NULL)) {
             if (i == peernum) {
                 return;
             }
@@ -647,7 +647,7 @@ static bool find_peer_by_pubkey(const ConferencePeer *list, uint32_t num_peers, 
     return false;
 }
 
-static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t num_peers,
+static void update_peer_list(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t num_peers,
                              uint32_t old_num_peers)
 {
     ConferenceChat *chat = &conferences[conferencenum];
@@ -683,7 +683,7 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
         };
 
         Tox_Err_Conference_Peer_Query err;
-        tox_conference_peer_get_public_key(m, conferencenum, i, peer->pubkey, &err);
+        tox_conference_peer_get_public_key(tox, conferencenum, i, peer->pubkey, &err);
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
             continue;
@@ -699,14 +699,14 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
             new_peer = false;
         }
 
-        size_t length = tox_conference_peer_get_name_size(m, conferencenum, i, &err);
+        size_t length = tox_conference_peer_get_name_size(tox, conferencenum, i, &err);
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK || length >= TOX_MAX_NAME_LENGTH) {
             // FIXME: length == TOX_MAX_NAME_LENGTH should not be an error!
             continue;
         }
 
-        tox_conference_peer_get_name(m, conferencenum, i, (uint8_t *) peer->name, &err);
+        tox_conference_peer_get_name(tox, conferencenum, i, (uint8_t *) peer->name, &err);
         peer->name[length] = 0;
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
@@ -724,7 +724,7 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
         }
 
 #ifdef AUDIO
-        set_peer_audio_position(m, conferencenum, i);
+        set_peer_audio_position(tox, conferencenum, i);
 #endif
     }
 
@@ -747,7 +747,7 @@ static void update_peer_list(ToxWindow *self, Tox *m, uint32_t conferencenum, ui
     free(old_peer_list);
 }
 
-static void conference_onConferenceNameListChange(ToxWindow *self, Tox *m, uint32_t conferencenum)
+static void conference_onConferenceNameListChange(ToxWindow *self, Tox *tox, uint32_t conferencenum)
 {
     if (self->num != conferencenum) {
         return;
@@ -765,7 +765,7 @@ static void conference_onConferenceNameListChange(ToxWindow *self, Tox *m, uint3
 
     Tox_Err_Conference_Peer_Query err;
 
-    uint32_t num_peers = tox_conference_peer_count(m, conferencenum, &err);
+    uint32_t num_peers = tox_conference_peer_count(tox, conferencenum, &err);
 
     if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
         fprintf(stderr, "conference_onConferenceNameListChange() failed with error: %d\n", err);
@@ -776,10 +776,10 @@ static void conference_onConferenceNameListChange(ToxWindow *self, Tox *m, uint3
 
     chat->num_peers = num_peers;
     chat->max_idx = num_peers;
-    update_peer_list(self, m, conferencenum, num_peers, old_num);
+    update_peer_list(self, tox, conferencenum, num_peers, old_num);
 }
 
-static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint32_t conferencenum, uint32_t peernum,
+static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t peernum,
         const char *name, size_t length)
 {
     UNUSED_VAR(length);
@@ -808,10 +808,10 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *m, uint3
         }
     }
 
-    conference_onConferenceNameListChange(self, m, conferencenum);
+    conference_onConferenceNameListChange(self, tox, conferencenum);
 }
 
-static void send_conference_action(ToxWindow *self, ChatContext *ctx, Tox *m, char *action)
+static void send_conference_action(ToxWindow *self, ChatContext *ctx, Tox *tox, char *action)
 {
     if (action == NULL) {
         wprintw(ctx->history, "Invalid syntax.\n");
@@ -820,7 +820,7 @@ static void send_conference_action(ToxWindow *self, ChatContext *ctx, Tox *m, ch
 
     Tox_Err_Conference_Send_Message err;
 
-    if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_ACTION, (uint8_t *) action, strlen(action), &err)) {
+    if (!tox_conference_send_message(tox, self->num, TOX_MESSAGE_TYPE_ACTION, (uint8_t *) action, strlen(action), &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send action (error %d)", err);
     }
 }
@@ -834,7 +834,7 @@ static int sidebar_offset(uint32_t conferencenum)
 /*
  * Return true if input is recognized by handler
  */
-static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
+static bool conference_onKey(ToxWindow *self, Tox *tox, wint_t key, bool ltr)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -901,12 +901,12 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
                     free(complete_strs);
                 }
             } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
-                diff = dir_match(self, m, ctx->line, L"/avatar");
+                diff = dir_match(self, tox, ctx->line, L"/avatar");
             }
 
 #ifdef PYTHON
             else if (wcsncmp(ctx->line, L"/run ", wcslen(L"/run ")) == 0) {
-                diff = dir_match(self, m, ctx->line, L"/run");
+                diff = dir_match(self, tox, ctx->line, L"/run");
             }
 
 #endif
@@ -976,17 +976,17 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
 
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
-                    delete_conference(self, m, self->num);
+                    delete_conference(self, tox, self->num);
                     return true;
                 } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
-                    send_conference_action(self, ctx, m, line + strlen("/me "));
+                    send_conference_action(self, ctx, tox, line + strlen("/me "));
                 } else {
-                    execute(ctx->history, self, m, line, CONFERENCE_COMMAND_MODE);
+                    execute(ctx->history, self, tox, line, CONFERENCE_COMMAND_MODE);
                 }
             } else if (line[0]) {
                 Tox_Err_Conference_Send_Message err;
 
-                if (!tox_conference_send_message(m, self->num, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) line, strlen(line), &err)) {
+                if (!tox_conference_send_message(tox, self->num, TOX_MESSAGE_TYPE_NORMAL, (uint8_t *) line, strlen(line), &err)) {
                     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (error %d)", err);
                 }
             } else {
@@ -1002,12 +1002,12 @@ static bool conference_onKey(ToxWindow *self, Tox *m, wint_t key, bool ltr)
     return input_ret;
 }
 
-static void draw_peer(ToxWindow *self, Tox *m, ChatContext *ctx, uint32_t i)
+static void draw_peer(ToxWindow *self, Tox *tox, ChatContext *ctx, uint32_t i)
 {
     pthread_mutex_lock(&Winthread.lock);
     const uint32_t peer_idx = i + conferences[self->num].side_pos;
     const uint32_t peernum = conferences[self->num].name_list[peer_idx].peernum;
-    const bool is_self = tox_conference_peer_number_is_ours(m, self->num, peernum, NULL);
+    const bool is_self = tox_conference_peer_number_is_ours(tox, self->num, peernum, NULL);
     const bool audio = conferences[self->num].audio_enabled;
 
     if (audio) {
@@ -1053,9 +1053,9 @@ static void draw_peer(ToxWindow *self, Tox *m, ChatContext *ctx, uint32_t i)
     }
 }
 
-static void conference_onDraw(ToxWindow *self, Tox *m)
+static void conference_onDraw(ToxWindow *self, Tox *tox)
 {
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     int x2, y2;
     getmaxyx(self->window, y2, x2);
@@ -1160,7 +1160,7 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
                 i < num_peers && i < y2 - header_lines - CHATBOX_HEIGHT;
                 ++i) {
             wmove(ctx->sidebar, i + header_lines, 1);
-            draw_peer(self, m, ctx, i);
+            draw_peer(self, tox, ctx, i);
         }
     }
 
@@ -1181,7 +1181,7 @@ static void conference_onDraw(ToxWindow *self, Tox *m)
     }
 }
 
-static void conference_onInit(ToxWindow *self, Tox *m)
+static void conference_onInit(ToxWindow *self, Tox *tox)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
@@ -1399,9 +1399,9 @@ bool conference_mute_self(uint32_t conferencenum)
     return true;
 }
 
-bool conference_mute_peer(const Tox *m, uint32_t conferencenum, uint32_t peernum)
+bool conference_mute_peer(const Tox *tox, uint32_t conferencenum, uint32_t peernum)
 {
-    if (tox_conference_peer_number_is_ours(m, conferencenum, peernum, NULL)) {
+    if (tox_conference_peer_number_is_ours(tox, conferencenum, peernum, NULL)) {
         return conference_mute_self(conferencenum);
     }
 

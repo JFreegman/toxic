@@ -38,6 +38,6 @@ int num_registered_handlers(void);
 int help_max_width(void);
 void draw_handler_help(WINDOW *win);
 void invoke_autoruns(WINDOW *w, ToxWindow *self);
-void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_run(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE]);
 
 #endif /* API_H */

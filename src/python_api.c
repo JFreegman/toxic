@@ -279,9 +279,9 @@ void terminate_python(void)
     Py_Finalize();
 }
 
-void init_python(Tox *m)
+void init_python(Tox *tox)
 {
-    user_tox = m;
+    user_tox = tox;
     PyImport_AppendInittab("toxic_api", PyInit_toxic_api);
     Py_Initialize();
 }

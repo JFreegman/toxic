@@ -1,7 +1,7 @@
 /*  autocomplete.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -38,10 +38,10 @@
 #include "toxic.h"
 #include "windows.h"
 
-static void print_ac_matches(ToxWindow *self, Tox *m, char **list, size_t n_matches)
+static void print_ac_matches(ToxWindow *self, Tox *tox, char **list, size_t n_matches)
 {
-    if (m) {
-        execute(self->chatwin->history, self, m, "/clear", GLOBAL_COMMAND_MODE);
+    if (tox != NULL) {
+        execute(self->chatwin->history, self, tox, "/clear", GLOBAL_COMMAND_MODE);
     }
 
     for (size_t i = 0; i < n_matches; ++i) {
@@ -317,7 +317,7 @@ static bool is_partial_match(const char *s, const char *p, size_t p_len)
  * Returns -1 if no matches or more than one match.
  */
 #define MAX_DIRS 75
-int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
+int dir_match(ToxWindow *self, Tox *tox, const wchar_t *line, const wchar_t *cmd)
 {
     char b_path[MAX_STR_SIZE + 1];
     char b_name[MAX_STR_SIZE + 1];
@@ -382,7 +382,7 @@ int dir_match(ToxWindow *self, Tox *m, const wchar_t *line, const wchar_t *cmd)
 
     if (dircount > 1) {
         qsort(dirnames, dircount, sizeof(char *), qsort_ptr_char_array_helper);
-        print_ac_matches(self, m, dirnames, dircount);
+        print_ac_matches(self, tox, dirnames, dircount);
     }
 
     int ret = complete_path(self, (const char *const *) dirnames, dircount);

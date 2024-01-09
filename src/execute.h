@@ -1,7 +1,7 @@
 /*  execute.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -35,6 +35,6 @@ enum {
     GROUPCHAT_COMMAND_MODE,
 };
 
-void execute(WINDOW *w, ToxWindow *self, Tox *m, const char *input, int mode);
+void execute(WINDOW *w, ToxWindow *self, Tox *tox, const char *input, int mode);
 
 #endif /* EXECUTE_H */

@@ -1,7 +1,7 @@
 /*  conference.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -84,14 +84,14 @@ typedef struct {
 /* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
 void free_conference(ToxWindow *self, uint32_t conferencenum);
 
-int init_conference_win(Tox *m, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
+int init_conference_win(Tox *tox, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
 
 /* destroys and re-creates conference window with or without the peerlist */
 void redraw_conference_win(ToxWindow *self);
 
 void conference_set_title(ToxWindow *self, uint32_t conferencesnum, const char *title, size_t length);
-void conference_rename_log_path(Tox *m, uint32_t conferencenum, const char *new_title);
-int conference_enable_logging(ToxWindow *self, Tox *m, uint32_t conferencenum, struct chatlog *log);
+void conference_rename_log_path(Tox *tox, uint32_t conferencenum, const char *new_title);
+int conference_enable_logging(ToxWindow *self, Tox *tox, uint32_t conferencenum, struct chatlog *log);
 
 /* Puts `(NameListEntry *)`s in `entries` for each matched peer, up to a maximum
  * of `maxpeers`.
@@ -121,7 +121,7 @@ void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peern
                                sample_rate, void *userdata);
 
 bool conference_mute_self(uint32_t conferencenum);
-bool conference_mute_peer(const Tox *m, uint32_t conferencenum, uint32_t peernum);
+bool conference_mute_peer(const Tox *tox, uint32_t conferencenum, uint32_t peernum);
 bool conference_set_VAD_threshold(uint32_t conferencenum, float threshold);
 float conference_get_VAD_threshold(uint32_t conferencenum);
 

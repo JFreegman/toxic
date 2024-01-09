@@ -1,7 +1,7 @@
 /*  misc_tools.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -178,16 +178,16 @@ void str_to_lower(char *str);
 
 /* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
    Returns nick len on success, -1 on failure */
-size_t get_nick_truncate(Tox *m, char *buf, uint32_t friendnum);
+size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum);
 
 /* same as get_nick_truncate but for conferences */
-int get_conference_nick_truncate(Tox *m, char *buf, uint32_t peernum, uint32_t conferencenum);
+int get_conference_nick_truncate(Tox *tox, char *buf, uint32_t peernum, uint32_t conferencenum);
 
 /* same as get_nick_truncate but for groupchats */
-size_t get_group_nick_truncate(Tox *m, char *buf, uint32_t peer_id, uint32_t groupnum);
+size_t get_group_nick_truncate(Tox *tox, char *buf, uint32_t peer_id, uint32_t groupnum);
 
 /* same as get_group_nick_truncate() but for self. */
-size_t get_group_self_nick_truncate(Tox *m, char *buf, uint32_t groupnum);
+size_t get_group_self_nick_truncate(Tox *tox, char *buf, uint32_t groupnum);
 
 /* copies data to msg buffer.
    returns length of msg, which will be no larger than size-1 */

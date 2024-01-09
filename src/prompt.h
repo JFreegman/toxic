@@ -1,7 +1,7 @@
 /*  prompt.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -46,15 +46,15 @@ extern FriendRequests FrndRequests;
 ToxWindow *new_prompt(void);
 
 void prep_prompt_win(void);
-void prompt_init_statusbar(ToxWindow *self, Tox *m, bool first_time_run);
+void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run);
 void prompt_update_nick(ToxWindow *prompt, const char *nick);
-void prompt_update_statusmessage(ToxWindow *prompt, Tox *m, const char *statusmsg);
+void prompt_update_statusmessage(ToxWindow *prompt, Tox *tox, const char *statusmsg);
 void prompt_update_status(ToxWindow *prompt, Tox_User_Status status);
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
 void kill_prompt_window(ToxWindow *self);
 
 /* callback: Updates own connection status in prompt statusbar */
-void on_self_connection_status(Tox *m, Tox_Connection connection_status, void *userdata);
+void on_self_connection_status(Tox *tox, Tox_Connection connection_status, void *userdata);
 
 /* Returns our own connection status */
 Tox_Connection prompt_selfConnectionStatus(void);

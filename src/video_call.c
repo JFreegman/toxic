@@ -1,7 +1,7 @@
 /*  video_call.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -266,10 +266,10 @@ void callback_video_end(uint32_t friend_number)
 /*
  * Commands from chat_commands.h
  */
-void cmd_vcall(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_vcall(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
     if (argc != 0) {
@@ -301,10 +301,10 @@ void cmd_vcall(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     place_call(self);
 }
 
-void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_video(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
     Call *this_call = &CallControl.calls[self->num];
@@ -337,10 +337,10 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[M
     }
 }
 
-void cmd_res(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_res(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     Call *call = &CallControl.calls[self->num];
 
@@ -384,10 +384,10 @@ void cmd_res(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX
     }
 }
 
-void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc != 1) {
         if (argc < 1) {
@@ -418,10 +418,10 @@ void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *m, int argc, c
 }
 
 /* This changes primary video device only */
-void cmd_change_video_device(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_change_video_device(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc != 2) {
         if (argc < 1) {

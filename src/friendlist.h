@@ -1,7 +1,7 @@
 /*  friendlist.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -113,12 +113,12 @@ typedef struct {
 extern FriendsList Friends;
 
 ToxWindow *new_friendlist(void);
-void friendlist_onInit(ToxWindow *self, Tox *m);
+void friendlist_onInit(ToxWindow *self, Tox *tox);
 void disable_chatwin(uint32_t f_num);
 int get_friendnum(uint8_t *name);
 int load_blocklist(char *data);
 void kill_friendlist(ToxWindow *self);
-void friendlist_onFriendAdded(ToxWindow *self, Tox *m, uint32_t num, bool sort);
+void friendlist_onFriendAdded(ToxWindow *self, Tox *tox, uint32_t num, bool sort);
 Tox_User_Status get_friend_status(uint32_t friendnumber);
 Tox_Connection get_friend_connection_status(uint32_t friendnumber);
 

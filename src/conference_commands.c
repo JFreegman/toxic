@@ -1,7 +1,7 @@
 /*  conference_commands.c
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -35,7 +35,7 @@ static void print_err(ToxWindow *self, const char *error_str)
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -43,14 +43,14 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
     char title[CONFERENCE_MAX_TITLE_LENGTH + 1];
 
     if (argc < 1) {
-        size_t tlen = tox_conference_get_title_size(m, self->num, &err);
+        size_t tlen = tox_conference_get_title_size(tox, self->num, &err);
 
         if (err != TOX_ERR_CONFERENCE_TITLE_OK || tlen >= sizeof(title)) {
             print_err(self, "Title is not set");
             return;
         }
 
-        if (!tox_conference_get_title(m, self->num, (uint8_t *) title, &err)) {
+        if (!tox_conference_get_title(tox, self->num, (uint8_t *) title, &err)) {
             print_err(self, "Title is not set");
             return;
         }
@@ -70,19 +70,19 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
 
     snprintf(title, sizeof(title), "%s", argv[1]);
 
-    if (!tox_conference_set_title(m, self->num, (uint8_t *) title, len, &err)) {
+    if (!tox_conference_set_title(tox, self->num, (uint8_t *) title, len, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set title (error %d)", err);
         return;
     }
 
-    conference_rename_log_path(m, self->num, title);  // must be called first
+    conference_rename_log_path(tox, self->num, title);  // must be called first
 
     conference_set_title(self, self->num, title, len);
 
     char selfnick[TOX_MAX_NAME_LENGTH];
-    tox_self_get_name(m, (uint8_t *) selfnick);
+    tox_self_get_name(tox, (uint8_t *) selfnick);
 
-    size_t sn_len = tox_self_get_name_size(m);
+    size_t sn_len = tox_self_get_name_size(tox);
     selfnick[sn_len] = '\0';
 
     line_info_add(self, true, selfnick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s", title);
@@ -93,7 +93,7 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *m, int argc,
 }
 
 #ifdef AUDIO
-void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -108,7 +108,7 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
         return;
     }
 
-    if (enable ? enable_conference_audio(self, m, self->num) : disable_conference_audio(self, m, self->num)) {
+    if (enable ? enable_conference_audio(self, tox, self->num) : disable_conference_audio(self, tox, self->num)) {
         print_err(self, enable ? "Enabled conference audio. Use the '/ptt' command to toggle Push-To-Talk."
                   : "Disabled conference audio");
     } else {
@@ -116,7 +116,7 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*
     }
 }
 
-void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -145,7 +145,7 @@ void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
             return;
         }
 
-        if (conference_mute_peer(m, self->num, entries[0]->peernum)) {
+        if (conference_mute_peer(tox, self->num, entries[0]->peernum)) {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Toggled audio mute status of %s", entries[0]->name);
         } else {
             print_err(self, "Peer is not on the call");
@@ -153,10 +153,10 @@ void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *m, int argc, char
     }
 }
 
-void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     if (argc == 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Current VAD threshold: %.1f",
@@ -184,10 +184,10 @@ void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *m, int argc, cha
     }
 }
 
-void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     bool enable;
 

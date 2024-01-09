@@ -1,7 +1,7 @@
 /*  windows.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -328,13 +328,13 @@ struct Help {
     bool active;
 };
 
-ToxWindow *init_windows(Tox *m);
-void draw_active_window(Tox *m);
-int add_window(Tox *m, ToxWindow *w);
+ToxWindow *init_windows(Tox *tox);
+void draw_active_window(Tox *tox);
+int add_window(Tox *tox, ToxWindow *w);
 void del_window(ToxWindow *w);
 void set_active_window_index(uint8_t index);
 int get_num_active_windows(void);
-void kill_all_windows(Tox *m);    /* should only be called on shutdown */
+void kill_all_windows(Tox *tox);    /* should only be called on shutdown */
 void on_window_resize(void);
 void force_refresh(WINDOW *w);
 ToxWindow *get_window_ptr(size_t i);

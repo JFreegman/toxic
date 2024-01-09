@@ -1,7 +1,7 @@
 /*  term_mplex.c
  *
  *
- *  Copyright (C) 2015 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -377,7 +377,7 @@ static int mplex_is_detached(void)
     return gnu_screen_is_detached()  ||  tmux_is_detached();
 }
 
-static void mplex_timer_handler(Tox *m)
+static void mplex_timer_handler(Tox *tox)
 {
     Tox_User_Status current_status, new_status;
     const char *new_note;
@@ -389,7 +389,7 @@ static void mplex_timer_handler(Tox *m)
     int detached = mplex_is_detached();
 
     pthread_mutex_lock(&Winthread.lock);
-    current_status = tox_self_get_status(m);
+    current_status = tox_self_get_status(tox);
     pthread_mutex_unlock(&Winthread.lock);
 
     if (auto_away_active && current_status == TOX_USER_STATUS_AWAY && !detached) {
@@ -401,8 +401,8 @@ static void mplex_timer_handler(Tox *m)
         prev_status = current_status;
         new_status = TOX_USER_STATUS_AWAY;
         pthread_mutex_lock(&Winthread.lock);
-        size_t slen = tox_self_get_status_message_size(m);
-        tox_self_get_status_message(m, (uint8_t *) prev_note);
+        size_t slen = tox_self_get_status_message_size(tox);
+        tox_self_get_status_message(tox, (uint8_t *) prev_note);
         prev_note[slen] = '\0';
         pthread_mutex_unlock(&Winthread.lock);
         new_note = user_settings->mplex_away_note;
@@ -418,8 +418,8 @@ static void mplex_timer_handler(Tox *m)
     snprintf(note_str, sizeof(status_str), "/note %s", new_note);
 
     pthread_mutex_lock(&Winthread.lock);
-    execute(prompt->chatwin->history, prompt, m, status_str, GLOBAL_COMMAND_MODE);
-    execute(prompt->chatwin->history, prompt, m, note_str, GLOBAL_COMMAND_MODE);
+    execute(prompt->chatwin->history, prompt, tox, status_str, GLOBAL_COMMAND_MODE);
+    execute(prompt->chatwin->history, prompt, tox, note_str, GLOBAL_COMMAND_MODE);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -428,15 +428,15 @@ static void mplex_timer_handler(Tox *m)
 
 void *mplex_timer_thread(void *data)
 {
-    Tox *m = (Tox *) data;
+    Tox *tox = (Tox *) data;
 
     while (true) {
         sleep(MPLEX_TIMER_INTERVAL);
-        mplex_timer_handler(m);
+        mplex_timer_handler(tox);
     }
 }
 
-int init_mplex_away_timer(Tox *m)
+int init_mplex_away_timer(Tox *tox)
 {
     if (! detect_mplex()) {
         return 0;
@@ -451,7 +451,7 @@ int init_mplex_away_timer(Tox *m)
         return -1;
     }
 
-    if (pthread_create(&mplex_tid, NULL, mplex_timer_thread, (void *) m) != 0) {
+    if (pthread_create(&mplex_tid, NULL, mplex_timer_thread, (void *)tox) != 0) {
         return -1;
     }
 

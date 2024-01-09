@@ -1,7 +1,7 @@
 /*  game_util.c
  *
  *
- *  Copyright (C) 2020 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *

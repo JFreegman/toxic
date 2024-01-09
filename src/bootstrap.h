@@ -1,7 +1,7 @@
 /*  bootstrap.h
  *
  *
- *  Copyright (C) 2016 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -24,7 +24,7 @@
 #define BOOTSTRAP_H
 
 /* Manages connection to the Tox DHT network. */
-void do_tox_connection(Tox *m);
+void do_tox_connection(Tox *tox);
 
 /* Creates a new thread that will load the DHT nodeslist to memory
  * from json encoded nodes file obtained at NODES_LIST_URL. Only one

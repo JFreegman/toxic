@@ -1,7 +1,7 @@
 /*  groupchats.h
  *
  *
- *  Copyright (C) 2020 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -70,18 +70,18 @@ typedef struct {
     int        side_pos;     /* current position of the sidebar - used for scrolling up and down */
 } GroupChat;
 
-void exit_groupchat(ToxWindow *self, Tox *m, uint32_t groupnumber, const char *partmessage, size_t length);
-int init_groupchat_win(Tox *m, uint32_t groupnumber, const char *groupname, size_t length, Group_Join_Type join_type);
-void set_nick_this_group(ToxWindow *self, Tox *m, const char *new_nick, size_t length);
-void set_status_all_groups(Tox *m, uint8_t status);
+void exit_groupchat(ToxWindow *self, Tox *tox, uint32_t groupnumber, const char *partmessage, size_t length);
+int init_groupchat_win(Tox *tox, uint32_t groupnumber, const char *groupname, size_t length, Group_Join_Type join_type);
+void set_nick_this_group(ToxWindow *self, Tox *tox, const char *new_nick, size_t length);
+void set_status_all_groups(Tox *tox, uint8_t status);
 int get_peer_index(uint32_t groupnumber, uint32_t peer_id);
-void groupchat_onGroupPeerExit(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t peer_id,
+void groupchat_onGroupPeerExit(ToxWindow *self, Tox *tox, uint32_t groupnumber, uint32_t peer_id,
                                Tox_Group_Exit_Type exit_type,
                                const char *name, size_t name_len, const char *partmessage, size_t len);
-void groupchat_onGroupModeration(ToxWindow *self, Tox *m, uint32_t groupnumber, uint32_t src_peer_id,
+void groupchat_onGroupModeration(ToxWindow *self, Tox *tox, uint32_t groupnumber, uint32_t src_peer_id,
                                  uint32_t tgt_peer_id, Tox_Group_Mod_Event type);
 
-void groupchat_rejoin(ToxWindow *self, Tox *m);
+void groupchat_rejoin(ToxWindow *self, Tox *tox);
 
 /* Puts the peer_id associated with `identifier` in `peer_id`. The string may be
  * either a nick or a public key.

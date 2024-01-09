@@ -136,7 +136,7 @@ void draw_handler_help(WINDOW *win)
     python_draw_handler_help(win);
 }
 
-void cmd_run(WINDOW *window, ToxWindow *self, Tox *m, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_run(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     FILE       *fp;
     const char *error_str;

@@ -1,7 +1,7 @@
 /*  game_base.c
  *
  *
- *  Copyright (C) 2020 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -68,7 +68,7 @@ extern struct user_settings *user_settings;
                                                  && ((max_x) >= (GAME_MAX_RECT_X_LARGE)))
 
 
-static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber);
+static ToxWindow *game_new_window(Tox *tox, GameType type, uint32_t friendnumber);
 
 struct GameList {
     const char *name;
@@ -250,7 +250,7 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
     return ret;
 }
 
-int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id, const uint8_t *multiplayer_data,
+int game_initialize(const ToxWindow *parent, Tox *tox, GameType type, uint32_t id, const uint8_t *multiplayer_data,
                     size_t length, bool self_host)
 {
     int max_x;
@@ -259,7 +259,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
 
     max_y -= (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT);
 
-    ToxWindow *self = game_new_window(m, type, parent->num);
+    ToxWindow *self = game_new_window(tox, type, parent->num);
 
     if (self == NULL) {
         return -4;
@@ -267,7 +267,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
 
     GameData *game = self->game;
 
-    int window_id = add_window(m, self);
+    int window_id = add_window(tox, self);
 
     if (window_id == -1) {
         free(game);
@@ -291,7 +291,7 @@ int game_initialize(const ToxWindow *parent, Tox *m, GameType type, uint32_t id,
         game->is_multiplayer = true;
     }
 
-    game->tox = m;
+    game->tox = tox;
     game->window_shape = GW_ShapeSquare;
     game->parent_max_x = max_x;
     game->parent_max_y = max_y;
@@ -726,9 +726,9 @@ static void game_update_state(GameData *game)
     }
 }
 
-void game_onDraw(ToxWindow *self, Tox *m)
+void game_onDraw(ToxWindow *self, Tox *tox)
 {
-    UNUSED_VAR(m);   // Note: This function is not thread safe if we ever need to use `m`
+    UNUSED_VAR(tox);   // Note: This function is not thread safe if we ever need to use `m`
 
     GameData *game = self->game;
 
@@ -777,10 +777,10 @@ void game_onDraw(ToxWindow *self, Tox *m)
     game_draw_messages(game, true);
 }
 
-bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
+bool game_onKey(ToxWindow *self, Tox *tox, wint_t key, bool is_printable)
 {
     UNUSED_VAR(is_printable);
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     GameData *game = self->game;
 
@@ -819,9 +819,9 @@ bool game_onKey(ToxWindow *self, Tox *m, wint_t key, bool is_printable)
     return true;
 }
 
-void game_onInit(ToxWindow *self, Tox *m)
+void game_onInit(ToxWindow *self, Tox *tox)
 {
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     int max_x;
     int max_y;
@@ -840,9 +840,9 @@ void game_onInit(ToxWindow *self, Tox *m)
  * Byte 2-5: Game ID
  * Byte 6-*  Game data
  */
-void game_onPacket(ToxWindow *self, Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length)
+void game_onPacket(ToxWindow *self, Tox *tox, uint32_t friendnumber, const uint8_t *data, size_t length)
 {
-    UNUSED_VAR(m);
+    UNUSED_VAR(tox);
 
     GameData *game = self->game;
 
@@ -885,7 +885,7 @@ void game_onPacket(ToxWindow *self, Tox *m, uint32_t friendnumber, const uint8_t
     }
 }
 
-static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber)
+static ToxWindow *game_new_window(Tox *tox, GameType type, uint32_t friendnumber)
 {
     const char *window_name = game_get_name_string(type);
 
@@ -918,7 +918,7 @@ static ToxWindow *game_new_window(Tox *m, GameType type, uint32_t friendnumber)
 
     if (game_type_is_multi_only(type)) {
         char nick[TOX_MAX_NAME_LENGTH];
-        get_nick_truncate(m, nick, friendnumber);
+        get_nick_truncate(tox, nick, friendnumber);
 
         char buf[sizeof(nick) + sizeof(ret->name) + 4];
         snprintf(buf, sizeof(buf), "%s (%s)", window_name, nick);

@@ -1,7 +1,7 @@
 /*  name_lookup.h
  *
  *
- *  Copyright (C) 2015 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -36,6 +36,6 @@ int name_lookup_init(int curl_init_status);
  *
  * Returns true on success.
  */
-bool name_lookup(ToxWindow *self, Tox *m, const char *id_bin, const char *addr, const char *message);
+bool name_lookup(ToxWindow *self, Tox *tox, const char *id_bin, const char *addr, const char *message);
 
 #endif /* NAME_LOOKUP */

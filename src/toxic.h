@@ -1,7 +1,7 @@
 /*  toxic.h
  *
  *
- *  Copyright (C) 2014 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -103,7 +103,8 @@ typedef enum _FATAL_ERRS {
     FATALERR_PROXY = -10,           /* Tox network failed to init using a proxy */
     FATALERR_ENCRYPT = -11,         /* Data file encryption failure */
     FATALERR_TOX_INIT = -12,        /* Tox instance failed to initialize */
-    FATALERR_CURSES = -13,          /* Unrecoverable Ncurses error */
+    FATALERR_TOXIC_INIT = -13,      /* Toxic instance failed to initialize */
+    FATALERR_CURSES = -14,          /* Unrecoverable Ncurses error */
 } FATAL_ERRS;
 
 /* Fixes text color problem on some terminals.
@@ -118,66 +119,67 @@ void flag_interface_refresh(void);
 /* Sets ncurses refresh rate. Lower values make it refresh more often. */
 void set_window_refresh_rate(size_t refresh_rate);
 
-void exit_toxic_success(Tox *m) __attribute__((__noreturn__));
+void exit_toxic_success(Tox *tox) __attribute__((__noreturn__));
 void exit_toxic_err(const char *errmsg, int errcode) __attribute__((__noreturn__));
 
-int store_data(Tox *m, const char *path);
+int store_data(Tox *tox, const char *path);
 
 /* callbacks */
-void on_friend_request(Tox *m, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata);
-void on_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection status, void *userdata);
-void on_friend_message(Tox *m, uint32_t friendnumber, Tox_Message_Type type, const uint8_t *string, size_t length,
+void on_friend_request(Tox *tox, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata);
+void on_friend_connection_status(Tox *tox, uint32_t friendnumber, Tox_Connection status, void *userdata);
+void on_friend_message(Tox *tox, uint32_t friendnumber, Tox_Message_Type type, const uint8_t *string, size_t length,
                        void *userdata);
-void on_friend_name(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
-void on_friend_status(Tox *m, uint32_t friendnumber, Tox_User_Status status, void *userdata);
-void on_friend_status_message(Tox *m, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
-void on_friend_added(Tox *m, uint32_t friendnumber, bool sort);
-void on_conference_message(Tox *m, uint32_t conferencenumber, uint32_t peernumber, Tox_Message_Type type,
+void on_friend_name(Tox *tox, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
+void on_friend_status(Tox *tox, uint32_t friendnumber, Tox_User_Status status, void *userdata);
+void on_friend_status_message(Tox *tox, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
+void on_friend_added(Tox *tox, uint32_t friendnumber, bool sort);
+void on_conference_message(Tox *tox, uint32_t conferencenumber, uint32_t peernumber, Tox_Message_Type type,
                            const uint8_t *message, size_t length, void *userdata);
-void on_conference_invite(Tox *m, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *conference_pub_key,
+void on_conference_invite(Tox *tox, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *conference_pub_key,
                           size_t length, void *userdata);
-void on_conference_peer_list_changed(Tox *m, uint32_t conferencenumber, void *userdata);
-void on_conference_peer_name(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *name,
+void on_conference_peer_list_changed(Tox *tox, uint32_t conferencenumber, void *userdata);
+void on_conference_peer_name(Tox *tox, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *name,
                              size_t length, void *userdata);
-void on_conference_title(Tox *m, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *title, size_t length,
+void on_conference_title(Tox *tox, uint32_t conferencenumber, uint32_t peernumber, const uint8_t *title, size_t length,
                          void *userdata);
-void on_file_chunk_request(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
+void on_file_chunk_request(Tox *tox, uint32_t friendnumber, uint32_t filenumber, uint64_t position, size_t length,
                            void *userdata);
-void on_file_recv_chunk(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint64_t position, const uint8_t *data,
+void on_file_recv_chunk(Tox *tox, uint32_t friendnumber, uint32_t filenumber, uint64_t position, const uint8_t *data,
                         size_t length, void *userdata);
-void on_file_recv_control(Tox *m, uint32_t friendnumber, uint32_t filenumber, Tox_File_Control control,
+void on_file_recv_control(Tox *tox, uint32_t friendnumber, uint32_t filenumber, Tox_File_Control control,
                           void *userdata);
-void on_file_recv(Tox *m, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
+void on_file_recv(Tox *tox, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
                   const uint8_t *filename, size_t filename_length, void *userdata);
-void on_friend_typing(Tox *m, uint32_t friendnumber, bool is_typing, void *userdata);
-void on_friend_read_receipt(Tox *m, uint32_t friendnumber, uint32_t receipt, void *userdata);
-void on_lossless_custom_packet(Tox *m, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata);
-void on_group_invite(Tox *m, uint32_t friendnumber, const uint8_t *invite_data, size_t length,
+void on_friend_typing(Tox *tox, uint32_t friendnumber, bool is_typing, void *userdata);
+void on_friend_read_receipt(Tox *tox, uint32_t friendnumber, uint32_t receipt, void *userdata);
+void on_lossless_custom_packet(Tox *tox, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata);
+void on_group_invite(Tox *tox, uint32_t friendnumber, const uint8_t *invite_data, size_t length,
                      const uint8_t *group_name,
                      size_t group_name_length, void *userdata);
-void on_group_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
                       const uint8_t *message, size_t length, uint32_t message_id, void *userdata);
-void on_group_private_message(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
                               const uint8_t *message, size_t length,
                               void *userdata);
-void on_group_peer_join(Tox *m, uint32_t groupnumber, uint32_t peernumber, void *userdata);
-void on_group_peer_exit(Tox *m, uint32_t groupnumber, uint32_t peer_id, Tox_Group_Exit_Type exit_type,
+void on_group_peer_join(Tox *tox, uint32_t groupnumber, uint32_t peernumber, void *userdata);
+void on_group_peer_exit(Tox *tox, uint32_t groupnumber, uint32_t peer_id, Tox_Group_Exit_Type exit_type,
                         const uint8_t *nick,
                         size_t nick_len, const uint8_t *partmsg, size_t length, void *userdata);
-void on_group_topic_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *topic, size_t length,
+void on_group_topic_change(Tox *tox, uint32_t groupnumber, uint32_t peernumber, const uint8_t *topic, size_t length,
                            void *userdata);
-void on_group_peer_limit(Tox *m, uint32_t groupnumber, uint32_t peer_limit, void *userdata);
-void on_group_privacy_state(Tox *m, uint32_t groupnumber, Tox_Group_Privacy_State privacy_state, void *userdata);
-void on_group_topic_lock(Tox *m, uint32_t groupnumber, Tox_Group_Topic_Lock topic_lock, void *userdata);
-void on_group_password(Tox *m, uint32_t groupnumber, const uint8_t *password, size_t length, void *userdata);
-void on_group_nick_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
+void on_group_peer_limit(Tox *tox, uint32_t groupnumber, uint32_t peer_limit, void *userdata);
+void on_group_privacy_state(Tox *tox, uint32_t groupnumber, Tox_Group_Privacy_State privacy_state, void *userdata);
+void on_group_topic_lock(Tox *tox, uint32_t groupnumber, Tox_Group_Topic_Lock topic_lock, void *userdata);
+void on_group_password(Tox *tox, uint32_t groupnumber, const uint8_t *password, size_t length, void *userdata);
+void on_group_nick_change(Tox *tox, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
                           void *userdata);
-void on_group_status_change(Tox *m, uint32_t groupnumber, uint32_t peernumber, TOX_USER_STATUS status, void *userdata);
-void on_group_self_join(Tox *m, uint32_t groupnumber, void *userdata);
-void on_group_rejected(Tox *m, uint32_t groupnumber, Tox_Group_Join_Fail type, void *userdata);
-void on_group_moderation(Tox *m, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
+void on_group_status_change(Tox *tox, uint32_t groupnumber, uint32_t peernumber, TOX_USER_STATUS status,
+                            void *userdata);
+void on_group_self_join(Tox *tox, uint32_t groupnumber, void *userdata);
+void on_group_rejected(Tox *tox, uint32_t groupnumber, Tox_Group_Join_Fail type, void *userdata);
+void on_group_moderation(Tox *tox, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
                          Tox_Group_Mod_Event type, void *userdata);
-void on_group_voice_state(Tox *m, uint32_t groupnumber, Tox_Group_Voice_State voice_state, void *userdata);
+void on_group_voice_state(Tox *tox, uint32_t groupnumber, Tox_Group_Voice_State voice_state, void *userdata);
 
 extern char *DATA_FILE;
 extern char *BLOCK_FILE;

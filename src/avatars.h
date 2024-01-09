@@ -1,7 +1,7 @@
 /*  avatars.h
  *
  *
- *  Copyright (C) 2015 Toxic All Rights Reserved.
+ *  Copyright (C) 2024 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic.
  *
@@ -32,24 +32,24 @@
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_send(Tox *m, uint32_t friendnum);
+int avatar_send(Tox *tox, uint32_t friendnum);
 
 /* Sets avatar to path and sends it to all online contacts.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_set(Tox *m, const char *path, size_t length);
+int avatar_set(Tox *tox, const char *path, size_t length);
 
 /* Unsets avatar and sends to all online contacts.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-void avatar_unset(Tox *m);
+void avatar_unset(Tox *tox);
 
-void on_avatar_chunk_request(Tox *m, struct FileTransfer *ft, uint64_t position, size_t length);
-void on_avatar_file_control(Tox *m, struct FileTransfer *ft, Tox_File_Control control);
-void on_avatar_friend_connection_status(Tox *m, uint32_t friendnumber, Tox_Connection connection_status);
+void on_avatar_chunk_request(Tox *tox, struct FileTransfer *ft, uint64_t position, size_t length);
+void on_avatar_file_control(Tox *tox, struct FileTransfer *ft, Tox_File_Control control);
+void on_avatar_friend_connection_status(Tox *tox, uint32_t friendnumber, Tox_Connection connection_status);
 
 #endif /* AVATARS_H */
