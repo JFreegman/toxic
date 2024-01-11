@@ -708,7 +708,7 @@ static void game_draw_messages(GameData *game, bool priority)
 
 static void game_update_state(GameData *game)
 {
-    if (!game->cb_game_update_state) {
+    if (game->cb_game_update_state == NULL) {
         return;
     }
 

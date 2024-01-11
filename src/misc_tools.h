@@ -23,6 +23,7 @@
 #define MISC_TOOLS_H
 
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "toxic.h"
 #include "windows.h"

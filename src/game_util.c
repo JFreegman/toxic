@@ -21,8 +21,6 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
 
 #include "game_util.h"
 #include "misc_tools.h"

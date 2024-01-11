@@ -991,13 +991,13 @@ static void snake_draw_powerup(WINDOW *win, const SnakeState *state)
 
 void snake_cb_update_game_state(GameData *game, void *cb_data)
 {
-    if (cb_data == NULL) {
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
 
     TIME_MS cur_time = get_time_millis();
-
-    SnakeState *state = (SnakeState *)cb_data;
 
     if (!state->is_online) {
         snake_decay_points(game, state);
@@ -1016,11 +1016,11 @@ void snake_cb_update_game_state(GameData *game, void *cb_data)
 
 void snake_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
-    if (cb_data == NULL) {
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    SnakeState *state = (SnakeState *)cb_data;
 
     snake_draw_food(win, state);
 
@@ -1036,11 +1036,11 @@ void snake_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 
 void snake_cb_kill(GameData *game, void *cb_data)
 {
-    if (cb_data == NULL) {
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    SnakeState *state = (SnakeState *)cb_data;
 
     if (state->is_online && state->status == SnakeStatusPlaying) {
         snake_packet_abort(game);
@@ -1060,24 +1060,24 @@ void snake_cb_kill(GameData *game, void *cb_data)
 
 void snake_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
-    if (cb_data == NULL) {
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    SnakeState *state = (SnakeState *)cb_data;
 
     snake_set_key_press(state, key);
 }
 
 void snake_cb_pause(GameData *game, bool is_paused, void *cb_data)
 {
-    UNUSED_VAR(game);
+    SnakeState *state = (SnakeState *)cb_data;
 
-    if (cb_data == NULL) {
+    if (state == NULL) {
         return;
     }
 
-    SnakeState *state = (SnakeState *)cb_data;
+    UNUSED_VAR(game);
 
     TIME_S t = get_unix_time();
 
@@ -1580,15 +1580,15 @@ static void snake_handle_abort_packet(GameData *game, SnakeState *state)
 
 static void snake_cb_on_packet(GameData *game, const uint8_t *data, size_t length, void *cb_data)
 {
+    SnakeState *state = (SnakeState *)cb_data;
+
+    if (state == NULL) {
+        return;
+    }
+
     if (length == 0 || data == NULL) {
         return;
     }
-
-    if (cb_data == NULL) {
-        return;
-    }
-
-    SnakeState *state = (SnakeState *)cb_data;
 
     if (!state->is_online) {
         return;

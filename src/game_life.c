@@ -348,22 +348,22 @@ static void life_start(GameData *game, LifeState *state)
 
 void life_cb_update_game_state(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    LifeState *state = (LifeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    LifeState *state = (LifeState *)cb_data;
 
     life_cycle(game, state);
 }
 
 void life_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
-    if (!cb_data) {
+    LifeState *state = (LifeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    LifeState *state = (LifeState *)cb_data;
 
     move(state->curs_y, state->curs_x);
 
@@ -444,11 +444,11 @@ static void life_move_curs_down_left(LifeState *state)
 
 void life_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
-    if (!cb_data) {
+    LifeState *state = (LifeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    LifeState *state = (LifeState *)cb_data;
 
     switch (key) {
         case KEY_LEFT: {
@@ -557,22 +557,22 @@ static void life_free_cells(LifeState *state)
 
 void life_cb_pause(GameData *game, bool is_paused, void *cb_data)
 {
-    if (!cb_data) {
+    LifeState *state = (LifeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    LifeState *state = (LifeState *)cb_data;
 
     state->paused = is_paused;
 }
 
 void life_cb_kill(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    LifeState *state = (LifeState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    LifeState *state = (LifeState *)cb_data;
 
     life_free_cells(state);
     free(state);

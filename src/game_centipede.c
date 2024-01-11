@@ -1031,7 +1031,7 @@ static void cent_set_head_direction(CentState *state, Segment *head, int y_botto
         Mushroom *mush = cent_get_mushroom_at_coords(state, &next_coords);
 
         if (head->coords.x <= x_left || mush != NULL) {
-            if (mush && mush->is_poisonous) {
+            if (mush != NULL && mush->is_poisonous) {
                 cent_poison_centipede(head);
             }
 
@@ -1045,7 +1045,7 @@ static void cent_set_head_direction(CentState *state, Segment *head, int y_botto
         Mushroom *mush = cent_get_mushroom_at_coords(state, &next_coords);
 
         if (head->coords.x >= x_right || mush != NULL) {
-            if (mush && mush->is_poisonous) {
+            if (mush != NULL && mush->is_poisonous) {
                 cent_poison_centipede(head);
             }
 
@@ -1507,11 +1507,11 @@ static void cent_mushrooms_draw(WINDOW *win, const CentState *state)
 
 void cent_cb_update_game_state(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    CentState *state = (CentState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    CentState *state = (CentState *)cb_data;
 
     if (state->game_over) {
         return;
@@ -1531,11 +1531,11 @@ void cent_cb_update_game_state(GameData *game, void *cb_data)
 
 void cent_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
-    if (!cb_data) {
+    CentState *state = (CentState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    CentState *state = (CentState *)cb_data;
 
     cent_blaster_draw(win, state);
     cent_projectiles_draw(win, state);
@@ -1546,11 +1546,11 @@ void cent_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 
 void cent_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
-    if (!cb_data) {
+    CentState *state = (CentState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    CentState *state = (CentState *)cb_data;
 
     if (key == CENT_KEY_FIRE) {
         cent_bullet_spawn(state);
@@ -1566,11 +1566,11 @@ void cent_cb_on_keypress(GameData *game, int key, void *cb_data)
 
 void cent_cb_pause(GameData *game, bool is_paused, void *cb_data)
 {
-    if (!cb_data) {
+    CentState *state = (CentState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    CentState *state = (CentState *)cb_data;
 
     TIME_S t = get_unix_time();
 
@@ -1583,11 +1583,11 @@ void cent_cb_pause(GameData *game, bool is_paused, void *cb_data)
 
 void cent_cb_kill(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    CentState *state = (CentState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    CentState *state = (CentState *)cb_data;
 
     cent_exterminate_centipedes(&state->centipedes);
 
@@ -1671,9 +1671,6 @@ static int cent_init_state(GameData *game, CentState *state)
     }
 
     state->mushrooms = mushrooms;
-
-    Centipedes *centipedes = &state->centipedes;
-    memset(centipedes->heads, 0, sizeof(centipedes->heads));
 
     Direction dir = rand_range_not_secure(2) == 0 ? WEST : EAST;
 

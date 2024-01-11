@@ -1716,11 +1716,11 @@ static void chess_draw_interface(const GameData *game, WINDOW *win, ChessState *
 
 void chess_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
-    if (!cb_data) {
+    ChessState *state = (ChessState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    ChessState *state = (ChessState *)cb_data;
 
     move(state->curs_y, state->curs_x);
 
@@ -1732,11 +1732,11 @@ void chess_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 
 void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
-    if (!cb_data) {
+    ChessState *state = (ChessState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    ChessState *state = (ChessState *)cb_data;
 
     switch (key) {
         case KEY_LEFT: {
@@ -1795,11 +1795,11 @@ void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
 
 void chess_cb_kill(GameData *game, void *cb_data)
 {
-    if (!cb_data) {
+    ChessState *state = (ChessState *)cb_data;
+
+    if (state == NULL) {
         return;
     }
-
-    ChessState *state = (ChessState *)cb_data;
 
     free(state);
 
@@ -1886,15 +1886,15 @@ static void chess_notify(const GameData *game, ChessPacketType type)
 
 static void chess_cb_on_packet(GameData *game, const uint8_t *data, size_t length, void *cb_data)
 {
+    ChessState *state = (ChessState *)cb_data;
+
+    if (state == NULL) {
+        return;
+    }
+
     if (length == 0 || data == NULL) {
         return;
     }
-
-    if (cb_data == NULL) {
-        return;
-    }
-
-    ChessState *state = (ChessState *)cb_data;
 
     ChessPacketType type = data[0];
 
