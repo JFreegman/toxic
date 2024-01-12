@@ -23,6 +23,8 @@
 #ifndef LINE_INFO_H
 #define LINE_INFO_H
 
+#include <time.h>
+
 #include "toxic.h"
 #include "windows.h"
 

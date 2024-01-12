@@ -107,7 +107,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
         return;
     }
 
-    if (!ft) {
+    if (ft == NULL) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
@@ -230,7 +230,12 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char 
 
     if (argc > 0) {
         passwd = argv[1];
-        passwd_len = strlen(passwd);
+        passwd_len = (uint16_t) strlen(passwd);
+    }
+
+    if (passwd_len > TOX_GROUP_MAX_PASSWORD_SIZE) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group: Password too long.");
+        return;
     }
 
     size_t nick_len = tox_self_get_name_size(tox);
@@ -244,12 +249,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char 
                            (const uint8_t *) passwd, passwd_len, &err);
 
     if (err != TOX_ERR_GROUP_INVITE_ACCEPT_OK) {
-        if (err == TOX_ERR_GROUP_INVITE_ACCEPT_TOO_LONG) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group: Password too long.");
-        } else {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
-        }
-
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
         return;
     }
 
@@ -353,7 +353,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*ar
 
     FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
 
-    if (!ft) {
+    if (ft == NULL) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
         return;
     }
@@ -443,7 +443,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*ar
 
     off_t filesize = file_size(path);
 
-    if (filesize == 0) {
+    if (filesize <= 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
         fclose(file_to_send);
         return;
@@ -462,14 +462,14 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*ar
 
     FileTransfer *ft = new_file_transfer(self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
 
-    if (!ft) {
+    if (ft == NULL) {
         err = TOX_ERR_FILE_SEND_TOO_MANY;
         goto on_send_error;
     }
 
     memcpy(ft->file_name, file_name, namelen + 1);
     ft->file = file_to_send;
-    ft->file_size = filesize;
+    ft->file_size = (uint64_t)filesize;
     tox_file_get_file_id(tox, self->num, filenum, ft->file_id, NULL);
 
     char sizestr[32];

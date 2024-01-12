@@ -24,6 +24,7 @@
 #define FILE_TRANSFERS_H
 
 #include <limits.h>
+#include <time.h>
 
 #include "notify.h"
 #include "toxic.h"

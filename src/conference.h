@@ -23,6 +23,8 @@
 #ifndef CONFERENCE_H
 #define CONFERENCE_H
 
+#include <time.h>
+
 #include "toxic.h"
 #include "windows.h"
 

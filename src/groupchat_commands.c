@@ -200,7 +200,7 @@ void cmd_list(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
 {
     GroupChat *chat = get_groupchat(self->num);
 
-    if (!chat) {
+    if (chat == NULL) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch GroupChat object.");
         return;
     }
@@ -857,7 +857,7 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
 
     GroupChat *chat = get_groupchat(self->num);
 
-    if (!chat) {
+    if (chat == NULL) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch GroupChat object.");
         return;
     }
