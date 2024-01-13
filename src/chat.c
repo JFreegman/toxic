@@ -90,9 +90,10 @@ static const char *chat_cmd_list[] = {
 #ifdef QRCODE
     "/myqr",
 #endif /* QRCODE */
+    "/fopen",
     "/nick",
-    "/note",
     "/nospam",
+    "/note",
     "/quit",
     "/savefile",
     "/sendfile",
