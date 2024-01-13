@@ -406,6 +406,7 @@ void cmd_fopen(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     // make and call xdg command
     char command[MAX_STR_SIZE];
     snprintf(command, sizeof(command), "xdg-open %s", ft->file_path);
+    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "I am about to run the xdg command.");
 
     int open_result = system(command);
 
