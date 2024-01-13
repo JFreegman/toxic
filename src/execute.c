@@ -91,8 +91,8 @@ static struct cmd_func chat_commands[] = {
 #ifdef GAMES
     { "/play",      cmd_game_join         },
 #endif
-    { "/savefile",  cmd_savefile          },
     { "/fopen",     cmd_fopen             },
+    { "/savefile",  cmd_savefile          },
     { "/sendfile",  cmd_sendfile          },
 #ifdef AUDIO
     { "/call",      cmd_call              },
