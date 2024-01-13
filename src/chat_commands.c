@@ -335,6 +335,23 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
 
 #endif // GAMES
 
+void open_with_xdg(const char *filename)
+{
+    // Make the command
+    char command[MAX_STR_SIZE];
+    snprintf(command, sizeof(command), "xdg-open %s", filename);
+
+    // Call the command
+    int result = system(command);
+
+    // Did it work?
+    if (result == -1) {
+        perror("Cannot open file.\n");
+    } else {
+        printf("File opened.\n");
+    }
+}
+
 void cmd_fopen(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -376,7 +393,7 @@ void cmd_fopen(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
         goto on_recv_error;
     }
 
-    xdg_open(ft);
+    open_with_xdg(ft);
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx, ft->file_path);
 
