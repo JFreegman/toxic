@@ -73,6 +73,13 @@ typedef enum {
     STATUS_AWAY,
     BAR_NOTIFY,
     BAR_SOLID,
+    WHITE_BAR_FG,
+    RED_BAR_FG,
+    GREEN_BAR_FG,
+    CYAN_BAR_FG,
+    PURPLE_BAR_FG,
+    YELLOW_BAR_FG,
+    BLACK_BAR_FG,
 } C_COLOURS;
 
 /* tab alert types: lower types take priority (this relies on the order of C_COLOURS) */
@@ -232,6 +239,7 @@ struct ToxWindow {
     int active_box; /* For box notify */
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
+    int colour;  /* The ncurses colour pair of the window name */
     uint32_t num;    /* corresponds to friendnumber in chat windows */
     uint8_t index; /* This window's index in the windows array */
     bool scroll_pause; /* true if this window is not scrolled to the bottom */

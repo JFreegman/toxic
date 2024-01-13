@@ -581,6 +581,7 @@ int add_window(Tox *tox, ToxWindow *w)
 
         w->index = i;
         w->window = newwin(LINES, COLS, 0, 0);
+        w->colour = BAR_TEXT;
 
         if (w->window == NULL) {
             return -1;
@@ -816,8 +817,18 @@ static void draw_window_tab(WINDOW *win, ToxWindow *toxwin, bool active_window)
         }
     }
 
-    if (active_window || (type == WINDOW_TYPE_PROMPT || type == WINDOW_TYPE_FRIEND_LIST)) {
+    if (type == WINDOW_TYPE_PROMPT || type == WINDOW_TYPE_FRIEND_LIST) {
+        if (!has_alert) {
+            wattron(win, COLOR_PAIR(toxwin->colour));
+            wprintw(win, "%s", toxwin->name);
+            wattroff(win, COLOR_PAIR(toxwin->colour));
+        } else {
+            wprintw(win, "%s", toxwin->name);
+        }
+    } else if (active_window) {
+        wattron(win, COLOR_PAIR(toxwin->colour));
         wprintw(win, "%s", toxwin->name);
+        wattroff(win, COLOR_PAIR(toxwin->colour));
     } else {
         if (pending_messages > 0) {
             wprintw(win, "%u", pending_messages);

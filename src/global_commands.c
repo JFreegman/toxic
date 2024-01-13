@@ -252,6 +252,39 @@ void cmd_clear(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     force_refresh(window);
 }
 
+void cmd_colour(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+    UNUSED_VAR(tox);
+
+    if (argc != 1) {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Change the name of the focused window with /colour [white|black|yellow|red|green|cyan|purple]");
+        return;
+    }
+
+    const char *colour = argv[1];
+
+    if (strcasecmp(colour, "white") == 0) {
+        self->colour = WHITE_BAR_FG;
+    } else if (strcasecmp(colour, "red") == 0) {
+        self->colour = RED_BAR_FG;
+    } else if (strcasecmp(colour, "green") == 0) {
+        self->colour = GREEN_BAR_FG;
+    } else if (strcasecmp(colour, "yellow") == 0) {
+        self->colour = YELLOW_BAR_FG;
+    } else if (strcasecmp(colour, "cyan") == 0) {
+        self->colour = CYAN_BAR_FG;
+    } else if (strcasecmp(colour, "purple") == 0) {
+        self->colour = PURPLE_BAR_FG;
+    } else if (strcasecmp(colour, "black") == 0) {
+        self->colour = BLACK_BAR_FG;
+    } else {
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid colour");
+        return;
+    }
+}
+
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);

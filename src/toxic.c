@@ -442,6 +442,13 @@ static void init_term(void)
         init_pair(STATUS_ONLINE, COLOR_GREEN, bar_bg_color);
         init_pair(STATUS_AWAY, COLOR_YELLOW, bar_bg_color);
         init_pair(STATUS_BUSY, COLOR_RED, bar_bg_color);
+        init_pair(WHITE_BAR_FG, COLOR_WHITE, bar_bg_color);
+        init_pair(RED_BAR_FG, COLOR_RED, bar_bg_color);
+        init_pair(GREEN_BAR_FG, COLOR_GREEN, bar_bg_color);
+        init_pair(CYAN_BAR_FG, COLOR_CYAN, bar_bg_color);
+        init_pair(PURPLE_BAR_FG, COLOR_MAGENTA, bar_bg_color);
+        init_pair(YELLOW_BAR_FG, COLOR_YELLOW, bar_bg_color);
+        init_pair(BLACK_BAR_FG, COLOR_BLACK, bar_bg_color);
     }
 
     refresh();

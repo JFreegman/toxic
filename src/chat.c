@@ -73,6 +73,7 @@ static const char *chat_cmd_list[] = {
     "/cjoin",
     "/clear",
     "/close",
+    "/colour",
     "/connect",
     "/exit",
     "/gaccept",
