@@ -387,7 +387,7 @@ void cmd_fopen(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     }
 
     if (mkdir(tmp_dir, S_IRWXU) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Could not create tox download /tmp/ directory.");
+        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Could not create tox download /tmp/ directory.\n", err);
     }
     // end make tmpdir if it does not exist
 
