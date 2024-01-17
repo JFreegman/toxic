@@ -200,8 +200,12 @@ static int add_friend_request(const char *public_key, const char *data)
 /*
  * Return true if input is recognized by handler
  */
-static bool prompt_onKey(ToxWindow *self, Tox *tox, wint_t key, bool ltr)
+static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 {
+    if (toxic == NULL || self == NULL) {
+        return false;
+    }
+
     ChatContext *ctx = self->chatwin;
 
     int x, y, y2, x2;
@@ -246,12 +250,12 @@ static bool prompt_onKey(ToxWindow *self, Tox *tox, wint_t key, bool ltr)
             int diff = -1;
 
             if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
-                diff = dir_match(self, tox, ctx->line, L"/avatar");
+                diff = dir_match(self, toxic, ctx->line, L"/avatar");
             }
 
 #ifdef PYTHON
             else if (wcsncmp(ctx->line, L"/run ", wcslen(L"/run ")) == 0) {
-                diff = dir_match(self, tox, ctx->line, L"/run");
+                diff = dir_match(self, toxic, ctx->line, L"/run");
             }
 
 #endif
@@ -296,7 +300,7 @@ static bool prompt_onKey(ToxWindow *self, Tox *tox, wint_t key, bool ltr)
                     line_info_add(self, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
                 }
 
-                execute(ctx->history, self, tox, line, GLOBAL_COMMAND_MODE);
+                execute(ctx->history, self, toxic, line, GLOBAL_COMMAND_MODE);
             }
         }
 
@@ -483,12 +487,17 @@ static void prompt_onDraw(ToxWindow *self, Tox *tox)
     }
 }
 
-static void prompt_onConnectionChange(ToxWindow *self, Tox *tox, uint32_t friendnum, Tox_Connection connection_status)
+static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t friendnum,
+                                      Tox_Connection connection_status)
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH] = {0};    /* stop removing this initiation */
-    get_nick_truncate(tox, nick, friendnum);
+    get_nick_truncate(toxic->tox, nick, friendnum);
 
     if (!nick[0]) {
         snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
@@ -655,9 +664,13 @@ static void prompt_init_log(ToxWindow *self, Tox *tox, const char *self_name)
     }
 }
 
-static void prompt_onInit(ToxWindow *self, Tox *tox)
+static void prompt_onInit(ToxWindow *self, Toxic *toxic)
 {
     curs_set(1);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
 
     int y2;
     int x2;
@@ -682,7 +695,7 @@ static void prompt_onInit(ToxWindow *self, Tox *tox)
 
     line_info_init(ctx->hst);
 
-    prompt_init_log(self, tox, self->name);
+    prompt_init_log(self, toxic->tox, self->name);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);

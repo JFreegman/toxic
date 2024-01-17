@@ -250,7 +250,7 @@ static int game_initialize_type(GameData *game, const uint8_t *data, size_t leng
     return ret;
 }
 
-int game_initialize(const ToxWindow *parent, Tox *tox, GameType type, uint32_t id, const uint8_t *multiplayer_data,
+int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32_t id, const uint8_t *multiplayer_data,
                     size_t length, bool self_host)
 {
     int max_x;
@@ -259,7 +259,7 @@ int game_initialize(const ToxWindow *parent, Tox *tox, GameType type, uint32_t i
 
     max_y -= (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT);
 
-    ToxWindow *self = game_new_window(tox, type, parent->num);
+    ToxWindow *self = game_new_window(toxic->tox, type, parent->num);
 
     if (self == NULL) {
         return -4;
@@ -267,7 +267,7 @@ int game_initialize(const ToxWindow *parent, Tox *tox, GameType type, uint32_t i
 
     GameData *game = self->game;
 
-    int window_id = add_window(tox, self);
+    const int window_id = add_window(toxic, self);
 
     if (window_id == -1) {
         free(game);
@@ -291,7 +291,7 @@ int game_initialize(const ToxWindow *parent, Tox *tox, GameType type, uint32_t i
         game->is_multiplayer = true;
     }
 
-    game->tox = tox;
+    game->toxic = toxic;
     game->window_shape = GW_ShapeSquare;
     game->parent_max_x = max_x;
     game->parent_max_y = max_y;
@@ -777,10 +777,10 @@ void game_onDraw(ToxWindow *self, Tox *tox)
     game_draw_messages(game, true);
 }
 
-bool game_onKey(ToxWindow *self, Tox *tox, wint_t key, bool is_printable)
+bool game_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool is_printable)
 {
     UNUSED_VAR(is_printable);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     GameData *game = self->game;
 
@@ -819,9 +819,13 @@ bool game_onKey(ToxWindow *self, Tox *tox, wint_t key, bool is_printable)
     return true;
 }
 
-void game_onInit(ToxWindow *self, Tox *tox)
+void game_onInit(ToxWindow *self, Toxic *toxic)
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     int max_x;
     int max_y;
@@ -1180,7 +1184,7 @@ int game_packet_send(const GameData *game, const uint8_t *data, size_t length, G
 
     Tox_Err_Friend_Custom_Packet err;
 
-    if (!tox_friend_send_lossless_packet(game->tox, game->friend_number, packet, packet_length, &err)) {
+    if (!tox_friend_send_lossless_packet(game->toxic->tox, game->friend_number, packet, packet_length, &err)) {
         fprintf(stderr, "failed to send game packet: error %d\n", err);
         return -1;
     }

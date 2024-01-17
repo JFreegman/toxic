@@ -36,6 +36,6 @@ int name_lookup_init(int curl_init_status);
  *
  * Returns true on success.
  */
-bool name_lookup(ToxWindow *self, Tox *tox, const char *id_bin, const char *addr, const char *message);
+bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *addr, const char *message);
 
 #endif /* NAME_LOOKUP */

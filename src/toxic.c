@@ -76,7 +76,6 @@
 #ifdef VIDEO
 #include "video_call.h"
 #endif /* VIDEO */
-static ToxAV *av;
 #endif /* AUDIO */
 
 #ifdef PYTHON
@@ -89,15 +88,10 @@ static ToxAV *av;
 #endif
 
 /* Export for use in Callbacks */
-char *DATA_FILE = NULL;
-char *BLOCK_FILE = NULL;
 ToxWindow *prompt = NULL;
 
 #define DATANAME  "toxic_profile.tox"
 #define BLOCKNAME "toxic_blocklist"
-
-#define MIN_PASSWORD_LEN 6
-#define MAX_PASSWORD_LEN 64
 
 struct Winthread Winthread;
 static struct cqueue_thread cqueue_thread;
@@ -107,19 +101,9 @@ struct arg_opts arg_opts;
 static struct av_thread av_thread;
 #endif
 
-typedef struct Toxic {
-    Tox *tox;
-} Toxic;
-
 // This struct is not thread safe. It should only ever be written to from the main thread
 // before any other thread that uses it is initialized.
 struct user_settings *user_settings = NULL;
-
-static struct user_password {
-    bool data_is_encrypted;
-    char pass[MAX_PASSWORD_LEN + 1];
-    int len;
-} user_password;
 
 static void queue_init_message(const char *msg, ...);
 
@@ -166,40 +150,39 @@ static void init_signal_catchers(void)
 
 void free_global_data(void)
 {
-    if (DATA_FILE) {
-        free(DATA_FILE);
-        DATA_FILE = NULL;
-    }
-
-    if (BLOCK_FILE) {
-        free(BLOCK_FILE);
-        BLOCK_FILE = NULL;
-    }
-
     if (user_settings) {
         free(user_settings);
         user_settings = NULL;
     }
 }
 
-void exit_toxic_success(Tox *tox)
+void kill_toxic(Toxic *toxic)
 {
-    store_data(tox, DATA_FILE);
+    Client_Data *client_data = &toxic->client_data;
 
-    user_password = (struct user_password) {
-        0
-    };
+    free(client_data->data_path);
+    free(client_data->block_path);
+    free(toxic);
+}
+
+void exit_toxic_success(Toxic *toxic)
+{
+    if (toxic == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
+    store_data(toxic);
 
     terminate_notify();
 
-    kill_all_file_transfers(tox);
-    kill_all_windows(tox);
+    kill_all_file_transfers(toxic->tox);
+    kill_all_windows(toxic->tox);
 
 #ifdef AUDIO
 #ifdef VIDEO
     terminate_video();
 #endif /* VIDEO */
-    terminate_audio();
+    terminate_audio(toxic->av);
 #endif /* AUDIO */
 
 #ifdef PYTHON
@@ -207,7 +190,7 @@ void exit_toxic_success(Tox *tox)
 #endif /* PYTHON */
 
     free_global_data();
-    tox_kill(tox);
+    tox_kill(toxic->tox);
 
     if (arg_opts.log_fp != NULL) {
         fclose(arg_opts.log_fp);
@@ -220,6 +203,8 @@ void exit_toxic_success(Tox *tox)
 #ifdef X11
     terminate_x11focus();
 #endif /* X11 */
+
+    kill_toxic(toxic);
 
     exit(EXIT_SUCCESS);
 }
@@ -568,19 +553,31 @@ static void load_friendlist(Tox *tox)
     sort_friendlist_index();
 }
 
-static void load_groups(Tox *tox)
+static void load_groups(Toxic *toxic)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     size_t numgroups = tox_group_get_number_groups(tox);
 
     for (size_t i = 0; i < numgroups; ++i) {
-        if (init_groupchat_win(tox, i, NULL, 0, Group_Join_Type_Load) != 0) {
+        if (init_groupchat_win(toxic, i, NULL, 0, Group_Join_Type_Load) != 0) {
             tox_group_leave(tox, i, NULL, 0, NULL);
         }
     }
 }
 
-static void load_conferences(Tox *tox)
+static void load_conferences(Toxic *toxic)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     size_t num_chats = tox_conference_get_chatlist_size(tox);
 
     if (num_chats == 0) {
@@ -628,7 +625,7 @@ static void load_conferences(Tox *tox)
 
         title[length] = 0;
 
-        int win_idx = init_conference_win(tox, conferencenum, type, (const char *) title, length);
+        const int win_idx = init_conference_win(toxic, conferencenum, type, (const char *) title, length);
 
         if (win_idx == -1) {
             tox_conference_delete(tox, conferencenum, NULL);
@@ -738,7 +735,7 @@ static int password_eval(char *buf, int size)
 }
 
 /* Ask user if they would like to encrypt the data file and set password */
-static void first_time_encrypt(const char *msg)
+static void first_time_encrypt(Client_Data *client_data, const char *msg)
 {
     char ch[256] = {0};
 
@@ -769,10 +766,10 @@ static void first_time_encrypt(const char *msg)
 
         while (valid_password == false) {
             fflush(stdout); // Flush all before user input
-            len = password_prompt(user_password.pass, sizeof(user_password.pass));
-            user_password.len = len;
+            len = password_prompt(client_data->pass, sizeof(client_data->pass));
+            client_data->pass_len = len;
 
-            if (strcasecmp(user_password.pass, "q") == 0) {
+            if (strcasecmp(client_data->pass, "q") == 0) {
                 exit(0);
             }
 
@@ -783,13 +780,13 @@ static void first_time_encrypt(const char *msg)
 
             if (string_is_empty(passconfirm)) {
                 printf("Enter password again ");
-                snprintf(passconfirm, sizeof(passconfirm), "%s", user_password.pass);
+                snprintf(passconfirm, sizeof(passconfirm), "%s", client_data->pass);
                 continue;
             }
 
-            if (strcmp(user_password.pass, passconfirm) != 0) {
+            if (strcmp(client_data->pass, passconfirm) != 0) {
                 memset(passconfirm, 0, sizeof(passconfirm));
-                memset(user_password.pass, 0, sizeof(user_password.pass));
+                memset(client_data->pass, 0, sizeof(client_data->pass));
                 printf("Passwords don't match. Try again. ");
                 continue;
             }
@@ -797,9 +794,9 @@ static void first_time_encrypt(const char *msg)
             valid_password = true;
         }
 
-        queue_init_message("Data file '%s' is encrypted", DATA_FILE);
+        queue_init_message("Data file '%s' is encrypted", client_data->data_path);
         memset(passconfirm, 0, sizeof(passconfirm));
-        user_password.data_is_encrypted = true;
+        client_data->is_encrypted = true;
     }
 
     clear_screen();
@@ -811,13 +808,15 @@ static void first_time_encrypt(const char *msg)
  * Return -1 on error.
  */
 #define TEMP_PROFILE_EXT ".tmp"
-int store_data(Tox *tox, const char *path)
+int store_data(const Toxic *toxic)
 {
+    const char *path = toxic->client_data.data_path;
+
     if (path == NULL) {
         return -1;
     }
 
-    size_t temp_buf_size = strlen(path) + strlen(TEMP_PROFILE_EXT) + 1;
+    const size_t temp_buf_size = strlen(path) + strlen(TEMP_PROFILE_EXT) + 1;
     char *temp_path = malloc(temp_buf_size);
 
     if (temp_path == NULL) {
@@ -833,7 +832,7 @@ int store_data(Tox *tox, const char *path)
         return -1;
     }
 
-    size_t data_len = tox_get_savedata_size(tox);
+    const size_t data_len = tox_get_savedata_size(toxic->tox);
     char *data = malloc(data_len * sizeof(char));
 
     if (data == NULL) {
@@ -842,9 +841,11 @@ int store_data(Tox *tox, const char *path)
         return -1;
     }
 
-    tox_get_savedata(tox, (uint8_t *) data);
+    tox_get_savedata(toxic->tox, (uint8_t *) data);
 
-    if (user_password.data_is_encrypted && !arg_opts.unencrypt_data) {
+    const Client_Data *client_data = &toxic->client_data;
+
+    if (client_data->is_encrypted && !arg_opts.unencrypt_data) {
         size_t enc_len = data_len + TOX_PASS_ENCRYPTION_EXTRA_LENGTH;
         char *enc_data = malloc(enc_len * sizeof(char));
 
@@ -856,8 +857,8 @@ int store_data(Tox *tox, const char *path)
         }
 
         Tox_Err_Encryption err;
-        tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) user_password.pass, user_password.len,
-                         (uint8_t *) enc_data, &err);
+        tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) toxic->client_data.pass,
+                         toxic->client_data.pass_len, (uint8_t *) enc_data, &err);
 
         if (err != TOX_ERR_ENCRYPTION_OK) {
             fprintf(stderr, "tox_pass_encrypt() failed with error %d\n", err);
@@ -986,17 +987,17 @@ static void init_tox_options(struct Tox_Options *tox_opts)
     }
 }
 
-/* Returns a new Tox object on success.
- * If object fails to initialize the toxic process will terminate.
+/*
+ * Loads a Tox instance.
+ *
+ * Return true on success.
  */
-static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New *new_err)
+static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *new_err)
 {
-    Tox *tox = NULL;
-
-    FILE *fp = fopen(data_path, "rb");
+    FILE *fp = fopen(toxic->client_data.data_path, "rb");
 
     if (fp != NULL) {   /* Data file exists */
-        off_t len = file_size(data_path);
+        off_t len = file_size(toxic->client_data.data_path);
 
         if (len == 0) {
             fclose(fp);
@@ -1016,7 +1017,7 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
 
-        bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
+        const bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
 
         /* attempt to encrypt an already encrypted data file */
         if (arg_opts.encrypt_data && is_encrypted) {
@@ -1025,15 +1026,18 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
             exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
         }
 
+        Client_Data *client_data = &toxic->client_data;
+
         if (arg_opts.unencrypt_data && is_encrypted) {
-            queue_init_message("Data file '%s' has been unencrypted", data_path);
+            queue_init_message("Data file '%s' has been unencrypted", client_data->data_path);
         } else if (arg_opts.unencrypt_data) {
-            queue_init_message("Warning: passed --unencrypt-data option with unencrypted data file '%s'", data_path);
+            queue_init_message("Warning: passed --unencrypt-data option with unencrypted data file '%s'",
+                               client_data->data_path);
         }
 
         if (is_encrypted) {
             if (!arg_opts.unencrypt_data) {
-                user_password.data_is_encrypted = true;
+                client_data->is_encrypted = true;
             }
 
             size_t pwlen = 0;
@@ -1057,14 +1061,14 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                 fflush(stdout); // Flush before prompts so the user sees the question/message
 
                 if (pweval) {
-                    pwlen = password_eval(user_password.pass, sizeof(user_password.pass));
+                    pwlen = password_eval(client_data->pass, sizeof(client_data->pass));
                 } else {
-                    pwlen = password_prompt(user_password.pass, sizeof(user_password.pass));
+                    pwlen = password_prompt(client_data->pass, sizeof(client_data->pass));
                 }
 
-                user_password.len = pwlen;
+                client_data->pass_len = pwlen;
 
-                if (strcasecmp(user_password.pass, "q") == 0) {
+                if (strcasecmp(client_data->pass, "q") == 0) {
                     fclose(fp);
                     free(plain);
                     free(data);
@@ -1080,20 +1084,20 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
                 }
 
                 Tox_Err_Decryption pwerr;
-                tox_pass_decrypt((uint8_t *) data, len, (uint8_t *) user_password.pass, pwlen,
+                tox_pass_decrypt((uint8_t *) data, len, (uint8_t *) client_data->pass, pwlen,
                                  (uint8_t *) plain, &pwerr);
 
                 if (pwerr == TOX_ERR_DECRYPTION_OK) {
                     tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_TOX_SAVE);
                     tox_options_set_savedata_data(tox_opts, (uint8_t *) plain, plain_len);
 
-                    tox = tox_new(tox_opts, new_err);
+                    toxic->tox = tox_new(tox_opts, new_err);
 
-                    if (tox == NULL) {
+                    if (toxic->tox == NULL) {
                         fclose(fp);
                         free(data);
                         free(plain);
-                        return NULL;
+                        return false;
                     }
 
                     break;
@@ -1115,39 +1119,39 @@ static Tox *load_tox(char *data_path, struct Tox_Options *tox_opts, Tox_Err_New 
             tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_TOX_SAVE);
             tox_options_set_savedata_data(tox_opts, (uint8_t *) data, len);
 
-            tox = tox_new(tox_opts, new_err);
+            toxic->tox = tox_new(tox_opts, new_err);
 
-            if (tox == NULL) {
+            if (toxic->tox == NULL) {
                 fclose(fp);
                 free(data);
-                return NULL;
+                return false;
             }
         }
 
         fclose(fp);
         free(data);
     } else {   /* Data file does not/should not exist */
-        if (file_exists(data_path)) {
+        if (file_exists(toxic->client_data.data_path)) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
 
         tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_NONE);
 
-        tox = tox_new(tox_opts, new_err);
+        toxic->tox = tox_new(tox_opts, new_err);
 
-        if (tox == NULL) {
-            return NULL;
+        if (toxic->tox == NULL) {
+            return false;
         }
 
-        if (store_data(tox, data_path) == -1) {
+        if (store_data(toxic) == -1) {
             exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
         }
     }
 
-    return tox;
+    return true;
 }
 
-static Tox *load_toxic(char *data_path)
+static bool load_toxic(Toxic *toxic)
 {
     Tox_Err_Options_New options_new_err;
     struct Tox_Options *tox_opts = tox_options_new(&options_new_err);
@@ -1159,32 +1163,43 @@ static Tox *load_toxic(char *data_path)
     init_tox_options(tox_opts);
 
     Tox_Err_New new_err;
-    Tox *tox = load_tox(data_path, tox_opts, &new_err);
+
+    if (!load_tox(toxic, tox_opts, &new_err)) {
+        return false;
+    }
 
     if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_options_get_ipv6_enabled(tox_opts)) {
         queue_init_message("Falling back to ipv4");
         tox_options_set_ipv6_enabled(tox_opts, false);
-        tox = load_tox(data_path, tox_opts, &new_err);
+
+        if (!load_tox(toxic, tox_opts, &new_err)) {
+            return false;
+        }
     }
 
-    if (tox == NULL) {
-        return NULL;
+    if (toxic->tox == NULL) {
+        return false;
     }
 
     if (new_err != TOX_ERR_NEW_OK) {
         queue_init_message("tox_new returned non-fatal error %d", new_err);
     }
 
-    init_tox_callbacks(tox);
-    load_friendlist(tox);
-    load_blocklist(BLOCK_FILE);
+    init_tox_callbacks(toxic->tox);
+    load_friendlist(toxic->tox);
 
-    if (tox_self_get_name_size(tox) == 0) {
-        tox_self_set_name(tox, (uint8_t *) "Toxic User", strlen("Toxic User"), NULL);
+    if (load_blocklist(toxic->client_data.block_path) == -1) {
+        queue_init_message("Failed to load block list");
+    }
+
+    if (tox_self_get_name_size(toxic->tox) == 0) {
+        tox_self_set_name(toxic->tox, (uint8_t *) "Toxic User", strlen("Toxic User"), NULL);
     }
 
     tox_options_free(tox_opts);
-    return tox;
+
+    fprintf(stderr, "a%p\n", (void *)toxic->tox);
+    return true;
 }
 
 static void do_toxic(Toxic *toxic)
@@ -1196,7 +1211,7 @@ static void do_toxic(Toxic *toxic)
         return;
     }
 
-    tox_iterate(toxic->tox, toxic);
+    tox_iterate(toxic->tox, (void *) toxic);
     do_tox_connection(toxic->tox);
 
     pthread_mutex_unlock(&Winthread.lock);
@@ -1237,7 +1252,7 @@ static void poll_interface_refresh_flag(void)
 
 void *thread_winref(void *data)
 {
-    Tox *tox = (Tox *) data;
+    Toxic *toxic = (Toxic *) data;
 
     uint8_t draw_count = 0;
 
@@ -1245,7 +1260,7 @@ void *thread_winref(void *data)
 
     while (true) {
         draw_count++;
-        draw_active_window(tox);
+        draw_active_window(toxic);
 
         if (Winthread.flag_resize) {
             on_window_resize();
@@ -1257,7 +1272,7 @@ void *thread_winref(void *data)
 
         if (Winthread.sig_exit_toxic) {
             pthread_mutex_lock(&Winthread.lock);
-            exit_toxic_success(tox);
+            exit_toxic_success(toxic);
         }
 
         poll_interface_refresh_flag();
@@ -1266,7 +1281,7 @@ void *thread_winref(void *data)
 
 void *thread_cqueue(void *data)
 {
-    Tox *tox = (Tox *) data;
+    Toxic *toxic = (Toxic *) data;
 
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
@@ -1278,7 +1293,7 @@ void *thread_cqueue(void *data)
                 cqueue_check_unread(toxwin);
 
                 if (get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE) {
-                    cqueue_try_send(toxwin, tox);
+                    cqueue_try_send(toxwin, toxic->tox);
                 }
             }
         }
@@ -1344,7 +1359,7 @@ static void set_default_opts(void)
     arg_opts.proxy_type = TOX_PROXY_TYPE_NONE;
 }
 
-static void parse_args(int argc, char *argv[])
+static void parse_args(Toxic *toxic, int argc, char *argv[])
 {
     set_default_opts();
 
@@ -1421,34 +1436,36 @@ static void parse_args(int argc, char *argv[])
 
                 arg_opts.use_custom_data = 1;
 
-                if (DATA_FILE) {
-                    free(DATA_FILE);
-                    DATA_FILE = NULL;
+                Client_Data *client_data = &toxic->client_data;
+
+                if (client_data->data_path) {
+                    free(client_data->data_path);
+                    client_data->data_path = NULL;
                 }
 
-                if (BLOCK_FILE) {
-                    free(BLOCK_FILE);
-                    BLOCK_FILE = NULL;
+                if (client_data->block_path) {
+                    free(client_data->block_path);
+                    client_data->block_path = NULL;
                 }
 
-                DATA_FILE = malloc(strlen(optarg) + 1);
+                client_data->data_path = malloc(strlen(optarg) + 1);
 
-                if (DATA_FILE == NULL) {
+                if (client_data->data_path == NULL) {
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
                 }
 
-                strcpy(DATA_FILE, optarg);
+                strcpy(client_data->data_path, optarg);
 
-                BLOCK_FILE = malloc(strlen(optarg) + strlen("-blocklist") + 1);
+                client_data->block_path = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
-                if (BLOCK_FILE == NULL) {
+                if (client_data->block_path == NULL) {
                     exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
                 }
 
-                strcpy(BLOCK_FILE, optarg);
-                strcat(BLOCK_FILE, "-blocklist");
+                strcpy(client_data->block_path, optarg);
+                strcat(client_data->block_path, "-blocklist");
 
-                queue_init_message("Using '%s' data file", DATA_FILE);
+                queue_init_message("Using '%s' data file", client_data->data_path);
 
                 break;
             }
@@ -1591,7 +1608,7 @@ static void parse_args(int argc, char *argv[])
  *
  * Exits the process with an error on failure.
  */
-static void init_default_data_files(void)
+static void init_default_data_files(Client_Data *client_data)
 {
     if (arg_opts.use_custom_data) {
         return;
@@ -1606,41 +1623,39 @@ static void init_default_data_files(void)
     int config_err = create_user_config_dirs(user_config_dir);
 
     if (config_err == -1) {
-        DATA_FILE = strdup(DATANAME);
-        BLOCK_FILE = strdup(BLOCKNAME);
+        client_data->data_path = strdup(DATANAME);
+        client_data->block_path = strdup(BLOCKNAME);
 
-        if (DATA_FILE == NULL || BLOCK_FILE == NULL) {
+        if (client_data->data_path == NULL || client_data->block_path == NULL) {
             exit_toxic_err("failed in init_default_data_files()", FATALERR_MEMORY);
         }
     } else {
-        DATA_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
-        BLOCK_FILE = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
+        client_data->data_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
+        client_data->block_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
 
-        if (DATA_FILE == NULL || BLOCK_FILE == NULL) {
+        if (client_data->data_path == NULL || client_data->block_path == NULL) {
             exit_toxic_err("failed in init_default_data_files()", FATALERR_MEMORY);
         }
 
-        strcpy(DATA_FILE, user_config_dir);
-        strcat(DATA_FILE, CONFIGDIR);
-        strcat(DATA_FILE, DATANAME);
+        strcpy(client_data->data_path, user_config_dir);
+        strcat(client_data->data_path, CONFIGDIR);
+        strcat(client_data->data_path, DATANAME);
 
-        strcpy(BLOCK_FILE, user_config_dir);
-        strcat(BLOCK_FILE, CONFIGDIR);
-        strcat(BLOCK_FILE, BLOCKNAME);
+        strcpy(client_data->block_path, user_config_dir);
+        strcat(client_data->block_path, CONFIGDIR);
+        strcat(client_data->block_path, BLOCKNAME);
     }
 
     free(user_config_dir);
 }
 
-static Toxic *toxic_init(Tox *tox)
+static Toxic *toxic_init(void)
 {
     Toxic *toxic = calloc(1, sizeof(Toxic));
 
     if (toxic == NULL) {
         return NULL;
     }
-
-    toxic->tox = tox;
 
     return toxic;
 }
@@ -1652,7 +1667,13 @@ int main(int argc, char **argv)
 
     srand(time(NULL)); // We use rand() for trivial/non-security related things
 
-    parse_args(argc, argv);
+    Toxic *toxic = toxic_init();
+
+    if (toxic == NULL) {
+        exit_toxic_err("failed in main", FATALERR_TOXIC_INIT);
+    }
+
+    parse_args(toxic, argc, argv);
 
     /* Use the -b flag to enable stderr */
     if (!arg_opts.debug) {
@@ -1667,14 +1688,14 @@ int main(int argc, char **argv)
         queue_init_message("Warning: Using --unencrypt-data and --encrypt-data simultaneously has no effect");
     }
 
-    init_default_data_files();
+    init_default_data_files(&toxic->client_data);
 
-    bool datafile_exists = file_exists(DATA_FILE);
+    const bool datafile_exists = file_exists(toxic->client_data.data_path);
 
     if (!datafile_exists && !arg_opts.unencrypt_data) {
-        first_time_encrypt("Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
+        first_time_encrypt(&toxic->client_data, "Creating new data file. Would you like to encrypt it? Y/n (q to quit)");
     } else if (arg_opts.encrypt_data) {
-        first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
+        first_time_encrypt(&toxic->client_data, "Encrypt existing data file? Y/n (q to quit)");
     }
 
     /* init user_settings struct and load settings from conf file */
@@ -1711,16 +1732,8 @@ int main(int argc, char **argv)
 
 #endif /* X11 */
 
-    Tox *tox = load_toxic(DATA_FILE);
-
-    if (tox == NULL) {
+    if (!load_toxic(toxic)) {
         exit_toxic_err("Failed in main", FATALERR_TOX_INIT);
-    }
-
-    Toxic *toxic = toxic_init(tox);
-
-    if (toxic == NULL) {
-        exit_toxic_err("failed in main", FATALERR_TOXIC_INIT);
     }
 
     if (arg_opts.encrypt_data && !datafile_exists) {
@@ -1729,10 +1742,10 @@ int main(int argc, char **argv)
 
     init_term();
 
-    prompt = init_windows(toxic->tox);
+    prompt = init_windows(toxic);
     prompt_init_statusbar(prompt, toxic->tox, !datafile_exists);
-    load_groups(toxic->tox);
-    load_conferences(toxic->tox);
+    load_groups(toxic);
+    load_conferences(toxic);
 
     const int fs_ret = settings_load_friends(config_path);
 
@@ -1754,23 +1767,23 @@ int main(int argc, char **argv)
 
 #ifdef AUDIO
 
-    av = init_audio(prompt, toxic->tox);
+    toxic->av = init_audio(prompt, toxic);
 
-    if (av == NULL) {
+    if (toxic->av == NULL) {
         queue_init_message("Failed to init audio");
     }
 
 #ifdef VIDEO
-    init_video(prompt, toxic->tox);
+    init_video(prompt, toxic);
 
-    if (av == NULL) {
+    if (toxic->av == NULL) {
         queue_init_message("Failed to init video");
     }
 
 #endif /* VIDEO */
 
     /* AV thread */
-    if (pthread_create(&av_thread.tid, NULL, thread_av, (void *)av) != 0) {
+    if (pthread_create(&av_thread.tid, NULL, thread_av, (void *) toxic->av) != 0) {
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     }
 
@@ -1786,12 +1799,12 @@ int main(int argc, char **argv)
 #endif /* AUDIO */
 
     /* thread for ncurses UI */
-    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *)toxic->tox) != 0) {
+    if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) toxic) != 0) {
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     }
 
     /* thread for message queue */
-    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *)toxic->tox) != 0) {
+    if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) toxic) != 0) {
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     }
 
@@ -1805,7 +1818,7 @@ int main(int argc, char **argv)
     init_notify(60, user_settings->notification_timeout);
 
     /* screen/tmux auto-away timer */
-    if (init_mplex_away_timer(toxic->tox) == -1) {
+    if (init_mplex_away_timer(toxic) == -1) {
         queue_init_message("Failed to init mplex auto-away.");
     }
 
@@ -1825,7 +1838,7 @@ int main(int argc, char **argv)
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[PATH_MAX + 11];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", user_settings->avatar_path);
-    execute(prompt->chatwin->history, prompt, toxic->tox, avatarstr, GLOBAL_COMMAND_MODE);
+    execute(prompt->chatwin->history, prompt, toxic, avatarstr, GLOBAL_COMMAND_MODE);
 
     time_t last_save = get_unix_time();
 
@@ -1837,7 +1850,7 @@ int main(int argc, char **argv)
         if (user_settings->autosave_freq > 0 && timed_out(last_save, user_settings->autosave_freq)) {
             pthread_mutex_lock(&Winthread.lock);
 
-            if (store_data(toxic->tox, DATA_FILE) != 0) {
+            if (store_data(toxic) != 0) {
                 line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
             }
 

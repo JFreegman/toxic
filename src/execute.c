@@ -37,7 +37,7 @@
 
 struct cmd_func {
     const char *name;
-    void (*func)(WINDOW *w, ToxWindow *, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE]);
+    void (*func)(WINDOW *w, ToxWindow *, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE]);
 };
 
 static struct cmd_func global_commands[] = {
@@ -252,12 +252,12 @@ static int parse_command(const char *input, char (*args)[MAX_STR_SIZE])
  * Returns 0 on match.
  * Returns 1 on no match
  */
-static int do_command(WINDOW *w, ToxWindow *self, Tox *tox, int num_args, struct cmd_func *commands,
+static int do_command(WINDOW *w, ToxWindow *self, Toxic *toxic, int num_args, struct cmd_func *commands,
                       char (*args)[MAX_STR_SIZE])
 {
     for (size_t i = 0; commands[i].name != NULL; ++i) {
         if (strcmp(args[0], commands[i].name) == 0) {
-            (commands[i].func)(w, self, tox, num_args - 1, args);
+            (commands[i].func)(w, self, toxic, num_args - 1, args);
             return 0;
         }
     }
@@ -265,7 +265,7 @@ static int do_command(WINDOW *w, ToxWindow *self, Tox *tox, int num_args, struct
     return 1;
 }
 
-void execute(WINDOW *w, ToxWindow *self, Tox *tox, const char *input, int mode)
+void execute(WINDOW *w, ToxWindow *self, Toxic *toxic, const char *input, int mode)
 {
     if (string_is_empty(input)) {
         return;
@@ -285,7 +285,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *tox, const char *input, int mode)
      */
     switch (mode) {
         case CHAT_COMMAND_MODE: {
-            if (do_command(w, self, tox, num_args, chat_commands, args) == 0) {
+            if (do_command(w, self, toxic, num_args, chat_commands, args) == 0) {
                 return;
             }
 
@@ -293,7 +293,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *tox, const char *input, int mode)
         }
 
         case CONFERENCE_COMMAND_MODE: {
-            if (do_command(w, self, tox, num_args, conference_commands, args) == 0) {
+            if (do_command(w, self, toxic, num_args, conference_commands, args) == 0) {
                 return;
             }
 
@@ -301,7 +301,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *tox, const char *input, int mode)
         }
 
         case GROUPCHAT_COMMAND_MODE: {
-            if (do_command(w, self, tox, num_args, groupchat_commands, args) == 0) {
+            if (do_command(w, self, toxic, num_args, groupchat_commands, args) == 0) {
                 return;
             }
 
@@ -309,7 +309,7 @@ void execute(WINDOW *w, ToxWindow *self, Tox *tox, const char *input, int mode)
         }
     }
 
-    if (do_command(w, self, tox, num_args, global_commands, args) == 0) {
+    if (do_command(w, self, toxic, num_args, global_commands, args) == 0) {
         return;
     }
 

@@ -288,7 +288,7 @@ int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t len
 #define FILE_TRANSFER_SEND_CMD "/sendfile "
 #define FILE_TRANSFER_SEND_LEN (sizeof(FILE_TRANSFER_SEND_CMD) - 1)
 
-void file_send_queue_check(ToxWindow *self, Tox *tox, uint32_t friendnumber)
+void file_send_queue_check(ToxWindow *self, Toxic *toxic, uint32_t friendnumber)
 {
     for (size_t i = 0; i < MAX_FILES; ++i) {
         PendingFileTransfer *pending_slot = &Friends.list[friendnumber].file_send_queue[i];
@@ -300,7 +300,7 @@ void file_send_queue_check(ToxWindow *self, Tox *tox, uint32_t friendnumber)
         char command[TOX_MAX_FILENAME_LENGTH + FILE_TRANSFER_SEND_LEN + 1];
         snprintf(command, sizeof(command), "%s%s", FILE_TRANSFER_SEND_CMD, pending_slot->file_path);
 
-        execute(self->window, self, tox, command, CHAT_COMMAND_MODE);
+        execute(self->window, self, toxic, command, CHAT_COMMAND_MODE);
 
         *pending_slot = (PendingFileTransfer) {
             0,

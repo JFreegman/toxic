@@ -37,7 +37,7 @@
 #ifdef PYTHON
 #include "python_api.h"
 
-Tox              *user_tox;
+Toxic            *user_toxic;
 static WINDOW    *cur_window;
 static ToxWindow *self_window;
 
@@ -58,33 +58,33 @@ FriendsList api_get_friendslist(void)
 
 char *api_get_nick(void)
 {
-    size_t   len  = tox_self_get_name_size(user_tox);
+    size_t   len  = tox_self_get_name_size(user_toxic->tox);
     uint8_t *name = malloc(len + 1);
 
     if (name == NULL) {
         return NULL;
     }
 
-    tox_self_get_name(user_tox, name);
+    tox_self_get_name(user_toxic->tox, name);
     name[len] = '\0';
     return (char *) name;
 }
 
 Tox_User_Status api_get_status(void)
 {
-    return tox_self_get_status(user_tox);
+    return tox_self_get_status(user_toxic->tox);
 }
 
 char *api_get_status_message(void)
 {
-    size_t   len    = tox_self_get_status_message_size(user_tox);
+    size_t   len    = tox_self_get_status_message_size(user_toxic->tox);
     uint8_t *status = malloc(len + 1);
 
     if (status == NULL) {
         return NULL;
     }
 
-    tox_self_get_status_message(user_tox, status);
+    tox_self_get_status_message(user_toxic->tox, status);
     status[len] = '\0';
     return (char *) status;
 }
@@ -113,7 +113,7 @@ void api_send(const char *msg)
 void api_execute(const char *input, int mode)
 {
     self_window = get_active_window();
-    execute(cur_window, self_window, user_tox, input, mode);
+    execute(cur_window, self_window, user_toxic, input, mode);
 }
 
 int do_plugin_command(int num_args, char (*args)[MAX_STR_SIZE])
@@ -136,8 +136,10 @@ void draw_handler_help(WINDOW *win)
     python_draw_handler_help(win);
 }
 
-void cmd_run(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(toxic);
+
     FILE       *fp;
     const char *error_str;
 

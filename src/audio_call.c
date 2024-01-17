@@ -67,7 +67,7 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
 void on_audio_receive_frame(ToxAV *av, uint32_t friend_number, int16_t const *pcm, size_t sample_count,
                             uint8_t channels, uint32_t sampling_rate, void *user_data);
 
-void callback_recv_invite(Tox *tox, uint32_t friend_number);
+void callback_recv_invite(Toxic *toxic, uint32_t friend_number);
 void callback_recv_ringing(uint32_t friend_number);
 void callback_recv_starting(uint32_t friend_number);
 void callback_recv_ending(uint32_t friend_number);
@@ -86,13 +86,13 @@ static void print_err(ToxWindow *self, const char *error_str)
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-ToxAV *init_audio(ToxWindow *self, Tox *tox)
+ToxAV *init_audio(ToxWindow *self, Toxic *toxic)
 {
     Toxav_Err_New error;
     CallControl.audio_errors = ae_None;
     CallControl.prompt = self;
 
-    CallControl.av = toxav_new(tox, &error);
+    toxic->av = toxav_new(toxic->tox, &error);
 
     CallControl.audio_enabled = true;
     CallControl.default_audio_bit_rate = 64;
@@ -104,26 +104,27 @@ ToxAV *init_audio(ToxWindow *self, Tox *tox)
     CallControl.default_video_bit_rate = 0;
     CallControl.video_frame_duration = 0;
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         CallControl.audio_errors |= ae_StartingCoreAudio;
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init ToxAV");
-
         return NULL;
     }
 
     if (init_devices() == de_InternalError) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init devices");
-        toxav_kill(CallControl.av);
-
-        return CallControl.av = NULL;
+        toxav_kill(toxic->av);
+        toxic->av = NULL;
+        return NULL;
     }
 
-    toxav_callback_call(CallControl.av, on_call, tox);
-    toxav_callback_call_state(CallControl.av, on_call_state, NULL);
-    toxav_callback_audio_receive_frame(CallControl.av, on_audio_receive_frame, NULL);
-    toxav_callback_audio_bit_rate(CallControl.av, audio_bit_rate_callback, NULL);
+    toxav_callback_call(toxic->av, on_call, (void *) toxic);
+    toxav_callback_call_state(toxic->av, on_call_state, NULL);
+    toxav_callback_audio_receive_frame(toxic->av, on_audio_receive_frame, NULL);
+    toxav_callback_audio_bit_rate(toxic->av, audio_bit_rate_callback, NULL);
 
-    return CallControl.av;
+    CallControl.av = toxic->av;
+
+    return toxic->av;
 }
 
 void read_device_callback(const int16_t *captured, uint32_t size, void *data)
@@ -272,14 +273,14 @@ static int stop_transmission(Call *call, uint32_t friend_number)
     return 0;
 }
 
-void terminate_audio(void)
+void terminate_audio(ToxAV *av)
 {
     for (int i = 0; i < CallControl.max_calls; ++i) {
         stop_transmission(&CallControl.calls[i], i);
     }
 
-    if (CallControl.av) {
-        toxav_kill(CallControl.av);
+    if (av) {
+        toxav_kill(av);
     }
 
     terminate_devices();
@@ -300,7 +301,7 @@ void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 {
     UNUSED_VAR(av);
 
-    Tox *tox = (Tox *) user_data;
+    Toxic *toxic = (Toxic *) user_data;
 
     Call *call = &CallControl.calls[friend_number];
     init_call(call);
@@ -315,7 +316,7 @@ void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
         call->state |= TOXAV_FRIEND_CALL_STATE_SENDING_V;
     }
 
-    callback_recv_invite(tox, friend_number);
+    callback_recv_invite(toxic, friend_number);
 }
 
 void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data)
@@ -394,8 +395,12 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
     toxav_audio_set_bit_rate(av, friend_number, audio_bit_rate, NULL);
 }
 
-void callback_recv_invite(Tox *tox, uint32_t friend_number)
+void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
     if (friend_number >= Friends.max_idx) {
         return;
     }
@@ -405,14 +410,14 @@ void callback_recv_invite(Tox *tox, uint32_t friend_number)
             return;
         }
 
-        Friends.list[friend_number].chatwin = add_window(tox, new_chat(tox, Friends.list[friend_number].num));
+        Friends.list[friend_number].chatwin = add_window(toxic, new_chat(toxic->tox, Friends.list[friend_number].num));
     }
 
     const Call *call = &CallControl.calls[friend_number];
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onInvite != NULL && windows[i]->num == friend_number) {
-            windows[i]->onInvite(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onInvite(windows[i], NULL, friend_number, call->state);
         }
     }
 }
@@ -422,7 +427,7 @@ void callback_recv_ringing(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onRinging != NULL && windows[i]->num == friend_number) {
-            windows[i]->onRinging(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onRinging(windows[i], NULL, friend_number, call->state);
         }
     }
 }
@@ -432,8 +437,7 @@ void callback_recv_starting(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onStarting != NULL && windows[i]->num == friend_number) {
-            windows[i]->onStarting(windows[i], CallControl.av, friend_number, call->state);
-
+            windows[i]->onStarting(windows[i], NULL, friend_number, call->state);
             start_call(windows[i], call);
         }
     }
@@ -444,7 +448,7 @@ void callback_recv_ending(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onEnding != NULL && windows[i]->num == friend_number) {
-            windows[i]->onEnding(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onEnding(windows[i], NULL, friend_number, call->state);
         }
     }
 }
@@ -454,7 +458,7 @@ void callback_call_started(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onStart != NULL && windows[i]->num == friend_number) {
-            windows[i]->onStart(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onStart(windows[i], NULL, friend_number, call->state);
 
             start_call(windows[i], call);
         }
@@ -466,7 +470,7 @@ void callback_call_canceled(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onCancel != NULL && windows[i]->num == friend_number) {
-            windows[i]->onCancel(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onCancel(windows[i], NULL, friend_number, call->state);
         }
     }
 }
@@ -476,7 +480,7 @@ void callback_call_rejected(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onReject != NULL && windows[i]->num == friend_number) {
-            windows[i]->onReject(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onReject(windows[i], NULL, friend_number, call->state);
         }
     }
 }
@@ -486,7 +490,7 @@ void callback_call_ended(uint32_t friend_number)
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onEnd != NULL && windows[i]->num == friend_number) {
-            windows[i]->onEnd(windows[i], CallControl.av, friend_number, call->state);
+            windows[i]->onEnd(windows[i], NULL, friend_number, call->state);
         }
     }
 }
@@ -499,18 +503,21 @@ void callback_call_ended(uint32_t friend_number)
 /*
  * Commands from chat_commands.h
  */
-void cmd_call(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_call(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     if (argc != 0) {
         print_err(self, "Unknown arguments.");
         return;
     }
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         print_err(self, "ToxAV not supported!");
         return;
     }
@@ -532,11 +539,14 @@ void cmd_call(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     place_call(self);
 }
 
-void cmd_answer(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_answer(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     Toxav_Err_Answer error;
 
@@ -545,7 +555,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
         return;
     }
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         print_err(self, "Audio not supported!");
         return;
     }
@@ -557,7 +567,7 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
         return;
     }
 
-    toxav_answer(CallControl.av, self->num, call->audio_bit_rate, call->video_bit_rate, &error);
+    toxav_answer(toxic->av, self->num, call->audio_bit_rate, call->video_bit_rate, &error);
 
     if (error != TOXAV_ERR_ANSWER_OK) {
         if (error == TOXAV_ERR_ANSWER_FRIEND_NOT_CALLING) {
@@ -579,18 +589,21 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     callback_recv_starting(self->num);
 }
 
-void cmd_reject(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_reject(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     if (argc != 0) {
         print_err(self, "Unknown arguments.");
         return;
     }
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         print_err(self, "Audio not supported!");
         return;
     }
@@ -603,20 +616,23 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     }
 
     /* Manually send a cancel call control because call hasn't started */
-    toxav_call_control(CallControl.av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
+    toxav_call_control(toxic->av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
     cancel_call(call);
 
     /* Callback will print status... */
     callback_call_rejected(self->num);
 }
 
-void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_hangup(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
 
-    if (!CallControl.av) {
+    if (toxic == NULL) {
+        return;
+    }
+
+    if (toxic->av == NULL) {
         print_err(self, "Audio not supported!");
         return;
     }
@@ -636,10 +652,10 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     stop_current_call(self);
 }
 
-void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_list_devices(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (argc != 1) {
         if (argc < 1) {
@@ -673,10 +689,10 @@ void cmd_list_devices(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char 
 }
 
 /* This changes primary device only */
-void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_change_device(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (argc != 2) {
         if (argc < 1) {
@@ -720,10 +736,10 @@ void cmd_change_device(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char
     }
 }
 
-void cmd_mute(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_mute(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (argc != 1) {
         print_err(self, "Specify type: \"/mute in\" or \"/mute out\".");
@@ -762,10 +778,10 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     return;
 }
 
-void cmd_sense(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_sense(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (argc != 1) {
         if (argc < 1) {
@@ -796,10 +812,13 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     return;
 }
 
-void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_bitrate(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     Call *call = &CallControl.calls[self->num];
 
@@ -828,7 +847,7 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*arg
     }
 
     Toxav_Err_Bit_Rate_Set error;
-    toxav_audio_set_bit_rate(CallControl.av, self->num, bit_rate, &error);
+    toxav_audio_set_bit_rate(toxic->av, self->num, bit_rate, &error);
 
     if (error != TOXAV_ERR_BIT_RATE_SET_OK) {
         if (error == TOXAV_ERR_BIT_RATE_SET_SYNC) {

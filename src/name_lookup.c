@@ -46,7 +46,7 @@ static struct Nameservers {
 } Nameservers;
 
 static struct thread_data {
-    Tox       *tox;
+    Toxic     *toxic;
     ToxWindow *self;
     char    id_bin[TOX_ADDRESS_SIZE];
     char    addr[MAX_STR_SIZE];
@@ -386,7 +386,7 @@ void *lookup_thread_func(void *data)
     }
 
     pthread_mutex_lock(&Winthread.lock);
-    cmd_add_helper(self, t_data.tox, t_data.id_bin, t_data.msg);
+    cmd_add_helper(self, t_data.toxic, t_data.id_bin, t_data.msg);
     pthread_mutex_unlock(&Winthread.lock);
 
 on_exit:
@@ -402,7 +402,7 @@ on_exit:
  *
  * Returns true on success.
  */
-bool name_lookup(ToxWindow *self, Tox *tox, const char *id_bin, const char *addr, const char *message)
+bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *addr, const char *message)
 {
     if (t_data.disabled) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "nameservers list is empty or does not exist.");
@@ -418,7 +418,7 @@ bool name_lookup(ToxWindow *self, Tox *tox, const char *id_bin, const char *addr
     snprintf(t_data.addr, sizeof(t_data.addr), "%s", addr);
     snprintf(t_data.msg, sizeof(t_data.msg), "%s", message);
     t_data.self = self;
-    t_data.tox = tox;
+    t_data.toxic = toxic;
     t_data.busy = true;
 
     if (pthread_attr_init(&lookup_thread.attr) != 0) {

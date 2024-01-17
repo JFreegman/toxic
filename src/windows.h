@@ -184,36 +184,36 @@ typedef struct GameData GameData;
 
 struct ToxWindow {
     /* ncurses */
-    bool(*onKey)(ToxWindow *, Tox *, wint_t, bool);
+    bool(*onKey)(ToxWindow *, Toxic *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Tox *);
-    void(*onInit)(ToxWindow *, Tox *);
+    void(*onInit)(ToxWindow *, Toxic *);
 
     /* toxcore */
     void(*onFriendRequest)(ToxWindow *, Tox *, const char *, const char *, size_t);
     void(*onFriendAdded)(ToxWindow *, Tox *, uint32_t, bool);
-    void(*onConnectionChange)(ToxWindow *, Tox *, uint32_t, Tox_Connection);
-    void(*onMessage)(ToxWindow *, Tox *, uint32_t, Tox_Message_Type, const char *, size_t);
+    void(*onConnectionChange)(ToxWindow *, Toxic *, uint32_t, Tox_Connection);
+    void(*onMessage)(ToxWindow *, Toxic *, uint32_t, Tox_Message_Type, const char *, size_t);
     void(*onNickChange)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
     void(*onStatusChange)(ToxWindow *, Tox *, uint32_t, Tox_User_Status);
     void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
     void(*onConferenceMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_Message_Type, const char *, size_t);
-    void(*onConferenceInvite)(ToxWindow *, Tox *, int32_t, uint8_t, const char *, uint16_t);
+    void(*onConferenceInvite)(ToxWindow *, Toxic *, int32_t, uint8_t, const char *, uint16_t);
     void(*onConferenceNameListChange)(ToxWindow *, Tox *, uint32_t);
     void(*onConferencePeerNameChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onConferenceTitleChange)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onFileChunkRequest)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, size_t);
     void(*onFileRecvChunk)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onFileControl)(ToxWindow *, Tox *, uint32_t, uint32_t, Tox_File_Control);
-    void(*onFileRecv)(ToxWindow *, Tox *, uint32_t, uint32_t, uint64_t, const char *, size_t);
+    void(*onFileRecv)(ToxWindow *, Toxic *, uint32_t, uint32_t, uint64_t, const char *, size_t);
     void(*onTypingChange)(ToxWindow *, Tox *, uint32_t, bool);
     void(*onReadReceipt)(ToxWindow *, Tox *, uint32_t, uint32_t);
 
 #ifdef GAMES
-    void(*onGameInvite)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
+    void(*onGameInvite)(ToxWindow *, Toxic *, uint32_t, const uint8_t *, size_t);
     void(*onGameData)(ToxWindow *, Tox *, uint32_t, const uint8_t *, size_t);
 #endif // GAMES
 
-    void(*onGroupInvite)(ToxWindow *, Tox *, uint32_t, const char *, size_t, const char *, size_t);
+    void(*onGroupInvite)(ToxWindow *, Toxic *, uint32_t, const char *, size_t, const char *, size_t);
     void(*onGroupMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
     void(*onGroupPrivateMessage)(ToxWindow *, Tox *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupPeerJoin)(ToxWindow *, Tox *, uint32_t, uint32_t);
@@ -226,22 +226,22 @@ struct ToxWindow {
     void(*onGroupPrivacyState)(ToxWindow *, Tox *, uint32_t, Tox_Group_Privacy_State);
     void(*onGroupTopicLock)(ToxWindow *, Tox *, uint32_t, Tox_Group_Topic_Lock);
     void(*onGroupPassword)(ToxWindow *, Tox *, uint32_t, const char *, size_t);
-    void(*onGroupSelfJoin)(ToxWindow *, Tox *, uint32_t);
+    void(*onGroupSelfJoin)(ToxWindow *, Toxic *, uint32_t);
     void(*onGroupRejected)(ToxWindow *, Tox *, uint32_t, Tox_Group_Join_Fail);
     void(*onGroupModeration)(ToxWindow *, Tox *, uint32_t, uint32_t, uint32_t, Tox_Group_Mod_Event);
     void(*onGroupVoiceState)(ToxWindow *, Tox *, uint32_t, Tox_Group_Voice_State);
 
 #ifdef AUDIO
 
-    void(*onInvite)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onRinging)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onStarting)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onEnding)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onError)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onStart)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onCancel)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onReject)(ToxWindow *, ToxAV *, uint32_t, int);
-    void(*onEnd)(ToxWindow *, ToxAV *, uint32_t, int);
+    void(*onInvite)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onRinging)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onStarting)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onEnding)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onError)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onStart)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onCancel)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onReject)(ToxWindow *, Toxic *, uint32_t, int);
+    void(*onEnd)(ToxWindow *, Toxic *, uint32_t, int);
     void(*onWriteDevice)(ToxWindow *, Tox *, uint32_t, int, const int16_t *, unsigned int, uint8_t, unsigned int);
 
     bool is_call;
@@ -349,9 +349,9 @@ struct Help {
     bool active;
 };
 
-ToxWindow *init_windows(Tox *tox);
-void draw_active_window(Tox *tox);
-int add_window(Tox *tox, ToxWindow *w);
+ToxWindow *init_windows(Toxic *toxic);
+void draw_active_window(Toxic *toxic);
+int add_window(Toxic *toxic, ToxWindow *w);
 void del_window(ToxWindow *w);
 void set_active_window_index(uint8_t index);
 int get_num_active_windows(void);

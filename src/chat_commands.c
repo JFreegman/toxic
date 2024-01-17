@@ -37,10 +37,14 @@
 extern ToxWindow *prompt;
 extern FriendsList Friends;
 
-void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     const char *msg;
     const bool auto_accept_files = friend_get_auto_accept_files(self->num);
@@ -71,9 +75,15 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Tox *tox, int argc, c
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
-void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 2) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Requires type in|out and the file ID.");
@@ -121,9 +131,15 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
     close_file_transfer(self, tox, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
 }
 
-void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference number required.");
@@ -147,11 +163,17 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Tox *tox, int argc, 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.", conferencenum);
 }
 
-void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
     UNUSED_VAR(argc);
     UNUSED_VAR(argv);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
@@ -196,7 +218,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, ch
         return;
     }
 
-    if (init_conference_win(tox, conferencenum, type, NULL, 0) == -1) {
+    if (init_conference_win(toxic, conferencenum, type, NULL, 0) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
         tox_conference_delete(tox, conferencenum, NULL);
         return;
@@ -213,8 +235,14 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, ch
 #endif
 }
 
-void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
@@ -253,15 +281,21 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char 
         return;
     }
 
-    if (init_groupchat_win(tox, groupnumber, NULL, 0, Group_Join_Type_Join) == -1) {
+    if (init_groupchat_win(toxic, groupnumber, NULL, 0, Group_Join_Type_Join) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_leave(tox, groupnumber, NULL, 0, NULL);
         return;
     }
 }
 
-void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_group_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
         return;
@@ -286,10 +320,13 @@ void cmd_group_invite(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char 
 
 #ifdef GAMES
 
-void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_game_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
 
     if (!Friends.list[self->num].game_invite.pending) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
@@ -306,7 +343,7 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
     uint8_t *data = Friends.list[self->num].game_invite.data;
     size_t length = Friends.list[self->num].game_invite.data_length;
 
-    int ret = game_initialize(self, tox, type, id, data, length, false);
+    const int ret = game_initialize(self, toxic, type, id, data, length, false);
 
     switch (ret) {
         case 0: {
@@ -335,9 +372,15 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
 
 #endif // GAMES
 
-void cmd_savefile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_savefile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File ID required.");
@@ -414,9 +457,15 @@ on_recv_error:
     }
 }
 
-void cmd_sendfile(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     const char *errmsg = NULL;
 

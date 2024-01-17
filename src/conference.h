@@ -86,7 +86,7 @@ typedef struct {
 /* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
 void free_conference(ToxWindow *self, uint32_t conferencenum);
 
-int init_conference_win(Tox *tox, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
+int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
 
 /* destroys and re-creates conference window with or without the peerlist */
 void redraw_conference_win(ToxWindow *self);

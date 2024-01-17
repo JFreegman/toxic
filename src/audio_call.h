@@ -95,8 +95,8 @@ struct CallControl {
 extern struct CallControl CallControl;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
-ToxAV *init_audio(ToxWindow *self, Tox *tox);
-void terminate_audio(void);
+ToxAV *init_audio(ToxWindow *self, Toxic *toxic);
+void terminate_audio(ToxAV *av);
 
 bool init_call(Call *call);
 

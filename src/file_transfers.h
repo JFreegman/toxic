@@ -121,7 +121,7 @@ struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnumber,
 int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t length);
 
 /* Initiates all file transfers from the file send queue for friend designated by `friendnumber`. */
-void file_send_queue_check(ToxWindow *self, Tox *tox, uint32_t friendnumber);
+void file_send_queue_check(ToxWindow *self, Toxic *toxic, uint32_t friendnumber);
 
 /* Removes the `index`-th item from the file send queue for `friendnumber`.
  *

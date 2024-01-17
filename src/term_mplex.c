@@ -377,7 +377,7 @@ static int mplex_is_detached(void)
     return gnu_screen_is_detached()  ||  tmux_is_detached();
 }
 
-static void mplex_timer_handler(Tox *tox)
+static void mplex_timer_handler(Toxic *toxic)
 {
     Tox_User_Status current_status, new_status;
     const char *new_note;
@@ -389,7 +389,7 @@ static void mplex_timer_handler(Tox *tox)
     int detached = mplex_is_detached();
 
     pthread_mutex_lock(&Winthread.lock);
-    current_status = tox_self_get_status(tox);
+    current_status = tox_self_get_status(toxic->tox);
     pthread_mutex_unlock(&Winthread.lock);
 
     if (auto_away_active && current_status == TOX_USER_STATUS_AWAY && !detached) {
@@ -401,8 +401,8 @@ static void mplex_timer_handler(Tox *tox)
         prev_status = current_status;
         new_status = TOX_USER_STATUS_AWAY;
         pthread_mutex_lock(&Winthread.lock);
-        size_t slen = tox_self_get_status_message_size(tox);
-        tox_self_get_status_message(tox, (uint8_t *) prev_note);
+        size_t slen = tox_self_get_status_message_size(toxic->tox);
+        tox_self_get_status_message(toxic->tox, (uint8_t *) prev_note);
         prev_note[slen] = '\0';
         pthread_mutex_unlock(&Winthread.lock);
         new_note = user_settings->mplex_away_note;
@@ -418,8 +418,8 @@ static void mplex_timer_handler(Tox *tox)
     snprintf(note_str, sizeof(status_str), "/note %s", new_note);
 
     pthread_mutex_lock(&Winthread.lock);
-    execute(prompt->chatwin->history, prompt, tox, status_str, GLOBAL_COMMAND_MODE);
-    execute(prompt->chatwin->history, prompt, tox, note_str, GLOBAL_COMMAND_MODE);
+    execute(prompt->chatwin->history, prompt, toxic, status_str, GLOBAL_COMMAND_MODE);
+    execute(prompt->chatwin->history, prompt, toxic, note_str, GLOBAL_COMMAND_MODE);
     pthread_mutex_unlock(&Winthread.lock);
 }
 
@@ -428,21 +428,21 @@ static void mplex_timer_handler(Tox *tox)
 
 void *mplex_timer_thread(void *data)
 {
-    Tox *tox = (Tox *) data;
+    Toxic *toxic = (Toxic *) data;
 
     while (true) {
         sleep(MPLEX_TIMER_INTERVAL);
-        mplex_timer_handler(tox);
+        mplex_timer_handler(toxic);
     }
 }
 
-int init_mplex_away_timer(Tox *tox)
+int init_mplex_away_timer(Toxic *toxic)
 {
-    if (! detect_mplex()) {
+    if (!detect_mplex()) {
         return 0;
     }
 
-    if (! user_settings->mplex_away) {
+    if (!user_settings->mplex_away) {
         return 0;
     }
 
@@ -451,7 +451,7 @@ int init_mplex_away_timer(Tox *tox)
         return -1;
     }
 
-    if (pthread_create(&mplex_tid, NULL, mplex_timer_thread, (void *)tox) != 0) {
+    if (pthread_create(&mplex_tid, NULL, mplex_timer_thread, (void *)toxic) != 0) {
         return -1;
     }
 

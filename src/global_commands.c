@@ -44,9 +44,15 @@
 #endif
 
 /* command functions */
-void cmd_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
@@ -73,7 +79,7 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
         return;
     } else {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Friend request accepted.");
-        on_friend_added(tox, friendnum, true);
+        on_friend_added(toxic, friendnum, true);
     }
 
     FrndRequests.request[req] = (struct friend_request) {
@@ -92,12 +98,12 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     --FrndRequests.num_requests;
 }
 
-void cmd_add_helper(ToxWindow *self, Tox *tox, const char *id_bin, const char *msg)
+void cmd_add_helper(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *msg)
 {
     const char *errmsg;
 
     Tox_Err_Friend_Add err;
-    uint32_t f_num = tox_friend_add(tox, (const uint8_t *) id_bin, (const uint8_t *) msg, strlen(msg), &err);
+    uint32_t f_num = tox_friend_add(toxic->tox, (const uint8_t *) id_bin, (const uint8_t *) msg, strlen(msg), &err);
 
     switch (err) {
         case TOX_ERR_FRIEND_ADD_TOO_LONG:
@@ -130,7 +136,7 @@ void cmd_add_helper(ToxWindow *self, Tox *tox, const char *id_bin, const char *m
 
         case TOX_ERR_FRIEND_ADD_OK:
             errmsg = "Friend request sent.";
-            on_friend_added(tox, f_num, true);
+            on_friend_added(toxic, f_num, true);
             break;
 
         case TOX_ERR_FRIEND_ADD_NULL:
@@ -144,9 +150,15 @@ void cmd_add_helper(ToxWindow *self, Tox *tox, const char *id_bin, const char *m
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
 }
 
-void cmd_add(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_add(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Tox ID or address required.");
@@ -177,7 +189,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[M
     const bool valid_id_size = arg_length >= TOX_ADDRESS_SIZE * 2;  // arg_length may include invite message
 
     if (is_domain) {
-        if (!name_lookup(self, tox, id_bin, id, msg)) {
+        if (!name_lookup(self, toxic, id_bin, id, msg)) {
             return;
         }
     } else if (!valid_id_size) {
@@ -206,12 +218,18 @@ void cmd_add(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[M
         return;
     }
 
-    cmd_add_helper(self, tox, id_bin, msg);
+    cmd_add_helper(self, toxic, id_bin, msg);
 }
 
-void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_avatar(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc != 1 || strlen(argv[1]) < 3) {
         avatar_unset(tox);
@@ -242,20 +260,28 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Avatar set to '%s'", filename);
 }
 
-void cmd_clear(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_clear(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
     UNUSED_VAR(argc);
     UNUSED_VAR(argv);
+
+    if (self == NULL) {
+        return;
+    }
 
     line_info_clear(self->chatwin->hst);
     force_refresh(window);
 }
 
-void cmd_color(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_color(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (argc != 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
@@ -277,9 +303,15 @@ void cmd_color(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     self->colour = colour_val;
 }
 
-void cmd_connect(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_connect(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc != 3) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Require: <ip> <port> <key>");
@@ -326,10 +358,14 @@ void cmd_connect(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*arg
     }
 }
 
-void cmd_decline(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_decline(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Request ID required.");
@@ -366,9 +402,13 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*arg
 
 #ifdef GAMES
 
-void cmd_game(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_game(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
 
     if (argc < 1) {
         game_list_print(self);
@@ -388,7 +428,7 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     }
 
     const unsigned int id = rand_not_secure();
-    const int ret = game_initialize(self, tox, type, id, NULL, 0, true);
+    const int ret = game_initialize(self, toxic, type, id, NULL, 0, true);
 
     switch (ret) {
         case 0: {
@@ -421,9 +461,15 @@ void cmd_game(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
 
 #endif // GAMES
 
-void cmd_conference(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
@@ -472,7 +518,7 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
 #endif
     }
 
-    if (init_conference_win(tox, conferencenum, type, NULL, 0) == -1) {
+    if (init_conference_win(toxic, conferencenum, type, NULL, 0) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
         tox_conference_delete(tox, conferencenum, NULL);
         return;
@@ -491,8 +537,15 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference [%d] created.", conferencenum);
 }
 
-void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_groupchat(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
@@ -546,7 +599,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
         return;
     }
 
-    int init = init_groupchat_win(tox, groupnumber, name, len, Group_Join_Type_Create);
+    const int init = init_groupchat_win(toxic, groupnumber, name, len, Group_Join_Type_Create);
 
     if (init == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
@@ -558,8 +611,14 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
     }
 }
 
-void cmd_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
@@ -623,7 +682,7 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
         return;
     }
 
-    int init = init_groupchat_win(tox, groupnumber, NULL, 0, Group_Join_Type_Join);
+    const int init = init_groupchat_win(toxic, groupnumber, NULL, 0, Group_Join_Type_Join);
 
     if (init == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
@@ -631,9 +690,14 @@ void cmd_join(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     }
 }
 
-void cmd_log(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     const char *msg;
     struct chatlog *log = self->chatwin->log;
@@ -671,15 +735,19 @@ void cmd_log(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[M
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
-void cmd_myid(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_myid(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
     UNUSED_VAR(argc);
     UNUSED_VAR(argv);
 
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     char id_string[TOX_ADDRESS_SIZE * 2 + 1];
     char bin_id[TOX_ADDRESS_SIZE];
-    tox_self_get_address(tox, (uint8_t *) bin_id);
+    tox_self_get_address(toxic->tox, (uint8_t *) bin_id);
 
     if (tox_id_bytes_to_str(bin_id, sizeof(bin_id), id_string, sizeof(id_string)) == -1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to print ID.");
@@ -690,9 +758,15 @@ void cmd_myid(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
 }
 
 #ifdef QRCODE
-void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_myqr(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     char id_string[TOX_ADDRESS_SIZE * 2 + 1];
     char bin_id[TOX_ADDRESS_SIZE];
@@ -708,7 +782,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     size_t nick_len = tox_self_get_name_size(tox);
     nick[nick_len] = '\0';
 
-    size_t data_file_len = strlen(DATA_FILE);
+    const size_t data_file_len = strlen(toxic->client_data.data_path);
     char *dir = malloc(data_file_len + 1);
 
     if (dir == NULL) {
@@ -716,7 +790,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
         return;
     }
 
-    size_t dir_len = get_base_dir(DATA_FILE, data_file_len, dir);
+    const size_t dir_len = get_base_dir(toxic->client_data.data_path, data_file_len, dir);
 
 #ifdef QRPNG
 
@@ -785,9 +859,15 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
 }
 #endif /* QRCODE */
 
-void cmd_nick(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_nick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
@@ -809,20 +889,31 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     tox_self_set_name(tox, (uint8_t *) nick, len, NULL);
     prompt_update_nick(prompt, nick);
 
-    store_data(tox, DATA_FILE);
+    store_data(toxic);
 }
 
-void cmd_note(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_note(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+    UNUSED_VAR(self);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
 
     const char *note = argc >= 1 ? argv[1] : "";
 
-    prompt_update_statusmessage(prompt, tox, note);
+    prompt_update_statusmessage(prompt, toxic->tox, note);
 }
 
-void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_nospam(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     long int nospam = (long int)rand_not_secure();  // the nospam isn't cryptographically sensitive
 
     if (argc > 0) {
@@ -838,7 +929,7 @@ void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     tox_self_set_nospam(tox, (uint32_t) nospam);
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Your new Tox ID is:");
-    cmd_myid(window, self, tox, 0, NULL);
+    cmd_myid(window, self, toxic, 0, NULL);
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
                   "Any services that relied on your old ID will need to be updated manually.");
@@ -846,32 +937,40 @@ void cmd_nospam(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
                   old_nospam);
 }
 
-void cmd_prompt_help(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_prompt_help(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
     UNUSED_VAR(argc);
     UNUSED_VAR(argv);
+
+    if (self == NULL) {
+        return;
+    }
 
     help_init_menu(self);
 }
 
-void cmd_quit(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_quit(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
     UNUSED_VAR(argc);
     UNUSED_VAR(argv);
     UNUSED_VAR(self);
 
-    exit_toxic_success(tox);
+    exit_toxic_success(toxic);
 }
 
-void cmd_requests(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_requests(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
     UNUSED_VAR(argc);
     UNUSED_VAR(argv);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (FrndRequests.num_requests == 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending friend requests.");
@@ -903,9 +1002,15 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*ar
     }
 }
 
-void cmd_status(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_status(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     const char *errmsg;
 

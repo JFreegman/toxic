@@ -54,39 +54,33 @@ static void print_err(ToxWindow *self, const char *error_str)
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-ToxAV *init_video(ToxWindow *self, Tox *tox)
+ToxAV *init_video(ToxWindow *self, const Toxic *toxic)
 {
-    UNUSED_VAR(tox);
-
     CallControl.video_errors = ve_None;
 
     CallControl.video_enabled = true;
     CallControl.default_video_bit_rate = 0;
     CallControl.video_frame_duration = 10;
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
-
         return NULL;
     }
 
-    if (init_video_devices(CallControl.av) == vde_InternalError) {
+    if (init_video_devices(toxic->av) == vde_InternalError) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
-
         return NULL;
     }
 
-    toxav_callback_video_receive_frame(CallControl.av, on_video_receive_frame, &CallControl);
-    toxav_callback_video_bit_rate(CallControl.av, on_video_bit_rate, &CallControl);
+    toxav_callback_video_receive_frame(toxic->av, on_video_receive_frame, &CallControl);
+    toxav_callback_video_bit_rate(toxic->av, on_video_bit_rate, &CallControl);
 
-    return CallControl.av;
+    return toxic->av;
 }
 
 void terminate_video(void)
 {
-    int i;
-
-    for (i = 0; i < CallControl.max_calls; ++i) {
+    for (int i = 0; i < CallControl.max_calls; ++i) {
         Call *this_call = &CallControl.calls[i];
 
         stop_video_transmission(this_call, i);
@@ -266,18 +260,21 @@ void callback_video_end(uint32_t friend_number)
 /*
  * Commands from chat_commands.h
  */
-void cmd_vcall(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_vcall(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     if (argc != 0) {
         print_err(self, "Unknown arguments.");
         return;
     }
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         print_err(self, "ToxAV not supported!");
         return;
     }
@@ -301,11 +298,14 @@ void cmd_vcall(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     place_call(self);
 }
 
-void cmd_video(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_video(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
     UNUSED_VAR(argv);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     Call *this_call = &CallControl.calls[self->num];
 
@@ -314,7 +314,7 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
         return;
     }
 
-    if (!CallControl.av) {
+    if (toxic->av == NULL) {
         print_err(self, "ToxAV not supported!");
         return;
     }
@@ -337,10 +337,13 @@ void cmd_video(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     }
 }
 
-void cmd_res(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+
+    if (toxic == NULL) {
+        return;
+    }
 
     Call *call = &CallControl.calls[self->num];
 
@@ -377,17 +380,17 @@ void cmd_res(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[M
         call->video_width = width;
         call->video_height = height;
         call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
-        start_video_transmission(self, CallControl.av, call);
+        start_video_transmission(self, toxic->av, call);
     } else {
         CallControl.default_video_width = width;
         CallControl.default_video_height = height;
     }
 }
 
-void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (argc != 1) {
         if (argc < 1) {
@@ -418,10 +421,10 @@ void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Tox *tox, int argc,
 }
 
 /* This changes primary video device only */
-void cmd_change_video_device(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_change_video_device(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (argc != 2) {
         if (argc < 1) {

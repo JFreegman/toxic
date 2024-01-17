@@ -27,7 +27,7 @@
 
 #include "execute.h"
 
-extern Tox       *user_tox;
+extern Toxic       *user_toxic;
 
 static struct python_registered_func {
     char     *name;
@@ -279,9 +279,9 @@ void terminate_python(void)
     Py_Finalize();
 }
 
-void init_python(Tox *tox)
+void init_python(Toxic *toxic)
 {
-    user_tox = tox;
+    user_toxic = toxic;
     PyImport_AppendInittab("toxic_api", PyInit_toxic_api);
     Py_Initialize();
 }

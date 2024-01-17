@@ -669,8 +669,8 @@ static void DHT_bootstrap(Tox *tox)
 /* Manages connection to the Tox DHT network. */
 void do_tox_connection(Tox *tox)
 {
-    static time_t last_bootstrap_time = 0;
-    bool connected = prompt_selfConnectionStatus() != TOX_CONNECTION_NONE;
+    static time_t last_bootstrap_time = 0;  // TODO: Put this in Toxic
+    const bool connected = prompt_selfConnectionStatus() != TOX_CONNECTION_NONE;
 
     if (!connected && timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL)) {
         DHT_bootstrap(tox);

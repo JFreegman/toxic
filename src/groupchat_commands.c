@@ -32,14 +32,20 @@
 
 extern GroupChat groupchats[MAX_GROUPCHAT_NUM];
 
-void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_chatid(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     char chatid[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
     char chat_public_key[TOX_GROUP_CHAT_ID_SIZE];
 
     Tox_Err_Group_State_Queries err;
 
-    if (!tox_group_get_chat_id(tox, self->num, (uint8_t *) chat_public_key, &err)) {
+    if (!tox_group_get_chat_id(toxic->tox, self->num, (uint8_t *) chat_public_key, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve the Chat ID (error %d).", err);
         return;
     }
@@ -53,10 +59,16 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", chatid);
 }
 
-void cmd_disconnect(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_disconnect(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     Tox_Err_Group_Disconnect err;
-    tox_group_disconnect(tox, self->num, &err);
+    tox_group_disconnect(toxic->tox, self->num, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_DISCONNECT_OK: {
@@ -76,9 +88,13 @@ void cmd_disconnect(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
     }
 }
 
-void cmd_group_nick(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_group_nick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
 
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Input required.");
@@ -97,13 +113,19 @@ void cmd_group_nick(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     nick[len] = '\0';
 
-    set_nick_this_group(self, tox, nick, len);
+    set_nick_this_group(self, toxic->tox, nick, len);
 
-    store_data(tox, DATA_FILE);
+    store_data(toxic);
 }
 
-void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_ignore(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -117,7 +139,7 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     }
 
     Tox_Err_Group_Set_Ignore err;
-    tox_group_set_ignore(tox, self->num, peer_id, true, &err);
+    tox_group_set_ignore(toxic->tox, self->num, peer_id, true, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_SET_IGNORE_OK: {
@@ -145,8 +167,16 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     group_toggle_peer_ignore(self->num, peer_id, true);
 }
 
-void cmd_kick(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_kick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -196,8 +226,15 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     }
 }
 
-void cmd_list(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_list(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
+
     GroupChat *chat = get_groupchat(self->num);
 
     if (chat == NULL) {
@@ -224,8 +261,16 @@ void cmd_list(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[
     }
 }
 
-void cmd_mod(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_mod(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -282,8 +327,16 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[M
     }
 }
 
-void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_unmod(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -341,8 +394,14 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
     }
 }
 
-void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_set_passwd(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     const char *passwd = NULL;
     size_t len = 0;
 
@@ -352,7 +411,7 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
     }
 
     Tox_Err_Group_Founder_Set_Password err;
-    tox_group_founder_set_password(tox, self->num, (uint8_t *) passwd, len, &err);
+    tox_group_founder_set_password(toxic->tox, self->num, (uint8_t *) passwd, len, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_OK: {
@@ -383,8 +442,16 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*
     }
 }
 
-void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     int maxpeers = 0;
 
     if (argc < 1) {
@@ -428,8 +495,16 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char
     }
 }
 
-void cmd_set_voice(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_set_voice(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     Tox_Group_Voice_State voice_state;
 
     if (argc < 1) {
@@ -500,8 +575,16 @@ void cmd_set_voice(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
     }
 }
 
-void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_set_privacy(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     const char *pstate_str = NULL;
     Tox_Group_Privacy_State privacy_state;
 
@@ -550,8 +633,16 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (
     }
 }
 
-void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     Tox_Group_Topic_Lock topic_lock;
     const char *tlock_str = NULL;
 
@@ -600,8 +691,16 @@ void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Tox *tox, int argc, cha
     }
 }
 
-void cmd_silence(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_silence(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -658,8 +757,16 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*arg
     }
 }
 
-void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_unsilence(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -721,8 +828,16 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
     }
 }
 
-void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_rejoin(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     Tox_Err_Group_Reconnect err;
 
     if (!tox_group_reconnect(tox, self->num, &err)) {
@@ -735,8 +850,16 @@ void cmd_rejoin(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
     groupchat_rejoin(self, tox);
 }
 
-void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         Tox_Err_Group_State_Queries err;
         size_t tlen = tox_group_get_topic_size(tox, self->num, &err);
@@ -805,8 +928,14 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*a
     write_to_log(tmp_event, self_nick, self->chatwin->log, true);
 }
 
-void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_unignore(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;
@@ -820,7 +949,7 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*ar
     }
 
     Tox_Err_Group_Set_Ignore err;
-    tox_group_set_ignore(tox, self->num, peer_id, false, &err);
+    tox_group_set_ignore(toxic->tox, self->num, peer_id, false, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_SET_IGNORE_OK: {
@@ -848,8 +977,16 @@ void cmd_unignore(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*ar
     group_toggle_peer_ignore(self->num, peer_id, false);
 }
 
-void cmd_whois(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_whois(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (argc < 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Peer name or public key must be specified.");
         return;

@@ -35,9 +35,15 @@ static void print_err(ToxWindow *self, const char *error_str)
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     Tox_Err_Conference_Title err;
     char title[CONFERENCE_MAX_TITLE_LENGTH + 1];
@@ -93,9 +99,15 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Tox *tox, int arg
 }
 
 #ifdef AUDIO
-void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_enable_audio(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     bool enable;
 
@@ -116,9 +128,15 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char 
     }
 }
 
-void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_mute(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (argc < 1) {
         if (conference_mute_self(self->num)) {
@@ -153,10 +171,14 @@ void cmd_conference_mute(WINDOW *window, ToxWindow *self, Tox *tox, int argc, ch
     }
 }
 
-void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_sense(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (argc == 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Current VAD threshold: %.1f",
@@ -184,10 +206,14 @@ void cmd_conference_sense(WINDOW *window, ToxWindow *self, Tox *tox, int argc, c
     }
 }
 
-void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     bool enable;
 

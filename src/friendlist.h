@@ -120,7 +120,7 @@ typedef struct {
 extern FriendsList Friends;
 
 ToxWindow *new_friendlist(void);
-void friendlist_onInit(ToxWindow *self, Tox *tox);
+void friendlist_onInit(ToxWindow *self, Toxic *toxic);
 void disable_chatwin(uint32_t f_num);
 int get_friendnum(uint8_t *name);
 int load_blocklist(char *data);

@@ -111,6 +111,27 @@ typedef enum _FATAL_ERRS {
    Uncomment if necessary */
 /* #define URXVT_FIX */
 
+#define MIN_PASSWORD_LEN 6
+#define MAX_PASSWORD_LEN 64
+
+typedef struct Client_Data {
+    bool is_encrypted;
+    char pass[MAX_PASSWORD_LEN + 1];
+    int  pass_len;
+    char *data_path;
+    char *block_path;
+} Client_Data;
+
+typedef struct ToxAV ToxAV;
+
+typedef struct Toxic {
+    Tox   *tox;
+#ifdef AUDIO
+    ToxAV *av;
+#endif
+    Client_Data client_data;
+} Toxic;
+
 void lock_status(void);
 void unlock_status(void);
 
@@ -119,10 +140,10 @@ void flag_interface_refresh(void);
 /* Sets ncurses refresh rate. Lower values make it refresh more often. */
 void set_window_refresh_rate(size_t refresh_rate);
 
-void exit_toxic_success(Tox *tox) __attribute__((__noreturn__));
+void exit_toxic_success(Toxic *toxic) __attribute__((__noreturn__));
 void exit_toxic_err(const char *errmsg, int errcode) __attribute__((__noreturn__));
 
-int store_data(Tox *tox, const char *path);
+int store_data(const Toxic *toxic);
 
 /* callbacks */
 void on_friend_request(Tox *tox, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata);
@@ -132,7 +153,7 @@ void on_friend_message(Tox *tox, uint32_t friendnumber, Tox_Message_Type type, c
 void on_friend_name(Tox *tox, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
 void on_friend_status(Tox *tox, uint32_t friendnumber, Tox_User_Status status, void *userdata);
 void on_friend_status_message(Tox *tox, uint32_t friendnumber, const uint8_t *string, size_t length, void *userdata);
-void on_friend_added(Tox *tox, uint32_t friendnumber, bool sort);
+void on_friend_added(Toxic *toxic, uint32_t friendnumber, bool sort);
 void on_conference_message(Tox *tox, uint32_t conferencenumber, uint32_t peernumber, Tox_Message_Type type,
                            const uint8_t *message, size_t length, void *userdata);
 void on_conference_invite(Tox *tox, uint32_t friendnumber, Tox_Conference_Type type, const uint8_t *conference_pub_key,
@@ -180,8 +201,5 @@ void on_group_rejected(Tox *tox, uint32_t groupnumber, Tox_Group_Join_Fail type,
 void on_group_moderation(Tox *tox, uint32_t groupnumber, uint32_t source_peernum, uint32_t target_peernum,
                          Tox_Group_Mod_Event type, void *userdata);
 void on_group_voice_state(Tox *tox, uint32_t groupnumber, Tox_Group_Voice_State voice_state, void *userdata);
-
-extern char *DATA_FILE;
-extern char *BLOCK_FILE;
 
 #endif /* TOXIC_H */
