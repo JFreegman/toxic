@@ -69,6 +69,8 @@ extern struct Winthread Winthread;
 
 #define GROUP_SIDEBAR_OFFSET 3    /* Offset for the peer number box at the top of the statusbar */
 
+static_assert(TOX_GROUP_CHAT_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_GROUP_CHAT_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
+
 /* groupchat command names used for tab completion. */
 static const char *group_cmd_list[] = {
     "/accept",
@@ -151,6 +153,60 @@ GroupChat *get_groupchat(uint32_t groupnumber)
     }
 
     return NULL;
+}
+
+/*
+ * Return a pointer to the ToxWindow associated with `groupnumber`.
+ * Return NULL if group does not exist.
+ */
+static ToxWindow *get_groupchat_toxwindow(uint32_t groupnumber)
+{
+    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *win = get_window_ptr(i);
+
+        if (win == NULL) {
+            continue;
+        }
+
+        if (win->type != WINDOW_TYPE_GROUPCHAT) {
+            continue;
+        }
+
+        if (win->num == groupnumber) {
+            return win;
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ * Return the groupnumber associated with `public_key`.
+ * Return -1 if public_key does not designate a valid group.
+ *
+ * `public_key` must be a string of at least TOX_PUBLIC_KEY_SIZE * 2 chars in length.
+ */
+static int get_groupnumber_by_public_key_string(const char *public_key)
+{
+    char pk_bin[TOX_PUBLIC_KEY_SIZE];
+
+    if (tox_pk_string_to_bytes(public_key, strlen(public_key), pk_bin, sizeof(pk_bin)) != 0) {
+        return -1;
+    }
+
+    for (size_t i = 0; i < max_groupchat_index; ++i) {
+        const GroupChat *chat = &groupchats[i];
+
+        if (!chat->active) {
+            continue;
+        }
+
+        if (memcmp(pk_bin, chat->chat_id, TOX_PUBLIC_KEY_SIZE) == 0) {
+            return chat->groupnumber;
+        }
+    }
+
+    return -1;
 }
 
 static const char *get_group_exit_string(Tox_Group_Exit_Type exit_type)
@@ -278,6 +334,38 @@ void exit_groupchat(ToxWindow *self, Tox *tox, uint32_t groupnumber, const char 
     }
 }
 
+static bool enable_groupchat_log(uint32_t groupnumber)
+{
+    ToxWindow *self = get_groupchat_toxwindow(groupnumber);
+
+    if (self == NULL) {
+        return false;
+    }
+
+    ChatContext *ctx = self->chatwin;
+
+    if (log_enable(ctx->log) != 0) {
+        return false;
+    }
+
+    return true;
+}
+
+static bool disable_groupchat_log(uint32_t groupnumber)
+{
+    ToxWindow *self = get_groupchat_toxwindow(groupnumber);
+
+    if (self == NULL) {
+        return false;
+    }
+
+    ChatContext *ctx = self->chatwin;
+
+    log_disable(ctx->log);
+
+    return true;
+}
+
 /*
  * Initializes groupchat log. This should only be called after we have the group name.
  */
@@ -313,12 +401,10 @@ static void init_groupchat_log(ToxWindow *self, Tox *tox, uint32_t groupnumber)
     }
 
     if (user_settings->autolog == AUTOLOG_ON) {
-        if (log_enable(ctx->log) != 0) {
+        if (!enable_groupchat_log(groupnumber)) {
             line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
     }
-
-    execute(ctx->history, self, tox, "/log", GLOBAL_COMMAND_MODE);  // print log state to screen
 }
 
 /* Creates a new toxic groupchat window associated with groupnumber.
@@ -2001,59 +2087,27 @@ static void groupchat_onInit(ToxWindow *self, Tox *tox)
 }
 
 /*
- * Return the groupnumber associated with `public_key`.
- * Return -1 if group does not exist.
- *
- * `public_key` must be at least TOX_PUBLIC_KEY_SIZE bytes in length.
- */
-static int get_groupnumber_by_public_key(const char *public_key)
-{
-    for (size_t i = 0; i < max_groupchat_index; ++i) {
-        const GroupChat *chat = &groupchats[i];
-
-        if (!chat->active) {
-            continue;
-        }
-
-        if (memcmp(public_key, chat->chat_id, TOX_PUBLIC_KEY_SIZE) == 0) {
-            return chat->groupnumber;
-        }
-    }
-
-    return -1;
-}
-
-/*
  * Sets the tab name colour of the ToxWindow associated with `public_key` to `colour`.
  *
  * Return false if group does not exist.
  */
 static bool groupchat_window_set_tab_name_colour(const char *public_key, int colour)
 {
-    const int groupnumber = get_groupnumber_by_public_key(public_key);
+    const int groupnumber = get_groupnumber_by_public_key_string(public_key);
 
     if (groupnumber < 0) {
         return false;
     }
 
-    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        ToxWindow *win = get_window_ptr(i);
+    ToxWindow *self = get_groupchat_toxwindow(groupnumber);
 
-        if (win == NULL) {
-            continue;
-        }
-
-        if (win->type != WINDOW_TYPE_GROUPCHAT) {
-            continue;
-        }
-
-        if (win->num == groupnumber) {
-            win->colour = colour;
-            return true;
-        }
+    if (self == NULL) {
+        return false;
     }
 
-    return false;
+    self->colour = colour;
+
+    return true;
 }
 
 bool groupchat_config_set_tab_name_colour(const char *public_key, const char *colour)
@@ -2064,13 +2118,18 @@ bool groupchat_config_set_tab_name_colour(const char *public_key, const char *co
         return false;
     }
 
-    char pk_bin[TOX_PUBLIC_KEY_SIZE];
+    return groupchat_window_set_tab_name_colour(public_key, colour_val);
+}
 
-    if (tox_pk_string_to_bytes(public_key, strlen(public_key), pk_bin, sizeof(pk_bin)) != 0) {
+bool groupchat_config_set_autolog(const char *public_key, bool autolog_enabled)
+{
+    const int groupnumber = get_groupnumber_by_public_key_string(public_key);
+
+    if (groupnumber < 0) {
         return false;
     }
 
-    return groupchat_window_set_tab_name_colour(pk_bin, colour_val);
+    return autolog_enabled ? enable_groupchat_log(groupnumber) : disable_groupchat_log(groupnumber);
 }
 
 static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *groupname, int length)

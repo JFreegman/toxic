@@ -34,8 +34,6 @@
 
 #define MAX_GROUPCHAT_NUM (MAX_WINDOWS_NUM - 2)
 
-static_assert(TOX_GROUP_CHAT_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_GROUP_CHAT_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
-
 typedef enum Group_Join_Type {
     Group_Join_Type_Create,
     Group_Join_Type_Join,
@@ -130,5 +128,14 @@ void group_toggle_peer_ignore(uint32_t groupnumber, int peer_id, bool ignore);
  * Return true on success.
  */
 bool groupchat_config_set_tab_name_colour(const char *public_key, const char *colour);
+
+/*
+ * Sets the auto-logging preference for the groupchat associated with `public_key`.
+ *
+ * `public_key` should be a string representing the group's public chat ID.
+ *
+ * Return true on success.
+ */
+bool groupchat_config_set_autolog(const char *public_key, bool autolog_enabled);
 
 #endif /* #define GROUPCHATS_H */

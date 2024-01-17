@@ -131,7 +131,7 @@ tox = {
 };
 
 // Friend-specific config settings. Public keys are used as friend identifiers
-// and must begin with the prefix "pk_".
+// and must begin with the prefix "pk_". These take priority over global settings.
 friends = {
   pk_PUBLIC_KEY_1 = {
     // The colour of the friend's window tab name.
@@ -139,23 +139,25 @@ friends = {
     tab_name_colour="white";
   };
 
-  pk_PUBLIC_KEY_2 = {
-    tab_name_colour="white";
-  };
+// pk_PUBLIC_KEY_2 = {
+//   ...
+// };
 };
 
 // groupchat-specific config settings. Public keys (chat ID's) are used as
-// group identifiers and must begin with the prefix "pk_".
+// group identifiers and must begin with the prefix "pk_". These take priority
+// over global settings.
 groupchats = {
   pk_PUBLIC_KEY_1 = {
     // The colour of the group's window tab name.
     // Valid colours are: white, red, green, cyan, purple, yellow, black.
     tab_name_colour="white";
+    autolog=false;
   };
 
-  pk_PUBLIC_KEY_2 = {
-    tab_name_colour="white";
-  };
+// pk_PUBLIC_KEY_2 = {
+//   ...
+// };
 }
 
 // To disable a sound set the path to "silent"

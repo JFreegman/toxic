@@ -286,9 +286,11 @@ static const struct friend_strings {
 static const struct groupchat_strings {
     const char *self;
     const char *tab_name_colour;
+    const char *autolog;
 } groupchat_strings = {
     "groupchats",
     "tab_name_colour",
+    "autolog",
 };
 
 static int key_parse(const char **bind)
@@ -426,12 +428,21 @@ int settings_load_groups(const char *patharg)
                 fprintf(stderr, "config error: failed to set groupchat tab name colour for %s: (colour: %s)\n", public_key, str);
             }
         }
+
+        int autolog_enabled;
+
+        if (config_setting_lookup_bool(keys, groupchat_strings.autolog, &autolog_enabled)) {
+            if (!groupchat_config_set_autolog(public_key, autolog_enabled != 0)) {
+                fprintf(stderr, "config error: failed to apply groupchat autolog setting for %s\n", public_key);
+            }
+        }
     }
 
     config_destroy(cfg);
 
     return 0;
 }
+
 int settings_load_friends(const char *patharg)
 {
     config_t cfg[1];
