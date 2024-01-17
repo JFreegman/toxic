@@ -141,6 +141,7 @@ enum settings_values {
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
 
-int settings_load(struct user_settings *s, const char *patharg);
+int settings_load_main(struct user_settings *s, const char *patharg);
+int settings_load_friends(const char *patharg);
 
 #endif /* SETTINGS_H */

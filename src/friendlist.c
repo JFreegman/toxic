@@ -482,6 +482,8 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, uint32_t num, cons
     Friends.list[num].statusmsg_len = strlen(Friends.list[num].statusmsg);
 }
 
+static void set_default_friend_config_settings(ToxicFriend *friend);
+
 void friendlist_onFriendAdded(ToxWindow *self, Tox *tox, uint32_t num, bool sort)
 {
     UNUSED_VAR(self);
@@ -505,6 +507,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *tox, uint32_t num, bool sort
         Friends.list[i].connection_status = TOX_CONNECTION_NONE;
         Friends.list[i].status = TOX_USER_STATUS_NONE;
         Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
+        set_default_friend_config_settings(&Friends.list[i]);
 
         Tox_Err_Friend_Get_Public_Key pkerr;
         tox_friend_get_public_key(tox, num, (uint8_t *) Friends.list[i].pub_key, &pkerr);
@@ -1439,6 +1442,71 @@ bool friend_get_auto_accept_files(uint32_t friendnumber)
     }
 
     return Friends.list[friendnumber].auto_accept_files;
+}
+
+/*
+ * Returns a pointer to the FriendSettings object associated with `public_key`.
+ * Returns NULL on failure.
+ */
+static FriendSettings *get_friend_settings_by_key(const char *public_key)
+{
+    char pk_bin[TOX_PUBLIC_KEY_SIZE];
+
+    if (tox_pk_string_to_bytes(public_key, strlen(public_key), pk_bin, sizeof(pk_bin)) != 0) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
+        ToxicFriend *friend = &Friends.list[i];
+
+        if (memcmp(pk_bin, friend->pub_key, sizeof(friend->pub_key)) == 0) {
+            return &friend->settings;
+        }
+    }
+
+    return NULL;
+}
+
+bool friend_config_set_tab_name_colour(const char *public_key, const char *colour)
+{
+    FriendSettings *settings = get_friend_settings_by_key(public_key);
+
+    if (settings == NULL) {
+        return false;
+    }
+
+    const int colour_val = colour_string_to_int(colour);
+
+    if (colour_val < 0) {
+        return false;
+    }
+
+    settings->tab_name_colour = colour_val;
+
+    return true;
+}
+
+int friend_config_get_tab_name_colour(uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        fprintf(stderr, "failed to get friend tab name colour for friend %u\n", friendnumber);
+        return -1;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    return friend->settings.tab_name_colour;
+}
+
+static void set_default_friend_config_settings(ToxicFriend *friend)
+{
+    if (friend == NULL) {
+        return;
+    }
+
+    FriendSettings *settings = &friend->settings;
+
+    settings->tab_name_colour = DefaultFriendSettingsTabNameColour;
 }
 
 ToxWindow *new_friendlist(void)

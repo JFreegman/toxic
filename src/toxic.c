@@ -1629,7 +1629,6 @@ int main(int argc, char **argv)
         first_time_encrypt("Encrypt existing data file? Y/n (q to quit)");
     }
 
-
     /* init user_settings struct and load settings from conf file */
     user_settings = calloc(1, sizeof(struct user_settings));
 
@@ -1637,9 +1636,9 @@ int main(int argc, char **argv)
         exit_toxic_err("failed in main", FATALERR_MEMORY);
     }
 
-    const char *p = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
+    const char *config_path = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
-    if (settings_load(user_settings, p) == -1) {
+    if (settings_load_main(user_settings, config_path) == -1) {
         queue_init_message("Failed to load user settings");
     }
 
@@ -1676,6 +1675,12 @@ int main(int argc, char **argv)
 
     if (arg_opts.encrypt_data && !datafile_exists) {
         arg_opts.encrypt_data = 0;
+    }
+
+    const int fs_ret = settings_load_friends(config_path);
+
+    if (fs_ret != 0) {
+        queue_init_message("Failed to load friend config settings: error %d", fs_ret);
     }
 
     init_term();

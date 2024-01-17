@@ -63,6 +63,14 @@ struct GameInvite {
 
 #endif // GAMES
 
+typedef enum DefaultFriendSettings {
+    DefaultFriendSettingsTabNameColour = WHITE_BAR_FG,
+} DefaultFriendSettings;
+
+typedef struct FriendSettings {
+    int tab_name_colour;
+} FriendSettings;
+
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     uint16_t namelength;
@@ -90,6 +98,8 @@ typedef struct {
     struct FileTransfer file_receiver[MAX_FILES];
     struct FileTransfer file_sender[MAX_FILES];
     PendingFileTransfer file_send_queue[MAX_FILES];
+
+    FriendSettings settings;
 } ToxicFriend;
 
 typedef struct {
@@ -141,5 +151,17 @@ void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept);
  * Return true if auto-accepting file transfers is enabled for this friend.
  */
 bool friend_get_auto_accept_files(uint32_t friendnumber);
+
+/*
+ * Sets the tab name colour config option for the friend associated with `public_key` to `colour`.
+ *
+ * Return true on success.
+ */
+bool friend_config_set_tab_name_colour(const char *public_key, const char *colour);
+
+/* Returns a friend's tab name colour.
+ * Returns -1 on error.
+ */
+int friend_config_get_tab_name_colour(uint32_t friendnumber);
 
 #endif /* end of include guard: FRIENDLIST_H */

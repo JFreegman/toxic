@@ -265,24 +265,14 @@ void cmd_colour(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv
 
     const char *colour = argv[1];
 
-    if (strcasecmp(colour, "white") == 0) {
-        self->colour = WHITE_BAR_FG;
-    } else if (strcasecmp(colour, "red") == 0) {
-        self->colour = RED_BAR_FG;
-    } else if (strcasecmp(colour, "green") == 0) {
-        self->colour = GREEN_BAR_FG;
-    } else if (strcasecmp(colour, "yellow") == 0) {
-        self->colour = YELLOW_BAR_FG;
-    } else if (strcasecmp(colour, "cyan") == 0) {
-        self->colour = CYAN_BAR_FG;
-    } else if (strcasecmp(colour, "purple") == 0) {
-        self->colour = PURPLE_BAR_FG;
-    } else if (strcasecmp(colour, "black") == 0) {
-        self->colour = BLACK_BAR_FG;
-    } else {
+    const int colour_val = colour_string_to_int(colour);
+
+    if (colour_val < 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid colour");
         return;
     }
+
+    self->colour = colour_val;
 }
 
 void cmd_connect(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)[MAX_STR_SIZE])

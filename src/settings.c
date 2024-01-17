@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "configdir.h"
+#include "friendlist.h"
 #include "misc_tools.h"
 #include "notify.h"
 #include "toxic.h"
@@ -273,6 +274,14 @@ static const struct sound_strings {
 };
 #endif
 
+static const struct friend_strings {
+    const char *self;
+    const char *tab_name_colour;
+} friend_strings = {
+    "friends",
+    "tab_name_colour",
+};
+
 static int key_parse(const char **bind)
 {
     int len = strlen(*bind);
@@ -303,10 +312,104 @@ static void set_key_binding(int *key, const char **bind)
     }
 }
 
-int settings_load(struct user_settings *s, const char *patharg)
+static bool get_settings_path(char *path, unsigned int path_size, const char *patharg)
+{
+    if (patharg != NULL) {
+        snprintf(path, path_size, "%s", patharg);
+        return true;
+    }
+
+    char *user_config_dir = get_user_config_dir();
+    snprintf(path, path_size, "%s%stoxic.conf", user_config_dir, CONFIGDIR);
+    free(user_config_dir);
+
+    /* make sure path exists or is created on first time running */
+    if (!file_exists(path)) {
+        FILE *fp = fopen(path, "w");
+
+        if (fp == NULL) {
+            fprintf(stderr, "failed to open config path: %s\n", path);
+            return false;
+        }
+
+        fclose(fp);
+    }
+
+    return true;
+}
+
+#define TOXIC_CONFIG_PUBLIC_KEY_PREFIX "pk_"
+
+int settings_load_friends(const char *patharg)
 {
     config_t cfg[1];
-    config_setting_t *setting;
+    const char *str = NULL;
+
+    config_init(cfg);
+
+    char path[MAX_STR_SIZE] = {0};
+
+    if (!get_settings_path(path, sizeof(path), patharg)) {
+        config_destroy(cfg);
+        return -1;
+    }
+
+    if (!config_read_file(cfg, path)) {
+        fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
+                config_error_line(cfg), config_error_text(cfg));
+        config_destroy(cfg);
+        return -2;
+    }
+
+    const config_setting_t *setting = config_lookup(cfg, friend_strings.self);
+
+    if (setting == NULL) {
+        config_destroy(cfg);
+        return -3 ;
+    }
+
+    const int num_friends = config_setting_length(setting);
+
+    for (int i = 0; i < num_friends; ++i) {
+        const config_setting_t *keys = config_setting_get_elem(setting, i);
+
+        if (keys == NULL) {
+            continue;
+        }
+
+        const char *public_key = config_setting_name(keys);
+
+        if (public_key == NULL) {
+            continue;
+        }
+
+        const uint16_t prefix_len = (uint16_t) strlen(TOXIC_CONFIG_PUBLIC_KEY_PREFIX);
+
+        if (strlen(public_key) != TOX_PUBLIC_KEY_SIZE * 2 + prefix_len) {
+            fprintf(stderr, "config error: invalid public key: %s\n", public_key);
+            continue;
+        }
+
+        if (memcmp(public_key, TOXIC_CONFIG_PUBLIC_KEY_PREFIX, prefix_len) != 0) {
+            fprintf(stderr, "config error: invalid public key prefix\n");
+            continue;
+        }
+
+        if (config_setting_lookup_string(keys, friend_strings.tab_name_colour, &str)) {
+            if (!friend_config_set_tab_name_colour(&public_key[prefix_len], str)) {
+                fprintf(stderr, "config error: failed to set tab name colour for %s: (colour: %s)\n", public_key, str);
+            }
+        }
+    }
+
+    config_destroy(cfg);
+    return 0;
+}
+
+int settings_load_main(struct user_settings *s, const char *patharg)
+{
+    config_t cfg[1];
+    config_setting_t *setting = NULL;
     const char *str = NULL;
 
     /* Load default settings */
@@ -320,29 +423,16 @@ int settings_load(struct user_settings *s, const char *patharg)
 
     config_init(cfg);
 
-    char path[MAX_STR_SIZE];
+    char path[MAX_STR_SIZE] = {0};
 
-    /* use default config file path */
-    if (patharg == NULL) {
-        char *user_config_dir = get_user_config_dir();
-        snprintf(path, sizeof(path), "%s%stoxic.conf", user_config_dir, CONFIGDIR);
-        free(user_config_dir);
-
-        /* make sure path exists or is created on first time running */
-        if (!file_exists(path)) {
-            FILE *fp = fopen(path, "w");
-
-            if (fp == NULL) {
-                return -1;
-            }
-
-            fclose(fp);
-        }
-    } else {
-        snprintf(path, sizeof(path), "%s", patharg);
+    if (!get_settings_path(path, sizeof(path), patharg)) {
+        config_destroy(cfg);
+        return -1;
     }
 
     if (!config_read_file(cfg, path)) {
+        fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
+                config_error_line(cfg), config_error_text(cfg));
         config_destroy(cfg);
         return -1;
     }
@@ -548,6 +638,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 
 #ifdef AUDIO
 
+    /* Audio */
     if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
         config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
         s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
@@ -571,6 +662,7 @@ int settings_load(struct user_settings *s, const char *patharg)
 
 #ifdef SOUND_NOTIFY
 
+    /* Sound notifications */
     if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
         if ((config_setting_lookup_string(setting, sound_strings.notif_error, &str) != CONFIG_TRUE) ||
                 !set_sound(notif_error, str)) {

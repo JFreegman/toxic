@@ -751,3 +751,36 @@ unsigned int rand_not_secure(void)
 
     return n;
 }
+
+int colour_string_to_int(const char *colour)
+{
+    if (strcasecmp(colour, "white") == 0) {
+        return WHITE_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "red") == 0) {
+        return RED_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "green") == 0) {
+        return GREEN_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "yellow") == 0) {
+        return YELLOW_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "cyan") == 0) {
+        return CYAN_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "purple") == 0) {
+        return PURPLE_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "black") == 0) {
+        return BLACK_BAR_FG;
+    }
+
+    return -1;
+}
