@@ -1638,8 +1638,10 @@ int main(int argc, char **argv)
 
     const char *config_path = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
-    if (settings_load_main(user_settings, config_path) == -1) {
-        queue_init_message("Failed to load user settings");
+    const int ms_ret = settings_load_main(user_settings, config_path);
+
+    if (ms_ret < 0) {
+        queue_init_message("Failed to load user settings: error %d", ms_ret);
     }
 
     const int curl_init = curl_global_init(CURL_GLOBAL_ALL);
@@ -1677,18 +1679,25 @@ int main(int argc, char **argv)
         arg_opts.encrypt_data = 0;
     }
 
-    const int fs_ret = settings_load_friends(config_path);
-
-    if (fs_ret != 0) {
-        queue_init_message("Failed to load friend config settings: error %d", fs_ret);
-    }
-
     init_term();
 
     prompt = init_windows(toxic->tox);
     prompt_init_statusbar(prompt, toxic->tox, !datafile_exists);
     load_groups(toxic->tox);
     load_conferences(toxic->tox);
+
+    const int fs_ret = settings_load_friends(config_path);
+
+    if (fs_ret != 0) {
+        queue_init_message("Failed to load friend config settings: error %d", fs_ret);
+    }
+
+    const int gs_ret = settings_load_groups(config_path);
+
+    if (gs_ret != 0) {
+        queue_init_message("Failed to load groupchat config settings: error %d", gs_ret);
+    }
+
     set_active_window_index(0);
 
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {

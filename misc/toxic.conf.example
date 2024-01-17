@@ -130,7 +130,7 @@ tox = {
   // chatlogs_path="/home/USERNAME/toxic_chatlogs/";
 };
 
-// Friend config settings. Public keys are used as friend identifiers
+// Friend-specific config settings. Public keys are used as friend identifiers
 // and must begin with the prefix "pk_".
 friends = {
   pk_PUBLIC_KEY_1 = {
@@ -143,6 +143,20 @@ friends = {
     tab_name_colour="white";
   };
 };
+
+// groupchat-specific config settings. Public keys (chat ID's) are used as
+// group identifiers and must begin with the prefix "pk_".
+groupchats = {
+  pk_PUBLIC_KEY_1 = {
+    // The colour of the group's window tab name.
+    // Valid colours are: white, red, green, cyan, purple, yellow, black.
+    tab_name_colour="white";
+  };
+
+  pk_PUBLIC_KEY_2 = {
+    tab_name_colour="white";
+  };
+}
 
 // To disable a sound set the path to "silent"
 sounds = {

@@ -340,6 +340,11 @@ int init_groupchat_win(Tox *tox, uint32_t groupnumber, const char *groupname, si
             groupchats[i].num_peers = 0;
             groupchats[i].time_connected = get_unix_time();
 
+            if (!tox_group_get_chat_id(tox, groupnumber, (uint8_t *) groupchats[i].chat_id, NULL)) {
+                close_groupchat(self, tox, groupnumber);
+                return -1;
+            }
+
             if (i == max_groupchat_index) {
                 ++max_groupchat_index;
             }
@@ -1813,7 +1818,6 @@ static bool groupchat_onKey(ToxWindow *self, Tox *tox, wint_t key, bool ltr)
 
 static void groupchat_onDraw(ToxWindow *self, Tox *tox)
 {
-
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
@@ -1994,6 +1998,79 @@ static void groupchat_onInit(ToxWindow *self, Tox *tox)
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+}
+
+/*
+ * Return the groupnumber associated with `public_key`.
+ * Return -1 if group does not exist.
+ *
+ * `public_key` must be at least TOX_PUBLIC_KEY_SIZE bytes in length.
+ */
+static int get_groupnumber_by_public_key(const char *public_key)
+{
+    for (size_t i = 0; i < max_groupchat_index; ++i) {
+        const GroupChat *chat = &groupchats[i];
+
+        if (!chat->active) {
+            continue;
+        }
+
+        if (memcmp(public_key, chat->chat_id, TOX_PUBLIC_KEY_SIZE) == 0) {
+            return chat->groupnumber;
+        }
+    }
+
+    return -1;
+}
+
+/*
+ * Sets the tab name colour of the ToxWindow associated with `public_key` to `colour`.
+ *
+ * Return false if group does not exist.
+ */
+static bool groupchat_window_set_tab_name_colour(const char *public_key, int colour)
+{
+    const int groupnumber = get_groupnumber_by_public_key(public_key);
+
+    if (groupnumber < 0) {
+        return false;
+    }
+
+    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *win = get_window_ptr(i);
+
+        if (win == NULL) {
+            continue;
+        }
+
+        if (win->type != WINDOW_TYPE_GROUPCHAT) {
+            continue;
+        }
+
+        if (win->num == groupnumber) {
+            win->colour = colour;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool groupchat_config_set_tab_name_colour(const char *public_key, const char *colour)
+{
+    const int colour_val = colour_string_to_int(colour);
+
+    if (colour_val < 0) {
+        return false;
+    }
+
+    char pk_bin[TOX_PUBLIC_KEY_SIZE];
+
+    if (tox_pk_string_to_bytes(public_key, strlen(public_key), pk_bin, sizeof(pk_bin)) != 0) {
+        return false;
+    }
+
+    return groupchat_window_set_tab_name_colour(pk_bin, colour_val);
 }
 
 static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *groupname, int length)

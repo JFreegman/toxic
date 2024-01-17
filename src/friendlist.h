@@ -159,7 +159,8 @@ bool friend_get_auto_accept_files(uint32_t friendnumber);
  */
 bool friend_config_set_tab_name_colour(const char *public_key, const char *colour);
 
-/* Returns a friend's tab name colour.
+/*
+ * Returns a friend's tab name colour.
  * Returns -1 on error.
  */
 int friend_config_get_tab_name_colour(uint32_t friendnumber);

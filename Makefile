@@ -5,7 +5,7 @@ CFG_DIR = $(BASE_DIR)/cfg
 
 LIBS = toxcore ncursesw libconfig libcurl
 
-CFLAGS ?= -std=c99 -pthread -Wall -Wpedantic -Wunused -fstack-protector-all -Wvla -Wno-missing-braces
+CFLAGS ?= -std=c11 -pthread -Wall -Wpedantic -Wunused -fstack-protector-all -Wvla -Wno-missing-braces
 CFLAGS += '-DTOXICVER="$(VERSION)"' -DHAVE_WIDECHAR -D_XOPEN_SOURCE_EXTENDED -D_FILE_OFFSET_BITS=64
 CFLAGS += '-DPACKAGE_DATADIR="$(abspath $(DATADIR))"'
 CFLAGS += ${USER_CFLAGS}

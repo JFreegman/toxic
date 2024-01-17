@@ -141,7 +141,35 @@ enum settings_values {
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
 
+/*
+ * Loads general toxic settings from the toxic config file pointed to by `patharg'.
+ *
+ * Return 0 on success.
+ * Return -1 if we fail to open the file path.
+ * Return -2 if libconfig fails to read the config file.
+ */
 int settings_load_main(struct user_settings *s, const char *patharg);
+
+/*
+ * Loads friend config settings from the toxic config file pointed to by `patharg`.
+ *
+ * Return 0 on success (or if no config entry for friends exists).
+ * Return -1 if we fail to open the file path.
+ * Return -2 if libconfig fails to read the config file.
+ *
+ * This function will have no effect on friends that are added in the future.
+ */
 int settings_load_friends(const char *patharg);
+
+/*
+ * Loads groupchat config settings from the toxic config file pointed to by `patharg`.
+ *
+ * Return 0 on success (or if no config entry for groupchats exists).
+ * Return -1 if we fail to open the file path.
+ * Return -2 if libconfig fails to read the config file.
+ *
+ * This function will have no effect on groupchat instances that are created in the future.
+ */
+int settings_load_groups(const char *patharg);
 
 #endif /* SETTINGS_H */

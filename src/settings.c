@@ -27,6 +27,7 @@
 
 #include "configdir.h"
 #include "friendlist.h"
+#include "groupchats.h"
 #include "misc_tools.h"
 #include "notify.h"
 #include "toxic.h"
@@ -282,6 +283,14 @@ static const struct friend_strings {
     "tab_name_colour",
 };
 
+static const struct groupchat_strings {
+    const char *self;
+    const char *tab_name_colour;
+} groupchat_strings = {
+    "groupchats",
+    "tab_name_colour",
+};
+
 static int key_parse(const char **bind)
 {
     int len = strlen(*bind);
@@ -340,6 +349,89 @@ static bool get_settings_path(char *path, unsigned int path_size, const char *pa
 
 #define TOXIC_CONFIG_PUBLIC_KEY_PREFIX "pk_"
 
+/* Extracts a public key from `keys`.
+ *
+ * Returns the public key as a string on success.
+ * Returns NULL on error.
+ */
+static const char *extract_setting_public_key(const config_setting_t *keys)
+{
+    if (keys == NULL) {
+        return NULL;
+    }
+
+    const char *public_key = config_setting_name(keys);
+
+    if (public_key == NULL) {
+        fprintf(stderr, "config error: failed to extract public key\n");
+        return NULL;
+    }
+
+    const uint16_t prefix_len = (uint16_t) strlen(TOXIC_CONFIG_PUBLIC_KEY_PREFIX);
+
+    if (strlen(public_key) != TOX_PUBLIC_KEY_SIZE * 2 + prefix_len) {
+        fprintf(stderr, "config error: invalid public key: %s\n", public_key);
+        return NULL;
+    }
+
+    if (memcmp(public_key, TOXIC_CONFIG_PUBLIC_KEY_PREFIX, prefix_len) != 0) {
+        fprintf(stderr, "config error: invalid public key prefix\n");
+        return NULL;
+    }
+
+    return &public_key[prefix_len];
+}
+
+int settings_load_groups(const char *patharg)
+{
+    config_t cfg[1];
+    const char *str = NULL;
+
+    config_init(cfg);
+
+    char path[MAX_STR_SIZE] = {0};
+
+    if (!get_settings_path(path, sizeof(path), patharg)) {
+        config_destroy(cfg);
+        return -1;
+    }
+
+    if (!config_read_file(cfg, path)) {
+        fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
+                config_error_line(cfg), config_error_text(cfg));
+        config_destroy(cfg);
+        return -2;
+    }
+
+    const config_setting_t *setting = config_lookup(cfg, groupchat_strings.self);
+
+    if (setting == NULL) {
+        config_destroy(cfg);
+        return 0;
+    }
+
+    const int num_groups = config_setting_length(setting);
+
+    for (int i = 0; i < num_groups; ++i) {
+        const config_setting_t *keys = config_setting_get_elem(setting, i);
+
+        const char *public_key = extract_setting_public_key(keys);
+
+        if (public_key == NULL) {
+            continue;
+        }
+
+        if (config_setting_lookup_string(keys, groupchat_strings.tab_name_colour, &str)) {
+            if (!groupchat_config_set_tab_name_colour(public_key, str)) {
+                fprintf(stderr, "config error: failed to set groupchat tab name colour for %s: (colour: %s)\n", public_key, str);
+            }
+        }
+    }
+
+    config_destroy(cfg);
+
+    return 0;
+}
 int settings_load_friends(const char *patharg)
 {
     config_t cfg[1];
@@ -365,7 +457,7 @@ int settings_load_friends(const char *patharg)
 
     if (setting == NULL) {
         config_destroy(cfg);
-        return -3 ;
+        return 0;
     }
 
     const int num_friends = config_setting_length(setting);
@@ -373,36 +465,21 @@ int settings_load_friends(const char *patharg)
     for (int i = 0; i < num_friends; ++i) {
         const config_setting_t *keys = config_setting_get_elem(setting, i);
 
-        if (keys == NULL) {
-            continue;
-        }
-
-        const char *public_key = config_setting_name(keys);
+        const char *public_key = extract_setting_public_key(keys);
 
         if (public_key == NULL) {
             continue;
         }
 
-        const uint16_t prefix_len = (uint16_t) strlen(TOXIC_CONFIG_PUBLIC_KEY_PREFIX);
-
-        if (strlen(public_key) != TOX_PUBLIC_KEY_SIZE * 2 + prefix_len) {
-            fprintf(stderr, "config error: invalid public key: %s\n", public_key);
-            continue;
-        }
-
-        if (memcmp(public_key, TOXIC_CONFIG_PUBLIC_KEY_PREFIX, prefix_len) != 0) {
-            fprintf(stderr, "config error: invalid public key prefix\n");
-            continue;
-        }
-
         if (config_setting_lookup_string(keys, friend_strings.tab_name_colour, &str)) {
-            if (!friend_config_set_tab_name_colour(&public_key[prefix_len], str)) {
-                fprintf(stderr, "config error: failed to set tab name colour for %s: (colour: %s)\n", public_key, str);
+            if (!friend_config_set_tab_name_colour(public_key, str)) {
+                fprintf(stderr, "config error: failed to set friend tab name colour for %s: (colour: %s)\n", public_key, str);
             }
         }
     }
 
     config_destroy(cfg);
+
     return 0;
 }
 
@@ -434,7 +511,7 @@ int settings_load_main(struct user_settings *s, const char *patharg)
         fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
                 config_error_line(cfg), config_error_text(cfg));
         config_destroy(cfg);
-        return -1;
+        return -2;
     }
 
     /* ui */

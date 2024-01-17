@@ -23,6 +23,8 @@
 #ifndef GROUPCHATS_H
 #define GROUPCHATS_H
 
+#include <assert.h>
+
 #include "toxic.h"
 #include "windows.h"
 
@@ -31,6 +33,8 @@
 #endif
 
 #define MAX_GROUPCHAT_NUM (MAX_WINDOWS_NUM - 2)
+
+static_assert(TOX_GROUP_CHAT_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_GROUP_CHAT_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
 
 typedef enum Group_Join_Type {
     Group_Join_Type_Create,
@@ -52,6 +56,7 @@ typedef struct GroupPeer {
 } GroupPeer;
 
 typedef struct {
+    char       chat_id[TOX_GROUP_CHAT_ID_SIZE];
     GroupPeer  *peer_list;
     char       **name_list;   /* List of peer names, needed for tab completion */
     uint32_t   num_peers;     /* Number of peers in the chat/name_list array */
@@ -116,5 +121,14 @@ GroupChat *get_groupchat(uint32_t groupnumber);
  * Toggles the ignore status of the peer associated with `peer_id`.
  */
 void group_toggle_peer_ignore(uint32_t groupnumber, int peer_id, bool ignore);
+
+/*
+ * Sets the tab name colour config option for the groupchat associated with `public_key` to `colour`.
+ *
+ * `public_key` should be a string representing the group's public chat ID.
+ *
+ * Return true on success.
+ */
+bool groupchat_config_set_tab_name_colour(const char *public_key, const char *colour);
 
 #endif /* #define GROUPCHATS_H */

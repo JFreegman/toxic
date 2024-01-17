@@ -1459,6 +1459,10 @@ static FriendSettings *get_friend_settings_by_key(const char *public_key)
     for (size_t i = 0; i < Friends.max_idx; ++i) {
         ToxicFriend *friend = &Friends.list[i];
 
+        if (!friend->active) {
+            continue;
+        }
+
         if (memcmp(pk_bin, friend->pub_key, sizeof(friend->pub_key)) == 0) {
             return &friend->settings;
         }
