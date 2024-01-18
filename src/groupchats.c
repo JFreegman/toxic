@@ -79,7 +79,7 @@ static const char *group_cmd_list[] = {
     "/chatid",
     "/clear",
     "/close",
-    "/colour",
+    "/color",
     "/conference",
     "/connect",
     "/disconnect",

@@ -277,21 +277,21 @@ static const struct sound_strings {
 
 static const struct friend_strings {
     const char *self;
-    const char *tab_name_colour;
+    const char *tab_name_color;
     const char *autolog;
 } friend_strings = {
     "friends",
-    "tab_name_colour",
+    "tab_name_color",
     "autolog",
 };
 
 static const struct groupchat_strings {
     const char *self;
-    const char *tab_name_colour;
+    const char *tab_name_color;
     const char *autolog;
 } groupchat_strings = {
     "groupchats",
-    "tab_name_colour",
+    "tab_name_color",
     "autolog",
 };
 
@@ -425,9 +425,9 @@ int settings_load_groups(const char *patharg)
             continue;
         }
 
-        if (config_setting_lookup_string(keys, groupchat_strings.tab_name_colour, &str)) {
+        if (config_setting_lookup_string(keys, groupchat_strings.tab_name_color, &str)) {
             if (!groupchat_config_set_tab_name_colour(public_key, str)) {
-                fprintf(stderr, "config error: failed to set groupchat tab name colour for %s: (colour: %s)\n", public_key, str);
+                fprintf(stderr, "config error: failed to set groupchat tab name color for %s: (color: %s)\n", public_key, str);
             }
         }
 
@@ -484,9 +484,9 @@ int settings_load_friends(const char *patharg)
             continue;
         }
 
-        if (config_setting_lookup_string(keys, friend_strings.tab_name_colour, &str)) {
+        if (config_setting_lookup_string(keys, friend_strings.tab_name_color, &str)) {
             if (!friend_config_set_tab_name_colour(public_key, str)) {
-                fprintf(stderr, "config error: failed to set friend tab name colour for %s: (colour: %s)\n", public_key, str);
+                fprintf(stderr, "config error: failed to set friend tab name color for %s: (color: %s)\n", public_key, str);
             }
         }
 

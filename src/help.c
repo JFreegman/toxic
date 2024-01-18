@@ -177,7 +177,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /add <addr> <msg>          : Add contact with optional message\n");
     wprintw(win, "  /accept <id>               : Accept friend request\n");
     wprintw(win, "  /avatar <path>             : Set an avatar (leave path empty to unset)\n");
-    wprintw(win, "  /colour <c>                : Change the colour of the focused window's name\n");
+    wprintw(win, "  /color <color>             : Change the colour of the focused window's name\n");
     wprintw(win, "  /conference <type>         : Create a conference where type: text | audio\n");
     wprintw(win, "  /connect <ip> <port> <key> : Manually connect to a DHT node\n");
     wprintw(win, "  /decline <id>              : Decline friend request\n");

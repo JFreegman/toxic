@@ -20,7 +20,7 @@ ui = {
   // Output a bell when receiving a group/call invite (see manpage)
   bell_on_invite=true;
 
-  // true to use native terminal colours, false to use toxic default colour theme
+  // true to use native terminal colors, false to use toxic default color theme
   native_colors=false;
 
   // set background color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
@@ -134,9 +134,9 @@ tox = {
 // and must begin with the prefix "pk_". These take priority over global settings.
 friends = {
   pk_PUBLIC_KEY_1 = {
-    // The colour of the friend's window tab name.
-    // Valid colours are: white, red, green, cyan, purple, yellow, black.
-    tab_name_colour="white";
+    // The color of the friend's window tab name.
+    // Valid colors are: black, white, red, green, blue, cyan, yellow, magenta.
+    tab_name_color="white";
 
     // Enable autologging for this friend
     autolog=false;
@@ -147,14 +147,14 @@ friends = {
 // };
 };
 
-// groupchat-specific config settings. Public keys (chat ID's) are used as
+// Groupchat-specific config settings. Public keys (chat ID's) are used as
 // group identifiers and must begin with the prefix "pk_". These take priority
 // over global settings.
 groupchats = {
   pk_PUBLIC_KEY_1 = {
-    // The colour of the group's window tab name.
-    // Valid colours are: white, red, green, cyan, purple, yellow, black.
-    tab_name_colour="white";
+    // The color of the group's window tab name.
+    // Valid colors are: black, white, red, green, blue, cyan, yellow, magenta.
+    tab_name_color="white";
 
     // Enable autologging for this group
     autolog=false;
@@ -163,7 +163,7 @@ groupchats = {
 // pk_PUBLIC_KEY_2 = {
 //   ...
 // };
-}
+};
 
 // To disable a sound set the path to "silent"
 sounds = {

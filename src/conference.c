@@ -81,7 +81,7 @@ static const char *conference_cmd_list[] = {
     "/avatar",
     "/clear",
     "/close",
-    "/colour",
+    "/color",
     "/connect",
     "/decline",
     "/exit",

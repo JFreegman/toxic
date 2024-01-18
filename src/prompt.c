@@ -56,7 +56,7 @@ static const char *glob_cmd_list[] = {
     "/add",
     "/avatar",
     "/clear",
-    "/colour",
+    "/color",
     "/connect",
     "/decline",
     "/exit",

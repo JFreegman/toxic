@@ -45,7 +45,7 @@ static struct cmd_func global_commands[] = {
     { "/add",       cmd_add           },
     { "/avatar",    cmd_avatar        },
     { "/clear",     cmd_clear         },
-    { "/colour",    cmd_colour        },
+    { "/color",     cmd_color         },
     { "/connect",   cmd_connect       },
     { "/decline",   cmd_decline       },
     { "/exit",      cmd_quit          },

@@ -774,12 +774,16 @@ int colour_string_to_int(const char *colour)
         return CYAN_BAR_FG;
     }
 
-    if (strcasecmp(colour, "purple") == 0) {
-        return PURPLE_BAR_FG;
+    if (strcasecmp(colour, "magenta") == 0) {
+        return MAGENTA_BAR_FG;
     }
 
     if (strcasecmp(colour, "black") == 0) {
         return BLACK_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "blue") == 0) {
+        return BLUE_BAR_FG;
     }
 
     return -1;
