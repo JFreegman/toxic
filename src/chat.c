@@ -1601,6 +1601,7 @@ static void chat_onInit(ToxWindow *self, Tox *tox)
     const int tab_name_colour = friend_config_get_tab_name_colour(self->num);
     self->colour = tab_name_colour > 0 ? tab_name_colour : WHITE_BAR_FG;
 
+    Friends.list[self->num].logging_on = friend_config_get_autolog(self->num);
     chat_init_log(self, tox, nick);
 
     execute(ctx->history, self, tox, "/log", GLOBAL_COMMAND_MODE);  // Print log status to screen

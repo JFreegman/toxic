@@ -137,6 +137,9 @@ friends = {
     // The colour of the friend's window tab name.
     // Valid colours are: white, red, green, cyan, purple, yellow, black.
     tab_name_colour="white";
+
+    // Enable autologging for this friend
+    autolog=false;
   };
 
 // pk_PUBLIC_KEY_2 = {
@@ -152,6 +155,8 @@ groupchats = {
     // The colour of the group's window tab name.
     // Valid colours are: white, red, green, cyan, purple, yellow, black.
     tab_name_colour="white";
+
+    // Enable autologging for this group
     autolog=false;
   };
 

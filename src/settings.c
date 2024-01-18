@@ -278,9 +278,11 @@ static const struct sound_strings {
 static const struct friend_strings {
     const char *self;
     const char *tab_name_colour;
+    const char *autolog;
 } friend_strings = {
     "friends",
     "tab_name_colour",
+    "autolog",
 };
 
 static const struct groupchat_strings {
@@ -485,6 +487,14 @@ int settings_load_friends(const char *patharg)
         if (config_setting_lookup_string(keys, friend_strings.tab_name_colour, &str)) {
             if (!friend_config_set_tab_name_colour(public_key, str)) {
                 fprintf(stderr, "config error: failed to set friend tab name colour for %s: (colour: %s)\n", public_key, str);
+            }
+        }
+
+        int autolog_enabled;
+
+        if (config_setting_lookup_bool(keys, friend_strings.autolog, &autolog_enabled)) {
+            if (!friend_config_set_autolog(public_key, autolog_enabled != 0)) {
+                fprintf(stderr, "config error: failed to apply friend autolog setting for: %s\n", public_key);
             }
         }
     }

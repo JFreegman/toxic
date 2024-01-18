@@ -64,6 +64,22 @@ static struct PendingDel {
     WINDOW *popup;
 } PendingDelete;
 
+typedef enum DefaultFriendSettings {
+    DefaultFriendSettingsTabNameColour = WHITE_BAR_FG,
+} DefaultFriendSettings;
+
+static void set_default_friend_config_settings(ToxicFriend *friend)
+{
+    if (friend == NULL) {
+        return;
+    }
+
+    FriendSettings *settings = &friend->settings;
+
+    settings->tab_name_colour = DefaultFriendSettingsTabNameColour;
+    settings->autolog = (bool) user_settings->autolog == AUTOLOG_ON;
+}
+
 static void realloc_friends(int n)
 {
     if (n <= 0) {
@@ -482,8 +498,6 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, uint32_t num, cons
     Friends.list[num].statusmsg_len = strlen(Friends.list[num].statusmsg);
 }
 
-static void set_default_friend_config_settings(ToxicFriend *friend);
-
 void friendlist_onFriendAdded(ToxWindow *self, Tox *tox, uint32_t num, bool sort)
 {
     UNUSED_VAR(self);
@@ -506,7 +520,6 @@ void friendlist_onFriendAdded(ToxWindow *self, Tox *tox, uint32_t num, bool sort
         Friends.list[i].auto_accept_files = false;  // do not change
         Friends.list[i].connection_status = TOX_CONNECTION_NONE;
         Friends.list[i].status = TOX_USER_STATUS_NONE;
-        Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
         set_default_friend_config_settings(&Friends.list[i]);
 
         Tox_Err_Friend_Get_Public_Key pkerr;
@@ -1432,7 +1445,13 @@ void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept)
         return;
     }
 
-    Friends.list[friendnumber].auto_accept_files = auto_accept;
+    ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return;
+    }
+
+    friend->auto_accept_files = auto_accept;
 }
 
 bool friend_get_auto_accept_files(uint32_t friendnumber)
@@ -1441,7 +1460,13 @@ bool friend_get_auto_accept_files(uint32_t friendnumber)
         return false;
     }
 
-    return Friends.list[friendnumber].auto_accept_files;
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return false;
+    }
+
+    return friend->auto_accept_files;
 }
 
 /*
@@ -1493,24 +1518,46 @@ bool friend_config_set_tab_name_colour(const char *public_key, const char *colou
 int friend_config_get_tab_name_colour(uint32_t friendnumber)
 {
     if (friendnumber >= Friends.max_idx) {
-        fprintf(stderr, "failed to get friend tab name colour for friend %u\n", friendnumber);
+        fprintf(stderr, "failed to get friend tab name colour (invalid friendnumber %u)\n", friendnumber);
         return -1;
     }
 
     const ToxicFriend *friend = &Friends.list[friendnumber];
 
+    if (!friend->active) {
+        return -1;
+    }
+
     return friend->settings.tab_name_colour;
 }
 
-static void set_default_friend_config_settings(ToxicFriend *friend)
+bool friend_config_set_autolog(const char *public_key, bool autolog_enabled)
 {
-    if (friend == NULL) {
-        return;
+    FriendSettings *settings = get_friend_settings_by_key(public_key);
+
+    if (settings == NULL) {
+        return false;
     }
 
-    FriendSettings *settings = &friend->settings;
+    settings->autolog = autolog_enabled;
 
-    settings->tab_name_colour = DefaultFriendSettingsTabNameColour;
+    return true;
+}
+
+bool friend_config_get_autolog(uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        fprintf(stderr, "failed to get autolog setting (invalid friendnumber %u)\n", friendnumber);
+        return false;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return false;
+    }
+
+    return friend->settings.autolog;
 }
 
 ToxWindow *new_friendlist(void)

@@ -63,12 +63,9 @@ struct GameInvite {
 
 #endif // GAMES
 
-typedef enum DefaultFriendSettings {
-    DefaultFriendSettingsTabNameColour = WHITE_BAR_FG,
-} DefaultFriendSettings;
-
 typedef struct FriendSettings {
-    int tab_name_colour;
+    int   tab_name_colour;
+    bool  autolog;
 } FriendSettings;
 
 typedef struct {
@@ -164,5 +161,17 @@ bool friend_config_set_tab_name_colour(const char *public_key, const char *colou
  * Returns -1 on error.
  */
 int friend_config_get_tab_name_colour(uint32_t friendnumber);
+
+/*
+ * Sets the autolog config option for the friend associated with `public_key`.
+ *
+ * Return true on success.
+ */
+bool friend_config_set_autolog(const char *public_key, bool autolog_enabled);
+
+/*
+ * Returns the friend's config setting for autologging.
+ */
+bool friend_config_get_autolog(uint32_t friendnumber);
 
 #endif /* end of include guard: FRIENDLIST_H */
