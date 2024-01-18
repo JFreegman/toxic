@@ -439,6 +439,7 @@ static void init_term(void)
         init_pair(BAR_SOLID, bar_bg_color, bar_bg_color);
         init_pair(BAR_ACCENT, bar_accent_color, bar_bg_color);
         init_pair(BAR_NOTIFY, bar_notify_color, bar_bg_color);
+        init_pair(PEERLIST_LINE, bar_bg_color, bg_color);
         init_pair(STATUS_ONLINE, COLOR_GREEN, bar_bg_color);
         init_pair(STATUS_AWAY, COLOR_YELLOW, bar_bg_color);
         init_pair(STATUS_BUSY, COLOR_RED, bar_bg_color);

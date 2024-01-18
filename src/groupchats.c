@@ -1937,10 +1937,10 @@ static void groupchat_onDraw(ToxWindow *self, Tox *tox)
     wclear(ctx->sidebar);
 
     if (self->show_peerlist) {
-        wattron(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattron(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
         mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
-        wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
 
         wmove(ctx->sidebar, 0, 1);
         wattron(ctx->sidebar, A_BOLD);
@@ -1959,10 +1959,10 @@ static void groupchat_onDraw(ToxWindow *self, Tox *tox)
 
         wattroff(ctx->sidebar, A_BOLD);
 
-        wattron(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattron(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
         mvwaddch(ctx->sidebar, 1, 0, ACS_LTEE);
         mvwhline(ctx->sidebar, 1, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
-        wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
 
         const int maxlines = y2 - GROUP_SIDEBAR_OFFSET - CHATBOX_HEIGHT;
         uint32_t offset = 0;

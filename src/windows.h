@@ -72,6 +72,7 @@ typedef enum {
     STATUS_BUSY,
     STATUS_AWAY,
     BAR_NOTIFY,
+    PEERLIST_LINE,
     BAR_SOLID,
     BLACK_BAR_FG,
     WHITE_BAR_FG,

@@ -1088,10 +1088,10 @@ static void conference_onDraw(ToxWindow *self, Tox *tox)
     wclear(ctx->sidebar);
 
     if (self->show_peerlist) {
-        wattron(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattron(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
         mvwvline(ctx->sidebar, 0, 0, ACS_VLINE, y2 - CHATBOX_HEIGHT);
         mvwaddch(ctx->sidebar, y2 - CHATBOX_HEIGHT, 0, ACS_BTEE);
-        wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
 
         pthread_mutex_lock(&Winthread.lock);
         const uint32_t num_peers = chat->num_peers;
@@ -1151,10 +1151,10 @@ static void conference_onDraw(ToxWindow *self, Tox *tox)
         wattroff(ctx->sidebar, A_BOLD);
         ++line;
 
-        wattron(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattron(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
         mvwaddch(ctx->sidebar, line, 0, ACS_LTEE);
         mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
-        wattroff(ctx->sidebar, COLOR_PAIR(BLUE));
+        wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
         ++line;
 
         for (uint32_t i = 0;
