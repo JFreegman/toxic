@@ -49,9 +49,16 @@ typedef enum CustomPacket {
     CUSTOM_PACKET_GAME_DATA   = 161,
 } CustomPacket;
 
+/* Our own custom colours */
+typedef enum CUSTOM_COLOUR {
+    CUSTOM_COLOUR_GRAY    = 255,  // values descend from top to prevent conflicts with colour pairs
+    CUSTOM_COLOUR_ORANGE  = 254,
+    CUSTOM_COLOUR_PINK    = 253,
+    CUSTOM_COLOUR_BROWN   = 252,
+} CUSTOM_COLOUR;
 
 /* ncurses colour pairs as FOREGROUND_BACKGROUND. No background defaults to black. */
-typedef enum {
+typedef enum COLOUR_PAIR {
     WHITE,
     GREEN,
     CYAN,
@@ -82,9 +89,13 @@ typedef enum {
     CYAN_BAR_FG,
     YELLOW_BAR_FG,
     MAGENTA_BAR_FG,
-} C_COLOURS;
+    GRAY_BAR_FG,
+    ORANGE_BAR_FG,
+    PINK_BAR_FG,
+    BROWN_BAR_FG,
+} COLOUR_PAIR;
 
-/* tab alert types: lower types take priority (this relies on the order of C_COLOURS) */
+/* tab alert types: lower types take priority (this relies on the order of COLOUR_PAIR) */
 typedef enum {
     WINDOW_ALERT_NONE = 0,
     WINDOW_ALERT_0 = STATUS_ONLINE,

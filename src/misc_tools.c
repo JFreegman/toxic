@@ -786,5 +786,21 @@ int colour_string_to_int(const char *colour)
         return BLUE_BAR_FG;
     }
 
+    if (strcasecmp(colour, "gray") == 0) {
+        return GRAY_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "orange") == 0) {
+        return ORANGE_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "pink") == 0) {
+        return PINK_BAR_FG;
+    }
+
+    if (strcasecmp(colour, "brown") == 0) {
+        return BROWN_BAR_FG;
+    }
+
     return -1;
 }

@@ -252,10 +252,11 @@ unsigned int rand_range_not_secure(unsigned int upper_bound);
 unsigned int rand_not_secure(void);
 
 /*
- * Returns an integer associated with an ncurses foreground colour, per the C_COLOURS enum
+ * Returns an integer associated with an ncurses foreground colour, per the COLOUR_PAIR enum
  * in windows.h.
  *
- * Valid colour strings are: black, white, red, green, blue, cyan, yellow, magenta.
+ * Valid colour strings are: black, white, gray, brown, red, green, blue, cyan, yellow, magenta,
+ *   orange, pink
  *
  * Returns -1 if colour is invalid.
  */

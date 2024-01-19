@@ -259,7 +259,8 @@ void cmd_color(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
 
     if (argc != 1) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
-                      "Change the name of the focused window with: /color [black|white|red|green|blue|cyan|yellow|magenta]");
+                      "Change the name of the focused window with: "
+                      "/color [black|white|gray|brown|red|green|blue|cyan|yellow|magenta|orange|pink]");
         return;
     }
 
@@ -269,7 +270,7 @@ void cmd_color(WINDOW *window, ToxWindow *self, Tox *tox, int argc, char (*argv)
 
     if (colour_val < 0) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
-                      "Invalid color. Valid colors are: black|white|red|green|blue|cyan|yellow|magenta");
+                      "Valid colors are: black|white|gray|brown|red|green|blue|cyan|yellow|magenta|orange|pink");
         return;
     }
 

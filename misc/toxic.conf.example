@@ -23,16 +23,20 @@ ui = {
   // true to use native terminal colors, false to use toxic default color theme
   native_colors=false;
 
-  // set background color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
+  // set background color of chat status bars
+  // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
   color_bar_bg="blue";
 
-  // set foreground (text) color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
+  // set foreground (text) color of chat status bars
+  // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
   color_bar_fg="white";
 
-  // set foreground accent color of chat status bars (black, white, red, green, blue, cyan, yellow, magenta)
+  // set foreground accent color of chat status bars
+  // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
   color_bar_accent="cyan";
 
-  // set foreground notify (and typing) color in chat status bar (black, white, red, green, blue, cyan, yellow, magenta)
+  // set foreground notify (and typing) color in chat status bar
+  // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
   color_bar_notify="yellow";
 
   // true to enable autologging, false to disable
@@ -135,7 +139,7 @@ tox = {
 friends = {
   pk_PUBLIC_KEY_1 = {
     // The color of the friend's window tab name.
-    // Valid colors are: black, white, red, green, blue, cyan, yellow, magenta.
+    // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
 
     // Enable autologging for this friend
@@ -153,7 +157,7 @@ friends = {
 groupchats = {
   pk_PUBLIC_KEY_1 = {
     // The color of the group's window tab name.
-    // Valid colors are: black, white, red, green, blue, cyan, yellow, magenta.
+    // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
 
     // Enable autologging for this group
