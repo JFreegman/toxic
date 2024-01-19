@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 2024-01-18
+.\"      Date: 2024-01-19
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2024\-01\-18" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2024\-01\-19" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -436,6 +436,9 @@ Toggle the peer list on and off\&.
 Toggle treating linebreaks as enter key press\&.
 .RE
 .RE
+.SH "BUGS"
+.sp
+Non\-default colours (gray, brown, orange, and pink) will not work on terminal emulators that don\(cqt support 256\-colors\&. Konsole, qterminal and possibly others are also known to have issues with them\&. If you\(cqre using screen or tmux, try to configure it to use the xterm\-256color TERM environment variable\&.
 .SH "FILES"
 .PP
 ~/\&.config/tox/toxic\&.conf

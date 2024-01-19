@@ -484,7 +484,7 @@ static void init_term(void)
     init_pair(YELLOW_BAR_FG, COLOR_YELLOW, bar_bg_color);
     init_pair(MAGENTA_BAR_FG, COLOR_MAGENTA, bar_bg_color);
 
-    if (COLORS == 256) {
+    if (COLORS >= 256) {
         init_color(CUSTOM_COLOUR_GRAY, 664, 664, 664);
         init_color(CUSTOM_COLOUR_ORANGE, 935, 525, 210);
         init_color(CUSTOM_COLOUR_PINK, 820, 555, 555);
