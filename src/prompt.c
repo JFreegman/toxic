@@ -312,8 +312,13 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     return input_ret;
 }
 
-static void prompt_onDraw(ToxWindow *self, Tox *tox)
+static void prompt_onDraw(ToxWindow *self, Toxic *toxic)
 {
+    if (toxic == NULL || self == NULL) {
+        fprintf(stderr, "prompt_onDraw null param\n");
+        return;
+    }
+
     int x2;
     int y2;
     getmaxyx(self->window, y2, x2);
@@ -430,8 +435,8 @@ static void prompt_onDraw(ToxWindow *self, Tox *tox)
 
         pthread_mutex_lock(&Winthread.lock);
 
-        size_t slen = tox_self_get_status_message_size(tox);
-        tox_self_get_status_message(tox, (uint8_t *) statusmsg);
+        const size_t slen = tox_self_get_status_message_size(toxic->tox);
+        tox_self_get_status_message(toxic->tox, (uint8_t *) statusmsg);
 
         statusmsg[slen] = '\0';
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -483,7 +488,7 @@ static void prompt_onDraw(ToxWindow *self, Tox *tox)
     wnoutrefresh(self->window);
 
     if (self->help->active) {
-        help_onDraw(self);
+        help_draw_main(self);
     }
 }
 
@@ -556,10 +561,14 @@ static bool key_is_similar(const char *key)
     return false;
 }
 
-static void prompt_onFriendRequest(ToxWindow *self, Tox *tox, const char *key, const char *data, size_t length)
+static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *key, const char *data, size_t length)
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
     UNUSED_VAR(length);
+
+    if (self == NULL) {
+        return;
+    }
 
     ChatContext *ctx = self->chatwin;
 
@@ -573,7 +582,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Tox *tox, const char *key, c
                       "in your list. This may be an impersonation attempt, or it may have occurred by chance.");
     }
 
-    int n = add_friend_request(key, data);
+    const int n = add_friend_request(key, data);
 
     if (n == -1) {
         const char *errmsg = "Friend request queue is full. Discarding request.";

@@ -726,9 +726,14 @@ static void game_update_state(GameData *game)
     }
 }
 
-void game_onDraw(ToxWindow *self, Tox *tox)
+void game_onDraw(ToxWindow *self, Toxic *toxic)
 {
-    UNUSED_VAR(tox);   // Note: This function is not thread safe if we ever need to use `m`
+    UNUSED_VAR(toxic);   // Note: This function is not thread safe if we ever need to use `toxic`
+
+    if (self == NULL) {
+        fprintf(stderr, "game_onDraw null param\n");
+        return;
+    }
 
     GameData *game = self->game;
 
@@ -844,9 +849,9 @@ void game_onInit(ToxWindow *self, Toxic *toxic)
  * Byte 2-5: Game ID
  * Byte 6-*  Game data
  */
-void game_onPacket(ToxWindow *self, Tox *tox, uint32_t friendnumber, const uint8_t *data, size_t length)
+void game_onPacket(ToxWindow *self, Toxic *toxic, uint32_t friendnumber, const uint8_t *data, size_t length)
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     GameData *game = self->game;
 

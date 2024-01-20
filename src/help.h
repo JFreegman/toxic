@@ -39,7 +39,7 @@ typedef enum {
 #endif
 } HELP_TYPES;
 
-void help_onDraw(ToxWindow *self);
+void help_draw_main(ToxWindow *self);
 void help_init_menu(ToxWindow *self);
 void help_onKey(ToxWindow *self, wint_t key);
 

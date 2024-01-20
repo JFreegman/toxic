@@ -284,9 +284,13 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
     }
 }
 
-static void chat_onTypingChange(ToxWindow *self, Tox *tox, uint32_t num, bool is_typing)
+static void chat_onTypingChange(ToxWindow *self, Toxic *toxic, uint32_t num, bool is_typing)
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (self->num != num) {
         return;
@@ -295,9 +299,13 @@ static void chat_onTypingChange(ToxWindow *self, Tox *tox, uint32_t num, bool is
     Friends.list[num].is_typing = is_typing;
 }
 
-static void chat_onNickChange(ToxWindow *self, Tox *tox, uint32_t num, const char *nick, size_t length)
+static void chat_onNickChange(ToxWindow *self, Toxic *toxic, uint32_t num, const char *nick, size_t length)
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (self->num != num) {
         return;
@@ -312,9 +320,13 @@ static void chat_onNickChange(ToxWindow *self, Tox *tox, uint32_t num, const cha
     set_window_title(self, statusbar->nick, length);
 }
 
-static void chat_onStatusChange(ToxWindow *self, Tox *tox, uint32_t num, Tox_User_Status status)
+static void chat_onStatusChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_User_Status status)
 {
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
+
+    if (self == NULL) {
+        return;
+    }
 
     if (self->num != num) {
         return;
@@ -328,6 +340,10 @@ static void chat_onStatusMessageChange(ToxWindow *self, uint32_t num, const char
 {
     UNUSED_VAR(length);
 
+    if (self == NULL) {
+        return;
+    }
+
     if (self->num != num) {
         return;
     }
@@ -338,11 +354,19 @@ static void chat_onStatusMessageChange(ToxWindow *self, uint32_t num, const char
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 }
 
-static void chat_onReadReceipt(ToxWindow *self, Tox *tox, uint32_t num, uint32_t receipt)
+static void chat_onReadReceipt(ToxWindow *self, Toxic *toxic, uint32_t num, uint32_t receipt)
 {
     UNUSED_VAR(num);
 
-    cqueue_remove(self, tox, receipt);
+    if (self == NULL) {
+        return;
+    }
+
+    if (toxic == NULL) {
+        return;
+    }
+
+    cqueue_remove(self, toxic->tox, receipt);
 }
 
 /* Stops active file transfers for this friend. Called when a friend goes offline */
@@ -388,17 +412,23 @@ static void chat_resume_file_senders(ToxWindow *self, Tox *tox, uint32_t friendn
     }
 }
 
-static void chat_onFileChunkRequest(ToxWindow *self, Tox *tox, uint32_t friendnum, uint32_t filenumber,
+static void chat_onFileChunkRequest(ToxWindow *self, Toxic *toxic, uint32_t friendnum, uint32_t filenumber,
                                     uint64_t position,
                                     size_t length)
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (friendnum != self->num) {
         return;
     }
 
     struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
 
-    if (!ft) {
+    if (ft == NULL) {
         return;
     }
 
@@ -461,10 +491,17 @@ static void chat_onFileChunkRequest(ToxWindow *self, Tox *tox, uint32_t friendnu
     ft->bps += send_length;
 }
 
-static void chat_onFileRecvChunk(ToxWindow *self, Tox *tox, uint32_t friendnum, uint32_t filenumber, uint64_t position,
+static void chat_onFileRecvChunk(ToxWindow *self, Toxic *toxic, uint32_t friendnum, uint32_t filenumber,
+                                 uint64_t position,
                                  const char *data, size_t length)
 {
     UNUSED_VAR(position);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (friendnum != self->num) {
         return;
@@ -472,7 +509,7 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *tox, uint32_t friendnum, 
 
     struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
 
-    if (!ft) {
+    if (ft == NULL) {
         return;
     }
 
@@ -505,9 +542,13 @@ static void chat_onFileRecvChunk(ToxWindow *self, Tox *tox, uint32_t friendnum, 
     ft->position += length;
 }
 
-static void chat_onFileControl(ToxWindow *self, Tox *tox, uint32_t friendnum, uint32_t filenumber,
+static void chat_onFileControl(ToxWindow *self, Toxic *toxic, uint32_t friendnum, uint32_t filenumber,
                                Tox_File_Control control)
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
     if (friendnum != self->num) {
         return;
     }
@@ -540,7 +581,7 @@ static void chat_onFileControl(ToxWindow *self, Tox *tox, uint32_t friendnum, ui
         case TOX_FILE_CONTROL_CANCEL: {
             char msg[MAX_STR_SIZE];
             snprintf(msg, sizeof(msg), "File transfer for '%s' was aborted.", ft->file_name);
-            close_file_transfer(self, tox, ft, -1, msg, notif_error);
+            close_file_transfer(self, toxic->tox, ft, -1, msg, notif_error);
             break;
         }
     }
@@ -550,8 +591,14 @@ static void chat_onFileControl(ToxWindow *self, Tox *tox, uint32_t friendnum, ui
  *
  * Returns true if resume is successful.
  */
-static bool chat_resume_broken_ft(ToxWindow *self, Tox *tox, uint32_t friendnum, uint32_t filenumber)
+static bool chat_resume_broken_ft(ToxWindow *self, Toxic *toxic, uint32_t friendnum, uint32_t filenumber)
 {
+    if (toxic == NULL || self == NULL) {
+        return false;
+    }
+
+    Tox *tox = toxic->tox;
+
     char msg[MAX_STR_SIZE];
     uint8_t file_id[TOX_FILE_ID_LENGTH];
 
@@ -578,7 +625,7 @@ static bool chat_resume_broken_ft(ToxWindow *self, Tox *tox, uint32_t friendnum,
         }
     }
 
-    if (!resuming || !ft) {
+    if (!resuming || ft == NULL) {
         return false;
     }
 
@@ -633,24 +680,24 @@ static bool valid_file_name(const char *filename, size_t length)
 static void chat_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t friendnum, uint32_t filenumber, uint64_t file_size,
                             const char *filename, size_t name_length)
 {
-    if (self->num != friendnum) {
-        return;
-    }
-
     if (toxic == NULL || self == NULL) {
         return;
     }
 
     Tox *tox = toxic->tox;
 
+    if (self->num != friendnum) {
+        return;
+    }
+
     /* first check if we need to resume a broken transfer */
-    if (chat_resume_broken_ft(self, tox, friendnum, filenumber)) {
+    if (chat_resume_broken_ft(self, toxic, friendnum, filenumber)) {
         return;
     }
 
     struct FileTransfer *ft = new_file_transfer(self, friendnum, filenumber, FILE_TRANSFER_RECV, TOX_FILE_KIND_DATA);
 
-    if (!ft) {
+    if (ft == NULL) {
         tox_file_control(tox, friendnum, filenumber, TOX_FILE_CONTROL_CANCEL, NULL);
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
                       "File transfer request failed: Too many concurrent file transfers.");
@@ -1343,8 +1390,13 @@ bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     return input_ret;
 }
 
-static void chat_onDraw(ToxWindow *self, Tox *tox)
+static void chat_onDraw(ToxWindow *self, Toxic *toxic)
 {
+    if (toxic == NULL || self == NULL) {
+        fprintf(stderr, "chat_onDraw null param\n");
+        return;
+    }
+
     int x2;
     int y2;
     getmaxyx(self->window, y2, x2);
@@ -1459,8 +1511,8 @@ static void chat_onDraw(ToxWindow *self, Tox *tox)
 
         pthread_mutex_lock(&Winthread.lock);
 
-        tox_friend_get_status_message(tox, self->num, (uint8_t *) statusmsg, NULL);
-        size_t s_len = tox_friend_get_status_message_size(tox, self->num, NULL);
+        tox_friend_get_status_message(toxic->tox, self->num, (uint8_t *) statusmsg, NULL);
+        const size_t s_len = tox_friend_get_status_message_size(toxic->tox, self->num, NULL);
 
         filter_str(statusmsg, s_len);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -1546,7 +1598,7 @@ static void chat_onDraw(ToxWindow *self, Tox *tox)
 #endif
 
     if (self->help->active) {
-        help_onDraw(self);
+        help_draw_main(self);
     }
 
     pthread_mutex_lock(&Winthread.lock);

@@ -108,13 +108,13 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
  *
  * Return true on success or if audio is already enabled.
  */
-bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum);
+bool enable_conference_audio(ToxWindow *self, Toxic *toxic, uint32_t conferencenum);
 
 /* Disable audio in a conference.
  *
  * Return true on success or if audio is already disabled.
  */
-bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum);
+bool disable_conference_audio(ToxWindow *self, Toxic *toxic, uint32_t conferencenum);
 
 bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
 bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled);

@@ -452,7 +452,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_
     sort_friendlist_index();
 }
 
-static void friendlist_onNickChange(ToxWindow *self, Tox *tox, uint32_t num, const char *nick, size_t length)
+static void friendlist_onNickChange(ToxWindow *self, Toxic *toxic, uint32_t num, const char *nick, size_t length)
 {
     UNUSED_VAR(self);
     UNUSED_VAR(length);
@@ -473,7 +473,7 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *tox, uint32_t num, con
     char newnamecpy[TOXIC_MAX_NAME_LENGTH + 1];
     char myid[TOX_ADDRESS_SIZE];
     strcpy(newnamecpy, Friends.list[num].name);
-    tox_self_get_address(tox, (uint8_t *) myid);
+    tox_self_get_address(toxic->tox, (uint8_t *) myid);
 
     if (strcmp(oldname, newnamecpy) != 0) {
         if (rename_logfile(oldname, newnamecpy, myid, Friends.list[num].pub_key, Friends.list[num].chatwin) != 0) {
@@ -484,10 +484,10 @@ static void friendlist_onNickChange(ToxWindow *self, Tox *tox, uint32_t num, con
     sort_friendlist_index();
 }
 
-static void friendlist_onStatusChange(ToxWindow *self, Tox *tox, uint32_t num, Tox_User_Status status)
+static void friendlist_onStatusChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_User_Status status)
 {
     UNUSED_VAR(self);
-    UNUSED_VAR(tox);
+    UNUSED_VAR(toxic);
 
     if (num >= Friends.max_idx) {
         return;
@@ -508,9 +508,16 @@ static void friendlist_onStatusMessageChange(ToxWindow *self, uint32_t num, cons
     Friends.list[num].statusmsg_len = strlen(Friends.list[num].statusmsg);
 }
 
-void friendlist_onFriendAdded(ToxWindow *self, Tox *tox, uint32_t num, bool sort)
+void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool sort)
 {
     UNUSED_VAR(self);
+
+    if (toxic == NULL) {
+        fprintf(stderr, "friendlist_onFriendAdded null param\n");
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     realloc_friends(Friends.max_idx + 1);
     clear_friendlist_index(Friends.max_idx);
@@ -1154,12 +1161,17 @@ static void blocklist_onDraw(ToxWindow *self, Tox *tox, int y2, int x2)
     draw_del_popup();
 
     if (self->help->active) {
-        help_onDraw(self);
+        help_draw_main(self);
     }
 }
 
-static void friendlist_onDraw(ToxWindow *self, Tox *tox)
+static void friendlist_onDraw(ToxWindow *self, Toxic *toxic)
 {
+    if (toxic == NULL || self == NULL) {
+        fprintf(stderr, "friendlist_onDraw null param\n");
+        return;
+    }
+
     curs_set(0);
     werase(self->window);
     int x2, y2;
@@ -1178,7 +1190,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *tox)
     draw_window_bar(self);
 
     if (blocklist_view == 1) {
-        blocklist_onDraw(self, tox, y2, x2);
+        blocklist_onDraw(self, toxic->tox, y2, x2);
         return;
     }
 
@@ -1276,8 +1288,8 @@ static void friendlist_onDraw(ToxWindow *self, Tox *tox)
                     char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
 
                     pthread_mutex_lock(&Winthread.lock);
-                    tox_friend_get_status_message(tox, Friends.list[f].num, (uint8_t *) statusmsg, NULL);
-                    size_t s_len = tox_friend_get_status_message_size(tox, Friends.list[f].num, NULL);
+                    tox_friend_get_status_message(toxic->tox, Friends.list[f].num, (uint8_t *) statusmsg, NULL);
+                    const size_t s_len = tox_friend_get_status_message_size(toxic->tox, Friends.list[f].num, NULL);
                     pthread_mutex_unlock(&Winthread.lock);
 
                     statusmsg[s_len] = '\0';
@@ -1381,7 +1393,7 @@ static void friendlist_onDraw(ToxWindow *self, Tox *tox)
     draw_del_popup();
 
     if (self->help->active) {
-        help_onDraw(self);
+        help_draw_main(self);
     }
 }
 

@@ -505,7 +505,7 @@ void help_onKey(ToxWindow *self, wint_t key)
     }
 }
 
-void help_onDraw(ToxWindow *self)
+void help_draw_main(ToxWindow *self)
 {
     switch (self->help->type) {
         case HELP_MENU:

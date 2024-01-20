@@ -296,9 +296,9 @@ void free_conference(ToxWindow *self, uint32_t conferencenum)
     kill_conference_window(self);
 }
 
-static void delete_conference(ToxWindow *self, Tox *tox, uint32_t conferencenum)
+static void delete_conference(ToxWindow *self, Toxic *toxic, uint32_t conferencenum)
 {
-    tox_conference_delete(tox, conferencenum, NULL);
+    tox_conference_delete(toxic->tox, conferencenum, NULL);
     free_conference(self, conferencenum);
 }
 
@@ -363,10 +363,16 @@ void redraw_conference_win(ToxWindow *self)
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 }
 
-static void conference_onConferenceMessage(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t peernum,
+static void conference_onConferenceMessage(ToxWindow *self, Toxic *toxic, uint32_t conferencenum, uint32_t peernum,
         Tox_Message_Type type, const char *msg, size_t len)
 {
     UNUSED_VAR(len);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
 
     if (self->num != conferencenum) {
         return;
@@ -404,10 +410,16 @@ static void conference_onConferenceMessage(ToxWindow *self, Tox *tox, uint32_t c
     write_to_log(msg, nick, ctx->log, false);
 }
 
-static void conference_onConferenceTitleChange(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t peernum,
+static void conference_onConferenceTitleChange(ToxWindow *self, Toxic *toxic, uint32_t conferencenum, uint32_t peernum,
         const char *title,
         size_t length)
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     ChatContext *ctx = self->chatwin;
 
     if (self->num != conferencenum) {
@@ -658,7 +670,7 @@ static bool find_peer_by_pubkey(const ConferencePeer *list, uint32_t num_peers, 
     return false;
 }
 
-static void update_peer_list(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t num_peers,
+static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencenum, uint32_t num_peers,
                              uint32_t old_num_peers)
 {
     ConferenceChat *chat = &conferences[conferencenum];
@@ -666,6 +678,8 @@ static void update_peer_list(ToxWindow *self, Tox *tox, uint32_t conferencenum, 
     if (!chat->active) {
         return;
     }
+
+    Tox *tox = toxic->tox;
 
     ChatContext *ctx = self->chatwin;
 
@@ -758,8 +772,14 @@ static void update_peer_list(ToxWindow *self, Tox *tox, uint32_t conferencenum, 
     free(old_peer_list);
 }
 
-static void conference_onConferenceNameListChange(ToxWindow *self, Tox *tox, uint32_t conferencenum)
+static void conference_onConferenceNameListChange(ToxWindow *self, Toxic *toxic, uint32_t conferencenum)
 {
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+
     if (self->num != conferencenum) {
         return;
     }
@@ -776,7 +796,7 @@ static void conference_onConferenceNameListChange(ToxWindow *self, Tox *tox, uin
 
     Tox_Err_Conference_Peer_Query err;
 
-    uint32_t num_peers = tox_conference_peer_count(tox, conferencenum, &err);
+    const uint32_t num_peers = tox_conference_peer_count(tox, conferencenum, &err);
 
     if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
         fprintf(stderr, "conference_onConferenceNameListChange() failed with error: %d\n", err);
@@ -787,13 +807,18 @@ static void conference_onConferenceNameListChange(ToxWindow *self, Tox *tox, uin
 
     chat->num_peers = num_peers;
     chat->max_idx = num_peers;
-    update_peer_list(self, tox, conferencenum, num_peers, old_num);
+    update_peer_list(self, toxic, conferencenum, num_peers, old_num);
 }
 
-static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *tox, uint32_t conferencenum, uint32_t peernum,
+static void conference_onConferencePeerNameChange(ToxWindow *self, Toxic *toxic, uint32_t conferencenum,
+        uint32_t peernum,
         const char *name, size_t length)
 {
     UNUSED_VAR(length);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
 
     if (self->num != conferencenum) {
         return;
@@ -819,7 +844,7 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Tox *tox, uin
         }
     }
 
-    conference_onConferenceNameListChange(self, tox, conferencenum);
+    conference_onConferenceNameListChange(self, toxic, conferencenum);
 }
 
 static void send_conference_action(ToxWindow *self, ChatContext *ctx, Tox *tox, char *action)
@@ -993,7 +1018,7 @@ static bool conference_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
 
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
-                    delete_conference(self, tox, self->num);
+                    delete_conference(self, toxic, self->num);
                     return true;
                 } else if (strncmp(line, "/me ", strlen("/me ")) == 0) {
                     send_conference_action(self, ctx, tox, line + strlen("/me "));
@@ -1019,12 +1044,12 @@ static bool conference_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
     return input_ret;
 }
 
-static void draw_peer(ToxWindow *self, Tox *tox, ChatContext *ctx, uint32_t i)
+static void draw_peer(ToxWindow *self, Toxic *toxic, ChatContext *ctx, uint32_t i)
 {
     pthread_mutex_lock(&Winthread.lock);
     const uint32_t peer_idx = i + conferences[self->num].side_pos;
     const uint32_t peernum = conferences[self->num].name_list[peer_idx].peernum;
-    const bool is_self = tox_conference_peer_number_is_ours(tox, self->num, peernum, NULL);
+    const bool is_self = tox_conference_peer_number_is_ours(toxic->tox, self->num, peernum, NULL);
     const bool audio = conferences[self->num].audio_enabled;
 
     if (audio) {
@@ -1051,7 +1076,7 @@ static void draw_peer(ToxWindow *self, Tox *tox, ChatContext *ctx, uint32_t i)
 
     /* truncate nick to fit in side panel without modifying list */
     char tmpnick[TOX_MAX_NAME_LENGTH];
-    int maxlen = SIDEBAR_WIDTH - 2 - 2 * audio;
+    const int maxlen = SIDEBAR_WIDTH - 2 - 2 * audio;
 
     pthread_mutex_lock(&Winthread.lock);
     memcpy(tmpnick, &conferences[self->num].name_list[peer_idx].name, maxlen);
@@ -1070,9 +1095,12 @@ static void draw_peer(ToxWindow *self, Tox *tox, ChatContext *ctx, uint32_t i)
     }
 }
 
-static void conference_onDraw(ToxWindow *self, Tox *tox)
+static void conference_onDraw(ToxWindow *self, Toxic *toxic)
 {
-    UNUSED_VAR(tox);
+    if (toxic == NULL || self == NULL) {
+        fprintf(stderr, "conference_onDraw null param\n");
+        return;
+    }
 
     int x2, y2;
     getmaxyx(self->window, y2, x2);
@@ -1177,7 +1205,7 @@ static void conference_onDraw(ToxWindow *self, Tox *tox)
                 i < num_peers && i < y2 - header_lines - CHATBOX_HEIGHT;
                 ++i) {
             wmove(ctx->sidebar, i + header_lines, 1);
-            draw_peer(self, tox, ctx, i);
+            draw_peer(self, toxic, ctx, i);
         }
     }
 
@@ -1194,13 +1222,13 @@ static void conference_onDraw(ToxWindow *self, Tox *tox)
     wnoutrefresh(self->window);
 
     if (self->help->active) {
-        help_onDraw(self);
+        help_draw_main(self);
     }
 }
 
 static void conference_onInit(ToxWindow *self, Toxic *toxic)
 {
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
@@ -1316,7 +1344,7 @@ static void conference_read_device_callback(const int16_t *captured, uint32_t si
 
     chat->last_sent_audio = get_unix_time();
 
-    int channels = user_settings->conference_audio_channels;
+    const int channels = user_settings->conference_audio_channels;
 
     toxav_group_send_audio(audio_input_callback_data->tox,
                            audio_input_callback_data->conferencenum,
@@ -1335,12 +1363,12 @@ bool init_conference_audio_input(Tox *tox, uint32_t conferencenum)
     const AudioInputCallbackData audio_input_callback_data = { tox, conferencenum };
     chat->audio_input_callback_data = audio_input_callback_data;
 
-    int channels = user_settings->conference_audio_channels;
+    const int channels = user_settings->conference_audio_channels;
 
-    bool success = (open_input_device(&chat->audio_in_idx,
-                                      conference_read_device_callback, &chat->audio_input_callback_data,
-                                      CONFAV_SAMPLE_RATE, CONFAV_FRAME_DURATION, channels)
-                    == de_None);
+    const bool success = (open_input_device(&chat->audio_in_idx,
+                                            conference_read_device_callback, &chat->audio_input_callback_data,
+                                            CONFAV_SAMPLE_RATE, CONFAV_FRAME_DURATION, channels)
+                          == de_None);
 
     chat->audio_enabled = success;
 
@@ -1360,10 +1388,10 @@ bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled)
     return true;
 }
 
-bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
+bool enable_conference_audio(ToxWindow *self, Toxic *toxic, uint32_t conferencenum)
 {
-    if (!toxav_groupchat_av_enabled(tox, conferencenum)) {
-        if (toxav_groupchat_enable_av(tox, conferencenum, audio_conference_callback, NULL) != 0) {
+    if (!toxav_groupchat_av_enabled(toxic->tox, conferencenum)) {
+        if (toxav_groupchat_enable_av(toxic->tox, conferencenum, audio_conference_callback, NULL) != 0) {
             return false;
         }
     }
@@ -1374,7 +1402,7 @@ bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
         return true;
     }
 
-    const bool success = init_conference_audio_input(tox, conferencenum);
+    const bool success = init_conference_audio_input(toxic->tox, conferencenum);
 
     if (success) {
         self->is_call = true;
@@ -1383,7 +1411,7 @@ bool enable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
     return success;
 }
 
-bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
+bool disable_conference_audio(ToxWindow *self, Toxic *toxic, uint32_t conferencenum)
 {
     ConferenceChat *chat = &conferences[conferencenum];
 
@@ -1398,7 +1426,7 @@ bool disable_conference_audio(ToxWindow *self, Tox *tox, uint32_t conferencenum)
         return true;
     }
 
-    const bool success = toxav_groupchat_disable_av(tox, conferencenum) == 0;
+    const bool success = toxav_groupchat_disable_av(toxic->tox, conferencenum) == 0;
 
     if (success) {
         self->is_call = false;

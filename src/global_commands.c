@@ -1039,7 +1039,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
 
     tox_self_set_status(tox, status);
     prompt_update_status(prompt, status);
-    set_status_all_groups(tox, status);
+    set_status_all_groups(toxic, status);
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s.", status_str);
 

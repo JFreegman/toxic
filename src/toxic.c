@@ -176,7 +176,7 @@ void exit_toxic_success(Toxic *toxic)
     terminate_notify();
 
     kill_all_file_transfers(toxic->tox);
-    kill_all_windows(toxic->tox);
+    kill_all_windows(toxic);
 
 #ifdef AUDIO
 #ifdef VIDEO
@@ -542,12 +542,12 @@ static void print_init_messages(ToxWindow *toxwin)
     }
 }
 
-static void load_friendlist(Tox *tox)
+static void load_friendlist(Toxic *toxic)
 {
-    size_t numfriends = tox_self_get_friend_list_size(tox);
+    const size_t numfriends = tox_self_get_friend_list_size(toxic->tox);
 
     for (size_t i = 0; i < numfriends; ++i) {
-        friendlist_onFriendAdded(NULL, tox, i, false);
+        friendlist_onFriendAdded(NULL, toxic, i, false);
     }
 
     sort_friendlist_index();
@@ -1186,7 +1186,7 @@ static bool load_toxic(Toxic *toxic)
     }
 
     init_tox_callbacks(toxic->tox);
-    load_friendlist(toxic->tox);
+    load_friendlist(toxic);
 
     if (load_blocklist(toxic->client_data.block_path) == -1) {
         queue_init_message("Failed to load block list");

@@ -107,8 +107,6 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     bool enable;
 
     if (argc == 1 && !strcasecmp(argv[1], "on")) {
@@ -120,7 +118,7 @@ void cmd_enable_audio(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
         return;
     }
 
-    if (enable ? enable_conference_audio(self, tox, self->num) : disable_conference_audio(self, tox, self->num)) {
+    if (enable ? enable_conference_audio(self, toxic, self->num) : disable_conference_audio(self, toxic, self->num)) {
         print_err(self, enable ? "Enabled conference audio. Use the '/ptt' command to toggle Push-To-Talk."
                   : "Disabled conference audio");
     } else {

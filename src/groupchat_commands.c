@@ -113,7 +113,7 @@ void cmd_group_nick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     nick[len] = '\0';
 
-    set_nick_this_group(self, toxic->tox, nick, len);
+    set_nick_this_group(self, toxic, nick, len);
 
     store_data(toxic);
 }
@@ -199,7 +199,8 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
             get_group_self_nick_truncate(tox, self_nick, self->num);
 
             line_info_add(self, true, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been kicked by %s", nick, self_nick);
-            groupchat_onGroupPeerExit(self, tox, self->num, target_peer_id, TOX_GROUP_EXIT_TYPE_KICK, nick, strlen(nick), NULL, 0);
+            groupchat_onGroupPeerExit(self, toxic, self->num, target_peer_id, TOX_GROUP_EXIT_TYPE_KICK, nick, strlen(nick), NULL,
+                                      0);
             return;
         }
 
@@ -296,7 +297,7 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            groupchat_onGroupModeration(self, tox, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_MODERATOR);
+            groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_MODERATOR);
             return;
         }
 
@@ -367,7 +368,7 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            groupchat_onGroupModeration(self, tox, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_USER);
+            groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_USER);
             return;
         }
 
@@ -726,7 +727,7 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            groupchat_onGroupModeration(self, tox, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_OBSERVER);
+            groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_OBSERVER);
             return;
         }
 
@@ -797,7 +798,7 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
 
     switch (err) {
         case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
-            groupchat_onGroupModeration(self, tox, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_USER);
+            groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_USER);
             return;
         }
 
@@ -836,18 +837,16 @@ void cmd_rejoin(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     Tox_Err_Group_Reconnect err;
 
-    if (!tox_group_reconnect(tox, self->num, &err)) {
+    if (!tox_group_reconnect(toxic->tox, self->num, &err)) {
         line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to rejoin group (error %d).", err);
         return;
     }
 
     line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Reconnecting to group...");
 
-    groupchat_rejoin(self, tox);
+    groupchat_rejoin(self, toxic);
 }
 
 void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
