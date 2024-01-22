@@ -321,5 +321,5 @@ void execute(WINDOW *w, ToxWindow *self, Toxic *toxic, const char *input, int mo
 
 #endif
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");
+    line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid command.");
 }

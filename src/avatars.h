@@ -48,8 +48,8 @@ int avatar_set(Tox *tox, const char *path, size_t length);
  */
 void avatar_unset(Tox *tox);
 
-void on_avatar_chunk_request(Tox *tox, struct FileTransfer *ft, uint64_t position, size_t length);
-void on_avatar_file_control(Tox *tox, struct FileTransfer *ft, Tox_File_Control control);
-void on_avatar_friend_connection_status(Tox *tox, uint32_t friendnumber, Tox_Connection connection_status);
+void on_avatar_chunk_request(Toxic *toxic, struct FileTransfer *ft, uint64_t position, size_t length);
+void on_avatar_file_control(Toxic *toxic, struct FileTransfer *ft, Tox_File_Control control);
+void on_avatar_friend_connection_status(Toxic *toxic, uint32_t friendnumber, Tox_Connection connection_status);
 
 #endif /* AVATARS_H */

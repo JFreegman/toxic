@@ -57,6 +57,6 @@ void cqueue_try_send(ToxWindow *self, Tox *tox);
 void cqueue_check_unread(ToxWindow *self);
 
 /* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
-void cqueue_remove(ToxWindow *self, Tox *tox, uint32_t receipt);
+void cqueue_remove(ToxWindow *self, Toxic *toxic, uint32_t receipt);
 
 #endif /* MESSAGE_QUEUE_H */

@@ -33,6 +33,7 @@
 #define MAX_OPENAL_DEVICES 32
 #define MAX_DEVICES 32
 
+#include "settings.h"
 #include "windows.h"
 
 typedef enum DeviceType {
@@ -76,8 +77,9 @@ DeviceError set_al_device(DeviceType type, int32_t selection);
 
 /* Start device */
 DeviceError open_input_device(uint32_t *device_idx, DataHandleCallback cb, void *cb_data,
-                              uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
-DeviceError open_output_device(uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels);
+                              uint32_t sample_rate, uint32_t frame_duration, uint8_t channels, double VAD_threshold);
+DeviceError open_output_device(uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels,
+                               double VAD_threshold);
 
 /* Stop device */
 DeviceError close_device(DeviceType type, uint32_t device_idx);
@@ -89,7 +91,7 @@ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t length,
 /* return current input volume as float in range 0.0-100.0 */
 float get_input_volume(void);
 
-void print_al_devices(ToxWindow *self, DeviceType type);
+void print_al_devices(ToxWindow *self, const Client_Config *c_config, DeviceType type);
 
 DeviceError selection_valid(DeviceType type, int32_t selection);
 #endif /* AUDIO_DEVICE_H */

@@ -48,6 +48,7 @@ typedef struct ConferencePeer {
 typedef struct AudioInputCallbackData {
     Tox *tox;
     uint32_t conferencenum;
+    int audio_channels;
 } AudioInputCallbackData;
 
 #define PUBKEY_STRING_SIZE (2 * TOX_PUBLIC_KEY_SIZE + 1)
@@ -84,7 +85,7 @@ typedef struct {
 } ConferenceChat;
 
 /* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
-void free_conference(ToxWindow *self, uint32_t conferencenum);
+void free_conference(ToxWindow *self, const Client_Config *c_config, uint32_t conferencenum);
 
 int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
 
@@ -92,7 +93,7 @@ int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, cons
 void redraw_conference_win(ToxWindow *self);
 
 void conference_set_title(ToxWindow *self, uint32_t conferencesnum, const char *title, size_t length);
-void conference_rename_log_path(Tox *tox, uint32_t conferencenum, const char *new_title);
+void conference_rename_log_path(Toxic *toxic, uint32_t conferencenum, const char *new_title);
 int conference_enable_logging(ToxWindow *self, Tox *tox, uint32_t conferencenum, struct chatlog *log);
 
 /* Puts `(NameListEntry *)`s in `entries` for each matched peer, up to a maximum
@@ -116,7 +117,7 @@ bool enable_conference_audio(ToxWindow *self, Toxic *toxic, uint32_t conferencen
  */
 bool disable_conference_audio(ToxWindow *self, Toxic *toxic, uint32_t conferencenum);
 
-bool init_conference_audio_input(Tox *tox, uint32_t conferencenum);
+bool init_conference_audio_input(Toxic *toxic, uint32_t conferencenum);
 bool toggle_conference_push_to_talk(uint32_t conferencenum, bool enabled);
 void audio_conference_callback(void *tox, uint32_t conferencenum, uint32_t peernum,
                                const int16_t *pcm, unsigned int samples, uint8_t channels, uint32_t

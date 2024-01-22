@@ -98,7 +98,8 @@ void groupchat_rejoin(ToxWindow *self, Toxic *toxic);
  * Return -1 if the identifier does not correspond with a peer in the group.
  * Return -2 if the identifier is a nick and the nick is in use by multiple peers.
  */
-int group_get_peer_id_of_identifier(ToxWindow *self, const char *identifier, uint32_t *peer_id);
+int group_get_peer_id_of_identifier(ToxWindow *self, const Client_Config *c_config, const char *identifier,
+                                    uint32_t *peer_id);
 
 /* Gets the peer_id associated with `public_key`.
  *

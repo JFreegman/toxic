@@ -35,7 +35,6 @@
 #include "windows.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings;
 
 void clear_screen(void)
 {
@@ -96,24 +95,21 @@ struct tm *get_time(void)
     return timeinfo;
 }
 
-/* Puts the current time in buf in the format of specified by the config */
-void get_time_str(char *buf, size_t bufsize)
+void get_time_str(char *buf, size_t bufsize, const char *format_string)
 {
     if (buf == NULL || bufsize == 0) {
         return;
     }
 
-    *buf = 0;
-
-    if (user_settings->timestamps == TIMESTAMPS_OFF) {
+    if (strftime(buf, bufsize, format_string, get_time()) > 0) {
         return;
     }
 
-    const char *t = user_settings->timestamp_format;
-
-    if (strftime(buf, bufsize, t, get_time()) == 0) {
-        strftime(buf, bufsize, TIMESTAMP_DEFAULT, get_time());
+    if (strftime(buf, bufsize, TIMESTAMP_DEFAULT, get_time()) > 0) {
+        return;
     }
+
+    buf[0] = '\0';
 }
 
 /* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */

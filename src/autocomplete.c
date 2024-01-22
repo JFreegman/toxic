@@ -38,17 +38,17 @@
 #include "toxic.h"
 #include "windows.h"
 
-static void print_ac_matches(ToxWindow *self, Toxic *toxic, char **list, size_t n_matches)
+static void print_ac_matches(ToxWindow *self, Toxic *toxic, char **list, size_t n_matches, bool have_matches)
 {
-    if (toxic != NULL) {
+    if (have_matches) {
         execute(self->chatwin->history, self, toxic, "/clear", GLOBAL_COMMAND_MODE);
     }
 
     for (size_t i = 0; i < n_matches; ++i) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", list[i]);
+        line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", list[i]);
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
 /* puts match in match buffer. if more than one match, add first n chars that are identical.
@@ -96,7 +96,8 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, const
  *
  * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-static int complete_line_helper(ToxWindow *self, const char *const *list, const size_t n_items, bool dir_search)
+static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const *list, const size_t n_items,
+                                bool dir_search)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -177,7 +178,7 @@ static int complete_line_helper(ToxWindow *self, const char *const *list, const 
     }
 
     if (!dir_search && n_matches > 1) {
-        print_ac_matches(self, NULL, matches, n_matches);
+        print_ac_matches(self, toxic, matches, n_matches, false);
     }
 
     char match[MAX_STR_SIZE];
@@ -259,14 +260,14 @@ static int complete_line_helper(ToxWindow *self, const char *const *list, const 
     return diff;
 }
 
-int complete_line(ToxWindow *self, const char *const *list, size_t n_items)
+int complete_line(ToxWindow *self, Toxic *toxic, const char *const *list, size_t n_items)
 {
-    return complete_line_helper(self, list, n_items, false);
+    return complete_line_helper(self, toxic, list, n_items, false);
 }
 
-static int complete_path(ToxWindow *self, const char *const *list, const size_t n_items)
+static int complete_path(ToxWindow *self, Toxic *toxic, const char *const *list, const size_t n_items)
 {
-    return complete_line_helper(self, list, n_items, true);
+    return complete_line_helper(self, toxic, list, n_items, true);
 }
 
 /* Transforms a tab complete starting with the shorthand "~" into the full home directory. */
@@ -382,10 +383,10 @@ int dir_match(ToxWindow *self, Toxic *toxic, const wchar_t *line, const wchar_t 
 
     if (dircount > 1) {
         qsort(dirnames, dircount, sizeof(char *), qsort_ptr_char_array_helper);
-        print_ac_matches(self, toxic, dirnames, dircount);
+        print_ac_matches(self, toxic, dirnames, dircount, true);
     }
 
-    int ret = complete_path(self, (const char *const *) dirnames, dircount);
+    const int ret = complete_path(self, toxic, (const char *const *) dirnames, dircount);
 
     free_ptr_array((void **) dirnames);
 

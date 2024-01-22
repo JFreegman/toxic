@@ -121,7 +121,7 @@ static struct ui_strings {
     "color_bar_notify",
 };
 
-static void ui_defaults(struct user_settings *settings)
+static void ui_defaults(Client_Config *settings)
 {
     settings->timestamps = TIMESTAMPS_ON;
     snprintf(settings->timestamp_format, sizeof(settings->timestamp_format), "%s", TIMESTAMP_DEFAULT);
@@ -179,7 +179,7 @@ static const struct keys_strings {
 };
 
 /* defines from toxic.h */
-static void key_defaults(struct user_settings *settings)
+static void key_defaults(Client_Config *settings)
 {
     settings->key_next_tab = T_KEY_NEXT;
     settings->key_prev_tab = T_KEY_PREV;
@@ -208,7 +208,7 @@ static const struct tox_strings {
     "password_eval",
 };
 
-static void tox_defaults(struct user_settings *settings)
+static void tox_defaults(Client_Config *settings)
 {
     strcpy(settings->download_path, "");
     strcpy(settings->chatlogs_path, "");
@@ -236,7 +236,7 @@ static const struct audio_strings {
     "push_to_talk",
 };
 
-static void audio_defaults(struct user_settings *settings)
+static void audio_defaults(Client_Config *settings)
 {
     settings->audio_in_dev = 0;
     settings->audio_out_dev = 0;
@@ -504,7 +504,7 @@ int settings_load_friends(const char *patharg)
     return 0;
 }
 
-int settings_load_main(struct user_settings *s, const char *patharg)
+int settings_load_main(Client_Config *s, const char *patharg)
 {
     config_t cfg[1];
     config_setting_t *setting = NULL;

@@ -332,10 +332,12 @@ int file_send_queue_remove(uint32_t friendnumber, size_t index)
  * Set CTRL to -1 if we don't want to send a control signal.
  * Set message or self to NULL if we don't want to display a message.
  */
-void close_file_transfer(ToxWindow *self, Tox *tox, FileTransfer *ft, int CTRL, const char *message,
+void close_file_transfer(ToxWindow *self, const Toxic *toxic, FileTransfer *ft, int CTRL, const char *message,
                          Notification sound_type)
 {
-    if (!ft) {
+    const Client_Config *c_config = toxic->c_config;
+
+    if (ft == NULL) {
         return;
     }
 
@@ -350,50 +352,50 @@ void close_file_transfer(ToxWindow *self, Tox *tox, FileTransfer *ft, int CTRL, 
     if (CTRL >= 0) {
         Tox_Err_File_Control err;
 
-        if (!tox_file_control(tox, ft->friendnumber, ft->filenumber, (Tox_File_Control) CTRL, &err)) {
+        if (!tox_file_control(toxic->tox, ft->friendnumber, ft->filenumber, (Tox_File_Control) CTRL, &err)) {
             fprintf(stderr, "Failed to cancel file transfer: %d\n", err);
         }
     }
 
     if (message && self) {
         if (self->active_box != -1 && sound_type != silent) {
-            box_notify2(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", message);
+            box_notify2(self, c_config, sound_type, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", message);
         } else {
-            box_notify(self, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);
+            box_notify(self, c_config, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);
         }
 
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
     }
 
     clear_file_transfer(ft);
 }
 
 /* Kills active outgoing avatar file transfers for friendnumber */
-void kill_avatar_file_transfers_friend(Tox *tox, uint32_t friendnumber)
+void kill_avatar_file_transfers_friend(Toxic *toxic, uint32_t friendnumber)
 {
     for (size_t i = 0; i < MAX_FILES; ++i) {
         FileTransfer *ft = &Friends.list[friendnumber].file_sender[i];
 
         if (ft->file_type == TOX_FILE_KIND_AVATAR) {
-            close_file_transfer(NULL, tox, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+            close_file_transfer(NULL, toxic, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
         }
     }
 }
 
 /* Kills all active file transfers for friendnumber */
-void kill_all_file_transfers_friend(Tox *tox, uint32_t friendnumber)
+void kill_all_file_transfers_friend(Toxic *toxic, uint32_t friendnumber)
 {
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        close_file_transfer(NULL, tox, &Friends.list[friendnumber].file_sender[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
-        close_file_transfer(NULL, tox, &Friends.list[friendnumber].file_receiver[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        close_file_transfer(NULL, toxic, &Friends.list[friendnumber].file_sender[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        close_file_transfer(NULL, toxic, &Friends.list[friendnumber].file_receiver[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
         file_send_queue_remove(friendnumber, i);
     }
 }
 
-void kill_all_file_transfers(Tox *tox)
+void kill_all_file_transfers(Toxic *toxic)
 {
     for (size_t i = 0; i < Friends.max_idx; ++i) {
-        kill_all_file_transfers_friend(tox, Friends.list[i].num);
+        kill_all_file_transfers_friend(toxic, Friends.list[i].num);
     }
 }
 

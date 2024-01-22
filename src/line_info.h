@@ -25,6 +25,7 @@
 
 #include <time.h>
 
+#include "settings.h"
 #include "toxic.h"
 #include "windows.h"
 
@@ -85,11 +86,11 @@ struct history {
  * Returns the id of the new line.
  * Returns -1 on failure.
  */
-int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const char *name2, LINE_TYPE type,
-                  uint8_t bold, uint8_t colour, const char *msg, ...);
+int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_timestamp, const char *name1,
+                  const char *name2, LINE_TYPE type, uint8_t bold, uint8_t colour, const char *msg, ...);
 
 /* Prints a section of history starting at line_start */
-void line_info_print(ToxWindow *self);
+void line_info_print(ToxWindow *self, const Client_Config *c_config);
 
 /* frees all history lines */
 void line_info_cleanup(struct history *hst);
@@ -109,6 +110,8 @@ struct line_info *line_info_get(ToxWindow *self, uint32_t id);
 void line_info_reset_start(ToxWindow *self, struct history *hst);
 
 void line_info_init(struct history *hst);
-bool line_info_onKey(ToxWindow *self, wint_t key);    /* returns true if key is a match */
+
+/* returns true if key is a match */
+bool line_info_onKey(ToxWindow *self, const Client_Config *c_config, wint_t key);
 
 #endif /* LINE_INFO_H */

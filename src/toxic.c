@@ -101,10 +101,6 @@ struct arg_opts arg_opts;
 static struct av_thread av_thread;
 #endif
 
-// This struct is not thread safe. It should only ever be written to from the main thread
-// before any other thread that uses it is initialized.
-struct user_settings *user_settings = NULL;
-
 static void queue_init_message(const char *msg, ...);
 
 static time_t last_signal_time;
@@ -148,20 +144,13 @@ static void init_signal_catchers(void)
     signal(SIGSEGV, catch_SIGSEGV);
 }
 
-void free_global_data(void)
-{
-    if (user_settings) {
-        free(user_settings);
-        user_settings = NULL;
-    }
-}
-
 void kill_toxic(Toxic *toxic)
 {
     Client_Data *client_data = &toxic->client_data;
 
     free(client_data->data_path);
     free(client_data->block_path);
+    free(toxic->c_config);
     free(toxic);
 }
 
@@ -175,7 +164,7 @@ void exit_toxic_success(Toxic *toxic)
 
     terminate_notify();
 
-    kill_all_file_transfers(toxic->tox);
+    kill_all_file_transfers(toxic);
     kill_all_windows(toxic);
 
 #ifdef AUDIO
@@ -189,7 +178,6 @@ void exit_toxic_success(Toxic *toxic)
     terminate_python();
 #endif /* PYTHON */
 
-    free_global_data();
     tox_kill(toxic->tox);
 
     if (arg_opts.log_fp != NULL) {
@@ -211,8 +199,6 @@ void exit_toxic_success(Toxic *toxic)
 
 void exit_toxic_err(const char *errmsg, int errcode)
 {
-    free_global_data();
-
     if (freopen("/dev/tty", "w", stderr)) {
         fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
     }
@@ -278,123 +264,123 @@ void set_window_refresh_rate(size_t refresh_rate)
     timeout(refresh_rate);
 }
 
-static void get_custom_toxic_colours(short *bar_bg_color, short *bar_fg_color, short *bar_accent_color,
-                                     short *bar_notify_color)
+static void get_custom_toxic_colours(const Client_Config *c_config, short *bar_bg_color, short *bar_fg_color,
+                                     short *bar_accent_color, short *bar_notify_color)
 {
-    if (!string_is_empty(user_settings->color_bar_bg)) {
-        if (strcmp(user_settings->color_bar_bg, "black") == 0) {
+    if (!string_is_empty(c_config->color_bar_bg)) {
+        if (strcmp(c_config->color_bar_bg, "black") == 0) {
             *bar_bg_color = COLOR_BLACK;
-        } else if (strcmp(user_settings->color_bar_bg, "red") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "red") == 0) {
             *bar_bg_color = COLOR_RED;
-        } else if (strcmp(user_settings->color_bar_bg, "blue") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "blue") == 0) {
             *bar_bg_color = COLOR_BLUE;
-        } else if (strcmp(user_settings->color_bar_bg, "cyan") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "cyan") == 0) {
             *bar_bg_color = COLOR_CYAN;
-        } else if (strcmp(user_settings->color_bar_bg, "green") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "green") == 0) {
             *bar_bg_color = COLOR_GREEN;
-        } else if (strcmp(user_settings->color_bar_bg, "yellow") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "yellow") == 0) {
             *bar_bg_color = COLOR_YELLOW;
-        } else if (strcmp(user_settings->color_bar_bg, "magenta") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "magenta") == 0) {
             *bar_bg_color = COLOR_MAGENTA;
-        } else if (strcmp(user_settings->color_bar_bg, "white") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "white") == 0) {
             *bar_bg_color = COLOR_WHITE;
-        } else if (strcmp(user_settings->color_bar_bg, "gray") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "gray") == 0) {
             *bar_bg_color = CUSTOM_COLOUR_GRAY;
-        } else if (strcmp(user_settings->color_bar_bg, "orange") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "orange") == 0) {
             *bar_bg_color = CUSTOM_COLOUR_ORANGE;
-        } else if (strcmp(user_settings->color_bar_bg, "pink") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "pink") == 0) {
             *bar_bg_color = CUSTOM_COLOUR_PINK;
-        } else if (strcmp(user_settings->color_bar_bg, "brown") == 0) {
+        } else if (strcmp(c_config->color_bar_bg, "brown") == 0) {
             *bar_bg_color = CUSTOM_COLOUR_BROWN;
         }
     }
 
-    if (!string_is_empty(user_settings->color_bar_fg)) {
-        if (strcmp(user_settings->color_bar_fg, "black") == 0) {
+    if (!string_is_empty(c_config->color_bar_fg)) {
+        if (strcmp(c_config->color_bar_fg, "black") == 0) {
             *bar_fg_color = COLOR_BLACK;
-        } else if (strcmp(user_settings->color_bar_fg, "red") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "red") == 0) {
             *bar_fg_color = COLOR_RED;
-        } else if (strcmp(user_settings->color_bar_fg, "blue") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "blue") == 0) {
             *bar_fg_color = COLOR_BLUE;
-        } else if (strcmp(user_settings->color_bar_fg, "cyan") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "cyan") == 0) {
             *bar_fg_color = COLOR_CYAN;
-        } else if (strcmp(user_settings->color_bar_fg, "green") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "green") == 0) {
             *bar_fg_color = COLOR_GREEN;
-        } else if (strcmp(user_settings->color_bar_fg, "yellow") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "yellow") == 0) {
             *bar_fg_color = COLOR_YELLOW;
-        } else if (strcmp(user_settings->color_bar_fg, "magenta") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "magenta") == 0) {
             *bar_fg_color = COLOR_MAGENTA;
-        } else if (strcmp(user_settings->color_bar_fg, "white") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "white") == 0) {
             *bar_fg_color = COLOR_WHITE;
-        } else if (strcmp(user_settings->color_bar_fg, "gray") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "gray") == 0) {
             *bar_fg_color = CUSTOM_COLOUR_GRAY;
-        } else if (strcmp(user_settings->color_bar_fg, "orange") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "orange") == 0) {
             *bar_fg_color = CUSTOM_COLOUR_ORANGE;
-        } else if (strcmp(user_settings->color_bar_fg, "pink") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "pink") == 0) {
             *bar_fg_color = CUSTOM_COLOUR_PINK;
-        } else if (strcmp(user_settings->color_bar_fg, "brown") == 0) {
+        } else if (strcmp(c_config->color_bar_fg, "brown") == 0) {
             *bar_fg_color = CUSTOM_COLOUR_BROWN;
         }
     }
 
-    if (!string_is_empty(user_settings->color_bar_accent)) {
-        if (strcmp(user_settings->color_bar_accent, "black") == 0) {
+    if (!string_is_empty(c_config->color_bar_accent)) {
+        if (strcmp(c_config->color_bar_accent, "black") == 0) {
             *bar_accent_color = COLOR_BLACK;
-        } else if (strcmp(user_settings->color_bar_accent, "red") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "red") == 0) {
             *bar_accent_color = COLOR_RED;
-        } else if (strcmp(user_settings->color_bar_accent, "blue") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "blue") == 0) {
             *bar_accent_color = COLOR_BLUE;
-        } else if (strcmp(user_settings->color_bar_accent, "cyan") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "cyan") == 0) {
             *bar_accent_color = COLOR_CYAN;
-        } else if (strcmp(user_settings->color_bar_accent, "green") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "green") == 0) {
             *bar_accent_color = COLOR_GREEN;
-        } else if (strcmp(user_settings->color_bar_accent, "yellow") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "yellow") == 0) {
             *bar_accent_color = COLOR_YELLOW;
-        } else if (strcmp(user_settings->color_bar_accent, "magenta") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "magenta") == 0) {
             *bar_accent_color = COLOR_MAGENTA;
-        } else if (strcmp(user_settings->color_bar_accent, "white") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "white") == 0) {
             *bar_accent_color = COLOR_WHITE;
-        } else if (strcmp(user_settings->color_bar_accent, "gray") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "gray") == 0) {
             *bar_accent_color = CUSTOM_COLOUR_GRAY;
-        } else if (strcmp(user_settings->color_bar_accent, "orange") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "orange") == 0) {
             *bar_accent_color = CUSTOM_COLOUR_ORANGE;
-        } else if (strcmp(user_settings->color_bar_accent, "pink") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "pink") == 0) {
             *bar_accent_color = CUSTOM_COLOUR_PINK;
-        } else if (strcmp(user_settings->color_bar_accent, "brown") == 0) {
+        } else if (strcmp(c_config->color_bar_accent, "brown") == 0) {
             *bar_accent_color = CUSTOM_COLOUR_BROWN;
         }
     }
 
-    if (!string_is_empty(user_settings->color_bar_notify)) {
-        if (strcmp(user_settings->color_bar_notify, "black") == 0) {
+    if (!string_is_empty(c_config->color_bar_notify)) {
+        if (strcmp(c_config->color_bar_notify, "black") == 0) {
             *bar_notify_color = COLOR_BLACK;
-        } else if (strcmp(user_settings->color_bar_notify, "red") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "red") == 0) {
             *bar_notify_color = COLOR_RED;
-        } else if (strcmp(user_settings->color_bar_notify, "blue") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "blue") == 0) {
             *bar_notify_color = COLOR_BLUE;
-        } else if (strcmp(user_settings->color_bar_notify, "cyan") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "cyan") == 0) {
             *bar_notify_color = COLOR_CYAN;
-        } else if (strcmp(user_settings->color_bar_notify, "green") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "green") == 0) {
             *bar_notify_color = COLOR_GREEN;
-        } else if (strcmp(user_settings->color_bar_notify, "yellow") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "yellow") == 0) {
             *bar_notify_color = COLOR_YELLOW;
-        } else if (strcmp(user_settings->color_bar_notify, "magenta") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "magenta") == 0) {
             *bar_notify_color = COLOR_MAGENTA;
-        } else if (strcmp(user_settings->color_bar_notify, "white") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "white") == 0) {
             *bar_notify_color = COLOR_WHITE;
-        } else if (strcmp(user_settings->color_bar_notify, "gray") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "gray") == 0) {
             *bar_notify_color = CUSTOM_COLOUR_GRAY;
-        } else if (strcmp(user_settings->color_bar_notify, "orange") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "orange") == 0) {
             *bar_notify_color = CUSTOM_COLOUR_ORANGE;
-        } else if (strcmp(user_settings->color_bar_notify, "pink") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "pink") == 0) {
             *bar_notify_color = CUSTOM_COLOUR_PINK;
-        } else if (strcmp(user_settings->color_bar_notify, "brown") == 0) {
+        } else if (strcmp(c_config->color_bar_notify, "brown") == 0) {
             *bar_notify_color = CUSTOM_COLOUR_BROWN;
         }
     }
 }
 
-static void init_term(void)
+static void init_term(const Client_Config *c_config)
 {
 #if HAVE_WIDECHAR
 
@@ -430,13 +416,13 @@ static void init_term(void)
         // let's try anyways
     }
 
-    if (user_settings->colour_theme == NATIVE_COLS) {
+    if (c_config->colour_theme == NATIVE_COLS) {
         if (assume_default_colors(-1, -1) == OK) {
             bg_color = -1;
         }
     }
 
-    get_custom_toxic_colours(&bar_bg_color, &bar_fg_color, &bar_accent_color, &bar_notify_color);
+    get_custom_toxic_colours(c_config, &bar_bg_color, &bar_fg_color, &bar_accent_color, &bar_notify_color);
 
     init_pair(WHITE, COLOR_WHITE, COLOR_BLACK);
     init_pair(GREEN, COLOR_GREEN, bg_color);
@@ -535,10 +521,10 @@ static void cleanup_init_messages(void)
     free(init_messages.msgs);
 }
 
-static void print_init_messages(ToxWindow *toxwin)
+static void print_init_messages(ToxWindow *toxwin, const Client_Config *c_config)
 {
     for (int i = 0; i < init_messages.num; ++i) {
-        line_info_add(toxwin, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
+        line_info_add(toxwin, c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
     }
 }
 
@@ -633,7 +619,8 @@ static void load_conferences(Toxic *toxic)
         }
 
         if (type == TOX_CONFERENCE_TYPE_AV) {
-            line_info_add(get_window_ptr(win_idx), NULL, NULL, NULL, SYS_MSG, 0, 0,
+            ToxWindow *win = get_window_ptr(win_idx);
+            line_info_add(win, toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0,
 #ifdef AUDIO
                           "Use \"/audio on\" to enable audio in this conference."
 #else
@@ -694,12 +681,12 @@ static int password_prompt(char *buf, int size)
 /* Get the password from the eval command.
  * return length of password on success, 0 on failure
  */
-static int password_eval(char *buf, int size)
+static int password_eval(const Client_Config *c_config, char *buf, int size)
 {
     buf[0] = '\0';
 
     /* Run password_eval command */
-    FILE *f = popen(user_settings->password_eval, "r");
+    FILE *f = popen(c_config->password_eval, "r");
 
     if (f == NULL) {
         fprintf(stderr, "Executing password_eval failed\n");
@@ -1041,7 +1028,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
             }
 
             size_t pwlen = 0;
-            int pweval = user_settings->password_eval[0];
+            int pweval = toxic->c_config->password_eval[0];
 
             if (!pweval) {
                 clear_screen();
@@ -1061,7 +1048,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
                 fflush(stdout); // Flush before prompts so the user sees the question/message
 
                 if (pweval) {
-                    pwlen = password_eval(client_data->pass, sizeof(client_data->pass));
+                    pwlen = password_eval(toxic->c_config, client_data->pass, sizeof(client_data->pass));
                 } else {
                     pwlen = password_prompt(client_data->pass, sizeof(client_data->pass));
                 }
@@ -1265,7 +1252,7 @@ void *thread_winref(void *data)
             on_window_resize();
             Winthread.flag_resize = 0;
         } else if (draw_count >= INACTIVE_WIN_REFRESH_RATE) {
-            refresh_inactive_windows();
+            refresh_inactive_windows(toxic->c_config);
             draw_count = 0;
         }
 
@@ -1650,11 +1637,20 @@ static void init_default_data_files(Client_Data *client_data)
 
 static Toxic *toxic_init(void)
 {
-    Toxic *toxic = calloc(1, sizeof(Toxic));
+    Toxic *toxic = (Toxic *) calloc(1, sizeof(Toxic));
 
     if (toxic == NULL) {
         return NULL;
     }
+
+    Client_Config *tmp_settings = (Client_Config *) calloc(1, sizeof(Client_Config));
+
+    if (tmp_settings == NULL) {
+        free(toxic);
+        return NULL;
+    }
+
+    toxic->c_config = tmp_settings;
 
     return toxic;
 }
@@ -1671,6 +1667,8 @@ int main(int argc, char **argv)
     if (toxic == NULL) {
         exit_toxic_err("failed in main", FATALERR_TOXIC_INIT);
     }
+
+    const Client_Config *c_config = toxic->c_config;
 
     parse_args(toxic, argc, argv);
 
@@ -1697,16 +1695,9 @@ int main(int argc, char **argv)
         first_time_encrypt(&toxic->client_data, "Encrypt existing data file? Y/n (q to quit)");
     }
 
-    /* init user_settings struct and load settings from conf file */
-    user_settings = calloc(1, sizeof(struct user_settings));
-
-    if (user_settings == NULL) {
-        exit_toxic_err("failed in main", FATALERR_MEMORY);
-    }
-
     const char *config_path = arg_opts.config_path[0] ? arg_opts.config_path : NULL;
 
-    const int ms_ret = settings_load_main(user_settings, config_path);
+    const int ms_ret = settings_load_main(toxic->c_config, config_path);
 
     if (ms_ret < 0) {
         queue_init_message("Failed to load user settings: error %d", ms_ret);
@@ -1739,10 +1730,10 @@ int main(int argc, char **argv)
         arg_opts.encrypt_data = 0;
     }
 
-    init_term();
+    init_term(c_config);
 
     prompt = init_windows(toxic);
-    prompt_init_statusbar(prompt, toxic->tox, !datafile_exists);
+    prompt_init_statusbar(prompt, toxic, !datafile_exists);
     load_groups(toxic);
     load_conferences(toxic);
 
@@ -1786,8 +1777,8 @@ int main(int argc, char **argv)
         exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
     }
 
-    set_al_device(input, user_settings->audio_in_dev);
-    set_al_device(output, user_settings->audio_out_dev);
+    set_al_device(input, c_config->audio_in_dev);
+    set_al_device(output, c_config->audio_out_dev);
 
 #elif SOUND_NOTIFY
 
@@ -1810,25 +1801,25 @@ int main(int argc, char **argv)
 #ifdef PYTHON
 
     init_python(toxic->tox);
-    invoke_autoruns(prompt->chatwin->history, prompt);
+    invoke_autoruns(prompt->chatwin->history, prompt, c_config->autorun_path);
 
 #endif /* PYTHON */
 
-    init_notify(60, user_settings->notification_timeout);
+    init_notify(60, c_config->notification_timeout);
 
     /* screen/tmux auto-away timer */
     if (init_mplex_away_timer(toxic) == -1) {
         queue_init_message("Failed to init mplex auto-away.");
     }
 
-    const int nodeslist_ret = load_DHT_nodeslist();
+    const int nodeslist_ret = load_DHT_nodeslist(c_config);
 
     if (nodeslist_ret != 0) {
         queue_init_message("DHT nodeslist failed to load (error %d)", nodeslist_ret);
     }
 
     pthread_mutex_lock(&Winthread.lock);
-    print_init_messages(prompt);
+    print_init_messages(prompt, c_config);
     flag_interface_refresh();
     pthread_mutex_unlock(&Winthread.lock);
 
@@ -1836,7 +1827,7 @@ int main(int argc, char **argv)
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[PATH_MAX + 11];
-    snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", user_settings->avatar_path);
+    snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", c_config->avatar_path);
     execute(prompt->chatwin->history, prompt, toxic, avatarstr, GLOBAL_COMMAND_MODE);
 
     time_t last_save = get_unix_time();
@@ -1846,11 +1837,12 @@ int main(int argc, char **argv)
 
         const time_t cur_time = get_unix_time();
 
-        if (user_settings->autosave_freq > 0 && timed_out(last_save, user_settings->autosave_freq)) {
+        if (c_config->autosave_freq > 0 && timed_out(last_save, c_config->autosave_freq)) {
             pthread_mutex_lock(&Winthread.lock);
 
             if (store_data(toxic) != 0) {
-                line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED, "WARNING: Failed to save to data file");
+                line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
+                              "WARNING: Failed to save to data file");
             }
 
             pthread_mutex_unlock(&Winthread.lock);

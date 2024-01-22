@@ -95,8 +95,12 @@ int tox_id_bytes_to_str(const char *bin_id, size_t bin_id_size, char *output, si
 /* get the current unix time (not thread safe) */
 time_t get_unix_time(void);
 
-/* Puts the current time in buf in the format of specified by the config */
-void get_time_str(char *buf, size_t bufsize);
+/* Puts the current time in `buf` in the format of specified by `format_string`.
+ *
+ * If the passed format string is invalid, a default format will be tried. If that
+ * fails, `buf` will be set to nul.
+ */
+void get_time_str(char *buf, size_t bufsize, const char *format_string);
 
 /* Converts seconds to string in format H hours, m minutes, s seconds */
 void get_elapsed_time_str_alt(char *buf, int bufsize, uint64_t secs);

@@ -36,10 +36,8 @@
 #include "toxic_strings.h"
 #include "windows.h"
 
-extern struct user_settings *user_settings;
-
 /* add a char to input field and buffer */
-void input_new_char(ToxWindow *self, wint_t key, int x, int mx_x)
+void input_new_char(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -51,12 +49,12 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int mx_x)
     int cur_len = wcwidth(key);
 
     if (cur_len == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
         return;
     }
 
     if (add_char_to_buf(ctx, key) == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
         return;
     }
 
@@ -67,12 +65,12 @@ void input_new_char(ToxWindow *self, wint_t key, int x, int mx_x)
 }
 
 /* delete a char via backspace key from input field and buffer */
-static void input_backspace(ToxWindow *self, int x, int mx_x)
+static void input_backspace(ToxWindow *self, const Client_Config *c_config, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
     if (del_char_buf_bck(ctx) == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
         return;
     }
 
@@ -87,45 +85,45 @@ static void input_backspace(ToxWindow *self, int x, int mx_x)
 }
 
 /* delete a char via delete key from input field and buffer */
-static void input_delete(ToxWindow *self)
+static void input_delete(ToxWindow *self, const Client_Config *c_config)
 {
     if (del_char_buf_frnt(self->chatwin) == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
     }
 }
 
 /* delete last typed word */
-static void input_del_word(ToxWindow *self)
+static void input_del_word(ToxWindow *self, const Client_Config *c_config)
 {
     ChatContext *ctx = self->chatwin;
 
     if (del_word_buf(ctx) == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
     }
 }
 
 /* deletes entire line before cursor from input field and buffer */
-static void input_discard(ToxWindow *self)
+static void input_discard(ToxWindow *self, const Client_Config *c_config)
 {
     if (discard_buf(self->chatwin) == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
     }
 }
 
 /* deletes entire line after cursor from input field and buffer */
-static void input_kill(ChatContext *ctx)
+static void input_kill(ChatContext *ctx, const Client_Config *c_config)
 {
     if (kill_buf(ctx) == -1) {
-        sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+        sound_notify(NULL, c_config, notif_error, NT_ALWAYS, NULL);
     }
 }
 
-static void input_yank(ToxWindow *self, int x, int mx_x)
+static void input_yank(ToxWindow *self, const Client_Config *c_config, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
     if (yank_buf(ctx) == -1) {
-        sound_notify(self, notif_error, 0, NULL);
+        sound_notify(self, c_config, notif_error, 0, NULL);
         return;
     }
 
@@ -250,45 +248,45 @@ static void input_skip_right(ToxWindow *self, int x, int mx_x)
 }
 
 /* puts a line history item in input field and buffer */
-static void input_history(ToxWindow *self, wint_t key, int mx_x)
+static void input_history(ToxWindow *self, const Client_Config *c_config, wint_t key, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
-    fetch_hist_item(ctx, key);
+    fetch_hist_item(c_config, ctx, key);
     int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
     ctx->start = wlen < mx_x ? 0 : wlen - mx_x + 1;
 }
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
+bool input_handle(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x)
 {
     bool match = true;
 
     switch (key) {
         case 0x7f:
         case KEY_BACKSPACE:
-            input_backspace(self, x, mx_x);
+            input_backspace(self, c_config, x, mx_x);
             break;
 
         case KEY_DC:
-            input_delete(self);
+            input_delete(self, c_config);
             break;
 
         case T_KEY_DISCARD:
-            input_discard(self);
+            input_discard(self, c_config);
             break;
 
         case T_KEY_KILL:
-            input_kill(self->chatwin);
+            input_kill(self->chatwin, c_config);
             break;
 
         case T_KEY_C_Y:
-            input_yank(self, x, mx_x);
+            input_yank(self, c_config, x, mx_x);
             break;
 
         case T_KEY_C_W:
-            input_del_word(self);
+            input_del_word(self, c_config);
             break;
 
         case KEY_HOME:
@@ -311,7 +309,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
 
         case KEY_UP:
         case KEY_DOWN:
-            input_history(self, key, mx_x);
+            input_history(self, c_config, key, mx_x);
             break;
 
         case T_KEY_C_L:
@@ -334,7 +332,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
     /* TODO: this special case is ugly.
        maybe convert entire function to if/else and make them all customizable keys? */
     if (!match) {
-        if (key == user_settings->key_toggle_peerlist) {
+        if (key == c_config->key_toggle_peerlist) {
             if (self->type == WINDOW_TYPE_CONFERENCE) {
                 self->show_peerlist ^= 1;
                 redraw_conference_win(self);
@@ -344,7 +342,7 @@ bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x)
             }
 
             match = true;
-        } else if (key == user_settings->key_toggle_pastemode) {
+        } else if (key == c_config->key_toggle_pastemode) {
             self->chatwin->pastemode ^= 1;
             match = true;
         }

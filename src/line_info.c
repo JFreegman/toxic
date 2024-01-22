@@ -39,8 +39,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern struct user_settings *user_settings;
-
 void line_info_init(struct history *hst)
 {
     hst->line_root = calloc(1, sizeof(struct line_info));
@@ -244,10 +242,6 @@ static unsigned int newline_count(const wchar_t *s)
  */
 static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
 {
-    int x;
-    int y;
-    UNUSED_VAR(y);
-
     const wchar_t *msg = line->msg;
     uint16_t length = line->msg_width;
     uint16_t lines = 0;
@@ -258,6 +252,10 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
         fprintf(stderr, "Warning: x_limit <= 0 in print_wrap(): %d\n", x_limit);
         return -1;
     }
+
+    int x;
+    int y;
+    UNUSED_VAR(y);
 
     while (msg) {
         getyx(win, y, x);
@@ -396,10 +394,10 @@ static void line_info_init_line(ToxWindow *self, struct line_info *line)
  * Returns the id of the new line.
  * Returns -1 on failure.
  */
-int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const char *name2, LINE_TYPE type,
-                  uint8_t bold, uint8_t colour, const char *msg, ...)
+int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_timestamp, const char *name1,
+                  const char *name2, LINE_TYPE type, uint8_t bold, uint8_t colour, const char *msg, ...)
 {
-    if (!self) {
+    if (self == NULL) {
         return -1;
     }
 
@@ -434,7 +432,7 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
         /* fallthrough */
         case OUT_ACTION:
-            len += strlen(user_settings->line_normal) + 2; // two spaces
+            len += strlen(c_config->line_normal) + 2; // two spaces
             break;
 
         case IN_MSG:
@@ -442,29 +440,29 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 
         /* fallthrough */
         case OUT_MSG:
-            len += strlen(user_settings->line_normal) + 3; // two spaces and a ':' char
+            len += strlen(c_config->line_normal) + 3; // two spaces and a ':' char
             break;
 
         case IN_PRVT_MSG:
 
         /* fallthrough */
         case OUT_PRVT_MSG:
-            len += strlen(user_settings->line_special) + 3;
+            len += strlen(c_config->line_special) + 3;
             break;
 
         case CONNECTION:
-            len += strlen(user_settings->line_join) + 2;  // two spaces
+            len += strlen(c_config->line_join) + 2;  // two spaces
             break;
 
         case DISCONNECTION:
-            len += strlen(user_settings->line_quit) + 2;  // two spaces
+            len += strlen(c_config->line_quit) + 2;  // two spaces
             break;
 
         case SYS_MSG:
             break;
 
         case NAME_CHANGE:
-            len += strlen(user_settings->line_alert) + 2;  // two spaces
+            len += strlen(c_config->line_alert) + 2;  // two spaces
             break;
 
         case PROMPT:
@@ -479,9 +477,12 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
     const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg) / sizeof(wchar_t), frmt_msg);
     len += msg_width;
 
-    if (show_timestamp) {
-        get_time_str(new_line->timestr, sizeof(new_line->timestr));
-        len += strlen(new_line->timestr) + 1;
+    if (show_timestamp)  {
+        if (c_config->timestamps == TIMESTAMPS_ON) {
+            get_time_str(new_line->timestr, sizeof(new_line->timestr), c_config->timestamp_format);
+        }
+
+        len += strlen(new_line->timestr) + 1;  // need the +1 regardless of client setting
     }
 
     if (name1) {
@@ -515,7 +516,7 @@ int line_info_add(ToxWindow *self, bool show_timestamp, const char *name1, const
 }
 
 /* adds a single queue item to hst if possible. only called once per call to line_info_print() */
-static void line_info_check_queue(ToxWindow *self)
+static void line_info_check_queue(ToxWindow *self, const Client_Config *c_config)
 {
     struct history *hst = self->chatwin->hst;
     struct line_info *line = line_info_ret_queue(hst);
@@ -524,7 +525,7 @@ static void line_info_check_queue(ToxWindow *self)
         return;
     }
 
-    if (hst->start_id > user_settings->history_size) {
+    if (hst->start_id > c_config->history_size) {
         line_info_root_fwd(hst);
     }
 
@@ -538,7 +539,7 @@ static void line_info_check_queue(ToxWindow *self)
     }
 }
 
-void line_info_print(ToxWindow *self)
+void line_info_print(ToxWindow *self, const Client_Config *c_config)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -549,7 +550,7 @@ void line_info_print(ToxWindow *self)
     struct history *hst = ctx->hst;
 
     /* Only allow one new item to be added to chat window per call to this function */
-    line_info_check_queue(self);
+    line_info_check_queue(self, c_config);
 
     WINDOW *win = ctx->history;
 
@@ -573,7 +574,7 @@ void line_info_print(ToxWindow *self)
 
     struct line_info *line = hst->line_start->next;
 
-    if (!line) {
+    if (line == NULL) {
         return;
     }
 
@@ -615,7 +616,7 @@ void line_info_print(ToxWindow *self)
                 }
 
                 wattron(win, COLOR_PAIR(nameclr));
-                wprintw(win, "%s %s: ", user_settings->line_normal, line->name1);
+                wprintw(win, "%s %s: ", c_config->line_normal, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
                 if (line->msg[0] == L'\0') {
@@ -653,7 +654,7 @@ void line_info_print(ToxWindow *self)
                 const int nameclr = line->colour ? line->colour : GREEN;
 
                 wattron(win, COLOR_PAIR(nameclr));
-                wprintw(win, "%s %s: ", user_settings->line_special, line->name1);
+                wprintw(win, "%s %s: ", c_config->line_special, line->name1);
                 wattroff(win, COLOR_PAIR(nameclr));
 
                 if (line->msg[0] == '>') {
@@ -686,7 +687,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(YELLOW));
-                wprintw(win, "%s %s ", user_settings->line_normal, line->name1);
+                wprintw(win, "%s %s ", c_config->line_normal, line->name1);
                 print_wrap(win, line, max_x, max_y);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
@@ -742,7 +743,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
-                wprintw(win, "%s ", user_settings->line_join);
+                wprintw(win, "%s ", c_config->line_join);
 
                 wattron(win, A_BOLD);
                 wprintw(win, "%s ", line->name1);
@@ -762,7 +763,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(line->colour));
-                wprintw(win, "%s ", user_settings->line_quit);
+                wprintw(win, "%s ", c_config->line_quit);
 
                 wattron(win, A_BOLD);
                 wprintw(win, "%s ", line->name1);
@@ -782,7 +783,7 @@ void line_info_print(ToxWindow *self)
                 wattroff(win, COLOR_PAIR(BLUE));
 
                 wattron(win, COLOR_PAIR(MAGENTA));
-                wprintw(win, "%s ", user_settings->line_alert);
+                wprintw(win, "%s ", c_config->line_alert);
                 wattron(win, A_BOLD);
                 wprintw(win, "%s", line->name1);
                 wattroff(win, A_BOLD);
@@ -805,7 +806,7 @@ void line_info_print(ToxWindow *self)
 
     /* keep calling until queue is empty */
     if (hst->queue_size > 0) {
-        line_info_print(self);
+        line_info_print(self, c_config);
     }
 }
 
@@ -949,20 +950,20 @@ static void line_info_page_down(ToxWindow *self, struct history *hst)
     }
 }
 
-bool line_info_onKey(ToxWindow *self, wint_t key)
+bool line_info_onKey(ToxWindow *self, const Client_Config *c_config, wint_t key)
 {
     struct history *hst = self->chatwin->hst;
     bool match = true;
 
-    if (key == user_settings->key_half_page_up) {
+    if (key == c_config->key_half_page_up) {
         line_info_page_up(self, hst);
-    } else if (key == user_settings->key_half_page_down) {
+    } else if (key == c_config->key_half_page_down) {
         line_info_page_down(self, hst);
-    } else if (key == user_settings->key_scroll_line_up) {
+    } else if (key == c_config->key_scroll_line_up) {
         line_info_scroll_up(self, hst);
-    } else if (key == user_settings->key_scroll_line_down) {
+    } else if (key == c_config->key_scroll_line_down) {
         line_info_scroll_down(self, hst);
-    } else if (key == user_settings->key_page_bottom) {
+    } else if (key == c_config->key_page_bottom) {
         line_info_reset_start(self, hst);
     } else {
         match = false;

@@ -40,11 +40,12 @@ extern FriendsList Friends;
 void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(toxic);
 
-    if (self == NULL) {
+    if (self == NULL || toxic == NULL) {
         return;
     }
+
+    const Client_Config *c_config = toxic->c_config;
 
     const char *msg;
     const bool auto_accept_files = friend_get_auto_accept_files(self->num);
@@ -56,7 +57,7 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int arg
             msg = "Auto-file accept for this friend is disabled; type \"/autoaccept on\" to enable";
         }
 
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
         return;
     }
 
@@ -72,7 +73,7 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int arg
         msg = "Invalid option. Use \"/autoaccept on\" and \"/autoaccept off\" to toggle auto-file accept";
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -83,10 +84,10 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
         return;
     }
 
-    Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (argc < 2) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Requires type in|out and the file ID.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Requires type in|out and the file ID.");
         return;
     }
 
@@ -95,13 +96,13 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
     long int idx = strtol(argv[2], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[2], "0")) || idx >= MAX_FILES || idx < 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
     // first check transfer queue
     if (file_send_queue_remove(self->num, idx) == 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Pending file transfer removed from queue");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Pending file transfer removed from queue");
         return;
     }
 
@@ -113,22 +114,22 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
     } else if (strcasecmp(inoutstr, "out") == 0) {
         ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_SEND);
     } else {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
         return;
     }
 
     if (ft == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
     if (ft->state == FILE_TRANSFER_INACTIVE) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
         return;
     }
 
     snprintf(msg, sizeof(msg), "File transfer for '%s' aborted.", ft->file_name);
-    close_file_transfer(self, tox, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
+    close_file_transfer(self, toxic, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
 }
 
 void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -140,27 +141,30 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int ar
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference number required.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Conference number required.");
         return;
     }
 
     long int conferencenum = strtol(argv[1], NULL, 10);
 
     if ((conferencenum == 0 && strcmp(argv[1], "0")) || conferencenum < 0 || conferencenum == LONG_MAX) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
         return;
     }
 
     Tox_Err_Conference_Invite err;
 
     if (!tox_conference_invite(tox, self->num, conferencenum, &err)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to conference (error %d)", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to invite contact to conference (error %d)", err);
         return;
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.", conferencenum);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.",
+                  conferencenum);
 }
 
 void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -174,9 +178,10 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 
@@ -185,7 +190,7 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
     uint8_t type = Friends.list[self->num].conference_invite.type;
 
     if (!Friends.list[self->num].conference_invite.pending) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
         return;
     }
 
@@ -196,7 +201,8 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
         conferencenum = tox_conference_join(tox, self->num, (const uint8_t *) conferencekey, length, &err);
 
         if (err != TOX_ERR_CONFERENCE_JOIN_OK) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference instance failed to initialize (error %d)", err);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Conference instance failed to initialize (error %d)", err);
             return;
         }
     } else if (type == TOX_CONFERENCE_TYPE_AV) {
@@ -205,21 +211,23 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
                                                 audio_conference_callback, NULL);
 
         if (conferencenum == (uint32_t) -1) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio conference instance failed to initialize");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Audio conference instance failed to initialize");
             return;
         }
 
 #else
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio support disabled by compile-time option.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Audio support disabled by compile-time option.");
         return;
 #endif
     } else {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Unknown conference type %d", type);
         return;
     }
 
     if (init_conference_win(toxic, conferencenum, type, NULL, 0) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
         tox_conference_delete(tox, conferencenum, NULL);
         return;
     }
@@ -227,8 +235,9 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
 #ifdef AUDIO
 
     if (type == TOX_CONFERENCE_TYPE_AV) {
-        if (!init_conference_audio_input(tox, conferencenum)) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Audio capture failed; use \"/audio on\" to try again.");
+        if (!init_conference_audio_input(toxic, conferencenum)) {
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Audio capture failed; use \"/audio on\" to try again.");
         }
     }
 
@@ -242,14 +251,15 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 
     if (Friends.list[self->num].group_invite.length == 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending group invite");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending group invite");
         return;
     }
 
@@ -262,7 +272,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     }
 
     if (passwd_len > TOX_GROUP_MAX_PASSWORD_SIZE) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group: Password too long.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group: Password too long.");
         return;
     }
 
@@ -277,12 +287,12 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
                            (const uint8_t *) passwd, passwd_len, &err);
 
     if (err != TOX_ERR_GROUP_INVITE_ACCEPT_OK) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
         return;
     }
 
     if (init_groupchat_win(toxic, groupnumber, NULL, 0, Group_Join_Type_Join) == -1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Group chat window failed to initialize.");
         tox_group_leave(tox, groupnumber, NULL, 0, NULL);
         return;
     }
@@ -295,27 +305,29 @@ void cmd_group_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Group number required.");
         return;
     }
 
     int groupnumber = atoi(argv[1]);
 
     if (groupnumber == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
         return;
     }
 
     Tox_Err_Group_Invite_Friend err;
 
     if (!tox_group_invite_friend(tox, groupnumber, self->num, &err)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d).", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d).",
+                      err);
         return;
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %d.", groupnumber);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %d.", groupnumber);
 }
 
 #ifdef GAMES
@@ -328,13 +340,15 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
+
     if (!Friends.list[self->num].game_invite.pending) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
         return;
     }
 
     if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 
@@ -354,17 +368,18 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
         }
 
         case -1: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Window is too small. Try enlarging your window.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Window is too small. Try enlarging your window.");
             return;
         }
 
         case -2: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (network error)");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (network error)");
             return;
         }
 
         default: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (error %d)", ret);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Game failed to initialize (error %d)", ret);
             return;
         }
     }
@@ -381,34 +396,35 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File ID required.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File ID required.");
         return;
     }
 
     long int idx = strtol(argv[1], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[1], "0")) || idx < 0 || idx >= MAX_FILES) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld", idx);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld", idx);
         return;
     }
 
     FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
 
     if (ft == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
         return;
     }
 
     if (ft->state != FILE_TRANSFER_PENDING) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
         return;
     }
 
     if ((ft->file = fopen(ft->file_path, "a")) == NULL) {
         const char *msg =  "File transfer failed: Invalid download path.";
-        close_file_transfer(self, tox, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
+        close_file_transfer(self, toxic, ft, TOX_FILE_CONTROL_CANCEL, msg, notif_error);
         return;
     }
 
@@ -419,14 +435,15 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         goto on_recv_error;
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx, ft->file_path);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx,
+                  ft->file_path);
 
     const bool auto_accept_files = friend_get_auto_accept_files(self->num);
     const uint32_t line_skip = auto_accept_files ? 4 : 2;
 
     char progline[MAX_STR_SIZE];
     init_progress_bar(progline);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
     ft->line_id = self->chatwin->hst->line_end->id + line_skip;
     ft->state = FILE_TRANSFER_STARTED;
 
@@ -436,23 +453,23 @@ on_recv_error:
 
     switch (err) {
         case TOX_ERR_FILE_CONTROL_FRIEND_NOT_FOUND:
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend not found.");
             return;
 
         case TOX_ERR_FILE_CONTROL_FRIEND_NOT_CONNECTED:
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend is not online.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Friend is not online.");
             return;
 
         case TOX_ERR_FILE_CONTROL_NOT_FOUND:
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Invalid filenumber.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Invalid filenumber.");
             return;
 
         case TOX_ERR_FILE_CONTROL_SENDQ:
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Connection error.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed: Connection error.");
             return;
 
         default:
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed (error %d)\n", err);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer failed (error %d)\n", err);
             return;
     }
 }
@@ -466,11 +483,12 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     const char *errmsg = NULL;
 
     if (argc < 1) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File path required.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File path required.");
         return;
     }
 
@@ -479,21 +497,21 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
     int path_len = strlen(path);
 
     if (path_len >= MAX_STR_SIZE) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");
         return;
     }
 
     FILE *file_to_send = fopen(path, "r");
 
     if (file_to_send == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "File `%s` not found.", path);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File `%s` not found.", path);
         return;
     }
 
     off_t filesize = file_size(path);
 
     if (filesize <= 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
         fclose(file_to_send);
         return;
     }
@@ -523,7 +541,8 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
 
     char sizestr[32];
     bytes_convert_str(sizestr, sizeof(sizestr), filesize);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s' (%s)", filenum, file_name, sizestr);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Sending file [%d]: '%s' (%s)", filenum,
+                  file_name, sizestr);
 
     return;
 
@@ -564,7 +583,7 @@ on_send_error:
                 }
             }
 
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 
             return;
         }
@@ -585,6 +604,6 @@ on_send_error:
         }
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
     tox_file_control(tox, self->num, filenum, TOX_FILE_CONTROL_CANCEL, NULL);
 }

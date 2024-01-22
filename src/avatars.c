@@ -180,14 +180,14 @@ void avatar_unset(Tox *tox)
     avatar_send_all(tox);
 }
 
-void on_avatar_friend_connection_status(Tox *tox, uint32_t friendnumber, Tox_Connection connection_status)
+void on_avatar_friend_connection_status(Toxic *toxic, uint32_t friendnumber, Tox_Connection connection_status)
 {
     if (connection_status == TOX_CONNECTION_NONE) {
-        kill_avatar_file_transfers_friend(tox, friendnumber);
+        kill_avatar_file_transfers_friend(toxic, friendnumber);
     }
 }
 
-void on_avatar_file_control(Tox *tox, struct FileTransfer *ft, Tox_File_Control control)
+void on_avatar_file_control(Toxic *toxic, struct FileTransfer *ft, Tox_File_Control control)
 {
     switch (control) {
         case TOX_FILE_CONTROL_RESUME:
@@ -204,30 +204,34 @@ void on_avatar_file_control(Tox *tox, struct FileTransfer *ft, Tox_File_Control 
             break;
 
         case TOX_FILE_CONTROL_CANCEL:
-            close_file_transfer(NULL, tox, ft, -1, NULL, silent);
+            close_file_transfer(NULL, toxic, ft, -1, NULL, silent);
             break;
     }
 }
 
-void on_avatar_chunk_request(Tox *tox, struct FileTransfer *ft, uint64_t position, size_t length)
+void on_avatar_chunk_request(Toxic *toxic, struct FileTransfer *ft, uint64_t position, size_t length)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
     if (ft->state != FILE_TRANSFER_STARTED) {
         return;
     }
 
     if (length == 0) {
-        close_file_transfer(NULL, tox, ft, -1, NULL, silent);
+        close_file_transfer(NULL, toxic, ft, -1, NULL, silent);
         return;
     }
 
     if (ft->file == NULL) {
-        close_file_transfer(NULL, tox, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        close_file_transfer(NULL, toxic, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
         return;
     }
 
     if (ft->position != position) {
         if (fseek(ft->file, position, SEEK_SET) == -1) {
-            close_file_transfer(NULL, tox, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+            close_file_transfer(NULL, toxic, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
             return;
         }
 
@@ -237,20 +241,20 @@ void on_avatar_chunk_request(Tox *tox, struct FileTransfer *ft, uint64_t positio
     uint8_t *send_data = malloc(length);
 
     if (send_data == NULL) {
-        close_file_transfer(NULL, tox, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        close_file_transfer(NULL, toxic, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
         return;
     }
 
     size_t send_length = fread(send_data, 1, length, ft->file);
 
     if (send_length != length) {
-        close_file_transfer(NULL, tox, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
+        close_file_transfer(NULL, toxic, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
         free(send_data);
         return;
     }
 
     Tox_Err_File_Send_Chunk err;
-    tox_file_send_chunk(tox, ft->friendnumber, ft->filenumber, position, send_data, send_length, &err);
+    tox_file_send_chunk(toxic->tox, ft->friendnumber, ft->filenumber, position, send_data, send_length, &err);
 
     free(send_data);
 

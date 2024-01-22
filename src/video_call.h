@@ -26,18 +26,17 @@
 #include <tox/toxav.h>
 
 #include "audio_call.h"
-
+#include "toxic.h"
 #include "video_device.h"
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
-ToxAV *init_video(ToxWindow *self, const Toxic *toxic);
+ToxAV *init_video(ToxWindow *self, Toxic *toxic);
 void terminate_video(void);
-int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call);
+int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call);
 int stop_video_transmission(Call *call, int friend_number);
 
 void callback_recv_video_starting(uint32_t friend_number);
 void callback_recv_video_end(uint32_t friend_number);
-void callback_video_starting(uint32_t friend_number);
 void callback_video_end(uint32_t friend_number);
 
 #endif /* VIDEO_CALL_H */

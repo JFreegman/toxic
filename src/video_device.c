@@ -59,8 +59,6 @@
 
 #define inline__ inline __attribute__((always_inline))
 
-extern struct user_settings *user_settings;
-
 struct VideoBuffer {
     void *start;
     size_t length;
@@ -108,7 +106,7 @@ static pthread_mutex_t video_mutex;
 static bool video_thread_running = true;
 static bool video_thread_paused = true;                /* Thread control */
 
-void *video_thread_poll(void *);
+void *video_thread_poll(void *userdata);
 
 static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y,
                         const uint8_t *u, const uint8_t *v, unsigned int ystride,
@@ -178,9 +176,9 @@ static int xioctl(int fh, unsigned long request, void *arg)
 
 /* Meet devices */
 #ifdef VIDEO
-VideoDeviceError init_video_devices(ToxAV *av_)
+VideoDeviceError init_video_devices(ToxAV *av_, const Client_Config *c_config)
 #else
-VideoDeviceError init_video_devices(void)
+VideoDeviceError init_video_devices(const Client_Config *c_config)
 #endif /* VIDEO */
 {
     size[vdt_input] = 0;
@@ -254,7 +252,8 @@ VideoDeviceError init_video_devices(void)
 
     pthread_t thread_id;
 
-    if (pthread_create(&thread_id, NULL, video_thread_poll, NULL) != 0 || pthread_detach(thread_id) != 0) {
+    if (pthread_create(&thread_id, NULL, video_thread_poll, (void *) c_config) != 0
+            || pthread_detach(thread_id) != 0) {
         return vde_InternalError;
     }
 
@@ -681,12 +680,17 @@ VideoDeviceError write_video_out(uint16_t width, uint16_t height,
     return vde_None;
 }
 
-void *video_thread_poll(void *arg)  // TODO: maybe use thread for every input source
+void *video_thread_poll(void *userdata)  // TODO: maybe use thread for every input source
 {
     /*
      * NOTE: We only need to poll input devices for data.
      */
-    UNUSED_VAR(arg);
+    const Client_Config *c_config = (Client_Config *) userdata;
+
+    if (c_config == NULL) {
+        pthread_exit(NULL);
+    }
+
     uint32_t i;
 
     while (1) {
@@ -741,7 +745,7 @@ void *video_thread_poll(void *arg)  // TODO: maybe use thread for every input so
 
                     /* Send frame data to friend through ToxAV */
                     if (device->cb) {
-                        device->cb(video_width, video_height, y, u, v, device->cb_data);
+                        device->cb(c_config, video_width, video_height, y, u, v, device->cb_data);
                     }
 
                     /* Convert YUV420 data to BGR */
@@ -862,12 +866,10 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
     return rc;
 }
 
-void print_video_devices(ToxWindow *self, VideoDeviceType type)
+void print_video_devices(ToxWindow *self, const Client_Config *c_config, VideoDeviceType type)
 {
-    int i;
-
-    for (i = 0; i < size[type]; ++i) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
+    for (int i = 0; i < size[type]; ++i) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
     }
 
     return;

@@ -94,11 +94,14 @@ static void cqueue_mark_read(ToxWindow *self, struct cqueue_msg *msg)
 }
 
 /* removes message with matching receipt from queue, writes to log and updates line to show the message was received. */
-void cqueue_remove(ToxWindow *self, Tox *tox, uint32_t receipt)
+void cqueue_remove(ToxWindow *self, Toxic *toxic, uint32_t receipt)
 {
     struct chatlog *log = self->chatwin->log;
     struct chat_queue *q = self->chatwin->cqueue;
     struct cqueue_msg *msg = q->root;
+
+    Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     while (msg) {
         if (msg->receipt != receipt) {
@@ -113,7 +116,7 @@ void cqueue_remove(ToxWindow *self, Tox *tox, uint32_t receipt)
             size_t len = tox_self_get_name_size(tox);
             selfname[len] = 0;
 
-            write_to_log(msg->message, selfname, log, msg->type == OUT_ACTION);
+            write_to_log(log, c_config, msg->message, selfname, msg->type == OUT_ACTION);
         }
 
         cqueue_mark_read(self, msg);

@@ -234,7 +234,7 @@ void add_line_to_hist(ChatContext *ctx)
    hst_pos is decremented or incremented depending on key_dir.
 
    resets line if at end of history */
-void fetch_hist_item(ChatContext *ctx, int key_dir)
+void fetch_hist_item(const Client_Config *c_config, ChatContext *ctx, int key_dir)
 {
     if (wcscmp(ctx->line, L"\0") != 0
             && ctx->hst_pos == ctx->hst_tot) {
@@ -245,7 +245,7 @@ void fetch_hist_item(ChatContext *ctx, int key_dir)
     if (key_dir == KEY_UP) {
         if (--ctx->hst_pos < 0) {
             ctx->hst_pos = 0;
-            sound_notify(NULL, notif_error, NT_ALWAYS, NULL);
+            sound_notify(NULL, c_config, notif_error, NT_ALWAYS, NULL);
         }
     } else {
         if (++ctx->hst_pos >= ctx->hst_tot) {

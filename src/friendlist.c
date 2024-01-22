@@ -68,7 +68,7 @@ typedef enum DefaultFriendSettings {
     DefaultFriendSettingsTabNameColour = WHITE_BAR_FG,
 } DefaultFriendSettings;
 
-static void set_default_friend_config_settings(ToxicFriend *friend)
+static void set_default_friend_config_settings(ToxicFriend *friend, int autolog)
 {
     if (friend == NULL) {
         return;
@@ -77,7 +77,7 @@ static void set_default_friend_config_settings(ToxicFriend *friend)
     FriendSettings *settings = &friend->settings;
 
     settings->tab_name_colour = DefaultFriendSettingsTabNameColour;
-    settings->autolog = (bool) user_settings->autolog == AUTOLOG_ON;
+    settings->autolog = autolog == AUTOLOG_ON;
 }
 
 static void realloc_friends(int n)
@@ -122,7 +122,7 @@ static void realloc_blocklist(int n)
     Blocked.index = b_idx;
 }
 
-void kill_friendlist(ToxWindow *self)
+void kill_friendlist(ToxWindow *self, const Client_Config *c_config)
 {
     for (size_t i = 0; i < Friends.max_idx; ++i) {
         if (Friends.list[i].active) {
@@ -140,7 +140,7 @@ void kill_friendlist(ToxWindow *self)
     realloc_blocklist(0);
     realloc_friends(0);
     free(self->help);
-    del_window(self);
+    del_window(self, c_config);
 }
 
 static void clear_blocklist_index(size_t idx)
@@ -384,14 +384,13 @@ static void sort_blocklist_index(void)
     qsort(Blocked.index, Blocked.num_blocked, sizeof(uint32_t), index_name_cmp_block);
 }
 
-static void update_friend_last_online(uint32_t num, time_t timestamp)
+static void update_friend_last_online(uint32_t num, time_t timestamp, const char *timestamp_format)
 {
     Friends.list[num].last_online.last_on = timestamp;
     Friends.list[num].last_online.tm = *localtime((const time_t *)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
-    const char *t = user_settings->timestamp_format;
-    strftime(Friends.list[num].last_online.hour_min_str, TIME_STR_SIZE, t,
+    strftime(Friends.list[num].last_online.hour_min_str, TIME_STR_SIZE, timestamp_format,
              &Friends.list[num].last_online.tm);
 }
 
@@ -407,6 +406,7 @@ static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, To
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (num >= Friends.max_idx) {
         return;
@@ -424,9 +424,11 @@ static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, To
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(tox, nick, num);
 
-    line_info_add(prompt, true, nick, NULL, IN_MSG, 0, 0, "%s", str);
-    line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED, "* Warning: Too many windows are open.");
-    sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+    line_info_add(prompt, c_config, true, nick, NULL, IN_MSG, 0, 0, "%s", str);
+    line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
+                  "* Warning: Too many windows are open.");
+
+    sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
 }
 
 static void friendlist_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Connection connection_status)
@@ -452,7 +454,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_
     }
 
     Friends.list[num].connection_status = connection_status;
-    update_friend_last_online(num, get_unix_time());
+    update_friend_last_online(num, get_unix_time(), toxic->c_config->timestamp_format);
     store_data(toxic);
     sort_friendlist_index();
 }
@@ -481,7 +483,8 @@ static void friendlist_onNickChange(ToxWindow *self, Toxic *toxic, uint32_t num,
     tox_self_get_address(toxic->tox, (uint8_t *) myid);
 
     if (strcmp(oldname, newnamecpy) != 0) {
-        if (rename_logfile(oldname, newnamecpy, myid, Friends.list[num].pub_key, Friends.list[num].chatwin) != 0) {
+        if (rename_logfile(toxic->c_config, oldname, newnamecpy, myid, Friends.list[num].pub_key,
+                           Friends.list[num].chatwin) != 0) {
             fprintf(stderr, "Failed to rename friend chat log from `%s` to `%s`\n", oldname, newnamecpy);
         }
     }
@@ -523,13 +526,12 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     realloc_friends(Friends.max_idx + 1);
     clear_friendlist_index(Friends.max_idx);
 
-    uint32_t i;
-
-    for (i = 0; i <= Friends.max_idx; ++i) {
+    for (uint32_t i = 0; i <= Friends.max_idx; ++i) {
         if (Friends.list[i].active) {
             continue;
         }
@@ -542,7 +544,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
         Friends.list[i].auto_accept_files = false;  // do not change
         Friends.list[i].connection_status = TOX_CONNECTION_NONE;
         Friends.list[i].status = TOX_USER_STATUS_NONE;
-        set_default_friend_config_settings(&Friends.list[i]);
+        set_default_friend_config_settings(&Friends.list[i], c_config->autolog);
 
         Tox_Err_Friend_Get_Public_Key pkerr;
         tox_friend_get_public_key(tox, num, (uint8_t *) Friends.list[i].pub_key, &pkerr);
@@ -558,7 +560,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
             t = 0;
         }
 
-        update_friend_last_online(i, t);
+        update_friend_last_online(i, t, c_config->timestamp_format);
 
         char tempname[TOX_MAX_NAME_LENGTH + 1];
         int name_len = get_nick_truncate(tox, tempname, num);
@@ -583,14 +585,12 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
 }
 
 /* Puts blocked friend back in friendlist. fnum is new friend number, bnum is blocked number. */
-static void friendlist_add_blocked(uint32_t fnum, uint32_t bnum)
+static void friendlist_add_blocked(const Client_Config *c_config, uint32_t fnum, uint32_t bnum)
 {
     realloc_friends(Friends.max_idx + 1);
     clear_friendlist_index(Friends.max_idx);
 
-    int i;
-
-    for (i = 0; i <= Friends.max_idx; ++i) {
+    for (int i = 0; i <= Friends.max_idx; ++i) {
         if (Friends.list[i].active) {
             continue;
         }
@@ -601,9 +601,9 @@ static void friendlist_add_blocked(uint32_t fnum, uint32_t bnum)
         Friends.list[i].active = true;
         Friends.list[i].chatwin = -1;
         Friends.list[i].status = TOX_USER_STATUS_NONE;
-        Friends.list[i].logging_on = (bool) user_settings->autolog == AUTOLOG_ON;
+        Friends.list[i].logging_on = c_config->autolog == AUTOLOG_ON;
         Friends.list[i].namelength = Blocked.list[bnum].namelength;
-        update_friend_last_online(i, Blocked.list[bnum].last_on);
+        update_friend_last_online(i, Blocked.list[bnum].last_on, c_config->timestamp_format);
         memcpy(Friends.list[i].name, Blocked.list[bnum].name, Friends.list[i].namelength + 1);
         memcpy(Friends.list[i].pub_key, Blocked.list[bnum].pub_key, TOX_PUBLIC_KEY_SIZE);
 
@@ -635,6 +635,7 @@ static void friendlist_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t frie
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (friend_number >= Friends.max_idx) {
         return;
@@ -652,10 +653,10 @@ static void friendlist_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t frie
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(tox, nick, friend_number);
 
-    line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED,
+    line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* Game invite from %s failed: Too many windows are open.", nick);
 
-    sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
 }
 
 #endif // GAMES
@@ -669,6 +670,7 @@ static void friendlist_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t num, u
     UNUSED_VAR(name_length);
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (num >= Friends.max_idx) {
         return;
@@ -688,10 +690,10 @@ static void friendlist_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t num, u
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(tox, nick, num);
 
-    line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED,
+    line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* File transfer from %s failed: too many windows are open.", nick);
 
-    sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
 }
 
 static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t num, uint8_t type,
@@ -708,6 +710,7 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (num >= Friends.max_idx) {
         return;
@@ -725,10 +728,10 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(tox, nick, num);
 
-    line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED,
+    line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* Conference chat invite from %s failed: too many windows are open.", nick);
 
-    sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
 }
 
 static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num, const char *data, size_t length,
@@ -743,6 +746,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (num >= Friends.max_idx) {
         return;
@@ -760,10 +764,10 @@ static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num
     char nick[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(tox, nick, num);
 
-    line_info_add(prompt, NULL, NULL, NULL, SYS_MSG, 0, RED,
+    line_info_add(prompt, c_config, NULL, NULL, NULL, SYS_MSG, 0, RED,
                   "* Group chat invite from %s failed: too many windows are open.", nick);
 
-    sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
 }
 
 /* move friendlist/blocklist cursor up and down */
@@ -790,8 +794,8 @@ static void delete_friend(Toxic *toxic, uint32_t f_num)
 
     Tox *tox = toxic->tox;
 
-    kill_all_file_transfers_friend(tox, f_num);
-    kill_avatar_file_transfers_friend(tox, f_num);
+    kill_all_file_transfers_friend(toxic, f_num);
+    kill_avatar_file_transfers_friend(toxic, f_num);
 
     Tox_Err_Friend_Delete err;
 
@@ -979,11 +983,12 @@ static void unblock_friend(Toxic *toxic, uint32_t bnum)
     uint32_t friendnum = tox_friend_add_norequest(toxic->tox, (uint8_t *) Blocked.list[bnum].pub_key, &err);
 
     if (err != TOX_ERR_FRIEND_ADD_OK) {
-        line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to unblock friend (error %d)", err);
+        line_info_add(prompt, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to unblock friend (error %d)", err);
         return;
     }
 
-    friendlist_add_blocked(friendnum, bnum);
+    friendlist_add_blocked(toxic->c_config, friendnum, bnum);
     delete_blocked_friend(toxic, bnum);
     sort_blocklist_index();
     sort_friendlist_index();
@@ -999,6 +1004,7 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (self->help->active) {
         help_onKey(self, key);
@@ -1053,8 +1059,8 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
                 set_active_window_index(Friends.list[f].chatwin);
             } else {
                 const char *msg = "* Warning: Too many windows are open.";
-                line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED, msg);
-                sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+                line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED, msg);
+                sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
             }
 
             break;
@@ -1440,6 +1446,7 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (Friends.list[friend_number].chatwin == -1) {
         if (get_num_active_windows() < MAX_WINDOWS_NUM) {
@@ -1450,12 +1457,12 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
         } else {
             char nick[TOX_MAX_NAME_LENGTH];
             get_nick_truncate(tox, nick, Friends.list[friend_number].num);
-            line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
+            line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
 
             const char *errmsg = "* Warning: Too many windows are open.";
-            line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, RED, errmsg);
+            line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED, errmsg);
 
-            sound_notify(prompt, notif_error, NT_WNDALERT_1, NULL);
+            sound_notify(prompt, c_config, notif_error, NT_WNDALERT_1, NULL);
         }
     }
 }
@@ -1649,7 +1656,6 @@ ToxWindow *new_friendlist(void)
     ret->onInvite = &friendlist_onAV;
     ret->onRinging = &friendlist_onAV;
     ret->onStarting = &friendlist_onAV;
-    ret->onEnding = &friendlist_onAV;
     ret->onError = &friendlist_onAV;
     ret->onStart = &friendlist_onAV;
     ret->onCancel = &friendlist_onAV;

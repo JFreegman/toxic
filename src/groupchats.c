@@ -64,7 +64,6 @@
 extern char *DATA_FILE;
 static int max_groupchat_index = 0;
 
-extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #define GROUP_SIDEBAR_OFFSET 3    /* Offset for the peer number box at the top of the statusbar */
@@ -241,10 +240,11 @@ static void clear_peer(GroupPeer *peer)
 
 void groupchat_rejoin(ToxWindow *self, Toxic *toxic)
 {
+    const Client_Config *c_config = toxic->c_config;
     GroupChat *chat = get_groupchat(self->num);
 
-    if (!chat) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Failed to fetch GroupChat object.");
+    if (chat == NULL) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "Failed to fetch GroupChat object.");
         return;
     }
 
@@ -252,7 +252,8 @@ void groupchat_rejoin(ToxWindow *self, Toxic *toxic)
     const uint32_t self_peer_id = tox_group_self_get_peer_id(toxic->tox, self->num, &s_err);
 
     if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Failed to fetch self peer_id in groupchat_rejoin()");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to fetch self peer_id in groupchat_rejoin()");
         return;
     }
 
@@ -267,7 +268,7 @@ void groupchat_rejoin(ToxWindow *self, Toxic *toxic)
     groupchat_onGroupPeerJoin(self, toxic, self->num, self_peer_id);
 }
 
-static void kill_groupchat_window(ToxWindow *self)
+static void kill_groupchat_window(ToxWindow *self, const Client_Config *c_config)
 {
     if (self == NULL) {
         return;
@@ -287,7 +288,7 @@ static void kill_groupchat_window(ToxWindow *self)
 
     free(self->help);
     kill_notifs(self->active_box);
-    del_window(self);
+    del_window(self, c_config);
 }
 
 /* Closes groupchat window and cleans up. */
@@ -295,7 +296,7 @@ static void close_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber)
 {
     GroupChat *chat = get_groupchat(groupnumber);
 
-    if (!chat) {
+    if (chat == NULL) {
         return;
     }
 
@@ -318,7 +319,7 @@ static void close_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber)
     }
 
     max_groupchat_index = i;
-    kill_groupchat_window(self);
+    kill_groupchat_window(self, toxic->c_config);
 }
 
 void exit_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *partmessage, size_t length)
@@ -376,10 +377,11 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     GroupChat *chat = get_groupchat(groupnumber);
 
-    if (!chat) {
+    if (chat == NULL) {
         return;
     }
 
@@ -393,22 +395,23 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     Tox_Err_Group_State_Queries err;
 
     if (!tox_group_get_chat_id(tox, groupnumber, (uint8_t *)chat_id, &err)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch chat id. Logging disabled. (error: %d)", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to fetch chat id. Logging disabled. (error: %d)", err);
         return;
     }
 
-    if (log_init(ctx->log, chat->group_name, my_id, chat_id, LOG_TYPE_CHAT) != 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+    if (log_init(ctx->log, c_config, chat->group_name, my_id, chat_id, LOG_TYPE_CHAT) != 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }
 
-    if (load_chat_history(self, ctx->log) != 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
+    if (load_chat_history(ctx->log, self, c_config) != 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 
-    if (user_settings->autolog == AUTOLOG_ON) {
+    if (c_config->autolog == AUTOLOG_ON) {
         if (!enable_groupchat_log(groupnumber)) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
     }
 }
@@ -469,7 +472,7 @@ int init_groupchat_win(Toxic *toxic, uint32_t groupnumber, const char *groupname
         }
     }
 
-    kill_groupchat_window(self);
+    kill_groupchat_window(self, toxic->c_config);
 
     return -1;
 }
@@ -481,6 +484,7 @@ void set_nick_this_group(ToxWindow *self, Toxic *toxic, const char *new_nick, si
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     char old_nick[TOX_MAX_NAME_LENGTH + 1];
     size_t old_length = get_group_self_nick_truncate(tox, old_nick, self->num);
@@ -491,7 +495,7 @@ void set_nick_this_group(ToxWindow *self, Toxic *toxic, const char *new_nick, si
     GroupChat *chat = get_groupchat(self->num);
 
     if (chat == NULL) {
-        line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick: invalid groupnumber");
+        line_info_add(self, c_config, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick: invalid groupnumber");
         return;
     }
 
@@ -503,7 +507,7 @@ void set_nick_this_group(ToxWindow *self, Toxic *toxic, const char *new_nick, si
 
         default: {
             if (chat->time_connected > 0) {
-                line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err);
+                line_info_add(self, c_config, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err);
             }
 
             break;
@@ -535,7 +539,7 @@ void set_nick_this_group(ToxWindow *self, Toxic *toxic, const char *new_nick, si
 
 /*                 default: { */
 /*                     if (groupchats[i].time_connected > 0) { */
-/*                         line_info_add(self, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err); */
+/*                         line_info_add(self, c_config, false, NULL, 0, SYS_MSG, 0, RED, "-!- Failed to set nick (error %d).", err); */
 /*                     } */
 
 /*                     break; */
@@ -551,7 +555,7 @@ void set_status_all_groups(Toxic *toxic, uint8_t status)
         if (groupchats[i].active) {
             ToxWindow *self = get_window_ptr(groupchats[i].chatwin);
 
-            if (!self) {
+            if (self == NULL) {
                 continue;
             }
 
@@ -559,7 +563,8 @@ void set_status_all_groups(Toxic *toxic, uint8_t status)
             const uint32_t self_peer_id = tox_group_self_get_peer_id(toxic->tox, self->num, &s_err);
 
             if (s_err != TOX_ERR_GROUP_SELF_QUERY_OK) {
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Failed to fetch self peer_id.");
+                line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                              "Failed to fetch self peer_id.");
                 continue;
             }
 
@@ -702,7 +707,8 @@ int group_get_public_key_peer_id(uint32_t groupnumber, const char *public_key, u
  * Return -1 if the identifier does not correspond with a peer in the group, or if
  *   the identifier is a nick which is being used by multiple peers.
  */
-int group_get_peer_id_of_identifier(ToxWindow *self, const char *identifier, uint32_t *peer_id)
+int group_get_peer_id_of_identifier(ToxWindow *self, const Client_Config *c_config,
+                                    const char *identifier, uint32_t *peer_id)
 {
     *peer_id = (uint32_t) -1;
 
@@ -718,21 +724,21 @@ int group_get_peer_id_of_identifier(ToxWindow *self, const char *identifier, uin
         }
 
         case -1: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "Invalid peer name or public key.");
             return -1;
         }
 
         case -2: {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "More than one peer is using this name; specify the target's public key.");
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "Use the /whois or /list command to determine the key.");
             *peer_id = (uint32_t) -1;
             return -1;
         }
 
         default:
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,  "Unspecified error.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "Unspecified error.");
             return -1;
     }
 }
@@ -977,6 +983,8 @@ void redraw_groupchat_win(ToxWindow *self)
 static void group_onAction(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id, const char *action,
                            size_t len)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH + 1];
@@ -987,18 +995,18 @@ static void group_onAction(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, 
 
     if (strcasestr(action, self_nick)) {
         if (self->active_box != -1) {
-            box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message, self->active_box,
-                        "* %s %s", nick, action);
+            box_notify2(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
+                        c_config->bell_on_message, self->active_box, "* %s %s", nick, action);
         } else {
-            box_notify(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message, &self->active_box,
-                       self->name, "* %s %s", nick, action);
+            box_notify(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
+                       c_config->bell_on_message, &self->active_box, self->name, "* %s %s", nick, action);
         }
     } else {
-        sound_notify(self, silent, NT_WNDALERT_1, NULL);
+        sound_notify(self, c_config, silent, NT_WNDALERT_1, NULL);
     }
 
-    line_info_add(self, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
-    write_to_log(action, nick, ctx->log, true);
+    line_info_add(self, c_config, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
+    write_to_log(ctx->log, c_config, action, nick, true);
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
@@ -1009,6 +1017,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t gro
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
         return;
@@ -1033,21 +1042,21 @@ static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t gro
 
     /* Only play sound if mentioned by someone else */
     if (strcasestr(msg, self_nick) && strcmp(self_nick, nick)) {
-        sound_notify(self, generic_message, NT_WNDALERT_0 | user_settings->bell_on_message, NULL);
+        sound_notify(self, c_config, generic_message, NT_WNDALERT_0 | c_config->bell_on_message, NULL);
 
         if (self->active_box != -1) {
-            box_silent_notify2(self, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+            box_silent_notify2(self, c_config, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
         } else {
-            box_silent_notify(self, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+            box_silent_notify(self, c_config, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
         }
 
         nick_clr = RED;
     } else {
-        sound_notify(self, silent, NT_WNDALERT_1, NULL);
+        sound_notify(self, c_config, silent, NT_WNDALERT_1, NULL);
     }
 
-    line_info_add(self, true, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
-    write_to_log(msg, nick, ctx->log, false);
+    line_info_add(self, c_config, true, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
+    write_to_log(ctx->log, c_config, msg, nick, false);
 }
 
 static void groupchat_onGroupPrivateMessage(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
@@ -1058,6 +1067,7 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Toxic *toxic, uint3
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
         return;
@@ -1070,14 +1080,14 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Toxic *toxic, uint3
     char nick[TOX_MAX_NAME_LENGTH + 1];
     get_group_nick_truncate(tox, nick, peer_id, groupnumber);
 
-    line_info_add(self, true, nick, NULL, IN_PRVT_MSG, 0, MAGENTA, "%s", msg);
-    write_to_log(msg, nick, ctx->log, false);
+    line_info_add(self, c_config, true, nick, NULL, IN_PRVT_MSG, 0, MAGENTA, "%s", msg);
+    write_to_log(ctx->log, c_config, msg, nick, false);
 
     if (self->active_box != -1) {
-        box_notify2(self, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+        box_notify2(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
                     self->active_box, "%s %s", nick, msg);
     } else {
-        box_notify(self,  generic_message, NT_WNDALERT_0 | NT_NOFOCUS | user_settings->bell_on_message,
+        box_notify(self, c_config,  generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
                    &self->active_box, self->name, "%s %s", nick, msg);
     }
 }
@@ -1090,6 +1100,7 @@ static void groupchat_onGroupTopicChange(ToxWindow *self, Toxic *toxic, uint32_t
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     ChatContext *ctx = self->chatwin;
 
@@ -1101,44 +1112,42 @@ static void groupchat_onGroupTopicChange(ToxWindow *self, Toxic *toxic, uint32_t
 
     char nick[TOX_MAX_NAME_LENGTH + 1];
     get_group_nick_truncate(tox, nick, peer_id, groupnumber);
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- %s set the topic to: %s", nick, topic);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- %s set the topic to: %s", nick, topic);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the topic to %s", topic);
-    write_to_log(tmp_event, nick, ctx->log, true);
+    write_to_log(ctx->log, c_config, tmp_event, nick, true);
 }
 
 static void groupchat_onGroupPeerLimit(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_limit)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
         return;
     }
 
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has set the peer limit to %d",
-                  peer_limit);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
+                  "-!- The group founder has set the peer limit to %d", peer_limit);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the peer limit to %u", peer_limit);
-    write_to_log(tmp_event, "The founder", ctx->log, true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
 }
 
 static void groupchat_onGroupPrivacyState(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
         Tox_Group_Privacy_State state)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
@@ -1147,22 +1156,21 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Toxic *toxic, uint32_
 
     const char *state_str = state == TOX_GROUP_PRIVACY_STATE_PUBLIC ? "public" : "private";
 
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has set the group to %s.",
-                  state_str);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
+                  "-!- The group founder has set the group to %s.", state_str);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the group to %s.", state_str);
-    write_to_log(tmp_event, "The founder", ctx->log, true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
 }
 
 void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, Tox_Group_Voice_State voice_state)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
@@ -1173,20 +1181,20 @@ void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t groupnu
 
     switch (voice_state) {
         case TOX_GROUP_VOICE_STATE_ALL: {
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Voice: Everyone may speak");
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Voice: Everyone may speak");
             snprintf(tmp_event, sizeof(tmp_event), " set the voice state to ALL.");
             break;
         }
 
         case TOX_GROUP_VOICE_STATE_MODERATOR: {
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE,
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
                           "-!- Voice: Only moderators and the founder may speak");
             snprintf(tmp_event, sizeof(tmp_event), " set the voice state to MODERATOR.");
             break;
         }
 
         case TOX_GROUP_VOICE_STATE_FOUNDER: {
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Voice: Only the founder may speak.");
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Voice: Only the founder may speak.");
             snprintf(tmp_event, sizeof(tmp_event), " set the voice state to FOUNDER.");
             break;
         }
@@ -1195,18 +1203,17 @@ void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t groupnu
             return;
     }
 
-    write_to_log(tmp_event, "The founder", ctx->log, true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
 }
 
 static void groupchat_onGroupTopicLock(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
                                        Tox_Group_Topic_Lock topic_lock)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
@@ -1215,22 +1222,22 @@ static void groupchat_onGroupTopicLock(ToxWindow *self, Toxic *toxic, uint32_t g
 
     const char *tlock_str = topic_lock == TOX_GROUP_TOPIC_LOCK_ENABLED ? "locked" : "unlocked";
 
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has %s the topic.", tlock_str);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
+                  "-!- The group founder has %s the topic.", tlock_str);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " %s the topic.", tlock_str);
-    write_to_log(tmp_event, "The founder", ctx->log, true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
 }
 
 static void groupchat_onGroupPassword(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *password,
                                       size_t length)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber || !get_groupchat(groupnumber)) {
@@ -1238,17 +1245,19 @@ static void groupchat_onGroupPassword(ToxWindow *self, Toxic *toxic, uint32_t gr
     }
 
     if (length > 0) {
-        line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has password protected the group.");
+        line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
+                      "-!- The group founder has password protected the group.");
 
         char tmp_event[MAX_STR_SIZE];
         snprintf(tmp_event, sizeof(tmp_event), " set a new password.");
-        write_to_log(tmp_event, "The founder", ctx->log, true);
+        write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
     } else {
-        line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- The group founder has removed password protection.");
+        line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
+                      "-!- The group founder has removed password protection.");
 
         char tmp_event[MAX_STR_SIZE];
         snprintf(tmp_event, sizeof(tmp_event), " removed password protection.");
-        write_to_log(tmp_event, "The founder", ctx->log, true);
+        write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
     }
 }
 
@@ -1261,7 +1270,7 @@ static int realloc_peer_list(uint32_t groupnumber, uint32_t n)
 {
     GroupChat *chat = get_groupchat(groupnumber);
 
-    if (!chat) {
+    if (chat == NULL) {
         return -1;
     }
 
@@ -1289,6 +1298,8 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
+    ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber) {
         return;
@@ -1296,7 +1307,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
 
     GroupChat *chat = get_groupchat(groupnumber);
 
-    if (!chat) {
+    if (chat == NULL) {
         return;
     }
 
@@ -1336,11 +1347,11 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
 
         /* ignore join messages when we first connect to the group */
         if (timed_out(chat->time_connected, 60)
-                && user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
-            line_info_add(self, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
+                && c_config->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
+            line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
-            write_to_log("has joined the room", peer->name, self->chatwin->log, true);
-            sound_notify(self, silent, NT_WNDALERT_2, NULL);
+            write_to_log(ctx->log, c_config, "has joined the room", peer->name, true);
+            sound_notify(self, c_config, silent, NT_WNDALERT_2, NULL);
         }
 
         group_update_name_list(groupnumber);
@@ -1355,11 +1366,13 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
 {
     UNUSED_VAR(name_len);
     UNUSED_VAR(length);
-    UNUSED_VAR(toxic);
 
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
+
+    const Client_Config *c_config = toxic->c_config;
+    ChatContext *ctx = self->chatwin;
 
     if (self->num != groupnumber) {
         return;
@@ -1367,25 +1380,25 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
 
     GroupChat *chat = get_groupchat(groupnumber);
 
-    if (!chat) {
+    if (chat == NULL) {
         return;
     }
 
     if (exit_type != TOX_GROUP_EXIT_TYPE_SELF_DISCONNECTED
-            && user_settings->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
+            && c_config->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
         char log_str[TOX_MAX_NAME_LENGTH + MAX_STR_SIZE];
 
         if (length > 0) {
-            line_info_add(self, true, name, NULL, DISCONNECTION, 0, RED, "[Quit]: %s", part_message);
+            line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "[Quit]: %s", part_message);
             snprintf(log_str, sizeof(log_str), "has left the room (%s)", part_message);
-            write_to_log(log_str, name, self->chatwin->log, true);
-            sound_notify(self, silent, NT_WNDALERT_2, NULL);
+            write_to_log(ctx->log, c_config, log_str, name, true);
+            sound_notify(self, c_config, silent, NT_WNDALERT_2, NULL);
         } else {
             const char *exit_string = get_group_exit_string(exit_type);
-            line_info_add(self, true, name, NULL, DISCONNECTION, 0, RED, "[%s]", exit_string);
+            line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "[%s]", exit_string);
             snprintf(log_str, sizeof(log_str), "[%s]", exit_string);
-            write_to_log(log_str, name, self->chatwin->log, true);
-            sound_notify(self, silent, NT_WNDALERT_2, NULL);
+            write_to_log(ctx->log, c_config, log_str, name, true);
+            sound_notify(self, c_config, silent, NT_WNDALERT_2, NULL);
         }
 
     }
@@ -1423,6 +1436,7 @@ static void groupchat_set_group_name(ToxWindow *self, Toxic *toxic, uint32_t gro
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     GroupChat *chat = get_groupchat(groupnumber);
 
@@ -1434,14 +1448,15 @@ static void groupchat_set_group_name(ToxWindow *self, Toxic *toxic, uint32_t gro
     size_t len = tox_group_get_name_size(tox, groupnumber, &err);
 
     if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group name length (error %d)", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to retrieve group name length (error %d)", err);
         return;
     }
 
     char tmp_groupname[TOX_GROUP_MAX_GROUP_NAME_LENGTH + 1];
 
     if (!tox_group_get_name(tox, groupnumber, (uint8_t *) tmp_groupname, &err)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group name (error %d)", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group name (error %d)", err);
         return;
     }
 
@@ -1461,6 +1476,7 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (self->num != groupnumber) {
         return;
@@ -1480,7 +1496,8 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
     const size_t topic_length = tox_group_get_topic_size(tox, groupnumber, &err);
 
     if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group topic length (error %d)", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to retrieve group topic length (error %d)", err);
         return;
     }
 
@@ -1488,11 +1505,12 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
     topic[topic_length] = 0;
 
     if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group topic (error %d)", err);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group topic (error %d)",
+                      err);
         return;
     }
 
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- Topic set to: %s", topic);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- Topic set to: %s", topic);
 
     if (chat->group_name_length == 0) {
         groupchat_set_group_name(self, toxic, groupnumber);
@@ -1525,9 +1543,7 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
 
 static void groupchat_onGroupRejected(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, Tox_Group_Join_Fail type)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
@@ -1551,7 +1567,7 @@ static void groupchat_onGroupRejected(ToxWindow *self, Toxic *toxic, uint32_t gr
             break;
     }
 
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 0, RED, "-!- %s", msg);
+    line_info_add(self, toxic->c_config, true, NULL, NULL, SYS_MSG, 0, RED, "-!- %s", msg);
 }
 
 static void groupchat_update_roles(Tox *tox, uint32_t groupnumber)
@@ -1586,6 +1602,7 @@ void groupchat_onGroupModeration(ToxWindow *self, Toxic *toxic, uint32_t groupnu
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     if (self->num != groupnumber) {
         return;
@@ -1614,24 +1631,28 @@ void groupchat_onGroupModeration(ToxWindow *self, Toxic *toxic, uint32_t groupnu
 
     switch (type) {
         case TOX_GROUP_MOD_EVENT_KICK:
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been kicked by %s", tgt_name, src_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been kicked by %s", tgt_name,
+                          src_name);
             break;
 
         case TOX_GROUP_MOD_EVENT_OBSERVER:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_OBSERVER;
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to observer", src_name, tgt_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to observer",
+                          src_name, tgt_name);
             sort_peerlist(groupnumber);
             break;
 
         case TOX_GROUP_MOD_EVENT_USER:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_USER;
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to user", src_name, tgt_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to user", src_name,
+                          tgt_name);
             sort_peerlist(groupnumber);
             break;
 
         case TOX_GROUP_MOD_EVENT_MODERATOR:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_MODERATOR;
-            line_info_add(self, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to moderator", src_name,
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to moderator",
+                          src_name,
                           tgt_name);
             sort_peerlist(groupnumber);
             break;
@@ -1680,7 +1701,8 @@ static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint3
     chat->peer_list[peer_index].name[length] = 0;
     chat->peer_list[peer_index].name_length = length;
 
-    line_info_add(self, true, old_nick, chat->peer_list[peer_index].name, NAME_CHANGE, 0, MAGENTA, " is now known as ");
+    line_info_add(self, toxic->c_config, true, old_nick, chat->peer_list[peer_index].name, NAME_CHANGE, 0,
+                  MAGENTA, " is now known as ");
 
     groupchat_update_last_seen(groupnumber, peer_id);
     group_update_name_list(groupnumber);
@@ -1689,9 +1711,7 @@ static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint3
 static void groupchat_onGroupNickChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
                                         const char *new_nick, size_t length)
 {
-    UNUSED_VAR(toxic);
-
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
@@ -1720,7 +1740,8 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Toxic *toxic, uint32_t 
     peer->name[length] = 0;
     peer->name_length = length;
 
-    line_info_add(self, true, peer->prev_name, peer->name, NAME_CHANGE, 0, MAGENTA, " is now known as ");
+    line_info_add(self, toxic->c_config, true, peer->prev_name, peer->name, NAME_CHANGE, 0, MAGENTA,
+                  " is now known as ");
 
     snprintf(peer->prev_name, sizeof(peer->prev_name), "%s", peer->name);
 
@@ -1764,6 +1785,7 @@ static void send_group_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     }
 
     Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
 
     ChatContext *ctx = self->chatwin;
 
@@ -1780,12 +1802,12 @@ static void send_group_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
             const Tox_Group_Role role = tox_group_self_get_role(tox, groupnumber, NULL);
 
             if (role == TOX_GROUP_ROLE_OBSERVER) {
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
             } else {
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You do not have voice.");
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * You do not have voice.");
             }
         } else {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (Error %d).", err);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send message (Error %d).", err);
         }
 
         return;
@@ -1795,28 +1817,29 @@ static void send_group_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     get_group_self_nick_truncate(tox, self_nick, groupnumber);
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
-        line_info_add(self, true, self_nick, NULL, OUT_MSG_READ, 0, 0, "%s", msg);
-        write_to_log(msg, self_nick, ctx->log, false);
+        line_info_add(self, c_config, true, self_nick, NULL, OUT_MSG_READ, 0, 0, "%s", msg);
+        write_to_log(ctx->log, c_config, msg, self_nick, false);
     } else if (type == TOX_MESSAGE_TYPE_ACTION) {
-        line_info_add(self, true, self_nick, NULL, OUT_ACTION_READ, 0, 0, "%s", msg);
-        write_to_log(msg, self_nick, ctx->log, true);
+        line_info_add(self, c_config, true, self_nick, NULL, OUT_ACTION_READ, 0, 0, "%s", msg);
+        write_to_log(ctx->log, c_config, msg, self_nick, true);
     }
 }
 
 static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *data,
                                     size_t data_len)
 {
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     GroupChat *chat = get_groupchat(groupnumber);
 
     if (chat == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Failed to fetch GroupChat object.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "Failed to fetch GroupChat object.");
         return;
     }
 
     if (data == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Invalid comand.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "Invalid comand.");
         return;
     }
 
@@ -1843,7 +1866,7 @@ static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t grou
 
     if (nick == NULL) {
         if (data_len < TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid nick.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid nick.");
             return;
         }
 
@@ -1853,14 +1876,14 @@ static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t grou
 
     uint32_t peer_id;
 
-    if (group_get_peer_id_of_identifier(self, nick, &peer_id) != 0) {
+    if (group_get_peer_id_of_identifier(self, c_config, nick, &peer_id) != 0) {
         return;
     }
 
     const int msg_len = ((int) data_len) - ((int) name_length) - 1;
 
     if (msg_len <= 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Message is empty.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Message is empty.");
         return;
     }
 
@@ -1871,9 +1894,9 @@ static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t grou
     if (!tox_group_send_private_message(toxic->tox, groupnumber, peer_id, TOX_MESSAGE_TYPE_NORMAL,
                                         (uint8_t *) msg, msg_len, &err)) {
         if (err == TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE_PERMISSIONS) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
         } else {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send private message (%d)", err);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to send private message (%d)", err);
         }
 
         return;
@@ -1882,8 +1905,8 @@ static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t grou
     char pm_nick[TOX_MAX_NAME_LENGTH + 3];
     snprintf(pm_nick, sizeof(pm_nick), ">%s<", nick);
 
-    line_info_add(self, true, pm_nick, NULL, OUT_PRVT_MSG, 0, 0, "%s", msg);
-    write_to_log(msg, pm_nick, ctx->log, false);
+    line_info_add(self, c_config, true, pm_nick, NULL, OUT_PRVT_MSG, 0, 0, "%s", msg);
+    write_to_log(ctx->log, c_config, msg, pm_nick, false);
 }
 
 /*
@@ -1895,6 +1918,7 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         return false;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     GroupChat *chat = get_groupchat(self->num);
@@ -1923,15 +1947,15 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     }
 
     if (ltr || key == L'\n') {    /* char is printable */
-        input_new_char(self, key, x, x2);
+        input_new_char(self, c_config, key, x, x2);
         return true;
     }
 
-    if (line_info_onKey(self, key)) {
+    if (line_info_onKey(self, c_config, key)) {
         return true;
     }
 
-    if (input_handle(self, key, x, x2)) {
+    if (input_handle(self, c_config, key, x, x2)) {
         return true;
     }
 
@@ -1945,11 +1969,11 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 
             /* TODO: make this not suck */
             if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {
-                diff = complete_line(self, (const char **) chat->name_list, chat->num_peers);
+                diff = complete_line(self, toxic, (const char **) chat->name_list, chat->num_peers);
             } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
                 diff = dir_match(self, toxic, ctx->line, L"/avatar");
             } else {
-                diff = complete_line(self, group_cmd_list, sizeof(group_cmd_list) / sizeof(char *));
+                diff = complete_line(self, toxic, group_cmd_list, sizeof(group_cmd_list) / sizeof(char *));
             }
 
             if (diff != -1) {
@@ -1958,10 +1982,10 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                sound_notify(self, notif_error, 0, NULL);
+                sound_notify(self, c_config, notif_error, 0, NULL);
             }
         } else {
-            sound_notify(self, notif_error, 0, NULL);
+            sound_notify(self, c_config, notif_error, 0, NULL);
         }
     } else if (key == T_KEY_C_DOWN) {    /* Scroll peerlist up and down one position */
         input_ret = true;
@@ -2005,7 +2029,8 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     if (part_length > 0) {
                         exit_groupchat(self, toxic, self->num, part_message, part_length);
                     } else {
-                        exit_groupchat(self, toxic, self->num, user_settings->group_part_message, strlen(user_settings->group_part_message));
+                        exit_groupchat(self, toxic, self->num, c_config->group_part_message,
+                                       strlen(c_config->group_part_message));
                     }
 
                     return true;
@@ -2019,7 +2044,7 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
             } else if (line[0]) {
                 send_group_message(self, toxic, self->num, line, TOX_MESSAGE_TYPE_NORMAL);
             } else {
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             }
 
             wclear(ctx->linewin);
@@ -2056,7 +2081,7 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
         return;
     }
 
-    line_info_print(self);
+    line_info_print(self, toxic->c_config);
 
     pthread_mutex_unlock(&Winthread.lock);
 

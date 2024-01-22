@@ -39,8 +39,6 @@
 #include "settings.h"
 #include "windows.h"
 
-extern struct user_settings *user_settings;
-
 /* URL that we get the JSON encoded nodes list from. */
 #define NODES_LIST_URL "https://nodes.tox.chat/json"
 
@@ -148,9 +146,9 @@ static bool node_is_offline(unsigned long long int last_ping)
  * This will be the case if the file is empty, has an invalid format,
  * or if the file is older than the given timeout.
  */
-static bool nodeslist_needs_update(const char *nodes_path)
+static bool nodeslist_needs_update(const char *nodes_path, int update_frequency)
 {
-    if (user_settings->nodeslist_update_freq <= 0) {
+    if (update_frequency <= 0) {
         return false;
     }
 
@@ -183,7 +181,7 @@ static bool nodeslist_needs_update(const char *nodes_path)
     pthread_mutex_unlock(&thread_data.lock);
 
     pthread_mutex_lock(&Winthread.lock);
-    bool is_timeout = timed_out(last_scan, user_settings->nodeslist_update_freq * 24 * 60 * 60);
+    bool is_timeout = timed_out(last_scan, update_frequency * 24 * 60 * 60);
     pthread_mutex_unlock(&Winthread.lock);
 
     if (is_timeout) {
@@ -314,9 +312,9 @@ on_exit:
  * Return -4 if data could not be written to disk.
  * Return -5 if memory allocation fails.
  */
-static int update_DHT_nodeslist(const char *nodes_path)
+static int update_DHT_nodeslist(const char *nodes_path, int update_frequency)
 {
-    if (!nodeslist_needs_update(nodes_path)) {
+    if (!nodeslist_needs_update(nodes_path, update_frequency)) {
         return 0;
     }
 
@@ -513,7 +511,11 @@ static int extract_node(const char *line, struct Node *node)
 /* Loads the DHT nodeslist to memory from json encoded nodes file. */
 void *load_nodeslist_thread(void *data)
 {
-    UNUSED_VAR(data);
+    const Client_Config *c_config = (Client_Config *) data;
+
+    if (c_config == NULL) {
+        goto on_exit;
+    }
 
     char nodes_path[PATH_MAX];
     get_nodeslist_path(nodes_path, sizeof(nodes_path));
@@ -530,7 +532,7 @@ void *load_nodeslist_thread(void *data)
         goto on_exit;
     }
 
-    int update_err = update_DHT_nodeslist(nodes_path);
+    const int update_err = update_DHT_nodeslist(nodes_path, c_config->nodeslist_update_freq);
 
     if (update_err < 0) {
         fprintf(stderr, "update_DHT_nodeslist() failed with error %d\n", update_err);
@@ -598,7 +600,7 @@ on_exit:
  * Return -4 if pthread fails to set detached state.
  * Return -5 if thread creation fails.
  */
-int load_DHT_nodeslist(void)
+int load_DHT_nodeslist(const Client_Config *c_config)
 {
     if (thread_data.active) {
         return -1;
@@ -618,7 +620,7 @@ int load_DHT_nodeslist(void)
 
     thread_data.active = true;
 
-    if (pthread_create(&thread_data.tid, &thread_data.attr, load_nodeslist_thread, NULL) != 0) {
+    if (pthread_create(&thread_data.tid, &thread_data.attr, load_nodeslist_thread, (void *) c_config) != 0) {
         thread_data.active = false;
         return -5;
     }

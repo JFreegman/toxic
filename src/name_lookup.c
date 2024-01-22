@@ -67,7 +67,7 @@ static void clear_thread_data(void)
     };
 }
 
-static int lookup_error(ToxWindow *self, const char *errmsg, ...)
+static int lookup_error(ToxWindow *self, const Client_Config *c_config, const char *errmsg, ...)
 {
     char frmt_msg[MAX_STR_SIZE];
 
@@ -77,7 +77,7 @@ static int lookup_error(ToxWindow *self, const char *errmsg, ...)
     va_end(args);
 
     pthread_mutex_lock(&Winthread.lock);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "name lookup failed: %s", frmt_msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "name lookup failed: %s", frmt_msg);
     pthread_mutex_unlock(&Winthread.lock);
 
     return -1;
@@ -240,7 +240,11 @@ static int process_response(struct Recv_Curl_Data *recv_data)
 
 void *lookup_thread_func(void *data)
 {
-    UNUSED_VAR(data);
+    const Client_Config *c_config = (Client_Config *) data;
+
+    if (c_config == NULL) {
+        kill_lookup_thread();
+    }
 
     ToxWindow *self = t_data.self;
 
@@ -248,7 +252,7 @@ void *lookup_thread_func(void *data)
     char name[MAX_STR_SIZE];
 
     if (parse_addr(t_data.addr, name, sizeof(name), input_domain, sizeof(input_domain)) == -1) {
-        lookup_error(self, "Input must be a 76 character Tox ID or an address in the form: username@domain");
+        lookup_error(self, c_config, "Input must be a 76 character Tox ID or an address in the form: username@domain");
         kill_lookup_thread();
     }
 
@@ -257,9 +261,9 @@ void *lookup_thread_func(void *data)
 
     if (!get_domain_match(nameserver_key, real_domain, sizeof(real_domain), input_domain)) {
         if (!strcasecmp(input_domain, "utox.org")) {
-            lookup_error(self, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic.");
+            lookup_error(self, c_config, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic.");
         } else {
-            lookup_error(self, "Name server domain not found.");
+            lookup_error(self, c_config, "Name server domain not found.");
         }
 
         kill_lookup_thread();
@@ -268,14 +272,14 @@ void *lookup_thread_func(void *data)
     CURL *c_handle = curl_easy_init();
 
     if (!c_handle) {
-        lookup_error(self, "curl handler error");
+        lookup_error(self, c_config, "curl handler error");
         kill_lookup_thread();
     }
 
     struct Recv_Curl_Data *recv_data = calloc(1, sizeof(struct Recv_Curl_Data));
 
     if (recv_data == NULL) {
-        lookup_error(self, "memory allocation error");
+        lookup_error(self, c_config, "memory allocation error");
         kill_lookup_thread();
     }
 
@@ -292,70 +296,70 @@ void *lookup_thread_func(void *data)
     int ret = curl_easy_setopt(c_handle, CURLOPT_HTTPHEADER, headers);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set http headers (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set http headers (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_URL, real_domain);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set url (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set url (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_WRITEFUNCTION, curl_cb_write_data);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set write function callback (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set write function callback (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_WRITEDATA, recv_data);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set write data (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set write data (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set useragent (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set useragent (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_POSTFIELDS, post_data);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set post data (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set post data (libcurl error %d)", ret);
         goto on_exit;
     }
 
     int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
 
     if (proxy_ret != 0) {
-        lookup_error(self, "Failed to set proxy (error %d)\n", proxy_ret);
+        lookup_error(self, c_config, "Failed to set proxy (error %d)\n", proxy_ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "TLS could not be enabled (libcurl error %d)", ret);
+        lookup_error(self, c_config, "TLS could not be enabled (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "TLSv1.2 could not be set (libcurl error %d)", ret);
+        lookup_error(self, c_config, "TLSv1.2 could not be set (libcurl error %d)", ret);
         goto on_exit;
     }
 
     ret = curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, TLS_CIPHER_SUITE_LIST);
 
     if (ret != CURLE_OK) {
-        lookup_error(self, "Failed to set TLS cipher list (libcurl error %d)", ret);
+        lookup_error(self, c_config, "Failed to set TLS cipher list (libcurl error %d)", ret);
         goto on_exit;
     }
 
@@ -367,7 +371,7 @@ void *lookup_thread_func(void *data)
             ret = curl_easy_setopt(c_handle, CURLOPT_SSL_CIPHER_LIST, NULL);
 
             if (ret != CURLE_OK) {
-                lookup_error(self, "Failed to set TLS cipher list (libcurl error %d)", ret);
+                lookup_error(self, c_config, "Failed to set TLS cipher list (libcurl error %d)", ret);
                 goto on_exit;
             }
 
@@ -375,13 +379,13 @@ void *lookup_thread_func(void *data)
         }
 
         if (ret != CURLE_OK) {
-            lookup_error(self, "HTTPS lookup error (libcurl error %d)", ret);
+            lookup_error(self, c_config, "HTTPS lookup error (libcurl error %d)", ret);
             goto on_exit;
         }
     }
 
     if (process_response(recv_data) == -1) {
-        lookup_error(self, "Bad response.");
+        lookup_error(self, c_config, "Bad response.");
         goto on_exit;
     }
 
@@ -404,13 +408,16 @@ on_exit:
  */
 bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *addr, const char *message)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     if (t_data.disabled) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "nameservers list is empty or does not exist.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "nameservers list is empty or does not exist.");
         return false;
     }
 
     if (t_data.busy) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Please wait for previous name lookup to finish.");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Please wait for previous name lookup to finish.");
         return false;
     }
 
@@ -422,20 +429,20 @@ bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *
     t_data.busy = true;
 
     if (pthread_attr_init(&lookup_thread.attr) != 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to init");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to init");
         clear_thread_data();
         return false;
     }
 
     if (pthread_attr_setdetachstate(&lookup_thread.attr, PTHREAD_CREATE_DETACHED) != 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to set");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread attr failed to set");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
         return false;
     }
 
-    if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, NULL) != 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
+    if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, (void *) c_config) != 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
         return false;

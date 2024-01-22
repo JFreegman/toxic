@@ -100,8 +100,8 @@ void terminate_audio(ToxAV *av);
 
 bool init_call(Call *call);
 
-void place_call(ToxWindow *self);
-void stop_current_call(ToxWindow *self);
+void place_call(ToxWindow *self, Toxic *toxic);
+void stop_current_call(ToxWindow *self, Toxic *toxic);
 
 void init_friend_AV(uint32_t index);
 void del_friend_AV(uint32_t index);

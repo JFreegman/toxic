@@ -46,12 +46,12 @@ extern FriendRequests FrndRequests;
 ToxWindow *new_prompt(void);
 
 void prep_prompt_win(void);
-void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run);
+void prompt_init_statusbar(ToxWindow *self, Toxic *toxic, bool first_time_run);
 void prompt_update_nick(ToxWindow *prompt, const char *nick);
-void prompt_update_statusmessage(ToxWindow *prompt, Tox *tox, const char *statusmsg);
+void prompt_update_statusmessage(ToxWindow *prompt, Toxic *toxic, const char *statusmsg);
 void prompt_update_status(ToxWindow *prompt, Tox_User_Status status);
 void prompt_update_connectionstatus(ToxWindow *prompt, bool is_connected);
-void kill_prompt_window(ToxWindow *self);
+void kill_prompt_window(ToxWindow *self, const Client_Config *c_config);
 
 /* callback: Updates own connection status in prompt statusbar */
 void on_self_connection_status(Tox *tox, Tox_Connection connection_status, void *userdata);

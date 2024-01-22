@@ -67,7 +67,7 @@ void on_friend_connection_status(Tox *tox, uint32_t friendnumber, Tox_Connection
     UNUSED_VAR(tox);
     Toxic *toxic = (Toxic *) userdata;
 
-    on_avatar_friend_connection_status(toxic->tox, friendnumber, connection_status);
+    on_avatar_friend_connection_status(toxic, friendnumber, connection_status);
 
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onConnectionChange != NULL) {
@@ -83,7 +83,7 @@ void on_friend_typing(Tox *tox, uint32_t friendnumber, bool is_typing, void *use
     UNUSED_VAR(tox);
     Toxic *toxic = (Toxic *) userdata;
 
-    if (user_settings->show_typing_other == SHOW_TYPING_OFF) {
+    if (toxic->c_config->show_typing_other == SHOW_TYPING_OFF) {
         return;
     }
 
@@ -265,7 +265,7 @@ void on_file_chunk_request(Tox *tox, uint32_t friendnumber, uint32_t filenumber,
     }
 
     if (ft->file_type == TOX_FILE_KIND_AVATAR) {
-        on_avatar_chunk_request(tox, ft, position, length);
+        on_avatar_chunk_request(toxic, ft, position, length);
         return;
     }
 
@@ -307,7 +307,7 @@ void on_file_recv_control(Tox *tox, uint32_t friendnumber, uint32_t filenumber, 
     }
 
     if (ft->file_type == TOX_FILE_KIND_AVATAR) {
-        on_avatar_file_control(tox, ft, control);
+        on_avatar_file_control(toxic, ft, control);
         return;
     }
 
@@ -386,6 +386,8 @@ void on_lossless_custom_packet(Tox *tox, uint32_t friendnumber, const uint8_t *d
             break;
         }
 
+#else
+        UNUSED_VAR(toxic);
 #endif // GAMES
 
         default: {
@@ -691,11 +693,11 @@ void set_active_window_index(uint8_t index)
 /* Displays the next window if `ch` is equal to the next window key binding.
  * Otherwise displays the previous window.
  */
-static void set_next_window(int ch)
+static void set_next_window(const Client_Config *c_config, int ch)
 {
     uint8_t index = 0;
 
-    if (ch == user_settings->key_next_tab) {
+    if (ch == c_config->key_next_tab) {
         for (uint8_t i = active_window_index + 1; i < MAX_WINDOWS_NUM; ++i) {
             if (windows[i] != NULL) {
                 index = i;
@@ -717,9 +719,9 @@ static void set_next_window(int ch)
 }
 
 /* Deletes window w and cleans up */
-void del_window(ToxWindow *w)
+void del_window(ToxWindow *w, const Client_Config *c_config)
 {
-    uint8_t idx = w->index;
+    const uint8_t idx = w->index;
     delwin(w->window_bar);
     delwin(w->window);
     free(w);
@@ -729,11 +731,11 @@ void del_window(ToxWindow *w)
     refresh();
 
     if (num_active_windows > 0) {
-        if (active_window_index == 2) {    // if closing current window would bring us to friend list
-            set_next_window(-1);           // skip back to the home window instead. FIXME: magic numbers
+        if (active_window_index == 2) { // if closing current window would bring us to friend list
+            set_next_window(c_config, -1);  // skip back to the home window instead. FIXME: magic numbers
         }
 
-        set_next_window(-1);
+        set_next_window(c_config, -1);
 
         --num_active_windows;
     }
@@ -1061,6 +1063,7 @@ void draw_active_window(Toxic *toxic)
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ToxWindow *a = windows[active_window_index];
 
     if (a == NULL) {
@@ -1107,8 +1110,8 @@ void draw_active_window(Toxic *toxic)
         flag_interface_refresh();
         pthread_mutex_unlock(&Winthread.lock);
 
-        if (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab) {
-            set_next_window(ch);
+        if (ch == c_config->key_next_tab || ch == c_config->key_prev_tab) {
+            set_next_window(c_config, ch);
         }
 
         a->onKey(a, toxic, ch, false);  // we lock only when necessary in the onKey callback
@@ -1129,8 +1132,8 @@ void draw_active_window(Toxic *toxic)
     flag_interface_refresh();
     pthread_mutex_unlock(&Winthread.lock);
 
-    if (printable == 0 && (ch == user_settings->key_next_tab || ch == user_settings->key_prev_tab)) {
-        set_next_window((int) ch);
+    if (printable == 0 && (ch == c_config->key_next_tab || ch == c_config->key_prev_tab)) {
+        set_next_window(c_config, (int) ch);
         return;
     } else if ((printable == 0) && (a->type != WINDOW_TYPE_FRIEND_LIST)) {
         pthread_mutex_lock(&Winthread.lock);
@@ -1157,7 +1160,7 @@ void draw_active_window(Toxic *toxic)
 /* Refresh inactive windows to prevent scrolling bugs.
  * Call at least once per second.
  */
-void refresh_inactive_windows(void)
+void refresh_inactive_windows(const Client_Config *c_config)
 {
     for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *toxwin = windows[i];
@@ -1168,7 +1171,7 @@ void refresh_inactive_windows(void)
 
         if ((i != active_window_index) && (toxwin->type != WINDOW_TYPE_FRIEND_LIST)) {
             pthread_mutex_lock(&Winthread.lock);
-            line_info_print(toxwin);
+            line_info_print(toxwin, c_config);
             pthread_mutex_unlock(&Winthread.lock);
         }
     }
@@ -1227,6 +1230,8 @@ size_t get_num_active_windows_type(WINDOW_TYPE type)
 /* destroys all chat and conference windows (should only be called on shutdown) */
 void kill_all_windows(Toxic *toxic)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     for (size_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
         ToxWindow *w = windows[i];
 
@@ -1241,22 +1246,22 @@ void kill_all_windows(Toxic *toxic)
             }
 
             case WINDOW_TYPE_CONFERENCE: {
-                free_conference(w, w->num);
+                free_conference(w, c_config, w->num);
                 break;
             }
 
 #ifdef GAMES
 
             case WINDOW_TYPE_GAME: {
-                game_kill(w);
+                game_kill(w, c_config);
                 break;
             }
 
 #endif // GAMES
 
             case WINDOW_TYPE_GROUPCHAT: {
-                exit_groupchat(w, toxic, w->num, user_settings->group_part_message,
-                               strlen(user_settings->group_part_message));
+                exit_groupchat(w, toxic, w->num, c_config->group_part_message,
+                               strlen(c_config->group_part_message));
                 break;
             }
 
@@ -1267,6 +1272,6 @@ void kill_all_windows(Toxic *toxic)
     }
 
     /* TODO: use enum instead of magic indices */
-    kill_friendlist(windows[1]);
-    kill_prompt_window(windows[0]);
+    kill_friendlist(windows[1], c_config);
+    kill_prompt_window(windows[0], c_config);
 }

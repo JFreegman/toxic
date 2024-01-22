@@ -1,4 +1,4 @@
-/*  qr_obj_code.c
+/*  qr_code.c
  *
  *
  *  Copyright (C) 2024 Toxic All Rights Reserved.

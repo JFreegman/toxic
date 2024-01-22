@@ -48,7 +48,7 @@ void api_display(const char *const msg)
     }
 
     self_window = get_active_window();
-    line_info_add(self_window, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self_window, user_toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
 }
 
 FriendsList api_get_friendslist(void)
@@ -105,7 +105,7 @@ void api_send(const char *msg)
 
     snprintf((char *) self_window->chatwin->line, sizeof(self_window->chatwin->line), "%s", msg);
     add_line_to_hist(self_window->chatwin);
-    int id = line_info_add(self_window, true, name, NULL, OUT_MSG, 0, 0, "%s", msg);
+    const int id = line_info_add(self_window, user_toxic->c_config, true, name, NULL, OUT_MSG, 0, 0, "%s", msg);
     cqueue_add(self_window->chatwin->cqueue, msg, strlen(msg), OUT_MSG, id);
     free(name);
 }
@@ -138,7 +138,11 @@ void draw_handler_help(WINDOW *win)
 
 void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
-    UNUSED_VAR(toxic);
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    const Client_Config *c_config = toxic->c_config;
 
     FILE       *fp;
     const char *error_str;
@@ -153,7 +157,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
             error_str = "Only one argument allowed.";
         }
 
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;
     }
 
@@ -162,7 +166,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     if (fp == NULL) {
         error_str = "Path does not exist.";
 
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
         return;
     }
 
@@ -170,19 +174,23 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     fclose(fp);
 }
 
-void invoke_autoruns(WINDOW *window, ToxWindow *self)
+void invoke_autoruns(WINDOW *window, ToxWindow *self, const char *autorun_path)
 {
     char abspath_buf[PATH_MAX + 256];
     char err_buf[PATH_MAX + 128];
 
-    if (user_settings->autorun_path[0] == '\0') {
+    if (autorun_path == NULL) {
         return;
     }
 
-    DIR *d = opendir(user_settings->autorun_path);
+    if (string_is_empty(autorun_path)) {
+        return;
+    }
+
+    DIR *d = opendir(autorun_path);
 
     if (d == NULL) {
-        snprintf(err_buf, sizeof(err_buf), "Autorun path does not exist: %s", user_settings->autorun_path);
+        snprintf(err_buf, sizeof(err_buf), "Autorun path does not exist: %s", autorun_path);
         api_display(err_buf);
         return;
     }
@@ -197,7 +205,7 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self)
         size_t path_len = strlen(dir->d_name);
 
         if (!strcmp(dir->d_name + path_len - 3, ".py")) {
-            snprintf(abspath_buf, sizeof(abspath_buf), "%s%s", user_settings->autorun_path, dir->d_name);
+            snprintf(abspath_buf, sizeof(abspath_buf), "%s%s", autorun_path, dir->d_name);
             FILE *fp = fopen(abspath_buf, "r");
 
             if (fp == NULL) {

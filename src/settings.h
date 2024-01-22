@@ -27,13 +27,15 @@
 
 #include <tox/tox.h>
 
+#include "toxic_constants.h"
+
 /* Represents line_* hints max strlen */
 #define LINE_HINT_MAX 3
 
 #define PASSWORD_EVAL_MAX 512
 
 /* Holds user setting values defined in the toxic config file. */
-struct user_settings {
+typedef struct Client_Config {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
 
@@ -97,9 +99,7 @@ struct user_settings {
     int chat_audio_channels;
     int push_to_talk;      /* boolean */
 #endif
-};
-
-extern struct user_settings *user_settings;
+} Client_Config;
 
 enum settings_values {
     AUTOLOG_OFF = 0,
@@ -148,7 +148,7 @@ enum settings_values {
  * Return -1 if we fail to open the file path.
  * Return -2 if libconfig fails to read the config file.
  */
-int settings_load_main(struct user_settings *s, const char *patharg);
+int settings_load_main(Client_Config *s, const char *patharg);
 
 /*
  * Loads friend config settings from the toxic config file pointed to by `patharg`.

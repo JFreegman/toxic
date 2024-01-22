@@ -257,7 +257,7 @@ const char *game_get_name_string(GameType type);
 /*
  * Prints all available games to window associated with `self`.
  */
-void game_list_print(ToxWindow *self);
+void game_list_print(ToxWindow *self, const Client_Config *c_config);
 
 /*
  * Return true if game `type` has a multiplayer mode.
@@ -394,7 +394,7 @@ TIME_MS get_time_millis(void);
 /*
  * Ends game associated with `self` and cleans up.
  */
-void game_kill(ToxWindow *self);
+void game_kill(ToxWindow *self, const Client_Config *c_config);
 
 /*
  * Sends a packet containing payload `data` of size `length` to the friendnumber associated with the game's

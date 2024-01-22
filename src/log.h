@@ -23,6 +23,8 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include "settings.h"
+
 struct chatlog {
     FILE *file;
     time_t lastwrite;
@@ -40,10 +42,13 @@ typedef enum LOG_TYPE {
  * Return 0 on success.
  * Return -1 on failure.
  */
-int log_init(struct chatlog *log, const char *name, const char *selfkey, const char *otherkey, LOG_TYPE type);
+int log_init(struct chatlog *log, const Client_Config *c_config, const char *name, const char *selfkey,
+             const char *otherkey,
+             LOG_TYPE type);
 
 /* formats/writes line to log file */
-void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event);
+void write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
+                  bool event);
 
 /* enables logging for specified log.
  *
@@ -60,13 +65,14 @@ void log_disable(struct chatlog *log);
  * Return 0 on success or if log file doesn't exist.
  * Return -1 on failure.
  */
-int load_chat_history(ToxWindow *self, struct chatlog *log);
+int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config);
 
 /* Renames chatlog file `src` to `dest`.
  *
  * Return 0 on success or if no log exists.
  * Return -1 on failure.
  */
-int rename_logfile(const char *src, const char *dest, const char *selfkey, const char *otherkey, int winnum);
+int rename_logfile(const Client_Config *c_config, const char *src, const char *dest, const char *selfkey,
+                   const char *otherkey, int winnum);
 
 #endif /* LOG_H */

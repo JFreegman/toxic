@@ -34,6 +34,7 @@
 #include <tox/toxav.h>
 #endif /* AUDIO */
 
+#include "settings.h"
 #include "toxic.h"
 
 #define MAX_WINDOWS_NUM 20
@@ -237,7 +238,6 @@ struct ToxWindow {
     void(*onInvite)(ToxWindow *, Toxic *, uint32_t, int);
     void(*onRinging)(ToxWindow *, Toxic *, uint32_t, int);
     void(*onStarting)(ToxWindow *, Toxic *, uint32_t, int);
-    void(*onEnding)(ToxWindow *, Toxic *, uint32_t, int);
     void(*onError)(ToxWindow *, Toxic *, uint32_t, int);
     void(*onStart)(ToxWindow *, Toxic *, uint32_t, int);
     void(*onCancel)(ToxWindow *, Toxic *, uint32_t, int);
@@ -353,7 +353,7 @@ struct Help {
 ToxWindow *init_windows(Toxic *toxic);
 void draw_active_window(Toxic *toxic);
 int add_window(Toxic *toxic, ToxWindow *w);
-void del_window(ToxWindow *w);
+void del_window(ToxWindow *w, const Client_Config *c_config);
 void set_active_window_index(uint8_t index);
 int get_num_active_windows(void);
 void kill_all_windows(Toxic *toxic);    /* should only be called on shutdown */
@@ -368,7 +368,6 @@ size_t get_num_active_windows_type(WINDOW_TYPE type);
 
 /* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */
-void refresh_inactive_windows(void);
+void refresh_inactive_windows(const Client_Config *c_config);
 
 #endif // WINDOWS_H
-

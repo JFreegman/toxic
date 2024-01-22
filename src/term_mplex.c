@@ -40,7 +40,6 @@
 #include "windows.h"
 
 extern struct ToxWindow *prompt;
-extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 #if defined(PATH_MAX) && PATH_MAX > 512
@@ -405,7 +404,7 @@ static void mplex_timer_handler(Toxic *toxic)
         tox_self_get_status_message(toxic->tox, (uint8_t *) prev_note);
         prev_note[slen] = '\0';
         pthread_mutex_unlock(&Winthread.lock);
-        new_note = user_settings->mplex_away_note;
+        new_note = toxic->c_config->mplex_away_note;
     } else {
         return;
     }
@@ -442,7 +441,7 @@ int init_mplex_away_timer(Toxic *toxic)
         return 0;
     }
 
-    if (!user_settings->mplex_away) {
+    if (!toxic->c_config->mplex_away) {
         return 0;
     }
 

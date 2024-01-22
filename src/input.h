@@ -23,11 +23,13 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include "settings.h"
+
 /* add a char to input field and buffer for given chatcontext */
-void input_new_char(ToxWindow *self, wint_t key, int x, int mx_x);
+void input_new_char(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x);
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, wint_t key, int x, int mx_x);
+bool input_handle(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x);
 
 #endif /* INPUT_H */

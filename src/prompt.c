@@ -44,7 +44,6 @@
 #include "windows.h"
 
 extern ToxWindow *prompt;
-extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 extern FriendsList Friends;
@@ -101,24 +100,26 @@ static const char *glob_cmd_list[] = {
 
 };
 
-void kill_prompt_window(ToxWindow *self)
+void kill_prompt_window(ToxWindow *self, const Client_Config *c_config)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
-    log_disable(ctx->log);
-    line_info_cleanup(ctx->hst);
+    if (ctx != NULL)  {
+        log_disable(ctx->log);
+        line_info_cleanup(ctx->hst);
 
-    delwin(ctx->linewin);
-    delwin(ctx->history);
+        delwin(ctx->linewin);
+        delwin(ctx->history);
+        free(ctx->log);
+        free(ctx);
+    }
+
     delwin(statusbar->topline);
-
-    free(ctx->log);
-    free(ctx);
     free(self->help);
     free(statusbar);
 
-    del_window(self);
+    del_window(self, c_config);
 }
 
 /* callback: Updates own connection status in prompt statusbar */
@@ -141,7 +142,7 @@ void prompt_update_nick(ToxWindow *prompt, const char *nick)
 }
 
 /* Updates own statusmessage */
-void prompt_update_statusmessage(ToxWindow *prompt, Tox *tox, const char *statusmsg)
+void prompt_update_statusmessage(ToxWindow *prompt, Toxic *toxic, const char *statusmsg)
 {
     StatusBar *statusbar = prompt->stb;
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
@@ -149,10 +150,10 @@ void prompt_update_statusmessage(ToxWindow *prompt, Tox *tox, const char *status
     statusbar->statusmsg_len = len;
 
     Tox_Err_Set_Info err;
-    tox_self_set_status_message(tox, (const uint8_t *) statusmsg, len, &err);
+    tox_self_set_status_message(toxic->tox, (const uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK) {
-        line_info_add(prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
+        line_info_add(prompt, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
     }
 }
 
@@ -206,6 +207,7 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         return false;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     int x, y, y2, x2;
@@ -229,15 +231,15 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     }
 
     if (ltr || key == '\n') {    /* char is printable */
-        input_new_char(self, key, x, x2);
+        input_new_char(self, c_config, key, x, x2);
         return true;
     }
 
-    if (line_info_onKey(self, key)) {
+    if (line_info_onKey(self, c_config, key)) {
         return true;
     }
 
-    if (input_handle(self, key, x, x2)) {
+    if (input_handle(self, c_config, key, x, x2)) {
         return true;
     }
 
@@ -266,9 +268,9 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     "away",
                     "busy",
                 };
-                diff = complete_line(self, status_cmd_list, sizeof(status_cmd_list) / sizeof(char *));
+                diff = complete_line(self, toxic, status_cmd_list, sizeof(status_cmd_list) / sizeof(char *));
             } else {
-                diff = complete_line(self, glob_cmd_list, sizeof(glob_cmd_list) / sizeof(char *));
+                diff = complete_line(self, toxic, glob_cmd_list, sizeof(glob_cmd_list) / sizeof(char *));
             }
 
             if (diff != -1) {
@@ -277,10 +279,10 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                sound_notify(self, notif_error, 0, NULL);
+                sound_notify(self, c_config, notif_error, 0, NULL);
             }
         } else {
-            sound_notify(self, notif_error, 0, NULL);
+            sound_notify(self, c_config, notif_error, 0, NULL);
         }
     } else if (key == '\r') {
         input_ret = true;
@@ -294,10 +296,10 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
             char line[MAX_STR_SIZE];
 
             if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             } else {
                 if (strcmp(line, "/clear") != 0) {
-                    line_info_add(self, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
+                    line_info_add(self, c_config, false, NULL, NULL, PROMPT, 0, 0, "%s", line);
                 }
 
                 execute(ctx->history, self, toxic, line, GLOBAL_COMMAND_MODE);
@@ -330,7 +332,7 @@ static void prompt_onDraw(ToxWindow *self, Toxic *toxic)
     ChatContext *ctx = self->chatwin;
 
     pthread_mutex_lock(&Winthread.lock);
-    line_info_print(self);
+    line_info_print(self, toxic->c_config);
     pthread_mutex_unlock(&Winthread.lock);
 
     wclear(ctx->linewin);
@@ -499,6 +501,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH] = {0};    /* stop removing this initiation */
@@ -510,32 +513,32 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
 
     const char *msg;
 
-    if (user_settings->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
+    if (c_config->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
         return;
     }
 
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
-        line_info_add(self, true, nick, NULL, CONNECTION, 0, GREEN, msg);
-        write_to_log(msg, nick, ctx->log, true);
+        line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, msg);
+        write_to_log(ctx->log, c_config, msg, nick, true);
 
         if (self->active_box != -1) {
-            box_notify2(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
+            box_notify2(self, c_config, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
                         "%s has come online", nick);
         } else {
-            box_notify(self, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
+            box_notify(self, c_config, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
                        "Toxic", "%s has come online", nick);
         }
     } else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
-        line_info_add(self, true, nick, NULL, DISCONNECTION, 0, RED, msg);
-        write_to_log(msg, nick, ctx->log, true);
+        line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, msg);
+        write_to_log(ctx->log, c_config, msg, nick, true);
 
         if (self->active_box != -1) {
-            box_notify2(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
+            box_notify2(self, c_config, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
                         "%s has gone offline", nick);
         } else {
-            box_notify(self, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
+            box_notify(self, c_config, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
                        "Toxic", "%s has gone offline", nick);
         }
     }
@@ -563,22 +566,22 @@ static bool key_is_similar(const char *key)
 
 static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *key, const char *data, size_t length)
 {
-    UNUSED_VAR(toxic);
     UNUSED_VAR(length);
 
-    if (self == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
-    line_info_add(self, true, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
-    write_to_log("Friend request with the message '%s'", "", ctx->log, true);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
+    write_to_log(ctx->log, c_config, "Friend request with the message '%s'", "", true);
 
     if (key_is_similar(key)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED,
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                       "WARNING: This contact's public key is suspiciously similar to that of another contact ");
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, RED,
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                       "in your list. This may be an impersonation attempt, or it may have occurred by chance.");
     }
 
@@ -586,15 +589,15 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
 
     if (n == -1) {
         const char *errmsg = "Friend request queue is full. Discarding request.";
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
         return;
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
-    sound_notify(self, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
+    sound_notify(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
-void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run)
+void prompt_init_statusbar(ToxWindow *self, Toxic *toxic, bool first_time_run)
 {
     int x2, y2;
     getmaxyx(self->window, y2, x2);
@@ -604,6 +607,8 @@ void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run)
     }
 
     UNUSED_VAR(y2);
+
+    Tox *tox = toxic->tox;
 
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
@@ -630,7 +635,7 @@ void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run)
         statusmsg[s_len] = '\0';
     }
 
-    prompt_update_statusmessage(prompt, tox, statusmsg);
+    prompt_update_statusmessage(prompt, toxic, statusmsg);
     prompt_update_status(prompt, status);
     prompt_update_nick(prompt, nick);
 
@@ -638,37 +643,39 @@ void prompt_init_statusbar(ToxWindow *self, Tox *tox, bool first_time_run)
     statusbar->topline = subwin(self->window, TOP_BAR_HEIGHT, x2, 0, 0);
 }
 
-static void print_welcome_msg(ToxWindow *self)
+static void print_welcome_msg(ToxWindow *self, const Client_Config *c_config)
 {
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "    _____ _____  _____ ____ ");
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "   |_   _/ _ \\ \\/ /_ _/ ___|");
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, BLUE, "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "    _____ _____  _____ ____ ");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "   |_   _/ _ \\ \\/ /_ _/ ___|");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE,
+                  "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
 
     const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messaging client.";
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
     msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
-static void prompt_init_log(ToxWindow *self, Tox *tox, const char *self_name)
+static void prompt_init_log(ToxWindow *self, Toxic *toxic, const char *self_name)
 {
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     char myid[TOX_ADDRESS_SIZE];
-    tox_self_get_address(tox, (uint8_t *) myid);
+    tox_self_get_address(toxic->tox, (uint8_t *) myid);
 
-    if (log_init(ctx->log, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
+    if (log_init(ctx->log, toxic->c_config, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }
 
-    if (user_settings->autolog == AUTOLOG_ON) {
+    if (toxic->c_config->autolog == AUTOLOG_ON) {
         if (log_enable(ctx->log) == -1) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Failed to enable log.");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Failed to enable log.");
         }
     }
 }
@@ -704,13 +711,13 @@ static void prompt_onInit(ToxWindow *self, Toxic *toxic)
 
     line_info_init(ctx->hst);
 
-    prompt_init_log(self, toxic->tox, self->name);
+    prompt_init_log(self, toxic, self->name);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    if (user_settings->show_welcome_msg == SHOW_WELCOME_MSG_ON) {
-        print_welcome_msg(self);
+    if (toxic->c_config->show_welcome_msg == SHOW_WELCOME_MSG_ON) {
+        print_welcome_msg(self, toxic->c_config);
     }
 }
 

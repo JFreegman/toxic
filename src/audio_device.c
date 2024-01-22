@@ -40,7 +40,6 @@
 #include <string.h>
 #include <unistd.h>
 
-extern struct user_settings *user_settings;
 extern struct Winthread Winthread;
 
 typedef struct FrameInfo {
@@ -484,7 +483,7 @@ DeviceError set_al_device(DeviceType type, int32_t selection)
 }
 
 static DeviceError open_device(DeviceType type, uint32_t *device_idx, DataHandleCallback cb, void *cb_data,
-                               uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
+                               uint32_t sample_rate, uint32_t frame_duration, uint8_t channels, double VAD_threshold)
 {
     if (channels != 1 && channels != 2) {
         return de_UnsupportedMode;
@@ -529,8 +528,8 @@ static DeviceError open_device(DeviceType type, uint32_t *device_idx, DataHandle
         device->cb_data = cb_data;
 #ifdef AUDIO
 
-        if (user_settings->VAD_threshold >= 0.0) {
-            device->VAD_threshold = user_settings->VAD_threshold;
+        if (VAD_threshold >= 0.0) {
+            device->VAD_threshold = VAD_threshold;
         }
 
 #else
@@ -550,14 +549,15 @@ static DeviceError open_device(DeviceType type, uint32_t *device_idx, DataHandle
 }
 
 DeviceError open_input_device(uint32_t *device_idx, DataHandleCallback cb, void *cb_data, uint32_t sample_rate,
-                              uint32_t frame_duration, uint8_t channels)
+                              uint32_t frame_duration, uint8_t channels, double VAD_threshold)
 {
-    return open_device(input, device_idx, cb, cb_data, sample_rate, frame_duration, channels);
+    return open_device(input, device_idx, cb, cb_data, sample_rate, frame_duration, channels, VAD_threshold);
 }
 
-DeviceError open_output_device(uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels)
+DeviceError open_output_device(uint32_t *device_idx, uint32_t sample_rate, uint32_t frame_duration, uint8_t channels,
+                               double VAD_threshold)
 {
-    return open_device(output, device_idx, 0, 0, sample_rate, frame_duration, channels);
+    return open_device(output, device_idx, 0, 0, sample_rate, frame_duration, channels, VAD_threshold);
 }
 
 DeviceError close_device(DeviceType type, uint32_t device_idx)
@@ -769,10 +769,10 @@ float get_input_volume(void)
     return ret;
 }
 
-void print_al_devices(ToxWindow *self, DeviceType type)
+void print_al_devices(ToxWindow *self, const Client_Config *c_config, DeviceType type)
 {
     for (int i = 0; i < audio_state->num_al_devices[type]; ++i) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG,
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG,
                       audio_state->current_al_device_name[type]
                       && strcmp(audio_state->current_al_device_name[type], audio_state->al_device_names[type][i]) == 0 ? 1 : 0,
                       0, "%d: %s", i, audio_state->al_device_names[type][i]);

@@ -33,8 +33,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern struct user_settings *user_settings;
-
 /* Creates a log path and puts it in `dest.
  *
  * There are two types of logs: chat logs and prompt logs (see LOG_TYPE in log.h)
@@ -47,14 +45,15 @@ extern struct user_settings *user_settings;
  * Return path length on success.
  * Return -1 if the path is too long.
  */
-static int get_log_path(char *dest, int destsize, const char *name, const char *selfkey, const char *otherkey)
+static int get_log_path(const Client_Config *c_config, char *dest, int destsize, const char *name,
+                        const char *selfkey, const char *otherkey)
 {
     if (!valid_nick(name)) {
         name = UNKNOWN_NAME;
     }
 
     const char *namedash = otherkey ? "-" : "";
-    const char *set_path = user_settings->chatlogs_path;
+    const char *set_path = c_config->chatlogs_path;
 
     char *user_config_dir = get_user_config_dir();
     int path_len = strlen(name) + strlen(".log") + strlen("-") + strlen(namedash);
@@ -100,8 +99,8 @@ static int get_log_path(char *dest, int destsize, const char *name, const char *
  * Return 0 on success.
  * Return -1 on failure.
  */
-static int init_logging_session(const char *name, const char *selfkey, const char *otherkey, struct chatlog *log,
-                                LOG_TYPE type)
+static int init_logging_session(const Client_Config *c_config, const char *name, const char *selfkey,
+                                const char *otherkey, struct chatlog *log, LOG_TYPE type)
 {
     if (log == NULL) {
         return -1;
@@ -113,7 +112,7 @@ static int init_logging_session(const char *name, const char *selfkey, const cha
 
     char log_path[MAX_STR_SIZE];
 
-    int path_len = get_log_path(log_path, sizeof(log_path), name, selfkey, otherkey);
+    const int path_len = get_log_path(c_config, log_path, sizeof(log_path), name, selfkey, otherkey);
 
     if (path_len == -1 || path_len >= sizeof(log->path)) {
         return -1;
@@ -127,7 +126,8 @@ static int init_logging_session(const char *name, const char *selfkey, const cha
 
 #define LOG_FLUSH_LIMIT 1  /* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
 
-void write_to_log(const char *msg, const char *name, struct chatlog *log, bool event)
+void write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
+                  bool event)
 {
     if (log == NULL) {
         return;
@@ -150,7 +150,7 @@ void write_to_log(const char *msg, const char *name, struct chatlog *log, bool e
         snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
     }
 
-    const char *t = user_settings->log_timestamp_format;
+    const char *t = c_config->log_timestamp_format;
     char s[MAX_STR_SIZE];
     strftime(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
@@ -210,7 +210,8 @@ int log_enable(struct chatlog *log)
  * Return 0 on success.
  * Return -1 on failure.
  */
-int log_init(struct chatlog *log, const char *name, const char *selfkey, const char *otherkey, LOG_TYPE type)
+int log_init(struct chatlog *log, const Client_Config *c_config, const char *name, const char *selfkey,
+             const char *otherkey, LOG_TYPE type)
 {
     if (log == NULL) {
         return -1;
@@ -221,7 +222,7 @@ int log_init(struct chatlog *log, const char *name, const char *selfkey, const c
         return -1;
     }
 
-    if (init_logging_session(name, selfkey, otherkey, log, type) == -1) {
+    if (init_logging_session(c_config, name, selfkey, otherkey, log, type) == -1) {
         return -1;
     }
 
@@ -235,7 +236,7 @@ int log_init(struct chatlog *log, const char *name, const char *selfkey, const c
  * Return 0 on success or if log file doesn't exist.
  * Return -1 on failure.
  */
-int load_chat_history(ToxWindow *self, struct chatlog *log)
+int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config)
 {
     if (log == NULL) {
         return -1;
@@ -245,7 +246,7 @@ int load_chat_history(ToxWindow *self, struct chatlog *log)
         return -1;
     }
 
-    off_t sz = file_size(log->path);
+    const off_t sz = file_size(log->path);
 
     if (sz <= 0) {
         return 0;
@@ -281,7 +282,7 @@ int load_chat_history(ToxWindow *self, struct chatlog *log)
     buf[sz] = 0;
 
     /* Number of history lines to load: must not be larger than MAX_LINE_INFO_QUEUE - 2 */
-    int L = MIN(MAX_LINE_INFO_QUEUE - 2, user_settings->history_size);
+    int L = MIN(MAX_LINE_INFO_QUEUE - 2, c_config->history_size);
 
     int start = 0;
     int count = 0;
@@ -302,11 +303,11 @@ int load_chat_history(ToxWindow *self, struct chatlog *log)
     }
 
     while (line != NULL && count--) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", line);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", line);
         line = strtok_r(NULL, "\n", &tmp);
     }
 
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, YELLOW, "---");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, YELLOW, "---");
 
     free(buf);
 
@@ -318,7 +319,8 @@ int load_chat_history(ToxWindow *self, struct chatlog *log)
  * Return 0 on success or if no log exists.
  * Return -1 on failure.
  */
-int rename_logfile(const char *src, const char *dest, const char *selfkey, const char *otherkey, int winnum)
+int rename_logfile(const Client_Config *c_config, const char *src, const char *dest, const char *selfkey,
+                   const char *otherkey, int winnum)
 {
     ToxWindow *toxwin = get_window_ptr(winnum);
     struct chatlog *log = NULL;
@@ -342,16 +344,16 @@ int rename_logfile(const char *src, const char *dest, const char *selfkey, const
     char newpath[MAX_STR_SIZE];
     char oldpath[MAX_STR_SIZE];
 
-    if (get_log_path(oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
+    if (get_log_path(c_config, oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
         goto on_error;
     }
 
-    if (!file_exists(oldpath)) {
-        init_logging_session(dest, selfkey, otherkey, log, LOG_TYPE_CHAT);  // still need to rename path
+    if (!file_exists(oldpath)) {  // still need to rename path
+        init_logging_session(c_config, dest, selfkey, otherkey, log, LOG_TYPE_CHAT);
         return 0;
     }
 
-    int new_path_len = get_log_path(newpath, sizeof(newpath), dest, selfkey, otherkey);
+    const int new_path_len = get_log_path(c_config, newpath, sizeof(newpath), dest, selfkey, otherkey);
 
     if (new_path_len == -1 || new_path_len >= MAX_STR_SIZE) {
         goto on_error;

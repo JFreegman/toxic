@@ -49,13 +49,15 @@ void on_video_receive_frame(ToxAV *av, uint32_t friend_number,
 
 void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data);
 
-static void print_err(ToxWindow *self, const char *error_str)
+static void print_err(ToxWindow *self, const Client_Config *c_config, const char *error_str)
 {
-    line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-ToxAV *init_video(ToxWindow *self, const Toxic *toxic)
+ToxAV *init_video(ToxWindow *self, Toxic *toxic)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     CallControl.video_errors = ve_None;
 
     CallControl.video_enabled = true;
@@ -63,12 +65,12 @@ ToxAV *init_video(ToxWindow *self, const Toxic *toxic)
     CallControl.video_frame_duration = 10;
 
     if (toxic->av == NULL) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
         return NULL;
     }
 
-    if (init_video_devices(toxic->av) == vde_InternalError) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
+    if (init_video_devices(toxic->av, c_config) == vde_InternalError) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
         return NULL;
     }
 
@@ -94,8 +96,8 @@ void terminate_video(void)
     terminate_video_devices();
 }
 
-void read_video_device_callback(int16_t width, int16_t height, const uint8_t *y, const uint8_t *u, const uint8_t *v,
-                                void *data)
+void read_video_device_callback(const Client_Config *c_config, int16_t width, int16_t height, const uint8_t *y,
+                                const uint8_t *u, const uint8_t *v, void *data)
 {
     uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
     Call *this_call = &CallControl.calls[friend_number];
@@ -103,17 +105,17 @@ void read_video_device_callback(int16_t width, int16_t height, const uint8_t *y,
 
     /* Drop frame if video sending is disabled */
     if (this_call->video_bit_rate == 0 || this_call->status != cs_Active || this_call->vin_idx == -1) {
-        line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Video frame dropped.");
+        line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video frame dropped.");
         return;
     }
 
     if (toxav_video_send_frame(CallControl.av, friend_number, width, height, y, u, v, &error) == false) {
-        line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to send video frame");
+        line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to send video frame");
 
         if (error == TOXAV_ERR_SEND_FRAME_NULL) {
-            line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to capture video frame");
+            line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to capture video frame");
         } else if (error == TOXAV_ERR_SEND_FRAME_INVALID) {
-            line_info_add(CallControl.prompt, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video frame");
+            line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video frame");
         }
     }
 }
@@ -128,25 +130,31 @@ void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_
     write_video_out(width, height, y, u, v, ystride, ustride, vstride, user_data);
 }
 
-int start_video_transmission(ToxWindow *self, ToxAV *av, Call *call)
+int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call)
 {
-    if (!self || !av) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video transmission");
+    if (self == NULL || toxic == NULL) {
+        return -1;
+    }
+
+    const Client_Config *c_config = toxic->c_config;
+
+    if (toxic->av == NULL) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video transmission");
         return -1;
     }
 
     if (open_primary_video_device(vdt_input, &call->vin_idx, &call->video_width, &call->video_height) != vde_None) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input video device!");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to open input video device!");
         return -1;
     }
 
     if (register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
         return -1;
     }
 
-    if (!toxav_video_set_bit_rate(CallControl.av, self->num, call->video_bit_rate, NULL)) {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
+    if (!toxav_video_set_bit_rate(toxic->av, self->num, call->video_bit_rate, NULL)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
         return -1;
     }
 
@@ -226,22 +234,20 @@ void callback_recv_video_end(uint32_t friend_number)
     close_video_device(vdt_output, this_call->vout_idx);
     this_call->vout_idx = -1;
 }
-void callback_video_starting(uint32_t friend_number)
+void callback_video_starting(Toxic *toxic, uint32_t friend_number)
 {
     Call *this_call = &CallControl.calls[friend_number];
 
     Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
-    toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
+    toxav_call_control(toxic->av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
 
     if (error == TOXAV_ERR_CALL_CONTROL_OK) {
-        size_t i;
-
-        for (i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
             ToxWindow *window = get_window_ptr(i);
 
             if (window != NULL && window->is_call && window->num == friend_number) {
-                if (start_video_transmission(window, CallControl.av, this_call) == 0) {
-                    line_info_add(window, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
+                if (start_video_transmission(window, toxic, this_call) == 0) {
+                    line_info_add(window, toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
                 }
             }
         }
@@ -265,29 +271,31 @@ void cmd_vcall(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
     UNUSED_VAR(window);
     UNUSED_VAR(argv);
 
-    if (toxic == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
 
+    const Client_Config *c_config = toxic->c_config;
+
     if (argc != 0) {
-        print_err(self, "Unknown arguments.");
+        print_err(self, c_config, "Unknown arguments.");
         return;
     }
 
     if (toxic->av == NULL) {
-        print_err(self, "ToxAV not supported!");
+        print_err(self, c_config, "ToxAV not supported!");
         return;
     }
 
     if (!self->stb->connection) {
-        print_err(self, "Friend is offline.");
+        print_err(self, c_config, "Friend is offline.");
         return;
     }
 
     Call *call = &CallControl.calls[self->num];
 
     if (call->status != cs_None) {
-        print_err(self, "Already calling.");
+        print_err(self, c_config, "Already calling.");
         return;
     }
 
@@ -295,7 +303,7 @@ void cmd_vcall(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
 
     call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
 
-    place_call(self);
+    place_call(self, toxic);
 }
 
 void cmd_video(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -303,35 +311,37 @@ void cmd_video(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
     UNUSED_VAR(window);
     UNUSED_VAR(argv);
 
-    if (toxic == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
+
+    const Client_Config *c_config = toxic->c_config;
 
     Call *this_call = &CallControl.calls[self->num];
 
     if (argc != 0) {
-        print_err(self, "Unknown arguments.");
+        print_err(self, c_config, "Unknown arguments.");
         return;
     }
 
     if (toxic->av == NULL) {
-        print_err(self, "ToxAV not supported!");
+        print_err(self, c_config, "ToxAV not supported!");
         return;
     }
 
     if (!self->stb->connection) {
-        print_err(self, "Friend is offline.");
+        print_err(self, c_config, "Friend is offline.");
         return;
     }
 
     if (this_call->status != cs_Active) {
-        print_err(self, "Not in call!");
+        print_err(self, c_config, "Not in call!");
         return;
     }
 
     if (this_call->vin_idx == -1) {
         this_call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
-        callback_video_starting(self->num);
+        callback_video_starting(toxic, self->num);
     } else {
         callback_video_end(self->num);
     }
@@ -341,19 +351,21 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 {
     UNUSED_VAR(window);
 
-    if (toxic == NULL) {
+    if (toxic == NULL || self == NULL) {
         return;
     }
+
+    const Client_Config *c_config = toxic->c_config;
 
     Call *call = &CallControl.calls[self->num];
 
     if (argc == 0) {
         if (call->status == cs_Active && call->vin_idx != -1) {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "Resolution of current call: %u x %u",
                           call->video_width, call->video_height);
         } else {
-            line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0,
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "Initial resolution for video calls: %u x %u",
                           CallControl.default_video_width, CallControl.default_video_height);
         }
@@ -362,7 +374,7 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     }
 
     if (argc != 2) {
-        print_err(self, "Require 0 or 2 arguments.");
+        print_err(self, c_config, "Require 0 or 2 arguments.");
         return;
     }
 
@@ -371,7 +383,7 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     const long int height = strtol(argv[2], &endh, 10);
 
     if (*endw || *endh || width < 0 || height < 0) {
-        print_err(self, "Invalid input");
+        print_err(self, c_config, "Invalid input");
         return;
     }
 
@@ -380,7 +392,7 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         call->video_width = width;
         call->video_height = height;
         call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
-        start_video_transmission(self, toxic->av, call);
+        start_video_transmission(self, toxic, call);
     } else {
         CallControl.default_video_width = width;
         CallControl.default_video_height = height;
@@ -390,13 +402,18 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(toxic);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    const Client_Config *c_config = toxic->c_config;
 
     if (argc != 1) {
         if (argc < 1) {
-            print_err(self, "Type must be specified!");
+            print_err(self, c_config, "Type must be specified!");
         } else {
-            print_err(self, "Only one argument allowed!");
+            print_err(self, c_config, "Only one argument allowed!");
         }
 
         return;
@@ -413,26 +430,31 @@ void cmd_list_video_devices(WINDOW *window, ToxWindow *self, Toxic *toxic, int a
     }
 
     else {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
-    print_video_devices(self, type);
+    print_video_devices(self, c_config, type);
 }
 
 /* This changes primary video device only */
 void cmd_change_video_device(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
-    UNUSED_VAR(toxic);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    const Client_Config *c_config = toxic->c_config;
 
     if (argc != 2) {
         if (argc < 1) {
-            print_err(self, "Type must be specified!");
+            print_err(self, c_config, "Type must be specified!");
         } else if (argc < 2) {
-            print_err(self, "Must have id!");
+            print_err(self, c_config, "Must have id!");
         } else {
-            print_err(self, "Only two arguments allowed!");
+            print_err(self, c_config, "Only two arguments allowed!");
         }
 
         return;
@@ -449,7 +471,7 @@ void cmd_change_video_device(WINDOW *window, ToxWindow *self, Toxic *toxic, int 
     }
 
     else {
-        line_info_add(self, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid type: %s", argv[1]);
         return;
     }
 
@@ -458,12 +480,12 @@ void cmd_change_video_device(WINDOW *window, ToxWindow *self, Toxic *toxic, int 
     long int selection = strtol(argv[2], &end, 10);
 
     if (*end) {
-        print_err(self, "Invalid input");
+        print_err(self, c_config, "Invalid input");
         return;
     }
 
     if (set_primary_video_device(type, selection) == vde_InvalidSelection) {
-        print_err(self, "Invalid selection!");
+        print_err(self, c_config, "Invalid selection!");
         return;
     }
 }

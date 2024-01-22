@@ -135,16 +135,16 @@ int file_send_queue_remove(uint32_t friendnumber, size_t index);
  * Set CTRL to -1 if we don't want to send a control signal.
  * Set message or self to NULL if we don't want to display a message.
  */
-void close_file_transfer(ToxWindow *self, Tox *tox, struct FileTransfer *ft, int CTRL, const char *message,
+void close_file_transfer(ToxWindow *self, const Toxic *toxic, struct FileTransfer *ft, int CTRL, const char *message,
                          Notification sound_type);
 
 /* Kills active outgoing avatar file transfers for friendnumber */
-void kill_avatar_file_transfers_friend(Tox *tox, uint32_t friendnumber);
+void kill_avatar_file_transfers_friend(Toxic *toxic, uint32_t friendnumber);
 
 /* Kills all active file transfers for friendnumber */
-void kill_all_file_transfers_friend(Tox *tox, uint32_t friendnumber);
+void kill_all_file_transfers_friend(Toxic *toxic, uint32_t friendnumber);
 
-void kill_all_file_transfers(Tox *tox);
+void kill_all_file_transfers(Toxic *toxic);
 
 /* Return true if any pending or active file receiver has the path `path`. */
 bool file_transfer_recv_path_exists(const char *path);

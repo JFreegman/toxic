@@ -24,7 +24,10 @@
 #define VIDEO_DEVICE_H
 
 #define MAX_DEVICES 32
+
 #include <inttypes.h>
+
+#include "settings.h"
 #include "windows.h"
 
 typedef enum VideoDeviceType {
@@ -45,13 +48,13 @@ typedef enum VideoDeviceError {
     vde_CaptureError = -9,
 } VideoDeviceError;
 
-typedef void (*VideoDataHandleCallback)(int16_t width, int16_t height, const uint8_t *y, const uint8_t *u,
-                                        const uint8_t *v, void *data);
+typedef void (*VideoDataHandleCallback)(const Client_Config *c_config, int16_t width, int16_t height,
+                                        const uint8_t *y, const uint8_t *u, const uint8_t *v, void *data);
 
 #ifdef VIDEO
-VideoDeviceError init_video_devices(ToxAV *av);
+VideoDeviceError init_video_devices(ToxAV *av_, const Client_Config *c_config);
 #else
-VideoDeviceError init_video_devices(void);
+VideoDeviceError init_video_devices(const Client_Config *c_config);
 #endif /* VIDEO */
 
 VideoDeviceError terminate_video_devices(void);
@@ -74,7 +77,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx);
 VideoDeviceError write_video_out(uint16_t width, uint16_t height, uint8_t const *y, uint8_t const *u, uint8_t const *v,
                                  int32_t ystride, int32_t ustride, int32_t vstride, void *user_data);
 
-void print_video_devices(ToxWindow *self, VideoDeviceType type);
+void print_video_devices(ToxWindow *self, const Client_Config *c_config, VideoDeviceType type);
 void get_primary_video_device_name(VideoDeviceType type, char *buf, int size);
 
 VideoDeviceError video_selection_valid(VideoDeviceType type, int32_t selection);

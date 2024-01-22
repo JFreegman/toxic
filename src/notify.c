@@ -61,8 +61,6 @@
 #define SOUNDS_SIZE 10
 #define ACTIVE_NOTIFS_MAX 10
 
-extern struct user_settings *user_settings;
-
 static struct Control {
     time_t cooldown;
     time_t notif_timeout;
@@ -129,9 +127,9 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
     ++self->pending_messages;
 }
 
-static bool notifications_are_disabled(uint64_t flags)
+static bool notifications_are_disabled(const Client_Config *c_config, uint64_t flags)
 {
-    if (user_settings->alerts != ALERTS_ENABLED) {
+    if (c_config->alerts != ALERTS_ENABLED) {
         return true;
     }
 
@@ -172,7 +170,7 @@ static bool device_opened = false;
 time_t last_opened_update = 0;
 
 /* Opens primary device. Returns true on succe*/
-void m_open_device(void)
+static void m_open_device(const Client_Config *c_config)
 {
     last_opened_update = get_unix_time();
 
@@ -180,8 +178,14 @@ void m_open_device(void)
         return;
     }
 
-    /* Blah error check */
-    open_output_device(&Control.device_idx, 48000, 20, 1);
+#ifdef AUDIO
+    const double VAD_threshold = c_config->VAD_threshold;
+#else
+    const double VAD_threshold = 0;
+#endif  // AUDIO
+
+    /* TODO: error check */
+    open_output_device(&Control.device_idx, 48000, 20, 1, VAD_threshold);
 
     device_opened = true;
 }
@@ -515,12 +519,12 @@ bool set_sound(Notification sound, const char *value)
     return stat(value, &buf) == 0;
 }
 
-int play_sound_internal(Notification what, bool loop)
+static int play_sound_internal(const Client_Config *c_config, Notification what, bool loop)
 {
     uint32_t source;
     uint32_t buffer;
 
-    m_open_device();
+    m_open_device(c_config);
 
     alGenSources(1, &source);
     alGenBuffers(1, &buffer);
@@ -540,7 +544,7 @@ int play_sound_internal(Notification what, bool loop)
     return rc;
 }
 
-int play_notify_sound(Notification notif, uint64_t flags)
+static int play_notify_sound(const Client_Config *c_config, Notification notif, uint64_t flags)
 {
     int rc = -1;
 
@@ -553,7 +557,7 @@ int play_notify_sound(Notification notif, uint64_t flags)
             return -1;
         }
 
-        rc = play_sound_internal(notif, flags & NT_LOOP ? 1 : 0);
+        rc = play_sound_internal(c_config, notif, flags & NT_LOOP ? 1 : 0);
     }
 
     return rc;
@@ -580,10 +584,10 @@ void stop_sound(int id)
 }
 #endif /* SOUND_NOTIFY */
 
-static int m_play_sound(Notification notif, uint64_t flags)
+static int m_play_sound(const Client_Config *c_config, Notification notif, uint64_t flags)
 {
 #ifdef SOUND_NOTIFY
-    return play_notify_sound(notif, flags);
+    return play_notify_sound(c_config, notif, flags);
 #else
 
     if (notif != silent) {
@@ -594,11 +598,12 @@ static int m_play_sound(Notification notif, uint64_t flags)
 #endif /* SOUND_NOTIFY */
 }
 
-int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indicator)
+int sound_notify(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+                 int *id_indicator)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(flags)) {
+    if (notifications_are_disabled(c_config, flags)) {
         return -1;
     }
 
@@ -606,9 +611,9 @@ int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_in
     control_lock();
 
     if (self && (!self->stb || self->stb->status != TOX_USER_STATUS_BUSY)) {
-        id = m_play_sound(notif, flags);
+        id = m_play_sound(c_config, notif, flags);
     } else if (flags & NT_ALWAYS) {
-        id = m_play_sound(notif, flags);
+        id = m_play_sound(c_config, notif, flags);
     }
 
 #if defined(BOX_NOTIFY) && !defined(SOUND_NOTIFY)
@@ -634,11 +639,11 @@ int sound_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_in
     return id;
 }
 
-int sound_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id)
+int sound_notify2(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags, int id)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(flags)) {
+    if (notifications_are_disabled(c_config, flags)) {
         return -1;
     }
 
@@ -654,7 +659,7 @@ int sound_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id)
         return -1;
     }
 
-    m_open_device();
+    m_open_device(c_config);
 
     alSourceStop(actives[id].source);
     alDeleteSources(1, &actives[id].source);
@@ -681,17 +686,17 @@ int sound_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id)
 #endif /* SOUND_NOTIFY */
 }
 
-int box_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indicator, const char *title,
-               const char *format, ...)
+int box_notify(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+               int *id_indicator, const char *title, const char *format, ...)
 {
-    if (notifications_are_disabled(flags)) {
+    if (notifications_are_disabled(c_config, flags)) {
         tab_notify(self, flags);
         return -1;
     }
 
 #ifdef BOX_NOTIFY
 
-    int id = sound_notify(self, notif, flags, id_indicator);
+    int id = sound_notify(self, c_config, notif, flags, id_indicator);
 
     control_lock();
 
@@ -750,20 +755,21 @@ int box_notify(ToxWindow *self, Notification notif, uint64_t flags, int *id_indi
     control_unlock();
     return id;
 #else
-    return sound_notify(self, notif, flags, id_indicator);
+    return sound_notify(self, c_config, notif, flags, id_indicator);
 #endif /* BOX_NOTIFY */
 }
 
-int box_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id, const char *format, ...)
+int box_notify2(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+                int id, const char *format, ...)
 {
-    if (notifications_are_disabled(flags)) {
+    if (notifications_are_disabled(c_config, flags)) {
         tab_notify(self, flags);
         return -1;
     }
 
 #ifdef BOX_NOTIFY
 
-    if (sound_notify2(self, notif, flags, id) == -1) {
+    if (sound_notify2(self, c_config, notif, flags, id) == -1) {
         return -1;
     }
 
@@ -802,15 +808,16 @@ int box_notify2(ToxWindow *self, Notification notif, uint64_t flags, int id, con
 
     return id;
 #else
-    return sound_notify2(self, notif, flags, id);
+    return sound_notify2(self, c_config, notif, flags, id);
 #endif /* BOX_NOTIFY */
 }
 
-int box_silent_notify(ToxWindow *self, uint64_t flags, int *id_indicator, const char *title, const char *format, ...)
+int box_silent_notify(ToxWindow *self, const Client_Config *c_config, uint64_t flags, int *id_indicator,
+                      const char *title, const char *format, ...)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(flags)) {
+    if (notifications_are_disabled(c_config, flags)) {
         return -1;
     }
 
@@ -864,11 +871,12 @@ int box_silent_notify(ToxWindow *self, uint64_t flags, int *id_indicator, const 
 #endif /* BOX_NOTIFY */
 }
 
-int box_silent_notify2(ToxWindow *self, uint64_t flags, int id, const char *format, ...)
+int box_silent_notify2(ToxWindow *self, const Client_Config *c_config, uint64_t flags, int id,
+                       const char *format, ...)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(flags)) {
+    if (notifications_are_disabled(c_config, flags)) {
         return -1;
     }
 
