@@ -1198,7 +1198,6 @@ static bool load_toxic(Toxic *toxic)
 
     tox_options_free(tox_opts);
 
-    fprintf(stderr, "a%p\n", (void *)toxic->tox);
     return true;
 }
 

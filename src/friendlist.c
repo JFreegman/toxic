@@ -263,6 +263,11 @@ int load_blocklist(char *path)
         return -1;
     }
 
+    if (!file_exists(path)) {
+        fprintf(stderr, "block list file `%s` doesn't exist\n", path);
+        return 0;
+    }
+
     FILE *fp = fopen(path, "rb");
 
     if (fp == NULL) {

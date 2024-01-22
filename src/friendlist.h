@@ -123,11 +123,19 @@ ToxWindow *new_friendlist(void);
 void friendlist_onInit(ToxWindow *self, Toxic *toxic);
 void disable_chatwin(uint32_t f_num);
 int get_friendnum(uint8_t *name);
-int load_blocklist(char *data);
 void kill_friendlist(ToxWindow *self);
 void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool sort);
 Tox_User_Status get_friend_status(uint32_t friendnumber);
 Tox_Connection get_friend_connection_status(uint32_t friendnumber);
+
+/*
+ * Loads the list of blocked peers from `path`.
+ *
+ * Returns 0 on success or if the file doesn't exist (a file will only exist if
+ *   the client has actually blocked someone).
+ * Returns -1 on failure.
+ */
+int load_blocklist(char *path);
 
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(void);
