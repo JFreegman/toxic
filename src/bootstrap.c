@@ -196,7 +196,7 @@ static bool nodeslist_needs_update(const char *nodes_path, int update_frequency)
  * Return 0 on success.
  * Return -1 on failure.
  */
-static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
+static int curl_fetch_nodes_JSON(const Run_Options *run_opts, struct Recv_Curl_Data *recv_data)
 {
     CURL *c_handle = curl_easy_init();
 
@@ -252,7 +252,7 @@ static int curl_fetch_nodes_JSON(struct Recv_Curl_Data *recv_data)
         goto on_exit;
     }
 
-    int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
+    int proxy_ret = set_curl_proxy(c_handle, run_opts->proxy_address, run_opts->proxy_port, run_opts->proxy_type);
 
     if (proxy_ret != 0) {
         fprintf(stderr, "set_curl_proxy() failed with error %d\n", proxy_ret);
@@ -312,7 +312,7 @@ on_exit:
  * Return -4 if data could not be written to disk.
  * Return -5 if memory allocation fails.
  */
-static int update_DHT_nodeslist(const char *nodes_path, int update_frequency)
+static int update_DHT_nodeslist(const Run_Options *run_opts, const char *nodes_path, int update_frequency)
 {
     if (!nodeslist_needs_update(nodes_path, update_frequency)) {
         return 0;
@@ -331,7 +331,7 @@ static int update_DHT_nodeslist(const char *nodes_path, int update_frequency)
         return -5;
     }
 
-    if (curl_fetch_nodes_JSON(recv_data) == -1) {
+    if (curl_fetch_nodes_JSON(run_opts, recv_data) == -1) {
         free(recv_data);
         fclose(fp);
         return -2;
@@ -355,12 +355,12 @@ static int update_DHT_nodeslist(const char *nodes_path, int update_frequency)
     return 1;
 }
 
-static void get_nodeslist_path(char *buf, size_t buf_size)
+static void get_nodeslist_path(const Run_Options *run_opts, char *buf, size_t buf_size)
 {
     char *config_dir = NULL;
 
-    if (arg_opts.nodes_path[0]) {
-        snprintf(buf, buf_size, "%s", arg_opts.nodes_path);
+    if (!string_is_empty(run_opts->nodes_path)) {
+        snprintf(buf, buf_size, "%s", run_opts->nodes_path);
     } else if ((config_dir = get_user_config_dir()) != NULL) {
         snprintf(buf, buf_size, "%s%s%s", config_dir, CONFIGDIR, DEFAULT_NODES_FILENAME);
         free(config_dir);
@@ -511,14 +511,15 @@ static int extract_node(const char *line, struct Node *node)
 /* Loads the DHT nodeslist to memory from json encoded nodes file. */
 void *load_nodeslist_thread(void *data)
 {
-    const Client_Config *c_config = (Client_Config *) data;
 
-    if (c_config == NULL) {
+    const Toxic *toxic = (Toxic *) data;
+
+    if (toxic == NULL) {
         goto on_exit;
     }
 
     char nodes_path[PATH_MAX];
-    get_nodeslist_path(nodes_path, sizeof(nodes_path));
+    get_nodeslist_path(toxic->run_opts, nodes_path, sizeof(nodes_path));
 
     FILE *fp = NULL;
 
@@ -532,7 +533,9 @@ void *load_nodeslist_thread(void *data)
         goto on_exit;
     }
 
-    const int update_err = update_DHT_nodeslist(nodes_path, c_config->nodeslist_update_freq);
+    const Client_Config *c_config = toxic->c_config;
+
+    const int update_err = update_DHT_nodeslist(toxic->run_opts, nodes_path, c_config->nodeslist_update_freq);
 
     if (update_err < 0) {
         fprintf(stderr, "update_DHT_nodeslist() failed with error %d\n", update_err);
@@ -600,7 +603,7 @@ on_exit:
  * Return -4 if pthread fails to set detached state.
  * Return -5 if thread creation fails.
  */
-int load_DHT_nodeslist(const Client_Config *c_config)
+int load_DHT_nodeslist(const Toxic *toxic)
 {
     if (thread_data.active) {
         return -1;
@@ -620,7 +623,7 @@ int load_DHT_nodeslist(const Client_Config *c_config)
 
     thread_data.active = true;
 
-    if (pthread_create(&thread_data.tid, &thread_data.attr, load_nodeslist_thread, (void *) c_config) != 0) {
+    if (pthread_create(&thread_data.tid, &thread_data.attr, load_nodeslist_thread, (void *) toxic) != 0) {
         thread_data.active = false;
         return -5;
     }

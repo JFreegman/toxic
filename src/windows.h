@@ -146,33 +146,6 @@ struct av_thread {
     pthread_t tid;
 };
 
-struct arg_opts {
-    bool use_ipv4;
-    bool force_tcp;
-    bool disable_local_discovery;
-    bool debug;
-    bool default_locale;
-    bool use_custom_data;
-    bool no_connect;
-    bool encrypt_data;
-    bool unencrypt_data;
-
-    char nameserver_path[MAX_STR_SIZE];
-    char config_path[MAX_STR_SIZE];
-    char nodes_path[MAX_STR_SIZE];
-
-    bool logging;
-    FILE *log_fp;
-
-    char proxy_address[256];
-    uint8_t proxy_type;
-    uint16_t proxy_port;
-
-    uint16_t tcp_port;
-};
-
-extern struct arg_opts arg_opts;
-
 typedef struct ToxWindow ToxWindow;
 typedef struct StatusBar StatusBar;
 typedef struct PromptBuf PromptBuf;

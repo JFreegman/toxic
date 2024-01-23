@@ -46,7 +46,6 @@ static struct Nameservers {
 } Nameservers;
 
 static struct thread_data {
-    Toxic     *toxic;
     ToxWindow *self;
     char    id_bin[TOX_ADDRESS_SIZE];
     char    addr[MAX_STR_SIZE];
@@ -240,11 +239,14 @@ static int process_response(struct Recv_Curl_Data *recv_data)
 
 void *lookup_thread_func(void *data)
 {
-    const Client_Config *c_config = (Client_Config *) data;
+    Toxic *toxic = (Toxic *) data;
 
-    if (c_config == NULL) {
+    if (toxic == NULL) {
         kill_lookup_thread();
     }
+
+    const Client_Config *c_config = toxic->c_config;
+    const Run_Options *run_opts = toxic->run_opts;
 
     ToxWindow *self = t_data.self;
 
@@ -335,7 +337,7 @@ void *lookup_thread_func(void *data)
         goto on_exit;
     }
 
-    int proxy_ret = set_curl_proxy(c_handle, arg_opts.proxy_address, arg_opts.proxy_port, arg_opts.proxy_type);
+    int proxy_ret = set_curl_proxy(c_handle, run_opts->proxy_address, run_opts->proxy_port, run_opts->proxy_type);
 
     if (proxy_ret != 0) {
         lookup_error(self, c_config, "Failed to set proxy (error %d)\n", proxy_ret);
@@ -390,7 +392,7 @@ void *lookup_thread_func(void *data)
     }
 
     pthread_mutex_lock(&Winthread.lock);
-    cmd_add_helper(self, t_data.toxic, t_data.id_bin, t_data.msg);
+    cmd_add_helper(self, toxic, t_data.id_bin, t_data.msg);
     pthread_mutex_unlock(&Winthread.lock);
 
 on_exit:
@@ -425,7 +427,6 @@ bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *
     snprintf(t_data.addr, sizeof(t_data.addr), "%s", addr);
     snprintf(t_data.msg, sizeof(t_data.msg), "%s", message);
     t_data.self = self;
-    t_data.toxic = toxic;
     t_data.busy = true;
 
     if (pthread_attr_init(&lookup_thread.attr) != 0) {
@@ -441,7 +442,7 @@ bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *
         return false;
     }
 
-    if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, (void *) c_config) != 0) {
+    if (pthread_create(&lookup_thread.tid, &lookup_thread.attr, lookup_thread_func, (void *) toxic) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "Error: lookup thread failed to init");
         pthread_attr_destroy(&lookup_thread.attr);
         clear_thread_data();
@@ -451,22 +452,14 @@ bool name_lookup(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *
     return true;
 }
 
-/* Initializes http based name lookups. Note: This function must be called only once before additional
- * threads are spawned.
- *
- * Returns 0 on success.
- * Returns -1 if curl failed to init.
- * Returns -2 if the nameserver list cannot be found.
- * Returns -3 if the nameserver list does not contain any valid entries.
- */
-int name_lookup_init(int curl_init_status)
+int name_lookup_init(const char *nameserver_path, int curl_init_status)
 {
     if (curl_init_status != 0) {
         t_data.disabled = true;
         return -1;
     }
 
-    const char *path = arg_opts.nameserver_path[0] ? arg_opts.nameserver_path : PACKAGE_DATADIR "/nameservers";
+    const char *path = !string_is_empty(nameserver_path) ? nameserver_path : PACKAGE_DATADIR "/nameservers";
     const int ret = load_nameserver_list(path);
 
     if (ret != 0) {
