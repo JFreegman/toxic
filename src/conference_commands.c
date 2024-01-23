@@ -35,6 +35,34 @@ static void print_err(ToxWindow *self, const Client_Config *c_config, const char
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
+void cmd_conference_chatid(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    const Client_Config *c_config = toxic->c_config;
+
+    char id_string[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
+    char id[TOX_CONFERENCE_ID_SIZE];
+
+    if (!tox_conference_get_id(toxic->tox, self->num, (uint8_t *) id)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve the Chat ID.");
+        return;
+    }
+
+    char tmp[3];
+
+    for (size_t i = 0; i < TOX_CONFERENCE_ID_SIZE; ++i) {
+        snprintf(tmp, sizeof(tmp), "%02X", id[i] & 0xff);
+        strcat(id_string, tmp);
+    }
+
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", id_string);
+}
+
 void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);

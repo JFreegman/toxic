@@ -42,24 +42,24 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
 
     const Client_Config *c_config = toxic->c_config;
 
-    char chatid[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
-    char chat_public_key[TOX_GROUP_CHAT_ID_SIZE];
+    char id_string[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
+    char chat_id[TOX_GROUP_CHAT_ID_SIZE];
 
     Tox_Err_Group_State_Queries err;
 
-    if (!tox_group_get_chat_id(toxic->tox, self->num, (uint8_t *) chat_public_key, &err)) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve the Chat ID (error %d).",
-                      err);
+    if (!tox_group_get_chat_id(toxic->tox, self->num, (uint8_t *) chat_id, &err)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve the Chat ID (error %d).", err);
         return;
     }
 
+    char tmp[3];
+
     for (size_t i = 0; i < TOX_GROUP_CHAT_ID_SIZE; ++i) {
-        char xx[3];
-        snprintf(xx, sizeof(xx), "%02X", chat_public_key[i] & 0xff);
-        strcat(chatid, xx);
+        snprintf(tmp, sizeof(tmp), "%02X", chat_id[i] & 0xff);
+        strcat(id_string, tmp);
     }
 
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", chatid);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", id_string);
 }
 
 void cmd_disconnect(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

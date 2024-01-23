@@ -24,6 +24,7 @@
 #define _GNU_SOURCE    /* needed for strcasestr() and wcswidth() */
 #endif
 
+#include <assert.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdlib.h>
@@ -70,6 +71,8 @@ static int max_conference_index = 0;
 
 extern struct Winthread Winthread;
 
+static_assert(TOX_CONFERENCE_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_CONFERENCE_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
+
 /* Array of conference command names used for tab completion. */
 static const char *conference_cmd_list[] = {
     "/accept",
@@ -78,6 +81,7 @@ static const char *conference_cmd_list[] = {
     "/audio",
 #endif
     "/avatar",
+    "/chatid",
     "/clear",
     "/close",
     "/color",

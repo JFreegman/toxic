@@ -24,6 +24,7 @@
 #define _GNU_SOURCE    /* needed for strcasestr() and wcswidth() */
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>

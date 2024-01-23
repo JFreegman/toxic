@@ -112,6 +112,7 @@ static struct cmd_func chat_commands[] = {
 };
 
 static struct cmd_func conference_commands[] = {
+    { "/chatid",    cmd_conference_chatid    },
     { "/title",     cmd_conference_set_title },
 
 #ifdef AUDIO

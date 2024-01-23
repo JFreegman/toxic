@@ -365,6 +365,7 @@ static void help_draw_conference(ToxWindow *self)
     wprintw(win, "Conference commands:\n");
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
+    wprintw(win, "  /chatid                 : Print this conference's ID\n");
     wprintw(win, "  /title <msg>            : Show/set conference title\n");
 #ifdef AUDIO
     wattron(win, A_BOLD);
@@ -467,7 +468,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'o':
-            height = 6;
+            height = 7;
 #ifdef AUDIO
             height += 7;
 #endif

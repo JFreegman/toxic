@@ -23,8 +23,6 @@
 #ifndef GROUPCHATS_H
 #define GROUPCHATS_H
 
-#include <assert.h>
-
 #include "toxic.h"
 #include "windows.h"
 
