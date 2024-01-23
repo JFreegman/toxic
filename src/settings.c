@@ -386,26 +386,46 @@ static const char *extract_setting_public_key(const config_setting_t *keys)
     return &public_key[prefix_len];
 }
 
-int settings_load_groups(const char *patharg)
+/*
+ * Initializes `cfg` with the contents from the toxic config file.
+ *
+ * `patharg` points to a user specified config path. If `patharg` is NULL
+ * the default config path will be used.
+ *
+ * Return 0 on success.
+ * Return -1 if we failed to fetch or create the config path.
+ * Return -2 if the config file cannot be read or is invalid.
+ */
+static int settings_init_config(config_t *cfg, const char *patharg)
 {
-    config_t cfg[1];
-    const char *str = NULL;
-
-    config_init(cfg);
-
     char path[MAX_STR_SIZE] = {0};
 
     if (!get_settings_path(path, sizeof(path), patharg)) {
-        config_destroy(cfg);
         return -1;
     }
 
     if (!config_read_file(cfg, path)) {
-        fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
+        fprintf(stderr, "config_read_file() error: %s:%d - %s\n", config_error_file(cfg),
                 config_error_line(cfg), config_error_text(cfg));
-        config_destroy(cfg);
         return -2;
     }
+
+    return 0;
+}
+
+int settings_load_groups(const char *patharg)
+{
+    config_t cfg[1];
+    config_init(cfg);
+
+    const int c_ret = settings_init_config(cfg, patharg);
+
+    if (c_ret < 0) {
+        config_destroy(cfg);
+        return c_ret;
+    }
+
+    const char *str = NULL;
 
     const config_setting_t *setting = config_lookup(cfg, groupchat_strings.self);
 
@@ -448,23 +468,16 @@ int settings_load_groups(const char *patharg)
 int settings_load_friends(const char *patharg)
 {
     config_t cfg[1];
-    const char *str = NULL;
-
     config_init(cfg);
 
-    char path[MAX_STR_SIZE] = {0};
+    const int c_ret = settings_init_config(cfg, patharg);
 
-    if (!get_settings_path(path, sizeof(path), patharg)) {
+    if (c_ret < 0) {
         config_destroy(cfg);
-        return -1;
+        return c_ret;
     }
 
-    if (!config_read_file(cfg, path)) {
-        fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
-                config_error_line(cfg), config_error_text(cfg));
-        config_destroy(cfg);
-        return -2;
-    }
+    const char *str = NULL;
 
     const config_setting_t *setting = config_lookup(cfg, friend_strings.self);
 
@@ -507,8 +520,9 @@ int settings_load_friends(const char *patharg)
 int settings_load_main(Client_Config *s, const char *patharg)
 {
     config_t cfg[1];
+    config_init(cfg);
+
     config_setting_t *setting = NULL;
-    const char *str = NULL;
 
     /* Load default settings */
     ui_defaults(s);
@@ -519,21 +533,14 @@ int settings_load_main(Client_Config *s, const char *patharg)
     audio_defaults(s);
 #endif
 
-    config_init(cfg);
+    const int c_ret = settings_init_config(cfg, patharg);
 
-    char path[MAX_STR_SIZE] = {0};
-
-    if (!get_settings_path(path, sizeof(path), patharg)) {
+    if (c_ret < 0) {
         config_destroy(cfg);
-        return -1;
+        return c_ret;
     }
 
-    if (!config_read_file(cfg, path)) {
-        fprintf(stderr, "settings read error: %s:%d - %s\n", config_error_file(cfg),
-                config_error_line(cfg), config_error_text(cfg));
-        config_destroy(cfg);
-        return -2;
-    }
+    const char *str = NULL;
 
     /* ui */
     if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
