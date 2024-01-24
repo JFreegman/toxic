@@ -1357,14 +1357,7 @@ bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 
 #endif
 
-        else if (wcsncmp(ctx->line, L"/status ", wcslen(L"/status ")) == 0) {
-            const char *status_cmd_list[] = {
-                "online",
-                "away",
-                "busy",
-            };
-            diff = complete_line(self, toxic, status_cmd_list, sizeof(status_cmd_list) / sizeof(char *));
-        } else {
+        else {
             diff = complete_line(self, toxic, chat_cmd_list, sizeof(chat_cmd_list) / sizeof(char *));
         }
 

@@ -191,7 +191,7 @@ static void help_draw_global(ToxWindow *self)
     wprintw(win, "  /group <name>              : Create a new group chat\n");
     wprintw(win, "  /join <chatid>             : Join a public groupchat using a Chat ID\n");
 #ifdef GAMES
-    wprintw(win, "  /game                      : Play a game\n");
+    wprintw(win, "  /game <name>               : Play a game\n");
 #endif /* GAMES */
 
 #ifdef QRCODE
@@ -256,6 +256,10 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /savefile <id>             : Receive a file\n");
     wprintw(win, "  /cancel <type> <id>        : Cancel file transfer where type: in|out\n");
 
+#ifdef GAMES
+    wprintw(win, "  /game <name>               : Play a game with this contact\n");
+#endif /* GAMES */
+
 #ifdef AUDIO
     wattron(win, A_BOLD);
     wprintw(win, "\n Audio:\n");
@@ -279,10 +283,6 @@ static void help_draw_chat(ToxWindow *self)
     wprintw(win, "  /vcall                     : Video call\n");
     wprintw(win, "  /video                     : Toggle video in call\n");
 #endif /* VIDEO */
-
-#ifdef GAMES
-    wprintw(win, "  /game                      : Play a game with contact\n");
-#endif /* GAMES */
 
     help_draw_bottom_menu(win);
 

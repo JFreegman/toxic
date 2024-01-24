@@ -118,7 +118,7 @@ void game_list_print(ToxWindow *self, const Client_Config *c_config)
     const char *name = NULL;
 
     for (size_t i = 0; (name = game_list[i].name); ++i) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%zu: %s", i + 1, name);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "- %s", name);
     }
 }
 

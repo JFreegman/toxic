@@ -91,13 +91,16 @@ static size_t get_str_match(ToxWindow *self, char *match, size_t match_sz, const
  *
  * dir_search should be true if the line being completed is a file path.
  *
+ * If `out` is non-null the input string will be copied to it. `out` must have room for at least
+ * MAX_STR_SIZE bytes.
+ *
  * Returns the difference between the old len and new len of line on success.
  * Returns -1 on error.
  *
  * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
 static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const *list, const size_t n_items,
-                                bool dir_search)
+                                bool dir_search, char *out)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -115,6 +118,10 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
     /* work with multibyte string copy of buf for simplicity */
     if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1) {
         return -1;
+    }
+
+    if (out != NULL) {
+        snprintf(out, MAX_STR_SIZE, "%s", ubuf);
     }
 
     /* isolate substring from space behind pos to pos */
@@ -260,14 +267,74 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
     return diff;
 }
 
+static const char *color_list[] = {
+    "black",
+    "blue",
+    "brown",
+    "cyan",
+    "gray",
+    "green",
+    "magenta",
+    "orange",
+    "pink",
+    "red",
+    "white",
+    "yellow",
+};
+
+static const char *game_list[] = {
+    "centipede",
+    "chess",
+    "life",
+    "snake",
+};
+
+static const char *status_list[] = {
+    "away",
+    "busy",
+    "online",
+};
+
+/*
+ * Attempts to auto-complete the argumemt for a string `input` that begins with a valid
+ * command, per the above lists.
+ *
+ * Returns the diff between the old len and new len of the line on success.
+ * Returns -1 on failure.
+ */
+static int complete_line_command_arg(ToxWindow *self, Toxic *toxic, const char *input)
+{
+    if (strncmp(input, "/status", strlen("/status")) == 0) {
+        return complete_line_helper(self, toxic, status_list, sizeof(status_list) / sizeof(char *), false, NULL);
+    }
+
+    if (strncmp(input, "/game", strlen("/game")) == 0) {
+        return complete_line_helper(self, toxic, game_list, sizeof(game_list) / sizeof(char *), false, NULL);
+    }
+
+    if (strncmp(input, "/color", strlen("/color")) == 0) {
+        return complete_line_helper(self, toxic, color_list, sizeof(color_list) / sizeof(char *), false, NULL);
+    }
+
+    return -1;
+}
+
 int complete_line(ToxWindow *self, Toxic *toxic, const char *const *list, size_t n_items)
 {
-    return complete_line_helper(self, toxic, list, n_items, false);
+    char cmd[MAX_STR_SIZE] = {0};
+
+    const int ret = complete_line_helper(self, toxic, list, n_items, false, cmd);
+
+    if (ret >= 0) {
+        return ret;
+    }
+
+    return complete_line_command_arg(self, toxic, cmd);
 }
 
 static int complete_path(ToxWindow *self, Toxic *toxic, const char *const *list, const size_t n_items)
 {
-    return complete_line_helper(self, toxic, list, n_items, true);
+    return complete_line_helper(self, toxic, list, n_items, true, NULL);
 }
 
 /* Transforms a tab complete starting with the shorthand "~" into the full home directory. */
