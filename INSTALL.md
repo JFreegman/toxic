@@ -19,6 +19,7 @@
 | [OpenAL](http://openal.org)                          | AUDIO, SOUND NOTIFICATIONS | libopenal-dev       |
 | [OpenALUT](http://openal.org)                        | SOUND NOTIFICATIONS        | libalut-dev         |
 | [LibNotify](https://developer.gnome.org/libnotify)   | DESKTOP NOTIFICATIONS      | libnotify-dev       |
+| [X11](https://gitlab.freedesktop.org/xorg/lib/libx11)| VIDEO, DESKTOP FOCUS       | libx11-dev          |
 | [Python 3](http://www.python.org/)                   | PYTHON                     | python3-dev         |
 | [AsciiDoc](http://asciidoc.org/index.html)           | DOCUMENTATION<sup>1</sup>  | asciidoc            |
 
@@ -33,8 +34,6 @@ brew install libnotify
 export PKG_CONFIG_PATH=/usr/local/opt/openal-soft/lib/pkgconfig
 make
 ```
-
-You can omit `libnotify` if you intend to build without desktop notifications enabled.
 
 ## Compiling
 ```
@@ -52,7 +51,7 @@ Run `make doc` in the build directory after editing the asciidoc files to regene
 #### Compilation variables
 * You can add specific flags to the Makefile with `USER_CFLAGS=""` and `USER_LDFLAGS=""` passed as arguments to make, or as environment variables
 * Default compile options can be overridden by using special variables:
-  * `DISABLE_X11=1` → Disable X11 support (needed for focus tracking)
+  * `DISABLE_X11=1` → Disable X11 support (needed for video and window focus tracking)
   * `DISABLE_AV=1` → Disable audio call support
   * `DISABLE_SOUND_NOTIFY=1` → Disable sound notifications support
   * `DISABLE_QRCODE=1` → Disable QR exporting support
