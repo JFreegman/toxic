@@ -137,7 +137,7 @@ tox = {
 // Friend-specific config settings. Public keys are used as friend identifiers
 // and must begin with the prefix "pk_". These take priority over global settings.
 friends = {
-  pk_PUBLIC_KEY_1 = {
+  pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
     // The color of the friend's window tab name.
     // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
@@ -146,7 +146,7 @@ friends = {
     autolog=false;
   };
 
-// pk_PUBLIC_KEY_2 = {
+// pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
 //   ...
 // };
 };
@@ -155,7 +155,7 @@ friends = {
 // group identifiers and must begin with the prefix "pk_". These take priority
 // over global settings.
 groupchats = {
-  pk_PUBLIC_KEY_1 = {
+  pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
     // The color of the group's window tab name.
     // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
@@ -164,7 +164,24 @@ groupchats = {
     autolog=false;
   };
 
-// pk_PUBLIC_KEY_2 = {
+// pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
+//   ...
+// };
+};
+
+// Conference-specific config settings. Public keys are used as group identifiers
+// and must begin with the prefix "pk_". These take priority over global settings.
+conferences = {
+  pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
+    // The color of the conference's window tab name.
+    // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
+    tab_name_color="white";
+
+    // Enable autologging for this conference
+    autolog=false;
+  };
+
+// pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
 //   ...
 // };
 };

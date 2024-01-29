@@ -32,6 +32,7 @@
 #include "friendlist.h"
 #include "groupchats.h"
 #include "line_info.h"
+#include "log.h"
 #include "misc_tools.h"
 #include "prompt.h"
 #include "settings.h"
@@ -874,7 +875,7 @@ static void draw_window_tab(WINDOW *win, ToxWindow *toxwin, bool active_window)
 
     pthread_mutex_unlock(&Winthread.lock);
 
-    WINDOW_TYPE type = toxwin->type;
+    Window_Type type = toxwin->type;
 
     if (active_window) {
         wattron(win, A_BOLD | COLOR_PAIR(BAR_ACCENT));
@@ -1208,7 +1209,7 @@ int get_num_active_windows(void)
 }
 
 /* Returns the number of active windows of given type. */
-size_t get_num_active_windows_type(WINDOW_TYPE type)
+size_t get_num_active_windows_type(Window_Type type)
 {
     size_t count = 0;
 
@@ -1225,6 +1226,55 @@ size_t get_num_active_windows_type(WINDOW_TYPE type)
     }
 
     return count;
+}
+
+ToxWindow *get_window_by_number_type(uint32_t number, Window_Type type)
+{
+    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
+        ToxWindow *win = windows[i];
+
+        if (win->type == type && win->num == number) {
+            return win;
+        }
+    }
+
+    return NULL;
+}
+
+bool disable_window_log_by_number_type(uint32_t number, Window_Type type)
+{
+    ToxWindow *win = get_window_by_number_type(number, type);
+
+    if (win == NULL) {
+        return false;
+    }
+
+    ChatContext *ctx = win->chatwin;
+
+    if (ctx == NULL) {
+        return false;
+    }
+
+    log_disable(ctx->log);
+
+    return true;
+}
+
+bool enable_window_log_by_number_type(uint32_t number, Window_Type type)
+{
+    ToxWindow *win = get_window_by_number_type(number, type);
+
+    if (win == NULL) {
+        return false;
+    }
+
+    ChatContext *ctx = win->chatwin;
+
+    if (ctx == NULL) {
+        return false;
+    }
+
+    return log_enable(ctx->log) == 0;
 }
 
 /* destroys all chat and conference windows (should only be called on shutdown) */

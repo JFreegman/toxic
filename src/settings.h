@@ -152,6 +152,7 @@ int settings_load_main(Client_Config *s, const char *patharg);
 
 /*
  * Loads friend config settings from the toxic config file pointed to by `patharg`.
+ * If `patharg` is null, the default config path is used.
  *
  * Return 0 on success (or if no config entry for friends exists).
  * Return -1 if we fail to open the file path.
@@ -163,6 +164,7 @@ int settings_load_friends(const char *patharg);
 
 /*
  * Loads groupchat config settings from the toxic config file pointed to by `patharg`.
+ * If `patharg` is null, the default config path is used.
  *
  * Return 0 on success (or if no config entry for groupchats exists).
  * Return -1 if we fail to open the file path.
@@ -171,5 +173,17 @@ int settings_load_friends(const char *patharg);
  * This function will have no effect on groupchat instances that are created in the future.
  */
 int settings_load_groups(const char *patharg);
+
+/*
+ * Loads conference config settings from the toxic config file pointed to by `patharg`.
+ * If `patharg` is null, the default config path is used.
+ *
+ * Return 0 on success (or if no config entry for conferences exists).
+ * Return -1 if we fail to open the file path.
+ * Return -2 if libconfig fails to read the config file.
+ *
+ * This function will have no effect on conference instances that are created in the future.
+ */
+int settings_load_conferences(const char *patharg);
 
 #endif /* SETTINGS_H */

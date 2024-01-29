@@ -60,11 +60,14 @@ typedef struct NameListEntry {
 
 
 typedef struct {
+    uint32_t conferencenum;
     int chatwin;
     bool active;
     uint8_t type;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
     time_t start_time;
+
+    char id[TOX_CONFERENCE_UID_SIZE];
 
     char title[CONFERENCE_MAX_TITLE_LENGTH + 1];
     size_t title_length;
@@ -104,6 +107,24 @@ int conference_enable_logging(ToxWindow *self, Tox *tox, uint32_t conferencenum,
  */
 uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *prefix, NameListEntry **entries,
         uint32_t maxpeers);
+
+/*
+ * Sets the tab name colour config option for the conference associated with `public_key` to `colour`.
+ *
+ * `public_key` should be a string representing the conference's unique ID.
+ *
+ * Return true on success.
+ */
+bool conference_config_set_tab_name_colour(const char *public_key, const char *colour);
+
+/*
+ * Sets the auto-logging preference for the conference associated with `public_key`.
+ *
+ * `public_key` should be a string representing the conference's unique ID.
+ *
+ * Return true on success.
+ */
+bool conference_config_set_autolog(const char *public_key, bool autolog_enabled);
 
 /* Enable audio in a conference.
  *

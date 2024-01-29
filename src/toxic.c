@@ -1765,6 +1765,12 @@ int main(int argc, char **argv)
         queue_init_message("Failed to load groupchat config settings: error %d", gs_ret);
     }
 
+    const int cs_ret = settings_load_conferences(config_path);
+
+    if (cs_ret != 0) {
+        queue_init_message("Failed to load conference config settings: error %d", cs_ret);
+    }
+
     set_active_window_index(0);
 
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {

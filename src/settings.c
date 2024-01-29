@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "conference.h"
 #include "configdir.h"
 #include "friendlist.h"
 #include "groupchats.h"
@@ -295,6 +296,16 @@ static const struct groupchat_strings {
     "autolog",
 };
 
+static const struct conference_strings {
+    const char *self;
+    const char *tab_name_color;
+    const char *autolog;
+} conference_strings = {
+    "conferences",
+    "tab_name_color",
+    "autolog",
+};
+
 static int key_parse(const char **bind)
 {
     int len = strlen(*bind);
@@ -409,6 +420,58 @@ static int settings_init_config(config_t *cfg, const char *patharg)
                 config_error_line(cfg), config_error_text(cfg));
         return -2;
     }
+
+    return 0;
+}
+
+int settings_load_conferences(const char *patharg)
+{
+    config_t cfg[1];
+    config_init(cfg);
+
+    const int c_ret = settings_init_config(cfg, patharg);
+
+    if (c_ret < 0) {
+        config_destroy(cfg);
+        return c_ret;
+    }
+
+    const char *str = NULL;
+
+    const config_setting_t *setting = config_lookup(cfg, conference_strings.self);
+
+    if (setting == NULL) {
+        config_destroy(cfg);
+        return 0;
+    }
+
+    const int num_conferences = config_setting_length(setting);
+
+    for (int i = 0; i < num_conferences; ++i) {
+        const config_setting_t *keys = config_setting_get_elem(setting, i);
+
+        const char *public_key = extract_setting_public_key(keys);
+
+        if (public_key == NULL) {
+            continue;
+        }
+
+        if (config_setting_lookup_string(keys, conference_strings.tab_name_color, &str)) {
+            if (!conference_config_set_tab_name_colour(public_key, str)) {
+                fprintf(stderr, "config error: failed to set conference tab name color for %s: (color: %s)\n", public_key, str);
+            }
+        }
+
+        int autolog_enabled;
+
+        if (config_setting_lookup_bool(keys, conference_strings.autolog, &autolog_enabled)) {
+            if (!conference_config_set_autolog(public_key, autolog_enabled != 0)) {
+                fprintf(stderr, "config error: failed to apply conference autolog setting for %s\n", public_key);
+            }
+        }
+    }
+
+    config_destroy(cfg);
 
     return 0;
 }

@@ -104,7 +104,7 @@ typedef enum {
     WINDOW_ALERT_2 = MAGENTA_BG,
 } WINDOW_ALERTS;
 
-typedef enum {
+typedef enum Window_Type {
     WINDOW_TYPE_PROMPT,
     WINDOW_TYPE_CHAT,
     WINDOW_TYPE_CONFERENCE,
@@ -114,7 +114,7 @@ typedef enum {
 #ifdef GAMES
     WINDOW_TYPE_GAME,
 #endif
-} WINDOW_TYPE;
+} Window_Type;
 
 /* Fixes text color problem on some terminals.
    Uncomment if necessary */
@@ -233,7 +233,7 @@ struct ToxWindow {
     unsigned int pending_messages;  /* # of new messages in this window since the last time it was focused */
     int x;
 
-    WINDOW_TYPE type;
+    Window_Type type;
 
     int show_peerlist;    /* used to toggle conference peerlist */
 
@@ -336,8 +336,23 @@ ToxWindow *get_window_ptr(size_t i);
 ToxWindow *get_active_window(void);
 void draw_window_bar(ToxWindow *self);
 
+/*
+ * Enables and disables the log associated the ToxWindow of type `type` and with
+ * num `number`.
+ *
+ * Returns true on success.
+ */
+bool enable_window_log_by_number_type(uint32_t number, Window_Type type);
+bool disable_window_log_by_number_type(uint32_t number, Window_Type type);
+
+/*
+ * Returns a pointer to the ToxWindow of type `type` and with num `number`.
+ * Returns NULL if a window with those parameters doesn't exist.
+ */
+ToxWindow *get_window_by_number_type(uint32_t number, Window_Type type);
+
 /* Returns the number of active windows of given type. */
-size_t get_num_active_windows_type(WINDOW_TYPE type);
+size_t get_num_active_windows_type(Window_Type type);
 
 /* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */

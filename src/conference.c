@@ -197,8 +197,6 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
     }
-
-    execute(ctx->history, self, toxic, "/log", GLOBAL_COMMAND_MODE);  // print log state to screen
 }
 
 int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
@@ -220,6 +218,7 @@ int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, cons
             // probably it so happens that this will (at least typically) be
             // the case, because toxic and tox maintain the indices in
             // parallel ways. But it isn't guaranteed by the API.
+            conferences[i].conferencenum = conferencenum;
             conferences[i].chatwin = add_window(toxic, self);
             conferences[i].active = true;
             conferences[i].num_peers = 0;
@@ -227,6 +226,10 @@ int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, cons
             conferences[i].start_time = get_unix_time();
             conferences[i].audio_enabled = false;
             conferences[i].last_sent_audio = 0;
+
+            if (!tox_conference_get_id(toxic->tox, conferencenum, (uint8_t *) conferences[i].id)) {
+                fprintf(stderr, "Failed to fetch conference ID for conferencenum: %u\n", conferencenum);
+            }
 
 #ifdef AUDIO
             conferences[i].push_to_talk_enabled = toxic->c_config->push_to_talk;
@@ -1270,6 +1273,83 @@ static void conference_onInit(ToxWindow *self, Toxic *toxic)
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
+}
+
+/*
+ * Return the conference number associated with `public_key`.
+ * Return -1 if public_key does not designate a valid conference.
+ *
+ * `public_key` must be a string of at least TOX_PUBLIC_KEY_SIZE * 2 chars in length.
+ */
+static int get_conferencenum_by_public_key_string(const char *public_key)
+{
+    char pk_bin[TOX_PUBLIC_KEY_SIZE];
+
+    if (tox_pk_string_to_bytes(public_key, strlen(public_key), pk_bin, sizeof(pk_bin)) != 0) {
+        return -1;
+    }
+
+    for (size_t i = 0; i < max_conference_index; ++i) {
+        const ConferenceChat *chat = &conferences[i];
+
+        if (!chat->active) {
+            continue;
+        }
+
+        if (memcmp(pk_bin, chat->id, TOX_PUBLIC_KEY_SIZE) == 0) {
+            return chat->conferencenum;
+        }
+    }
+
+    return -1;
+}
+
+/*
+ * Sets the tab name colour of the ToxWindow associated with `public_key` to `colour`.
+ *
+ * Return false if conference does not exist.
+ */
+static bool conference_window_set_tab_name_colour(const char *public_key, int colour)
+{
+    const int conferencenum = get_conferencenum_by_public_key_string(public_key);
+
+    if (conferencenum < 0) {
+        return false;
+    }
+
+    ToxWindow *self = get_window_by_number_type(conferencenum, WINDOW_TYPE_CONFERENCE);
+
+    if (self == NULL) {
+        return false;
+    }
+
+    self->colour = colour;
+
+    return true;
+}
+
+bool conference_config_set_tab_name_colour(const char *public_key, const char *colour)
+{
+    const int colour_val = colour_string_to_int(colour);
+
+    if (colour_val < 0) {
+        return false;
+    }
+
+    return conference_window_set_tab_name_colour(public_key, colour_val);
+}
+
+bool conference_config_set_autolog(const char *public_key, bool autolog_enabled)
+{
+    const int conferencenum = get_conferencenum_by_public_key_string(public_key);
+
+    if (conferencenum < 0) {
+        return false;
+    }
+
+    return autolog_enabled
+           ? enable_window_log_by_number_type(conferencenum, WINDOW_TYPE_CONFERENCE)
+           : disable_window_log_by_number_type(conferencenum, WINDOW_TYPE_CONFERENCE);
 }
 
 static ToxWindow *new_conference_chat(uint32_t conferencenum)

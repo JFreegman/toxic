@@ -156,31 +156,6 @@ GroupChat *get_groupchat(uint32_t groupnumber)
 }
 
 /*
- * Return a pointer to the ToxWindow associated with `groupnumber`.
- * Return NULL if group does not exist.
- */
-static ToxWindow *get_groupchat_toxwindow(uint32_t groupnumber)
-{
-    for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        ToxWindow *win = get_window_ptr(i);
-
-        if (win == NULL) {
-            continue;
-        }
-
-        if (win->type != WINDOW_TYPE_GROUPCHAT) {
-            continue;
-        }
-
-        if (win->num == groupnumber) {
-            return win;
-        }
-    }
-
-    return NULL;
-}
-
-/*
  * Return the groupnumber associated with `public_key`.
  * Return -1 if public_key does not designate a valid group.
  *
@@ -336,38 +311,6 @@ void exit_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const c
     }
 }
 
-static bool enable_groupchat_log(uint32_t groupnumber)
-{
-    ToxWindow *self = get_groupchat_toxwindow(groupnumber);
-
-    if (self == NULL) {
-        return false;
-    }
-
-    ChatContext *ctx = self->chatwin;
-
-    if (log_enable(ctx->log) != 0) {
-        return false;
-    }
-
-    return true;
-}
-
-static bool disable_groupchat_log(uint32_t groupnumber)
-{
-    ToxWindow *self = get_groupchat_toxwindow(groupnumber);
-
-    if (self == NULL) {
-        return false;
-    }
-
-    ChatContext *ctx = self->chatwin;
-
-    log_disable(ctx->log);
-
-    return true;
-}
-
 /*
  * Initializes groupchat log. This should only be called after we have the group name.
  */
@@ -411,7 +354,7 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     }
 
     if (c_config->autolog == AUTOLOG_ON) {
-        if (!enable_groupchat_log(groupnumber)) {
+        if (log_enable(ctx->log) != 0) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
     }
@@ -2265,7 +2208,7 @@ static bool groupchat_window_set_tab_name_colour(const char *public_key, int col
         return false;
     }
 
-    ToxWindow *self = get_groupchat_toxwindow(groupnumber);
+    ToxWindow *self = get_window_by_number_type(groupnumber, WINDOW_TYPE_GROUPCHAT);
 
     if (self == NULL) {
         return false;
@@ -2295,7 +2238,9 @@ bool groupchat_config_set_autolog(const char *public_key, bool autolog_enabled)
         return false;
     }
 
-    return autolog_enabled ? enable_groupchat_log(groupnumber) : disable_groupchat_log(groupnumber);
+    return autolog_enabled
+           ? enable_window_log_by_number_type(groupnumber, WINDOW_TYPE_GROUPCHAT)
+           : disable_window_log_by_number_type(groupnumber, WINDOW_TYPE_GROUPCHAT);
 }
 
 static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *groupname, int length)
