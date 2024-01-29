@@ -589,7 +589,7 @@ void *load_nodeslist_thread(void *data)
 on_exit:
     thread_data.active = false;
     pthread_attr_destroy(&thread_data.attr);
-    pthread_exit(0);
+    pthread_exit(NULL);
 }
 
 /* Creates a new thread that will load the DHT nodeslist to memory

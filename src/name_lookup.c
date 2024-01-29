@@ -82,13 +82,6 @@ static int lookup_error(ToxWindow *self, const Client_Config *c_config, const ch
     return -1;
 }
 
-static void kill_lookup_thread(void)
-{
-    clear_thread_data();
-    pthread_attr_destroy(&lookup_thread.attr);
-    pthread_exit(NULL);
-}
-
 /* Attempts to load the nameserver list pointed at by path into the Nameservers structure.
  *
  * Returns 0 on success.
@@ -239,10 +232,14 @@ static int process_response(struct Recv_Curl_Data *recv_data)
 
 void *lookup_thread_func(void *data)
 {
+    struct curl_slist *headers = NULL;
+    CURL *c_handle = NULL;
+    struct Recv_Curl_Data *recv_data = NULL;
+
     Toxic *toxic = (Toxic *) data;
 
     if (toxic == NULL) {
-        kill_lookup_thread();
+        goto on_exit;
     }
 
     const Client_Config *c_config = toxic->c_config;
@@ -255,41 +252,34 @@ void *lookup_thread_func(void *data)
 
     if (parse_addr(t_data.addr, name, sizeof(name), input_domain, sizeof(input_domain)) == -1) {
         lookup_error(self, c_config, "Input must be a 76 character Tox ID or an address in the form: username@domain");
-        kill_lookup_thread();
+        goto on_exit;
     }
 
     char nameserver_key[SERVER_KEY_SIZE];
     char real_domain[MAX_DOMAIN_SIZE];
 
     if (!get_domain_match(nameserver_key, real_domain, sizeof(real_domain), input_domain)) {
-        if (!strcasecmp(input_domain, "utox.org")) {
-            lookup_error(self, c_config, "utox.org uses deprecated DNS-based lookups and is no longer supported by Toxic.");
-        } else {
-            lookup_error(self, c_config, "Name server domain not found.");
-        }
-
-        kill_lookup_thread();
+        lookup_error(self, c_config, "Name server domain not found.");
+        goto on_exit;
     }
 
-    CURL *c_handle = curl_easy_init();
+    c_handle = curl_easy_init();
 
-    if (!c_handle) {
+    if (c_handle == NULL) {
         lookup_error(self, c_config, "curl handler error");
-        kill_lookup_thread();
+        goto on_exit;
     }
 
-    struct Recv_Curl_Data *recv_data = calloc(1, sizeof(struct Recv_Curl_Data));
+    recv_data = calloc(1, sizeof(struct Recv_Curl_Data));
 
     if (recv_data == NULL) {
         lookup_error(self, c_config, "memory allocation error");
-        kill_lookup_thread();
+        goto on_exit;
     }
 
     char post_data[MAX_STR_SIZE + 30];
 
     snprintf(post_data, sizeof(post_data), "{\"action\": 3, \"name\": \"%s\"}", name);
-
-    struct curl_slist *headers = NULL;
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
@@ -396,12 +386,13 @@ void *lookup_thread_func(void *data)
     pthread_mutex_unlock(&Winthread.lock);
 
 on_exit:
-    free(recv_data);
-    curl_slist_free_all(headers);
-    curl_easy_cleanup(c_handle);
-    kill_lookup_thread();
 
-    return 0;
+    free(recv_data);
+    curl_slist_free_all(headers);  // passing null has no effect
+    curl_easy_cleanup(c_handle);  // passing null has no effect
+    clear_thread_data();
+    pthread_attr_destroy(&lookup_thread.attr);
+    pthread_exit(NULL);
 }
 
 /* Attempts to do a tox name lookup.
