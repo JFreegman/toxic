@@ -40,6 +40,8 @@
 #ifdef VIDEO
 
 #define DEFAULT_VIDEO_BIT_RATE 5000
+#define DEFAULT_VIDEO_HEIGHT 400
+#define DEFAULT_VIDEO_WIDTH 400
 
 void on_video_receive_frame(ToxAV *av, uint32_t friend_number,
                             uint16_t width, uint16_t height,
@@ -63,6 +65,8 @@ ToxAV *init_video(ToxWindow *self, Toxic *toxic)
     CallControl.video_enabled = true;
     CallControl.default_video_bit_rate = 0;
     CallControl.video_frame_duration = 10;
+    CallControl.default_video_height = DEFAULT_VIDEO_HEIGHT;
+    CallControl.default_video_width = DEFAULT_VIDEO_WIDTH;
 
     if (toxic->av == NULL) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
