@@ -25,16 +25,6 @@
 
 <sup>1</sup>: see [Documentation](#documentation)
 
-#### OS X Notes
-Using [Homebrew](http://brew.sh):
-```
-brew install curl qrencode openal-soft freealut libconfig libpng
-brew install --HEAD https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
-brew install libnotify
-export PKG_CONFIG_PATH=/usr/local/opt/openal-soft/lib/pkgconfig
-make
-```
-
 ## Compiling
 ```
 make
@@ -45,6 +35,27 @@ sudo make install
 Run `make doc` in the build directory after editing the asciidoc files to regenerate the manpages.<br />
 **Note for developers**: asciidoc files and generated manpages will need to be committed together.<br />
 **Note for everyone**: [asciidoc](http://asciidoc.org/index.html) (and this step) is only required for regenerating manpages when you modify them.
+
+#### OS X Notes
+Using [Homebrew](http://brew.sh):
+```
+brew install curl qrencode openal-soft freealut libconfig libpng
+brew install --HEAD https://raw.githubusercontent.com/Tox/homebrew-tox/master/Formula/libtoxcore.rb
+brew install libnotify
+export PKG_CONFIG_PATH=/usr/local/opt/openal-soft/lib/pkgconfig
+make
+```
+
+#### FreeBSD Notes
+To compile Toxic on FreeBSD you'll need to use `gmake` instead of `make`, and you may need to manually tell `pkg-config` where to find the toxcore library.
+In order to build with audio/video support you'll need to install the [v4l_compat](https://www.freshports.org/multimedia/v4l_compat) port.
+
+The following commands should work for a default installation of both toxcore and toxic:
+```
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+gmake
+sudo -E gmake install
+```
 
 ## Notes
 
