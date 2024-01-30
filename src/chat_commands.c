@@ -34,7 +34,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern ToxWindow *prompt;
 extern FriendsList Friends;
 
 void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

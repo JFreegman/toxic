@@ -74,7 +74,6 @@ struct CallControl {
 #endif /* VIDEO */
 
     ToxAV *av;
-    ToxWindow *prompt;
 
     Call *calls;
     uint32_t max_calls;
@@ -95,7 +94,7 @@ struct CallControl {
 extern struct CallControl CallControl;
 
 /* You will have to pass pointer to first member of 'windows' declared in windows.c */
-ToxAV *init_audio(ToxWindow *self, Toxic *toxic);
+ToxAV *init_audio(Toxic *toxic);
 void terminate_audio(ToxAV *av);
 
 bool init_call(Call *call);

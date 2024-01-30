@@ -87,9 +87,6 @@
 #define PACKAGE_DATADIR "."
 #endif
 
-/* Export for use in Callbacks */
-ToxWindow *prompt = NULL;
-
 #define DATANAME  "toxic_profile.tox"
 #define BLOCKNAME "toxic_blocklist"
 
@@ -527,10 +524,10 @@ static void cleanup_init_messages(void)
     free(init_messages.msgs);
 }
 
-static void print_init_messages(ToxWindow *toxwin, const Client_Config *c_config)
+static void print_init_messages(ToxWindow *home_window, const Client_Config *c_config)
 {
     for (int i = 0; i < init_messages.num; ++i) {
-        line_info_add(toxwin, c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
+        line_info_add(home_window, c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
     }
 }
 
@@ -1208,7 +1205,7 @@ static void do_toxic(Toxic *toxic)
     }
 
     tox_iterate(toxic->tox, (void *) toxic);
-    do_tox_connection(toxic->tox);
+    do_tox_connection(toxic);
 
     pthread_mutex_unlock(&Winthread.lock);
 }
@@ -1748,8 +1745,11 @@ int main(int argc, char **argv)
 
     init_term(c_config, run_opts->default_locale);
 
-    prompt = init_windows(toxic);
-    prompt_init_statusbar(prompt, toxic, !datafile_exists);
+    init_windows(toxic);
+    ToxWindow *home_window = toxic->home_window;
+
+    prompt_init_statusbar(toxic, !datafile_exists);
+
     load_groups(toxic);
     load_conferences(toxic);
 
@@ -1779,14 +1779,14 @@ int main(int argc, char **argv)
 
 #ifdef AUDIO
 
-    toxic->av = init_audio(prompt, toxic);
+    toxic->av = init_audio(toxic);
 
     if (toxic->av == NULL) {
         queue_init_message("Failed to init audio");
     }
 
 #ifdef VIDEO
-    init_video(prompt, toxic);
+    init_video(toxic);
 
     if (toxic->av == NULL) {
         queue_init_message("Failed to init video");
@@ -1823,7 +1823,7 @@ int main(int argc, char **argv)
 #ifdef PYTHON
 
     init_python(toxic->tox);
-    invoke_autoruns(prompt->chatwin->history, prompt, c_config->autorun_path);
+    invoke_autoruns(toxic->home_window, c_config->autorun_path);
 
 #endif /* PYTHON */
 
@@ -1841,7 +1841,7 @@ int main(int argc, char **argv)
     }
 
     pthread_mutex_lock(&Winthread.lock);
-    print_init_messages(prompt, c_config);
+    print_init_messages(toxic->home_window, c_config);
     flag_interface_refresh();
     pthread_mutex_unlock(&Winthread.lock);
 
@@ -1850,7 +1850,7 @@ int main(int argc, char **argv)
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[PATH_MAX + 11];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", c_config->avatar_path);
-    execute(prompt->chatwin->history, prompt, toxic, avatarstr, GLOBAL_COMMAND_MODE);
+    execute(home_window->chatwin->history, home_window, toxic, avatarstr, GLOBAL_COMMAND_MODE);
 
     time_t last_save = get_unix_time();
 
@@ -1863,7 +1863,7 @@ int main(int argc, char **argv)
             pthread_mutex_lock(&Winthread.lock);
 
             if (store_data(toxic) != 0) {
-                line_info_add(prompt, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
+                line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                               "WARNING: Failed to save to data file");
             }
 

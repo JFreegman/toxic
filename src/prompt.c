@@ -43,7 +43,6 @@
 #include "toxic_strings.h"
 #include "windows.h"
 
-extern ToxWindow *prompt;
 extern struct Winthread Winthread;
 
 extern FriendsList Friends;
@@ -126,48 +125,57 @@ void kill_prompt_window(ToxWindow *self, const Client_Config *c_config)
 void on_self_connection_status(Tox *tox, Tox_Connection connection_status, void *userdata)
 {
     UNUSED_VAR(tox);
-    UNUSED_VAR(userdata);
-    StatusBar *statusbar = prompt->stb;
+
+    Toxic *toxic = (Toxic *) userdata;
+
+    if (toxic == NULL) {
+        return;
+    }
+
+    StatusBar *statusbar = toxic->home_window->stb;
     statusbar->connection = connection_status;
 
     flag_interface_refresh();
 }
 
 /* Updates own nick in prompt statusbar */
-void prompt_update_nick(ToxWindow *prompt, const char *nick)
+void prompt_update_nick(ToxWindow *self, const char *nick)
 {
-    StatusBar *statusbar = prompt->stb;
+    StatusBar *statusbar = self->stb;
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", nick);
     statusbar->nick_len = strlen(statusbar->nick);
 }
 
 /* Updates own statusmessage */
-void prompt_update_statusmessage(ToxWindow *prompt, Toxic *toxic, const char *statusmsg)
+void prompt_update_statusmessage(Toxic *toxic, const char *statusmsg)
 {
-    StatusBar *statusbar = prompt->stb;
+    ToxWindow *self = toxic->home_window;
+    StatusBar *statusbar = self->stb;
+
     snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
-    size_t len = strlen(statusbar->statusmsg);
+
+    const size_t len = strlen(statusbar->statusmsg);
     statusbar->statusmsg_len = len;
 
     Tox_Err_Set_Info err;
     tox_self_set_status_message(toxic->tox, (const uint8_t *) statusmsg, len, &err);
 
     if (err != TOX_ERR_SET_INFO_OK) {
-        line_info_add(prompt, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
+        line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set note (error %d)\n", err);
     }
 }
 
 /* Updates own status in prompt statusbar */
-void prompt_update_status(ToxWindow *prompt, Tox_User_Status status)
+void prompt_update_status(ToxWindow *self, Tox_User_Status status)
 {
-    StatusBar *statusbar = prompt->stb;
+    StatusBar *statusbar = self->stb;
     statusbar->status = status;
 }
 
 /* Returns our own connection status */
-Tox_Connection prompt_selfConnectionStatus(void)
+Tox_Connection prompt_selfConnectionStatus(Toxic *toxic)
 {
-    StatusBar *statusbar = prompt->stb;
+    StatusBar *statusbar = toxic->home_window->stb;
     return statusbar->connection;
 }
 
@@ -590,8 +598,14 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
     sound_notify(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
-void prompt_init_statusbar(ToxWindow *self, Toxic *toxic, bool first_time_run)
+void prompt_init_statusbar(Toxic *toxic, bool first_time_run)
 {
+    ToxWindow *self = toxic->home_window;
+
+    if (self == NULL) {
+        exit_toxic_err("failed in prompt_init_statusbar", FATALERR_WININIT);
+    }
+
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
@@ -628,9 +642,9 @@ void prompt_init_statusbar(ToxWindow *self, Toxic *toxic, bool first_time_run)
         statusmsg[s_len] = '\0';
     }
 
-    prompt_update_statusmessage(prompt, toxic, statusmsg);
-    prompt_update_status(prompt, status);
-    prompt_update_nick(prompt, nick);
+    prompt_update_statusmessage(toxic, statusmsg);
+    prompt_update_status(toxic->home_window, status);
+    prompt_update_nick(toxic->home_window, nick);
 
     /* Init statusbar subwindow */
     statusbar->topline = subwin(self->window, TOP_BAR_HEIGHT, x2, 0, 0);
@@ -653,9 +667,10 @@ static void print_welcome_msg(ToxWindow *self, const Client_Config *c_config)
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 
-static void prompt_init_log(ToxWindow *self, Toxic *toxic, const char *self_name)
+static void prompt_init_log(Toxic *toxic)
 {
     const Client_Config *c_config = toxic->c_config;
+    ToxWindow *self = toxic->home_window;
     ChatContext *ctx = self->chatwin;
 
     char myid[TOX_ADDRESS_SIZE];
@@ -704,13 +719,13 @@ static void prompt_onInit(ToxWindow *self, Toxic *toxic)
 
     line_info_init(ctx->hst);
 
-    prompt_init_log(self, toxic, self->name);
+    prompt_init_log(toxic);
 
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
     if (toxic->c_config->show_welcome_msg == SHOW_WELCOME_MSG_ON) {
-        print_welcome_msg(self, toxic->c_config);
+        print_welcome_msg(toxic->home_window, toxic->c_config);
     }
 }
 

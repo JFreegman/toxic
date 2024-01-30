@@ -85,17 +85,17 @@ static void print_err(ToxWindow *self, const Client_Config *c_config, const char
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-ToxAV *init_audio(ToxWindow *self, Toxic *toxic)
+ToxAV *init_audio(Toxic *toxic)
 {
     if (toxic == NULL) {
         return NULL;
     }
 
+    ToxWindow *self = toxic->home_window;
     const Client_Config *c_config = toxic->c_config;
 
     Toxav_Err_New error;
     CallControl.audio_errors = ae_None;
-    CallControl.prompt = self;
 
     toxic->av = toxav_new(toxic->tox, &error);
 
@@ -357,7 +357,7 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
         case TOXAV_FRIEND_CALL_STATE_ERROR:
         case TOXAV_FRIEND_CALL_STATE_FINISHED:
             if (state == TOXAV_FRIEND_CALL_STATE_ERROR) {
-                line_info_add(CallControl.prompt, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                line_info_add(toxic->home_window, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                               "ToxAV callstate error!");
             }
 

@@ -56,8 +56,9 @@ static void print_err(ToxWindow *self, const Client_Config *c_config, const char
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
 }
 
-ToxAV *init_video(ToxWindow *self, Toxic *toxic)
+ToxAV *init_video(Toxic *toxic)
 {
+    ToxWindow *home_window = toxic->home_window;
     const Client_Config *c_config = toxic->c_config;
 
     CallControl.video_errors = ve_None;
@@ -69,12 +70,12 @@ ToxAV *init_video(ToxWindow *self, Toxic *toxic)
     CallControl.default_video_width = DEFAULT_VIDEO_WIDTH;
 
     if (toxic->av == NULL) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
+        line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
         return NULL;
     }
 
-    if (init_video_devices(toxic->av, c_config) == vde_InternalError) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
+    if (init_video_devices(toxic) == vde_InternalError) {
+        line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init video devices");
         return NULL;
     }
 
@@ -100,26 +101,33 @@ void terminate_video(void)
     terminate_video_devices();
 }
 
-void read_video_device_callback(const Client_Config *c_config, int16_t width, int16_t height, const uint8_t *y,
-                                const uint8_t *u, const uint8_t *v, void *data)
+void read_video_device_callback(Toxic *toxic, int16_t width, int16_t height, const uint8_t *y, const uint8_t *u,
+                                const uint8_t *v, void *data)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
+    const Client_Config *c_config = toxic->c_config;
+    ToxWindow *home_window = toxic->home_window;
+
     uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
     Call *this_call = &CallControl.calls[friend_number];
     Toxav_Err_Send_Frame error;
 
     /* Drop frame if video sending is disabled */
     if (this_call->video_bit_rate == 0 || this_call->status != cs_Active || this_call->vin_idx == -1) {
-        line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video frame dropped.");
+        line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video frame dropped.");
         return;
     }
 
-    if (toxav_video_send_frame(CallControl.av, friend_number, width, height, y, u, v, &error) == false) {
-        line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to send video frame");
+    if (toxav_video_send_frame(toxic->av, friend_number, width, height, y, u, v, &error) == false) {
+        line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to send video frame");
 
         if (error == TOXAV_ERR_SEND_FRAME_NULL) {
-            line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to capture video frame");
+            line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to capture video frame");
         } else if (error == TOXAV_ERR_SEND_FRAME_INVALID) {
-            line_info_add(CallControl.prompt, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video frame");
+            line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare video frame");
         }
     }
 }

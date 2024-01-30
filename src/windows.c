@@ -742,27 +742,25 @@ void del_window(ToxWindow *w, const Client_Config *c_config)
     }
 }
 
-ToxWindow *init_windows(Toxic *toxic)
+void init_windows(Toxic *toxic)
 {
     if (COLS <= CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT) {
         exit_toxic_err("add_window() for prompt failed in init_windows", FATALERR_WININIT);
     }
 
-    prompt = new_prompt();
+    toxic->home_window = new_prompt();
 
-    int n_prompt = add_window(toxic, prompt);
+    const int win_num = add_window(toxic, toxic->home_window);
 
-    if (n_prompt < 0) {
+    if (win_num != 0) {  // prompt window is always index 0
         exit_toxic_err("add_window() for prompt failed in init_windows", FATALERR_WININIT);
     }
 
-    if (add_window(toxic, new_friendlist()) == -1) {
+    if (add_window(toxic, new_friendlist()) != 1) {  // friendlist is always index 1
         exit_toxic_err("add_window() for friendlist failed in init_windows", FATALERR_WININIT);
     }
 
-    set_active_window_index(n_prompt);
-
-    return prompt;
+    set_active_window_index(win_num);
 }
 
 void on_window_resize(void)
@@ -1323,5 +1321,5 @@ void kill_all_windows(Toxic *toxic)
 
     /* TODO: use enum instead of magic indices */
     kill_friendlist(windows[1], c_config);
-    kill_prompt_window(windows[0], c_config);
+    kill_prompt_window(toxic->home_window, c_config);
 }

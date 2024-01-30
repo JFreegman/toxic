@@ -24,7 +24,7 @@
 #define BOOTSTRAP_H
 
 /* Manages connection to the Tox DHT network. */
-void do_tox_connection(Tox *tox);
+void do_tox_connection(Toxic *toxic);
 
 /* Creates a new thread that will load the DHT nodeslist to memory
  * from json encoded nodes file obtained at NODES_LIST_URL. Only one

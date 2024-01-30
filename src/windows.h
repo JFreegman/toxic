@@ -323,7 +323,7 @@ struct Help {
     bool active;
 };
 
-ToxWindow *init_windows(Toxic *toxic);
+void init_windows(Toxic *toxic);
 void draw_active_window(Toxic *toxic);
 int add_window(Toxic *toxic, ToxWindow *w);
 void del_window(ToxWindow *w, const Client_Config *c_config);

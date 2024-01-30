@@ -85,6 +85,7 @@ typedef struct Client_Data {
 } Client_Data;
 
 typedef struct ToxAV ToxAV;
+typedef struct ToxWindow ToxWindow;
 
 typedef struct Toxic {
     Tox   *tox;
@@ -94,6 +95,8 @@ typedef struct Toxic {
     Client_Data   client_data;
     Client_Config *c_config;
     Run_Options   *run_opts;
+
+    ToxWindow     *home_window;
 } Toxic;
 
 void lock_status(void);

@@ -51,7 +51,6 @@
 #include "execute.h"
 #include "misc_tools.h"
 #include "groupchats.h"
-#include "prompt.h"
 #include "toxic_strings.h"
 #include "log.h"
 #include "line_info.h"

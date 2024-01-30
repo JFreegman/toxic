@@ -57,7 +57,6 @@
 #include "log.h"
 #include "misc_tools.h"
 #include "notify.h"
-#include "prompt.h"
 #include "settings.h"
 #include "toxic.h"
 #include "toxic_strings.h"

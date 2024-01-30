@@ -912,7 +912,7 @@ void cmd_nick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
     nick[len] = '\0';
 
     tox_self_set_name(tox, (uint8_t *) nick, len, NULL);
-    prompt_update_nick(prompt, nick);
+    prompt_update_nick(toxic->home_window, nick);
 
     store_data(toxic);
 }
@@ -928,7 +928,7 @@ void cmd_note(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
 
     const char *note = argc >= 1 ? argv[1] : "";
 
-    prompt_update_statusmessage(prompt, toxic, note);
+    prompt_update_statusmessage(toxic, note);
 }
 
 void cmd_nospam(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -1068,7 +1068,7 @@ void cmd_status(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     }
 
     tox_self_set_status(tox, status);
-    prompt_update_status(prompt, status);
+    prompt_update_status(toxic->home_window, status);
     set_status_all_groups(toxic, status);
 
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Your status has been changed to %s.",

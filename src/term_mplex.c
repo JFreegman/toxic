@@ -39,7 +39,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern struct ToxWindow *prompt;
 extern struct Winthread Winthread;
 
 #if defined(PATH_MAX) && PATH_MAX > 512
@@ -378,6 +377,12 @@ static int mplex_is_detached(void)
 
 static void mplex_timer_handler(Toxic *toxic)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
+    ToxWindow *home_window = toxic->home_window;
+
     Tox_User_Status current_status, new_status;
     const char *new_note;
 
@@ -417,8 +422,8 @@ static void mplex_timer_handler(Toxic *toxic)
     snprintf(note_str, sizeof(status_str), "/note %s", new_note);
 
     pthread_mutex_lock(&Winthread.lock);
-    execute(prompt->chatwin->history, prompt, toxic, status_str, GLOBAL_COMMAND_MODE);
-    execute(prompt->chatwin->history, prompt, toxic, note_str, GLOBAL_COMMAND_MODE);
+    execute(home_window->chatwin->history, home_window, toxic, status_str, GLOBAL_COMMAND_MODE);
+    execute(home_window->chatwin->history, home_window, toxic, note_str, GLOBAL_COMMAND_MODE);
     pthread_mutex_unlock(&Winthread.lock);
 }
 

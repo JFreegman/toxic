@@ -37,7 +37,7 @@ int do_plugin_command(int num_args, char (*args)[MAX_STR_SIZE]);
 int num_registered_handlers(void);
 int help_max_width(void);
 void draw_handler_help(WINDOW *win);
-void invoke_autoruns(WINDOW *w, ToxWindow *self, const char *autorun_path);
+void invoke_autoruns(ToxWindow *self, const char *autorun_path);
 void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE]);
 
 #endif /* API_H */

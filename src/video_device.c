@@ -174,12 +174,7 @@ static int xioctl(int fh, unsigned long request, void *arg)
 
 #endif
 
-/* Meet devices */
-#ifdef VIDEO
-VideoDeviceError init_video_devices(ToxAV *av_, const Client_Config *c_config)
-#else
-VideoDeviceError init_video_devices(const Client_Config *c_config)
-#endif /* VIDEO */
+VideoDeviceError init_video_devices(Toxic *toxic)
 {
     size[vdt_input] = 0;
 
@@ -252,13 +247,13 @@ VideoDeviceError init_video_devices(const Client_Config *c_config)
 
     pthread_t thread_id;
 
-    if (pthread_create(&thread_id, NULL, video_thread_poll, (void *) c_config) != 0
+    if (pthread_create(&thread_id, NULL, video_thread_poll, (void *) toxic) != 0
             || pthread_detach(thread_id) != 0) {
         return vde_InternalError;
     }
 
 #ifdef VIDEO
-    av = av_;
+    av = toxic->av;
 #endif /* VIDEO */
 
     return (VideoDeviceError) vde_None;
@@ -685,9 +680,9 @@ void *video_thread_poll(void *userdata)  // TODO: maybe use thread for every inp
     /*
      * NOTE: We only need to poll input devices for data.
      */
-    const Client_Config *c_config = (Client_Config *) userdata;
+    Toxic *toxic = (Toxic *) userdata;
 
-    if (c_config == NULL) {
+    if (toxic == NULL) {
         pthread_exit(NULL);
     }
 
@@ -745,7 +740,7 @@ void *video_thread_poll(void *userdata)  // TODO: maybe use thread for every inp
 
                     /* Send frame data to friend through ToxAV */
                     if (device->cb) {
-                        device->cb(c_config, video_width, video_height, y, u, v, device->cb_data);
+                        device->cb(toxic, video_width, video_height, y, u, v, device->cb_data);
                     }
 
                     /* Convert YUV420 data to BGR */

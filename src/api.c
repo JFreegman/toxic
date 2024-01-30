@@ -174,7 +174,7 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     fclose(fp);
 }
 
-void invoke_autoruns(WINDOW *window, ToxWindow *self, const char *autorun_path)
+void invoke_autoruns(ToxWindow *self, const char *autorun_path)
 {
     char abspath_buf[PATH_MAX + 256];
     char err_buf[PATH_MAX + 128];
@@ -197,7 +197,7 @@ void invoke_autoruns(WINDOW *window, ToxWindow *self, const char *autorun_path)
 
     struct dirent *dir = NULL;
 
-    cur_window  = window;
+    cur_window  = self->chatwin->history;
 
     self_window = self;
 

@@ -34,8 +34,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern ToxWindow *prompt;
-
 void clear_screen(void)
 {
     printf("\033[2J\033[1;1H");
