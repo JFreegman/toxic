@@ -57,7 +57,7 @@ ui = {
   // true to show the welcome message on startup
   show_welcome_msg=true;
 
-  // true to show friend connection change messages on the home screen
+  // true to enable friend connection change notifications
   show_connection_msg=true;
 
   // true to show peer connection change messages in groups
@@ -143,6 +143,9 @@ friends = {
 
     // Enable autologging for this friend.
     autolog=false;
+
+    // true to enable connection change notifications.
+    show_connection_msg=true;
 
     // The color of the friend's window tab name.
     // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink

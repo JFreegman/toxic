@@ -514,7 +514,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
 
     const char *msg;
 
-    if (c_config->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
+    if (!friend_config_get_show_connection_msg(friendnum)) {
         return;
     }
 

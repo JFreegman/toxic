@@ -74,6 +74,7 @@ typedef struct Friend_Settings {
     int   tab_name_colour;
     bool  autolog;
     bool  auto_accept_files;
+    bool  show_connection_msg;
 } Friend_Settings;
 
 typedef struct {
@@ -174,6 +175,19 @@ void friend_set_logging_enabled(uint32_t friendnumber, bool enable_log);
  * Return true if logging is currently enabled for this friend.
  */
 bool friend_get_logging_enabled(uint32_t friendnumber);
+
+/*
+ * Sets the show connection message config option for the friend associated
+ * with `public_key`.
+ *
+ * Return true on success.
+ */
+bool friend_config_set_show_connection_msg(const char *public_key, bool show_connection_msg);
+
+/*
+ * Returns the friend's config setting for showing connection messages.
+ */
+bool friend_config_get_show_connection_msg(uint32_t friendnumber);
 
 /*
  * Sets the tab name colour config option for the friend associated with `public_key` to `colour`.

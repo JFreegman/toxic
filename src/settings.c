@@ -280,11 +280,13 @@ static const struct friend_strings {
     const char *self;
     const char *auto_accept_files;
     const char *autolog;
+    const char *show_connection_msg;
     const char *tab_name_color;
 } friend_strings = {
     "friends",
     "auto_accept_files",
     "autolog",
+    "show_connection_msg",
     "tab_name_color",
 };
 
@@ -581,6 +583,14 @@ int settings_load_friends(const char *patharg)
         if (config_setting_lookup_bool(keys, friend_strings.auto_accept_files, &auto_accept_files)) {
             if (!friend_config_set_auto_accept_files(public_key, auto_accept_files != 0)) {
                 fprintf(stderr, "config error: failed to apply friend auto-accept filetransfers setting for: %s\n", public_key);
+            }
+        }
+
+        int show_connection_msg;
+
+        if (config_setting_lookup_bool(keys, friend_strings.show_connection_msg, &show_connection_msg)) {
+            if (!friend_config_set_show_connection_msg(public_key, show_connection_msg != 0)) {
+                fprintf(stderr, "config error: failed to apply friend show connection message setting for: %s\n", public_key);
             }
         }
     }
