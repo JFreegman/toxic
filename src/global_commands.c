@@ -739,7 +739,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         return;
     } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
         if (self->type == WINDOW_TYPE_CHAT) {
-            Friends.list[self->num].logging_on = false;
+            friend_set_logging_enabled(self->num, false);
         }
 
         log_disable(log);

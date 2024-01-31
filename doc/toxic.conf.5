@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 2024-01-19
+.\"      Date: 2024-01-29
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2024\-01\-19" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2024\-01\-29" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -302,14 +302,19 @@ Replace password prompt by running this command and using its output as the pass
 .RS 4
 Friend\-specific settings (prioritized over global settings)
 .PP
-\fBtab_name_colour\fR
+\fBauto_accept_files\fR
 .RS 4
-The colour of the friend\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
+Enable or disable auto\-accepting inbound file transfers\&. true or false
 .RE
 .PP
 \fBautolog\fR
 .RS 4
 Enable or disable autologging\&. true or false
+.RE
+.PP
+\fBtab_name_colour\fR
+.RS 4
+The colour of the friend\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
 .RE
 .RE
 .PP
@@ -317,14 +322,14 @@ Enable or disable autologging\&. true or false
 .RS 4
 Groupchat\-specific settings (prioritized over global settings)
 .PP
-\fBtab_name_colour\fR
-.RS 4
-The colour of the group\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
-.RE
-.PP
 \fBautolog\fR
 .RS 4
 Enable or disable autologging\&. true or false
+.RE
+.PP
+\fBtab_name_colour\fR
+.RS 4
+The colour of the group\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
 .RE
 .RE
 .PP
@@ -332,14 +337,14 @@ Enable or disable autologging\&. true or false
 .RS 4
 Conference\-specific settings (prioritized over global settings)
 .PP
-\fBtab_name_colour\fR
-.RS 4
-The colour of the conferences\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
-.RE
-.PP
 \fBautolog\fR
 .RS 4
 Enable or disable autologging\&. true or false
+.RE
+.PP
+\fBtab_name_colour\fR
+.RS 4
+The colour of the conferences\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
 .RE
 .RE
 .PP

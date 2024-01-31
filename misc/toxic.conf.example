@@ -138,12 +138,15 @@ tox = {
 // and must begin with the prefix "pk_". These take priority over global settings.
 friends = {
   pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
+    // Enable auto-accepting inbound file transfers for this friend.
+    auto_accept_files=false;
+
+    // Enable autologging for this friend.
+    autolog=false;
+
     // The color of the friend's window tab name.
     // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
-
-    // Enable autologging for this friend
-    autolog=false;
   };
 
 // pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
@@ -156,12 +159,12 @@ friends = {
 // over global settings.
 groupchats = {
   pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
+    // Enable autologging for this group.
+    autolog=false;
+
     // The color of the group's window tab name.
     // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
-
-    // Enable autologging for this group
-    autolog=false;
   };
 
 // pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
@@ -173,12 +176,12 @@ groupchats = {
 // and must begin with the prefix "pk_". These take priority over global settings.
 conferences = {
   pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
+    // Enable autologging for this conference.
+    autolog=false;
+
     // The color of the conference's window tab name.
     // colors: black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink
     tab_name_color="white";
-
-    // Enable autologging for this conference
-    autolog=false;
   };
 
 // pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {

@@ -64,9 +64,10 @@ static struct PendingDel {
     WINDOW *popup;
 } PendingDelete;
 
-typedef enum DefaultFriendSettings {
-    DefaultFriendSettingsTabNameColour = WHITE_BAR_FG,
-} DefaultFriendSettings;
+typedef enum Default_Conf {
+    Default_Conf_Auto_Accept_Files = 0,
+    Default_Conf_Tab_Name_Colour = WHITE_BAR_FG,
+} Default_Conf;
 
 static void set_default_friend_config_settings(ToxicFriend *friend, int autolog)
 {
@@ -74,10 +75,11 @@ static void set_default_friend_config_settings(ToxicFriend *friend, int autolog)
         return;
     }
 
-    FriendSettings *settings = &friend->settings;
+    Friend_Settings *settings = &friend->settings;
 
-    settings->tab_name_colour = DefaultFriendSettingsTabNameColour;
+    settings->auto_accept_files = (bool)(Default_Conf_Auto_Accept_Files != 0);
     settings->autolog = autolog == AUTOLOG_ON;
+    settings->tab_name_colour = Default_Conf_Tab_Name_Colour;
 }
 
 static void realloc_friends(int n)
@@ -602,11 +604,11 @@ static void friendlist_add_blocked(const Client_Config *c_config, uint32_t fnum,
         Friends.list[i].active = true;
         Friends.list[i].chatwin = -1;
         Friends.list[i].status = TOX_USER_STATUS_NONE;
-        Friends.list[i].logging_on = c_config->autolog == AUTOLOG_ON;
         Friends.list[i].namelength = Blocked.list[bnum].namelength;
         update_friend_last_online(i, Blocked.list[bnum].last_on, c_config->timestamp_format);
         memcpy(Friends.list[i].name, Blocked.list[bnum].name, Friends.list[i].namelength + 1);
         memcpy(Friends.list[i].pub_key, Blocked.list[bnum].pub_key, TOX_PUBLIC_KEY_SIZE);
+        set_default_friend_config_settings(&Friends.list[i], c_config->autolog);
 
         if (i == Friends.max_idx) {
             ++Friends.max_idx;
@@ -1519,6 +1521,36 @@ bool friend_is_blocked(const char *public_key)
     return false;
 }
 
+void friend_set_logging_enabled(uint32_t friendnumber, bool enable_log)
+{
+    if (friendnumber >= Friends.max_idx) {
+        return;
+    }
+
+    ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return;
+    }
+
+    friend->logging_on = enable_log;
+}
+
+bool friend_get_logging_enabled(uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        return false;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return false;
+    }
+
+    return friend->logging_on;
+}
+
 void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept)
 {
     if (friendnumber >= Friends.max_idx) {
@@ -1550,10 +1582,10 @@ bool friend_get_auto_accept_files(uint32_t friendnumber)
 }
 
 /*
- * Returns a pointer to the FriendSettings object associated with `public_key`.
+ * Returns a pointer to the Friend_Settings object associated with `public_key`.
  * Returns NULL on failure.
  */
-static FriendSettings *get_friend_settings_by_key(const char *public_key)
+static Friend_Settings *get_friend_settings_by_key(const char *public_key)
 {
     char pk_bin[TOX_PUBLIC_KEY_SIZE];
 
@@ -1578,7 +1610,7 @@ static FriendSettings *get_friend_settings_by_key(const char *public_key)
 
 bool friend_config_set_tab_name_colour(const char *public_key, const char *colour)
 {
-    FriendSettings *settings = get_friend_settings_by_key(public_key);
+    Friend_Settings *settings = get_friend_settings_by_key(public_key);
 
     if (settings == NULL) {
         return false;
@@ -1613,7 +1645,7 @@ int friend_config_get_tab_name_colour(uint32_t friendnumber)
 
 bool friend_config_set_autolog(const char *public_key, bool autolog_enabled)
 {
-    FriendSettings *settings = get_friend_settings_by_key(public_key);
+    Friend_Settings *settings = get_friend_settings_by_key(public_key);
 
     if (settings == NULL) {
         return false;
@@ -1638,6 +1670,35 @@ bool friend_config_get_autolog(uint32_t friendnumber)
     }
 
     return friend->settings.autolog;
+}
+
+bool friend_config_set_auto_accept_files(const char *public_key, bool auto_accept_files)
+{
+    Friend_Settings *settings = get_friend_settings_by_key(public_key);
+
+    if (settings == NULL) {
+        return false;
+    }
+
+    settings->auto_accept_files = auto_accept_files;
+
+    return true;
+}
+
+bool friend_config_get_auto_accept_files(uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        fprintf(stderr, "failed to get auto-accept files autolog setting (invalid friendnumber %u)\n", friendnumber);
+        return false;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return false;
+    }
+
+    return friend->settings.auto_accept_files;
 }
 
 ToxWindow *new_friendlist(void)

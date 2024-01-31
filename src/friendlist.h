@@ -63,10 +63,18 @@ struct GameInvite {
 
 #endif // GAMES
 
-typedef struct FriendSettings {
+/* Config settings for this friend.
+ *
+ * These values are set on initialization and should not change afterwards.
+ * If a client modifies one of these settings via command and then closes
+ * the chat window, these values will override the client's modified settings
+ * upon re-opening the respective friend's chat window.
+ */
+typedef struct Friend_Settings {
     int   tab_name_colour;
     bool  autolog;
-} FriendSettings;
+    bool  auto_accept_files;
+} Friend_Settings;
 
 typedef struct {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
@@ -79,8 +87,8 @@ typedef struct {
     bool active;
     Tox_Connection connection_status;
     bool is_typing;
-    bool logging_on;    /* saves preference for friend irrespective of global settings */
-    bool auto_accept_files;  /* default should always be false */
+    bool logging_on;    /* saves preference for friend irrespective of config settings */
+    bool auto_accept_files;  /* same as above; default should always be false */
     Tox_User_Status status;
 
     struct LastOnline last_online;
@@ -96,7 +104,7 @@ typedef struct {
     struct FileTransfer file_sender[MAX_FILES];
     PendingFileTransfer file_send_queue[MAX_FILES];
 
-    FriendSettings settings;
+    Friend_Settings settings;
 } ToxicFriend;
 
 typedef struct {
@@ -158,6 +166,16 @@ void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept);
 bool friend_get_auto_accept_files(uint32_t friendnumber);
 
 /*
+ * Enable or disable logging for this friend.
+ */
+void friend_set_logging_enabled(uint32_t friendnumber, bool enable_log);
+
+/*
+ * Return true if logging is currently enabled for this friend.
+ */
+bool friend_get_logging_enabled(uint32_t friendnumber);
+
+/*
  * Sets the tab name colour config option for the friend associated with `public_key` to `colour`.
  *
  * Return true on success.
@@ -179,7 +197,26 @@ bool friend_config_set_autolog(const char *public_key, bool autolog_enabled);
 
 /*
  * Returns the friend's config setting for autologging.
+ *
+ * Note: To determine if logging for a friend is currently enabled,
+ * use `friend_get_logging_enabled()`.
  */
 bool friend_config_get_autolog(uint32_t friendnumber);
+
+/*
+ * Sets the auto-accept file transfers config option for the friend associated with
+ * `public_key`.
+ *
+ * Return true on success.
+ */
+bool friend_config_set_auto_accept_files(const char *public_key, bool autoaccept_files);
+
+/*
+ * Returns the friend's config setting for auto-accept file transfers.
+ *
+ * Note: To determine if auto-accepting files for a friend is currently enabled,
+ * use `friend_get_auto_accept_files()`.
+ */
+bool friend_config_get_auto_accept_files(uint32_t friendnumber);
 
 #endif /* end of include guard: FRIENDLIST_H */

@@ -278,12 +278,14 @@ static const struct sound_strings {
 
 static const struct friend_strings {
     const char *self;
-    const char *tab_name_color;
+    const char *auto_accept_files;
     const char *autolog;
+    const char *tab_name_color;
 } friend_strings = {
     "friends",
-    "tab_name_color",
+    "auto_accept_files",
     "autolog",
+    "tab_name_color",
 };
 
 static const struct groupchat_strings {
@@ -571,6 +573,14 @@ int settings_load_friends(const char *patharg)
         if (config_setting_lookup_bool(keys, friend_strings.autolog, &autolog_enabled)) {
             if (!friend_config_set_autolog(public_key, autolog_enabled != 0)) {
                 fprintf(stderr, "config error: failed to apply friend autolog setting for: %s\n", public_key);
+            }
+        }
+
+        int auto_accept_files;
+
+        if (config_setting_lookup_bool(keys, friend_strings.auto_accept_files, &auto_accept_files)) {
+            if (!friend_config_set_auto_accept_files(public_key, auto_accept_files != 0)) {
+                fprintf(stderr, "config error: failed to apply friend auto-accept filetransfers setting for: %s\n", public_key);
             }
         }
     }

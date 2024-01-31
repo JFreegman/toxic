@@ -1657,7 +1657,7 @@ static void chat_init_log(ToxWindow *self, Toxic *toxic, const char *self_nick)
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 
-    if (Friends.list[self->num].logging_on) {
+    if (friend_get_logging_enabled(self->num)) {
         if (log_enable(ctx->log) != 0) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
@@ -1727,7 +1727,9 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     const int tab_name_colour = friend_config_get_tab_name_colour(self->num);
     self->colour = tab_name_colour > 0 ? tab_name_colour : WHITE_BAR_FG;
 
-    Friends.list[self->num].logging_on = friend_config_get_autolog(self->num);
+    friend_set_logging_enabled(self->num, friend_config_get_autolog(self->num));
+    friend_set_auto_file_accept(self->num, friend_config_get_auto_accept_files(self->num));
+
     chat_init_log(self, toxic, nick);
 
     execute(ctx->history, self, toxic, "/log", GLOBAL_COMMAND_MODE);  // Print log status to screen
