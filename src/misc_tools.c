@@ -559,7 +559,7 @@ size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length)
    returns length of s if char not found or 0 if s is NULL. */
 int char_find(int idx, const char *s, char ch)
 {
-    if (!s) {
+    if (s == NULL) {
         return 0;
     }
 
@@ -578,7 +578,7 @@ int char_find(int idx, const char *s, char ch)
    returns 0 if char not found or s is NULL (skips 0th index). */
 int char_rfind(const char *s, char ch, int len)
 {
-    if (!s) {
+    if (s == NULL) {
         return 0;
     }
 

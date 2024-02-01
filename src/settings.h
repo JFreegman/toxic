@@ -141,6 +141,27 @@ enum settings_values {
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
 
+typedef struct Run_Options Run_Options;
+
+/*
+ * Loads the config file into `run_opts` and creates an empty file if it does not
+ * already exist. This function must be called before any other `settings_load` function.
+ *
+ * If the client has set a custom config file via the run option it will be
+ * prioritized.
+ *
+ * If the client is using the default tox data file and has not specified a custom
+ * config file, the default config file in the user config directory is used
+ *
+ * If the client is using a custom tox data file, the config path and filename will be
+ * identical to those of the data file, but with a `.conf` file extension.
+ *
+ * `data_path` is the name of the tox profile being used.
+ *
+ * Returns true if config file is successfully loaded.
+ */
+bool settings_load_config_file(Run_Options *run_opts, const char *data_path);
+
 /*
  * Loads general toxic settings from the toxic config file pointed to by `patharg'.
  *
@@ -148,7 +169,7 @@ enum settings_values {
  * Return -1 if we fail to open the file path.
  * Return -2 if libconfig fails to read the config file.
  */
-int settings_load_main(Client_Config *s, const char *patharg);
+int settings_load_main(Client_Config *s, const Run_Options *run_opts);
 
 /*
  * Loads friend config settings from the toxic config file pointed to by `patharg`.
@@ -160,7 +181,7 @@ int settings_load_main(Client_Config *s, const char *patharg);
  *
  * This function will have no effect on friends that are added in the future.
  */
-int settings_load_friends(const char *patharg);
+int settings_load_friends(const Run_Options *run_opts);
 
 /*
  * Loads groupchat config settings from the toxic config file pointed to by `patharg`.
@@ -172,7 +193,7 @@ int settings_load_friends(const char *patharg);
  *
  * This function will have no effect on groupchat instances that are created in the future.
  */
-int settings_load_groups(const char *patharg);
+int settings_load_groups(const Run_Options *run_opts);
 
 /*
  * Loads conference config settings from the toxic config file pointed to by `patharg`.
@@ -184,6 +205,6 @@ int settings_load_groups(const char *patharg);
  *
  * This function will have no effect on conference instances that are created in the future.
  */
-int settings_load_conferences(const char *patharg);
+int settings_load_conferences(const Run_Options *run_opts);
 
 #endif /* SETTINGS_H */

@@ -62,6 +62,7 @@
 #include "name_lookup.h"
 #include "notify.h"
 #include "prompt.h"
+#include "run_options.h"
 #include "settings.h"
 #include "term_mplex.h"
 #include "toxic.h"
@@ -1397,11 +1398,9 @@ static void parse_args(Toxic *toxic, int argc, char *argv[])
                 }
 
                 snprintf(run_opts->config_path, sizeof(run_opts->config_path), "%s", optarg);
+                run_opts->use_custom_config_file = true;
 
-                if (!file_exists(run_opts->config_path)) {
-                    queue_init_message("Config file not found");
-                }
-
+                queue_init_message("Using '%s' custom config file", run_opts->config_path);
                 break;
             }
 
@@ -1453,7 +1452,7 @@ static void parse_args(Toxic *toxic, int argc, char *argv[])
                 strcpy(client_data->block_path, optarg);
                 strcat(client_data->block_path, "-blocklist");
 
-                queue_init_message("Using '%s' data file", client_data->data_path);
+                queue_init_message("Using '%s' tox profile", client_data->data_path);
 
                 break;
             }
@@ -1708,12 +1707,18 @@ int main(int argc, char **argv)
         first_time_encrypt(&toxic->client_data, "Encrypt existing data file? Y/n (q to quit)");
     }
 
-    const char *config_path = !string_is_empty(run_opts->config_path) ? run_opts->config_path : NULL;
+    if (!settings_load_config_file(run_opts, toxic->client_data.data_path)) {
+        queue_init_message("Failed to load config file");
+    }
 
-    const int ms_ret = settings_load_main(toxic->c_config, config_path);
+    const int ms_ret = settings_load_main(toxic->c_config, run_opts);
 
     if (ms_ret < 0) {
         queue_init_message("Failed to load user settings: error %d", ms_ret);
+    }
+
+    if (!run_opts->use_custom_config_file && run_opts->use_custom_data) {
+        queue_init_message("Using '%s' config file", run_opts->config_path);
     }
 
     const int curl_init = curl_global_init(CURL_GLOBAL_ALL);
@@ -1753,19 +1758,19 @@ int main(int argc, char **argv)
     load_groups(toxic);
     load_conferences(toxic);
 
-    const int fs_ret = settings_load_friends(config_path);
+    const int fs_ret = settings_load_friends(run_opts);
 
     if (fs_ret != 0) {
         queue_init_message("Failed to load friend config settings: error %d", fs_ret);
     }
 
-    const int gs_ret = settings_load_groups(config_path);
+    const int gs_ret = settings_load_groups(run_opts);
 
     if (gs_ret != 0) {
         queue_init_message("Failed to load groupchat config settings: error %d", gs_ret);
     }
 
-    const int cs_ret = settings_load_conferences(config_path);
+    const int cs_ret = settings_load_conferences(run_opts);
 
     if (cs_ret != 0) {
         queue_init_message("Failed to load conference config settings: error %d", cs_ret);

@@ -31,6 +31,7 @@
 #include "groupchats.h"
 #include "misc_tools.h"
 #include "notify.h"
+#include "run_options.h"
 #include "toxic.h"
 #include "windows.h"
 
@@ -340,28 +341,49 @@ static void set_key_binding(int *key, const char **bind)
     }
 }
 
-static bool get_settings_path(char *path, unsigned int path_size, const char *patharg)
+#define TOXIC_CONF_FILE_EXT ".conf"
+
+bool settings_load_config_file(Run_Options *run_opts, const char *data_path)
 {
-    if (patharg != NULL) {
-        snprintf(path, path_size, "%s", patharg);
-        return true;
+    char tmp_path[MAX_STR_SIZE] = {0};
+
+    if (run_opts->use_custom_config_file) {
+        snprintf(tmp_path, sizeof(tmp_path), "%s", run_opts->config_path);
+    } else if (run_opts->use_custom_data) {
+        char tmp_data[MAX_STR_SIZE - strlen(TOXIC_CONF_FILE_EXT)];
+
+        if (strlen(data_path) >= sizeof(tmp_data)) {
+            return false;
+        }
+
+        snprintf(tmp_data, sizeof(tmp_data), "%s", data_path);
+
+        const int dot_idx = char_rfind(tmp_data, '.', strlen(tmp_data));
+
+        if (dot_idx > 0) {
+            tmp_data[dot_idx] = '\0';  // remove .tox file extension (or any others) if it exists
+        }
+
+        snprintf(tmp_path, sizeof(tmp_path), "%s%s", tmp_data, TOXIC_CONF_FILE_EXT);
+    } else {
+        char *user_config_dir = get_user_config_dir();
+        snprintf(tmp_path, sizeof(tmp_path), "%s%stoxic%s", user_config_dir, CONFIGDIR, TOXIC_CONF_FILE_EXT);
+        free(user_config_dir);
     }
 
-    char *user_config_dir = get_user_config_dir();
-    snprintf(path, path_size, "%s%stoxic.conf", user_config_dir, CONFIGDIR);
-    free(user_config_dir);
-
     /* make sure path exists or is created on first time running */
-    if (!file_exists(path)) {
-        FILE *fp = fopen(path, "w");
+    if (!file_exists(tmp_path)) {
+        FILE *fp = fopen(tmp_path, "w");
 
         if (fp == NULL) {
-            fprintf(stderr, "failed to open config path: %s\n", path);
+            fprintf(stderr, "failed to create config path `%s`\n", tmp_path);
             return false;
         }
 
         fclose(fp);
     }
+
+    snprintf(run_opts->config_path, sizeof(run_opts->config_path), "%s", tmp_path);
 
     return true;
 }
@@ -404,22 +426,17 @@ static const char *extract_setting_public_key(const config_setting_t *keys)
 /*
  * Initializes `cfg` with the contents from the toxic config file.
  *
- * `patharg` points to a user specified config path. If `patharg` is NULL
- * the default config path will be used.
- *
  * Return 0 on success.
- * Return -1 if we failed to fetch or create the config path.
+ * Return -1 if the config file was not set by the client.
  * Return -2 if the config file cannot be read or is invalid.
  */
-static int settings_init_config(config_t *cfg, const char *patharg)
+static int settings_init_config(config_t *cfg, const Run_Options *run_opts)
 {
-    char path[MAX_STR_SIZE] = {0};
-
-    if (!get_settings_path(path, sizeof(path), patharg)) {
+    if (string_is_empty(run_opts->config_path)) {
         return -1;
     }
 
-    if (!config_read_file(cfg, path)) {
+    if (!config_read_file(cfg, run_opts->config_path)) {
         fprintf(stderr, "config_read_file() error: %s:%d - %s\n", config_error_file(cfg),
                 config_error_line(cfg), config_error_text(cfg));
         return -2;
@@ -428,12 +445,12 @@ static int settings_init_config(config_t *cfg, const char *patharg)
     return 0;
 }
 
-int settings_load_conferences(const char *patharg)
+int settings_load_conferences(const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
 
-    const int c_ret = settings_init_config(cfg, patharg);
+    const int c_ret = settings_init_config(cfg, run_opts);
 
     if (c_ret < 0) {
         config_destroy(cfg);
@@ -480,12 +497,12 @@ int settings_load_conferences(const char *patharg)
     return 0;
 }
 
-int settings_load_groups(const char *patharg)
+int settings_load_groups(const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
 
-    const int c_ret = settings_init_config(cfg, patharg);
+    const int c_ret = settings_init_config(cfg, run_opts);
 
     if (c_ret < 0) {
         config_destroy(cfg);
@@ -532,12 +549,12 @@ int settings_load_groups(const char *patharg)
     return 0;
 }
 
-int settings_load_friends(const char *patharg)
+int settings_load_friends(const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
 
-    const int c_ret = settings_init_config(cfg, patharg);
+    const int c_ret = settings_init_config(cfg, run_opts);
 
     if (c_ret < 0) {
         config_destroy(cfg);
@@ -600,7 +617,7 @@ int settings_load_friends(const char *patharg)
     return 0;
 }
 
-int settings_load_main(Client_Config *s, const char *patharg)
+int settings_load_main(Client_Config *s, const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
@@ -616,7 +633,7 @@ int settings_load_main(Client_Config *s, const char *patharg)
     audio_defaults(s);
 #endif
 
-    const int c_ret = settings_init_config(cfg, patharg);
+    const int c_ret = settings_init_config(cfg, run_opts);
 
     if (c_ret < 0) {
         config_destroy(cfg);

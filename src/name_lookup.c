@@ -30,6 +30,7 @@
 #include "global_commands.h"
 #include "line_info.h"
 #include "misc_tools.h"
+#include "run_options.h"
 #include "toxic.h"
 #include "windows.h"
 

@@ -36,6 +36,7 @@
 #include "line_info.h"
 #include "misc_tools.h"
 #include "prompt.h"
+#include "run_options.h"
 #include "settings.h"
 #include "windows.h"
 
