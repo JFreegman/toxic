@@ -136,10 +136,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="b148a2afff82e6b6d634f524e8f10d9e5b78aa92"
+TOXCORE_VERSION="c08409390fe185c8b65e218d5c36c9347234f3e7"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="79913e0d95f7039eeaf40e14792c3f881290166132ab2f154c5d1ee87c84e882"
+TOXCORE_HASH="28614c74fa8cf4aa5ae1dbd6857dfe3656e0d07f44572dde2fdbdc625bb6af42"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
@@ -152,7 +152,7 @@ rm "$TOXCORE_FILENAME"
 cd c-toxcore*
 mkdir -p "third_party" && cd "third_party"
 
-CMP_VERSION="074e0df43e8a61ea938c4f77f65d1fbccc0c3bf9"
+CMP_VERSION="cc67a0eab0a7579dcb12ce1072066275d49787bf"
 CMP_FILENAME="cmp-$CMP_VERSION.tar.gz"
 wget --timeout=10 -O "$CMP_FILENAME" "https://github.com/TokTok/cmp/archive/$CMP_VERSION.tar.gz"
 tar -o -xf "$CMP_FILENAME"
@@ -161,7 +161,6 @@ mv cmp-*/* 'cmp/'
 cd ..
 
 cmake -B_build -H. \
-      -DUSE_TEST_NETWORK=OFF \
       -DENABLE_STATIC=ON \
       -DENABLE_SHARED=OFF \
       -DCMAKE_BUILD_TYPE=Release \
