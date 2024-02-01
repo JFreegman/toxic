@@ -20,6 +20,7 @@
  *
  */
 
+#include <assert.h>
 #include <ctype.h>
 #include <libconfig.h>
 #include <stdlib.h>
@@ -45,6 +46,11 @@
 #ifndef PACKAGE_DATADIR
 #define PACKAGE_DATADIR "."
 #endif
+
+#define TOXIC_CONF_FILE_EXT ".conf"
+#define TOXIC_CONF_FILE_EXT_LENGTH (sizeof(TOXIC_CONF_FILE_EXT) - 1)
+
+static_assert(MAX_STR_SIZE > TOXIC_CONF_FILE_EXT_LENGTH, "MAX_STR_SIZE <= TOXIC_CONF_FILE_EXT_LENGTH");
 
 #define NO_SOUND "silent"
 
@@ -341,8 +347,6 @@ static void set_key_binding(int *key, const char **bind)
     }
 }
 
-#define TOXIC_CONF_FILE_EXT ".conf"
-
 bool settings_load_config_file(Run_Options *run_opts, const char *data_path)
 {
     char tmp_path[MAX_STR_SIZE] = {0};
@@ -350,7 +354,7 @@ bool settings_load_config_file(Run_Options *run_opts, const char *data_path)
     if (run_opts->use_custom_config_file) {
         snprintf(tmp_path, sizeof(tmp_path), "%s", run_opts->config_path);
     } else if (run_opts->use_custom_data) {
-        char tmp_data[MAX_STR_SIZE - strlen(TOXIC_CONF_FILE_EXT)];
+        char tmp_data[MAX_STR_SIZE - TOXIC_CONF_FILE_EXT_LENGTH];
 
         if (strlen(data_path) >= sizeof(tmp_data)) {
             return false;
