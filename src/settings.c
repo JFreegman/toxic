@@ -32,7 +32,6 @@
 #include "groupchats.h"
 #include "misc_tools.h"
 #include "notify.h"
-#include "run_options.h"
 #include "toxic.h"
 #include "windows.h"
 

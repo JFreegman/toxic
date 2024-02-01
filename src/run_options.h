@@ -21,6 +21,7 @@
  */
 
 #ifndef RUN_OPTIONS_H
+#define RUN_OPTIONS_H
 
 #include <stdbool.h>
 #include <stdio.h>  // needed for FILE

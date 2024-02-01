@@ -27,6 +27,7 @@
 
 #include <tox/tox.h>
 
+#include "run_options.h"
 #include "toxic_constants.h"
 
 /* Represents line_* hints max strlen */
@@ -140,8 +141,6 @@ enum settings_values {
 #define TIMESTAMP_DEFAULT      "%H:%M"
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
-
-typedef struct Run_Options Run_Options;
 
 /*
  * Loads the config file into `run_opts` and creates an empty file if it does not
