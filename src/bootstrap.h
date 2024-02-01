@@ -23,6 +23,8 @@
 #ifndef BOOTSTRAP_H
 #define BOOTSTRAP_H
 
+#include "toxic.h"
+
 /* Manages connection to the Tox DHT network. */
 void do_tox_connection(Toxic *toxic);
 

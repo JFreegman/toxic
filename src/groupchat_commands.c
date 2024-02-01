@@ -20,6 +20,8 @@
  *
  */
 
+#include "groupchat_commands.h"
+
 #include <string.h>
 #include <stdlib.h>
 

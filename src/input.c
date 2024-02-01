@@ -24,6 +24,8 @@
 #define _GNU_SOURCE    /* needed for wcwidth() */
 #endif
 
+#include "input.h"
+
 #include <wchar.h>
 
 #include "conference.h"

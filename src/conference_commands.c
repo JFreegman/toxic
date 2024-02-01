@@ -20,6 +20,8 @@
  *
  */
 
+#include "conference_commands.h"
+
 #include <stdlib.h>
 #include <string.h>
 

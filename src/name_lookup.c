@@ -20,6 +20,8 @@
  *
  */
 
+#include "name_lookup.h"
+
 #include <curl/curl.h>
 #include <stdarg.h>
 #include <stdlib.h>

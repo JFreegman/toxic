@@ -23,6 +23,11 @@
 #ifndef NAME_LOOKUP
 #define NAME_LOOKUP
 
+#include "toxic.h"
+#include "windows.h"
+
+#include <stdbool.h>
+
 /* Initializes http based name lookups. Note: This function must be called only once before additional
  * threads are spawned.
  *

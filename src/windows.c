@@ -1289,7 +1289,7 @@ void kill_all_windows(Toxic *toxic)
 
         switch (w->type) {
             case WINDOW_TYPE_CHAT: {
-                kill_chat_window(w, toxic->tox);
+                kill_chat_window(w, toxic);
                 break;
             }
 

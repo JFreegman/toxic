@@ -24,6 +24,8 @@
 #define _GNU_SOURCE    /* needed for wcswidth() */
 #endif
 
+#include "chat.h"
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>

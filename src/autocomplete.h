@@ -40,7 +40,7 @@
  *
  * Note: This function should not be called directly. Use complete_line() and complete_path() instead.
  */
-int complete_line(ToxWindow *self, Toxic *toxic, const char **list, size_t n_items);
+int complete_line(ToxWindow *self, Toxic *toxic, const char *const *list, size_t n_items);
 
 /* Attempts to match /command "<incomplete-dir>" line to matching directories.
  * If there is only one match the line is auto-completed.

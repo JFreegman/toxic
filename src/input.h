@@ -24,6 +24,7 @@
 #define INPUT_H
 
 #include "settings.h"
+#include "windows.h"
 
 /* add a char to input field and buffer for given chatcontext */
 void input_new_char(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x);

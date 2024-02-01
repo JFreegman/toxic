@@ -20,6 +20,8 @@
  *
  */
 
+#include "chat_commands.h"
+
 #include <stdlib.h>
 #include <string.h>
 

@@ -823,7 +823,7 @@ static void delete_friend(Toxic *toxic, uint32_t f_num)
         ToxWindow *toxwin = get_window_ptr(Friends.list[f_num].chatwin);
 
         if (toxwin != NULL) {
-            kill_chat_window(toxwin, tox);
+            kill_chat_window(toxwin, toxic);
             set_active_window_index(1);   /* keep friendlist focused */
         }
     }
