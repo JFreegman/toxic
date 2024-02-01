@@ -661,7 +661,7 @@ DeviceError write_out(uint32_t device_idx, const int16_t *data, uint32_t sample_
  *
  * return normalized volume of buffer in range 0.0-100.0
  */
-float volume(int16_t *frame, uint32_t samples)
+static float volume(int16_t *frame, uint32_t samples)
 {
     float sum_of_squares = 0;
 

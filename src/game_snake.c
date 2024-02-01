@@ -989,7 +989,7 @@ static void snake_draw_powerup(WINDOW *win, const SnakeState *state)
     }
 }
 
-void snake_cb_update_game_state(GameData *game, void *cb_data)
+static void snake_cb_update_game_state(GameData *game, void *cb_data)
 {
     SnakeState *state = (SnakeState *)cb_data;
 
@@ -1014,7 +1014,7 @@ void snake_cb_update_game_state(GameData *game, void *cb_data)
     }
 }
 
-void snake_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
+static void snake_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
     SnakeState *state = (SnakeState *)cb_data;
 
@@ -1034,7 +1034,7 @@ void snake_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
     snake_draw_snake(win, state->snake, state->snake_length);
 }
 
-void snake_cb_kill(GameData *game, void *cb_data)
+static void snake_cb_kill(GameData *game, void *cb_data)
 {
     SnakeState *state = (SnakeState *)cb_data;
 
@@ -1058,7 +1058,7 @@ void snake_cb_kill(GameData *game, void *cb_data)
     game_set_cb_on_pause(game, NULL, NULL);
 }
 
-void snake_cb_on_keypress(GameData *game, int key, void *cb_data)
+static void snake_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
     SnakeState *state = (SnakeState *)cb_data;
 
@@ -1069,7 +1069,7 @@ void snake_cb_on_keypress(GameData *game, int key, void *cb_data)
     snake_set_key_press(state, key);
 }
 
-void snake_cb_pause(GameData *game, bool is_paused, void *cb_data)
+static void snake_cb_pause(GameData *game, bool is_paused, void *cb_data)
 {
     SnakeState *state = (SnakeState *)cb_data;
 

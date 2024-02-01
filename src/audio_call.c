@@ -132,7 +132,7 @@ ToxAV *init_audio(Toxic *toxic)
     return toxic->av;
 }
 
-void read_device_callback(const int16_t *captured, uint32_t size, void *data)
+static void read_device_callback(const int16_t *captured, uint32_t size, void *data)
 {
     UNUSED_VAR(size);
 

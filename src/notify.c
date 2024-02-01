@@ -156,7 +156,7 @@ static void control_unlock(void)
 }
 
 #ifdef SOUND_NOTIFY
-bool is_playing(int source)
+static bool is_playing(int source)
 {
     int ready;
     alGetSourcei(source, AL_SOURCE_STATE, &ready);
@@ -190,7 +190,7 @@ static void m_open_device(const Client_Config *c_config)
     device_opened = true;
 }
 
-void m_close_device(void)
+static void m_close_device(void)
 {
     if (!device_opened) {
         return;
@@ -202,7 +202,7 @@ void m_close_device(void)
 }
 
 /* Terminate all sounds but wait for them to finish first */
-void graceful_clear(void)
+static void graceful_clear(void)
 {
     control_lock();
 
@@ -249,7 +249,7 @@ void graceful_clear(void)
     control_unlock();
 }
 
-void *do_playing(void *_p)
+static void *do_playing(void *_p)
 {
     UNUSED_VAR(_p);
 
@@ -327,7 +327,7 @@ void *do_playing(void *_p)
     pthread_exit(NULL);
 }
 
-int play_source(uint32_t source, uint32_t buffer, bool looping)
+static int play_source(uint32_t source, uint32_t buffer, bool looping)
 {
     int i = 0;
 

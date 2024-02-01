@@ -731,7 +731,7 @@ static void game_update_state(GameData *game)
     }
 }
 
-void game_onDraw(ToxWindow *self, Toxic *toxic)
+static void game_onDraw(ToxWindow *self, Toxic *toxic)
 {
     UNUSED_VAR(toxic);   // Note: This function is not thread safe if we ever need to use `toxic`
 
@@ -787,7 +787,7 @@ void game_onDraw(ToxWindow *self, Toxic *toxic)
     game_draw_messages(game, true);
 }
 
-bool game_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool is_printable)
+static bool game_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool is_printable)
 {
     UNUSED_VAR(is_printable);
 
@@ -828,7 +828,7 @@ bool game_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool is_printable)
     return true;
 }
 
-void game_onInit(ToxWindow *self, Toxic *toxic)
+static void game_onInit(ToxWindow *self, Toxic *toxic)
 {
     UNUSED_VAR(toxic);
 
@@ -853,7 +853,7 @@ void game_onInit(ToxWindow *self, Toxic *toxic)
  * Byte 2-5: Game ID
  * Byte 6-*  Game data
  */
-void game_onPacket(ToxWindow *self, Toxic *toxic, uint32_t friendnumber, const uint8_t *data, size_t length)
+static void game_onPacket(ToxWindow *self, Toxic *toxic, uint32_t friendnumber, const uint8_t *data, size_t length)
 {
     UNUSED_VAR(toxic);
 

@@ -904,7 +904,7 @@ static void chat_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t friendnum
 }
 
 #ifdef GAMES
-void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number, const uint8_t *data, size_t length)
+static void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number, const uint8_t *data, size_t length)
 {
     if (toxic == NULL || self == NULL) {
         return;
@@ -986,7 +986,7 @@ void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number, co
 /* AV Stuff */
 #ifdef AUDIO
 
-void chat_onInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1018,7 +1018,7 @@ void chat_onInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int st
     }
 }
 
-void chat_onRinging(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onRinging(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1044,7 +1044,7 @@ void chat_onRinging(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int s
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onStarting(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onStarting(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1070,7 +1070,7 @@ void chat_onStarting(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int 
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onError(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onError(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1090,7 +1090,7 @@ void chat_onError(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int sta
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onStart(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onStart(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1116,7 +1116,7 @@ void chat_onStart(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int sta
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onCancel(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onCancel(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1137,7 +1137,7 @@ void chat_onCancel(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int st
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onReject(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onReject(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1157,7 +1157,7 @@ void chat_onReject(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int st
 #endif /* SOUND_NOTIFY */
 }
 
-void chat_onEnd(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
+static void chat_onEnd(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
     UNUSED_VAR(state);
 
@@ -1294,7 +1294,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Toxic *toxic, char *a
 /*
  * Return true if input is recognized by handler
  */
-bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
+static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 {
     if (toxic == NULL || self == NULL) {
         return false;

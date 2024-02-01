@@ -1107,7 +1107,8 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Toxic *toxic, uint32_
     write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
 }
 
-void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, Tox_Group_Voice_State voice_state)
+static void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
+                                        Tox_Group_Voice_State voice_state)
 {
     if (toxic == NULL || self == NULL) {
         return;

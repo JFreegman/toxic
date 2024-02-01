@@ -849,7 +849,7 @@ static void cent_bullet_move(const GameData *game, CentState *state, TIME_MS cur
     }
 }
 
-void cent_bullet_spawn(CentState *state)
+static void cent_bullet_spawn(CentState *state)
 {
     Projectile *bullet = &state->bullet;
 
@@ -1505,7 +1505,7 @@ static void cent_mushrooms_draw(WINDOW *win, const CentState *state)
     }
 }
 
-void cent_cb_update_game_state(GameData *game, void *cb_data)
+static void cent_cb_update_game_state(GameData *game, void *cb_data)
 {
     CentState *state = (CentState *)cb_data;
 
@@ -1529,7 +1529,7 @@ void cent_cb_update_game_state(GameData *game, void *cb_data)
     cent_do_scorpion(game, state, cur_time);
 }
 
-void cent_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
+static void cent_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
     CentState *state = (CentState *)cb_data;
 
@@ -1544,7 +1544,7 @@ void cent_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
     cent_centipede_draw(game, win, state);
 }
 
-void cent_cb_on_keypress(GameData *game, int key, void *cb_data)
+static void cent_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
     CentState *state = (CentState *)cb_data;
 
@@ -1564,7 +1564,7 @@ void cent_cb_on_keypress(GameData *game, int key, void *cb_data)
     }
 }
 
-void cent_cb_pause(GameData *game, bool is_paused, void *cb_data)
+static void cent_cb_pause(GameData *game, bool is_paused, void *cb_data)
 {
     CentState *state = (CentState *)cb_data;
 
@@ -1581,7 +1581,7 @@ void cent_cb_pause(GameData *game, bool is_paused, void *cb_data)
     }
 }
 
-void cent_cb_kill(GameData *game, void *cb_data)
+static void cent_cb_kill(GameData *game, void *cb_data)
 {
     CentState *state = (CentState *)cb_data;
 

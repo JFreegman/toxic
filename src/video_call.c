@@ -101,8 +101,8 @@ void terminate_video(void)
     terminate_video_devices();
 }
 
-void read_video_device_callback(Toxic *toxic, int16_t width, int16_t height, const uint8_t *y, const uint8_t *u,
-                                const uint8_t *v, void *data)
+static void read_video_device_callback(Toxic *toxic, int16_t width, int16_t height, const uint8_t *y, const uint8_t *u,
+                                       const uint8_t *v, void *data)
 {
     if (toxic == NULL) {
         return;
@@ -132,10 +132,10 @@ void read_video_device_callback(Toxic *toxic, int16_t width, int16_t height, con
     }
 }
 
-void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_t height,
-                                 uint8_t const *y, uint8_t const *u, uint8_t const *v,
-                                 int32_t ystride, int32_t ustride, int32_t vstride,
-                                 void *user_data)
+static void write_video_device_callback(uint32_t friend_number, uint16_t width, uint16_t height,
+                                        uint8_t const *y, uint8_t const *u, uint8_t const *v,
+                                        int32_t ystride, int32_t ustride, int32_t vstride,
+                                        void *user_data)
 {
     UNUSED_VAR(friend_number);
 
@@ -246,7 +246,7 @@ void callback_recv_video_end(uint32_t friend_number)
     close_video_device(vdt_output, this_call->vout_idx);
     this_call->vout_idx = -1;
 }
-void callback_video_starting(Toxic *toxic, uint32_t friend_number)
+static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
 {
     Call *this_call = &CallControl.calls[friend_number];
 

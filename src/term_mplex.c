@@ -430,7 +430,7 @@ static void mplex_timer_handler(Toxic *toxic)
 /* Time in seconds between calls to mplex_timer_handler */
 #define MPLEX_TIMER_INTERVAL 5
 
-void *mplex_timer_thread(void *data)
+static void *mplex_timer_thread(void *data)
 {
     Toxic *toxic = (Toxic *) data;
 

@@ -1484,25 +1484,25 @@ static int chess_get_display_colour(ChessColour p_colour, int tile_colour)
     }
 }
 
-void chess_move_curs_up_left(ChessState *state)
+static void chess_move_curs_up_left(ChessState *state)
 {
     chess_move_curs_left(state);
     chess_move_curs_up(state);
 }
 
-void chess_move_curs_up_right(ChessState *state)
+static void chess_move_curs_up_right(ChessState *state)
 {
     chess_move_curs_right(state);
     chess_move_curs_up(state);
 }
 
-void chess_move_curs_down_left(ChessState *state)
+static void chess_move_curs_down_left(ChessState *state)
 {
     chess_move_curs_left(state);
     chess_move_curs_down(state);
 }
 
-void chess_move_curs_down_right(ChessState *state)
+static void chess_move_curs_down_right(ChessState *state)
 {
     chess_move_curs_right(state);
     chess_move_curs_down(state);
@@ -1714,7 +1714,7 @@ static void chess_draw_interface(const GameData *game, WINDOW *win, ChessState *
     chess_print_captured(game, win, state);
 }
 
-void chess_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
+static void chess_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
 {
     ChessState *state = (ChessState *)cb_data;
 
@@ -1730,7 +1730,7 @@ void chess_cb_render_window(GameData *game, WINDOW *win, void *cb_data)
     chess_draw_interface(game, win, state);
 }
 
-void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
+static void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
 {
     ChessState *state = (ChessState *)cb_data;
 
@@ -1793,7 +1793,7 @@ void chess_cb_on_keypress(GameData *game, int key, void *cb_data)
     }
 }
 
-void chess_cb_kill(GameData *game, void *cb_data)
+static void chess_cb_kill(GameData *game, void *cb_data)
 {
     ChessState *state = (ChessState *)cb_data;
 

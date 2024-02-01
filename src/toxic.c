@@ -141,7 +141,7 @@ static void init_signal_catchers(void)
     signal(SIGSEGV, catch_SIGSEGV);
 }
 
-void kill_toxic(Toxic *toxic)
+static void kill_toxic(Toxic *toxic)
 {
     if (toxic == NULL) {
         return;
@@ -233,8 +233,8 @@ static const char *tox_log_level_show(Tox_Log_Level level)
     return "<invalid>";
 }
 
-void cb_toxcore_logger(Tox *tox, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
-                       const char *message, void *user_data)
+static void cb_toxcore_logger(Tox *tox, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
+                              const char *message, void *user_data)
 {
     UNUSED_VAR(tox);
 
@@ -1244,7 +1244,7 @@ static void poll_interface_refresh_flag(void)
 /* How often we refresh windows that aren't focused */
 #define INACTIVE_WIN_REFRESH_RATE 10
 
-void *thread_winref(void *data)
+static void *thread_winref(void *data)
 {
     Toxic *toxic = (Toxic *) data;
 
@@ -1273,7 +1273,7 @@ void *thread_winref(void *data)
     }
 }
 
-void *thread_cqueue(void *data)
+static void *thread_cqueue(void *data)
 {
     Toxic *toxic = (Toxic *) data;
 
@@ -1299,7 +1299,7 @@ void *thread_cqueue(void *data)
 }
 
 #ifdef AUDIO
-void *thread_av(void *data)
+static void *thread_av(void *data)
 {
     ToxAV *av = (ToxAV *) data;
 

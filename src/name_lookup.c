@@ -233,7 +233,7 @@ static int process_response(struct Recv_Curl_Data *recv_data)
     return 0;
 }
 
-void *lookup_thread_func(void *data)
+static void *lookup_thread_func(void *data)
 {
     struct curl_slist *headers = NULL;
     CURL *c_handle = NULL;

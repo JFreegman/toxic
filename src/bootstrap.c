@@ -512,7 +512,7 @@ static int extract_node(const char *line, struct Node *node)
 }
 
 /* Loads the DHT nodeslist to memory from json encoded nodes file. */
-void *load_nodeslist_thread(void *data)
+static void *load_nodeslist_thread(void *data)
 {
 
     const Toxic *toxic = (Toxic *) data;
