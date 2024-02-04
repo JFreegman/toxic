@@ -335,8 +335,6 @@ int file_send_queue_remove(uint32_t friendnumber, size_t index)
 void close_file_transfer(ToxWindow *self, const Toxic *toxic, FileTransfer *ft, int CTRL, const char *message,
                          Notification sound_type)
 {
-    const Client_Config *c_config = toxic->c_config;
-
     if (ft == NULL) {
         return;
     }
@@ -359,12 +357,12 @@ void close_file_transfer(ToxWindow *self, const Toxic *toxic, FileTransfer *ft, 
 
     if (message && self) {
         if (self->active_box != -1 && sound_type != silent) {
-            box_notify2(self, c_config, sound_type, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", message);
+            box_notify2(self, toxic, sound_type, NT_NOFOCUS | NT_WNDALERT_2, self->active_box, "%s", message);
         } else {
-            box_notify(self, c_config, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);
+            box_notify(self, toxic, sound_type, NT_NOFOCUS | NT_WNDALERT_2, &self->active_box, self->name, "%s", message);
         }
 
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
+        line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", message);
     }
 
     clear_file_transfer(ft);

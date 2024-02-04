@@ -154,15 +154,16 @@ void game_window_notify(const GameData *game, const char *message)
         return;
     }
 
-    const Client_Config *c_config = game->toxic->c_config;
+    const Toxic *toxic = game->toxic;
+    const Client_Config *c_config = toxic->c_config;
 
     const int bell_on_message = c_config->bell_on_message;
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | bell_on_message,
+        box_notify2(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | bell_on_message,
                     self->active_box, "%s", message);
     } else {
-        box_notify(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | bell_on_message,
+        box_notify(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | bell_on_message,
                    &self->active_box, self->name, "%s", message);
     }
 }

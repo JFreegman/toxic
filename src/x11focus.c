@@ -26,62 +26,57 @@
 
 #include <X11/Xlib.h>
 
-static struct Focus {
-    Display *display;
-    Window terminal_window;
-} Focus;
-
-static long unsigned int focused_window_id(void)
+static long unsigned int focused_window_id(const X11_Focus *focus)
 {
-    if (!Focus.display) {
+    if (!focus->display) {
         return 0;
     }
 
-    Window focus;
+    Window window_focus;
     int revert;
 
-    XLockDisplay(Focus.display);
-    XGetInputFocus(Focus.display, &focus, &revert);
-    XUnlockDisplay(Focus.display);
+    XLockDisplay(focus->display);
+    XGetInputFocus(focus->display, &window_focus, &revert);
+    XUnlockDisplay(focus->display);
 
-    return focus;
+    return window_focus;
 }
 
-bool is_focused(void)
+bool is_focused(const X11_Focus *focus)
 {
-    if (!Focus.display) {
+    if (!focus->display) {
         return false;
     }
 
-    return Focus.terminal_window == focused_window_id();
+    return focus->terminal_window == focused_window_id(focus);
 }
 
-int init_x11focus(void)
+int init_x11focus(X11_Focus *focus)
 {
     if (XInitThreads() == 0) {
         return -1;
     }
 
-    Focus.display = XOpenDisplay(NULL);
+    focus->display = XOpenDisplay(NULL);
 
-    if (!Focus.display) {
+    if (!focus->display) {
         return -1;
     }
 
-    Focus.terminal_window = focused_window_id();
+    focus->terminal_window = focused_window_id(focus);
 
     return 0;
 }
 
-void terminate_x11focus(void)
+void terminate_x11focus(X11_Focus *focus)
 {
-    if (!Focus.display || !Focus.terminal_window) {
+    if (!focus->display || !focus->terminal_window) {
         return;
     }
 
-    XLockDisplay(Focus.display);
-    XCloseDisplay(Focus.display);
-    XUnlockDisplay(Focus.display);
+    XLockDisplay(focus->display);
+    XCloseDisplay(focus->display);
+    XUnlockDisplay(focus->display);
 }
 
 #endif /* !__APPLE__ */

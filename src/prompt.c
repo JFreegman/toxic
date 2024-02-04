@@ -239,7 +239,7 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     }
 
     if (ltr || key == '\n') {    /* char is printable */
-        input_new_char(self, c_config, key, x, x2);
+        input_new_char(self, toxic, key, x, x2);
         return true;
     }
 
@@ -247,7 +247,7 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         return true;
     }
 
-    if (input_handle(self, c_config, key, x, x2)) {
+    if (input_handle(self, toxic, key, x, x2)) {
         return true;
     }
 
@@ -280,10 +280,10 @@ static bool prompt_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                sound_notify(self, c_config, notif_error, 0, NULL);
+                sound_notify(self, toxic, notif_error, 0, NULL);
             }
         } else {
-            sound_notify(self, c_config, notif_error, 0, NULL);
+            sound_notify(self, toxic, notif_error, 0, NULL);
         }
     } else if (key == '\r') {
         input_ret = true;
@@ -524,10 +524,10 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
         write_to_log(ctx->log, c_config, msg, nick, true);
 
         if (self->active_box != -1) {
-            box_notify2(self, c_config, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
+            box_notify2(self, toxic, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
                         "%s has come online", nick);
         } else {
-            box_notify(self, c_config, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
+            box_notify(self, toxic, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
                        "Toxic", "%s has come online", nick);
         }
     } else if (connection_status == TOX_CONNECTION_NONE) {
@@ -536,10 +536,10 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
         write_to_log(ctx->log, c_config, msg, nick, true);
 
         if (self->active_box != -1) {
-            box_notify2(self, c_config, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
+            box_notify2(self, toxic, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
                         "%s has gone offline", nick);
         } else {
-            box_notify(self, c_config, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
+            box_notify(self, toxic, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, &self->active_box,
                        "Toxic", "%s has gone offline", nick);
         }
     }
@@ -595,7 +595,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
     }
 
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Type \"/accept %d\" or \"/decline %d\"", n, n);
-    sound_notify(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
+    sound_notify(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOTIFWND, NULL);
 }
 
 void prompt_init_statusbar(Toxic *toxic, bool first_time_run)

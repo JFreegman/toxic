@@ -938,14 +938,14 @@ static void group_onAction(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, 
 
     if (strcasestr(action, self_nick)) {
         if (self->active_box != -1) {
-            box_notify2(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
+            box_notify2(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
                         c_config->bell_on_message, self->active_box, "* %s %s", nick, action);
         } else {
-            box_notify(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
+            box_notify(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
                        c_config->bell_on_message, &self->active_box, self->name, "* %s %s", nick, action);
         }
     } else {
-        sound_notify(self, c_config, silent, NT_WNDALERT_1, NULL);
+        sound_notify(self, toxic, silent, NT_WNDALERT_1, NULL);
     }
 
     line_info_add(self, c_config, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
@@ -985,17 +985,17 @@ static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t gro
 
     /* Only play sound if mentioned by someone else */
     if (strcasestr(msg, self_nick) && strcmp(self_nick, nick)) {
-        sound_notify(self, c_config, generic_message, NT_WNDALERT_0 | c_config->bell_on_message, NULL);
+        sound_notify(self, toxic, generic_message, NT_WNDALERT_0 | c_config->bell_on_message, NULL);
 
         if (self->active_box != -1) {
-            box_silent_notify2(self, c_config, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+            box_silent_notify2(self, toxic, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
         } else {
-            box_silent_notify(self, c_config, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+            box_silent_notify(self, toxic, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
         }
 
         nick_clr = RED;
     } else {
-        sound_notify(self, c_config, silent, NT_WNDALERT_1, NULL);
+        sound_notify(self, toxic, silent, NT_WNDALERT_1, NULL);
     }
 
     line_info_add(self, c_config, true, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
@@ -1027,10 +1027,10 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Toxic *toxic, uint3
     write_to_log(ctx->log, c_config, msg, nick, false);
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
+        box_notify2(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
                     self->active_box, "%s %s", nick, msg);
     } else {
-        box_notify(self, c_config,  generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
+        box_notify(self, toxic,  generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
                    &self->active_box, self->name, "%s %s", nick, msg);
     }
 }
@@ -1295,7 +1295,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
             line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
             write_to_log(ctx->log, c_config, "has joined the room", peer->name, true);
-            sound_notify(self, c_config, silent, NT_WNDALERT_2, NULL);
+            sound_notify(self, toxic, silent, NT_WNDALERT_2, NULL);
         }
 
         group_update_name_list(groupnumber);
@@ -1336,13 +1336,13 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
             line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "[Quit]: %s", part_message);
             snprintf(log_str, sizeof(log_str), "has left the room (%s)", part_message);
             write_to_log(ctx->log, c_config, log_str, name, true);
-            sound_notify(self, c_config, silent, NT_WNDALERT_2, NULL);
+            sound_notify(self, toxic, silent, NT_WNDALERT_2, NULL);
         } else {
             const char *exit_string = get_group_exit_string(exit_type);
             line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "[%s]", exit_string);
             snprintf(log_str, sizeof(log_str), "[%s]", exit_string);
             write_to_log(ctx->log, c_config, log_str, name, true);
-            sound_notify(self, c_config, silent, NT_WNDALERT_2, NULL);
+            sound_notify(self, toxic, silent, NT_WNDALERT_2, NULL);
         }
 
     }
@@ -1891,7 +1891,7 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     }
 
     if (ltr || key == L'\n') {    /* char is printable */
-        input_new_char(self, c_config, key, x, x2);
+        input_new_char(self, toxic, key, x, x2);
         return true;
     }
 
@@ -1899,7 +1899,7 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         return true;
     }
 
-    if (input_handle(self, c_config, key, x, x2)) {
+    if (input_handle(self, toxic, key, x, x2)) {
         return true;
     }
 
@@ -1926,10 +1926,10 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
                 }
             } else {
-                sound_notify(self, c_config, notif_error, 0, NULL);
+                sound_notify(self, toxic, notif_error, 0, NULL);
             }
         } else {
-            sound_notify(self, c_config, notif_error, 0, NULL);
+            sound_notify(self, toxic, notif_error, 0, NULL);
         }
     } else if (key == T_KEY_C_DOWN) {    /* Scroll peerlist up and down one position */
         input_ret = true;

@@ -176,36 +176,37 @@ void kill_chat_window(ToxWindow *self, Toxic *toxic)
     del_window(self, toxic->c_config);
 }
 
-static void recv_message_helper(ToxWindow *self, const Client_Config *c_config, const char *msg,
+static void recv_message_helper(ToxWindow *self, const Toxic *toxic, const char *msg,
                                 const char *nick)
 {
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, nick, NULL, IN_MSG, 0, 0, "%s", msg);
     write_to_log(ctx->log, c_config, msg, nick, false);
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
+        box_notify2(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
                     self->active_box, "%s", msg);
     } else {
-        box_notify(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
+        box_notify(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
                    &self->active_box, nick, "%s", msg);
     }
 }
 
-static void recv_action_helper(ToxWindow *self, const Client_Config *c_config, const char *action,
-                               const char *nick)
+static void recv_action_helper(ToxWindow *self, const Toxic *toxic,  const char *action, const char *nick)
 {
+    const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
     write_to_log(ctx->log, c_config, action, nick, true);
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
+        box_notify2(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
                     self->active_box, "* %s %s", nick, action);
     } else {
-        box_notify(self, c_config, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
+        box_notify(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
                    &self->active_box, self->name, "* %s %s", nick, action);
     }
 }
@@ -219,8 +220,6 @@ static void chat_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Mess
         return;
     }
 
-    const Client_Config *c_config = toxic->c_config;
-
     if (self->num != num) {
         return;
     }
@@ -229,12 +228,12 @@ static void chat_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Mess
     get_nick_truncate(toxic->tox, nick, num);
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
-        recv_message_helper(self, c_config, msg, nick);
+        recv_message_helper(self, toxic, msg, nick);
         return;
     }
 
     if (type == TOX_MESSAGE_TYPE_ACTION) {
-        recv_action_helper(self, c_config, msg, nick);
+        recv_action_helper(self, toxic, msg, nick);
         return;
     }
 }
@@ -572,8 +571,7 @@ static void chat_onFileControl(ToxWindow *self, Toxic *toxic, uint32_t friendnum
                 ft->state = FILE_TRANSFER_STARTED;
                 line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%zu] for '%s' accepted.",
                               ft->index, ft->file_name);
-                sound_notify(self, c_config, silent,
-                             NT_NOFOCUS | c_config->bell_on_filetrans_accept | NT_WNDALERT_2, NULL);
+                sound_notify(self, toxic, silent, NT_NOFOCUS | c_config->bell_on_filetrans_accept | NT_WNDALERT_2, NULL);
             } else if (ft->state == FILE_TRANSFER_PAUSED) {    /* transfer is resumed */
                 ft->state = FILE_TRANSFER_STARTED;
             }
@@ -785,10 +783,10 @@ static void chat_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t friendnum, u
     free(file_path);
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_filetrans,
+        box_notify2(self, toxic, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_filetrans,
                     self->active_box, "Incoming file: %s", filename);
     } else {
-        box_notify(self, c_config, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_filetrans,
+        box_notify(self, toxic, transfer_pending, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_filetrans,
                    &self->active_box, self->name, "Incoming file: %s", filename);
     }
 
@@ -843,11 +841,10 @@ static void chat_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t frien
     const char *description = type == TOX_CONFERENCE_TYPE_AV ? "an audio conference" : "a conference";
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, self->active_box,
+        box_notify2(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, self->active_box,
                     "invites you to join %s", description);
     } else {
-        box_notify(self, c_config, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, &self->active_box,
-                   name,
+        box_notify(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, &self->active_box, name,
                    "invites you to join %s", description);
     }
 
@@ -884,16 +881,16 @@ static void chat_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t friendnum
     memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
     Friends.list[friendnumber].group_invite.length = length;
 
-    sound_notify(self, c_config, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, NULL);
+    sound_notify(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, NULL);
 
     char name[TOX_MAX_NAME_LENGTH];
     get_nick_truncate(toxic->tox, name, friendnumber);
 
     if (self->active_box != -1) {
-        box_silent_notify2(self, c_config, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box,
+        box_silent_notify2(self, toxic, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box,
                            "invites you to join group chat");
     } else {
-        box_silent_notify(self, c_config, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name,
+        box_silent_notify(self, toxic, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name,
                           "invites you to join group chat");
     }
 
@@ -967,10 +964,10 @@ static void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_num
     get_nick_truncate(toxic->tox, name, friend_number);
 
     if (self->active_box != -1) {
-        box_notify2(self, c_config, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, self->active_box,
+        box_notify2(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, self->active_box,
                     "invites you to play %s", game_string);
     } else {
-        box_notify(self, c_config, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, &self->active_box,
+        box_notify(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, &self->active_box,
                    name,
                    "invites you to play %s", game_string);
     }
@@ -1007,14 +1004,13 @@ static void chat_onInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number,
                   "Incoming audio call! Type: \"/answer\" or \"/reject\"");
 
     if (self->ringing_sound == -1) {
-        sound_notify(self, c_config, call_incoming, NT_LOOP | c_config->bell_on_invite, &self->ringing_sound);
+        sound_notify(self, toxic, call_incoming, NT_LOOP | c_config->bell_on_invite, &self->ringing_sound);
     }
 
     if (self->active_box != -1) {
-        box_silent_notify2(self, c_config, NT_NOFOCUS | NT_WNDALERT_0, self->active_box, "Incoming audio call!");
+        box_silent_notify2(self, toxic, NT_NOFOCUS | NT_WNDALERT_0, self->active_box, "Incoming audio call!");
     } else {
-        box_silent_notify(self, c_config, NT_NOFOCUS | NT_WNDALERT_0, &self->active_box, self->name,
-                          "Incoming audio call!");
+        box_silent_notify(self, toxic, NT_NOFOCUS | NT_WNDALERT_0, &self->active_box, self->name, "Incoming audio call!");
     }
 }
 
@@ -1038,7 +1034,7 @@ static void chat_onRinging(ToxWindow *self, Toxic *toxic, uint32_t friend_number
 #ifdef SOUND_NOTIFY
 
     if (self->ringing_sound == -1) {
-        sound_notify(self, c_config, call_outgoing, NT_LOOP, &self->ringing_sound);
+        sound_notify(self, toxic, call_outgoing, NT_LOOP, &self->ringing_sound);
     }
 
 #endif /* SOUND_NOTIFY */
@@ -1326,7 +1322,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     }
 
     if (ltr || key == L'\n') {    /* char is printable */
-        input_new_char(self, c_config, key, x, x2);
+        input_new_char(self, toxic, key, x, x2);
 
         if (ctx->line[0] != '/' && !ctx->self_is_typing && statusbar->connection != TOX_CONNECTION_NONE) {
             set_self_typingstatus(self, toxic, true);
@@ -1339,7 +1335,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         return true;
     }
 
-    bool input_ret = input_handle(self, c_config, key, x, x2);
+    bool input_ret = input_handle(self, toxic, key, x, x2);
 
     if (key == L'\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         input_ret = true;
@@ -1369,7 +1365,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
             }
         } else {
-            sound_notify(self, c_config, notif_error, 0, NULL);
+            sound_notify(self, toxic, notif_error, 0, NULL);
         }
 
     } else if (key == L'\r') {

@@ -51,6 +51,10 @@
 #include "settings.h"
 #include "toxic_constants.h"
 
+#ifdef X11
+#include "x11focus.h"
+#endif
+
 typedef struct Client_Data {
     bool is_encrypted;
     char pass[MAX_PASSWORD_LEN + 1];
@@ -68,6 +72,11 @@ typedef struct Toxic {
 #ifdef AUDIO
     ToxAV *av;
 #endif
+
+#ifdef X11
+    X11_Focus     x11_focus;
+#endif
+
     Client_Data   client_data;
     Client_Config *c_config;
     Run_Options   *run_opts;

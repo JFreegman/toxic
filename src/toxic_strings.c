@@ -25,7 +25,6 @@
 #include <wchar.h>
 
 #include "misc_tools.h"
-#include "notify.h"
 #include "toxic.h"
 #include "toxic_strings.h"
 #include "windows.h"
@@ -198,15 +197,14 @@ void rm_trailing_spaces_buf(ChatContext *ctx)
     ctx->line[ctx->len] = L'\0';
 }
 
-#define HIST_PURGE MAX_LINE_HIST / 4
+#define HIST_PURGE ((MAX_LINE_HIST) / 4)
 
 /* shifts hist items back and makes room for HIST_PURGE new entries */
 static void shift_hist_back(ChatContext *ctx)
 {
-    int i;
     int n = MAX_LINE_HIST - HIST_PURGE;
 
-    for (i = 0; i < n; ++i) {
+    for (int i = 0; i < n; ++i) {
         wmemcpy(ctx->ln_history[i], ctx->ln_history[i + HIST_PURGE], MAX_STR_SIZE);
     }
 
@@ -245,7 +243,6 @@ void fetch_hist_item(const Client_Config *c_config, ChatContext *ctx, int key_di
     if (key_dir == KEY_UP) {
         if (--ctx->hst_pos < 0) {
             ctx->hst_pos = 0;
-            sound_notify(NULL, c_config, notif_error, NT_ALWAYS, NULL);
         }
     } else {
         if (++ctx->hst_pos >= ctx->hst_tot) {
@@ -265,9 +262,7 @@ void fetch_hist_item(const Client_Config *c_config, ChatContext *ctx, int key_di
 
 void strsubst(char *str, char old, char new)
 {
-    int i;
-
-    for (i = 0; str[i] != '\0'; ++i) {
+    for (int i = 0; str[i] != '\0'; ++i) {
         if (str[i] == old) {
             str[i] = new;
         }
@@ -276,9 +271,7 @@ void strsubst(char *str, char old, char new)
 
 void wstrsubst(wchar_t *str, wchar_t old, wchar_t new)
 {
-    int i;
-
-    for (i = 0; str[i] != L'\0'; ++i) {
+    for (int i = 0; str[i] != L'\0'; ++i) {
         if (str[i] == old) {
             str[i] = new;
         }

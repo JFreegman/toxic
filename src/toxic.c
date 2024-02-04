@@ -193,7 +193,7 @@ void exit_toxic_success(Toxic *toxic)
     curl_global_cleanup();
 
 #ifdef X11
-    terminate_x11focus();
+    terminate_x11focus(&toxic->x11_focus);
 #endif /* X11 */
 
     kill_toxic(toxic);
@@ -1734,7 +1734,7 @@ int main(int argc, char **argv)
 
 #ifdef X11
 
-    if (init_x11focus() == -1) {
+    if (init_x11focus(&toxic->x11_focus) == -1) {
         queue_init_message("X failed to initialize");
     }
 

@@ -432,7 +432,7 @@ static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, To
     line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* Warning: Too many windows are open.");
 
-    sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
 }
 
 static void friendlist_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Connection connection_status)
@@ -661,7 +661,7 @@ static void friendlist_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t frie
     line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* Game invite from %s failed: Too many windows are open.", nick);
 
-    sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
 }
 
 #endif // GAMES
@@ -699,7 +699,7 @@ static void friendlist_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t num, u
     line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* File transfer from %s failed: too many windows are open.", nick);
 
-    sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
 }
 
 static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t num, uint8_t type,
@@ -738,7 +738,7 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t
     line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                   "* Conference chat invite from %s failed: too many windows are open.", nick);
 
-    sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
 }
 
 static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num, const char *data, size_t length,
@@ -775,7 +775,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num
     line_info_add(home_window, c_config, NULL, NULL, NULL, SYS_MSG, 0, RED,
                   "* Group chat invite from %s failed: too many windows are open.", nick);
 
-    sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+    sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
 }
 
 /* move friendlist/blocklist cursor up and down */
@@ -1069,7 +1069,7 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
             } else {
                 const char *msg = "* Warning: Too many windows are open.";
                 line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED, msg);
-                sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+                sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
             }
 
             break;
@@ -1468,7 +1468,7 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
             const char *errmsg = "* Warning: Too many windows are open.";
             line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED, errmsg);
 
-            sound_notify(home_window, c_config, notif_error, NT_WNDALERT_1, NULL);
+            sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
         }
     }
 }

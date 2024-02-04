@@ -34,7 +34,10 @@
 #include "misc_tools.h"
 #include "notify.h"
 #include "settings.h"
+
+#ifdef X11
 #include "x11focus.h"
+#endif  /* X11 */
 
 #if defined(AUDIO) || defined(SOUND_NOTIFY)
 #ifdef __APPLE__
@@ -127,15 +130,17 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
     ++self->pending_messages;
 }
 
-static bool notifications_are_disabled(const Client_Config *c_config, uint64_t flags)
+static bool notifications_are_disabled(const Toxic *toxic, uint64_t flags)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     if (c_config->alerts != ALERTS_ENABLED) {
         return true;
     }
 
     bool res = (flags & NT_RESTOL) && (Control.cooldown > get_unix_time());
 #ifdef X11
-    return res || ((flags & NT_NOFOCUS) && is_focused());
+    return res || ((flags & NT_NOFOCUS) && is_focused(&toxic->x11_focus));
 #else
     return res;
 #endif
@@ -598,12 +603,14 @@ static int m_play_sound(const Client_Config *c_config, Notification notif, uint6
 #endif /* SOUND_NOTIFY */
 }
 
-int sound_notify(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+int sound_notify(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags,
                  int *id_indicator)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(c_config, flags)) {
+    if (notifications_are_disabled(toxic, flags)) {
         return -1;
     }
 
@@ -639,11 +646,11 @@ int sound_notify(ToxWindow *self, const Client_Config *c_config, Notification no
     return id;
 }
 
-int sound_notify2(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags, int id)
+int sound_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags, int id)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(c_config, flags)) {
+    if (notifications_are_disabled(toxic, flags)) {
         return -1;
     }
 
@@ -659,7 +666,7 @@ int sound_notify2(ToxWindow *self, const Client_Config *c_config, Notification n
         return -1;
     }
 
-    m_open_device(c_config);
+    m_open_device(toxic->c_config);
 
     alSourceStop(actives[id].source);
     alDeleteSources(1, &actives[id].source);
@@ -686,17 +693,17 @@ int sound_notify2(ToxWindow *self, const Client_Config *c_config, Notification n
 #endif /* SOUND_NOTIFY */
 }
 
-int box_notify(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+int box_notify(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags,
                int *id_indicator, const char *title, const char *format, ...)
 {
-    if (notifications_are_disabled(c_config, flags)) {
+    if (notifications_are_disabled(toxic, flags)) {
         tab_notify(self, flags);
         return -1;
     }
 
 #ifdef BOX_NOTIFY
 
-    int id = sound_notify(self, c_config, notif, flags, id_indicator);
+    int id = sound_notify(self, toxic, notif, flags, id_indicator);
 
     control_lock();
 
@@ -755,21 +762,21 @@ int box_notify(ToxWindow *self, const Client_Config *c_config, Notification noti
     control_unlock();
     return id;
 #else
-    return sound_notify(self, c_config, notif, flags, id_indicator);
+    return sound_notify(self, toxic, notif, flags, id_indicator);
 #endif /* BOX_NOTIFY */
 }
 
-int box_notify2(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+int box_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags,
                 int id, const char *format, ...)
 {
-    if (notifications_are_disabled(c_config, flags)) {
+    if (notifications_are_disabled(toxic, flags)) {
         tab_notify(self, flags);
         return -1;
     }
 
 #ifdef BOX_NOTIFY
 
-    if (sound_notify2(self, c_config, notif, flags, id) == -1) {
+    if (sound_notify2(self, toxic, notif, flags, id) == -1) {
         return -1;
     }
 
@@ -808,16 +815,16 @@ int box_notify2(ToxWindow *self, const Client_Config *c_config, Notification not
 
     return id;
 #else
-    return sound_notify2(self, c_config, notif, flags, id);
+    return sound_notify2(self, toxic, notif, flags, id);
 #endif /* BOX_NOTIFY */
 }
 
-int box_silent_notify(ToxWindow *self, const Client_Config *c_config, uint64_t flags, int *id_indicator,
+int box_silent_notify(ToxWindow *self, const Toxic *toxic, uint64_t flags, int *id_indicator,
                       const char *title, const char *format, ...)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(c_config, flags)) {
+    if (notifications_are_disabled(toxic, flags)) {
         return -1;
     }
 
@@ -871,12 +878,12 @@ int box_silent_notify(ToxWindow *self, const Client_Config *c_config, uint64_t f
 #endif /* BOX_NOTIFY */
 }
 
-int box_silent_notify2(ToxWindow *self, const Client_Config *c_config, uint64_t flags, int id,
+int box_silent_notify2(ToxWindow *self, const Toxic *toxic, uint64_t flags, int id,
                        const char *format, ...)
 {
     tab_notify(self, flags);
 
-    if (notifications_are_disabled(c_config, flags)) {
+    if (notifications_are_disabled(toxic, flags)) {
         return -1;
     }
 

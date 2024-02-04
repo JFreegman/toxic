@@ -65,20 +65,20 @@ void terminate_notify(void);
 /* Kills all notifications for `id`. This must be called before freeing a ToxWindow. */
 void kill_notifs(int id);
 
-int sound_notify(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+int sound_notify(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags,
                  int *id_indicator);
-int sound_notify2(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags, int id);
+int sound_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags, int id);
 
 void stop_sound(int id);
 
-int box_notify(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags,
+int box_notify(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags,
                int *id_indicator,
                const char *title, const char *format, ...);
-int box_notify2(ToxWindow *self, const Client_Config *c_config, Notification notif, uint64_t flags, int id,
+int box_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags, int id,
                 const char *format, ...);
-int box_silent_notify(ToxWindow *self, const Client_Config *c_config, uint64_t flags, int *id_indicator,
+int box_silent_notify(ToxWindow *self, const Toxic *toxic, uint64_t flags, int *id_indicator,
                       const char *title, const char *format, ...);
-int box_silent_notify2(ToxWindow *self, const Client_Config *c_config, uint64_t flags, int id,
+int box_silent_notify2(ToxWindow *self, const Toxic *toxic, uint64_t flags, int id,
                        const char *format, ...);
 
 #ifdef SOUND_NOTIFY

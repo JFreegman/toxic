@@ -39,7 +39,7 @@
 #include "windows.h"
 
 /* add a char to input field and buffer */
-void input_new_char(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x)
+void input_new_char(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
@@ -51,12 +51,12 @@ void input_new_char(ToxWindow *self, const Client_Config *c_config, wint_t key, 
     int cur_len = wcwidth(key);
 
     if (cur_len == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
         return;
     }
 
     if (add_char_to_buf(ctx, key) == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
         return;
     }
 
@@ -67,12 +67,12 @@ void input_new_char(ToxWindow *self, const Client_Config *c_config, wint_t key, 
 }
 
 /* delete a char via backspace key from input field and buffer */
-static void input_backspace(ToxWindow *self, const Client_Config *c_config, int x, int mx_x)
+static void input_backspace(ToxWindow *self, const Toxic *toxic, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
     if (del_char_buf_bck(ctx) == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
         return;
     }
 
@@ -87,45 +87,45 @@ static void input_backspace(ToxWindow *self, const Client_Config *c_config, int 
 }
 
 /* delete a char via delete key from input field and buffer */
-static void input_delete(ToxWindow *self, const Client_Config *c_config)
+static void input_delete(ToxWindow *self, const Toxic *toxic)
 {
     if (del_char_buf_frnt(self->chatwin) == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
     }
 }
 
 /* delete last typed word */
-static void input_del_word(ToxWindow *self, const Client_Config *c_config)
+static void input_del_word(ToxWindow *self, const Toxic *toxic)
 {
     ChatContext *ctx = self->chatwin;
 
     if (del_word_buf(ctx) == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
     }
 }
 
 /* deletes entire line before cursor from input field and buffer */
-static void input_discard(ToxWindow *self, const Client_Config *c_config)
+static void input_discard(ToxWindow *self, const Toxic *toxic)
 {
     if (discard_buf(self->chatwin) == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
     }
 }
 
 /* deletes entire line after cursor from input field and buffer */
-static void input_kill(ChatContext *ctx, const Client_Config *c_config)
+static void input_kill(ChatContext *ctx, const Toxic *toxic)
 {
     if (kill_buf(ctx) == -1) {
-        sound_notify(NULL, c_config, notif_error, NT_ALWAYS, NULL);
+        sound_notify(NULL, toxic, notif_error, NT_ALWAYS, NULL);
     }
 }
 
-static void input_yank(ToxWindow *self, const Client_Config *c_config, int x, int mx_x)
+static void input_yank(ToxWindow *self, const Toxic *toxic, int x, int mx_x)
 {
     ChatContext *ctx = self->chatwin;
 
     if (yank_buf(ctx) == -1) {
-        sound_notify(self, c_config, notif_error, 0, NULL);
+        sound_notify(self, toxic, notif_error, 0, NULL);
         return;
     }
 
@@ -261,34 +261,36 @@ static void input_history(ToxWindow *self, const Client_Config *c_config, wint_t
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, const Client_Config *c_config, wint_t key, int x, int mx_x)
+bool input_handle(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int mx_x)
 {
+    const Client_Config *c_config = toxic->c_config;
+
     bool match = true;
 
     switch (key) {
         case 0x7f:
         case KEY_BACKSPACE:
-            input_backspace(self, c_config, x, mx_x);
+            input_backspace(self, toxic, x, mx_x);
             break;
 
         case KEY_DC:
-            input_delete(self, c_config);
+            input_delete(self, toxic);
             break;
 
         case T_KEY_DISCARD:
-            input_discard(self, c_config);
+            input_discard(self, toxic);
             break;
 
         case T_KEY_KILL:
-            input_kill(self->chatwin, c_config);
+            input_kill(self->chatwin, toxic);
             break;
 
         case T_KEY_C_Y:
-            input_yank(self, c_config, x, mx_x);
+            input_yank(self, toxic, x, mx_x);
             break;
 
         case T_KEY_C_W:
-            input_del_word(self, c_config);
+            input_del_word(self, toxic);
             break;
 
         case KEY_HOME:
