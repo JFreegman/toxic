@@ -242,12 +242,12 @@ static int life_get_live_neighbours(const LifeState *state, const int i, const i
 
     int count = 0;
 
-    for (size_t i = 0; i < 8; ++i) {
-        if (n[i] == NULL) {
+    for (size_t idx = 0; idx < 8; ++idx) {
+        if (n[idx] == NULL) {
             return 0; // If we're at a boundary kill cell
         }
 
-        if (n[i]->alive) {
+        if (n[idx]->alive) {
             ++count;
         }
     }

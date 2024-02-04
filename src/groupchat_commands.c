@@ -485,7 +485,7 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, 
 
     if (argc < 1) {
         Tox_Err_Group_State_Queries err;
-        uint32_t maxpeers = tox_group_get_peer_limit(tox, self->num, &err);
+        maxpeers = tox_group_get_peer_limit(tox, self->num, &err);
 
         if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve peer limit (error %d).",
@@ -1105,9 +1105,9 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
 
         char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
 
-        for (size_t i = 0; i < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++i) {
+        for (size_t j = 0; j < TOX_GROUP_PEER_PUBLIC_KEY_SIZE; ++j) {
             char d[3];
-            snprintf(d, sizeof(d), "%02X", peer->public_key[i] & 0xff);
+            snprintf(d, sizeof(d), "%02X", peer->public_key[j] & 0xff);
             strcat(pk_string, d);
         }
 

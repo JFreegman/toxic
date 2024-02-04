@@ -120,7 +120,7 @@ static const char *group_cmd_list[] = {
     "/whois",
 };
 
-GroupChat groupchats[MAX_GROUPCHAT_NUM];
+static GroupChat groupchats[MAX_GROUPCHAT_NUM];
 
 static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *groupname, int length);
 static void groupchat_set_group_name(ToxWindow *self, Toxic *toxic, uint32_t groupnumber);

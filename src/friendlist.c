@@ -1127,9 +1127,7 @@ static void blocklist_onDraw(ToxWindow *self, Tox *tox, int y2, int x2)
     int start = (y2 - FLIST_OFST) * page;
     int end = y2 - FLIST_OFST + start;
 
-    int i;
-
-    for (i = start; i < Blocked.num_blocked && i < end; ++i) {
+    for (int i = start; i < Blocked.num_blocked && i < end; ++i) {
         uint32_t f = Blocked.index[i];
         bool f_selected = false;
 
@@ -1170,9 +1168,7 @@ static void blocklist_onDraw(ToxWindow *self, Tox *tox, int y2, int x2)
         wprintw(self->window, "Public key: ");
         wattroff(self->window, A_BOLD);
 
-        int i;
-
-        for (i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
+        for (int i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
             wprintw(self->window, "%02X", Blocked.list[selected_num].pub_key[i] & 0xff);
         }
     }
@@ -1241,9 +1237,7 @@ static void friendlist_onDraw(ToxWindow *self, Toxic *toxic)
     const size_t num_friends = Friends.num_friends;
     pthread_mutex_unlock(&Winthread.lock);
 
-    int i;
-
-    for (i = start; i < num_friends && i < end; ++i) {
+    for (int i = start; i < num_friends && i < end; ++i) {
         pthread_mutex_lock(&Winthread.lock);
         uint32_t f = Friends.index[i];
         bool is_active = Friends.list[f].active;
@@ -1402,9 +1396,7 @@ static void friendlist_onDraw(ToxWindow *self, Toxic *toxic)
         wprintw(self->window, "Public key: ");
         wattroff(self->window, A_BOLD);
 
-        int i;
-
-        for (i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
+        for (int i = 0; i < TOX_PUBLIC_KEY_SIZE; ++i) {
             wprintw(self->window, "%02X", Friends.list[selected_num].pub_key[i] & 0xff);
         }
     }

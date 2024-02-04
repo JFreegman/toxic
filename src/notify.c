@@ -167,7 +167,7 @@ static bool is_playing(int source)
 /* cooldown is in seconds */
 #define DEVICE_COOLDOWN 5 /* TODO perhaps load this from config? */
 static bool device_opened = false;
-time_t last_opened_update = 0;
+static time_t last_opened_update = 0;
 
 /* Opens primary device. Returns true on succe*/
 static void m_open_device(const Client_Config *c_config)

@@ -92,7 +92,7 @@ typedef struct VideoDevice {
 
 static const char *dvideo_device_names[2];        /* Default device */
 static char *video_devices_names[2][MAX_DEVICES]; /* Container of available devices */
-static int size[2];                               /* Size of above containers */
+static int c_size[2];                               /* Size of above containers */
 static VideoDevice *video_devices_running[2][MAX_DEVICES] = {{NULL}}; /* Running devices */
 static uint32_t primary_video_device[2];                              /* Primary device */
 
@@ -136,27 +136,27 @@ static void yuv420tobgr(uint16_t width, uint16_t height, const uint8_t *y,
 
 #if !(defined(__OSX__) || defined(__APPLE__))
 static void yuv422to420(uint8_t *plane_y, uint8_t *plane_u, uint8_t *plane_v,
-                        uint8_t *input, uint16_t width, uint16_t height)
+                        uint8_t *f_input, uint16_t width, uint16_t height)
 {
-    uint8_t *end = input + width * height * 2;
+    uint8_t *end = f_input + width * height * 2;
 
-    while (input != end) {
-        uint8_t *line_end = input + width * 2;
+    while (f_input != end) {
+        uint8_t *line_end = f_input + width * 2;
 
-        while (input != line_end) {
-            *plane_y++ = *input++;
-            *plane_u++ = *input++;
-            *plane_y++ = *input++;
-            *plane_v++ = *input++;
+        while (f_input != line_end) {
+            *plane_y++ = *f_input++;
+            *plane_u++ = *f_input++;
+            *plane_y++ = *f_input++;
+            *plane_v++ = *f_input++;
         }
 
-        line_end = input + width * 2;
+        line_end = f_input + width * 2;
 
-        while (input != line_end) {
-            *plane_y++ = *input++;
-            input++;//u
-            *plane_y++ = *input++;
-            input++;//v
+        while (f_input != line_end) {
+            *plane_y++ = *f_input++;
+            f_input++;//u
+            *plane_y++ = *f_input++;
+            f_input++;//v
         }
     }
 }
@@ -176,20 +176,20 @@ static int xioctl(int fh, unsigned long request, void *arg)
 
 VideoDeviceError init_video_devices(Toxic *toxic)
 {
-    size[vdt_input] = 0;
+    c_size[vdt_input] = 0;
 
 #if defined(__OSX__) || defined(__APPLE__)
 
-    if (osx_video_init(&video_devices_names[vdt_input][0], &size[vdt_input]) != 0) {
+    if (osx_video_init(&video_devices_names[vdt_input][0], &c_size[vdt_input]) != 0) {
         return vde_InternalError;
     }
 
 #else /* not __OSX__ || __APPLE__ */
 
-    for (; size[vdt_input] <= MAX_DEVICES; ++size[vdt_input]) {
+    for (; c_size[vdt_input] <= MAX_DEVICES; ++c_size[vdt_input]) {
         int fd;
         char device_address[] = "/dev/videoXX";
-        snprintf(device_address + 10, sizeof(char) * strlen(device_address) - 10, "%i", size[vdt_input]);
+        snprintf(device_address + 10, sizeof(char) * strlen(device_address) - 10, "%i", c_size[vdt_input]);
 
         fd = open(device_address, O_RDWR | O_NONBLOCK, 0);
 
@@ -225,7 +225,7 @@ VideoDeviceError init_video_devices(Toxic *toxic)
                 strcat(video_input_name, ")");
             }
 
-            video_devices_names[vdt_input][size[vdt_input]] = video_input_name;
+            video_devices_names[vdt_input][c_size[vdt_input]] = video_input_name;
 
             close(fd);
         }
@@ -233,7 +233,7 @@ VideoDeviceError init_video_devices(Toxic *toxic)
 
 #endif
 
-    size[vdt_output] = 1;
+    c_size[vdt_output] = 1;
     // TODO(iphydf): String literals are const char *. This may need to be
     // copied, or if we're not owning any output device names, it should be
     // const and video_devices_names needs to be split.
@@ -270,7 +270,7 @@ VideoDeviceError terminate_video_devices(void)
 
     int i;
 
-    for (i = 0; i < size[vdt_input]; ++i) {
+    for (i = 0; i < c_size[vdt_input]; ++i) {
         free(video_devices_names[vdt_input][i]);
     }
 
@@ -290,13 +290,13 @@ VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t 
 {
 #if defined(__OSX__) || defined(__APPLE__)
 
-    if (size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx]) {
+    if (c_size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx]) {
         return vde_InvalidSelection;
     }
 
 #else /* not __OSX__ || __APPLE__ */
 
-    if (size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx]
+    if (c_size[vdt_input] <= device_idx || !video_devices_running[vdt_input][device_idx]
             || !video_devices_running[vdt_input][device_idx]->fd) {
         return vde_InvalidSelection;
     }
@@ -314,7 +314,7 @@ VideoDeviceError register_video_device_callback(int32_t friend_number, uint32_t 
 
 VideoDeviceError set_primary_video_device(VideoDeviceType type, int32_t selection)
 {
-    if (size[type] <= selection || selection < 0) {
+    if (c_size[type] <= selection || selection < 0) {
         return vde_InvalidSelection;
     }
 
@@ -337,7 +337,7 @@ void get_primary_video_device_name(VideoDeviceType type, char *buf, int size)
 VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint32_t *device_idx,
                                    uint32_t *width, uint32_t *height)
 {
-    if (size[type] <= selection || selection < 0) {
+    if (c_size[type] <= selection || selection < 0) {
         return vde_InvalidSelection;
     }
 
@@ -487,7 +487,7 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
         device->n_buffers = i;
 
-        enum v4l2_buf_type type;
+        enum v4l2_buf_type btype;
 
         for (i = 0; i < device->n_buffers; ++i) {
             struct v4l2_buffer buf = {0};
@@ -508,10 +508,10 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
             }
         }
 
-        type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        btype = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
         /* Turn on video stream */
-        if (-1 == xioctl(device->fd, VIDIOC_STREAMON, &type)) {
+        if (-1 == xioctl(device->fd, VIDIOC_STREAMON, &btype)) {
             close_video_device(vdt_input, temp_idx);
             unlock;
             return vde_FailedStart;
@@ -701,7 +701,7 @@ void *video_thread_poll(void *userdata)  // TODO: maybe use thread for every inp
         if (video_thread_paused) {
             sleep_thread(10000L);    /* Wait for unpause. */
         } else {
-            for (i = 0; i < size[vdt_input]; ++i) {
+            for (i = 0; i < c_size[vdt_input]; ++i) {
                 lock;
 
                 if (video_devices_running[vdt_input][i] != NULL) {
@@ -863,7 +863,7 @@ VideoDeviceError close_video_device(VideoDeviceType type, uint32_t device_idx)
 
 void print_video_devices(ToxWindow *self, const Client_Config *c_config, VideoDeviceType type)
 {
-    for (int i = 0; i < size[type]; ++i) {
+    for (int i = 0; i < c_size[type]; ++i) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%d: %s", i, video_devices_names[type][i]);
     }
 
@@ -872,7 +872,7 @@ void print_video_devices(ToxWindow *self, const Client_Config *c_config, VideoDe
 
 VideoDeviceError video_selection_valid(VideoDeviceType type, int32_t selection)
 {
-    return (size[type] <= selection || selection < 0) ? vde_InvalidSelection : vde_None;
+    return (c_size[type] <= selection || selection < 0) ? vde_InvalidSelection : vde_None;
 }
 
 #endif /* VIDEO */
