@@ -606,7 +606,7 @@ on_exit:
  * Return -4 if pthread fails to set detached state.
  * Return -5 if thread creation fails.
  */
-int load_DHT_nodeslist(const Toxic *toxic)
+int load_DHT_nodeslist(Toxic *toxic)
 {
     if (thread_data.active) {
         return -1;

@@ -850,7 +850,7 @@ int store_data(const Toxic *toxic)
         }
 
         Tox_Err_Encryption err;
-        tox_pass_encrypt((uint8_t *) data, data_len, (uint8_t *) toxic->client_data.pass,
+        tox_pass_encrypt((uint8_t *) data, data_len, (const uint8_t *) toxic->client_data.pass,
                          toxic->client_data.pass_len, (uint8_t *) enc_data, &err);
 
         if (err != TOX_ERR_ENCRYPTION_OK) {
@@ -1273,7 +1273,7 @@ static void *thread_winref(void *data)
     }
 }
 
-static void *thread_cqueue(void *data)
+_Noreturn static void *thread_cqueue(void *data)
 {
     Toxic *toxic = (Toxic *) data;
 
@@ -1299,7 +1299,7 @@ static void *thread_cqueue(void *data)
 }
 
 #ifdef AUDIO
-static void *thread_av(void *data)
+_Noreturn static void *thread_av(void *data)
 {
     ToxAV *av = (ToxAV *) data;
 
@@ -1308,7 +1308,7 @@ static void *thread_av(void *data)
         toxav_iterate(av);
         pthread_mutex_unlock(&Winthread.lock);
 
-        long int sleep_duration = toxav_iteration_interval(av) * 1000;
+        const long int sleep_duration = toxav_iteration_interval(av) * 1000;
         sleep_thread(sleep_duration);
     }
 }

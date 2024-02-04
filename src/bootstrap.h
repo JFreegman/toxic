@@ -39,6 +39,6 @@ void do_tox_connection(Toxic *toxic);
  * Return -4 if pthread fails to set detached state.
  * Return -5 if thread creation fails.
  */
-int load_DHT_nodeslist(const Toxic *toxic);
+int load_DHT_nodeslist(Toxic *toxic);
 
 #endif /* BOOTSTRAP_H */

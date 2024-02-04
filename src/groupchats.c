@@ -303,7 +303,7 @@ void exit_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const c
         length = TOX_GROUP_MAX_PART_LENGTH;
     }
 
-    tox_group_leave(toxic->tox, groupnumber, (uint8_t *) partmessage, length, NULL);
+    tox_group_leave(toxic->tox, groupnumber, (const uint8_t *) partmessage, length, NULL);
 
     if (self != NULL) {
         close_groupchat(self, toxic, groupnumber);
@@ -433,7 +433,7 @@ void set_nick_this_group(ToxWindow *self, Toxic *toxic, const char *new_nick, si
     size_t old_length = get_group_self_nick_truncate(tox, old_nick, self->num);
 
     Tox_Err_Group_Self_Name_Set err;
-    tox_group_self_set_name(tox, self->num, (uint8_t *) new_nick, length, &err);
+    tox_group_self_set_name(tox, self->num, (const uint8_t *) new_nick, length, &err);
 
     GroupChat *chat = get_groupchat(self->num);
 
@@ -520,7 +520,7 @@ void set_status_all_groups(Toxic *toxic, uint8_t status)
 
 /* Returns a weight for peer_sort_cmp based on the peer's role. */
 #define PEER_CMP_BASE_WEIGHT 100000
-static int peer_sort_cmp_weight(struct GroupPeer *peer)
+static int peer_sort_cmp_weight(const struct GroupPeer *peer)
 {
     int w = PEER_CMP_BASE_WEIGHT;
 
@@ -537,8 +537,8 @@ static int peer_sort_cmp_weight(struct GroupPeer *peer)
 
 static int peer_sort_cmp(const void *n1, const void *n2)
 {
-    struct GroupPeer *peer1 = (struct GroupPeer *) n1;
-    struct GroupPeer *peer2 = (struct GroupPeer *) n2;
+    const struct GroupPeer *peer1 = (const struct GroupPeer *) n1;
+    const struct GroupPeer *peer2 = (const struct GroupPeer *) n2;
 
     int res = qsort_strcasecmp_hlpr(peer1->name, peer2->name);
     return res - peer_sort_cmp_weight(peer1) + peer_sort_cmp_weight(peer2);
@@ -1739,7 +1739,7 @@ static void send_group_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     }
 
     Tox_Err_Group_Send_Message err;
-    tox_group_send_message(tox, groupnumber, type, (uint8_t *) msg, strlen(msg), &err);
+    tox_group_send_message(tox, groupnumber, type, (const uint8_t *) msg, strlen(msg), &err);
 
     if (err != TOX_ERR_GROUP_SEND_MESSAGE_OK) {
         if (err == TOX_ERR_GROUP_SEND_MESSAGE_PERMISSIONS) {
@@ -1836,7 +1836,7 @@ static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t grou
     Tox_Err_Group_Send_Private_Message err;
 
     if (!tox_group_send_private_message(toxic->tox, groupnumber, peer_id, TOX_MESSAGE_TYPE_NORMAL,
-                                        (uint8_t *) msg, msg_len, &err)) {
+                                        (const uint8_t *) msg, msg_len, &err)) {
         if (err == TOX_ERR_GROUP_SEND_PRIVATE_MESSAGE_PERMISSIONS) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * You are silenced.");
         } else {
@@ -1913,7 +1913,7 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 
             /* TODO: make this not suck */
             if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {
-                diff = complete_line(self, toxic, (const char **) chat->name_list, chat->num_peers);
+                diff = complete_line(self, toxic, (const char *const *) chat->name_list, chat->num_peers);
             } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
                 diff = dir_match(self, toxic, ctx->line, L"/avatar");
             } else {

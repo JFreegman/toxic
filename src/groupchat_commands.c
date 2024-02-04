@@ -438,7 +438,7 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
     }
 
     Tox_Err_Group_Founder_Set_Password err;
-    tox_group_founder_set_password(toxic->tox, self->num, (uint8_t *) passwd, len, &err);
+    tox_group_founder_set_password(toxic->tox, self->num, (const uint8_t *) passwd, len, &err);
 
     switch (err) {
         case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_OK: {
@@ -936,7 +936,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     const char *topic = argv[1];
 
     Tox_Err_Group_Topic_Set err;
-    tox_group_set_topic(tox, self->num, (uint8_t *) topic, strlen(topic), &err);
+    tox_group_set_topic(tox, self->num, (const uint8_t *) topic, strlen(topic), &err);
 
     switch (err) {
         case TOX_ERR_GROUP_TOPIC_SET_OK: {

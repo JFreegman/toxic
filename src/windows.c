@@ -409,7 +409,8 @@ void on_group_invite(Tox *tox, uint32_t friendnumber, const uint8_t *invite_data
 
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupInvite != NULL) {
-            windows[i]->onGroupInvite(windows[i], toxic, friendnumber, (char *) invite_data, length, gname, group_name_length);
+            windows[i]->onGroupInvite(windows[i], toxic, friendnumber, (const char *) invite_data, length, gname,
+                                      group_name_length);
         }
     }
 }
@@ -569,7 +570,7 @@ void on_group_password(Tox *tox, uint32_t groupnumber, const uint8_t *password, 
 
     for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
         if (windows[i] != NULL && windows[i]->onGroupPassword != NULL) {
-            windows[i]->onGroupPassword(windows[i], toxic, groupnumber, (char *) password, length);
+            windows[i]->onGroupPassword(windows[i], toxic, groupnumber, (const char *) password, length);
         }
     }
 }
