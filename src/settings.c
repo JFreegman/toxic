@@ -190,10 +190,10 @@ static void key_defaults(Client_Config *settings)
 {
     settings->key_next_tab = T_KEY_NEXT;
     settings->key_prev_tab = T_KEY_PREV;
-    settings->key_scroll_line_up = KEY_PPAGE;
-    settings->key_scroll_line_down = KEY_NPAGE;
-    settings->key_half_page_up = T_KEY_C_F;
-    settings->key_half_page_down = T_KEY_C_V;
+    settings->key_scroll_line_up = T_KEY_C_F;
+    settings->key_scroll_line_down = T_KEY_C_V;
+    settings->key_half_page_up = KEY_PPAGE;
+    settings->key_half_page_down = KEY_NPAGE;
     settings->key_page_bottom = T_KEY_C_H;
     settings->key_toggle_peerlist = T_KEY_C_B;
     settings->key_toggle_pastemode = T_KEY_C_T;
