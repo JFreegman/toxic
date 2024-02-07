@@ -45,8 +45,8 @@
  * Return path length on success.
  * Return -1 if the path is too long.
  */
-static int get_log_path(const Client_Config *c_config, char *dest, int destsize, const char *name,
-                        const char *selfkey, const char *otherkey)
+static int create_log_path(const Client_Config *c_config, char *dest, int destsize, const char *name,
+                           const char *selfkey, const char *otherkey)
 {
     if (!valid_nick(name)) {
         name = UNKNOWN_NAME;
@@ -112,14 +112,14 @@ static int init_logging_session(const Client_Config *c_config, const char *name,
 
     char log_path[MAX_STR_SIZE];
 
-    const int path_len = get_log_path(c_config, log_path, sizeof(log_path), name, selfkey, otherkey);
+    const int path_len = create_log_path(c_config, log_path, sizeof(log_path), name, selfkey, otherkey);
 
     if (path_len == -1 || path_len >= sizeof(log->path)) {
         return -1;
     }
 
     memcpy(log->path, log_path, path_len);
-    log->path[path_len] = 0;
+    log->path[path_len] = '\0';
 
     return 0;
 }
@@ -279,7 +279,7 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
 
     fclose(fp);
 
-    buf[sz] = 0;
+    buf[sz] = '\0';
 
     /* Number of history lines to load: must not be larger than MAX_LINE_INFO_QUEUE - 2 */
     int L = MIN(MAX_LINE_INFO_QUEUE - 2, c_config->history_size);
@@ -344,7 +344,7 @@ int rename_logfile(const Client_Config *c_config, const char *src, const char *d
     char newpath[MAX_STR_SIZE];
     char oldpath[MAX_STR_SIZE];
 
-    if (get_log_path(c_config, oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
+    if (create_log_path(c_config, oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
         goto on_error;
     }
 
@@ -353,7 +353,7 @@ int rename_logfile(const Client_Config *c_config, const char *src, const char *d
         return 0;
     }
 
-    const int new_path_len = get_log_path(c_config, newpath, sizeof(newpath), dest, selfkey, otherkey);
+    const int new_path_len = create_log_path(c_config, newpath, sizeof(newpath), dest, selfkey, otherkey);
 
     if (new_path_len == -1 || new_path_len >= MAX_STR_SIZE) {
         goto on_error;
@@ -369,7 +369,7 @@ int rename_logfile(const Client_Config *c_config, const char *src, const char *d
 
     if (log != NULL) {
         memcpy(log->path, newpath, new_path_len);
-        log->path[new_path_len] = 0;
+        log->path[new_path_len] = '\0';
 
         if (log_on) {
             log_enable(log);

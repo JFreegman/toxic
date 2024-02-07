@@ -736,10 +736,18 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     const char *swch = argv[1];
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
-        msg = log_enable(log) == 0 ? "Logging enabled." : "Warning: Failed to enable log.";
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+        if (log_enable(log) == 0) {
+            char e_msg[MAX_STR_SIZE];
+            snprintf(e_msg, sizeof(e_msg), "Logging to: %s", log->path);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, e_msg);
+            return;
+        }
+
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable log.");
         return;
-    } else if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
+    }
+
+    if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
         if (self->type == WINDOW_TYPE_CHAT) {
             friend_set_logging_enabled(self->num, false);
         }
