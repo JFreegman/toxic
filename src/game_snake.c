@@ -78,7 +78,6 @@
 
 #define SNAKE_HEAD_COLOUR       GREEN
 
-#define SNAKE_DEAD_BODY_CHAR    'o'
 #define SNAKE_DEAD_BODY_COLOUR  RED
 
 #define SNAKE_BODY_COLOUR       CYAN

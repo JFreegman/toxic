@@ -57,8 +57,6 @@
 
 #ifdef VIDEO
 
-#define inline__ inline __attribute__((always_inline))
-
 struct VideoBuffer {
     void *start;
     size_t length;
