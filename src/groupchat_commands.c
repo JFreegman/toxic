@@ -966,6 +966,8 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
         }
     }
 
+    groupchat_update_statusbar_topic(self, tox);
+
     char self_nick[TOX_MAX_NAME_LENGTH + 1];
     get_group_self_nick_truncate(tox, self_nick, self->num);
 

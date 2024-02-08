@@ -451,13 +451,13 @@ static void prompt_onDraw(ToxWindow *self, Toxic *toxic)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    uint16_t maxlen = x2 - getcurx(statusbar->topline) - 3;
+    const int maxlen = x2 - getcurx(statusbar->topline) - 3;
 
     pthread_mutex_lock(&Winthread.lock);
-    size_t statusmsg_len = statusbar->statusmsg_len;
+    const size_t statusmsg_len = statusbar->statusmsg_len;
     pthread_mutex_unlock(&Winthread.lock);
 
-    if (statusmsg_len > maxlen) {
+    if (statusmsg_len > maxlen && maxlen >= 3) {
         pthread_mutex_lock(&Winthread.lock);
         statusbar->statusmsg[maxlen - 3] = 0;
         strcat(statusbar->statusmsg, "...");
@@ -483,7 +483,7 @@ static void prompt_onDraw(ToxWindow *self, Toxic *toxic)
 
     UNUSED_VAR(x);
 
-    int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
+    const int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y, new_x);
 
     draw_window_bar(self);

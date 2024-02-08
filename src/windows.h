@@ -262,6 +262,8 @@ struct StatusBar {
     size_t nick_len;
     Tox_User_Status status;
     Tox_Connection connection;
+    char topic[TOX_GROUP_MAX_TOPIC_LENGTH + 1];
+    size_t topic_len;
 };
 
 #ifdef AUDIO

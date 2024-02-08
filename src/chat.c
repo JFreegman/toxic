@@ -158,16 +158,20 @@ void kill_chat_window(ToxWindow *self, Toxic *toxic)
 #endif /* AUDIO */
 
     kill_all_file_transfers_friend(toxic, self->num);
-    log_disable(ctx->log);
-    line_info_cleanup(ctx->hst);
-    cqueue_cleanup(ctx->cqueue);
 
-    delwin(ctx->linewin);
-    delwin(ctx->history);
+    if (ctx != NULL) {
+        log_disable(ctx->log);
+        line_info_cleanup(ctx->hst);
+        cqueue_cleanup(ctx->cqueue);
+
+        delwin(ctx->linewin);
+        delwin(ctx->history);
+
+        free(ctx->log);
+        free(ctx);
+    }
+
     delwin(statusbar->topline);
-
-    free(ctx->log);
-    free(ctx);
     free(self->help);
     free(statusbar);
 
@@ -1552,15 +1556,15 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    size_t maxlen = x2 - getcurx(statusbar->topline) - KEY_IDENT_BYTES - 6;
+    const int maxlen = x2 - getcurx(statusbar->topline) - KEY_IDENT_BYTES - 6;
 
     pthread_mutex_lock(&Winthread.lock);
-    size_t statusmsg_len = statusbar->statusmsg_len;
+    const size_t statusmsg_len = statusbar->statusmsg_len;
     pthread_mutex_unlock(&Winthread.lock);
 
-    if (statusmsg_len > maxlen) {
+    if (statusmsg_len > maxlen && maxlen >= 3) {
         pthread_mutex_lock(&Winthread.lock);
-        statusbar->statusmsg[maxlen - 3] = 0;
+        statusbar->statusmsg[maxlen - 3] = '\0';
         strcat(statusbar->statusmsg, "...");
         statusbar->statusmsg_len = maxlen;
         pthread_mutex_unlock(&Winthread.lock);
@@ -1610,7 +1614,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
 
     UNUSED_VAR(x);
 
-    int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
+    const int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y, new_x);
 
     draw_window_bar(self);
@@ -1688,18 +1692,21 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     statusbar->status = get_friend_status(self->num);
     statusbar->connection = get_friend_connection_status(self->num);
 
-    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
-    tox_friend_get_status_message(tox, self->num, (uint8_t *) statusmsg, NULL);
 
-    size_t s_len = tox_friend_get_status_message_size(tox, self->num, NULL);
-    statusmsg[s_len] = '\0';
+    const size_t s_len = tox_friend_get_status_message_size(tox, self->num, NULL);
 
-    filter_str(statusmsg, s_len);
-    snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+    if (s_len > 0 && s_len <= TOX_MAX_STATUS_MESSAGE_LENGTH) {
+        char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1] = {0};
+        tox_friend_get_status_message(tox, self->num, (uint8_t *) statusmsg, NULL);
+        statusmsg[s_len] = '\0';
+        filter_str(statusmsg, s_len);
+        snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
+    }
+
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 
     char nick[TOX_MAX_NAME_LENGTH + 1];
-    size_t n_len = get_nick_truncate(tox, nick, self->num);
+    const size_t n_len = get_nick_truncate(tox, nick, self->num);
     memcpy(statusbar->nick, nick, n_len);
     statusbar->nick[n_len] = 0;
     statusbar->nick_len = n_len;

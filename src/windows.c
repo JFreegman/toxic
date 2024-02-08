@@ -818,7 +818,9 @@ void on_window_resize(void)
         if (w->type == WINDOW_TYPE_CONFERENCE || w->type == WINDOW_TYPE_GROUPCHAT) {
             delwin(w->chatwin->sidebar);
             w->chatwin->sidebar = NULL;
-        } else {
+        }
+
+        if (w->type != WINDOW_TYPE_CONFERENCE) {
             delwin(w->stb->topline);
         }
 
@@ -838,17 +840,20 @@ void on_window_resize(void)
         }
 
         if (w->show_peerlist) {
-            w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2 - SIDEBAR_WIDTH - 1, 0, 0);
-            w->chatwin->sidebar = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
+            w->chatwin->history = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT,
+                                         x2 - SIDEBAR_WIDTH - 1, 0, 0);
+            w->chatwin->sidebar = subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT,
+                                         SIDEBAR_WIDTH, 0, x2 - SIDEBAR_WIDTH);
         } else {
             w->chatwin->history =  subwin(w->window, y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT, x2, 0, 0);
-
-            if (!(w->type == WINDOW_TYPE_CONFERENCE || w->type == WINDOW_TYPE_GROUPCHAT)) {
-                w->stb->topline = subwin(w->window, TOP_BAR_HEIGHT, x2, 0, 0);
-            }
         }
 
-        w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, x2, y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
+        if (w->type != WINDOW_TYPE_CONFERENCE) {
+            w->stb->topline = subwin(w->window, TOP_BAR_HEIGHT, x2, 0, 0);
+        }
+
+        w->window_bar = subwin(w->window, WINDOW_BAR_HEIGHT, x2,
+                               y2 - (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT), 0);
         w->chatwin->linewin = subwin(w->window, CHATBOX_HEIGHT, x2, y2 - WINDOW_BAR_HEIGHT, 0);
 
 #ifdef AUDIO

@@ -66,7 +66,7 @@ void line_info_reset_start(ToxWindow *self, struct history *hst)
     getmaxyx(self->window, y2, x2);
     UNUSED_VAR(x2);
 
-    int top_offst = (self->type == WINDOW_TYPE_CHAT) || (self->type == WINDOW_TYPE_PROMPT) ? TOP_BAR_HEIGHT : 0;
+    int top_offst = self->type != WINDOW_TYPE_CONFERENCE ? TOP_BAR_HEIGHT : 0;
     int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT - top_offst;
 
     uint16_t curlines = 0;
@@ -566,7 +566,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
         return;
     }
 
-    if (self->type == WINDOW_TYPE_CONFERENCE || self->type == WINDOW_TYPE_GROUPCHAT) {
+    if (self->type == WINDOW_TYPE_CONFERENCE) {
         wmove(win, 0, 0);
     } else {
         wmove(win, TOP_BAR_HEIGHT, 0);

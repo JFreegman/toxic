@@ -85,6 +85,9 @@ void groupchat_onGroupModeration(ToxWindow *self, Toxic *toxic, uint32_t groupnu
 
 void groupchat_rejoin(ToxWindow *self, Toxic *toxic);
 
+/* Updates the groupchat topic in the top statusbar. */
+void groupchat_update_statusbar_topic(ToxWindow *self, const Tox *tox);
+
 /* Puts the peer_id associated with `identifier` in `peer_id`. The string may be
  * either a nick or a public key.
  *
