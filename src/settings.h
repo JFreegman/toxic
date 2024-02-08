@@ -39,6 +39,7 @@
 typedef struct Client_Config {
     int autolog;           /* boolean */
     int alerts;            /* boolean */
+    int show_notification_content; /* boolean */
 
     /* boolean (is set to NT_BEEP or 0 after loading) */
     int bell_on_message;
@@ -111,6 +112,8 @@ enum settings_values {
 
     ALERTS_DISABLED = 0,
     ALERTS_ENABLED = 1,
+
+    SHOW_NOTIFICATION_CONTENT_ON = 1,
 
     DFLT_COLS = 0,
     NATIVE_COLS = 1,

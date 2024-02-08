@@ -60,6 +60,7 @@ static struct ui_strings {
     const char *timestamp_format;
     const char *log_timestamp_format;
     const char *alerts;
+    const char *show_notification_content;
     const char *bell_on_message;
     const char *bell_on_filetrans;
     const char *bell_on_filetrans_accept;
@@ -97,6 +98,7 @@ static struct ui_strings {
     "timestamp_format",
     "log_timestamp_format",
     "alerts",
+    "show_notification_content",
     "bell_on_message",
     "bell_on_filetrans",
     "bell_on_filetrans_accept",
@@ -136,6 +138,7 @@ static void ui_defaults(Client_Config *settings)
 
     settings->autolog = AUTOLOG_OFF;
     settings->alerts = ALERTS_ENABLED;
+    settings->show_notification_content = 1;
     settings->bell_on_message = 0;
     settings->bell_on_filetrans = 0;
     settings->bell_on_filetrans_accept = 0;
@@ -683,6 +686,7 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
         }
 
         config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
+        config_setting_lookup_bool(setting, ui_strings.show_notification_content, &s->show_notification_content);
 
         if (config_setting_lookup_bool(setting, ui_strings.bell_on_message, &s->bell_on_message)) {
             s->bell_on_message = s->bell_on_message ? NT_BEEP : 0;

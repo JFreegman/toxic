@@ -8,6 +8,9 @@ ui = {
   // true to enable acoustic alerts on messages, false to disable
   alerts=true;
 
+  // true to show notification content on desktop alerts, false to hide
+  show_notification_content=true;
+
   // Output a bell when receiving a message (see manpage)
   bell_on_message=true;
 
