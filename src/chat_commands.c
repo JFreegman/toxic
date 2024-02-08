@@ -58,7 +58,7 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int arg
             msg = "Auto-file accept for this friend is disabled; type \"/autoaccept on\" to enable";
         }
 
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
         return;
     }
 
@@ -74,7 +74,7 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int arg
         msg = "Invalid option. Use \"/autoaccept on\" and \"/autoaccept off\" to toggle auto-file accept";
     }
 
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 }
 
 void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

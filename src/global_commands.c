@@ -150,7 +150,7 @@ void cmd_add_helper(ToxWindow *self, Toxic *toxic, const char *id_bin, const cha
             break;
     }
 
-    line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+    line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", errmsg);
 }
 
 void cmd_add(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -719,17 +719,18 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
     const Client_Config *c_config = toxic->c_config;
 
-    const char *msg;
     struct chatlog *log = self->chatwin->log;
 
     if (argc == 0) {
+        const char *msg;
+
         if (log->log_on) {
             msg = "Logging for this window is ON; type \"/log off\" to disable. (Logs are not encrypted)";
         } else {
             msg = "Logging for this window is OFF; type \"/log on\" to enable.";
         }
 
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
         return;
     }
 
@@ -739,7 +740,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         if (log_enable(log) == 0) {
             char e_msg[MAX_STR_SIZE];
             snprintf(e_msg, sizeof(e_msg), "Logging to: %s", log->path);
-            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, e_msg);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", e_msg);
             return;
         }
 
@@ -754,13 +755,12 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
         log_disable(log);
 
-        msg = "Logging disabled.";
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Logging disabled.");
         return;
     }
 
-    msg = "Invalid option. Use \"/log on\" and \"/log off\" to toggle logging.";
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                  "Invalid option. Use \"/log on\" and \"/log off\" to toggle logging.");
 }
 
 void cmd_myid(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -1052,13 +1052,11 @@ void cmd_status(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
-    const char *errmsg = NULL;
-
     lock_status();
 
     if (argc < 1) {
-        errmsg = "Require a status. Statuses are: online, busy and away.";
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Require a status. Statuses are: online, busy and away.");
         goto finish;
     }
 
@@ -1072,8 +1070,8 @@ void cmd_status(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     } else if (!strcasecmp(status_str, "busy")) {
         status = TOX_USER_STATUS_BUSY;
     } else {
-        errmsg = "Invalid status. Valid statuses are: online, busy and away.";
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Invalid status. Valid statuses are: online, busy and away.");
         goto finish;
     }
 

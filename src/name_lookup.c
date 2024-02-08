@@ -69,6 +69,7 @@ static void clear_thread_data(void)
     };
 }
 
+__attribute__((format(printf, 3, 4)))
 static int lookup_error(ToxWindow *self, const Client_Config *c_config, const char *errmsg, ...)
 {
     char frmt_msg[MAX_STR_SIZE];

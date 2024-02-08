@@ -48,7 +48,7 @@ void api_display(const char *const msg)
     }
 
     self_window = get_active_window();
-    line_info_add(self_window, user_toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, msg);
+    line_info_add(self_window, user_toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
 }
 
 FriendsList api_get_friendslist(void)
@@ -145,28 +145,27 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     const Client_Config *c_config = toxic->c_config;
 
     FILE       *fp;
-    const char *error_str;
 
     cur_window  = window;
     self_window = self;
 
     if (argc != 1) {
+        const char *error_str;
+
         if (argc < 1) {
             error_str = "Path must be specified.";
         } else {
             error_str = "Only one argument allowed.";
         }
 
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", error_str);
         return;
     }
 
     fp = fopen(argv[1], "r");
 
     if (fp == NULL) {
-        error_str = "Path does not exist.";
-
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, error_str);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Path does not exist.");
         return;
     }
 

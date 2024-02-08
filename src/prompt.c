@@ -520,7 +520,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
 
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
-        line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, msg);
+        line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, "%s", msg);
         write_to_log(ctx->log, c_config, msg, nick, true);
 
         if (self->active_box != -1) {
@@ -532,7 +532,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
         }
     } else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
-        line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, msg);
+        line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, "%s", msg);
         write_to_log(ctx->log, c_config, msg, nick, true);
 
         if (self->active_box != -1) {
@@ -589,8 +589,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
     const int n = add_friend_request(key, data);
 
     if (n == -1) {
-        const char *errmsg = "Friend request queue is full. Discarding request.";
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, errmsg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend request queue is full. Discarding request.");
         return;
     }
 
@@ -660,10 +659,10 @@ static void print_welcome_msg(ToxWindow *self, const Client_Config *c_config)
                   "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
 
-    const char *msg = "Welcome to Toxic, a free, open source Tox-based instant messaging client.";
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
-    msg = "Type \"/help\" for assistance. Further help may be found via the man page.";
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN, msg);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN,
+                  "Welcome to Toxic, a free, open source Tox-based instant messaging client.");
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN,
+                  "Type \"/help\" for assistance. Further help may be found via the man page.");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
 }
 

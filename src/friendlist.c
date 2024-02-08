@@ -1067,8 +1067,7 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
                 Friends.list[f].chatwin = add_window(toxic, new_chat(tox, Friends.list[f].num));
                 set_active_window_index(Friends.list[f].chatwin);
             } else {
-                const char *msg = "* Warning: Too many windows are open.";
-                line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED, msg);
+                line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "* Warning: Too many windows are open.");
                 sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
             }
 
@@ -1465,8 +1464,7 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
             get_nick_truncate(tox, nick, Friends.list[friend_number].num);
             line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Audio action from: %s!", nick);
 
-            const char *errmsg = "* Warning: Too many windows are open.";
-            line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED, errmsg);
+            line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "* Warning: Too many windows are open.");
 
             sound_notify(home_window, toxic, notif_error, NT_WNDALERT_1, NULL);
         }

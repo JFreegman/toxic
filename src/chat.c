@@ -277,7 +277,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         file_send_queue_check(self, toxic, self->num);
 
         msg = "has come online";
-        line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, msg);
+        line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, "%s", msg);
         write_to_log(ctx->log, c_config, msg, nick, true);
     } else if (connection_status == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = false;
@@ -289,7 +289,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         chat_pause_file_transfers(num);
 
         msg = "has gone offline";
-        line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, msg);
+        line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, "%s", msg);
         write_to_log(ctx->log, c_config, msg, nick, true);
     }
 }

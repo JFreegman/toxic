@@ -483,6 +483,7 @@ static struct _init_messages {
 } init_messages;
 
 /* One-time queue for messages created during init. Do not use after program init. */
+__attribute__((format(printf, 1, 2)))
 static void queue_init_message(const char *msg, ...)
 {
     char frmt_msg[MAX_STR_SIZE] = {0};
@@ -528,7 +529,7 @@ static void cleanup_init_messages(void)
 static void print_init_messages(ToxWindow *home_window, const Client_Config *c_config)
 {
     for (int i = 0; i < init_messages.num; ++i) {
-        line_info_add(home_window, c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, init_messages.msgs[i]);
+        line_info_add(home_window, c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", init_messages.msgs[i]);
     }
 }
 

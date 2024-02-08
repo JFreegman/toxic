@@ -753,7 +753,7 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
 
         if (new_peer && peer->name_length > 0 && timed_out(chat->start_time, CONFERENCE_EVENT_WAIT)) {
             const char *msg = "has joined the conference";
-            line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, msg);
+            line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, "%s", msg);
             write_to_log(ctx->log, c_config, msg, peer->name, true);
         }
 
@@ -770,7 +770,7 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
         if (old_peer->active) {
             if (old_peer->name_length > 0 && !find_peer_by_pubkey(chat->peer_list, chat->num_peers, old_peer->pubkey, NULL)) {
                 const char *msg = "has left the conference";
-                line_info_add(self, c_config, true, old_peer->name, NULL, DISCONNECTION, 0, RED, msg);
+                line_info_add(self, c_config, true, old_peer->name, NULL, DISCONNECTION, 0, RED, "%s", msg);
                 write_to_log(ctx->log, c_config, msg, old_peer->name, true);
             }
 
@@ -850,7 +850,7 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Toxic *toxic,
             // this is kind of a hack; peers always join a group with no name set and then set it after
         } else if (timed_out(conferences[conferencenum].start_time, CONFERENCE_EVENT_WAIT)) {
             const char *msg = "has joined the conference";
-            line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, msg);
+            line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, "%s", msg);
             write_to_log(ctx->log, c_config, msg, name, true);
         }
     }

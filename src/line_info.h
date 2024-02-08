@@ -86,6 +86,7 @@ struct history {
  * Returns the id of the new line.
  * Returns -1 on failure.
  */
+__attribute__((format(printf, 9, 10)))
 int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_timestamp, const char *name1,
                   const char *name2, LINE_TYPE type, uint8_t bold, uint8_t colour, const char *msg, ...);
 

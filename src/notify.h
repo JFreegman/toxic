@@ -71,13 +71,17 @@ int sound_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint6
 
 void stop_sound(int id);
 
+__attribute__((format(printf, 7, 8)))
 int box_notify(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags,
                int *id_indicator,
                const char *title, const char *format, ...);
+__attribute__((format(printf, 6, 7)))
 int box_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t flags, int id,
                 const char *format, ...);
+__attribute__((format(printf, 6, 7)))
 int box_silent_notify(ToxWindow *self, const Toxic *toxic, uint64_t flags, int *id_indicator,
                       const char *title, const char *format, ...);
+__attribute__((format(printf, 5, 6)))
 int box_silent_notify2(ToxWindow *self, const Toxic *toxic, uint64_t flags, int id,
                        const char *format, ...);
 
