@@ -1880,6 +1880,4 @@ int main(int argc, char **argv)
         const long int sleep_duration = tox_iteration_interval(toxic->tox) * 1000;
         sleep_thread(sleep_duration);
     }
-
-    return 0;
 }

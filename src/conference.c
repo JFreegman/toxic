@@ -697,7 +697,6 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
 
     if (!old_peer_list) {
         exit_toxic_err("failed in update_peer_list", FATALERR_MEMORY);
-        return;
     }
 
     if (chat->peer_list != NULL) {
