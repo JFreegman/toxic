@@ -99,11 +99,11 @@ void get_time_str(char *buf, size_t bufsize, const char *format_string)
         return;
     }
 
-    if (strftime(buf, bufsize, format_string, get_time()) > 0) {
+    if (format_time_str(buf, bufsize, format_string, get_time()) > 0) {
         return;
     }
 
-    if (strftime(buf, bufsize, TIMESTAMP_DEFAULT, get_time()) > 0) {
+    if (format_time_str(buf, bufsize, TIMESTAMP_DEFAULT, get_time()) > 0) {
         return;
     }
 
@@ -797,4 +797,12 @@ int colour_string_to_int(const char *colour)
     }
 
     return -1;
+}
+
+size_t format_time_str(char *s, size_t max, const char *format, const struct tm *tm)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+    return strftime(s, max, format, tm);
+#pragma GCC diagnostic pop
 }

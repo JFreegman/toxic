@@ -266,4 +266,10 @@ unsigned int rand_not_secure(void);
  */
 int colour_string_to_int(const char *colour);
 
+/*
+ * A wrapper for strftime() from time.h. We use this wrapper to suppress
+ * gcc compiler warnings produced by the -Wformat-nonliteral.
+ */
+size_t format_time_str(char *s, size_t max, const char *format, const struct tm *tm);
+
 #endif /* MISC_TOOLS_H */

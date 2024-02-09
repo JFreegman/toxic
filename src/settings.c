@@ -51,7 +51,9 @@
 
 static_assert(MAX_STR_SIZE > TOXIC_CONF_FILE_EXT_LENGTH, "MAX_STR_SIZE <= TOXIC_CONF_FILE_EXT_LENGTH");
 
+#ifdef SOUND_NOTIFY
 #define NO_SOUND "silent"
+#endif  /* SOUND_NOTIFY */
 
 static struct ui_strings {
     const char *self;

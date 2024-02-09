@@ -152,7 +152,7 @@ void write_to_log(struct chatlog *log, const Client_Config *c_config, const char
 
     const char *t = c_config->log_timestamp_format;
     char s[MAX_STR_SIZE];
-    strftime(s, MAX_STR_SIZE, t, get_time());
+    format_time_str(s, MAX_STR_SIZE, t, get_time());
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
 
     if (timed_out(log->lastwrite, LOG_FLUSH_LIMIT)) {

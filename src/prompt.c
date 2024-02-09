@@ -656,14 +656,11 @@ static void print_welcome_msg(ToxWindow *self, const Client_Config *c_config)
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE,
-                  "     |_| \\___/_/\\_\\___\\____| v." TOXICVER);
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
-
+                  "     |_| \\___/_/\\_\\___\\____| v.\n" TOXICVER);
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN,
                   "Welcome to Toxic, a free, open source Tox-based instant messaging client.");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN,
-                  "Type \"/help\" for assistance. Further help may be found via the man page.");
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
+                  "Type \"/help\" for assistance. Further help may be found via the man page.\n");
 }
 
 static void prompt_init_log(Toxic *toxic)

@@ -50,7 +50,7 @@ static void print_ac_matches(ToxWindow *self, Toxic *toxic, char **list, size_t 
         line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", list[i]);
     }
 
-    line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
+    line_info_add(self, toxic->c_config, false, NULL, NULL, SYS_MSG, 0, 0, " ");
 }
 
 /* puts match in match buffer. if more than one match, add first n chars that are identical.

@@ -59,11 +59,14 @@
 
 #ifdef BOX_NOTIFY
 #include <libnotify/notify.h>
-#endif
+#endif  /* BOX_NOTIFY */
 
 #define MAX_BOX_MSG_LEN 127
-#define SOUNDS_SIZE 10
 #define ACTIVE_NOTIFS_MAX 10
+
+#ifdef SOUND_NOTIFY
+#define SOUNDS_SIZE 10
+#endif  /* SOUND_NOTIFY */
 
 #define CONTENT_HIDDEN_MESSAGE "[Content hidden]"
 
@@ -359,7 +362,7 @@ static int play_source(uint32_t source, uint32_t buffer, bool looping)
 }
 
 #elif BOX_NOTIFY
-void *do_playing(void *_p)
+static void *do_playing(void *_p)
 {
     UNUSED_VAR(_p);
 
@@ -386,7 +389,7 @@ void *do_playing(void *_p)
     pthread_exit(NULL);
 }
 
-void graceful_clear(void)
+static void graceful_clear(void)
 {
     control_lock();
 

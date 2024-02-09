@@ -254,7 +254,7 @@ static void cb_toxcore_logger(Tox *tox, TOX_LOG_LEVEL level, const char *file, u
 
     char timestamp[200];
 
-    strftime(timestamp, sizeof(timestamp), "%F %T", &tmp);
+    format_time_str(timestamp, sizeof(timestamp), "%F %T", &tmp);
 
     fprintf(fp, "%c %s.%06ld %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, tv.tv_usec, file, line, func,
             message);

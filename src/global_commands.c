@@ -738,9 +738,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
         if (log_enable(log) == 0) {
-            char e_msg[MAX_STR_SIZE];
-            snprintf(e_msg, sizeof(e_msg), "Logging to: %s", log->path);
-            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", e_msg);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Logging to: %s", log->path);
             return;
         }
 
@@ -965,10 +963,11 @@ void cmd_nospam(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     tox_self_set_nospam(tox, (uint32_t) nospam);
 
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Your new Tox ID is:");
+
     cmd_myid(window, self, toxic, 0, NULL);
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
+
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
-                  "Any services that relied on your old ID will need to be updated manually.");
+                  "\nAny services that relied on your old ID will need to be updated manually.");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                   "If you ever want your old Tox ID back, type '/nospam %X'",
                   old_nospam);
@@ -1036,7 +1035,7 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", FrndRequests.request[i].msg);
 
         if (++count < FrndRequests.num_requests) {
-            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "");
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, " ");
         }
     }
 }

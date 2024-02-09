@@ -393,8 +393,8 @@ static void update_friend_last_online(uint32_t num, time_t timestamp, const char
     Friends.list[num].last_online.tm = *localtime((const time_t *)&timestamp);
 
     /* if the format changes make sure TIME_STR_SIZE is the correct size */
-    strftime(Friends.list[num].last_online.hour_min_str, TIME_STR_SIZE, timestamp_format,
-             &Friends.list[num].last_online.tm);
+    format_time_str(Friends.list[num].last_online.hour_min_str, TIME_STR_SIZE, timestamp_format,
+                    &Friends.list[num].last_online.tm);
 }
 
 static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Message_Type type, const char *str,
