@@ -179,11 +179,12 @@ void cmd_add(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     if (space_idx > 0 && space_idx < arg_length - 1) {
         snprintf(msg, sizeof(msg), "%s", &id[space_idx + 1]);
     } else {
-        char selfname[TOX_MAX_NAME_LENGTH];
+        char selfname[TOX_MAX_NAME_LENGTH + 1];
         tox_self_get_name(tox, (uint8_t *) selfname);
 
-        size_t n_len = tox_self_get_name_size(tox);
+        const size_t n_len = tox_self_get_name_size(tox);
         selfname[n_len] = '\0';
+
         snprintf(msg, sizeof(msg), "Hello, my name is %s. Care to Tox?", selfname);
     }
 
@@ -584,7 +585,7 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
 
     snprintf(name, sizeof(name), "%s", argv[1]);
 
-    size_t nick_length = tox_self_get_name_size(tox);
+    const size_t nick_length = tox_self_get_name_size(tox);
     char self_nick[TOX_MAX_NAME_LENGTH + 1];
     tox_self_get_name(tox, (uint8_t *) self_nick);
     self_nick[nick_length] = '\0';
@@ -806,9 +807,10 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
-    char nick[TOX_MAX_NAME_LENGTH];
+    char nick[TOX_MAX_NAME_LENGTH + 1];
     tox_self_get_name(tox, (uint8_t *) nick);
-    size_t nick_len = tox_self_get_name_size(tox);
+
+    const size_t nick_len = tox_self_get_name_size(tox);
     nick[nick_len] = '\0';
 
     const size_t data_file_len = strlen(toxic->client_data.data_path);

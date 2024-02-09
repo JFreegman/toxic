@@ -2167,9 +2167,11 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
             char tmpnck[TOX_MAX_NAME_LENGTH];
             const int maxlen = SIDEBAR_WIDTH - maxlen_offset;
 
-            memcpy(tmpnck, chat->peer_list[i].name, maxlen);
+            if (maxlen < 0) {
+                continue;
+            }
 
-            tmpnck[maxlen] = '\0';
+            snprintf(tmpnck, sizeof(tmpnck), "%s", chat->peer_list[i].name);
 
             int namecolour = WHITE;
 
