@@ -656,7 +656,7 @@ static void print_welcome_msg(ToxWindow *self, const Client_Config *c_config)
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || | | \\  / | | |    ");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE, "     | || |_| /  \\ | | |___ ");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, BLUE,
-                  "     |_| \\___/_/\\_\\___\\____| v.\n" TOXICVER);
+                  "     |_| \\___/_/\\_\\___\\____| v.%s\n", TOXICVER);
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN,
                   "Welcome to Toxic, a free, open source Tox-based instant messaging client.");
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 1, CYAN,

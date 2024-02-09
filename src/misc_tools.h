@@ -268,7 +268,7 @@ int colour_string_to_int(const char *colour);
 
 /*
  * A wrapper for strftime() from time.h. We use this wrapper to suppress
- * gcc compiler warnings produced by the -Wformat-nonliteral.
+ * gcc compiler warnings produced by the -Wformat-nonliteral flag.
  */
 size_t format_time_str(char *s, size_t max, const char *format, const struct tm *tm);
 
