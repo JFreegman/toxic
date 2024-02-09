@@ -29,6 +29,7 @@
 #include <time.h>
 
 #include "file_transfers.h"
+#include "friendlist.h"
 #include "misc_tools.h"
 #include "settings.h"
 #include "toxic.h"
@@ -431,11 +432,18 @@ void str_to_lower(char *str)
     }
 }
 
-/* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
-   if toxcore API call fails, put UNKNOWN_NAME in buf
-   Returns nick len */
 size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum)
 {
+    if (friend_config_alias_is_set(friendnum)) {
+        const int len = get_friend_nick(buf, TOXIC_MAX_NAME_LENGTH, friendnum);
+
+        if (len <= 0) {
+            goto on_error;
+        }
+
+        return len;
+    }
+
     Tox_Err_Friend_Query err;
     size_t len = tox_friend_get_name_size(tox, friendnum, &err);
 
@@ -546,7 +554,8 @@ size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length)
 
     for (size_t i = 0; (i < length) && (j < size - 1); ++i) {
         if (data[i] != '\r') {
-            msg[j++] = data[i];
+            msg[j] = data[i];
+            ++j;
         }
     }
 
