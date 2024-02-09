@@ -145,6 +145,9 @@ tox = {
 // and must begin with the prefix "pk_". These take priority over global settings.
 friends = {
   pk_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA = {
+    // Set an alias for this friend.
+    alias="EXAMPLE_NAME";
+
     // Enable auto-accepting inbound file transfers for this friend.
     auto_accept_files=false;
 

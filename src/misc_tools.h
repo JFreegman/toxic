@@ -185,8 +185,13 @@ size_t get_base_dir(const char *path, size_t path_len, char *dir);
 /* converts str to all lowercase */
 void str_to_lower(char *str);
 
-/* puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
-   Returns nick len on success, -1 on failure */
+/* Puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
+ * if toxcore API call fails, put UNKNOWN_NAME in buf.
+ *
+ * `buf` must have room for at least TOXIC_MAX_NAME_LENGTH bytes.
+ *
+ * Returns the length of the number of bytes copied to `buf`.
+ */
 size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum);
 
 /* same as get_nick_truncate but for conferences */

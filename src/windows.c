@@ -129,6 +129,10 @@ void on_friend_name(Tox *tox, uint32_t friendnumber, const uint8_t *string, size
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
 
+    if (friend_config_alias_is_set(friendnumber)) {
+        return;
+    }
+
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(nick, sizeof(nick), (const char *) string, length);
     filter_str(nick, length);

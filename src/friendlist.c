@@ -67,6 +67,7 @@ static struct PendingDel {
 typedef enum Default_Conf {
     Default_Conf_Auto_Accept_Files = 0,
     Default_Conf_Tab_Name_Colour = BAR_TEXT,
+    Default_Conf_Alias_Set = 0,
 } Default_Conf;
 
 static void set_default_friend_config_settings(ToxicFriend *friend, const Client_Config *c_config)
@@ -81,6 +82,7 @@ static void set_default_friend_config_settings(ToxicFriend *friend, const Client
     settings->autolog = c_config->autolog == AUTOLOG_ON;
     settings->show_connection_msg = c_config->show_connection_msg == SHOW_CONNECTION_MSG_ON;
     settings->tab_name_colour = Default_Conf_Tab_Name_Colour;
+    settings->alias_set = Default_Conf_Alias_Set != 0;
 }
 
 static void realloc_friends(int n)
@@ -1487,11 +1489,30 @@ bool friend_get_auto_accept_files(uint32_t friendnumber)
     return friend->auto_accept_files;
 }
 
+int get_friend_nick(char *buf, size_t buf_size, uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        return -1;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return -1;
+    }
+
+    snprintf(buf, buf_size, "%s", friend->name);
+    return friend->namelength;
+}
+
 /*
  * Returns a pointer to the Friend_Settings object associated with `public_key`.
+ * If non-null, the friendnumber of `public_key` will be copied to the `friendnumber`
+ * pointer on success.
+ *
  * Returns NULL on failure.
  */
-static Friend_Settings *get_friend_settings_by_key(const char *public_key)
+static Friend_Settings *get_friend_settings_by_key(const char *public_key, uint32_t *friendnumber)
 {
     char pk_bin[TOX_PUBLIC_KEY_SIZE];
 
@@ -1507,6 +1528,10 @@ static Friend_Settings *get_friend_settings_by_key(const char *public_key)
         }
 
         if (memcmp(pk_bin, friend->pub_key, sizeof(friend->pub_key)) == 0) {
+            if (friendnumber != NULL) {
+                *friendnumber = friend->num;
+            }
+
             return &friend->settings;
         }
     }
@@ -1516,7 +1541,7 @@ static Friend_Settings *get_friend_settings_by_key(const char *public_key)
 
 bool friend_config_set_show_connection_msg(const char *public_key, bool show_connection_msg)
 {
-    Friend_Settings *settings = get_friend_settings_by_key(public_key);
+    Friend_Settings *settings = get_friend_settings_by_key(public_key, NULL);
 
     if (settings == NULL) {
         return false;
@@ -1545,7 +1570,7 @@ bool friend_config_get_show_connection_msg(uint32_t friendnumber)
 
 bool friend_config_set_tab_name_colour(const char *public_key, const char *colour)
 {
-    Friend_Settings *settings = get_friend_settings_by_key(public_key);
+    Friend_Settings *settings = get_friend_settings_by_key(public_key, NULL);
 
     if (settings == NULL) {
         return false;
@@ -1580,7 +1605,7 @@ int friend_config_get_tab_name_colour(uint32_t friendnumber)
 
 bool friend_config_set_autolog(const char *public_key, bool autolog_enabled)
 {
-    Friend_Settings *settings = get_friend_settings_by_key(public_key);
+    Friend_Settings *settings = get_friend_settings_by_key(public_key, NULL);
 
     if (settings == NULL) {
         return false;
@@ -1609,7 +1634,7 @@ bool friend_config_get_autolog(uint32_t friendnumber)
 
 bool friend_config_set_auto_accept_files(const char *public_key, bool auto_accept_files)
 {
-    Friend_Settings *settings = get_friend_settings_by_key(public_key);
+    Friend_Settings *settings = get_friend_settings_by_key(public_key, NULL);
 
     if (settings == NULL) {
         return false;
@@ -1634,6 +1659,63 @@ bool friend_config_get_auto_accept_files(uint32_t friendnumber)
     }
 
     return friend->settings.auto_accept_files;
+}
+
+bool friend_config_alias_is_set(uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        fprintf(stderr, "failed to get alias setting (invalid friendnumber %u)\n", friendnumber);
+        return false;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return false;
+    }
+
+    return friend->settings.alias_set;
+}
+
+bool friend_config_set_alias(const char *public_key, const char *alias, uint16_t length)
+{
+    uint32_t friendnumber;
+    Friend_Settings *settings = get_friend_settings_by_key(public_key, &friendnumber);
+
+    if (settings == NULL) {
+        return false;
+    }
+
+    if (friendnumber >= Friends.max_idx) {
+        return false;
+    }
+
+    if (alias == NULL || string_is_empty(alias)) {
+        fprintf(stderr, "Failed to set alias with NULL name for: %s\n", public_key);
+        return false;
+    }
+
+    if (length == 0 || length > TOXIC_MAX_NAME_LENGTH) {
+        fprintf(stderr, "Failed to set alias '%s' (invalid length: %u)\n", alias, length);
+        return false;
+    }
+
+    char tmp[TOXIC_MAX_NAME_LENGTH + 1];
+    const uint16_t tmp_len = copy_tox_str(tmp, sizeof(tmp), alias, length);
+    filter_str(tmp, tmp_len);
+
+    if (tmp_len == 0 || tmp_len > TOXIC_MAX_NAME_LENGTH) {
+        return false;
+    }
+
+    ToxicFriend *friend = &Friends.list[friendnumber];
+
+    snprintf(friend->name, sizeof(friend->name), "%s", tmp);
+    friend->namelength = strlen(friend->name);
+
+    settings->alias_set = true;
+
+    return true;
 }
 
 ToxWindow *new_friendlist(void)

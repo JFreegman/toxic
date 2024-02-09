@@ -292,12 +292,14 @@ static const struct sound_strings {
 
 static const struct friend_strings {
     const char *self;
+    const char *alias;
     const char *auto_accept_files;
     const char *autolog;
     const char *show_connection_msg;
     const char *tab_name_color;
 } friend_strings = {
     "friends",
+    "alias",
     "auto_accept_files",
     "autolog",
     "show_connection_msg",
@@ -594,7 +596,8 @@ int settings_load_friends(const Run_Options *run_opts)
 
         if (config_setting_lookup_string(keys, friend_strings.tab_name_color, &str)) {
             if (!friend_config_set_tab_name_colour(public_key, str)) {
-                fprintf(stderr, "config error: failed to set friend tab name color for %s: (color: %s)\n", public_key, str);
+                fprintf(stderr, "config error: failed to set friend tab name color for %s: (color: %s)\n",
+                        public_key, str);
             }
         }
 
@@ -610,7 +613,8 @@ int settings_load_friends(const Run_Options *run_opts)
 
         if (config_setting_lookup_bool(keys, friend_strings.auto_accept_files, &auto_accept_files)) {
             if (!friend_config_set_auto_accept_files(public_key, auto_accept_files != 0)) {
-                fprintf(stderr, "config error: failed to apply friend auto-accept filetransfers setting for: %s\n", public_key);
+                fprintf(stderr, "config error: failed to apply friend auto-accept filetransfers setting for: %s\n",
+                        public_key);
             }
         }
 
@@ -618,7 +622,14 @@ int settings_load_friends(const Run_Options *run_opts)
 
         if (config_setting_lookup_bool(keys, friend_strings.show_connection_msg, &show_connection_msg)) {
             if (!friend_config_set_show_connection_msg(public_key, show_connection_msg != 0)) {
-                fprintf(stderr, "config error: failed to apply friend show connection message setting for: %s\n", public_key);
+                fprintf(stderr, "config error: failed to apply friend show connection message setting for: %s\n",
+                        public_key);
+            }
+        }
+
+        if (config_setting_lookup_string(keys, friend_strings.alias, &str)) {
+            if (!friend_config_set_alias(public_key, str, strlen(str))) {
+                fprintf(stderr, "config error: failed to apply alias '%s' for: %s\n", str, public_key);
             }
         }
     }

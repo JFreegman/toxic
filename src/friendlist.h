@@ -75,6 +75,7 @@ typedef struct Friend_Settings {
     bool  autolog;
     bool  auto_accept_files;
     bool  show_connection_msg;
+    bool  alias_set;
 } Friend_Settings;
 
 typedef struct {
@@ -167,6 +168,14 @@ void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept);
 bool friend_get_auto_accept_files(uint32_t friendnumber);
 
 /*
+ * Puts a friend's name in `buf`.
+ *
+ * Returns name length on success.
+ * Returns -1 if `friendnumber` does not designate a valid peer.
+ */
+int get_friend_nick(char *buf, size_t buf_size, uint32_t friendnumber);
+
+/*
  * Enable or disable logging for this friend.
  */
 void friend_set_logging_enabled(uint32_t friendnumber, bool enable_log);
@@ -232,5 +241,15 @@ bool friend_config_set_auto_accept_files(const char *public_key, bool autoaccept
  * use `friend_get_auto_accept_files()`.
  */
 bool friend_config_get_auto_accept_files(uint32_t friendnumber);
+
+/*
+ * Set's the friend's alias.
+ *
+ * Return true on success.
+ */
+bool friend_config_set_alias(const char *public_key, const char *alias, uint16_t length);
+
+/* Return true if the friend has an alias. */
+bool friend_config_alias_is_set(uint32_t friendnumber);
 
 #endif /* end of include guard: FRIENDLIST_H */
