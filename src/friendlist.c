@@ -66,7 +66,7 @@ static struct PendingDel {
 
 typedef enum Default_Conf {
     Default_Conf_Auto_Accept_Files = 0,
-    Default_Conf_Tab_Name_Colour = WHITE_BAR_FG,
+    Default_Conf_Tab_Name_Colour = BAR_TEXT,
 } Default_Conf;
 
 static void set_default_friend_config_settings(ToxicFriend *friend, const Client_Config *c_config)
