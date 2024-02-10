@@ -722,15 +722,14 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     struct chatlog *log = self->chatwin->log;
 
     if (argc == 0) {
-        const char *msg;
-
         if (log->log_on) {
-            msg = "Logging for this window is ON; type \"/log off\" to disable. (Logs are not encrypted)";
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Logging to: %s\nType \"/log off\" to disable. Logs are not encrypted.", log->path);
         } else {
-            msg = "Logging for this window is OFF; type \"/log on\" to enable.";
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                          "Logging for this window is OFF; type \"/log on\" to enable.");
         }
 
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
         return;
     }
 
@@ -738,7 +737,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
     if (!strcmp(swch, "1") || !strcmp(swch, "on")) {
         if (log_enable(log) == 0) {
-            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Logging to: %s", log->path);
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Logging enabled to: %s", log->path);
             return;
         }
 
