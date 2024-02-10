@@ -932,11 +932,11 @@ static ToxWindow *game_new_window(Tox *tox, GameType type, uint32_t friendnumber
     ret->active_box = -1;
 
     if (game_type_is_multi_only(type)) {
-        char nick[TOX_MAX_NAME_LENGTH];
-        get_nick_truncate(tox, nick, friendnumber);
+        char name[TOXIC_MAX_NAME_LENGTH + 1];
+        get_friend_name(name, sizeof(name), friendnumber);
 
-        char buf[sizeof(nick) + sizeof(ret->name) + 4];
-        snprintf(buf, sizeof(buf), "%s (%s)", window_name, nick);
+        char buf[sizeof(name) + sizeof(ret->name) + 4];
+        snprintf(buf, sizeof(buf), "%s (%s)", window_name, name);
 
         const size_t name_size = sizeof(ret->name);
 

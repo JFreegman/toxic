@@ -505,18 +505,14 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
     const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
-    char nick[TOX_MAX_NAME_LENGTH] = {0};    /* stop removing this initiation */
-    get_nick_truncate(toxic->tox, nick, friendnum);
-
-    if (!nick[0]) {
-        snprintf(nick, sizeof(nick), "%s", UNKNOWN_NAME);
-    }
-
-    const char *msg;
-
     if (!friend_config_get_show_connection_msg(friendnum)) {
         return;
     }
+
+    char nick[TOXIC_MAX_NAME_LENGTH + 1];
+    get_friend_name(nick, sizeof(nick), friendnum);
+
+    const char *msg;
 
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
@@ -621,10 +617,10 @@ void prompt_init_statusbar(Toxic *toxic, bool first_time_run)
     statusbar->status = TOX_USER_STATUS_NONE;
     statusbar->connection = TOX_CONNECTION_NONE;
 
-    char nick[TOX_MAX_NAME_LENGTH];
-    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH];
+    char nick[TOX_MAX_NAME_LENGTH + 1];
+    char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
 
-    size_t n_len = tox_self_get_name_size(tox);
+    const size_t n_len = tox_self_get_name_size(tox);
     tox_self_get_name(tox, (uint8_t *) nick);
 
     size_t s_len = tox_self_get_status_message_size(tox);

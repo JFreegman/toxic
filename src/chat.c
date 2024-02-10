@@ -262,8 +262,8 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
     ChatContext *ctx = self->chatwin;
     const char *msg;
 
-    char nick[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(tox, nick, num);
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    get_friend_name(name, sizeof(name), num);
 
     Tox_Connection prev_status = statusbar->connection;
     statusbar->connection = connection_status;
@@ -277,8 +277,8 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         file_send_queue_check(self, toxic, self->num);
 
         msg = "has come online";
-        line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, nick, true, LOG_HINT_CONNECT);
+        line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, "%s", msg);
+        write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_CONNECT);
     } else if (connection_status == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = false;
 
@@ -289,8 +289,8 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         chat_pause_file_transfers(num);
 
         msg = "has gone offline";
-        line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, nick, true, LOG_HINT_DISCONNECT);
+        line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "%s", msg);
+        write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_DISCONNECT);
     }
 }
 
@@ -839,8 +839,8 @@ static void chat_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t frien
     Friends.list[friendnumber].conference_invite.length = length;
     Friends.list[friendnumber].conference_invite.type = type;
 
-    char name[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(toxic->tox, name, friendnumber);
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    get_friend_name(name, sizeof(name), friendnumber);
 
     const char *description = type == TOX_CONFERENCE_TYPE_AV ? "an audio conference" : "a conference";
 
@@ -887,8 +887,8 @@ static void chat_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t friendnum
 
     sound_notify(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, NULL);
 
-    char name[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(toxic->tox, name, friendnumber);
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    get_friend_name(name, sizeof(name), friendnumber);
 
     if (self->active_box != -1) {
         box_silent_notify2(self, toxic, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box,
@@ -964,8 +964,8 @@ static void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_num
     Friends.list[friend_number].game_invite.pending = true;
     Friends.list[friend_number].game_invite.data_length = data_length;
 
-    char name[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(toxic->tox, name, friend_number);
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    get_friend_name(name, sizeof(name), friend_number);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, self->active_box,
@@ -1281,7 +1281,7 @@ static void send_action(ToxWindow *self, ChatContext *ctx, Toxic *toxic, char *a
         return;
     }
 
-    char selfname[TOX_MAX_NAME_LENGTH];
+    char selfname[TOX_MAX_NAME_LENGTH + 1];
     tox_self_get_name(toxic->tox, (uint8_t *) selfname);
 
     const size_t len = tox_self_get_name_size(toxic->tox);
@@ -1400,7 +1400,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                     execute(ctx->history, self, toxic, line, CHAT_COMMAND_MODE);
                 }
             } else if (line[0]) {
-                char selfname[TOX_MAX_NAME_LENGTH];
+                char selfname[TOX_MAX_NAME_LENGTH + 1];
                 tox_self_get_name(tox, (uint8_t *) selfname);
 
                 const size_t len = tox_self_get_name_size(tox);
@@ -1716,10 +1716,10 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
 
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 
-    char nick[TOX_MAX_NAME_LENGTH + 1];
-    const size_t n_len = get_nick_truncate(tox, nick, self->num);
-    memcpy(statusbar->nick, nick, n_len);
-    statusbar->nick[n_len] = 0;
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    const uint16_t n_len = get_friend_name(name, sizeof(name), self->num);
+
+    snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", name);
     statusbar->nick_len = n_len;
 
     /* Init subwindows */
@@ -1746,7 +1746,7 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     friend_set_logging_enabled(self->num, friend_config_get_autolog(self->num));
     friend_set_auto_file_accept(self->num, friend_config_get_auto_accept_files(self->num));
 
-    chat_init_log(self, toxic, nick);
+    chat_init_log(self, toxic, name);
 
     execute(ctx->history, self, toxic, "/log", GLOBAL_COMMAND_MODE);  // Print log status to screen
 
@@ -1803,9 +1803,10 @@ ToxWindow *new_chat(Tox *tox, uint32_t friendnum)
 
     ret->active_box = -1;
 
-    char nick[TOX_MAX_NAME_LENGTH];
-    size_t n_len = get_nick_truncate(tox, nick, friendnum);
-    set_window_title(ret, nick, n_len);
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    const uint16_t n_len = get_friend_name(name, sizeof(name), friendnum);
+
+    set_window_title(ret, name, n_len);
 
     ChatContext *chatwin = calloc(1, sizeof(ChatContext));
     StatusBar *stb = calloc(1, sizeof(StatusBar));

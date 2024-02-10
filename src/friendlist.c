@@ -554,10 +554,10 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
 
         update_friend_last_online(i, t, c_config->timestamp_format);
 
-        char tempname[TOX_MAX_NAME_LENGTH + 1];
-        int name_len = get_nick_truncate(tox, tempname, num);
-        memcpy(Friends.list[i].name, tempname, name_len);
-        Friends.list[i].name[name_len] = 0;
+        char tempname[TOXIC_MAX_NAME_LENGTH + 1];
+        const size_t name_len = get_nick_truncate(tox, tempname, sizeof(tempname), num);
+
+        snprintf(Friends.list[i].name, sizeof(Friends.list[i].name), "%s", tempname);
         Friends.list[i].namelength = name_len;
 
         if (i == Friends.max_idx) {
@@ -1489,20 +1489,24 @@ bool friend_get_auto_accept_files(uint32_t friendnumber)
     return friend->auto_accept_files;
 }
 
-int get_friend_nick(char *buf, size_t buf_size, uint32_t friendnumber)
+uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber)
 {
     if (friendnumber >= Friends.max_idx) {
-        return -1;
+        goto on_error;
     }
 
     const ToxicFriend *friend = &Friends.list[friendnumber];
 
     if (!friend->active) {
-        return -1;
+        goto on_error;
     }
 
     snprintf(buf, buf_size, "%s", friend->name);
     return friend->namelength;
+
+on_error:
+    snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+    return (uint16_t) strlen(buf);
 }
 
 /*

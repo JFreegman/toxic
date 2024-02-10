@@ -168,7 +168,9 @@ int qsort_ptr_char_array_helper(const void *str1, const void *str2);
  */
 bool valid_nick(const char *nick);
 
-/* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
+/* Converts all newline/tab chars to spaces
+ * (use for strings that should be contained to a single line)
+ */
 void filter_str(char *str, size_t len);
 
 /* gets base file name from path or original file name if no path is supplied */
@@ -185,14 +187,17 @@ size_t get_base_dir(const char *path, size_t path_len, char *dir);
 /* converts str to all lowercase */
 void str_to_lower(char *str);
 
-/* Puts friendnum's nick in buf, truncating at TOXIC_MAX_NAME_LENGTH if necessary.
- * if toxcore API call fails, put UNKNOWN_NAME in buf.
+/* Gets the name designated by `friendnum` via tox API call and puts it in buf,
+ * truncating the name at `buf_size`
  *
- * `buf` must have room for at least TOXIC_MAX_NAME_LENGTH bytes.
+ * If the toxcore API call fails, put UNKNOWN_NAME in buf.
  *
- * Returns the length of the number of bytes copied to `buf`.
+ * Note: This function should only be used when initially adding a new friend. In all
+ * other instances, use the `get_friend_name()` function from friendlist.h.
+ *
+ * Returns the length of the resulting nick.
  */
-size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum);
+size_t get_nick_truncate(Tox *tox, char *buf, uint16_t buf_size, uint32_t friendnum);
 
 /* same as get_nick_truncate but for conferences */
 int get_conference_nick_truncate(Tox *tox, char *buf, uint32_t peernum, uint32_t conferencenum);

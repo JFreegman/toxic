@@ -168,12 +168,13 @@ void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept);
 bool friend_get_auto_accept_files(uint32_t friendnumber);
 
 /*
- * Puts a friend's name in `buf`.
+ * Puts a NUL-terminated string representing a friend's name in `buf`. If
+ * `friendnumber` does not designate a valid friend number, a place-holder name
+ * is put in `buf`.
  *
- * Returns name length on success.
- * Returns -1 if `friendnumber` does not designate a valid peer.
+ * Returns the length of the name.
  */
-int get_friend_nick(char *buf, size_t buf_size, uint32_t friendnumber);
+uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber);
 
 /*
  * Enable or disable logging for this friend.
@@ -243,7 +244,7 @@ bool friend_config_set_auto_accept_files(const char *public_key, bool autoaccept
 bool friend_config_get_auto_accept_files(uint32_t friendnumber);
 
 /*
- * Set's the friend's alias.
+ * Sets the friend's alias.
  *
  * Return true on success.
  */

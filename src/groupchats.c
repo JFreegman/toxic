@@ -2184,11 +2184,8 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
 
             /* truncate nick to fit in side panel without modifying list */
             char tmpnck[TOX_MAX_NAME_LENGTH];
-            const int maxlen = SIDEBAR_WIDTH - maxlen_offset;
-
-            memcpy(tmpnck, chat->peer_list[i].name, maxlen);
-
-            tmpnck[maxlen] = '\0';
+            const size_t maxlen = SIDEBAR_WIDTH - maxlen_offset;
+            snprintf(tmpnck, maxlen + 1, "%s", chat->peer_list[i].name);
 
             int namecolour = WHITE;
 

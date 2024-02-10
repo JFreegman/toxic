@@ -267,7 +267,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
         return;
     }
 
-    size_t nick_len = tox_self_get_name_size(tox);
+    const size_t nick_len = tox_self_get_name_size(tox);
     char self_nick[TOX_MAX_NAME_LENGTH + 1];
     tox_self_get_name(tox, (uint8_t *) self_nick);
     self_nick[nick_len] = '\0';

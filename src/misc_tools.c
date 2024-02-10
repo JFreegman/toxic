@@ -20,6 +20,7 @@
  *
  */
 
+#include <assert.h>
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <limits.h>
@@ -432,17 +433,9 @@ void str_to_lower(char *str)
     }
 }
 
-size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum)
+size_t get_nick_truncate(Tox *tox, char *buf, uint16_t buf_size, uint32_t friendnum)
 {
-    if (friend_config_alias_is_set(friendnum)) {
-        const int len = get_friend_nick(buf, TOXIC_MAX_NAME_LENGTH, friendnum);
-
-        if (len <= 0) {
-            goto on_error;
-        }
-
-        return len;
-    }
+    assert(buf_size > 0);
 
     Tox_Err_Friend_Query err;
     size_t len = tox_friend_get_name_size(tox, friendnum, &err);
@@ -455,16 +448,15 @@ size_t get_nick_truncate(Tox *tox, char *buf, uint32_t friendnum)
         }
     }
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+    len = MIN(len, buf_size - 1);
     buf[len] = '\0';
     filter_str(buf, len);
+
     return len;
 
 on_error:
-    strcpy(buf, UNKNOWN_NAME);
-    len = strlen(UNKNOWN_NAME);
-    buf[len] = '\0';
-    return len;
+    snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+    return strlen(buf);
 }
 
 /* same as get_nick_truncate but for conferences */
