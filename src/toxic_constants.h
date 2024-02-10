@@ -62,6 +62,7 @@
 #define T_KEY_C_L        0x0C     /* ctrl-l */
 #define T_KEY_C_W        0x17     /* ctrl-w */
 #define T_KEY_C_B        0x02     /* ctrl-b */
+#define T_KEY_C_R        0x12     /* ctrl-r */
 #define T_KEY_C_T        0x14     /* ctrl-t */
 #define T_KEY_C_LEFT     0x221    /* ctrl-left arrow */
 #define T_KEY_C_RIGHT    0x230    /* ctrl-right arrow */

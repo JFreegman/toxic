@@ -336,7 +336,10 @@ bool input_handle(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int mx
     /* TODO: this special case is ugly.
        maybe convert entire function to if/else and make them all customizable keys? */
     if (!match) {
-        if (key == c_config->key_toggle_peerlist) {
+        if (key == c_config->key_reload_config) {
+            settings_reload(toxic->c_config, toxic->run_opts);
+            match = true;
+        } else if (key == c_config->key_toggle_peerlist) {
             if (self->type == WINDOW_TYPE_CONFERENCE) {
                 self->show_peerlist ^= 1;
                 redraw_conference_win(self);

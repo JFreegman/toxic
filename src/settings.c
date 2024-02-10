@@ -177,6 +177,7 @@ static const struct keys_strings {
     const char *page_bottom;
     const char *toggle_peerlist;
     const char *toggle_pastemode;
+    const char *reload_config;
 } key_strings = {
     "keys",
     "next_tab",
@@ -188,6 +189,7 @@ static const struct keys_strings {
     "page_bottom",
     "toggle_peerlist",
     "toggle_paste_mode",
+    "reload_config",
 };
 
 /* defines from toxic.h */
@@ -202,6 +204,7 @@ static void key_defaults(Client_Config *settings)
     settings->key_page_bottom = T_KEY_C_H;
     settings->key_toggle_peerlist = T_KEY_C_B;
     settings->key_toggle_pastemode = T_KEY_C_T;
+    settings->key_reload_config = T_KEY_C_R;
 }
 
 static const struct tox_strings {
@@ -848,6 +851,10 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
         if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp)) {
             set_key_binding(&s->key_toggle_pastemode, &tmp);
         }
+
+        if (config_setting_lookup_string(setting, key_strings.reload_config, &tmp)) {
+            set_key_binding(&s->key_reload_config, &tmp);
+        }
     }
 
 #ifdef AUDIO
@@ -948,4 +955,34 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
 
     config_destroy(cfg);
     return 0;
+}
+
+void settings_reload(Client_Config *c_config, const Run_Options *run_opts)
+{
+    int ret = settings_load_main(c_config, run_opts);
+
+    if (ret < 0) {
+        fprintf(stderr, "Failed to reload global settings (error %d)\n", ret);
+    }
+
+    ret = settings_load_friends(run_opts);
+
+    if (ret < 0) {
+        fprintf(stderr, "Failed to reload friend settings (error %d)\n", ret);
+    }
+
+    ret = settings_load_conferences(run_opts);
+
+    if (ret < 0) {
+        fprintf(stderr, "Failed to reload conference settings (error %d)\n", ret);
+    }
+
+    ret = settings_load_groups(run_opts);
+
+    if (ret < 0) {
+        fprintf(stderr, "Failed to reload group settings (error %d)\n", ret);
+    }
+
+    endwin();
+    init_term(c_config, run_opts->default_locale);
 }

@@ -88,6 +88,7 @@ typedef struct Client_Config {
     int key_page_bottom;
     int key_toggle_peerlist;
     int key_toggle_pastemode;
+    int key_reload_config;
 
     int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
     char mplex_away_note [TOX_MAX_STATUS_MESSAGE_LENGTH];
@@ -208,5 +209,10 @@ int settings_load_groups(const Run_Options *run_opts);
  * This function will have no effect on conference instances that are created in the future.
  */
 int settings_load_conferences(const Run_Options *run_opts);
+
+/*
+ * Reloads config settings.
+ */
+void settings_reload(Client_Config *c_config, const Run_Options *run_opts);
 
 #endif /* SETTINGS_H */

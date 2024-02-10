@@ -347,6 +347,7 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Ctrl+B                    : Toggle groupchat/conference peer list\n");
     wprintw(win, "  Ctrl+J                    : Insert new line\n");
     wprintw(win, "  Ctrl+T                    : Toggle paste mode\n\n");
+    wprintw(win, "  Ctrl+R                    : Reload the Toxic config file\n\n");
     wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
 
     help_draw_bottom_menu(win);

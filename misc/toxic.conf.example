@@ -219,4 +219,5 @@ keys = {
   page_bottom="Ctrl+H";
   toggle_peerlist="Ctrl+B";
   toggle_paste_mode="Ctrl+T";
+  reload_config="Ctrl+R";
 };

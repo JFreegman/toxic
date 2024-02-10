@@ -156,11 +156,15 @@ static void kill_toxic(Toxic *toxic)
     free(toxic);
 }
 
+static void cleanup_init_messages(void);
+
 void exit_toxic_success(Toxic *toxic)
 {
     if (toxic == NULL) {
         exit(EXIT_FAILURE);
     }
+
+    cleanup_init_messages();
 
     store_data(toxic);
 
@@ -384,7 +388,7 @@ static void get_custom_toxic_colours(const Client_Config *c_config, short *bar_b
     }
 }
 
-static void init_term(const Client_Config *c_config, bool use_default_locale)
+void init_term(const Client_Config *c_config, bool use_default_locale)
 {
 #if HAVE_WIDECHAR
 
@@ -493,7 +497,7 @@ static void queue_init_message(const char *msg, ...)
     vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
     va_end(args);
 
-    int i = init_messages.num;
+    const int i = init_messages.num;
     ++init_messages.num;
 
     char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
@@ -512,7 +516,7 @@ static void queue_init_message(const char *msg, ...)
     init_messages.msgs = new_msgs;
 }
 
-/* called after messages have been printed to prompt and are no longer needed */
+/* called on exit */
 static void cleanup_init_messages(void)
 {
     if (init_messages.num <= 0) {
@@ -524,6 +528,8 @@ static void cleanup_init_messages(void)
     }
 
     free(init_messages.msgs);
+    init_messages.msgs = NULL;
+    init_messages.num = 0;
 }
 
 static void print_init_messages(ToxWindow *home_window, const Client_Config *c_config)
@@ -1850,8 +1856,6 @@ int main(int argc, char **argv)
     print_init_messages(toxic->home_window, c_config);
     flag_interface_refresh();
     pthread_mutex_unlock(&Winthread.lock);
-
-    cleanup_init_messages();
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[PATH_MAX + 11];

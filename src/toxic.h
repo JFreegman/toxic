@@ -97,6 +97,8 @@ void exit_toxic_err(const char *errmsg, int errcode) __attribute__((__noreturn__
 
 int store_data(const Toxic *toxic);
 
+void init_term(const Client_Config *c_config, bool use_default_locale);
+
 /* callbacks */
 void on_friend_request(Tox *tox, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata);
 void on_friend_connection_status(Tox *tox, uint32_t friendnumber, Tox_Connection status, void *userdata);
