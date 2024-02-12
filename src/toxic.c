@@ -950,6 +950,7 @@ static void init_tox_options(const Run_Options *run_opts, struct Tox_Options *to
     tox_options_set_proxy_type(tox_opts, run_opts->proxy_type);
     tox_options_set_tcp_port(tox_opts, run_opts->tcp_port);
     tox_options_set_local_discovery_enabled(tox_opts, !run_opts->disable_local_discovery);
+    tox_options_set_experimental_groups_persistence(tox_opts, true);
 
     if (run_opts->logging) {
         tox_options_set_log_callback(tox_opts, cb_toxcore_logger);
