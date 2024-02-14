@@ -65,7 +65,7 @@ static void kill_infobox(ToxWindow *self);
 #endif /* AUDIO */
 
 /* Array of chat command names used for tab completion. */
-static const char *chat_cmd_list[] = {
+static const char *const chat_cmd_list[] = {
     "/accept",
     "/add",
     "/autoaccept",
@@ -1306,7 +1306,10 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
 
-    int x, y, y2, x2;
+    int x;
+    int y;
+    int y2;
+    int x2;
     getyx(self->window, y, x);
     getmaxyx(self->window, y2, x2);
 
@@ -1365,7 +1368,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 
         if (diff != -1) {
             if (x + diff > x2 - 1) {
-                int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
+                const int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
             }
         } else {
@@ -1400,10 +1403,10 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                 char selfname[TOX_MAX_NAME_LENGTH];
                 tox_self_get_name(tox, (uint8_t *) selfname);
 
-                size_t len = tox_self_get_name_size(tox);
+                const size_t len = tox_self_get_name_size(tox);
                 selfname[len] = '\0';
 
-                int id = line_info_add(self, c_config, true, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
+                const int id = line_info_add(self, c_config, true, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
                 cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, id);
             } else {
                 line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");

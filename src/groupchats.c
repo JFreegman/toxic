@@ -71,7 +71,7 @@ extern struct Winthread Winthread;
 static_assert(TOX_GROUP_CHAT_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_GROUP_CHAT_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
 
 /* groupchat command names used for tab completion. */
-static const char *group_cmd_list[] = {
+static const char *const group_cmd_list[] = {
     "/accept",
     "/add",
     "/avatar",

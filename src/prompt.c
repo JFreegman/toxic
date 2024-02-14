@@ -49,7 +49,7 @@ extern FriendsList Friends;
 FriendRequests FrndRequests;
 
 /* Array of global command names used for tab completion. */
-static const char *glob_cmd_list[] = {
+static const char *const glob_cmd_list[] = {
     "/accept",
     "/add",
     "/avatar",

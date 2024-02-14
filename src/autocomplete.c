@@ -106,7 +106,7 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len) {
+    if (ctx->pos <= 0 || ctx->len <= 1 || ctx->pos > ctx->len) {
         return -1;
     }
 
@@ -269,7 +269,7 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
     return diff;
 }
 
-static const char *color_list[] = {
+static const char *const color_list[] = {
     "black",
     "blue",
     "brown",
@@ -284,14 +284,14 @@ static const char *color_list[] = {
     "yellow",
 };
 
-static const char *game_list[] = {
+static const char *const game_list[] = {
     "centipede",
     "chess",
     "life",
     "snake",
 };
 
-static const char *status_list[] = {
+static const char *const status_list[] = {
     "away",
     "busy",
     "online",

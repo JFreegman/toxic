@@ -73,7 +73,7 @@ extern struct Winthread Winthread;
 static_assert(TOX_CONFERENCE_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_CONFERENCE_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
 
 /* Array of conference command names used for tab completion. */
-static const char *conference_cmd_list[] = {
+static const char *const conference_cmd_list[] = {
     "/accept",
     "/add",
 #ifdef AUDIO

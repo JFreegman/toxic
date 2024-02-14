@@ -36,7 +36,7 @@
 #include "windows.h"
 
 struct cmd_func {
-    const char *name;
+    const char *const name;
     void (*func)(WINDOW *w, ToxWindow *, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE]);
 };
 
