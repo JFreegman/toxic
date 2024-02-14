@@ -106,7 +106,7 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
 {
     ChatContext *ctx = self->chatwin;
 
-    if (ctx->pos <= 0 || ctx->len <= 1 || ctx->pos > ctx->len) {
+    if (ctx->pos <= 0 || ctx->len <= 0 || ctx->pos > ctx->len) {
         return -1;
     }
 
@@ -119,6 +119,10 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
 
     /* work with multibyte string copy of buf for simplicity */
     if (wcs_to_mbs_buf(ubuf, ctx->line, sizeof(ubuf)) == -1) {
+        return -1;
+    }
+
+    if (ubuf[0] == '/' && ubuf[1] == '\0') {
         return -1;
     }
 
@@ -162,7 +166,7 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
         return 0;
     }
 
-    int s_len = strlen(sub);
+    const int s_len = strlen(sub);
     size_t n_matches = 0;
 
     char **matches = (char **) malloc_ptr_array(n_items, MAX_STR_SIZE);
@@ -191,7 +195,8 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
     }
 
     char match[MAX_STR_SIZE];
-    size_t match_len = get_str_match(self, match, sizeof(match), (const char *const *) matches, n_matches, MAX_STR_SIZE);
+    const size_t match_len = get_str_match(self, match, sizeof(match), (const char *const *) matches,
+                                           n_matches, MAX_STR_SIZE);
 
     free_ptr_array((void **) matches);
 
@@ -210,8 +215,8 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
     }
 
     /* put match in correct spot in buf and append endchars */
-    int n_endchrs = strlen(endchrs);
-    int strt = ctx->pos - s_len;
+    const int n_endchrs = strlen(endchrs);
+    const int strt = ctx->pos - s_len;
     int diff = match_len - s_len + n_endchrs;
 
     if (ctx->len + diff >= MAX_STR_SIZE) {
