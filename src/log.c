@@ -152,7 +152,7 @@ void write_to_log(struct chatlog *log, const Client_Config *c_config, const char
 
     const char *t = c_config->log_timestamp_format;
     char s[MAX_STR_SIZE];
-    format_time_str(s, MAX_STR_SIZE, t, get_time());
+    get_time_str(s, sizeof(s), t);
     fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
 
     if (timed_out(log->lastwrite, LOG_FLUSH_LIMIT)) {
@@ -231,12 +231,60 @@ int log_init(struct chatlog *log, const Client_Config *c_config, const char *nam
     return 0;
 }
 
+static void load_line(ToxWindow *self, const Client_Config *c_config, const char *line, const char *self_name)
+{
+    const size_t line_length = strlen(line);
+    const int start_ts = char_find(0, line, '[') + 1;
+    const int end_ts = char_find(0, line, ']');
+    const int ts_len = end_ts - start_ts;
+    const int start_idx = (line_length > start_ts) ? start_ts - 1 : 0;
+
+    char timestamp[TIME_STR_SIZE];
+
+    // sanity check
+    if (ts_len <= 0 || ts_len >= sizeof(timestamp) || start_ts < 0 || start_ts + ts_len >= line_length
+            || start_ts >= line_length || end_ts <= 0 || end_ts >= line_length) {
+        return;
+    }
+
+    memcpy(timestamp, &line[start_ts], ts_len);
+    timestamp[ts_len] = '\0';
+
+    const int end_name = char_find(end_ts, line, ':');
+
+    if (end_name + 2 >= line_length || end_name <= 0) {
+        goto on_error;
+    }
+
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    const char *message = &line[end_name + 2];
+
+    const int start_name = end_ts + 1;
+    const int name_len = end_name - start_name - 1;
+
+    if (start_name + 1 >= line_length || name_len >= sizeof(name) || start_name + 1 + name_len >= line_length
+            || name_len <= 0) {
+        goto on_error;
+    }
+
+    memcpy(name, &line[start_name + 1], name_len);
+    name[name_len] = '\0';
+
+    const int colour = strcmp(self_name, name) != 0 ? CYAN : GREEN;
+
+    line_info_load_history(self, c_config, timestamp, name, colour, message);
+    return;
+
+on_error:
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", &line[start_idx]);
+}
+
 /* Loads chat log history and prints it to `self` window.
  *
  * Return 0 on success or if log file doesn't exist.
  * Return -1 on failure.
  */
-int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config)
+int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config, const char *self_name)
 {
     if (log == NULL) {
         return -1;
@@ -303,7 +351,7 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
     }
 
     while (line != NULL && count--) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", line);
+        load_line(self, c_config, line, self_name);
         line = strtok_r(NULL, "\n", &tmp);
     }
 

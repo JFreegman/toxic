@@ -21,7 +21,7 @@
  */
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE    /* needed for wcswidth() */
+#define _GNU_SOURCE    /* needed for strcasestr() and wcswidth() */
 #endif
 
 #include "chat.h"
@@ -1647,18 +1647,26 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
 
 static void chat_init_log(ToxWindow *self, Toxic *toxic, const char *self_nick)
 {
+    Tox *tox = toxic->tox;
+
     ChatContext *ctx = self->chatwin;
     const Client_Config *c_config = toxic->c_config;
 
     char myid[TOX_ADDRESS_SIZE];
-    tox_self_get_address(toxic->tox, (uint8_t *) myid);
+    tox_self_get_address(tox, (uint8_t *) myid);
+
+    char self_name[TOX_MAX_NAME_LENGTH + 1];
+    tox_self_get_name(tox, (uint8_t *) self_name);
+
+    const size_t len = tox_self_get_name_size(tox);
+    self_name[len] = '\0';
 
     if (log_init(ctx->log, c_config, self_nick, myid, Friends.list[self->num].pub_key, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to initialize chat log.");
         return;
     }
 
-    if (load_chat_history(ctx->log, self, c_config) != 0) {
+    if (load_chat_history(ctx->log, self, c_config, self_name) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 

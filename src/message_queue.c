@@ -110,10 +110,10 @@ void cqueue_remove(ToxWindow *self, Toxic *toxic, uint32_t receipt)
         }
 
         if (log->log_on) {
-            char selfname[TOX_MAX_NAME_LENGTH];
+            char selfname[TOX_MAX_NAME_LENGTH + 1];
             tox_self_get_name(tox, (uint8_t *) selfname);
 
-            size_t len = tox_self_get_name_size(tox);
+            const size_t len = tox_self_get_name_size(tox);
             selfname[len] = 0;
 
             write_to_log(log, c_config, msg->message, selfname, msg->type == OUT_ACTION);

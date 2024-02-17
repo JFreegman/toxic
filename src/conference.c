@@ -179,6 +179,12 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
     char my_id[TOX_ADDRESS_SIZE];
     tox_self_get_address(tox, (uint8_t *) my_id);
 
+    char self_name[TOX_MAX_NAME_LENGTH + 1];
+    tox_self_get_name(tox, (uint8_t *) self_name);
+
+    const size_t len = tox_self_get_name_size(tox);
+    self_name[len] = '\0';
+
     char conference_id[TOX_CONFERENCE_ID_SIZE];
     tox_conference_get_id(tox, conferencenum, (uint8_t *) conference_id);
 
@@ -187,7 +193,7 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
         return;
     }
 
-    if (load_chat_history(ctx->log, self, c_config) != 0) {
+    if (load_chat_history(ctx->log, self, c_config, self_name) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 

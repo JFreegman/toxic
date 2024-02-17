@@ -662,7 +662,7 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
         if (config_setting_lookup_int(setting, ui_strings.time_format, &time)) {
             if (time == 12) {
                 snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M %p");
-                snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M:%S %p]");
+                snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M %p]");
             }
         }
 

@@ -65,7 +65,7 @@ void log_disable(struct chatlog *log);
  * Return 0 on success or if log file doesn't exist.
  * Return -1 on failure.
  */
-int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config);
+int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config, const char *self_name);
 
 /* Renames chatlog file `src` to `dest`.
  *

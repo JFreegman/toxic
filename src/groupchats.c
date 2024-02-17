@@ -338,6 +338,9 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
     char my_id[TOX_ADDRESS_SIZE];
     tox_self_get_address(tox, (uint8_t *) my_id);
 
+    char self_nick[TOX_MAX_NAME_LENGTH + 1];
+    get_group_self_nick_truncate(tox, self_nick, groupnumber);
+
     char chat_id[TOX_GROUP_CHAT_ID_SIZE];
 
     Tox_Err_Group_State_Queries err;
@@ -353,7 +356,7 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
         return;
     }
 
-    if (load_chat_history(ctx->log, self, c_config) != 0) {
+    if (load_chat_history(ctx->log, self, c_config, self_nick) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 

@@ -510,7 +510,58 @@ int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_time
 
     line_info_init_line(self, new_line);
 
-    hst->queue[hst->queue_size++] = new_line;
+    hst->queue[hst->queue_size] = new_line;
+    ++hst->queue_size;
+
+    return new_line->id;
+}
+
+int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const char *timestamp,
+                           const char *name, int colour, const char *message)
+{
+    if (self == NULL) {
+        return -1;
+    }
+
+    struct history *hst = self->chatwin->hst;
+
+    if (hst->queue_size >= MAX_LINE_INFO_QUEUE) {
+        return -1;
+    }
+
+    struct line_info *new_line = calloc(1, sizeof(struct line_info));
+
+    if (new_line == NULL) {
+        return -1;
+    }
+
+    int len = 1 + strlen(c_config->line_normal) + 3;
+
+    const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg) / sizeof(wchar_t), message);
+    len += msg_width;
+
+    if (c_config->timestamps == TIMESTAMPS_ON) {
+        snprintf(new_line->timestr, sizeof(new_line->timestr), "%s", timestamp);
+    }
+
+    len += strlen(new_line->timestr) + 1;
+
+    snprintf(new_line->name1, sizeof(new_line->name1), "%s", name);
+    len += strlen(new_line->name1);
+
+    new_line->id = (hst->line_end->id + 1 + hst->queue_size) % INT_MAX;
+    new_line->len = len;
+    new_line->msg_width = msg_width;
+    new_line->type = IN_MSG;
+    new_line->bold = false;
+    new_line->colour = colour;
+    new_line->noread_flag = false;
+    new_line->timestamp = get_unix_time();
+
+    line_info_init_line(self, new_line);
+
+    hst->queue[hst->queue_size] = new_line;
+    ++hst->queue_size;
 
     return new_line->id;
 }

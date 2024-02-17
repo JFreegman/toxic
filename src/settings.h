@@ -143,7 +143,7 @@ enum settings_values {
 #define LINE_NORMAL  "-"
 #define LINE_SPECIAL ">"
 #define TIMESTAMP_DEFAULT      "%H:%M"
-#define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
+#define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
 
 typedef struct Windows Windows;

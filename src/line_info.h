@@ -83,12 +83,21 @@ struct history {
 
 /* creates new line_info line and puts it in the queue.
  *
- * Returns the id of the new line.
+ * Returns the ID of the new line on success.
  * Returns -1 on failure.
  */
 __attribute__((format(printf, 9, 10)))
 int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_timestamp, const char *name1,
                   const char *name2, LINE_TYPE type, uint8_t bold, uint8_t colour, const char *msg, ...);
+
+/*
+ * Similar to line_info_add() but uses lines from history.
+ *
+ * Returns the ID of the new line on success.
+ * Returns -1 on failure.
+ */
+int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const char *timestamp,
+                           const char *name, int colour, const char *message);
 
 /* Prints a section of history starting at line_start */
 void line_info_print(ToxWindow *self, const Client_Config *c_config);

@@ -51,6 +51,10 @@ ui = {
   // Timestamp format string according to date/strftime format. Overrides time_format setting
   timestamp_format="%H:%M";
 
+  // Timestamp format string for raw logs according to date/strftime format. (Note: the time
+  // of the format string must be enclosed in square brackets in order to be parsed by toxic).
+  log_timestamp_format="%Y/%m/%d [%H:%M]"
+
   // true to show you when others are typing a message in 1-on-1 chats
   show_typing_other=true;
 
