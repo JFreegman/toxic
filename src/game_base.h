@@ -151,7 +151,7 @@ struct GameData {
     int        parent_max_x; // max dimensions of parent window
     int        parent_max_y;
 
-    int        window_id;
+    int64_t    window_id;
     WINDOW     *window;
 
     Toxic      *toxic;  // must be locked with Winthread mutex
@@ -394,7 +394,7 @@ TIME_MS get_time_millis(void);
 /*
  * Ends game associated with `self` and cleans up.
  */
-void game_kill(ToxWindow *self, const Client_Config *c_config);
+void game_kill(ToxWindow *self, Windows *windows, const Client_Config *c_config);
 
 /*
  * Sends a packet containing payload `data` of size `length` to the friendnumber associated with the game's

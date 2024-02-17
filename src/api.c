@@ -47,8 +47,11 @@ void api_display(const char *const msg)
         return;
     }
 
-    self_window = get_active_window();
-    line_info_add(self_window, user_toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+    self_window = get_active_window(user_toxic->windows);
+
+    if (self_window != NULL) {
+        line_info_add(self_window, user_toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", msg);
+    }
 }
 
 FriendsList api_get_friendslist(void)
@@ -101,7 +104,11 @@ void api_send(const char *msg)
         return;
     }
 
-    self_window = get_active_window();
+    self_window = get_active_window(user_toxic->windows);
+
+    if (self_window == NULL) {
+        return;
+    }
 
     snprintf((char *) self_window->chatwin->line, sizeof(self_window->chatwin->line), "%s", msg);
     add_line_to_hist(self_window->chatwin);
@@ -112,8 +119,11 @@ void api_send(const char *msg)
 
 void api_execute(const char *input, int mode)
 {
-    self_window = get_active_window();
-    execute(cur_window, self_window, user_toxic, input, mode);
+    self_window = get_active_window(user_toxic->windows);
+
+    if (self_window != NULL) {
+        execute(cur_window, self_window, user_toxic, input, mode);
+    }
 }
 
 int do_plugin_command(int num_args, char (*args)[MAX_STR_SIZE])

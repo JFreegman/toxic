@@ -319,10 +319,10 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
  * Return 0 on success or if no log exists.
  * Return -1 on failure.
  */
-int rename_logfile(const Client_Config *c_config, const char *src, const char *dest, const char *selfkey,
-                   const char *otherkey, int winnum)
+int rename_logfile(Windows *windows, const Client_Config *c_config, const char *src, const char *dest,
+                   const char *selfkey, const char *otherkey, uint32_t window_id)
 {
-    ToxWindow *toxwin = get_window_ptr(winnum);
+    ToxWindow *toxwin = get_window_pointer_by_id(windows, window_id);
     struct chatlog *log = NULL;
     bool log_on = false;
 

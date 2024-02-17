@@ -99,7 +99,7 @@ static const char *const glob_cmd_list[] = {
 
 };
 
-void kill_prompt_window(ToxWindow *self, const Client_Config *c_config)
+void kill_prompt_window(ToxWindow *self, Windows *windows, const Client_Config *c_config)
 {
     ChatContext *ctx = self->chatwin;
     StatusBar *statusbar = self->stb;
@@ -118,7 +118,7 @@ void kill_prompt_window(ToxWindow *self, const Client_Config *c_config)
     free(self->help);
     free(statusbar);
 
-    del_window(self, c_config);
+    del_window(self, windows, c_config);
 }
 
 /* callback: Updates own connection status in prompt statusbar */
@@ -486,7 +486,7 @@ static void prompt_onDraw(ToxWindow *self, Toxic *toxic)
     const int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y, new_x);
 
-    draw_window_bar(self);
+    draw_window_bar(self, toxic->windows);
 
     wnoutrefresh(self->window);
 

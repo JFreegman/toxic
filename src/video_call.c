@@ -253,14 +253,18 @@ static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
     Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
     toxav_call_control(toxic->av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
 
-    if (error == TOXAV_ERR_CALL_CONTROL_OK) {
-        for (size_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-            ToxWindow *window = get_window_ptr(i);
+    Windows *windows = toxic->windows;
 
-            if (window != NULL && window->is_call && window->num == friend_number) {
-                if (start_video_transmission(window, toxic, this_call) == 0) {
-                    line_info_add(window, toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
-                }
+    if (error == TOXAV_ERR_CALL_CONTROL_OK) {
+        for (uint16_t i = 0; i < windows->count; ++i) {
+            ToxWindow *window = windows->list[i];
+
+            if (window->is_call && window->num != friend_number) {
+                continue;
+            }
+
+            if (start_video_transmission(window, toxic, this_call) == 0) {
+                line_info_add(window, toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "Video capture starting.");
             }
         }
     }

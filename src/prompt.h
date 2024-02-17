@@ -49,7 +49,7 @@ void prompt_init_statusbar(Toxic *toxic, bool first_time_run);
 void prompt_update_nick(ToxWindow *self, const char *nick);
 void prompt_update_statusmessage(Toxic *toxic, const char *statusmsg);
 void prompt_update_status(ToxWindow *self, Tox_User_Status status);
-void kill_prompt_window(ToxWindow *self, const Client_Config *c_config);
+void kill_prompt_window(ToxWindow *self, Windows *windows, const Client_Config *c_config);
 
 /* callback: Updates own connection status in prompt statusbar */
 void on_self_connection_status(Tox *tox, Tox_Connection connection_status, void *userdata);

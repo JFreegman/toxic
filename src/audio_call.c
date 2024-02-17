@@ -419,90 +419,102 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
 
 void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
 {
-    if (toxic == NULL) {
-        return;
-    }
-
     if (friend_number >= Friends.max_idx) {
         return;
     }
 
-    if (Friends.list[friend_number].chatwin == -1) {
-        if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-            return;
-        }
-
-        Friends.list[friend_number].chatwin = add_window(toxic, new_chat(toxic->tox, Friends.list[friend_number].num));
+    if (Friends.list[friend_number].window_id == -1) {
+        Friends.list[friend_number].window_id = add_window(toxic, new_chat(toxic->tox, Friends.list[friend_number].num));
     }
 
     const Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onInvite != NULL && windows[i]->num == friend_number) {
-            windows[i]->onInvite(windows[i], toxic, friend_number, call->state);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onInvite != NULL && w->num == friend_number) {
+            w->onInvite(w, toxic, friend_number, call->state);
         }
     }
 }
 void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
 {
     const Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onRinging != NULL && windows[i]->num == friend_number) {
-            windows[i]->onRinging(windows[i], toxic, friend_number, call->state);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onRinging != NULL && w->num == friend_number) {
+            w->onRinging(w, toxic, friend_number, call->state);
         }
     }
 }
 void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
 {
     Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onStarting != NULL && windows[i]->num == friend_number) {
-            windows[i]->onStarting(windows[i], toxic, friend_number, call->state);
-            start_call(windows[i], toxic, call);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onStarting != NULL && w->num == friend_number) {
+            w->onStarting(w, toxic, friend_number, call->state);
+            start_call(w, toxic, call);
         }
     }
 }
 void callback_call_started(Toxic *toxic, uint32_t friend_number)
 {
     Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onStart != NULL && windows[i]->num == friend_number) {
-            windows[i]->onStart(windows[i], toxic, friend_number, call->state);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
 
-            start_call(windows[i], toxic, call);
+        if (w->onStart != NULL && w->num == friend_number) {
+            w->onStart(w, toxic, friend_number, call->state);
+            start_call(w, toxic, call);
         }
     }
 }
 void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
 {
     const Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onCancel != NULL && windows[i]->num == friend_number) {
-            windows[i]->onCancel(windows[i], toxic, friend_number, call->state);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onCancel != NULL && w->num == friend_number) {
+            w->onCancel(w, toxic, friend_number, call->state);
         }
     }
 }
 void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
 {
     const Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onReject != NULL && windows[i]->num == friend_number) {
-            windows[i]->onReject(windows[i], toxic, friend_number, call->state);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onReject != NULL && w->num == friend_number) {
+            w->onReject(w, toxic, friend_number, call->state);
         }
     }
 }
 void callback_call_ended(Toxic *toxic, uint32_t friend_number)
 {
     const Call *call = &CallControl.calls[friend_number];
+    Windows *windows = toxic->windows;
 
-    for (uint8_t i = 0; i < MAX_WINDOWS_NUM; ++i) {
-        if (windows[i] != NULL && windows[i]->onEnd != NULL && windows[i]->num == friend_number) {
-            windows[i]->onEnd(windows[i], toxic, friend_number, call->state);
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onEnd != NULL && w->num == friend_number) {
+            w->onEnd(w, toxic, friend_number, call->state);
         }
     }
 }

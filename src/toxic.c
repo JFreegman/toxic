@@ -153,6 +153,7 @@ static void kill_toxic(Toxic *toxic)
     free(client_data->block_path);
     free(toxic->c_config);
     free(toxic->run_opts);
+    free(toxic->windows);
     free(toxic);
 }
 
@@ -593,11 +594,6 @@ static void load_conferences(Toxic *toxic)
     for (size_t i = 0; i < num_chats; ++i) {
         uint32_t conferencenum = chatlist[i];
 
-        if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-            tox_conference_delete(tox, conferencenum, NULL);
-            continue;
-        }
-
         Tox_Err_Conference_Get_Type err;
         Tox_Conference_Type type = tox_conference_get_type(tox, conferencenum, &err);
 
@@ -622,15 +618,15 @@ static void load_conferences(Toxic *toxic)
 
         title[length] = 0;
 
-        const int win_idx = init_conference_win(toxic, conferencenum, type, (const char *) title, length);
+        const int64_t win_id = init_conference_win(toxic, conferencenum, type, (const char *) title, length);
 
-        if (win_idx == -1) {
+        if (win_id == -1) {
             tox_conference_delete(tox, conferencenum, NULL);
             continue;
         }
 
         if (type == TOX_CONFERENCE_TYPE_AV) {
-            ToxWindow *win = get_window_ptr(win_idx);
+            ToxWindow *win = get_window_pointer_by_id(toxic->windows, win_id);
             line_info_add(win, toxic->c_config, NULL, NULL, NULL, SYS_MSG, 0, 0,
 #ifdef AUDIO
                           "Use \"/audio on\" to enable audio in this conference."
@@ -1265,10 +1261,10 @@ static void *thread_winref(void *data)
         draw_active_window(toxic);
 
         if (Winthread.flag_resize) {
-            on_window_resize();
+            on_window_resize(toxic->windows);
             Winthread.flag_resize = 0;
         } else if (draw_count >= INACTIVE_WIN_REFRESH_RATE) {
-            refresh_inactive_windows(toxic->c_config);
+            refresh_inactive_windows(toxic->windows, toxic->c_config);
             draw_count = 0;
         }
 
@@ -1284,18 +1280,19 @@ static void *thread_winref(void *data)
 _Noreturn static void *thread_cqueue(void *data)
 {
     Toxic *toxic = (Toxic *) data;
+    Windows *windows = toxic->windows;
 
     while (true) {
         pthread_mutex_lock(&Winthread.lock);
 
-        for (size_t i = 2; i < MAX_WINDOWS_NUM; ++i) {
-            ToxWindow *toxwin = get_window_ptr(i);
+        for (uint16_t i = 2; i < windows->count; ++i) {
+            ToxWindow *w = windows->list[i];
 
-            if ((toxwin != NULL) && (toxwin->type == WINDOW_TYPE_CHAT)) {
-                cqueue_check_unread(toxwin);
+            if (w->type == WINDOW_TYPE_CHAT) {
+                cqueue_check_unread(w);
 
-                if (get_friend_connection_status(toxwin->num) != TOX_CONNECTION_NONE) {
-                    cqueue_try_send(toxwin, toxic->tox);
+                if (get_friend_connection_status(w->num) != TOX_CONNECTION_NONE) {
+                    cqueue_try_send(w, toxic->tox);
                 }
             }
         }
@@ -1669,6 +1666,17 @@ static Toxic *toxic_init(void)
 
     set_default_run_options(toxic->run_opts);
 
+    Windows *tmp_windows = (Windows *)calloc(1, sizeof(Windows));
+
+    if (tmp_windows == NULL) {
+        free(toxic->c_config);
+        free(toxic->run_opts);
+        free(toxic);
+        return NULL;
+    }
+
+    toxic->windows = tmp_windows;
+
     return toxic;
 }
 
@@ -1689,6 +1697,7 @@ int main(int argc, char **argv)
 
     const Client_Config *c_config = toxic->c_config;
     Run_Options *run_opts = toxic->run_opts;
+    Windows *windows = toxic->windows;
 
     /* Use the -b flag to enable stderr */
     if (!run_opts->debug) {
@@ -1772,19 +1781,19 @@ int main(int argc, char **argv)
         queue_init_message("Failed to load friend config settings: error %d", fs_ret);
     }
 
-    const int gs_ret = settings_load_groups(run_opts);
+    const int gs_ret = settings_load_groups(windows, run_opts);
 
     if (gs_ret != 0) {
         queue_init_message("Failed to load groupchat config settings: error %d", gs_ret);
     }
 
-    const int cs_ret = settings_load_conferences(run_opts);
+    const int cs_ret = settings_load_conferences(windows, run_opts);
 
     if (cs_ret != 0) {
         queue_init_message("Failed to load conference config settings: error %d", cs_ret);
     }
 
-    set_active_window_index(0);
+    set_active_window_by_type(windows, WINDOW_TYPE_PROMPT);
 
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
         exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);

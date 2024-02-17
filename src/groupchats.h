@@ -30,7 +30,7 @@
 #define SIDEBAR_WIDTH 16
 #endif
 
-#define MAX_GROUPCHAT_NUM (MAX_WINDOWS_NUM - 2)
+#define MAX_GROUPCHAT_NUM 100
 
 typedef enum Group_Join_Type {
     Group_Join_Type_Create,
@@ -67,7 +67,7 @@ typedef struct {
     bool       active;
     uint64_t   time_connected;    /* The time we successfully connected to the group */
 
-    int        chatwin;
+    int64_t    window_id;
     int        side_pos;     /* current position of the sidebar - used for scrolling up and down */
 } GroupChat;
 
@@ -130,7 +130,7 @@ void group_toggle_peer_ignore(uint32_t groupnumber, int peer_id, bool ignore);
  *
  * Return true on success.
  */
-bool groupchat_config_set_tab_name_colour(const char *public_key, const char *colour);
+bool groupchat_config_set_tab_name_colour(Windows *windows, const char *public_key, const char *colour);
 
 /*
  * Sets the auto-logging preference for the groupchat associated with `public_key`.
@@ -139,6 +139,6 @@ bool groupchat_config_set_tab_name_colour(const char *public_key, const char *co
  *
  * Return true on success.
  */
-bool groupchat_config_set_autolog(const char *public_key, bool autolog_enabled);
+bool groupchat_config_set_autolog(Windows *windows, const char *public_key, bool autolog_enabled);
 
 #endif /* #define GROUPCHATS_H */

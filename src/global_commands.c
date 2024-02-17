@@ -432,11 +432,6 @@ void cmd_game(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
-
     const unsigned int id = rand_not_secure();
     const int ret = game_initialize(self, toxic, type, id, NULL, 0, true);
 
@@ -481,11 +476,6 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
 
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
-
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
 
     if (argc < 1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Please specify conference type: text | audio");
@@ -562,11 +552,6 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
-
     if (argc < 1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Group name required");
         return;
@@ -636,11 +621,6 @@ void cmd_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
 
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
-
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
 
     if (argc < 1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Chat ID is required.");

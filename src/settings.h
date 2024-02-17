@@ -146,6 +146,8 @@ enum settings_values {
 #define LOG_TIMESTAMP_DEFAULT  "%Y/%m/%d [%H:%M:%S]"
 #define MPLEX_AWAY_NOTE "Away from keyboard, be back soon!"
 
+typedef struct Windows Windows;
+
 /*
  * Loads the config file into `run_opts` and creates an empty file if it does not
  * already exist. This function must be called before any other `settings_load` function.
@@ -196,7 +198,7 @@ int settings_load_friends(const Run_Options *run_opts);
  *
  * This function will have no effect on groupchat instances that are created in the future.
  */
-int settings_load_groups(const Run_Options *run_opts);
+int settings_load_groups(Windows *windows, const Run_Options *run_opts);
 
 /*
  * Loads conference config settings from the toxic config file pointed to by `patharg`.
@@ -208,11 +210,11 @@ int settings_load_groups(const Run_Options *run_opts);
  *
  * This function will have no effect on conference instances that are created in the future.
  */
-int settings_load_conferences(const Run_Options *run_opts);
+int settings_load_conferences(Windows *windows, const Run_Options *run_opts);
 
 /*
  * Reloads config settings.
  */
-void settings_reload(Client_Config *c_config, const Run_Options *run_opts);
+void settings_reload(Windows *windows, Client_Config *c_config, const Run_Options *run_opts);
 
 #endif /* SETTINGS_H */

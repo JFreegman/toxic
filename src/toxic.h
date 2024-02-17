@@ -67,6 +67,13 @@ typedef struct ToxAV ToxAV;
 typedef struct ToxWindow ToxWindow;
 typedef struct Run_Options Run_Options;
 
+typedef struct Windows {
+    ToxWindow  **list;
+    uint16_t   count;
+    uint16_t   active_index;
+    uint32_t   next_id;
+} Windows;
+
 typedef struct Toxic {
     Tox   *tox;
 #ifdef AUDIO
@@ -82,6 +89,7 @@ typedef struct Toxic {
     Run_Options   *run_opts;
 
     ToxWindow     *home_window;
+    Windows       *windows;
 } Toxic;
 
 void lock_status(void);

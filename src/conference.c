@@ -62,7 +62,7 @@
 #include "toxic_strings.h"
 #include "windows.h"
 
-#define MAX_CONFERENCE_NUM (MAX_WINDOWS_NUM - 2)
+#define MAX_CONFERENCE_NUM 100
 #define CONFERENCE_EVENT_WAIT 30
 
 static ConferenceChat conferences[MAX_CONFERENCE_NUM];
@@ -142,7 +142,7 @@ void conference_set_title(ToxWindow *self, uint32_t conferencesnum, const char *
     set_window_title(self, title, length);
 }
 
-static void kill_conference_window(ToxWindow *self, const Client_Config *c_config)
+static void kill_conference_window(ToxWindow *self, Windows *windows, const Client_Config *c_config)
 {
     if (self == NULL) {
         return;
@@ -162,7 +162,7 @@ static void kill_conference_window(ToxWindow *self, const Client_Config *c_confi
 
     free(self->help);
     kill_notifs(self->active_box);
-    del_window(self, c_config);
+    del_window(self, windows, c_config);
 }
 
 static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conferencenum)
@@ -198,7 +198,7 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
     }
 }
 
-int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
+int64_t init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
 {
     if (toxic == NULL) {
         return -1;
@@ -218,7 +218,7 @@ int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, cons
             // the case, because toxic and tox maintain the indices in
             // parallel ways. But it isn't guaranteed by the API.
             conferences[i].conferencenum = conferencenum;
-            conferences[i].chatwin = add_window(toxic, self);
+            conferences[i].window_id = add_window(toxic, self);
             conferences[i].active = true;
             conferences[i].num_peers = 0;
             conferences[i].type = type;
@@ -234,7 +234,7 @@ int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, cons
             conferences[i].push_to_talk_enabled = toxic->c_config->push_to_talk;
 #endif
 
-            set_active_window_index(conferences[i].chatwin);
+            set_active_window_by_id(toxic->windows, conferences[i].window_id);
 
             conference_set_title(self, conferencenum, title, length);
 
@@ -244,11 +244,11 @@ int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, cons
                 ++max_conference_index;
             }
 
-            return conferences[i].chatwin;
+            return conferences[i].window_id;
         }
     }
 
-    kill_conference_window(self, toxic->c_config);
+    kill_conference_window(self, toxic->windows, toxic->c_config);
 
     return -1;
 }
@@ -264,7 +264,7 @@ static void free_peer(ConferencePeer *peer)
 #endif
 }
 
-void free_conference(ToxWindow *self, const Client_Config *c_config, uint32_t conferencenum)
+void free_conference(ToxWindow *self, Windows *windows, const Client_Config *c_config, uint32_t conferencenum)
 {
     ConferenceChat *chat = &conferences[conferencenum];
 
@@ -299,13 +299,13 @@ void free_conference(ToxWindow *self, const Client_Config *c_config, uint32_t co
     }
 
     max_conference_index = i;
-    kill_conference_window(self, c_config);
+    kill_conference_window(self, windows, c_config);
 }
 
 static void delete_conference(ToxWindow *self, Toxic *toxic, uint32_t conferencenum)
 {
     tox_conference_delete(toxic->tox, conferencenum, NULL);
-    free_conference(self, toxic->c_config, conferencenum);
+    free_conference(self, toxic->windows, toxic->c_config, conferencenum);
 }
 
 void conference_rename_log_path(Toxic *toxic, uint32_t conferencenum, const char *new_title)
@@ -322,7 +322,8 @@ void conference_rename_log_path(Toxic *toxic, uint32_t conferencenum, const char
     char conference_id[TOX_CONFERENCE_ID_SIZE];
     tox_conference_get_id(toxic->tox, conferencenum, (uint8_t *) conference_id);
 
-    if (rename_logfile(toxic->c_config, chat->title, new_title, myid, conference_id, chat->chatwin) != 0) {
+    if (rename_logfile(toxic->windows, toxic->c_config, chat->title, new_title, myid, conference_id,
+                       chat->window_id) != 0) {
         fprintf(stderr, "Failed to rename conference log to `%s`\n", new_title);
     }
 }
@@ -1231,7 +1232,7 @@ static void conference_onDraw(ToxWindow *self, Toxic *toxic)
     int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y, new_x);
 
-    draw_window_bar(self);
+    draw_window_bar(self, toxic->windows);
 
     wnoutrefresh(self->window);
 
@@ -1307,7 +1308,7 @@ static int get_conferencenum_by_public_key_string(const char *public_key)
  *
  * Return false if conference does not exist.
  */
-static bool conference_window_set_tab_name_colour(const char *public_key, int colour)
+static bool conference_window_set_tab_name_colour(Windows *windows, const char *public_key, int colour)
 {
     const int conferencenum = get_conferencenum_by_public_key_string(public_key);
 
@@ -1315,7 +1316,7 @@ static bool conference_window_set_tab_name_colour(const char *public_key, int co
         return false;
     }
 
-    ToxWindow *self = get_window_by_number_type(conferencenum, WINDOW_TYPE_CONFERENCE);
+    ToxWindow *self = get_window_by_number_type(windows, conferencenum, WINDOW_TYPE_CONFERENCE);
 
     if (self == NULL) {
         return false;
@@ -1326,7 +1327,7 @@ static bool conference_window_set_tab_name_colour(const char *public_key, int co
     return true;
 }
 
-bool conference_config_set_tab_name_colour(const char *public_key, const char *colour)
+bool conference_config_set_tab_name_colour(Windows *windows, const char *public_key, const char *colour)
 {
     const int colour_val = colour_string_to_int(colour);
 
@@ -1334,10 +1335,10 @@ bool conference_config_set_tab_name_colour(const char *public_key, const char *c
         return false;
     }
 
-    return conference_window_set_tab_name_colour(public_key, colour_val);
+    return conference_window_set_tab_name_colour(windows, public_key, colour_val);
 }
 
-bool conference_config_set_autolog(const char *public_key, bool autolog_enabled)
+bool conference_config_set_autolog(Windows *windows, const char *public_key, bool autolog_enabled)
 {
     const int conferencenum = get_conferencenum_by_public_key_string(public_key);
 
@@ -1346,8 +1347,8 @@ bool conference_config_set_autolog(const char *public_key, bool autolog_enabled)
     }
 
     return autolog_enabled
-           ? enable_window_log_by_number_type(conferencenum, WINDOW_TYPE_CONFERENCE)
-           : disable_window_log_by_number_type(conferencenum, WINDOW_TYPE_CONFERENCE);
+           ? enable_window_log_by_number_type(windows, conferencenum, WINDOW_TYPE_CONFERENCE)
+           : disable_window_log_by_number_type(windows, conferencenum, WINDOW_TYPE_CONFERENCE);
 }
 
 static ToxWindow *new_conference_chat(uint32_t conferencenum)

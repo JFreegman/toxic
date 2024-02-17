@@ -175,9 +175,9 @@ void kill_chat_window(ToxWindow *self, Toxic *toxic)
     free(self->help);
     free(statusbar);
 
-    disable_chatwin(self->num);
+    disable_friend_window(self->num);
     kill_notifs(self->active_box);
-    del_window(self, toxic->c_config);
+    del_window(self, toxic->windows, toxic->c_config);
 }
 
 static void recv_message_helper(ToxWindow *self, const Toxic *toxic, const char *msg,
@@ -1620,7 +1620,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
     const int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y, new_x);
 
-    draw_window_bar(self);
+    draw_window_bar(self, toxic->windows);
 
     wnoutrefresh(self->window);
 

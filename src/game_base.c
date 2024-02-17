@@ -148,14 +148,14 @@ static bool game_type_is_multi_and_single(const ToxWindow *window, GameType type
  */
 void game_window_notify(const GameData *game, const char *message)
 {
-    ToxWindow *self = get_window_ptr(game->window_id);
+    const Toxic *toxic = game->toxic;
+    const Client_Config *c_config = toxic->c_config;
+
+    ToxWindow *self = get_window_pointer_by_id(toxic->windows, game->window_id);
 
     if (self == NULL) {
         return;
     }
-
-    const Toxic *toxic = game->toxic;
-    const Client_Config *c_config = toxic->c_config;
 
     const int bell_on_message = c_config->bell_on_message;
 
@@ -176,7 +176,7 @@ TIME_MS get_time_millis(void)
     return ((TIME_MS) t.tv_sec) * 1000 + ((TIME_MS) t.tv_nsec) / 1000000;
 }
 
-void game_kill(ToxWindow *self, const Client_Config *c_config)
+void game_kill(ToxWindow *self, Windows *windows, const Client_Config *c_config)
 {
     GameData *game = self->game;
 
@@ -191,17 +191,14 @@ void game_kill(ToxWindow *self, const Client_Config *c_config)
     }
 
     kill_notifs(self->active_box);
-    del_window(self, c_config);
-
-    if (get_num_active_windows_type(WINDOW_TYPE_GAME) == 0) {
-        set_window_refresh_rate(NCURSES_DEFAULT_REFRESH_RATE);
-    }
+    del_window(self, windows, c_config);
 }
 
-static void game_init_abort(const ToxWindow *parent, ToxWindow *self, const Client_Config *c_config)
+static void game_init_abort(const ToxWindow *parent, ToxWindow *self, Windows *windows,
+                            const Client_Config *c_config)
 {
-    game_kill(self, c_config);
-    set_active_window_index(parent->index);
+    game_kill(self, windows, c_config);
+    set_active_window_by_id(windows, parent->id);
 }
 
 static void game_toggle_pause(GameData *game)
@@ -273,9 +270,9 @@ int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32
 
     GameData *game = self->game;
 
-    const int window_id = add_window(toxic, self);
+    const int64_t window_id = add_window(toxic, self);
 
-    if (window_id == -1) {
+    if (window_id < 0) {
         free(game);
         free(self);
         return -4;
@@ -285,12 +282,12 @@ int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32
 
     if (game->is_multiplayer) {
         if (parent->type != WINDOW_TYPE_CHAT) {
-            game_init_abort(parent, self, c_config);
+            game_init_abort(parent, self, toxic->windows, c_config);
             return -3;
         }
 
         if (get_friend_connection_status(parent->num) == TOX_CONNECTION_NONE) {
-            game_init_abort(parent, self, c_config);
+            game_init_abort(parent, self, toxic->windows, c_config);
             return -2;
         }
 
@@ -309,20 +306,20 @@ int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32
     game->friend_number = parent->num;
 
     if (game->window == NULL) {
-        game_init_abort(parent, self, c_config);
+        game_init_abort(parent, self, toxic->windows, c_config);
         return -4;
     }
 
     const int init_ret = game_initialize_type(game, multiplayer_data, length, self_host);
 
     if (init_ret < 0) {
-        game_init_abort(parent, self, c_config);
+        game_init_abort(parent, self, toxic->windows, c_config);
         return init_ret;
     }
 
     game->status = GS_Running;
 
-    set_active_window_index(window_id);
+    set_active_window_by_id(toxic->windows, game->window_id);
 
     set_window_refresh_rate(NCURSES_GAME_REFRESH_RATE);
 
@@ -744,7 +741,7 @@ static void game_onDraw(ToxWindow *self, Toxic *toxic)
     GameData *game = self->game;
 
     game_draw_help_bar(game, self->window);
-    draw_window_bar(self);
+    draw_window_bar(self, toxic->windows);
 
     curs_set(0);
 
@@ -796,7 +793,7 @@ static bool game_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool is_printa
 
     if (key == KEY_F(9)) {
         pthread_mutex_lock(&Winthread.lock);
-        game_kill(self, toxic->c_config);
+        game_kill(self, toxic->windows, toxic->c_config);
         pthread_mutex_unlock(&Winthread.lock);
         return true;
     }

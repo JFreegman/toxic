@@ -456,7 +456,7 @@ static int settings_init_config(config_t *cfg, const Run_Options *run_opts)
     return 0;
 }
 
-int settings_load_conferences(const Run_Options *run_opts)
+int settings_load_conferences(Windows *windows, const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
@@ -489,7 +489,7 @@ int settings_load_conferences(const Run_Options *run_opts)
         }
 
         if (config_setting_lookup_string(keys, conference_strings.tab_name_color, &str)) {
-            if (!conference_config_set_tab_name_colour(public_key, str)) {
+            if (!conference_config_set_tab_name_colour(windows, public_key, str)) {
                 fprintf(stderr, "config error: failed to set conference tab name color for %s: (color: %s)\n", public_key, str);
             }
         }
@@ -497,7 +497,7 @@ int settings_load_conferences(const Run_Options *run_opts)
         int autolog_enabled;
 
         if (config_setting_lookup_bool(keys, conference_strings.autolog, &autolog_enabled)) {
-            if (!conference_config_set_autolog(public_key, autolog_enabled != 0)) {
+            if (!conference_config_set_autolog(windows, public_key, autolog_enabled != 0)) {
                 fprintf(stderr, "config error: failed to apply conference autolog setting for %s\n", public_key);
             }
         }
@@ -508,7 +508,7 @@ int settings_load_conferences(const Run_Options *run_opts)
     return 0;
 }
 
-int settings_load_groups(const Run_Options *run_opts)
+int settings_load_groups(Windows *windows, const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
@@ -541,7 +541,7 @@ int settings_load_groups(const Run_Options *run_opts)
         }
 
         if (config_setting_lookup_string(keys, groupchat_strings.tab_name_color, &str)) {
-            if (!groupchat_config_set_tab_name_colour(public_key, str)) {
+            if (!groupchat_config_set_tab_name_colour(windows, public_key, str)) {
                 fprintf(stderr, "config error: failed to set groupchat tab name color for %s: (color: %s)\n", public_key, str);
             }
         }
@@ -549,7 +549,7 @@ int settings_load_groups(const Run_Options *run_opts)
         int autolog_enabled;
 
         if (config_setting_lookup_bool(keys, groupchat_strings.autolog, &autolog_enabled)) {
-            if (!groupchat_config_set_autolog(public_key, autolog_enabled != 0)) {
+            if (!groupchat_config_set_autolog(windows, public_key, autolog_enabled != 0)) {
                 fprintf(stderr, "config error: failed to apply groupchat autolog setting for %s\n", public_key);
             }
         }
@@ -957,7 +957,7 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
     return 0;
 }
 
-void settings_reload(Client_Config *c_config, const Run_Options *run_opts)
+void settings_reload(Windows *windows, Client_Config *c_config, const Run_Options *run_opts)
 {
     int ret = settings_load_main(c_config, run_opts);
 
@@ -971,13 +971,13 @@ void settings_reload(Client_Config *c_config, const Run_Options *run_opts)
         fprintf(stderr, "Failed to reload friend settings (error %d)\n", ret);
     }
 
-    ret = settings_load_conferences(run_opts);
+    ret = settings_load_conferences(windows, run_opts);
 
     if (ret < 0) {
         fprintf(stderr, "Failed to reload conference settings (error %d)\n", ret);
     }
 
-    ret = settings_load_groups(run_opts);
+    ret = settings_load_groups(windows, run_opts);
 
     if (ret < 0) {
         fprintf(stderr, "Failed to reload group settings (error %d)\n", ret);

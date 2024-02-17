@@ -181,11 +181,6 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
-
     const char *conferencekey = Friends.list[self->num].conference_invite.key;
     uint16_t length = Friends.list[self->num].conference_invite.length;
     uint8_t type = Friends.list[self->num].conference_invite.type;
@@ -253,11 +248,6 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
 
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
-
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
-        return;
-    }
 
     if (Friends.list[self->num].group_invite.length == 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending group invite");
@@ -345,11 +335,6 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
 
     if (!Friends.list[self->num].game_invite.pending) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
-        return;
-    }
-
-    if (get_num_active_windows() >= MAX_WINDOWS_NUM) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Warning: Too many windows are open.");
         return;
     }
 

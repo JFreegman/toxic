@@ -61,7 +61,7 @@ typedef struct NameListEntry {
 
 typedef struct {
     uint32_t conferencenum;
-    int chatwin;
+    int64_t window_id;
     bool active;
     uint8_t type;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
@@ -88,9 +88,9 @@ typedef struct {
 } ConferenceChat;
 
 /* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
-void free_conference(ToxWindow *self, const Client_Config *c_config, uint32_t conferencenum);
+void free_conference(ToxWindow *self, Windows *windows, const Client_Config *c_config, uint32_t conferencenum);
 
-int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
+int64_t init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
 
 /* destroys and re-creates conference window with or without the peerlist */
 void redraw_conference_win(ToxWindow *self);
@@ -115,7 +115,7 @@ uint32_t get_name_list_entries_by_prefix(uint32_t conferencenum, const char *pre
  *
  * Return true on success.
  */
-bool conference_config_set_tab_name_colour(const char *public_key, const char *colour);
+bool conference_config_set_tab_name_colour(Windows *windows, const char *public_key, const char *colour);
 
 /*
  * Sets the auto-logging preference for the conference associated with `public_key`.
@@ -124,7 +124,7 @@ bool conference_config_set_tab_name_colour(const char *public_key, const char *c
  *
  * Return true on success.
  */
-bool conference_config_set_autolog(const char *public_key, bool autolog_enabled);
+bool conference_config_set_autolog(Windows *windows, const char *public_key, bool autolog_enabled);
 
 /* Enable audio in a conference.
  *

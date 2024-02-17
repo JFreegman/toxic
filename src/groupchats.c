@@ -243,7 +243,7 @@ void groupchat_rejoin(ToxWindow *self, Toxic *toxic)
     groupchat_onGroupPeerJoin(self, toxic, self->num, self_peer_id);
 }
 
-static void kill_groupchat_window(ToxWindow *self, const Client_Config *c_config)
+static void kill_groupchat_window(ToxWindow *self, Windows *windows, const Client_Config *c_config)
 {
     if (self == NULL) {
         return;
@@ -268,7 +268,7 @@ static void kill_groupchat_window(ToxWindow *self, const Client_Config *c_config
     free(self->help);
 
     kill_notifs(self->active_box);
-    del_window(self, c_config);
+    del_window(self, windows, c_config);
 }
 
 /* Closes groupchat window and cleans up. */
@@ -299,7 +299,7 @@ static void close_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber)
     }
 
     max_groupchat_index = i;
-    kill_groupchat_window(self, toxic->c_config);
+    kill_groupchat_window(self, toxic->windows, toxic->c_config);
 }
 
 void exit_groupchat(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *partmessage, size_t length)
@@ -384,7 +384,7 @@ int init_groupchat_win(Toxic *toxic, uint32_t groupnumber, const char *groupname
 
     for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
-            groupchats[i].chatwin = add_window(toxic, self);
+            groupchats[i].window_id = add_window(toxic, self);
             groupchats[i].active = true;
             groupchats[i].groupnumber = groupnumber;
             groupchats[i].num_peers = 0;
@@ -399,11 +399,11 @@ int init_groupchat_win(Toxic *toxic, uint32_t groupnumber, const char *groupname
                 ++max_groupchat_index;
             }
 
-            set_active_window_index(groupchats[i].chatwin);
+            set_active_window_by_id(toxic->windows, groupchats[i].window_id);
             store_data(toxic);
 
             Tox_Err_Group_Self_Query err;
-            uint32_t peer_id = tox_group_self_get_peer_id(tox, groupnumber, &err);
+            const uint32_t peer_id = tox_group_self_get_peer_id(tox, groupnumber, &err);
 
             if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
                 close_groupchat(self, toxic, groupnumber);
@@ -420,7 +420,7 @@ int init_groupchat_win(Toxic *toxic, uint32_t groupnumber, const char *groupname
         }
     }
 
-    kill_groupchat_window(self, toxic->c_config);
+    kill_groupchat_window(self, toxic->windows, toxic->c_config);
 
     return -1;
 }
@@ -485,7 +485,7 @@ void set_nick_this_group(ToxWindow *self, Toxic *toxic, const char *new_nick, si
 /* { */
 /*     for (int i = 0; i < max_groupchat_index; ++i) { */
 /*         if (groupchats[i].active) { */
-/*             ToxWindow *self = get_window_ptr(groupchats[i].chatwin); */
+/*             ToxWindow *self = get_window_pointer_by_id(groupchats[i].window_id); */
 
 /*             if (!self) { */
 /*                 continue; */
@@ -519,7 +519,7 @@ void set_status_all_groups(Toxic *toxic, uint8_t status)
 {
     for (int i = 0; i < max_groupchat_index; ++i) {
         if (groupchats[i].active) {
-            ToxWindow *self = get_window_ptr(groupchats[i].chatwin);
+            ToxWindow *self = get_window_pointer_by_id(toxic->windows, groupchats[i].window_id);
 
             if (self == NULL) {
                 continue;
@@ -2222,7 +2222,7 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
     const int new_x = ctx->start ? x2 - 1 : MAX(0, wcswidth(ctx->line, ctx->pos));
     wmove(self->window, y, new_x);
 
-    draw_window_bar(self);
+    draw_window_bar(self, toxic->windows);
 
     wrefresh(self->window);
 
@@ -2277,7 +2277,7 @@ static void groupchat_onInit(ToxWindow *self, Toxic *toxic)
  *
  * Return false if group does not exist.
  */
-static bool groupchat_window_set_tab_name_colour(const char *public_key, int colour)
+static bool groupchat_window_set_tab_name_colour(Windows *windows, const char *public_key, int colour)
 {
     const int groupnumber = get_groupnumber_by_public_key_string(public_key);
 
@@ -2285,7 +2285,7 @@ static bool groupchat_window_set_tab_name_colour(const char *public_key, int col
         return false;
     }
 
-    ToxWindow *self = get_window_by_number_type(groupnumber, WINDOW_TYPE_GROUPCHAT);
+    ToxWindow *self = get_window_by_number_type(windows, groupnumber, WINDOW_TYPE_GROUPCHAT);
 
     if (self == NULL) {
         return false;
@@ -2296,7 +2296,7 @@ static bool groupchat_window_set_tab_name_colour(const char *public_key, int col
     return true;
 }
 
-bool groupchat_config_set_tab_name_colour(const char *public_key, const char *colour)
+bool groupchat_config_set_tab_name_colour(Windows *windows, const char *public_key, const char *colour)
 {
     const int colour_val = colour_string_to_int(colour);
 
@@ -2304,10 +2304,10 @@ bool groupchat_config_set_tab_name_colour(const char *public_key, const char *co
         return false;
     }
 
-    return groupchat_window_set_tab_name_colour(public_key, colour_val);
+    return groupchat_window_set_tab_name_colour(windows, public_key, colour_val);
 }
 
-bool groupchat_config_set_autolog(const char *public_key, bool autolog_enabled)
+bool groupchat_config_set_autolog(Windows *windows, const char *public_key, bool autolog_enabled)
 {
     const int groupnumber = get_groupnumber_by_public_key_string(public_key);
 
@@ -2316,8 +2316,8 @@ bool groupchat_config_set_autolog(const char *public_key, bool autolog_enabled)
     }
 
     return autolog_enabled
-           ? enable_window_log_by_number_type(groupnumber, WINDOW_TYPE_GROUPCHAT)
-           : disable_window_log_by_number_type(groupnumber, WINDOW_TYPE_GROUPCHAT);
+           ? enable_window_log_by_number_type(windows, groupnumber, WINDOW_TYPE_GROUPCHAT)
+           : disable_window_log_by_number_type(windows, groupnumber, WINDOW_TYPE_GROUPCHAT);
 }
 
 static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *groupname, int length)

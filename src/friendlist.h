@@ -84,7 +84,7 @@ typedef struct {
     size_t statusmsg_len;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
     uint32_t num;
-    int chatwin;
+    int64_t window_id;
     bool active;
     Tox_Connection connection_status;
     bool is_typing;
@@ -130,9 +130,9 @@ extern FriendsList Friends;
 
 ToxWindow *new_friendlist(void);
 void friendlist_onInit(ToxWindow *self, Toxic *toxic);
-void disable_chatwin(uint32_t f_num);
+void disable_friend_window(uint32_t f_num);
 int get_friendnum(uint8_t *name);
-void kill_friendlist(ToxWindow *self, const Client_Config *c_config);
+void kill_friendlist(ToxWindow *self, Windows *windows, const Client_Config *c_config);
 void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool sort);
 Tox_User_Status get_friend_status(uint32_t friendnumber);
 Tox_Connection get_friend_connection_status(uint32_t friendnumber);
