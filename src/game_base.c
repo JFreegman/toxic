@@ -192,6 +192,10 @@ void game_kill(ToxWindow *self, Windows *windows, const Client_Config *c_config)
 
     kill_notifs(self->active_box);
     del_window(self, windows, c_config);
+
+    if (get_num_active_windows_type(windows, WINDOW_TYPE_GAME) == 0) {
+        set_window_refresh_rate(NCURSES_DEFAULT_REFRESH_RATE);
+    }
 }
 
 static void game_init_abort(const ToxWindow *parent, ToxWindow *self, Windows *windows,
