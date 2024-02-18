@@ -884,7 +884,7 @@ void del_window(ToxWindow *w, Windows *windows, const Client_Config *c_config)
 
     ToxWindow **tmp_list = (ToxWindow **)realloc(windows->list, windows->count * sizeof(ToxWindow *));
 
-    if (tmp_list == NULL) {
+    if (tmp_list == NULL && windows->count != 0) {
         exit_toxic_err("realloc() failed in del_window()", FATALERR_MEMORY);
     }
 
