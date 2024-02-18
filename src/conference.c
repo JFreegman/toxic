@@ -422,7 +422,7 @@ static void conference_onConferenceMessage(ToxWindow *self, Toxic *toxic, uint32
 
     line_info_add(self, c_config, true, nick, NULL, type == TOX_MESSAGE_TYPE_NORMAL ? IN_MSG : IN_ACTION, 0,
                   nick_clr, "%s", msg);
-    write_to_log(ctx->log, c_config, msg, nick, false);
+    write_to_log(ctx->log, c_config, msg, nick, false, LOG_HINT_NORMAL_I);
 }
 
 static void conference_onConferenceTitleChange(ToxWindow *self, Toxic *toxic, uint32_t conferencenum, uint32_t peernum,
@@ -463,7 +463,7 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Toxic *toxic, ui
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
-    write_to_log(ctx->log, c_config, tmp_event, nick, true);
+    write_to_log(ctx->log, c_config, tmp_event, nick, true, LOG_HINT_TOPIC);
 }
 
 /* Puts `(NameListEntry *)`s in `entries` for each matched peer, up to a
@@ -742,13 +742,16 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
 
         size_t length = tox_conference_peer_get_name_size(tox, conferencenum, i, &err);
 
-        if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK || length >= TOX_MAX_NAME_LENGTH) {
-            // FIXME: length == TOX_MAX_NAME_LENGTH should not be an error!
+        if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
             continue;
         }
 
+        if (length >= TOX_MAX_NAME_LENGTH) {
+            length = TOX_MAX_NAME_LENGTH - 1;
+        }
+
         tox_conference_peer_get_name(tox, conferencenum, i, (uint8_t *) peer->name, &err);
-        peer->name[length] = 0;
+        peer->name[length] = '\0';
 
         if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
             continue;
@@ -761,7 +764,7 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
         if (new_peer && peer->name_length > 0 && timed_out(chat->start_time, CONFERENCE_EVENT_WAIT)) {
             const char *msg = "has joined the conference";
             line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, "%s", msg);
-            write_to_log(ctx->log, c_config, msg, peer->name, true);
+            write_to_log(ctx->log, c_config, msg, peer->name, true, LOG_HINT_CONNECT);
         }
 
 #ifdef AUDIO
@@ -778,7 +781,7 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
             if (old_peer->name_length > 0 && !find_peer_by_pubkey(chat->peer_list, chat->num_peers, old_peer->pubkey, NULL)) {
                 const char *msg = "has left the conference";
                 line_info_add(self, c_config, true, old_peer->name, NULL, DISCONNECTION, 0, RED, "%s", msg);
-                write_to_log(ctx->log, c_config, msg, old_peer->name, true);
+                write_to_log(ctx->log, c_config, msg, old_peer->name, true, LOG_HINT_DISCONNECT);
             }
 
             free_peer(old_peer);
@@ -848,17 +851,18 @@ static void conference_onConferencePeerNameChange(ToxWindow *self, Toxic *toxic,
         ChatContext *ctx = self->chatwin;
 
         if (peer->name_length > 0) {
-            char log_event[TOXIC_MAX_NAME_LENGTH * 2 + 32];
-            line_info_add(self, c_config, true, peer->name, (const char *) name, NAME_CHANGE, 0, 0, " is now known as ");
+            char log_event[TOX_MAX_NAME_LENGTH * 2 + 32];
+            line_info_add(self, c_config, true, peer->name, (const char *) name, NAME_CHANGE, 0, 0,
+                          " is now known as ");
 
             snprintf(log_event, sizeof(log_event), "is now known as %s", (const char *) name);
-            write_to_log(ctx->log, c_config, log_event, peer->name, true);
+            write_to_log(ctx->log, c_config, log_event, peer->name, true, LOG_HINT_NAME);
 
             // this is kind of a hack; peers always join a group with no name set and then set it after
         } else if (timed_out(conferences[conferencenum].start_time, CONFERENCE_EVENT_WAIT)) {
             const char *msg = "has joined the conference";
             line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, "%s", msg);
-            write_to_log(ctx->log, c_config, msg, name, true);
+            write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_CONNECT);
         }
     }
 

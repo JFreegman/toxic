@@ -127,7 +127,7 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Toxic *toxic, int
 
     char tmp_event[MAX_STR_SIZE + 20];
     snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
-    write_to_log(self->chatwin->log, c_config, tmp_event, selfnick, true);
+    write_to_log(self->chatwin->log, c_config, tmp_event, selfnick, true, LOG_HINT_TOPIC);
 }
 
 #ifdef AUDIO

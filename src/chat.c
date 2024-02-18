@@ -187,7 +187,7 @@ static void recv_message_helper(ToxWindow *self, const Toxic *toxic, const char 
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, nick, NULL, IN_MSG, 0, 0, "%s", msg);
-    write_to_log(ctx->log, c_config, msg, nick, false);
+    write_to_log(ctx->log, c_config, msg, nick, false, LOG_HINT_NORMAL_I);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
@@ -204,7 +204,7 @@ static void recv_action_helper(ToxWindow *self, const Toxic *toxic,  const char 
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
-    write_to_log(ctx->log, c_config, action, nick, true);
+    write_to_log(ctx->log, c_config, action, nick, true, LOG_HINT_ACTION);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
@@ -278,7 +278,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
 
         msg = "has come online";
         line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, nick, true);
+        write_to_log(ctx->log, c_config, msg, nick, true, LOG_HINT_CONNECT);
     } else if (connection_status == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = false;
 
@@ -290,7 +290,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
 
         msg = "has gone offline";
         line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, nick, true);
+        write_to_log(ctx->log, c_config, msg, nick, true, LOG_HINT_DISCONNECT);
     }
 }
 

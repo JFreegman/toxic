@@ -35,7 +35,7 @@
 
 /* Creates a log path and puts it in `dest.
  *
- * There are two types of logs: chat logs and prompt logs (see LOG_TYPE in log.h)
+ * There are two types of logs: chat logs and prompt logs (see Log_Type in log.h)
  * A prompt log is in the format: LOGDIR/selfkey-home.log
  * A chat log is in the format: LOGDIR/selfkey-name-otherkey.log
  *
@@ -100,7 +100,7 @@ static int create_log_path(const Client_Config *c_config, char *dest, int destsi
  * Return -1 on failure.
  */
 static int init_logging_session(const Client_Config *c_config, const char *name, const char *selfkey,
-                                const char *otherkey, struct chatlog *log, LOG_TYPE type)
+                                const char *otherkey, struct chatlog *log, Log_Type type)
 {
     if (log == NULL) {
         return -1;
@@ -126,39 +126,48 @@ static int init_logging_session(const Client_Config *c_config, const char *name,
 
 #define LOG_FLUSH_LIMIT 1  /* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
 
-void write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
-                  bool event)
+int write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
+                 bool is_event, Log_Hint log_hint)
 {
     if (log == NULL) {
-        return;
+        return -1;
     }
 
     if (!log->log_on) {
-        return;
+        return 0;
     }
 
     if (log->file == NULL) {
         log->log_on = false;
-        return;
+        return -1;
     }
 
     char name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
 
-    if (event) {
-        snprintf(name_frmt, sizeof(name_frmt), "* %s", name);
-    } else {
-        snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
+    if (name != NULL) {
+        if (is_event) {
+            snprintf(name_frmt, sizeof(name_frmt), "* %s", name);
+        } else {
+            snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
+        }
     }
 
     const char *t = c_config->log_timestamp_format;
     char s[MAX_STR_SIZE];
     get_time_str(s, sizeof(s), t);
-    fprintf(log->file, "%s %s %s\n", s, name_frmt, msg);
+
+    if (name == NULL) {
+        fprintf(log->file, "{%d} %s %s\n", log_hint, s, msg);
+    } else {
+        fprintf(log->file, "{%d} %s %s %s\n", log_hint, s, name_frmt, msg);
+    }
 
     if (timed_out(log->lastwrite, LOG_FLUSH_LIMIT)) {
         fflush(log->file);
         log->lastwrite = get_unix_time();
     }
+
+    return 0;
 }
 
 void log_disable(struct chatlog *log)
@@ -211,7 +220,7 @@ int log_enable(struct chatlog *log)
  * Return -1 on failure.
  */
 int log_init(struct chatlog *log, const Client_Config *c_config, const char *name, const char *selfkey,
-             const char *otherkey, LOG_TYPE type)
+             const char *otherkey, Log_Type type)
 {
     if (log == NULL) {
         return -1;

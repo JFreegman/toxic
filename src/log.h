@@ -32,10 +32,25 @@ struct chatlog {
     bool log_on;    /* specific to current chat window */
 };
 
-typedef enum LOG_TYPE {
+typedef enum Log_Type {
     LOG_TYPE_PROMPT,
     LOG_TYPE_CHAT,
-} LOG_TYPE;
+} Log_Type;
+
+typedef enum Log_Hint {
+    LOG_HINT_NORMAL_I,   // normal inbound chat message
+    LOG_HINT_NORMAL_O,   // normal outbound chat message
+    LOG_HINT_ACTION,     // action message
+    LOG_HINT_SYSTEM,     // system message
+    LOG_HINT_CONNECT,    // friend online/peer join
+    LOG_HINT_DISCONNECT, // friend offline/peer exit
+    LOG_HINT_PRIVATE_I,  // private inbound group message
+    LOG_HINT_PRIVATE_O,  // private outbound group message
+    LOG_HINT_MOD_EVENT,  // group moderation event
+    LOG_HINT_FOUNDER,    // group founder event
+    LOG_HINT_NAME,       // name change
+    LOG_HINT_TOPIC,      // group/conference topic/title change
+} Log_Hint;
 
 /* Initializes a log. This function must be called before any other logging operations.
  *
@@ -44,11 +59,21 @@ typedef enum LOG_TYPE {
  */
 int log_init(struct chatlog *log, const Client_Config *c_config, const char *name, const char *selfkey,
              const char *otherkey,
-             LOG_TYPE type);
+             Log_Type type);
 
-/* formats/writes line to log file */
-void write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
-                  bool event);
+/* Writes a message to the log.
+ *
+ * `log` is the log being written to.
+ * `msg` is the message being written.
+ * `name` is the name of the initiator of the message. If NULL it will be ignored.
+ * `is_event` is true if the message is an event rather than a chat message.
+ * `log_hint` indicates the type of message.
+ *
+ * Return 0 on success (or if the log is disabled).
+ * Return -1 on failure.
+ */
+int write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
+                 bool is_event, Log_Hint log_hint);
 
 /* enables logging for specified log.
  *

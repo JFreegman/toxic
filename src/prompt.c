@@ -521,7 +521,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
     if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
         line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, nick, true);
+        write_to_log(ctx->log, c_config, msg, nick, true, LOG_HINT_CONNECT);
 
         if (self->active_box != -1) {
             box_notify2(self, toxic, user_log_in, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
@@ -533,7 +533,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
     } else if (connection_status == TOX_CONNECTION_NONE) {
         msg = "has gone offline";
         line_info_add(self, c_config, true, nick, NULL, DISCONNECTION, 0, RED, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, nick, true);
+        write_to_log(ctx->log, c_config, msg, nick, true, LOG_HINT_DISCONNECT);
 
         if (self->active_box != -1) {
             box_notify2(self, toxic, user_log_out, NT_WNDALERT_2 | NT_NOTIFWND | NT_RESTOL, self->active_box,
@@ -577,7 +577,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
-    write_to_log(ctx->log, c_config, "Friend request with the message '%s'", "", true);
+    write_to_log(ctx->log, c_config, "Friend request with the message '%s'", "", true, LOG_HINT_SYSTEM);
 
     if (key_is_similar(key)) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED,

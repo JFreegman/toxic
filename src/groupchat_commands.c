@@ -975,7 +975,7 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "set topic to %s", topic);
-    write_to_log(self->chatwin->log, c_config, tmp_event, self_nick, true);
+    write_to_log(self->chatwin->log, c_config, tmp_event, self_nick, true, LOG_HINT_TOPIC);
 }
 
 void cmd_unignore(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

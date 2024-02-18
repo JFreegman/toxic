@@ -980,7 +980,7 @@ static void group_onAction(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, 
     }
 
     line_info_add(self, c_config, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
-    write_to_log(ctx->log, c_config, action, nick, true);
+    write_to_log(ctx->log, c_config, action, nick, true, LOG_HINT_ACTION);
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
@@ -1030,7 +1030,7 @@ static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t gro
     }
 
     line_info_add(self, c_config, true, nick, NULL, IN_MSG, 0, nick_clr, "%s", msg);
-    write_to_log(ctx->log, c_config, msg, nick, false);
+    write_to_log(ctx->log, c_config, msg, nick, false, LOG_HINT_NORMAL_I);
 }
 
 static void groupchat_onGroupPrivateMessage(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
@@ -1055,7 +1055,7 @@ static void groupchat_onGroupPrivateMessage(ToxWindow *self, Toxic *toxic, uint3
     get_group_nick_truncate(tox, nick, peer_id, groupnumber);
 
     line_info_add(self, c_config, true, nick, NULL, IN_PRVT_MSG, 0, MAGENTA, "%s", msg);
-    write_to_log(ctx->log, c_config, msg, nick, false);
+    write_to_log(ctx->log, c_config, msg, nick, false, LOG_HINT_PRIVATE_I);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS | c_config->bell_on_message,
@@ -1091,7 +1091,7 @@ static void groupchat_onGroupTopicChange(ToxWindow *self, Toxic *toxic, uint32_t
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the topic to %s", topic);
-    write_to_log(ctx->log, c_config, tmp_event, nick, true);
+    write_to_log(ctx->log, c_config, tmp_event, nick, true, LOG_HINT_TOPIC);
 }
 
 static void groupchat_onGroupPeerLimit(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_limit)
@@ -1112,7 +1112,7 @@ static void groupchat_onGroupPeerLimit(ToxWindow *self, Toxic *toxic, uint32_t g
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the peer limit to %u", peer_limit);
-    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true, LOG_HINT_FOUNDER);
 }
 
 static void groupchat_onGroupPrivacyState(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
@@ -1136,7 +1136,7 @@ static void groupchat_onGroupPrivacyState(ToxWindow *self, Toxic *toxic, uint32_
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " set the group to %s.", state_str);
-    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true, LOG_HINT_FOUNDER);
 }
 
 static void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
@@ -1179,7 +1179,7 @@ static void groupchat_onGroupVoiceState(ToxWindow *self, Toxic *toxic, uint32_t 
             return;
     }
 
-    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true, LOG_HINT_FOUNDER);
 }
 
 static void groupchat_onGroupTopicLock(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
@@ -1203,7 +1203,7 @@ static void groupchat_onGroupTopicLock(ToxWindow *self, Toxic *toxic, uint32_t g
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), " %s the topic.", tlock_str);
-    write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
+    write_to_log(ctx->log, c_config, tmp_event, "The founder", true, LOG_HINT_FOUNDER);
 }
 
 static void groupchat_onGroupPassword(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *password,
@@ -1226,14 +1226,14 @@ static void groupchat_onGroupPassword(ToxWindow *self, Toxic *toxic, uint32_t gr
 
         char tmp_event[MAX_STR_SIZE];
         snprintf(tmp_event, sizeof(tmp_event), " set a new password.");
-        write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
+        write_to_log(ctx->log, c_config, tmp_event, "The founder", true, LOG_HINT_FOUNDER);
     } else {
         line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE,
                       "-!- The group founder has removed password protection.");
 
         char tmp_event[MAX_STR_SIZE];
         snprintf(tmp_event, sizeof(tmp_event), " removed password protection.");
-        write_to_log(ctx->log, c_config, tmp_event, "The founder", true);
+        write_to_log(ctx->log, c_config, tmp_event, "The founder", true, LOG_HINT_FOUNDER);
     }
 }
 
@@ -1326,7 +1326,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
                 && c_config->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
             line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
-            write_to_log(ctx->log, c_config, "has joined the room", peer->name, true);
+            write_to_log(ctx->log, c_config, "has joined the room", peer->name, true, LOG_HINT_CONNECT);
             sound_notify(self, toxic, silent, NT_WNDALERT_2, NULL);
         }
 
@@ -1367,13 +1367,13 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
         if (length > 0) {
             line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "[Quit]: %s", part_message);
             snprintf(log_str, sizeof(log_str), "has left the room (%s)", part_message);
-            write_to_log(ctx->log, c_config, log_str, name, true);
+            write_to_log(ctx->log, c_config, log_str, name, true, LOG_HINT_DISCONNECT);
             sound_notify(self, toxic, silent, NT_WNDALERT_2, NULL);
         } else {
             const char *exit_string = get_group_exit_string(exit_type);
             line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "[%s]", exit_string);
             snprintf(log_str, sizeof(log_str), "[%s]", exit_string);
-            write_to_log(ctx->log, c_config, log_str, name, true);
+            write_to_log(ctx->log, c_config, log_str, name, true, LOG_HINT_DISCONNECT);
             sound_notify(self, toxic, silent, NT_WNDALERT_2, NULL);
         }
 
@@ -1603,41 +1603,45 @@ void groupchat_onGroupModeration(ToxWindow *self, Toxic *toxic, uint32_t groupnu
 
     groupchat_update_last_seen(groupnumber, src_peer_id);
 
+    char msg[MAX_STR_SIZE];
+
     switch (type) {
         case TOX_GROUP_MOD_EVENT_KICK:
-            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, RED, "-!- %s has been kicked by %s", tgt_name,
-                          src_name);
+            snprintf(msg, sizeof(msg), "-!- %s has been kicked by %s", tgt_name, src_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, RED, "%s", msg);
             break;
 
         case TOX_GROUP_MOD_EVENT_OBSERVER:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_OBSERVER;
-            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to observer",
-                          src_name, tgt_name);
+            snprintf(msg, sizeof(msg), "-!- %s has set %s's role to observer", src_name, tgt_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "%s", msg);
             sort_peerlist(groupnumber);
             break;
 
         case TOX_GROUP_MOD_EVENT_USER:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_USER;
-            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to user", src_name,
-                          tgt_name);
+            snprintf(msg, sizeof(msg), "-!- %s has set %s's role to user", src_name, tgt_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "%s", msg);
             sort_peerlist(groupnumber);
             break;
 
         case TOX_GROUP_MOD_EVENT_MODERATOR:
             chat->peer_list[tgt_index].role = TOX_GROUP_ROLE_MODERATOR;
-            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- %s has set %s's role to moderator",
-                          src_name,
-                          tgt_name);
+            snprintf(msg, sizeof(msg), "-!- %s has set %s's role to moderator", src_name, tgt_name);
+            line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "%s", msg);
             sort_peerlist(groupnumber);
             break;
 
         default:
             return;
     }
+
+    ChatContext *ctx = self->chatwin;
+    write_to_log(ctx->log, c_config, msg, NULL, true, LOG_HINT_MOD_EVENT);
 }
 
-static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *old_nick,
-        size_t old_length, const char *new_nick, size_t length)
+static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber,
+        const char *old_nick, size_t old_length, const char *new_nick, size_t length)
 {
     UNUSED_VAR(old_length);
 
@@ -1672,7 +1676,7 @@ static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint3
 
     length = MIN(length, TOX_MAX_NAME_LENGTH - 1);
     memcpy(chat->peer_list[peer_index].name, new_nick, length);
-    chat->peer_list[peer_index].name[length] = 0;
+    chat->peer_list[peer_index].name[length] = '\0';
     chat->peer_list[peer_index].name_length = length;
 
     line_info_add(self, toxic->c_config, true, old_nick, chat->peer_list[peer_index].name, NAME_CHANGE, 0,
@@ -1680,6 +1684,12 @@ static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint3
 
     groupchat_update_last_seen(groupnumber, peer_id);
     groupchat_update_name_list(groupnumber);
+
+    ChatContext *ctx = self->chatwin;
+
+    char log_event[TOX_MAX_NAME_LENGTH + 32];
+    snprintf(log_event, sizeof(log_event), "is now known as %s", chat->peer_list[peer_index].name);
+    write_to_log(ctx->log, toxic->c_config, log_event, old_nick, true, LOG_HINT_NAME);
 }
 
 static void groupchat_onGroupNickChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
@@ -1711,11 +1721,17 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Toxic *toxic, uint32_t 
 
     length = MIN(length, TOX_MAX_NAME_LENGTH - 1);
     memcpy(peer->name, new_nick, length);
-    peer->name[length] = 0;
+    peer->name[length] = '\0';
     peer->name_length = length;
 
     line_info_add(self, toxic->c_config, true, peer->prev_name, peer->name, NAME_CHANGE, 0, MAGENTA,
                   " is now known as ");
+
+    ChatContext *ctx = self->chatwin;
+
+    char log_event[TOX_MAX_NAME_LENGTH + 32];
+    snprintf(log_event, sizeof(log_event), "is now known as %s", peer->name);
+    write_to_log(ctx->log, toxic->c_config, log_event, peer->prev_name, true, LOG_HINT_NAME);
 
     snprintf(peer->prev_name, sizeof(peer->prev_name), "%s", peer->name);
 
@@ -1792,10 +1808,10 @@ static void send_group_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
         line_info_add(self, c_config, true, self_nick, NULL, OUT_MSG_READ, 0, 0, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, self_nick, false);
+        write_to_log(ctx->log, c_config, msg, self_nick, false, LOG_HINT_NORMAL_O);
     } else if (type == TOX_MESSAGE_TYPE_ACTION) {
         line_info_add(self, c_config, true, self_nick, NULL, OUT_ACTION_READ, 0, 0, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, self_nick, true);
+        write_to_log(ctx->log, c_config, msg, self_nick, true, LOG_HINT_ACTION);
     }
 }
 
@@ -1880,7 +1896,7 @@ static void send_group_prvt_message(ToxWindow *self, Toxic *toxic, uint32_t grou
     snprintf(pm_nick, sizeof(pm_nick), ">%s<", nick);
 
     line_info_add(self, c_config, true, pm_nick, NULL, OUT_PRVT_MSG, 0, 0, "%s", msg);
-    write_to_log(ctx->log, c_config, msg, pm_nick, false);
+    write_to_log(ctx->log, c_config, msg, pm_nick, false, LOG_HINT_PRIVATE_O);
 }
 
 /*
