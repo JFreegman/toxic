@@ -84,10 +84,6 @@
 #include "python_api.h"
 #endif
 
-#ifndef PACKAGE_DATADIR
-#define PACKAGE_DATADIR "."
-#endif
-
 #define DATANAME  "toxic_profile.tox"
 #define BLOCKNAME "toxic_blocklist"
 

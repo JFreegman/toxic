@@ -115,7 +115,7 @@ jobs:
             -DAUDIO
             -DBOX_NOTIFY
             -DGAMES
-            -DPACKAGE_DATADIR='""'
+            -DPACKAGE_DATADIR='"."'
             -DPYTHON
             -DQRCODE
             -DSOUND_NOTIFY

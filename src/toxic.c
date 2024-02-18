@@ -84,13 +84,6 @@
 #include "python_api.h"
 #endif
 
-#ifndef PACKAGE_DATADIR
-#define PACKAGE_DATADIR "."
-#endif
-
-#define DATANAME  "toxic_profile.tox"
-#define BLOCKNAME "toxic_blocklist"
-
 struct Winthread Winthread;
 
 static void queue_init_message(const char *msg, ...);
