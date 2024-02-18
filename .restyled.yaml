@@ -2,3 +2,8 @@
 restylers:
   - astyle:
       arguments: ["--options=astylerc"]
+  - clang-format:
+      image: restyled/restyler-clang-format:v16.0.6
+      include:
+        - "**/*.cc"
+        - "**/*.hh"

@@ -29,6 +29,10 @@
 #include "toxic.h"
 #include "windows.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define MAX_HISTORY 100000
 #define MIN_HISTORY 40
 #define MAX_LINE_INFO_QUEUE 1024
@@ -123,5 +127,21 @@ void line_info_init(struct history *hst);
 
 /* returns true if key is a match */
 bool line_info_onKey(ToxWindow *self, const Client_Config *c_config, wint_t key);
+
+/**
+ * Converts the multibyte string `msg` into a wide character string and puts
+ * the result in `buf`.
+ *
+ * @param buf is the buffer to put the wide character string in.
+ * @param buf_size is the number of wide characters that `buf` can hold.
+ *
+ * @return the widechar width of the string.
+ * @private
+ */
+uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* LINE_INFO_H */

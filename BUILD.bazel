@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("//tools/project:build_defs.bzl", "project")
 
 project(license = "gpl3-https")
@@ -9,19 +9,7 @@ AV_SRCS = [
     "src/x11*.c",
 ]
 
-cc_binary(
-    name = "toxic",
-    srcs = glob(
-        [
-            "src/*.c",
-            "src/*.h",
-        ],
-        exclude = AV_SRCS,
-    ) + select({
-        "//tools/config:linux-x86_64": glob(AV_SRCS),
-        "//conditions:default": [],
-    }),
-    copts = [
+COPTS = [
         "-D_DEFAULT_SOURCE",
         "-DGAMES",
         "-DHAVE_WIDECHAR",
@@ -34,8 +22,44 @@ cc_binary(
             "-DPYTHON",
         ],
         "//conditions:default": [],
+    })
+
+cc_library(
+    name = "libtoxic",
+    srcs = glob(
+        [
+            "src/*.c",
+            "src/*.h",
+        ],
+        exclude = ["src/main.c"] + AV_SRCS,
+    ) + select({
+        "//tools/config:linux-x86_64": glob(AV_SRCS),
+        "//conditions:default": [],
     }),
+    copts = COPTS,
     deps = [
+        "//c-toxcore",
+        "@curl",
+        "@libconfig",
+        "@libqrencode",
+        "@ncurses",
+    ] + select({
+        "//tools/config:linux-x86_64": [
+            "@libvpx",
+            "@openal",
+            "@python3//:python",
+            "@x11",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_binary(
+    name = "toxic",
+    srcs = ["src/main.c"],
+    copts = COPTS,
+    deps = [
+        ":libtoxic",
         "//c-toxcore",
         "@curl",
         "@libconfig",
@@ -57,4 +81,26 @@ sh_test(
     size = "small",
     srcs = [":toxic"],
     args = ["--help"],
+)
+
+cc_test(
+    name = "line_info_test",
+    size = "small",
+    srcs = ["src/line_info_test.cc"],
+    deps = [
+        ":libtoxic",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "misc_tools_test",
+    size = "small",
+    srcs = ["src/misc_tools_test.cc"],
+    deps = [
+        ":libtoxic",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
+    ],
 )

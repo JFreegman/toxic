@@ -28,6 +28,10 @@
 #include "toxic.h"
 #include "windows.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
@@ -271,5 +275,9 @@ int colour_string_to_int(const char *colour);
  * gcc compiler warnings produced by the -Wformat-nonliteral flag.
  */
 size_t format_time_str(char *s, size_t max, const char *format, const struct tm *tm);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* MISC_TOOLS_H */

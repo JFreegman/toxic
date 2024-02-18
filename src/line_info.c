@@ -24,6 +24,7 @@
 #define _GNU_SOURCE    /* needed for wcswidth() */
 #endif
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -348,7 +349,7 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
  *
  * Returns the widechar width of the string.
  */
-static uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg)
+uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg)
 {
     if (msg == NULL || msg[0] == '\0') {
         return 0;
@@ -366,7 +367,8 @@ static uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg
 
         return (uint16_t)width;
     } else {
-        fprintf(stderr, "Failed to convert string '%s' to widechar\n", msg);
+        fprintf(stderr, "Failed to convert string '%s' to widechar (len=%d, error=%s)\n",
+                msg, wc_msg_len, strerror(errno));
         const wchar_t *err = L"Failed to parse message";
         uint16_t width = (uint16_t)wcslen(err);
         wmemcpy(buf, err, width);
