@@ -155,11 +155,12 @@ void exit_toxic_success(Toxic *toxic)
 
 void exit_toxic_err(const char *errmsg, int errcode)
 {
+    endwin();
+
     if (freopen("/dev/tty", "w", stderr)) {
         fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
     }
 
-    endwin();
     exit(EXIT_FAILURE);
 }
 
