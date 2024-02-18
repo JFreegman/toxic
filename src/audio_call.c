@@ -993,7 +993,7 @@ static void realloc_calls(uint32_t n)
     Call *temp = realloc(CallControl.calls, n * sizeof(Call));
 
     if (temp == NULL) {
-        exit_toxic_err("failed in realloc_calls", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in realloc_calls");
     }
 
     CallControl.calls = temp;

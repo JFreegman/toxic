@@ -45,7 +45,7 @@ void line_info_init(struct history *hst)
     hst->line_root = calloc(1, sizeof(struct line_info));
 
     if (hst->line_root == NULL) {
-        exit_toxic_err("failed in line_info_init", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in line_info_init");
     }
 
     hst->line_start = hst->line_root;
@@ -412,7 +412,7 @@ int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_time
     struct line_info *new_line = calloc(1, sizeof(struct line_info));
 
     if (new_line == NULL) {
-        exit_toxic_err("failed in line_info_add", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in line_info_add");
     }
 
     char frmt_msg[MAX_LINE_INFO_MSG_SIZE];

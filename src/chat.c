@@ -1692,7 +1692,7 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
-        exit_toxic_err("failed in chat_onInit", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in chat_onInit");
     }
 
     self->x = x2;
@@ -1735,7 +1735,7 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     ctx->cqueue = calloc(1, sizeof(struct chat_queue));
 
     if (ctx->log == NULL || ctx->hst == NULL || ctx->cqueue == NULL) {
-        exit_toxic_err("failed in chat_onInit", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in chat_onInit");
     }
 
     line_info_init(ctx->hst);
@@ -1761,7 +1761,7 @@ ToxWindow *new_chat(Tox *tox, uint32_t friendnum)
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
     if (ret == NULL) {
-        exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_chat");
     }
 
     ret->type = WINDOW_TYPE_CHAT;
@@ -1812,7 +1812,7 @@ ToxWindow *new_chat(Tox *tox, uint32_t friendnum)
     Help *help = calloc(1, sizeof(Help));
 
     if (stb == NULL || chatwin == NULL || help == NULL) {
-        exit_toxic_err("failed in new_chat", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_chat");
     }
 
     ret->chatwin = chatwin;

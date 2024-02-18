@@ -2263,7 +2263,7 @@ static void groupchat_onInit(ToxWindow *self, Toxic *toxic)
     getmaxyx(self->window, y2, x2);
 
     if (x2 <= 0 || y2 <= 0) {
-        exit_toxic_err("failed in groupchat_onInit", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in groupchat_onInit");
     }
 
     self->x = x2;
@@ -2282,7 +2282,7 @@ static void groupchat_onInit(ToxWindow *self, Toxic *toxic)
     ctx->log = calloc(1, sizeof(struct chatlog));
 
     if (ctx->log == NULL || ctx->hst == NULL) {
-        exit_toxic_err("failed in groupchat_onInit", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in groupchat_onInit");
     }
 
     line_info_init(ctx->hst);
@@ -2344,7 +2344,7 @@ static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *gro
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
     if (ret == NULL) {
-        exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_group_chat");
     }
 
     ret->type = WINDOW_TYPE_GROUPCHAT;
@@ -2373,7 +2373,7 @@ static ToxWindow *new_group_chat(Tox *tox, uint32_t groupnumber, const char *gro
     Help *help = calloc(1, sizeof(Help));
 
     if (stb == NULL || chatwin == NULL || help == NULL) {
-        exit_toxic_err("failed in new_group_chat", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_group_chat");
     }
 
     ret->chatwin = chatwin;

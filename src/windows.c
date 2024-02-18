@@ -808,7 +808,7 @@ int64_t add_window(Toxic *toxic, ToxWindow *w)
     ToxWindow **tmp_list = (ToxWindow **)realloc(windows->list, (windows->count + 1) * sizeof(ToxWindow *));
 
     if (tmp_list == NULL) {
-        exit_toxic_err("realloc() failed in add_window()", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "realloc(_, %d * sizeof(ToxWindow *)) failed in add_window()", windows->count + 1);
     }
 
     tmp_list[new_index] = w;
@@ -885,7 +885,7 @@ void del_window(ToxWindow *w, Windows *windows, const Client_Config *c_config)
     ToxWindow **tmp_list = (ToxWindow **)realloc(windows->list, windows->count * sizeof(ToxWindow *));
 
     if (tmp_list == NULL && windows->count != 0) {
-        exit_toxic_err("realloc() failed in del_window()", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "realloc(_, %d * sizeof(ToxWindow *)) failed in del_window()", windows->count);
     }
 
     windows->list = tmp_list;
@@ -903,7 +903,7 @@ void del_window(ToxWindow *w, Windows *windows, const Client_Config *c_config)
 void init_windows(Toxic *toxic)
 {
     if (COLS <= CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT) {
-        exit_toxic_err("add_window() for prompt failed in init_windows", FATALERR_WININIT);
+        exit_toxic_err(FATALERR_WININIT, "add_window() for prompt failed in init_windows");
     }
 
     toxic->home_window = new_prompt();
@@ -911,11 +911,11 @@ void init_windows(Toxic *toxic)
     const int win_num = add_window(toxic, toxic->home_window);
 
     if (win_num != 0) {  // prompt window is always index 0
-        exit_toxic_err("add_window() for prompt failed in init_windows", FATALERR_WININIT);
+        exit_toxic_err(FATALERR_WININIT, "add_window() for prompt failed in init_windows");
     }
 
     if (add_window(toxic, new_friendlist()) != 1) {  // friendlist is always index 1
-        exit_toxic_err("add_window() for friendlist failed in init_windows", FATALERR_WININIT);
+        exit_toxic_err(FATALERR_WININIT, "add_window() for friendlist failed in init_windows");
     }
 
     set_active_window_by_id(toxic->windows, win_num);

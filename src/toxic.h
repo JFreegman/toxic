@@ -101,7 +101,7 @@ void flag_interface_refresh(void);
 void set_window_refresh_rate(size_t refresh_rate);
 
 void exit_toxic_success(Toxic *toxic) __attribute__((__noreturn__));
-void exit_toxic_err(const char *errmsg, int errcode) __attribute__((__noreturn__));
+void exit_toxic_err(int errcode, const char *errmsg, ...) __attribute__((__noreturn__, format(printf, 2, 3)));
 
 int store_data(const Toxic *toxic);
 

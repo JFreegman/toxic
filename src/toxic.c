@@ -153,12 +153,17 @@ void exit_toxic_success(Toxic *toxic)
     exit(EXIT_SUCCESS);
 }
 
-void exit_toxic_err(const char *errmsg, int errcode)
+void exit_toxic_err(int errcode, const char *errmsg, ...)
 {
     endwin();
 
     if (freopen("/dev/tty", "w", stderr)) {
-        fprintf(stderr, "Toxic session aborted with error code %d (%s)\n", errcode, errmsg);
+        va_list args;
+        va_start(args, errmsg);
+        vfprintf(stderr, errmsg, args);
+        va_end(args);
+
+        fprintf(stderr, "; toxic session aborted with error code %d\n", errcode);
     }
 
     exit(EXIT_FAILURE);
@@ -292,8 +297,9 @@ void init_term(const Client_Config *c_config, bool use_default_locale)
 
     if (!use_default_locale) {
         if (setlocale(LC_ALL, "") == NULL)
-            exit_toxic_err("Could not set your locale. Please check your locale settings or "
-                           "disable unicode support with the -d flag.", FATALERR_LOCALE_NOT_SET);
+            exit_toxic_err(FATALERR_LOCALE_NOT_SET,
+                           "Could not set your locale. Please check your locale settings or "
+                           "disable unicode support with the -d flag.");
     }
 
 #endif
@@ -401,13 +407,13 @@ static void queue_init_message(const char *msg, ...)
     char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
 
     if (new_msgs == NULL) {
-        exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
     }
 
     new_msgs[i] = malloc(MAX_STR_SIZE);
 
     if (new_msgs[i] == NULL) {
-        exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
     }
 
     snprintf(new_msgs[i], MAX_STR_SIZE, "%s", frmt_msg);

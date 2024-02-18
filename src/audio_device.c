@@ -691,7 +691,7 @@ static void *poll_input(void *arg)
     int16_t *frame_buf = malloc(FRAME_BUF_SIZE * sizeof(int16_t));
 
     if (frame_buf == NULL) {
-        exit_toxic_err("failed in thread_poll", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in thread_poll");
     }
 
     while (1) {

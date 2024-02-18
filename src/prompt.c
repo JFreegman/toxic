@@ -602,14 +602,14 @@ void prompt_init_statusbar(Toxic *toxic, bool first_time_run)
     ToxWindow *self = toxic->home_window;
 
     if (self == NULL) {
-        exit_toxic_err("failed in prompt_init_statusbar", FATALERR_WININIT);
+        exit_toxic_err(FATALERR_WININIT, "failed in prompt_init_statusbar");
     }
 
     int x2, y2;
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
-        exit_toxic_err("failed in prompt_init_statusbar", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in prompt_init_statusbar");
     }
 
     UNUSED_VAR(y2);
@@ -697,7 +697,7 @@ static void prompt_onInit(ToxWindow *self, Toxic *toxic)
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
-        exit_toxic_err("failed in prompt_onInit", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in prompt_onInit");
     }
 
     ChatContext *ctx = self->chatwin;
@@ -710,7 +710,7 @@ static void prompt_onInit(ToxWindow *self, Toxic *toxic)
     ctx->hst = calloc(1, sizeof(struct history));
 
     if (ctx->log == NULL || ctx->hst == NULL) {
-        exit_toxic_err("failed in prompt_onInit", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in prompt_onInit");
     }
 
     line_info_init(ctx->hst);
@@ -730,7 +730,7 @@ ToxWindow *new_prompt(void)
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
     if (ret == NULL) {
-        exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_prompt");
     }
 
     ret->num = -1;
@@ -749,7 +749,7 @@ ToxWindow *new_prompt(void)
     Help *help = calloc(1, sizeof(Help));
 
     if (stb == NULL || chatwin == NULL || help == NULL) {
-        exit_toxic_err("failed in new_prompt", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_prompt");
     }
 
     ret->chatwin = chatwin;

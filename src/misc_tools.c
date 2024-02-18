@@ -370,7 +370,7 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     char *path = strdup(pathname);
 
     if (path == NULL) {
-        exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in get_file_name");
     }
 
     while (len >= 0 && pathname[len] == '/') {
@@ -380,7 +380,7 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     char *finalname = strdup(path);
 
     if (finalname == NULL) {
-        exit_toxic_err("failed in get_file_name", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in get_file_name");
     }
 
     const char *basenm = strrchr(path, '/');

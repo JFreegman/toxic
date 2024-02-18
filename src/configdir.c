@@ -123,7 +123,7 @@ int create_user_config_dirs(char *path)
     char *logpath = malloc(strlen(path) + strlen(LOGDIR) + 1);
 
     if (fullpath == NULL || logpath == NULL) {
-        exit_toxic_err("failed in load_data_structures", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in load_data_structures");
     }
 
     strcpy(fullpath, path);

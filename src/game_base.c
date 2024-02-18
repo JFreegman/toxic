@@ -843,7 +843,7 @@ static void game_onInit(ToxWindow *self, Toxic *toxic)
     getmaxyx(self->window, max_y, max_x);
 
     if (max_y <= 0 || max_x <= 0) {
-        exit_toxic_err("failed in game_onInit", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in game_onInit");
     }
 
     self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, max_x, max_y - 2, 0);

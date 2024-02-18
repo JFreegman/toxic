@@ -51,7 +51,7 @@ void cqueue_add(struct chat_queue *q, const char *msg, size_t len, uint8_t type,
     struct cqueue_msg *new_m = calloc(1, sizeof(struct cqueue_msg));
 
     if (new_m == NULL) {
-        exit_toxic_err("failed in cqueue_message", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in cqueue_message");
     }
 
     snprintf(new_m->message, sizeof(new_m->message), "%s", msg);

@@ -544,7 +544,7 @@ static void conference_update_name_list(uint32_t conferencenum)
     chat->name_list = malloc(chat->num_peers * sizeof(NameListEntry));
 
     if (chat->name_list == NULL) {
-        exit_toxic_err("failed in conference_update_name_list", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in conference_update_name_list");
     }
 
     uint32_t count = 0;
@@ -703,7 +703,7 @@ static void update_peer_list(ToxWindow *self, Toxic *toxic, uint32_t conferencen
     ConferencePeer *old_peer_list = malloc(old_num_peers * sizeof(ConferencePeer));
 
     if (!old_peer_list) {
-        exit_toxic_err("failed in update_peer_list", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in update_peer_list");
     }
 
     if (chat->peer_list != NULL) {
@@ -1261,7 +1261,7 @@ static void conference_onInit(ToxWindow *self, Toxic *toxic)
     getmaxyx(self->window, y2, x2);
 
     if (x2 <= 0 || y2 <= 0) {
-        exit_toxic_err("failed in conference_onInit", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in conference_onInit");
     }
 
     ChatContext *ctx = self->chatwin;
@@ -1275,7 +1275,7 @@ static void conference_onInit(ToxWindow *self, Toxic *toxic)
     ctx->log = calloc(1, sizeof(struct chatlog));
 
     if (ctx->log == NULL || ctx->hst == NULL) {
-        exit_toxic_err("failed in conference_onInit", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in conference_onInit");
     }
 
     line_info_init(ctx->hst);
@@ -1366,7 +1366,7 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
     if (ret == NULL) {
-        exit_toxic_err("failed in new_conference_chat", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_conference_chat");
     }
 
     ret->type = WINDOW_TYPE_CONFERENCE;
@@ -1385,7 +1385,7 @@ static ToxWindow *new_conference_chat(uint32_t conferencenum)
     Help *help = calloc(1, sizeof(Help));
 
     if (chatwin == NULL || help == NULL) {
-        exit_toxic_err("failed in new_conference_chat", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_conference_chat");
     }
 
     ret->chatwin = chatwin;

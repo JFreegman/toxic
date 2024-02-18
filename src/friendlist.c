@@ -97,7 +97,7 @@ static void realloc_friends(int n)
     uint32_t *f_idx = realloc(Friends.index, n * sizeof(uint32_t));
 
     if (f == NULL || f_idx == NULL) {
-        exit_toxic_err("failed in realloc_friends", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in realloc_friends");
     }
 
     Friends.list = f;
@@ -118,7 +118,7 @@ static void realloc_blocklist(int n)
     uint32_t *b_idx = realloc(Blocked.index, n * sizeof(uint32_t));
 
     if (b == NULL || b_idx == NULL) {
-        exit_toxic_err("failed in realloc_blocklist", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in realloc_blocklist");
     }
 
     Blocked.list = b;
@@ -1346,7 +1346,7 @@ void friendlist_onInit(ToxWindow *self, Toxic *toxic)
     getmaxyx(self->window, y2, x2);
 
     if (y2 <= 0 || x2 <= 0) {
-        exit_toxic_err("failed in friendlist_onInit", FATALERR_CURSES);
+        exit_toxic_err(FATALERR_CURSES, "failed in friendlist_onInit");
     }
 
     self->window_bar = subwin(self->window, WINDOW_BAR_HEIGHT, x2, y2 - 2, 0);
@@ -1641,7 +1641,7 @@ ToxWindow *new_friendlist(void)
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
     if (ret == NULL) {
-        exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_friendlist");
     }
 
     ret->type = WINDOW_TYPE_FRIEND_LIST;
@@ -1682,7 +1682,7 @@ ToxWindow *new_friendlist(void)
     Help *help = calloc(1, sizeof(Help));
 
     if (help == NULL) {
-        exit_toxic_err("failed in new_friendlist", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in new_friendlist");
     }
 
     ret->help = help;

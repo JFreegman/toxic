@@ -209,13 +209,13 @@ static void queue_init_message(const char *msg, ...)
     char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
 
     if (new_msgs == NULL) {
-        exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
     }
 
     new_msgs[i] = malloc(MAX_STR_SIZE);
 
     if (new_msgs[i] == NULL) {
-        exit_toxic_err("Failed in queue_init_message", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
     }
 
     snprintf(new_msgs[i], MAX_STR_SIZE, "%s", frmt_msg);
@@ -587,20 +587,20 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
 
         if (len == 0) {
             fclose(fp);
-            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            exit_toxic_err(FATALERR_FILEOP, "failed in load_tox");
         }
 
         char *data = malloc(len);
 
         if (data == NULL) {
             fclose(fp);
-            exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
+            exit_toxic_err(FATALERR_MEMORY, "failed in load_tox");
         }
 
         if (fread(data, len, 1, fp) != 1) {
             fclose(fp);
             free(data);
-            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            exit_toxic_err(FATALERR_FILEOP, "failed in load_tox");
         }
 
         const bool is_encrypted = tox_is_data_encrypted((uint8_t *) data);
@@ -609,7 +609,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
         if (run_opts->encrypt_data && is_encrypted) {
             fclose(fp);
             free(data);
-            exit_toxic_err("failed in load_tox", FATALERR_ENCRYPT);
+            exit_toxic_err(FATALERR_ENCRYPT, "failed in load_tox");
         }
 
         Client_Data *client_data = &toxic->client_data;
@@ -640,7 +640,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
             if (plain == NULL) {
                 fclose(fp);
                 free(data);
-                exit_toxic_err("failed in load_tox", FATALERR_MEMORY);
+                exit_toxic_err(FATALERR_MEMORY, "failed in load_tox");
             }
 
             while (true) {
@@ -696,7 +696,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
                     fclose(fp);
                     free(data);
                     free(plain);
-                    exit_toxic_err("tox_pass_decrypt() failed", pwerr);
+                    exit_toxic_err(pwerr, "tox_pass_decrypt() failed");
                 }
             }
 
@@ -718,7 +718,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
         free(data);
     } else {   /* Data file does not/should not exist */
         if (file_exists(toxic->client_data.data_path)) {
-            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            exit_toxic_err(FATALERR_FILEOP, "failed in load_tox");
         }
 
         tox_options_set_savedata_type(tox_opts, TOX_SAVEDATA_TYPE_NONE);
@@ -730,7 +730,7 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Tox_Err_New *ne
         }
 
         if (store_data(toxic) == -1) {
-            exit_toxic_err("failed in load_tox", FATALERR_FILEOP);
+            exit_toxic_err(FATALERR_FILEOP, "failed in load_tox");
         }
     }
 
@@ -743,7 +743,7 @@ static bool load_toxic(Toxic *toxic)
     struct Tox_Options *tox_opts = tox_options_new(&options_new_err);
 
     if (tox_opts == NULL) {
-        exit_toxic_err("tox_options_new returned fatal error", options_new_err);
+        exit_toxic_err(options_new_err, "tox_options_new returned fatal error");
     }
 
     init_tox_options(toxic->run_opts, tox_opts);
@@ -1020,7 +1020,7 @@ static void parse_args(Toxic *toxic, int argc, char *argv[])
                 client_data->data_path = malloc(strlen(optarg) + 1);
 
                 if (client_data->data_path == NULL) {
-                    exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+                    exit_toxic_err(FATALERR_MEMORY, "failed in parse_args");
                 }
 
                 strcpy(client_data->data_path, optarg);
@@ -1028,7 +1028,7 @@ static void parse_args(Toxic *toxic, int argc, char *argv[])
                 client_data->block_path = malloc(strlen(optarg) + strlen("-blocklist") + 1);
 
                 if (client_data->block_path == NULL) {
-                    exit_toxic_err("failed in parse_args", FATALERR_MEMORY);
+                    exit_toxic_err(FATALERR_MEMORY, "failed in parse_args");
                 }
 
                 strcpy(client_data->block_path, optarg);
@@ -1103,13 +1103,13 @@ static void parse_args(Toxic *toxic, int argc, char *argv[])
                 snprintf(run_opts->proxy_address, sizeof(run_opts->proxy_address), "%s", optarg);
 
                 if (++optind > argc || argv[optind - 1][0] == '-') {
-                    exit_toxic_err("Proxy error", FATALERR_PROXY);
+                    exit_toxic_err(FATALERR_PROXY, "Proxy error");
                 }
 
                 long int port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE) {
-                    exit_toxic_err("Proxy error", FATALERR_PROXY);
+                    exit_toxic_err(FATALERR_PROXY, "Proxy error");
                 }
 
                 run_opts->proxy_port = port;
@@ -1182,7 +1182,7 @@ static void init_default_data_files(Client_Data *client_data)
     char *user_config_dir = get_user_config_dir();
 
     if (user_config_dir == NULL) {
-        exit_toxic_err("failed in init_default_data_files()", FATALERR_FILEOP);
+        exit_toxic_err(FATALERR_FILEOP, "failed in init_default_data_files()");
     }
 
     int config_err = create_user_config_dirs(user_config_dir);
@@ -1192,14 +1192,14 @@ static void init_default_data_files(Client_Data *client_data)
         client_data->block_path = strdup(BLOCKNAME);
 
         if (client_data->data_path == NULL || client_data->block_path == NULL) {
-            exit_toxic_err("failed in init_default_data_files()", FATALERR_MEMORY);
+            exit_toxic_err(FATALERR_MEMORY, "failed in init_default_data_files()");
         }
     } else {
         client_data->data_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
         client_data->block_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
 
         if (client_data->data_path == NULL || client_data->block_path == NULL) {
-            exit_toxic_err("failed in init_default_data_files()", FATALERR_MEMORY);
+            exit_toxic_err(FATALERR_MEMORY, "failed in init_default_data_files()");
         }
 
         strcpy(client_data->data_path, user_config_dir);
@@ -1267,7 +1267,7 @@ int main(int argc, char **argv)
     Toxic *toxic = toxic_init();
 
     if (toxic == NULL) {
-        exit_toxic_err("failed in main", FATALERR_TOXIC_INIT);
+        exit_toxic_err(FATALERR_TOXIC_INIT, "failed in main");
     }
 
     parse_args(toxic, argc, argv);
@@ -1335,7 +1335,7 @@ int main(int argc, char **argv)
 #endif /* X11 */
 
     if (!load_toxic(toxic)) {
-        exit_toxic_err("Failed in main", FATALERR_TOX_INIT);
+        exit_toxic_err(FATALERR_TOX_INIT, "Failed in main");
     }
 
     if (run_opts->encrypt_data && !datafile_exists) {
@@ -1373,7 +1373,7 @@ int main(int argc, char **argv)
     set_active_window_by_type(windows, WINDOW_TYPE_PROMPT);
 
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {
-        exit_toxic_err("failed in main", FATALERR_MUTEX_INIT);
+        exit_toxic_err(FATALERR_MUTEX_INIT, "failed in main");
     }
 
 #ifdef AUDIO
@@ -1395,7 +1395,7 @@ int main(int argc, char **argv)
 
     /* AV thread */
     if (pthread_create(&av_thread.tid, NULL, thread_av, (void *) toxic->av) != 0) {
-        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+        exit_toxic_err(FATALERR_THREAD_CREATE, "failed in main");
     }
 
     set_al_device(input, c_config->audio_in_dev);
@@ -1411,12 +1411,12 @@ int main(int argc, char **argv)
 
     /* thread for ncurses UI */
     if (pthread_create(&Winthread.tid, NULL, thread_winref, (void *) toxic) != 0) {
-        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+        exit_toxic_err(FATALERR_THREAD_CREATE, "failed in main");
     }
 
     /* thread for message queue */
     if (pthread_create(&cqueue_thread.tid, NULL, thread_cqueue, (void *) toxic) != 0) {
-        exit_toxic_err("failed in main", FATALERR_THREAD_CREATE);
+        exit_toxic_err(FATALERR_THREAD_CREATE, "failed in main");
     }
 
 #ifdef PYTHON

@@ -224,7 +224,7 @@ static int parse_command(const char *input, char (*args)[MAX_STR_SIZE])
     char *cmd = strdup(input);
 
     if (cmd == NULL) {
-        exit_toxic_err("failed in parse_command", FATALERR_MEMORY);
+        exit_toxic_err(FATALERR_MEMORY, "failed in parse_command");
     }
 
     int num_args = 0;
