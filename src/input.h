@@ -31,6 +31,6 @@ void input_new_char(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int 
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int mx_x);
+bool input_handle(ToxWindow *self, Toxic *toxic, wint_t key, int x, int mx_x);
 
 #endif /* INPUT_H */

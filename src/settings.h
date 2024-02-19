@@ -35,6 +35,8 @@
 
 #define PASSWORD_EVAL_MAX 512
 
+typedef struct Toxic Toxic;
+
 /* Holds user setting values defined in the toxic config file. */
 typedef struct Client_Config {
     int autolog;           /* boolean */
@@ -215,6 +217,6 @@ int settings_load_conferences(Windows *windows, const Run_Options *run_opts);
 /*
  * Reloads config settings.
  */
-void settings_reload(Windows *windows, Client_Config *c_config, const Run_Options *run_opts);
+void settings_reload(Toxic *toxic);
 
 #endif /* SETTINGS_H */

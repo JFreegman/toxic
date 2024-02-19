@@ -228,16 +228,16 @@ static void chat_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Mess
         return;
     }
 
-    char nick[TOX_MAX_NAME_LENGTH];
-    get_nick_truncate(toxic->tox, nick, num);
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    get_friend_name(name, sizeof(name), num);
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
-        recv_message_helper(self, toxic, msg, nick);
+        recv_message_helper(self, toxic, msg, name);
         return;
     }
 
     if (type == TOX_MESSAGE_TYPE_ACTION) {
-        recv_action_helper(self, toxic, msg, nick);
+        recv_action_helper(self, toxic, msg, name);
         return;
     }
 }
@@ -251,7 +251,6 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         return;
     }
 
-    Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
     if (self->num != num) {
@@ -328,6 +327,36 @@ static void chat_onNickChange(ToxWindow *self, Toxic *toxic, uint32_t num, const
     statusbar->nick_len = length;
 
     set_window_title(self, statusbar->nick, length);
+}
+
+static void chat_onNickRefresh(ToxWindow *self, Toxic *toxic)
+{
+    if (self == NULL || toxic == NULL) {
+        return;
+    }
+
+    StatusBar *statusbar = self->stb;
+
+    char new_name[TOXIC_MAX_NAME_LENGTH + 1];
+    const uint16_t n_len = get_friend_name(new_name, sizeof(new_name), self->num);
+
+    if (strcmp(new_name, statusbar->nick) == 0) {
+        return;
+    }
+
+    char self_key[TOX_ADDRESS_SIZE];
+    tox_self_get_address(toxic->tox, (uint8_t *) self_key);
+
+    char other_key[TOX_PUBLIC_KEY_SIZE];
+
+    if (get_friend_public_key(other_key, self->num)) {
+        if (rename_logfile(toxic->windows, toxic->c_config, statusbar->nick, new_name, self_key, other_key,
+                           self->id) != 0) {
+            fprintf(stderr, "failed to rename logfile\n");
+        }
+    }
+
+    chat_onNickChange(self, toxic, self->num, new_name, n_len);
 }
 
 static void chat_onStatusChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_User_Status status)
@@ -1703,7 +1732,6 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     statusbar->status = get_friend_status(self->num);
     statusbar->connection = get_friend_connection_status(self->num);
 
-
     const size_t s_len = tox_friend_get_status_message_size(tox, self->num, NULL);
 
     if (s_len > 0 && s_len <= TOX_MAX_STATUS_MESSAGE_LENGTH) {
@@ -1769,6 +1797,7 @@ ToxWindow *new_chat(Tox *tox, uint32_t friendnum)
     ret->onKey = &chat_onKey;
     ret->onDraw = &chat_onDraw;
     ret->onInit = &chat_onInit;
+    ret->onNickRefresh = &chat_onNickRefresh;
     ret->onMessage = &chat_onMessage;
     ret->onConnectionChange = &chat_onConnectionChange;
     ret->onTypingChange = & chat_onTypingChange;

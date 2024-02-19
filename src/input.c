@@ -261,7 +261,7 @@ static void input_history(ToxWindow *self, const Client_Config *c_config, wint_t
 
 /* Handles non-printable input keys that behave the same for all types of chat windows.
    return true if key matches a function, false otherwise */
-bool input_handle(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int mx_x)
+bool input_handle(ToxWindow *self, Toxic *toxic, wint_t key, int x, int mx_x)
 {
     const Client_Config *c_config = toxic->c_config;
 
@@ -337,7 +337,7 @@ bool input_handle(ToxWindow *self, const Toxic *toxic, wint_t key, int x, int mx
        maybe convert entire function to if/else and make them all customizable keys? */
     if (!match) {
         if (key == c_config->key_reload_config) {
-            settings_reload(toxic->windows, toxic->c_config, toxic->run_opts);
+            settings_reload(toxic);
             match = true;
         } else if (key == c_config->key_toggle_peerlist) {
             if (self->type == WINDOW_TYPE_CONFERENCE) {

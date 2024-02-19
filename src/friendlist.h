@@ -177,6 +177,14 @@ bool friend_get_auto_accept_files(uint32_t friendnumber);
 uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber);
 
 /*
+ * Puts a friend's public key in `pk`, which must have room for at least
+ * TOX_PUBLIC_KEY_SIZE bytes.
+ *
+ * Returns true on success.
+ */
+bool get_friend_public_key(char *pk, uint32_t friendnumber);
+
+/*
  * Enable or disable logging for this friend.
  */
 void friend_set_logging_enabled(uint32_t friendnumber, bool enable_log);

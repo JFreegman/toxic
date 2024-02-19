@@ -968,8 +968,12 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
     return 0;
 }
 
-void settings_reload(Windows *windows, Client_Config *c_config, const Run_Options *run_opts)
+void settings_reload(Toxic *toxic)
 {
+    Client_Config *c_config = toxic->c_config;
+    const Run_Options *run_opts = toxic->run_opts;
+    Windows *windows = toxic->windows;
+
     int ret = settings_load_main(c_config, run_opts);
 
     if (ret < 0) {
@@ -996,4 +1000,5 @@ void settings_reload(Windows *windows, Client_Config *c_config, const Run_Option
 
     endwin();
     init_term(c_config, run_opts->default_locale);
+    refresh_window_names(toxic);
 }

@@ -156,12 +156,11 @@ typedef struct GameData GameData;
 #endif
 
 struct ToxWindow {
-    /* ncurses */
     bool(*onKey)(ToxWindow *, Toxic *, wint_t, bool);
     void(*onDraw)(ToxWindow *, Toxic *);
     void(*onInit)(ToxWindow *, Toxic *);
+    void(*onNickRefresh)(ToxWindow *, Toxic *);
 
-    /* toxcore */
     void(*onFriendRequest)(ToxWindow *, Toxic *, const char *, const char *, size_t);
     void(*onFriendAdded)(ToxWindow *, Toxic *, uint32_t, bool);
     void(*onConnectionChange)(ToxWindow *, Toxic *, uint32_t, Tox_Connection);
@@ -364,5 +363,11 @@ uint16_t get_num_active_windows_type(const Windows *windows, Window_Type type);
 /* refresh inactive windows to prevent scrolling bugs.
    call at least once per second */
 void refresh_inactive_windows(Windows *windows, const Client_Config *c_config);
+
+/*
+ * Updates the friend name associated with the given window. Called
+ * after config changes.
+ */
+void refresh_window_names(Toxic *toxic);
 
 #endif // WINDOWS_H

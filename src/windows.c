@@ -1438,6 +1438,19 @@ bool enable_window_log_by_number_type(Windows *windows, uint32_t number, Window_
     return log_enable(ctx->log) == 0;
 }
 
+void refresh_window_names(Toxic *toxic)
+{
+    Windows *windows = toxic->windows;
+
+    for (uint16_t i = 0; i < windows->count; ++i) {
+        ToxWindow *w = windows->list[i];
+
+        if (w->onNickRefresh != NULL) {
+            w->onNickRefresh(w, toxic);
+        }
+    }
+}
+
 /* destroys all chat and conference windows (should only be called on shutdown) */
 void kill_all_windows(Toxic *toxic)
 {

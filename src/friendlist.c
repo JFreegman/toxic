@@ -484,6 +484,14 @@ static void friendlist_onNickChange(ToxWindow *self, Toxic *toxic, uint32_t num,
     sort_friendlist_index();
 }
 
+static void friendlist_onNickRefresh(ToxWindow *self, Toxic *toxic)
+{
+    UNUSED_VAR(self);
+    UNUSED_VAR(toxic);
+
+    sort_friendlist_index();
+}
+
 static void friendlist_onStatusChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_User_Status status)
 {
     UNUSED_VAR(self);
@@ -1489,6 +1497,22 @@ bool friend_get_auto_accept_files(uint32_t friendnumber)
     return friend->auto_accept_files;
 }
 
+bool get_friend_public_key(char *pk, uint32_t friendnumber)
+{
+    if (friendnumber >= Friends.max_idx) {
+        return false;
+    }
+
+    const ToxicFriend *friend = &Friends.list[friendnumber];
+
+    if (!friend->active) {
+        return false;
+    }
+
+    memcpy(pk, friend->pub_key, TOX_PUBLIC_KEY_SIZE);
+    return true;
+}
+
 uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber)
 {
     if (friendnumber >= Friends.max_idx) {
@@ -1502,7 +1526,7 @@ uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber)
     }
 
     snprintf(buf, buf_size, "%s", friend->name);
-    return friend->namelength;
+    return (uint16_t) strlen(buf);
 
 on_error:
     snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
@@ -1735,6 +1759,7 @@ ToxWindow *new_friendlist(void)
     ret->onInit = &friendlist_onInit;
     ret->onKey = &friendlist_onKey;
     ret->onDraw = &friendlist_onDraw;
+    ret->onNickRefresh = &friendlist_onNickRefresh;
     ret->onFriendAdded = &friendlist_onFriendAdded;
     ret->onMessage = &friendlist_onMessage;
     ret->onConnectionChange = &friendlist_onConnectionChange;
