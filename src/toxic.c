@@ -47,6 +47,7 @@
 #include "message_queue.h"
 #include "misc_tools.h"
 #include "name_lookup.h"
+#include "netprof.h"
 #include "notify.h"
 #include "prompt.h"
 #include "run_options.h"
@@ -95,6 +96,12 @@ void exit_toxic_success(Toxic *toxic)
         exit(EXIT_FAILURE);
     }
 
+    Run_Options *run_opts = toxic->run_opts;
+
+    if (run_opts->netprof_log_dump) {
+        netprof_log_dump(toxic->tox, run_opts->netprof_fp, get_unix_time() - run_opts->netprof_start_time);
+    }
+
     store_data(toxic);
 
     terminate_notify();
@@ -120,6 +127,11 @@ void exit_toxic_success(Toxic *toxic)
     if (run_opts->log_fp != NULL) {
         fclose(run_opts->log_fp);
         run_opts->log_fp = NULL;
+    }
+
+    if (run_opts->netprof_fp != NULL) {
+        fclose(run_opts->netprof_fp);
+        run_opts->netprof_fp = NULL;
     }
 
     endwin();
