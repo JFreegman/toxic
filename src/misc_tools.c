@@ -538,15 +538,18 @@ size_t get_group_self_nick_truncate(Tox *tox, char *buf, uint32_t groupnum)
     return len;
 }
 
-/* copies data to msg buffer, removing return characters.
-   returns length of msg, which will be no larger than size-1 */
 size_t copy_tox_str(char *msg, size_t size, const char *data, size_t length)
 {
     size_t j = 0;
 
     for (size_t i = 0; (i < length) && (j < size - 1); ++i) {
-        if (data[i] != '\r') {
-            msg[j] = data[i];
+        const char ch = data[i];
+
+        if (ch == '\t' || ch == '\v') {
+            msg[j] = ' ';
+            ++j;
+        } else if (ch != '\r') {
+            msg[j] = ch;
             ++j;
         }
     }
