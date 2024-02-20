@@ -10,19 +10,19 @@ AV_SRCS = [
 ]
 
 COPTS = [
-        "-D_DEFAULT_SOURCE",
-        "-DGAMES",
-        "-DHAVE_WIDECHAR",
-        "-DPACKAGE_DATADIR='\"data\"'",
-        "-DQRCODE",
-    ] + select({
-        "//tools/config:linux-x86_64": [
-            "-DAUDIO",
-            "-DVIDEO",
-            "-DPYTHON",
-        ],
-        "//conditions:default": [],
-    })
+    "-D_DEFAULT_SOURCE",
+    "-DGAMES",
+    "-DHAVE_WIDECHAR",
+    "-DPACKAGE_DATADIR='\"data\"'",
+    "-DQRCODE",
+] + select({
+    "//tools/config:linux-x86_64": [
+        "-DAUDIO",
+        "-DVIDEO",
+        "-DPYTHON",
+    ],
+    "//conditions:default": [],
+})
 
 cc_library(
     name = "libtoxic",
