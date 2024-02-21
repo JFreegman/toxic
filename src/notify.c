@@ -70,7 +70,7 @@
 
 #define CONTENT_HIDDEN_MESSAGE "[Content hidden]"
 
-static_assert(sizeof(CONTENT_HIDDEN_MESSAGE) < MAX_BOX_MSG_LEN,
+_Static_assert(sizeof(CONTENT_HIDDEN_MESSAGE) < MAX_BOX_MSG_LEN,
               "sizeof(CONTENT_HIDDEN_MESSAGE) >= MAX_BOX_MSG_LEN");
 
 static struct Control {

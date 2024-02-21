@@ -68,7 +68,7 @@ extern struct Winthread Winthread;
 
 #define GROUP_SIDEBAR_OFFSET 3    /* Offset for the peer number box at the top of the statusbar */
 
-static_assert(TOX_GROUP_CHAT_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_GROUP_CHAT_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
+_Static_assert(TOX_GROUP_CHAT_ID_SIZE == TOX_PUBLIC_KEY_SIZE, "TOX_GROUP_CHAT_ID_SIZE != TOX_PUBLIC_KEY_SIZE");
 
 /* groupchat command names used for tab completion. */
 static const char *const group_cmd_list[] = {
