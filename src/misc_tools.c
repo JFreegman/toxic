@@ -567,9 +567,9 @@ int char_find(int idx, const char *s, char ch)
         return 0;
     }
 
-    int i = idx;
+    int i;
 
-    for (i = idx; s[i]; ++i) {
+    for (i = idx; s[i] != '\0'; ++i) {
         if (s[i] == ch) {
             break;
         }

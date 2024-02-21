@@ -1197,7 +1197,7 @@ static void friendlist_onDraw(ToxWindow *self, Toxic *toxic)
             pthread_mutex_unlock(&Winthread.lock);
 
             if (connection_status != TOX_CONNECTION_NONE) {
-                int colour = MAGENTA;
+                int colour;
 
                 switch (status) {
                     case TOX_USER_STATUS_NONE:
@@ -1210,6 +1210,10 @@ static void friendlist_onDraw(ToxWindow *self, Toxic *toxic)
 
                     case TOX_USER_STATUS_BUSY:
                         colour = RED;
+                        break;
+
+                    default:
+                        colour = BAR_TEXT;
                         break;
                 }
 

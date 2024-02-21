@@ -1224,7 +1224,6 @@ static void conference_onDraw(ToxWindow *self, Toxic *toxic)
         mvwaddch(ctx->sidebar, line, 0, ACS_LTEE);
         mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
         wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
-        ++line;
 
         for (uint32_t i = 0;
                 i < num_peers && i < y2 - header_lines - CHATBOX_HEIGHT;

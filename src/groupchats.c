@@ -1955,7 +1955,7 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         input_ret = true;
 
         if (ctx->len > 0) {
-            int diff = -1;
+            int diff;
 
             /* TODO: make this not suck */
             if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {

@@ -1375,7 +1375,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 
     if (key == L'\t' && ctx->len > 1 && ctx->line[0] == '/') {    /* TAB key: auto-complete */
         input_ret = true;
-        int diff = -1;
+        int diff;
 
         /* TODO: make this not suck */
         if (wcsncmp(ctx->line, L"/sendfile ", wcslen(L"/sendfile ")) == 0) {
@@ -1395,7 +1395,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
             diff = complete_line(self, toxic, chat_cmd_list, sizeof(chat_cmd_list) / sizeof(char *));
         }
 
-        if (diff != -1) {
+        if (diff >= 0) {
             if (x + diff > x2 - 1) {
                 const int wlen = MAX(0, wcswidth(ctx->line, sizeof(ctx->line) / sizeof(wchar_t)));
                 ctx->start = wlen < x2 ? 0 : wlen - x2 + 1;
