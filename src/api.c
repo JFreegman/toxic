@@ -20,6 +20,8 @@
  *
  */
 
+#include "api.h"
+
 #include <dirent.h>
 #include <stdint.h>
 

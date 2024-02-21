@@ -20,12 +20,14 @@
  *
  */
 
+#include "python_api.h"
+
 #include "api.h"
+#include "toxic.h"
+#include "execute.h"
 
 #ifdef PYTHON
 #include <Python.h>
-
-#include "execute.h"
 
 extern Toxic       *user_toxic;
 
