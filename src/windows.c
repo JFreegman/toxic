@@ -20,6 +20,7 @@
  *
  */
 
+#include <assert.h>
 #include <ctype.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -862,7 +863,10 @@ static void set_next_window(Windows *windows, const Client_Config *c_config, int
 
     if (ch == c_config->key_prev_tab) {
         windows->active_index = windows->active_index > 0 ? windows->active_index - 1 : windows->count - 1;
+        return;
     }
+
+    fprintf(stderr, "Warning: set_next_window() got invalid key: %c\n", ch);
 }
 
 /* Deletes window w and cleans up */
@@ -878,6 +882,8 @@ void del_window(ToxWindow *w, Windows *windows, const Client_Config *c_config)
     delwin(w->window);
     free(w);
 
+    assert(windows->count > 0);
+
     --windows->count;
 
     if (windows->count != idx) {
@@ -886,10 +892,17 @@ void del_window(ToxWindow *w, Windows *windows, const Client_Config *c_config)
 
     windows->list[windows->count] = NULL;
 
+    if (windows->count == 0) {
+        free(windows->list);
+        windows->list = NULL;
+        return;
+    }
+
     ToxWindow **tmp_list = (ToxWindow **)realloc(windows->list, windows->count * sizeof(ToxWindow *));
 
-    if (tmp_list == NULL && windows->count != 0) {
-        exit_toxic_err(FATALERR_MEMORY, "realloc(_, %d * sizeof(ToxWindow *)) failed in del_window()", windows->count);
+    if (tmp_list == NULL) {
+        exit_toxic_err(FATALERR_MEMORY,
+                       "realloc(_, %d * sizeof(ToxWindow *)) failed in del_window()", windows->count);
     }
 
     windows->list = tmp_list;
