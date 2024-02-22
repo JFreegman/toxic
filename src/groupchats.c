@@ -343,7 +343,7 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
 
     char chat_id[TOX_GROUP_CHAT_ID_SIZE];
 
-    Tox_Err_Group_State_Queries err;
+    Tox_Err_Group_State_Query err;
 
     if (!tox_group_get_chat_id(tox, groupnumber, (uint8_t *)chat_id, &err)) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
@@ -1420,10 +1420,10 @@ static void groupchat_set_group_name(ToxWindow *self, Toxic *toxic, uint32_t gro
         return;
     }
 
-    Tox_Err_Group_State_Queries err;
+    Tox_Err_Group_State_Query err;
     size_t len = tox_group_get_name_size(tox, groupnumber, &err);
 
-    if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+    if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                       "Failed to retrieve group name length (error %d)", err);
         return;
@@ -1468,10 +1468,10 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
 
     char topic[TOX_GROUP_MAX_TOPIC_LENGTH + 1];
 
-    Tox_Err_Group_State_Queries err;
+    Tox_Err_Group_State_Query err;
     const size_t topic_length = tox_group_get_topic_size(tox, groupnumber, &err);
 
-    if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+    if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                       "Failed to retrieve group topic length (error %d)", err);
         return;
@@ -1480,7 +1480,7 @@ static void groupchat_onGroupSelfJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
     tox_group_get_topic(tox, groupnumber, (uint8_t *) topic, &err);
     topic[topic_length] = 0;
 
-    if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+    if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve group topic (error %d)",
                       err);
         return;

@@ -47,7 +47,7 @@ void cmd_chatid(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     char id_string[TOX_GROUP_CHAT_ID_SIZE * 2 + 1] = {0};
     char chat_id[TOX_GROUP_CHAT_ID_SIZE];
 
-    Tox_Err_Group_State_Queries err;
+    Tox_Err_Group_State_Query err;
 
     if (!tox_group_get_chat_id(toxic->tox, self->num, (uint8_t *) chat_id, &err)) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve the Chat ID (error %d).", err);
@@ -484,10 +484,10 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, 
     int maxpeers = 0;
 
     if (argc < 1) {
-        Tox_Err_Group_State_Queries err;
+        Tox_Err_Group_State_Query err;
         maxpeers = tox_group_get_peer_limit(tox, self->num, &err);
 
-        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+        if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve peer limit (error %d).",
                           err);
             return;
@@ -540,10 +540,10 @@ void cmd_set_voice(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     Tox_Group_Voice_State voice_state;
 
     if (argc < 1) {
-        Tox_Err_Group_State_Queries err;
+        Tox_Err_Group_State_Query err;
         voice_state = tox_group_get_voice_state(tox, self->num, &err);
 
-        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+        if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve voice state (error %d).",
                           err);
             return;
@@ -624,10 +624,10 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, ch
     Tox_Group_Privacy_State privacy_state;
 
     if (argc < 1) {
-        Tox_Err_Group_State_Queries err;
+        Tox_Err_Group_State_Query err;
         privacy_state = tox_group_get_privacy_state(tox, self->num, &err);
 
-        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+        if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve privacy state (error %d).",
                           err);
             return;
@@ -686,10 +686,10 @@ void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc,
     const char *tlock_str = NULL;
 
     if (argc < 1) {
-        Tox_Err_Group_State_Queries err;
+        Tox_Err_Group_State_Query err;
         topic_lock = tox_group_get_topic_lock(tox, self->num, &err);
 
-        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+        if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve topic lock (error %d).",
                           err);
             return;
@@ -907,10 +907,10 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     const Client_Config *c_config = toxic->c_config;
 
     if (argc < 1) {
-        Tox_Err_Group_State_Queries err;
+        Tox_Err_Group_State_Query err;
         size_t tlen = tox_group_get_topic_size(tox, self->num, &err);
 
-        if (err != TOX_ERR_GROUP_STATE_QUERIES_OK) {
+        if (err != TOX_ERR_GROUP_STATE_QUERY_OK) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to retrieve topic length (error %d).",
                           err);
             return;

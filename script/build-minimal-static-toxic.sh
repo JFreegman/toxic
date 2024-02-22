@@ -136,10 +136,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="c71567dc18515f69111c5af7902bc0357f0cd9ea"
+TOXCORE_VERSION="e1fa5cae964c9f98ea0d35340d4014bfdd759882"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="31c211385db8022f498dc6f81702908729dc770549787050d4e77b0c23d8971f"
+TOXCORE_HASH="72803d1f9ff59a4cd6e7eec206bf452d96317c22080060a2313b5d542db82f57"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
@@ -167,6 +167,7 @@ cmake -B_build -H. \
       -DBUILD_TOXAV=OFF \
       -DBOOTSTRAP_DAEMON=OFF \
       -DDHT_BOOTSTRAP=OFF \
+      -DEXPERIMENTAL_API=ON \
       -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/prefix-toxcore"
 cmake --build _build --target install
 
