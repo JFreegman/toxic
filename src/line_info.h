@@ -101,7 +101,7 @@ int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_time
  * Returns -1 on failure.
  */
 int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const char *timestamp,
-                           const char *name, int colour, const char *message);
+                           const char *name, LINE_TYPE type, bool bold, int colour, const char *message);
 
 /* Prints a section of history starting at line_start */
 void line_info_print(ToxWindow *self, const Client_Config *c_config);

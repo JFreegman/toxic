@@ -391,39 +391,12 @@ static void line_info_init_line(ToxWindow *self, struct line_info *line)
     print_wrap(NULL, line, max_x, max_y);
 }
 
-/* creates new line_info line and puts it in the queue.
- *
- * Returns the id of the new line.
- * Returns -1 on failure.
+/*
+ * Returns the base format length required for a given line type (e.g. spaces, newlines etc.)
  */
-int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_timestamp, const char *name1,
-                  const char *name2, LINE_TYPE type, uint8_t bold, uint8_t colour, const char *msg, ...)
+static uint16_t line_info_type_length(const Client_Config *c_config, LINE_TYPE type)
 {
-    if (self == NULL) {
-        return -1;
-    }
-
-    struct history *hst = self->chatwin->hst;
-
-    if (hst->queue_size >= MAX_LINE_INFO_QUEUE) {
-        return -1;
-    }
-
-    struct line_info *new_line = calloc(1, sizeof(struct line_info));
-
-    if (new_line == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in line_info_add");
-    }
-
-    char frmt_msg[MAX_LINE_INFO_MSG_SIZE];
-    frmt_msg[0] = 0;
-
-    va_list args;
-    va_start(args, msg);
-    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
-    va_end(args);
-
-    int len = 1;     /* there will always be a newline */
+    uint16_t len = 1;  // there will always be a newline
 
     /* for type-specific formatting in print function */
     switch (type) {
@@ -476,6 +449,43 @@ int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_time
             break;
     }
 
+    return len;
+}
+
+/* creates new line_info line and puts it in the queue.
+ *
+ * Returns the id of the new line.
+ * Returns -1 on failure.
+ */
+int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_timestamp, const char *name1,
+                  const char *name2, LINE_TYPE type, uint8_t bold, uint8_t colour, const char *msg, ...)
+{
+    if (self == NULL) {
+        return -1;
+    }
+
+    struct history *hst = self->chatwin->hst;
+
+    if (hst->queue_size >= MAX_LINE_INFO_QUEUE) {
+        return -1;
+    }
+
+    struct line_info *new_line = calloc(1, sizeof(struct line_info));
+
+    if (new_line == NULL) {
+        exit_toxic_err(FATALERR_MEMORY, "failed in line_info_add");
+    }
+
+    char frmt_msg[MAX_LINE_INFO_MSG_SIZE];
+    frmt_msg[0] = 0;
+
+    va_list args;
+    va_start(args, msg);
+    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
+    va_end(args);
+
+    int len = line_info_type_length(c_config, type);
+
     const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg) / sizeof(wchar_t), frmt_msg);
     len += msg_width;
 
@@ -519,7 +529,7 @@ int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_time
 }
 
 int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const char *timestamp,
-                           const char *name, int colour, const char *message)
+                           const char *name, LINE_TYPE type, bool bold, int colour, const char *message)
 {
     if (self == NULL) {
         return -1;
@@ -537,7 +547,7 @@ int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const
         return -1;
     }
 
-    int len = 1 + strlen(c_config->line_normal) + 3;
+    int len = line_info_type_length(c_config, type);
 
     const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg) / sizeof(wchar_t), message);
     len += msg_width;
@@ -548,14 +558,16 @@ int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const
 
     len += strlen(new_line->timestr) + 1;
 
-    snprintf(new_line->name1, sizeof(new_line->name1), "%s", name);
-    len += strlen(new_line->name1);
+    if (name != NULL) {
+        snprintf(new_line->name1, sizeof(new_line->name1), "%s", name);
+        len += strlen(new_line->name1);
+    }
 
     new_line->id = (hst->line_end->id + 1 + hst->queue_size) % INT_MAX;
     new_line->len = len;
     new_line->msg_width = msg_width;
-    new_line->type = IN_MSG;
-    new_line->bold = false;
+    new_line->type = type;
+    new_line->bold = bold;
     new_line->colour = colour;
     new_line->noread_flag = false;
     new_line->timestamp = get_unix_time();

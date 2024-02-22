@@ -133,7 +133,7 @@ static int init_logging_session(const Client_Config *c_config, const char *name,
 #define LOG_BYTES_THRESHOLD ((1024 << 10) * 100)  // 100 MiB
 
 int write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
-                 bool is_event, Log_Hint log_hint)
+                 Log_Hint log_hint)
 {
     if (log == NULL) {
         return -1;
@@ -153,14 +153,10 @@ int write_to_log(struct chatlog *log, const Client_Config *c_config, const char 
         return -1;
     }
 
-    char name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
+    char name_frmt[TOXIC_MAX_NAME_LENGTH + 2];
 
     if (name != NULL) {
-        if (is_event) {
-            snprintf(name_frmt, sizeof(name_frmt), "* %s", name);
-        } else {
-            snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
-        }
+        snprintf(name_frmt, sizeof(name_frmt), "%s:", name);
     }
 
     const char *t = c_config->log_timestamp_format;
@@ -258,52 +254,301 @@ int log_init(struct chatlog *log, const Client_Config *c_config, const char *nam
     return 0;
 }
 
-static void load_line(ToxWindow *self, const Client_Config *c_config, const char *line, const char *self_name)
+/*
+ * Extracts a log hint from a log line.
+ *
+ * A hint starts at the beginning of the line and is a 1 or 2 digit integer
+ * surrounded by curly bracers.
+ *
+ * Return hint on success.
+ * Return -1 on parsing error.
+ */
+static int extract_log_hint(const char *line, size_t length)
 {
-    const size_t line_length = strlen(line);
+    const int start = char_find(0, line, '{');
+    const int end = char_find(0, line, '}');
+    const int num_digits = end - start - 1;
+
+    if (start != 0 || end == length || num_digits < 1 || num_digits > 2) {
+        return -1;
+    }
+
+    char digits[3];
+    memcpy(digits, &line[1], num_digits);
+    digits[num_digits] = '\0';
+
+    const long int hint = strtol(digits, NULL, 10);
+
+    return hint >= 0 && hint != LONG_MAX ? hint : -1;
+}
+
+/*
+ * Extracts the timestamp from line.
+ *
+ * A timestamp comes after the log hint and is surrounded by square brackets.
+ *
+ * Return the index of the end of the timestamp on success.
+ * Return -1 on parsing error.
+ */
+static int extract_timestamp(const char *line, size_t length, char *buf, size_t buf_size)
+{
     const int start_ts = char_find(0, line, '[') + 1;
     const int end_ts = char_find(0, line, ']');
     const int ts_len = end_ts - start_ts;
-    const int start_idx = (line_length > start_ts) ? start_ts - 1 : 0;
 
-    char timestamp[TIME_STR_SIZE];
-
-    // sanity check
-    if (ts_len <= 0 || ts_len >= sizeof(timestamp) || start_ts < 0 || start_ts + ts_len >= line_length
-            || start_ts >= line_length || end_ts <= 0 || end_ts >= line_length) {
-        return;
+    if (ts_len <= 0 || ts_len >= buf_size || start_ts < 0 || start_ts + ts_len >= length
+            || start_ts >= length || end_ts <= 0 || end_ts >= length) {
+        return -1;
     }
 
-    memcpy(timestamp, &line[start_ts], ts_len);
-    timestamp[ts_len] = '\0';
+    memcpy(buf, &line[start_ts], ts_len);
+    buf[ts_len] = '\0';
 
-    const int end_name = char_find(end_ts, line, ':');
+    return end_ts;
+}
 
-    if (end_name + 2 >= line_length || end_name <= 0) {
-        goto on_error;
+/*
+ * Extracts the name from line.
+ *
+ * A name comes after the timestamp and is proceeded by a colon.
+ *
+ * Return the index of the end of the name on success.
+ * Return -1 on parsing error.
+ */
+static int extract_log_name(const char *line, size_t length, char *buf, size_t buf_size)
+{
+    const int end_name = char_find(0, line, ':');
+
+    if (end_name + 2 >= length || end_name <= 0) {
+        return -1;
+    }
+
+    const int start_name = 1;
+    const int name_len = end_name - start_name - 1;
+
+    if (start_name + 1 >= length || name_len >= buf_size || start_name + 1 + name_len >= length
+            || name_len <= 0) {
+        return -1;
+    }
+
+    memcpy(buf, &line[start_name + 1], name_len);
+    buf[name_len] = '\0';
+
+    return end_name;
+}
+
+static bool load_line_topic(ToxWindow *self, const Client_Config *c_config, const char *line, size_t length,
+                            const char *timestamp)
+{
+    if (length <= 2) {
+        return false;
+    }
+
+    line_info_load_history(self, c_config, timestamp, NULL, SYS_MSG, true, MAGENTA, &line[2]);
+
+    return true;
+}
+
+static bool load_line_name(ToxWindow *self, const Client_Config *c_config, const char *line, size_t length,
+                           const char *timestamp)
+{
+    if (length <= 2) {
+        return false;
     }
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
+    const int end_name = extract_log_name(line, length, name, sizeof(name));
+
+    if (end_name < 0 || end_name + 1 >= length) {
+        return false;
+    }
+
+    line_info_load_history(self, c_config, timestamp, name, NAME_CHANGE, true, MAGENTA, &line[end_name + 1]);
+
+    return true;
+}
+
+static bool load_line_moderation(ToxWindow *self, const Client_Config *c_config, const char *line, size_t length,
+                                 const char *timestamp)
+{
+    if (length <= 2) {
+        return false;
+    }
+
+    const int colour = strstr(line, "has been kicked by") != NULL ? RED : BLUE;
+    line_info_load_history(self, c_config, timestamp, NULL, SYS_MSG, true, colour, &line[2]);
+
+    return true;
+}
+
+static bool load_line_connection(ToxWindow *self, const Client_Config *c_config, const char *line, size_t length,
+                                 const char *timestamp, Log_Hint hint)
+{
+    if (length <= 2) {
+        return false;
+    }
+
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+    const int end_name = extract_log_name(line, length, name, sizeof(name));
+
+    if (end_name < 0 || end_name + 2 >= length) {
+        return -1;
+    }
+
+    int colour;
+    int type;
+
+    if (hint == LOG_HINT_CONNECT) {
+        colour = GREEN;
+        type = CONNECTION;
+    } else {
+        colour = RED;
+        type = DISCONNECTION;
+    }
+
+    line_info_load_history(self, c_config, timestamp, name, type, true, colour, &line[end_name + 2]);
+
+    return true;
+}
+
+static bool load_line_message(ToxWindow *self, const Client_Config *c_config, const char *line, size_t length,
+                              const char *timestamp, Log_Hint hint)
+{
+    char name[TOXIC_MAX_NAME_LENGTH + 1];
+
+    const int end_name = extract_log_name(line, length, name, sizeof(name));
+
+    if (end_name < 0 || end_name >= length + 2) {
+        return false;
+    }
+
     const char *message = &line[end_name + 2];
 
-    const int start_name = end_ts + 1;
-    const int name_len = end_name - start_name - 1;
 
-    if (start_name + 1 >= line_length || name_len >= sizeof(name) || start_name + 1 + name_len >= line_length
-            || name_len <= 0) {
+    switch (hint) {
+        case LOG_HINT_NORMAL_I: {
+            line_info_load_history(self, c_config, timestamp, name, IN_MSG, false, 0, message);
+            break;
+        }
+
+        case LOG_HINT_NORMAL_O: {
+            line_info_load_history(self, c_config, timestamp, name, OUT_MSG, false, 0, message);
+            break;
+        }
+
+        case LOG_HINT_PRIVATE_I: {
+            line_info_load_history(self, c_config, timestamp, name, IN_PRVT_MSG, false, MAGENTA, message);
+            break;
+        }
+
+        case LOG_HINT_PRIVATE_O: {
+            line_info_load_history(self, c_config, timestamp, name, OUT_PRVT_MSG, false, 0, message);
+            break;
+        }
+
+        case LOG_HINT_ACTION: {
+            line_info_load_history(self, c_config, timestamp, name, IN_ACTION, false, 0, message);
+            break;
+        }
+
+        default: {
+            fprintf(stderr, "Invalid hint in load_line_message(): %d\n", hint);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void load_line(ToxWindow *self, const Client_Config *c_config, const char *line)
+{
+    const size_t line_length = strlen(line);
+
+    if (line_length <= 4) {
         goto on_error;
     }
 
-    memcpy(name, &line[start_name + 1], name_len);
-    name[name_len] = '\0';
+    const int hint = extract_log_hint(line, line_length);
 
-    const int colour = strcmp(self_name, name) != 0 ? CYAN : GREEN;
+    if (hint == -1) {
+        goto on_error;
+    }
 
-    line_info_load_history(self, c_config, timestamp, name, colour, message);
-    return;
+    char timestamp[TIME_STR_SIZE];
+    const int end_ts = extract_timestamp(line, line_length, timestamp, sizeof(timestamp));
+
+    if (end_ts >= line_length) {
+        goto on_error;
+    }
+
+    const char *line_start = &line[end_ts];
+    const size_t length = line_length - end_ts;
+
+    switch (hint) {
+        case LOG_HINT_NORMAL_I:
+
+        /* fallthrough */
+        case LOG_HINT_NORMAL_O:
+
+        /* fallthrough */
+        case LOG_HINT_PRIVATE_I:
+
+        /* fallthrough */
+        case LOG_HINT_PRIVATE_O:
+
+        /* fallthrough */
+        case LOG_HINT_ACTION: {
+            if (load_line_message(self, c_config, line_start, length, timestamp, hint)) {
+                return;
+            }
+
+            break;
+        }
+
+        case LOG_HINT_NAME: {
+            if (load_line_name(self, c_config, line_start, length, timestamp)) {
+                return;
+            }
+
+            break;
+        }
+
+        case LOG_HINT_TOPIC: {
+            if (load_line_topic(self, c_config, line_start, length, timestamp)) {
+                return;
+            }
+
+            break;
+        }
+
+        case LOG_HINT_FOUNDER:
+
+        /* fallthrough */
+        case LOG_HINT_MOD_EVENT: {
+            if (load_line_moderation(self, c_config, line_start, length, timestamp)) {
+                return;
+            }
+
+            break;
+        }
+
+        case LOG_HINT_CONNECT:
+
+        /* fallthrough */
+        case LOG_HINT_DISCONNECT: {
+            if (load_line_connection(self, c_config, line_start, length, timestamp, hint)) {
+                return;
+            }
+
+            break;
+        }
+
+        default:
+            break;
+    }
 
 on_error:
-    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", &line[start_idx]);
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", line);
 }
 
 /* Loads chat log history and prints it to `self` window.
@@ -311,7 +556,7 @@ on_error:
  * Return 0 on success or if log file doesn't exist.
  * Return -1 on failure.
  */
-int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config, const char *self_name)
+int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config)
 {
     if (log == NULL) {
         return -1;
@@ -378,7 +623,7 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
     }
 
     while (line != NULL && count--) {
-        load_line(self, c_config, line, self_name);
+        load_line(self, c_config, line);
         line = strtok_r(NULL, "\n", &tmp);
     }
 

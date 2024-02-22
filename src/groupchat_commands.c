@@ -971,11 +971,11 @@ void cmd_set_topic(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     char self_nick[TOX_MAX_NAME_LENGTH + 1];
     get_group_self_nick_truncate(tox, self_nick, self->num);
 
-    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "-!- You set the topic to: %s", topic);
-
     char tmp_event[MAX_STR_SIZE];
-    snprintf(tmp_event, sizeof(tmp_event), "set topic to %s", topic);
-    write_to_log(self->chatwin->log, c_config, tmp_event, self_nick, true, LOG_HINT_TOPIC);
+    snprintf(tmp_event, sizeof(tmp_event), "-!- You set the topic to: %s", topic);
+
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "%s", tmp_event);
+    write_to_log(self->chatwin->log, c_config, tmp_event, NULL, LOG_HINT_TOPIC);
 }
 
 void cmd_unignore(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

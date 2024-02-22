@@ -187,7 +187,7 @@ static void recv_message_helper(ToxWindow *self, const Toxic *toxic, const char 
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, nick, NULL, IN_MSG, 0, 0, "%s", msg);
-    write_to_log(ctx->log, c_config, msg, nick, false, LOG_HINT_NORMAL_I);
+    write_to_log(ctx->log, c_config, msg, nick, LOG_HINT_NORMAL_I);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
@@ -204,7 +204,7 @@ static void recv_action_helper(ToxWindow *self, const Toxic *toxic,  const char 
     ChatContext *ctx = self->chatwin;
 
     line_info_add(self, c_config, true, nick, NULL, IN_ACTION, 0, 0, "%s", action);
-    write_to_log(ctx->log, c_config, action, nick, true, LOG_HINT_ACTION);
+    write_to_log(ctx->log, c_config, action, nick, LOG_HINT_ACTION);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_1 | NT_NOFOCUS | c_config->bell_on_message,
@@ -274,7 +274,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         if (c_config->show_connection_msg) {
             msg = "has come online";
             line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, "%s", msg);
-            write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_CONNECT);
+            write_to_log(ctx->log, c_config, msg, name, LOG_HINT_CONNECT);
         }
     } else if (connection_status == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = false;
@@ -288,7 +288,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
         if (c_config->show_connection_msg) {
             msg = "has gone offline";
             line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "%s", msg);
-            write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_DISCONNECT);
+            write_to_log(ctx->log, c_config, msg, name, LOG_HINT_DISCONNECT);
         }
     }
 }
@@ -1684,18 +1684,12 @@ static void chat_init_log(ToxWindow *self, Toxic *toxic, const char *self_nick)
     char myid[TOX_ADDRESS_SIZE];
     tox_self_get_address(tox, (uint8_t *) myid);
 
-    char self_name[TOX_MAX_NAME_LENGTH + 1];
-    tox_self_get_name(tox, (uint8_t *) self_name);
-
-    const size_t len = tox_self_get_name_size(tox);
-    self_name[len] = '\0';
-
     if (log_init(ctx->log, c_config, self_nick, myid, Friends.list[self->num].pub_key, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to initialize chat log.");
         return;
     }
 
-    if (load_chat_history(ctx->log, self, c_config, self_name) != 0) {
+    if (load_chat_history(ctx->log, self, c_config) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 

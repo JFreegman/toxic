@@ -67,14 +67,13 @@ int log_init(struct chatlog *log, const Client_Config *c_config, const char *nam
  * `log` is the log being written to.
  * `msg` is the message being written.
  * `name` is the name of the initiator of the message. If NULL it will be ignored.
- * `is_event` is true if the message is an event rather than a chat message.
  * `log_hint` indicates the type of message.
  *
  * Return 0 on success (or if the log is disabled).
  * Return -1 on failure.
  */
 int write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
-                 bool is_event, Log_Hint log_hint);
+                 Log_Hint log_hint);
 
 /* Enables logging for specified log.
  *
@@ -96,7 +95,7 @@ void log_disable(struct chatlog *log);
  * Return 0 on success or if log file doesn't exist.
  * Return -1 on failure.
  */
-int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config, const char *self_name);
+int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config *c_config);
 
 /* Renames chatlog file `src` to `dest`.
  *

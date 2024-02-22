@@ -116,18 +116,11 @@ void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Toxic *toxic, int
 
     conference_set_title(self, self->num, title, len);
 
-    char selfnick[TOX_MAX_NAME_LENGTH];
-    tox_self_get_name(tox, (uint8_t *) selfnick);
+    char tmp_event[MAX_STR_SIZE];
+    snprintf(tmp_event, sizeof(tmp_event), "-!- You set the conference title to: %s", title);
 
-    size_t sn_len = tox_self_get_name_size(tox);
-    selfnick[sn_len] = '\0';
-
-    line_info_add(self, c_config, true, selfnick, NULL, NAME_CHANGE, 0, 0, " set the conference title to: %s",
-                  title);
-
-    char tmp_event[MAX_STR_SIZE + 20];
-    snprintf(tmp_event, sizeof(tmp_event), "set title to %s", title);
-    write_to_log(self->chatwin->log, c_config, tmp_event, selfnick, true, LOG_HINT_TOPIC);
+    line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, MAGENTA, "%s", tmp_event);
+    write_to_log(self->chatwin->log, c_config, tmp_event, NULL, LOG_HINT_TOPIC);
 }
 
 #ifdef AUDIO

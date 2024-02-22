@@ -116,7 +116,8 @@ void cqueue_remove(ToxWindow *self, Toxic *toxic, uint32_t receipt)
             const size_t len = tox_self_get_name_size(tox);
             selfname[len] = '\0';
 
-            write_to_log(log, c_config, msg->message, selfname, msg->type == OUT_ACTION, LOG_HINT_NORMAL_O);
+            write_to_log(log, c_config, msg->message, selfname,
+                         msg->type == OUT_MSG ? LOG_HINT_NORMAL_O : LOG_HINT_ACTION);
         }
 
         cqueue_mark_read(self, msg);

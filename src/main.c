@@ -1079,7 +1079,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
                     exit_toxic_err(FATALERR_PROXY, "Proxy error");
                 }
 
-                long int port = strtol(argv[optind - 1], NULL, 10);
+                const long int port = strtol(argv[optind - 1], NULL, 10);
 
                 if (port <= 0 || port > MAX_PORT_RANGE) {
                     exit_toxic_err(FATALERR_PROXY, "Proxy error");
