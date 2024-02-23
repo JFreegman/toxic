@@ -206,11 +206,11 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
-    Tox_Err_Group_Mod_Kick_Peer err;
-    tox_group_mod_kick_peer(tox, self->num, target_peer_id, &err);
+    Tox_Err_Group_Kick_Peer err;
+    tox_group_kick_peer(tox, self->num, target_peer_id, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_MOD_KICK_PEER_OK: {
+        case TOX_ERR_GROUP_KICK_PEER_OK: {
             char self_nick[TOX_MAX_NAME_LENGTH + 1];
             get_group_self_nick_truncate(tox, self_nick, self->num);
 
@@ -221,17 +221,17 @@ void cmd_kick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_KICK_PEER_PERMISSIONS: {
+        case TOX_ERR_GROUP_KICK_PEER_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to kick %s.", nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_KICK_PEER_SELF: {
+        case TOX_ERR_GROUP_KICK_PEER_SELF: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "You cannot kick yourself.");
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_KICK_PEER_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_KICK_PEER_PEER_NOT_FOUND: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "Specified nick or public key is invalid.");
             return;
         }
@@ -311,32 +311,32 @@ void cmd_mod(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         return;
     }
 
-    Tox_Err_Group_Mod_Set_Role err;
-    tox_group_mod_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_MODERATOR, &err);
+    Tox_Err_Group_Set_Role err;
+    tox_group_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_MODERATOR, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
+        case TOX_ERR_GROUP_SET_ROLE_OK: {
             groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_MODERATOR);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_ROLE_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "You do not have permission to promote moderators.");
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_ASSIGNMENT: {
+        case TOX_ERR_GROUP_SET_ROLE_ASSIGNMENT: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "%s is already a moderator.", nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
+        case TOX_ERR_GROUP_SET_ROLE_SELF: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot make yourself a moderator.");
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_SET_ROLE_PEER_NOT_FOUND: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
@@ -385,27 +385,27 @@ void cmd_unmod(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         return;
     }
 
-    Tox_Err_Group_Mod_Set_Role err;
-    tox_group_mod_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_USER, &err);
+    Tox_Err_Group_Set_Role err;
+    tox_group_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_USER, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
+        case TOX_ERR_GROUP_SET_ROLE_OK: {
             groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_USER);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_ROLE_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,  "You do not have permission to unmod %s.",
                           nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
+        case TOX_ERR_GROUP_SET_ROLE_SELF: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot remove your own moderator status.");
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_SET_ROLE_PEER_NOT_FOUND: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
@@ -437,11 +437,11 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
         len = strlen(passwd);
     }
 
-    Tox_Err_Group_Founder_Set_Password err;
-    tox_group_founder_set_password(toxic->tox, self->num, (const uint8_t *) passwd, len, &err);
+    Tox_Err_Group_Set_Password err;
+    tox_group_set_password(toxic->tox, self->num, (const uint8_t *) passwd, len, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_OK: {
+        case TOX_ERR_GROUP_SET_PASSWORD_OK: {
             if (len > 0) {
                 line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Password has been set to %s.", passwd);
             } else {
@@ -451,13 +451,13 @@ void cmd_set_passwd(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
             return;
         }
 
-        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_TOO_LONG: {
+        case TOX_ERR_GROUP_SET_PASSWORD_TOO_LONG: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Password length must not exceed %d.",
                           TOX_GROUP_MAX_PASSWORD_SIZE);
             return;
         }
 
-        case TOX_ERR_GROUP_FOUNDER_SET_PASSWORD_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_PASSWORD_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "You do not have permission to set the password.");
             return;
@@ -504,16 +504,16 @@ void cmd_set_peerlimit(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, 
         return;
     }
 
-    Tox_Err_Group_Founder_Set_Peer_Limit err;
-    tox_group_founder_set_peer_limit(tox, self->num, maxpeers, &err);
+    Tox_Err_Group_Set_Peer_Limit err;
+    tox_group_set_peer_limit(tox, self->num, maxpeers, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_OK: {
+        case TOX_ERR_GROUP_SET_PEER_LIMIT_OK: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Peer limit has been set to %d.", maxpeers);
             return;
         }
 
-        case TOX_ERR_GROUP_FOUNDER_SET_PEER_LIMIT_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_PEER_LIMIT_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "You do not have permission to set the peer limit.");
             return;
@@ -587,16 +587,16 @@ void cmd_set_voice(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
         return;
     }
 
-    Tox_Err_Group_Founder_Set_Voice_State err;
-    tox_group_founder_set_voice_state(tox, self->num, voice_state, &err);
+    Tox_Err_Group_Set_Voice_State err;
+    tox_group_set_voice_state(tox, self->num, voice_state, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_FOUNDER_SET_VOICE_STATE_OK: {
+        case TOX_ERR_GROUP_SET_VOICE_STATE_OK: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Voice state has been set to %s.", vstate_str);
             return;
         }
 
-        case TOX_ERR_GROUP_FOUNDER_SET_VOICE_STATE_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_VOICE_STATE_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "You do not have permission to set the voice state.");
             return;
@@ -649,16 +649,16 @@ void cmd_set_privacy(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, ch
     privacy_state = strcasecmp(pstate_str,
                                "private") == 0 ? TOX_GROUP_PRIVACY_STATE_PRIVATE : TOX_GROUP_PRIVACY_STATE_PUBLIC;
 
-    Tox_Err_Group_Founder_Set_Privacy_State err;
-    tox_group_founder_set_privacy_state(tox, self->num, privacy_state, &err);
+    Tox_Err_Group_Set_Privacy_State err;
+    tox_group_set_privacy_state(tox, self->num, privacy_state, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_OK: {
+        case TOX_ERR_GROUP_SET_PRIVACY_STATE_OK: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Privacy state has been set to %s.", pstate_str);
             return;
         }
 
-        case TOX_ERR_GROUP_FOUNDER_SET_PRIVACY_STATE_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_PRIVACY_STATE_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "You do not have permission to set the privacy state.");
             return;
@@ -710,16 +710,16 @@ void cmd_set_topic_lock(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc,
     topic_lock = strcasecmp(tlock_str, "on") == 0 ? TOX_GROUP_TOPIC_LOCK_ENABLED : TOX_GROUP_TOPIC_LOCK_DISABLED;
     const char *display_str = (topic_lock ==  TOX_GROUP_TOPIC_LOCK_ENABLED) ? "enabled" : "disabled";
 
-    Tox_Err_Group_Founder_Set_Topic_Lock err;
-    tox_group_founder_set_topic_lock(tox, self->num, topic_lock, &err);
+    Tox_Err_Group_Set_Topic_Lock err;
+    tox_group_set_topic_lock(tox, self->num, topic_lock, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_FOUNDER_SET_TOPIC_LOCK_OK: {
+        case TOX_ERR_GROUP_SET_TOPIC_LOCK_OK: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Topic lock has been %s.", display_str);
             return;
         }
 
-        case TOX_ERR_GROUP_FOUNDER_SET_TOPIC_LOCK_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_TOPIC_LOCK_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "You do not have permission to set the topic lock.");
             return;
@@ -763,32 +763,32 @@ void cmd_silence(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (
         return;
     }
 
-    Tox_Err_Group_Mod_Set_Role err;
-    tox_group_mod_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_OBSERVER, &err);
+    Tox_Err_Group_Set_Role err;
+    tox_group_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_OBSERVER, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
+        case TOX_ERR_GROUP_SET_ROLE_OK: {
             groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_OBSERVER);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_ROLE_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to silence %s.",
                           nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_ASSIGNMENT: {
+        case TOX_ERR_GROUP_SET_ROLE_ASSIGNMENT: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s is already silenced.", nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
+        case TOX_ERR_GROUP_SET_ROLE_SELF: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot silence yourself.");
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_SET_ROLE_PEER_NOT_FOUND: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
@@ -836,32 +836,32 @@ void cmd_unsilence(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
         return;
     }
 
-    Tox_Err_Group_Mod_Set_Role err;
-    tox_group_mod_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_USER, &err);
+    Tox_Err_Group_Set_Role err;
+    tox_group_set_role(tox, self->num, target_peer_id, TOX_GROUP_ROLE_USER, &err);
 
     switch (err) {
-        case TOX_ERR_GROUP_MOD_SET_ROLE_OK: {
+        case TOX_ERR_GROUP_SET_ROLE_OK: {
             groupchat_onGroupModeration(self, toxic, self->num, self_peer_id, target_peer_id, TOX_GROUP_MOD_EVENT_USER);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PERMISSIONS: {
+        case TOX_ERR_GROUP_SET_ROLE_PERMISSIONS: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You do not have permission to unsilence %s.",
                           nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_ASSIGNMENT: {
+        case TOX_ERR_GROUP_SET_ROLE_ASSIGNMENT: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s is not silenced.", nick);
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_SELF: {
+        case TOX_ERR_GROUP_SET_ROLE_SELF: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You cannot unsilence yourself.");
             return;
         }
 
-        case TOX_ERR_GROUP_MOD_SET_ROLE_PEER_NOT_FOUND: {
+        case TOX_ERR_GROUP_SET_ROLE_PEER_NOT_FOUND: {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "The specified nick or public key is invalid.");
             return;
         }
