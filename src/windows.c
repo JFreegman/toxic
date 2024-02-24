@@ -90,7 +90,7 @@ void on_friend_typing(Tox *tox, uint32_t friendnumber, bool is_typing, void *use
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
 
-    if (toxic->c_config->show_typing_other == SHOW_TYPING_OFF) {
+    if (!toxic->c_config->show_typing_other) {
         return;
     }
 

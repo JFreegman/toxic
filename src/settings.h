@@ -39,30 +39,28 @@ typedef struct Toxic Toxic;
 
 /* Holds user setting values defined in the toxic config file. */
 typedef struct Client_Config {
-    int autolog;           /* boolean */
-    int alerts;            /* boolean */
-    int show_notification_content; /* boolean */
+    bool autolog;
+    bool alerts;
+    bool show_notification_content;
+    bool show_typing_self;
+    bool show_typing_other;
+    bool show_welcome_msg;
+    bool show_connection_msg;
+    bool show_group_connection_msg;
+    bool show_timestamps;
 
-    /* boolean (is set to NT_BEEP or 0 after loading) */
     int bell_on_message;
     int bell_on_filetrans;
     int bell_on_filetrans_accept;
     int bell_on_invite;
 
-    int timestamps;        /* boolean */
     char timestamp_format[TIME_STR_SIZE];
     char log_timestamp_format[TIME_STR_SIZE];
 
-    int colour_theme;      /* boolean (0 for default toxic colours) */
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     int notification_timeout;
-    int show_typing_self;  /* boolean */
-    int show_typing_other; /* boolean */
-    int show_welcome_msg;  /* boolean */
-    int show_connection_msg;  /* boolean */
-    int show_group_connection_msg;  /* boolean */
-    int nodeslist_update_freq;  /* int (<= 0 to disable updates) */
-    int autosave_freq; /* int (<= 0 to disable autosave) */
+    int nodeslist_update_freq;  /* <= 0 to disable updates */
+    int autosave_freq; /* <= 0 to disable autosave */
 
     char line_join[LINE_HINT_MAX + 1];
     char line_quit[LINE_HINT_MAX + 1];
@@ -76,6 +74,7 @@ typedef struct Client_Config {
     char autorun_path[PATH_MAX];
     char password_eval[PASSWORD_EVAL_MAX];
 
+    bool native_colors;
     char color_bar_bg[COLOR_STR_SIZE];
     char color_bar_fg[COLOR_STR_SIZE];
     char color_bar_accent[COLOR_STR_SIZE];
@@ -92,7 +91,7 @@ typedef struct Client_Config {
     int key_toggle_pastemode;
     int key_reload_config;
 
-    int mplex_away; /* boolean (1 for reaction to terminal attach/detach) */
+    bool mplex_away; /*  true for reaction to terminal attach/detach */
     char mplex_away_note [TOX_MAX_STATUS_MESSAGE_LENGTH];
     char group_part_message[TOX_GROUP_MAX_PART_LENGTH];
 
@@ -102,42 +101,9 @@ typedef struct Client_Config {
     double VAD_threshold;
     int conference_audio_channels;
     int chat_audio_channels;
-    int push_to_talk;      /* boolean */
+    bool push_to_talk;
 #endif
 } Client_Config;
-
-enum settings_values {
-    AUTOLOG_OFF = 0,
-    AUTOLOG_ON = 1,
-
-    TIMESTAMPS_OFF = 0,
-    TIMESTAMPS_ON = 1,
-
-    ALERTS_DISABLED = 0,
-    ALERTS_ENABLED = 1,
-
-    SHOW_NOTIFICATION_CONTENT_ON = 1,
-
-    DFLT_COLS = 0,
-    NATIVE_COLS = 1,
-
-    SHOW_TYPING_OFF = 0,
-    SHOW_TYPING_ON = 1,
-
-    SHOW_WELCOME_MSG_OFF = 0,
-    SHOW_WELCOME_MSG_ON = 1,
-
-    SHOW_CONNECTION_MSG_OFF = 0,
-    SHOW_CONNECTION_MSG_ON = 1,
-
-    SHOW_GROUP_CONNECTION_MSG_OFF = 0,
-    SHOW_GROUP_CONNECTION_MSG_ON = 1,
-
-    DFLT_HST_SIZE = 700,
-
-    MPLEX_OFF = 0,
-    MPLEX_ON = 1,
-};
 
 #define LINE_JOIN    "-->"
 #define LINE_QUIT    "<--"

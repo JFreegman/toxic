@@ -131,7 +131,7 @@ static const char *const chat_cmd_list[] = {
 
 static void set_self_typingstatus(ToxWindow *self, Toxic *toxic, bool is_typing)
 {
-    if (toxic->c_config->show_typing_self == SHOW_TYPING_OFF) {
+    if (!toxic->c_config->show_typing_self) {
         return;
     }
 
@@ -267,17 +267,15 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
     Tox_Connection prev_status = statusbar->connection;
     statusbar->connection = connection_status;
 
-    if (c_config->show_connection_msg == SHOW_WELCOME_MSG_OFF) {
-        return;
-    }
-
     if (prev_status == TOX_CONNECTION_NONE) {
         chat_resume_file_senders(self, toxic, num);
         file_send_queue_check(self, toxic, self->num);
 
-        msg = "has come online";
-        line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_CONNECT);
+        if (c_config->show_connection_msg) {
+            msg = "has come online";
+            line_info_add(self, c_config, true, name, NULL, CONNECTION, 0, GREEN, "%s", msg);
+            write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_CONNECT);
+        }
     } else if (connection_status == TOX_CONNECTION_NONE) {
         Friends.list[num].is_typing = false;
 
@@ -287,9 +285,11 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
 
         chat_pause_file_transfers(num);
 
-        msg = "has gone offline";
-        line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "%s", msg);
-        write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_DISCONNECT);
+        if (c_config->show_connection_msg) {
+            msg = "has gone offline";
+            line_info_add(self, c_config, true, name, NULL, DISCONNECTION, 0, RED, "%s", msg);
+            write_to_log(ctx->log, c_config, msg, name, true, LOG_HINT_DISCONNECT);
+        }
     }
 }
 

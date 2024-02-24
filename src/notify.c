@@ -143,7 +143,7 @@ static bool notifications_are_disabled(const Toxic *toxic, uint64_t flags)
 {
     const Client_Config *c_config = toxic->c_config;
 
-    if (c_config->alerts != ALERTS_ENABLED) {
+    if (!c_config->alerts) {
         return true;
     }
 
@@ -752,7 +752,7 @@ int box_notify(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_t
         strcpy(actives[id].title + 20, "...");
     }
 
-    if (c_config->show_notification_content == SHOW_NOTIFICATION_CONTENT_ON) {
+    if (c_config->show_notification_content) {
         va_list __ARGS__;
         va_start(__ARGS__, format);
         vsnprintf(actives[id].messages[0], MAX_BOX_MSG_LEN, format, __ARGS__);
@@ -803,7 +803,7 @@ int box_notify2(ToxWindow *self, const Toxic *toxic, Notification notif, uint64_
         return -1;
     }
 
-    if (c_config->show_notification_content == SHOW_NOTIFICATION_CONTENT_ON) {
+    if (c_config->show_notification_content) {
         va_list __ARGS__;
         va_start(__ARGS__, format);
         vsnprintf(actives[id].messages[actives[id].size], MAX_BOX_MSG_LEN, format, __ARGS__);
@@ -874,7 +874,7 @@ int box_silent_notify(ToxWindow *self, const Toxic *toxic, uint64_t flags, int *
         strcpy(actives[id].title + 20, "...");
     }
 
-    if (c_config->show_notification_content == SHOW_NOTIFICATION_CONTENT_ON) {
+    if (c_config->show_notification_content) {
         va_list __ARGS__;
         va_start(__ARGS__, format);
         vsnprintf(actives[id].messages[0], MAX_BOX_MSG_LEN, format, __ARGS__);
@@ -923,7 +923,7 @@ int box_silent_notify2(ToxWindow *self, const Toxic *toxic, uint64_t flags, int 
         return -1;
     }
 
-    if (c_config->show_notification_content == SHOW_NOTIFICATION_CONTENT_ON) {
+    if (c_config->show_notification_content) {
         va_list __ARGS__;
         va_start(__ARGS__, format);
         vsnprintf(actives[id].messages[actives[id].size], MAX_BOX_MSG_LEN, format, __ARGS__);

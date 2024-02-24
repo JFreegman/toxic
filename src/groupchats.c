@@ -360,7 +360,7 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 
-    if (c_config->autolog == AUTOLOG_ON) {
+    if (c_config->autolog) {
         if (log_enable(ctx->log) != 0) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
@@ -1322,8 +1322,7 @@ static void groupchat_onGroupPeerJoin(ToxWindow *self, Toxic *toxic, uint32_t gr
         }
 
         /* ignore join messages when we first connect to the group */
-        if (timed_out(chat->time_connected, 60)
-                && c_config->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
+        if (timed_out(chat->time_connected, 60) && c_config->show_group_connection_msg) {
             line_info_add(self, c_config, true, peer->name, NULL, CONNECTION, 0, GREEN, "has joined the room");
 
             write_to_log(ctx->log, c_config, "has joined the room", peer->name, true, LOG_HINT_CONNECT);
@@ -1360,8 +1359,7 @@ void groupchat_onGroupPeerExit(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
         return;
     }
 
-    if (exit_type != TOX_GROUP_EXIT_TYPE_SELF_DISCONNECTED
-            && c_config->show_group_connection_msg == SHOW_GROUP_CONNECTION_MSG_ON) {
+    if (exit_type != TOX_GROUP_EXIT_TYPE_SELF_DISCONNECTED && c_config->show_group_connection_msg) {
         char log_str[TOX_MAX_NAME_LENGTH + MAX_STR_SIZE];
 
         if (length > 0) {

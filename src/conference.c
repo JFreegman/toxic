@@ -197,7 +197,7 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 
-    if (c_config->autolog == AUTOLOG_ON) {
+    if (c_config->autolog) {
         if (log_enable(ctx->log) != 0) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }

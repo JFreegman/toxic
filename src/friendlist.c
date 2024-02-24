@@ -79,10 +79,23 @@ static void set_default_friend_config_settings(ToxicFriend *friend, const Client
     Friend_Settings *settings = &friend->settings;
 
     settings->auto_accept_files = Default_Conf_Auto_Accept_Files != 0;
-    settings->autolog = c_config->autolog == AUTOLOG_ON;
-    settings->show_connection_msg = c_config->show_connection_msg == SHOW_CONNECTION_MSG_ON;
+    settings->autolog = c_config->autolog;
+    settings->show_connection_msg = c_config->show_connection_msg;
     settings->tab_name_colour = Default_Conf_Tab_Name_Colour;
     settings->alias_set = Default_Conf_Alias_Set != 0;
+}
+
+void friend_reset_default_config_settings(const Client_Config *c_config)
+{
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
+        ToxicFriend *friend = &Friends.list[i];
+
+        if (!friend->active) {
+            continue;
+        }
+
+        set_default_friend_config_settings(friend, c_config);
+    }
 }
 
 static void realloc_friends(int n)

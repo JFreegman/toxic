@@ -261,4 +261,7 @@ bool friend_config_set_alias(const char *public_key, const char *alias, uint16_t
 /* Return true if the friend has an alias. */
 bool friend_config_alias_is_set(uint32_t friendnumber);
 
+/* Sets config settings to global defaults for all friends, ignoring friend-specific settings. */
+void friend_reset_default_config_settings(const Client_Config *c_config);
+
 #endif /* end of include guard: FRIENDLIST_H */

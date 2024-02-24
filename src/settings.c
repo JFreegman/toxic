@@ -134,25 +134,24 @@ static struct ui_strings {
 
 static void ui_defaults(Client_Config *settings)
 {
-    settings->timestamps = TIMESTAMPS_ON;
     snprintf(settings->timestamp_format, sizeof(settings->timestamp_format), "%s", TIMESTAMP_DEFAULT);
     snprintf(settings->log_timestamp_format, sizeof(settings->log_timestamp_format), "%s", LOG_TIMESTAMP_DEFAULT);
-
-    settings->autolog = AUTOLOG_OFF;
-    settings->alerts = ALERTS_ENABLED;
-    settings->show_notification_content = 1;
+    settings->show_timestamps = true;
+    settings->autolog = false;
+    settings->alerts = true;
+    settings->show_notification_content = true;
+    settings->native_colors = false;
     settings->bell_on_message = 0;
     settings->bell_on_filetrans = 0;
     settings->bell_on_filetrans_accept = 0;
     settings->bell_on_invite = 0;
-    settings->colour_theme = DFLT_COLS;
     settings->history_size = 700;
     settings->notification_timeout = 6000;
-    settings->show_typing_self = SHOW_TYPING_ON;
-    settings->show_typing_other = SHOW_TYPING_ON;
-    settings->show_welcome_msg = SHOW_WELCOME_MSG_ON;
-    settings->show_connection_msg = SHOW_CONNECTION_MSG_ON;
-    settings->show_group_connection_msg = SHOW_GROUP_CONNECTION_MSG_ON;
+    settings->show_typing_self = true;
+    settings->show_typing_other = true;
+    settings->show_welcome_msg = true;
+    settings->show_connection_msg = true;
+    settings->show_group_connection_msg = true;
     settings->nodeslist_update_freq = 1;
     settings->autosave_freq = 600;
 
@@ -162,7 +161,7 @@ static void ui_defaults(Client_Config *settings)
     snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
     snprintf(settings->line_special, LINE_HINT_MAX + 1, "%s", LINE_SPECIAL);
 
-    settings->mplex_away = MPLEX_ON;
+    settings->mplex_away = true;
     snprintf(settings->mplex_away_note, sizeof(settings->mplex_away_note), "%s", MPLEX_AWAY_NOTE);
 }
 
@@ -613,7 +612,8 @@ int settings_load_friends(const Run_Options *run_opts)
 
         if (config_setting_lookup_bool(keys, friend_strings.auto_accept_files, &auto_accept_files)) {
             if (!friend_config_set_auto_accept_files(public_key, auto_accept_files != 0)) {
-                fprintf(stderr, "config error: failed to apply friend auto-accept filetransfers setting for: %s\n",
+                fprintf(stderr,
+                        "config error: failed to apply friend auto-accept filetransfers setting for: %s\n",
                         public_key);
             }
         }
@@ -622,7 +622,8 @@ int settings_load_friends(const Run_Options *run_opts)
 
         if (config_setting_lookup_bool(keys, friend_strings.show_connection_msg, &show_connection_msg)) {
             if (!friend_config_set_show_connection_msg(public_key, show_connection_msg != 0)) {
-                fprintf(stderr, "config error: failed to apply friend show connection message setting for: %s\n",
+                fprintf(stderr,
+                        "config error: failed to apply friend show connection message setting for: %s\n",
                         public_key);
             }
         }
@@ -663,10 +664,13 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
     }
 
     const char *str = NULL;
+    int bool_val;
 
     /* ui */
     if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
-        config_setting_lookup_bool(setting, ui_strings.timestamps, &s->timestamps);
+        if (config_setting_lookup_bool(setting, ui_strings.timestamps, &bool_val)) {
+            s->show_timestamps = bool_val != 0;
+        }
 
         int time = 24;
 
@@ -701,32 +705,57 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
             snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", str);
         }
 
-        config_setting_lookup_bool(setting, ui_strings.alerts, &s->alerts);
-        config_setting_lookup_bool(setting, ui_strings.show_notification_content, &s->show_notification_content);
-
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_message, &s->bell_on_message)) {
-            s->bell_on_message = s->bell_on_message ? NT_BEEP : 0;
+        if (config_setting_lookup_bool(setting, ui_strings.alerts, &bool_val)) {
+            s->alerts = bool_val != 0;
         }
 
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans, &s->bell_on_filetrans)) {
-            s->bell_on_filetrans = s->bell_on_filetrans ? NT_BEEP : 0;
+        if (config_setting_lookup_bool(setting, ui_strings.show_notification_content, &bool_val)) {
+            s->show_notification_content = bool_val != 0;
         }
 
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans_accept, &s->bell_on_filetrans_accept)) {
-            s->bell_on_filetrans_accept = s->bell_on_filetrans_accept ? NT_BEEP : 0;
+        if (config_setting_lookup_bool(setting, ui_strings.bell_on_message, &bool_val)) {
+            s->bell_on_message = bool_val != 0 ? NT_BEEP : 0;
         }
 
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_invite, &s->bell_on_invite)) {
-            s->bell_on_invite = s->bell_on_invite ? NT_BEEP : 0;
+        if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans, &bool_val)) {
+            s->bell_on_filetrans = bool_val != 0 ? NT_BEEP : 0;
         }
 
-        config_setting_lookup_bool(setting, ui_strings.autolog, &s->autolog);
-        config_setting_lookup_bool(setting, ui_strings.native_colors, &s->colour_theme);
-        config_setting_lookup_bool(setting, ui_strings.show_typing_self, &s->show_typing_self);
-        config_setting_lookup_bool(setting, ui_strings.show_typing_other, &s->show_typing_other);
-        config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &s->show_welcome_msg);
-        config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &s->show_connection_msg);
-        config_setting_lookup_bool(setting, ui_strings.show_group_connection_msg, &s->show_group_connection_msg);
+        if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans_accept, &bool_val)) {
+            s->bell_on_filetrans_accept = bool_val != 0 ? NT_BEEP : 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.bell_on_invite, &bool_val)) {
+            s->bell_on_invite = bool_val != 0 ? NT_BEEP : 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.autolog, &bool_val)) {
+            s->autolog = bool_val != 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.native_colors, &bool_val)) {
+            s->native_colors = bool_val != 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.show_typing_self, &bool_val)) {
+            s->show_typing_self = bool_val != 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.show_typing_other, &bool_val)) {
+            s->show_typing_other = bool_val != 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &bool_val)) {
+            s->show_welcome_msg = bool_val != 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &bool_val)) {
+            s->show_connection_msg = bool_val != 0;
+        }
+
+        if (config_setting_lookup_bool(setting, ui_strings.show_group_connection_msg, &bool_val)) {
+            s->show_group_connection_msg = bool_val != 0;
+        }
 
         config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
         config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
@@ -753,7 +782,9 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
             snprintf(s->line_special, sizeof(s->line_special), "%s", str);
         }
 
-        config_setting_lookup_bool(setting, ui_strings.mplex_away, &s->mplex_away);
+        if (config_setting_lookup_bool(setting, ui_strings.mplex_away, &bool_val)) {
+            s->mplex_away = bool_val != 0;
+        }
 
         if (config_setting_lookup_string(setting, ui_strings.mplex_away_note, &str)) {
             snprintf(s->mplex_away_note, sizeof(s->mplex_away_note), "%s", str);
@@ -768,30 +799,30 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
     if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
         if (config_setting_lookup_string(setting, tox_strings.download_path, &str)) {
             snprintf(s->download_path, sizeof(s->download_path), "%s", str);
-            int len = strlen(s->download_path);
+            const size_t len = strlen(s->download_path);
 
             /* make sure path ends with a '/' */
             if (len >= sizeof(s->download_path) - 2) {
                 s->download_path[0] = '\0';
-            } else if (s->download_path[len - 1] != '/') {
+            } else if (len > 0 && s->download_path[len - 1] != '/') {
                 strcat(&s->download_path[len - 1], "/");
             }
         }
 
         if (config_setting_lookup_string(setting, tox_strings.chatlogs_path, &str)) {
             snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
-            int len = strlen(s->chatlogs_path);
+            const size_t len = strlen(s->chatlogs_path);
 
             if (len >= sizeof(s->chatlogs_path) - 2) {
                 s->chatlogs_path[0] = '\0';
-            } else if (s->chatlogs_path[len - 1] != '/') {
+            } else if (len > 0 && s->chatlogs_path[len - 1] != '/') {
                 strcat(&s->chatlogs_path[len - 1], "/");
             }
         }
 
         if (config_setting_lookup_string(setting, tox_strings.avatar_path, &str)) {
             snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
-            int len = strlen(str);
+            const size_t len = strlen(str);
 
             if (len >= sizeof(s->avatar_path)) {
                 s->avatar_path[0] = '\0';
@@ -802,11 +833,11 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
 
         if (config_setting_lookup_string(setting, tox_strings.autorun_path, &str)) {
             snprintf(s->autorun_path, sizeof(s->autorun_path), "%s", str);
-            int len = strlen(str);
+            const size_t len = strlen(str);
 
             if (len >= sizeof(s->autorun_path) - 2) {
                 s->autorun_path[0] = '\0';
-            } else if (s->autorun_path[len - 1] != '/') {
+            } else if (len > 0 && s->autorun_path[len - 1] != '/') {
                 strcat(&s->autorun_path[len - 1], "/");
             }
         }
@@ -815,7 +846,7 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
 
         if (config_setting_lookup_string(setting, tox_strings.password_eval, &str)) {
             snprintf(s->password_eval, sizeof(s->password_eval), "%s", str);
-            int len = strlen(str);
+            const size_t len = strlen(str);
 
             if (len >= sizeof(s->password_eval)) {
                 s->password_eval[0] = '\0';
@@ -887,7 +918,9 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
         config_setting_lookup_int(setting, audio_strings.chat_audio_channels, &s->chat_audio_channels);
         s->chat_audio_channels = s->chat_audio_channels <= 0 || s->chat_audio_channels > 2 ? 2 : s->chat_audio_channels;
 
-        config_setting_lookup_bool(setting, audio_strings.push_to_talk, &s->push_to_talk);
+        if (config_setting_lookup_bool(setting, audio_strings.push_to_talk, &bool_val)) {
+            s->push_to_talk = bool_val != 0;
+        }
     }
 
 #endif
@@ -979,6 +1012,8 @@ void settings_reload(Toxic *toxic)
     if (ret < 0) {
         fprintf(stderr, "Failed to reload global settings (error %d)\n", ret);
     }
+
+    friend_reset_default_config_settings(c_config);
 
     ret = settings_load_friends(run_opts);
 

@@ -480,7 +480,7 @@ int line_info_add(ToxWindow *self, const Client_Config *c_config, bool show_time
     len += msg_width;
 
     if (show_timestamp)  {
-        if (c_config->timestamps == TIMESTAMPS_ON) {
+        if (c_config->show_timestamps) {
             get_time_str(new_line->timestr, sizeof(new_line->timestr), c_config->timestamp_format);
         }
 
@@ -542,7 +542,7 @@ int line_info_load_history(ToxWindow *self, const Client_Config *c_config, const
     const uint16_t msg_width = line_info_add_msg(new_line->msg, sizeof(new_line->msg) / sizeof(wchar_t), message);
     len += msg_width;
 
-    if (c_config->timestamps == TIMESTAMPS_ON) {
+    if (c_config->show_timestamps) {
         snprintf(new_line->timestr, sizeof(new_line->timestr), "%s", timestamp);
     }
 

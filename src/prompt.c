@@ -673,7 +673,7 @@ static void prompt_init_log(Toxic *toxic)
         return;
     }
 
-    if (toxic->c_config->autolog == AUTOLOG_ON) {
+    if (toxic->c_config->autolog) {
         if (log_enable(ctx->log) == -1) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Failed to enable log.");
         }
@@ -716,7 +716,7 @@ static void prompt_onInit(ToxWindow *self, Toxic *toxic)
     scrollok(ctx->history, 0);
     wmove(self->window, y2 - CURS_Y_OFFSET, 0);
 
-    if (toxic->c_config->show_welcome_msg == SHOW_WELCOME_MSG_ON) {
+    if (toxic->c_config->show_welcome_msg) {
         print_welcome_msg(toxic->home_window, toxic->c_config);
     }
 }

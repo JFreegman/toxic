@@ -328,7 +328,7 @@ void init_term(const Client_Config *c_config, bool use_default_locale)
         // let's try anyways
     }
 
-    if (c_config->colour_theme == NATIVE_COLS) {
+    if (c_config->native_colors) {
         if (assume_default_colors(-1, -1) == OK) {
             bg_color = -1;
         }
