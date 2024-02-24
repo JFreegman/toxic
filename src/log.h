@@ -98,6 +98,6 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
  * Return -1 on failure.
  */
 int rename_logfile(Windows *windows, const Client_Config *c_config, const char *src, const char *dest,
-                   const char *selfkey, const char *otherkey, uint32_t window_id);
+                   const char *selfkey, const char *otherkey, uint16_t window_id);
 
 #endif /* LOG_H */

@@ -226,7 +226,7 @@ struct ToxWindow {
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     int colour;  /* The ncurses colour pair of the window name */
     uint32_t num;    /* corresponds to friendnumber in chat windows */
-    uint32_t id; /* a unique and permanent identifier for this window */
+    uint16_t id; /* a unique and permanent identifier for this window */
     bool scroll_pause; /* true if this window is not scrolled to the bottom */
     unsigned int pending_messages;  /* # of new messages in this window since the last time it was focused */
     int x;
@@ -323,19 +323,26 @@ struct Help {
 
 void init_windows(Toxic *toxic);
 void draw_active_window(Toxic *toxic);
-int64_t add_window(Toxic *toxic, ToxWindow *w);
 void del_window(ToxWindow *w, Windows *windows, const Client_Config *c_config);
 void kill_all_windows(Toxic *toxic);    /* should only be called on shutdown */
 void on_window_resize(Windows *windows);
 void force_refresh(WINDOW *w);
-ToxWindow *get_window_pointer_by_id(Windows *windows, uint32_t id);
+ToxWindow *get_window_pointer_by_id(Windows *windows, uint16_t id);
 ToxWindow *get_active_window(const Windows *windows);
 void draw_window_bar(ToxWindow *self, Windows *windows);
 
 /*
+ * Initializes window `w` and adds it to the windows list.
+ *
+ * Returns the window's unique ID on success.
+ * Returns -1 on failure.
+ */
+int add_window(Toxic *toxic, ToxWindow *w);
+
+/*
  * Sets the active window to the window associated with `id`.
  */
-void set_active_window_by_id(Windows *windows, uint32_t id);
+void set_active_window_by_id(Windows *windows, uint16_t id);
 
 /*
  * Sets the active window to the first found window of window type `type`.

@@ -307,9 +307,9 @@ static void load_conferences(Toxic *toxic)
 
         title[length] = 0;
 
-        const int64_t win_id = init_conference_win(toxic, conferencenum, type, (const char *) title, length);
+        const int win_id = init_conference_win(toxic, conferencenum, type, (const char *) title, length);
 
-        if (win_id == -1) {
+        if (win_id < 0) {
             tox_conference_delete(tox, conferencenum, NULL);
             continue;
         }

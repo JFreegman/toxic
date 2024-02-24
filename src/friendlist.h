@@ -85,7 +85,7 @@ typedef struct {
     size_t statusmsg_len;
     char pub_key[TOX_PUBLIC_KEY_SIZE];
     uint32_t num;
-    int64_t window_id;
+    int window_id;
     bool active;
     Tox_Connection connection_status;
     bool is_typing;

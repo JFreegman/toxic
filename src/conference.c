@@ -204,7 +204,9 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
     }
 }
 
-int64_t init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
+static void delete_conference(ToxWindow *self, Toxic *toxic, uint32_t conferencenum);
+
+int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length)
 {
     if (toxic == NULL) {
         return -1;
@@ -223,17 +225,32 @@ int64_t init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, 
             // probably it so happens that this will (at least typically) be
             // the case, because toxic and tox maintain the indices in
             // parallel ways. But it isn't guaranteed by the API.
-            conferences[i].conferencenum = conferencenum;
-            conferences[i].window_id = add_window(toxic, self);
+            if (i == max_conference_index) {
+                ++max_conference_index;
+            }
+
             conferences[i].active = true;
+            conferences[i].conferencenum = conferencenum;
             conferences[i].num_peers = 0;
             conferences[i].type = type;
             conferences[i].start_time = get_unix_time();
             conferences[i].audio_enabled = false;
             conferences[i].last_sent_audio = 0;
 
+            const int window_id = add_window(toxic, self);
+
+            if (window_id < 0) {
+                fprintf(stderr, "Failed to create new conference window\n");
+                delete_conference(self, toxic, conferencenum);
+                return -1;
+            }
+
+            conferences[i].window_id = window_id;
+
             if (!tox_conference_get_id(toxic->tox, conferencenum, (uint8_t *) conferences[i].id)) {
                 fprintf(stderr, "Failed to fetch conference ID for conferencenum: %u\n", conferencenum);
+                delete_conference(self, toxic, conferencenum);
+                return -1;
             }
 
 #ifdef AUDIO
@@ -245,10 +262,6 @@ int64_t init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, 
             conference_set_title(self, conferencenum, title, length);
 
             init_conference_logging(self, toxic, conferencenum);
-
-            if (i == max_conference_index) {
-                ++max_conference_index;
-            }
 
             return conferences[i].window_id;
         }
@@ -330,7 +343,7 @@ void conference_rename_log_path(Toxic *toxic, uint32_t conferencenum, const char
 
     if (rename_logfile(toxic->windows, toxic->c_config, chat->title, new_title, myid, conference_id,
                        chat->window_id) != 0) {
-        fprintf(stderr, "Failed to rename conference log to `%s`\n", new_title);
+        fprintf(stderr, "Failed to rename conference log to '%s'\n", new_title);
     }
 }
 

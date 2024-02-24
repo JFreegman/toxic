@@ -67,7 +67,7 @@ typedef struct {
     bool       active;
     uint64_t   time_connected;    /* The time we successfully connected to the group */
 
-    int64_t    window_id;
+    uint16_t   window_id;
     int        side_pos;     /* current position of the sidebar - used for scrolling up and down */
 } GroupChat;
 

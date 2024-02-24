@@ -523,7 +523,7 @@ void cmd_conference(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
 #endif
     }
 
-    if (init_conference_win(toxic, conferencenum, type, NULL, 0) == -1) {
+    if (init_conference_win(toxic, conferencenum, type, NULL, 0) < 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Conference window failed to initialize.");
         tox_conference_delete(tox, conferencenum, NULL);
         return;

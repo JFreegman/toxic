@@ -387,19 +387,29 @@ int init_groupchat_win(Toxic *toxic, uint32_t groupnumber, const char *groupname
 
     for (int i = 0; i <= max_groupchat_index; ++i) {
         if (!groupchats[i].active) {
-            groupchats[i].window_id = add_window(toxic, self);
+            if (i == max_groupchat_index) {
+                ++max_groupchat_index;
+            }
+
             groupchats[i].active = true;
             groupchats[i].groupnumber = groupnumber;
             groupchats[i].num_peers = 0;
             groupchats[i].time_connected = get_unix_time();
 
-            if (!tox_group_get_chat_id(tox, groupnumber, (uint8_t *) groupchats[i].chat_id, NULL)) {
+            const int window_id = add_window(toxic, self);
+
+            if (window_id < 0) {
+                fprintf(stderr, "Failed to create new groupchat window\n");
                 close_groupchat(self, toxic, groupnumber);
                 return -1;
             }
 
-            if (i == max_groupchat_index) {
-                ++max_groupchat_index;
+            groupchats[i].window_id = window_id;
+
+            if (!tox_group_get_chat_id(tox, groupnumber, (uint8_t *) groupchats[i].chat_id, NULL)) {
+                fprintf(stderr, "Failed to fetch new groupchat ID\n");
+                close_groupchat(self, toxic, groupnumber);
+                return -1;
             }
 
             set_active_window_by_id(toxic->windows, groupchats[i].window_id);

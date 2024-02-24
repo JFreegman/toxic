@@ -424,7 +424,14 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
     }
 
     if (Friends.list[friend_number].window_id == -1) {
-        Friends.list[friend_number].window_id = add_window(toxic, new_chat(toxic->tox, Friends.list[friend_number].num));
+        const int window_id = add_window(toxic, new_chat(toxic->tox, Friends.list[friend_number].num));
+
+        if (window_id < 0) {
+            fprintf(stderr, "Failed to create new chat window in callback_recv_invite()\n");
+            return;
+        }
+
+        Friends.list[friend_number].window_id = window_id;
     }
 
     const Call *call = &CallControl.calls[friend_number];

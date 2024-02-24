@@ -274,7 +274,7 @@ int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32
 
     GameData *game = self->game;
 
-    const int64_t window_id = add_window(toxic, self);
+    const int window_id = add_window(toxic, self);
 
     if (window_id < 0) {
         free(game);

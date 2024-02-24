@@ -61,7 +61,7 @@ typedef struct NameListEntry {
 
 typedef struct {
     uint32_t conferencenum;
-    int64_t window_id;
+    uint16_t window_id;
     bool active;
     uint8_t type;
     int side_pos;    /* current position of the sidebar - used for scrolling up and down */
@@ -90,7 +90,7 @@ typedef struct {
 /* Frees all Toxic associated data structures for a conference (does not call tox_conference_delete() ) */
 void free_conference(ToxWindow *self, Windows *windows, const Client_Config *c_config, uint32_t conferencenum);
 
-int64_t init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
+int init_conference_win(Toxic *toxic, uint32_t conferencenum, uint8_t type, const char *title, size_t length);
 
 /* destroys and re-creates conference window with or without the peerlist */
 void redraw_conference_win(ToxWindow *self);

@@ -761,7 +761,7 @@ void on_group_voice_state(Tox *tox, uint32_t groupnumber, Tox_Group_Voice_State 
  * Returns the windows list index of the window associated with `id`.
  * Returns -1 if `id` is not found.
  */
-static int get_window_index(Windows *windows, uint32_t id)
+static int get_window_index(Windows *windows, uint16_t id)
 {
     for (uint16_t i = 0; i < windows->count; ++i) {
         if (windows->list[i]->id == id) {
@@ -772,16 +772,23 @@ static int get_window_index(Windows *windows, uint32_t id)
     return -1;
 }
 
-static uint32_t get_new_window_id(Windows *windows)
+static uint16_t get_new_window_id(Windows *windows)
 {
-    const uint32_t new_id = windows->next_id;
-    ++windows->next_id;
+    uint16_t new_id = 0;
+
+    for (uint16_t i = 0; i < UINT16_MAX; ++i) {
+        if (get_window_pointer_by_id(windows, i) == NULL) {
+            new_id = i;
+            break;
+        }
+    }
+
     return new_id;
 }
 
 /* CALLBACKS END */
 
-int64_t add_window(Toxic *toxic, ToxWindow *w)
+int add_window(Toxic *toxic, ToxWindow *w)
 {
     if (w == NULL || LINES < 2) {
         fprintf(stderr, "Failed to add window.\n");
@@ -835,7 +842,7 @@ void set_active_window_by_type(Windows *windows, Window_Type type)
     fprintf(stderr, "Warning: attemping to set active window with no active type: %d\n", type);
 }
 
-void set_active_window_by_id(Windows *windows, uint32_t id)
+void set_active_window_by_id(Windows *windows, uint16_t id)
 {
     const int idx = get_window_index(windows, id);
 
@@ -1357,7 +1364,7 @@ void refresh_inactive_windows(Windows *windows, const Client_Config *c_config)
 /* Returns a pointer to the ToxWindow associated with `id`.
  * Returns NULL if no ToxWindow exists.
  */
-ToxWindow *get_window_pointer_by_id(Windows *windows, uint32_t id)
+ToxWindow *get_window_pointer_by_id(Windows *windows, uint16_t id)
 {
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];

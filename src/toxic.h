@@ -71,7 +71,6 @@ typedef struct Windows {
     ToxWindow  **list;
     uint16_t   count;
     uint16_t   active_index;
-    uint32_t   next_id;
 } Windows;
 
 typedef struct Toxic {

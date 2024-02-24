@@ -151,7 +151,7 @@ struct GameData {
     int        parent_max_x; // max dimensions of parent window
     int        parent_max_y;
 
-    int64_t    window_id;
+    uint16_t   window_id;
     WINDOW     *window;
 
     Toxic      *toxic;  // must be locked with Winthread mutex

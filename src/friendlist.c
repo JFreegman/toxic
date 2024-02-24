@@ -433,7 +433,14 @@ static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, To
         return;
     }
 
-    Friends.list[num].window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+
+    if (window_id < 0) {
+        fprintf(stderr, "Failed to create new chat window in friendlist_onMessage\n");
+        return;
+    }
+
+    Friends.list[num].window_id = window_id;
 }
 
 static void friendlist_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Connection connection_status)
@@ -657,7 +664,14 @@ static void friendlist_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t frie
         return;
     }
 
-    Friends.list[friend_number].window_id = add_window(toxic, new_chat(tox, Friends.list[friend_number].num));
+    const int window_id = add_window(toxic, new_chat(tox, Friends.list[friend_number].num));
+
+    if (window_id < 0) {
+        fprintf(stderr, "Failed to create new chat window in friendlist_onGameInvite\n");
+        return;
+    }
+
+    Friends.list[friend_number].window_id = window_id;
 }
 
 #endif // GAMES
@@ -680,7 +694,14 @@ static void friendlist_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t num, u
         return;
     }
 
-    Friends.list[num].window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+
+    if (window_id < 0) {
+        fprintf(stderr, "Failed to create new chat window in friendlist_onFileRecv\n");
+        return;
+    }
+
+    Friends.list[num].window_id = window_id;
 }
 
 static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t num, uint8_t type,
@@ -706,7 +727,14 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t
         return;
     }
 
-    Friends.list[num].window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+
+    if (window_id < 0) {
+        fprintf(stderr, "Failed to create new chat window in friendlist_onConferenceInvite\n");
+        return;
+    }
+
+    Friends.list[num].window_id = window_id;
 }
 
 static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num, const char *data, size_t length,
@@ -730,7 +758,14 @@ static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num
         return;
     }
 
-    Friends.list[num].window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+
+    if (window_id < 0) {
+        fprintf(stderr, "Failed to create new chat window in friendlist_onGroupInvite\n");
+        return;
+    }
+
+    Friends.list[num].window_id = window_id;
 }
 
 /* move friendlist/blocklist cursor up and down */
@@ -1015,7 +1050,14 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
 
             /* Jump to chat window if already open */
             if (Friends.list[f].window_id < 0) {
-                Friends.list[f].window_id = add_window(toxic, new_chat(tox, Friends.list[f].num));
+                const int window_id = add_window(toxic, new_chat(tox, Friends.list[f].num));
+
+                if (window_id < 0) {
+                    fprintf(stderr, "Failed to create new chat window in friendlist_onKey\n");
+                    return true;
+                }
+
+                Friends.list[f].window_id = window_id;
             }
 
             set_active_window_by_id(toxic->windows, Friends.list[f].window_id);
@@ -1408,8 +1450,15 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
     }
 
     if (state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
-        Friends.list[friend_number].window_id = add_window(toxic, new_chat(tox, Friends.list[friend_number].num));
-        set_active_window_by_id(toxic->windows, Friends.list[friend_number].window_id);
+        const int window_id = add_window(toxic, new_chat(tox, Friends.list[friend_number].num));
+
+        if (window_id < 0) {
+            fprintf(stderr, "Failed to create new chat window in friendlist_onAV");
+            return;
+        }
+
+        Friends.list[friend_number].window_id = window_id;
+        set_active_window_by_id(toxic->windows, window_id);
     }
 }
 #endif /* AUDIO */
