@@ -25,6 +25,13 @@
 #define SIGINT 2
 #endif
 
+#include <assert.h>
+#if !defined(static_assert) && (defined(__GNUC__) || defined(__clang__)) \
+    && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L \
+    && __STDC_VERSION__ <= 201710L
+#define static_assert _Static_assert
+#endif
+
 #include <stdbool.h>
 #include <curses.h>
 
