@@ -224,7 +224,7 @@ static int parse_command(const char *input, char (*args)[MAX_STR_SIZE])
     char *cmd = strdup(input);
 
     if (cmd == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in parse_command");
+        return -1;
     }
 
     int num_args = 0;
@@ -273,9 +273,10 @@ void execute(WINDOW *w, ToxWindow *self, Toxic *toxic, const char *input, int mo
     }
 
     char args[MAX_NUM_ARGS][MAX_STR_SIZE];
-    int num_args = parse_command(input, args);
+    const int num_args = parse_command(input, args);
 
     if (num_args <= 0) {
+        fprintf(stderr, "Warning: parse_command(%s, %d) failed in execute()\n", input, mode);
         return;
     }
 

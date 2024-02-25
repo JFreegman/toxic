@@ -319,6 +319,11 @@ void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_e
 
     Toxic *toxic = (Toxic *) user_data;
 
+    if (friend_number >= CallControl.max_calls) {
+        fprintf(stderr, "Failed to receive call: Insufficient memory\n");
+        return;
+    }
+
     Call *call = &CallControl.calls[friend_number];
     init_call(call);
 
@@ -344,6 +349,11 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
     }
 
     UNUSED_VAR(av);
+
+    if (friend_number >= CallControl.max_calls) {
+        fprintf(stderr, "Failed to handle call state: Insufficient memory\n");
+        return;
+    }
 
     Call *call = &CallControl.calls[friend_number];
 
@@ -412,6 +422,10 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
 {
     UNUSED_VAR(user_data);
 
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *call = &CallControl.calls[friend_number];
     call->audio_bit_rate = audio_bit_rate;
     toxav_audio_set_bit_rate(av, friend_number, audio_bit_rate, NULL);
@@ -420,6 +434,10 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
 void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= Friends.max_idx) {
+        return;
+    }
+
+    if (friend_number >= CallControl.max_calls) {
         return;
     }
 
@@ -447,6 +465,10 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
 }
 void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     const Call *call = &CallControl.calls[friend_number];
     Windows *windows = toxic->windows;
 
@@ -460,6 +482,10 @@ void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
 }
 void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *call = &CallControl.calls[friend_number];
     Windows *windows = toxic->windows;
 
@@ -474,6 +500,10 @@ void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
 }
 void callback_call_started(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *call = &CallControl.calls[friend_number];
     Windows *windows = toxic->windows;
 
@@ -488,6 +518,10 @@ void callback_call_started(Toxic *toxic, uint32_t friend_number)
 }
 void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     const Call *call = &CallControl.calls[friend_number];
     Windows *windows = toxic->windows;
 
@@ -501,6 +535,10 @@ void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
 }
 void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     const Call *call = &CallControl.calls[friend_number];
     Windows *windows = toxic->windows;
 
@@ -514,6 +552,10 @@ void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
 }
 void callback_call_ended(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     const Call *call = &CallControl.calls[friend_number];
     Windows *windows = toxic->windows;
 
@@ -560,6 +602,11 @@ void cmd_call(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index");
+        return;
+    }
+
     Call *call = &CallControl.calls[self->num];
 
     if (call->status != cs_None) {
@@ -592,6 +639,11 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
 
     if (toxic->av == NULL) {
         print_err(self, c_config, "Audio not supported!");
+        return;
+    }
+
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index");
         return;
     }
 
@@ -645,6 +697,11 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
+
     Call *call = &CallControl.calls[self->num];
 
     if (call->status != cs_Pending) {
@@ -678,6 +735,11 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
 
     if (argc != 0) {
         print_err(self, c_config, "Unknown arguments.");
+        return;
+    }
+
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
         return;
     }
 
@@ -815,6 +877,10 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
 
     /* If call is active, use this_call values */
     Call *this_call = &CallControl.calls[self->num];
@@ -860,6 +926,11 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         return;
     }
 
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
+
     const Call *call = &CallControl.calls[self->num];
 
     /* Call must be active */
@@ -880,6 +951,11 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (
     }
 
     const Client_Config *c_config = toxic->c_config;
+
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
 
     Call *call = &CallControl.calls[self->num];
 
@@ -933,13 +1009,19 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (
 
 void place_call(ToxWindow *self, Toxic *toxic)
 {
-    Call *call = &CallControl.calls[self->num];
+    const Client_Config *c_config = toxic->c_config;
 
-    if (call->status != cs_Pending) {
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    const Client_Config *c_config = toxic->c_config;
+    Call *call = &CallControl.calls[self->num];
+
+    if (call->status != cs_Pending) {
+        print_err(self, toxic->c_config, "No pending call.");
+        return;
+    }
 
     Toxav_Err_Call error;
 
@@ -967,11 +1049,15 @@ void place_call(ToxWindow *self, Toxic *toxic)
 
 void stop_current_call(ToxWindow *self, Toxic *toxic)
 {
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, toxic->c_config, "Invalid call index.");
+        return;
+    }
+
     Call *call = &CallControl.calls[self->num];
 
     if (call->status == cs_Pending) {
         toxav_call_control(toxic->av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
-
         cancel_call(call);
         callback_call_canceled(toxic, self->num);
     } else {
@@ -989,36 +1075,42 @@ void stop_current_call(ToxWindow *self, Toxic *toxic)
 /**
  * Reallocates the Calls list according to n.
  */
-static void realloc_calls(uint32_t n)
+static bool realloc_calls(uint32_t n)
 {
     if (n == 0) {
         free(CallControl.calls);
         CallControl.calls = NULL;
-        return;
+        return true;
     }
 
     Call *temp = realloc(CallControl.calls, n * sizeof(Call));
 
     if (temp == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in realloc_calls");
+        return false;
     }
 
     CallControl.calls = temp;
+    return true;
 }
 
-/**
- * Inits the call structure for a given friend. Called when a friend is added to the friends list.
- * Index must be equivalent to the friend's friendlist index.
- */
-void init_friend_AV(uint32_t index)
+bool init_friend_AV(uint32_t index)
 {
-    if (index == CallControl.max_calls) {
-        realloc_calls(CallControl.max_calls + 1);
-        CallControl.calls[CallControl.max_calls] = (Call) {
-            0
-        };
-        ++CallControl.max_calls;
+    if (index != CallControl.max_calls) {
+        return false;
     }
+
+    if (!realloc_calls(CallControl.max_calls + 1)) {
+        fprintf(stderr, "Warning: realloc_calls(%u) failed\n", CallControl.max_calls + 1);
+        return false;
+    }
+
+    CallControl.calls[CallControl.max_calls] = (Call) {
+        0
+    };
+
+    ++CallControl.max_calls;
+
+    return true;
 }
 
 /**
@@ -1027,7 +1119,11 @@ void init_friend_AV(uint32_t index)
  */
 void del_friend_AV(uint32_t index)
 {
-    realloc_calls(index);
+    if (!realloc_calls(index)) {
+        fprintf(stderr, "Warning: realloc_calls(%u) failed\n", index);
+        return;
+    }
+
     CallControl.max_calls = index;
 }
 

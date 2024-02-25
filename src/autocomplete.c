@@ -139,7 +139,7 @@ static int complete_line_helper(ToxWindow *self, Toxic *toxic, const char *const
     char *sub = calloc(1, strlen(ubuf) + 1);
 
     if (sub == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in complete_line_helper");
+        return -1;
     }
 
     if (!s && !dir_search) {

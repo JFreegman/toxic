@@ -254,7 +254,11 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
 
     path[len] = '\0';
     char filename[MAX_STR_SIZE];
-    get_file_name(filename, sizeof(filename), path);
+
+    if (get_file_name(filename, sizeof(filename), path) < 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch file name (OOM)");
+        return;
+    }
 
     if (avatar_set(tox, path, len) == -1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,

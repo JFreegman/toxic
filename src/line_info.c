@@ -45,7 +45,7 @@ void line_info_init(struct history *hst)
     hst->line_root = calloc(1, sizeof(struct line_info));
 
     if (hst->line_root == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in line_info_init");
+        exit_toxic_err(FATALERR_MEMORY, "calloc() failed in line_info_init()");
     }
 
     hst->line_start = hst->line_root;

@@ -78,16 +78,13 @@ typedef enum _FATAL_ERRS {
     FATALERR_FILEOP = -2,           /* critical file operation failed */
     FATALERR_THREAD_CREATE = -3,    /* thread creation failed for critical thread */
     FATALERR_MUTEX_INIT = -4,       /* mutex init for critical thread failed */
-    FATALERR_THREAD_ATTR = -5,      /* thread attr object init failed */
-    FATALERR_LOCALE_NOT_SET = -6,   /* system locale not set */
-    FATALERR_STORE_DATA = -7,       /* store_data failed in critical section */
-    FATALERR_INFLOOP = -8,          /* infinite loop detected */
-    FATALERR_WININIT = -9,          /* window init failed */
-    FATALERR_PROXY = -10,           /* Tox network failed to init using a proxy */
-    FATALERR_ENCRYPT = -11,         /* Data file encryption failure */
-    FATALERR_TOX_INIT = -12,        /* Tox instance failed to initialize */
-    FATALERR_TOXIC_INIT = -13,      /* Toxic instance failed to initialize */
-    FATALERR_CURSES = -14,          /* Unrecoverable Ncurses error */
+    FATALERR_LOCALE_NOT_SET = -5,   /* system locale not set */
+    FATALERR_WININIT = -6,          /* window init failed */
+    FATALERR_PROXY = -7,            /* Tox network failed to init using a proxy */
+    FATALERR_ENCRYPT = -8,          /* Data file encryption failure */
+    FATALERR_TOX_INIT = -9,         /* Tox instance failed to initialize */
+    FATALERR_TOXIC_INIT = -10,      /* Toxic instance failed to initialize */
+    FATALERR_CURSES = -11,          /* Unrecoverable Ncurses error */
 } FATAL_ERRS;
 
 #endif  // TOXIC_CONSTANTS_H

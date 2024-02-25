@@ -187,8 +187,12 @@ bool valid_nick(const char *nick);
  */
 void filter_string(char *str, size_t len, bool is_nick);
 
-/* gets base file name from path or original file name if no path is supplied */
-size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname);
+/* Gets base file name from path or original file name if no path is supplied.
+ *
+ * Returns the file name length on success.
+ * Returns -1 on failure (OOM).
+ */
+int get_file_name(char *namebuf, size_t bufsize, const char *pathname);
 
 /* Gets the base directory of path and puts it in dir.
  * dir must have at least as much space as path_len.

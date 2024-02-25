@@ -357,26 +357,25 @@ void filter_string(char *str, size_t len, bool is_nick)
     }
 }
 
-/* gets base file name from path or original file name if no path is supplied.
- * Returns the file name length
- */
-size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
+int get_file_name(char *namebuf, size_t bufsize, const char *pathname)
 {
     int len = strlen(pathname) - 1;
     char *path = strdup(pathname);
 
     if (path == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in get_file_name");
+        return -1;
     }
 
     while (len >= 0 && pathname[len] == '/') {
-        path[len--] = '\0';
+        path[len] = '\0';
+        --len;
     }
 
     char *finalname = strdup(path);
 
     if (finalname == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "failed in get_file_name");
+        free(path);
+        return -1;
     }
 
     const char *basenm = strrchr(path, '/');
@@ -391,7 +390,7 @@ size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname)
     free(finalname);
     free(path);
 
-    return strlen(namebuf);
+    return (int)strlen(namebuf);
 }
 
 /* Gets the base directory of path and puts it in dir.

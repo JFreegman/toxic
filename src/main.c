@@ -1165,14 +1165,14 @@ static void init_default_data_files(Client_Data *client_data)
         client_data->block_path = strdup(BLOCKNAME);
 
         if (client_data->data_path == NULL || client_data->block_path == NULL) {
-            exit_toxic_err(FATALERR_MEMORY, "failed in init_default_data_files()");
+            exit_toxic_err(FATALERR_MEMORY, "strdup() failed in init_default_data_files()");
         }
     } else {
         client_data->data_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
         client_data->block_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
 
         if (client_data->data_path == NULL || client_data->block_path == NULL) {
-            exit_toxic_err(FATALERR_MEMORY, "failed in init_default_data_files()");
+            exit_toxic_err(FATALERR_MEMORY, "malloc() failed in init_default_data_files()");
         }
 
         strcpy(client_data->data_path, user_config_dir);

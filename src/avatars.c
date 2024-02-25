@@ -152,13 +152,16 @@ int avatar_set(Tox *tox, const char *path, size_t path_len)
 
     fclose(fp);
 
-    off_t size = file_size(path);
+    const off_t size = file_size(path);
 
     if (size == 0 || size > MAX_AVATAR_FILE_SIZE) {
         return -1;
     }
 
-    get_file_name(Avatar.name, sizeof(Avatar.name), path);
+    if (get_file_name(Avatar.name, sizeof(Avatar.name), path) < 0) {
+        return -1;
+    }
+
     Avatar.name_len = strlen(Avatar.name);
     snprintf(Avatar.path, sizeof(Avatar.path), "%s", path);
     Avatar.path_len = path_len;

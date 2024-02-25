@@ -94,7 +94,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
 
     char msg[MAX_STR_SIZE];
     const char *inoutstr = argv[1];
-    long int idx = strtol(argv[2], NULL, 10);
+    const long int idx = strtol(argv[2], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[2], "0")) || idx >= MAX_FILES || idx < 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file ID.");
@@ -149,7 +149,7 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int ar
         return;
     }
 
-    long int conferencenum = strtol(argv[1], NULL, 10);
+    const long int conferencenum = strtol(argv[1], NULL, 10);
 
     if ((conferencenum == 0 && strcmp(argv[1], "0")) || conferencenum < 0 || conferencenum == LONG_MAX) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
@@ -182,8 +182,8 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
     const Client_Config *c_config = toxic->c_config;
 
     const char *conferencekey = Friends.list[self->num].conference_invite.key;
-    uint16_t length = Friends.list[self->num].conference_invite.length;
-    uint8_t type = Friends.list[self->num].conference_invite.type;
+    const uint16_t length = Friends.list[self->num].conference_invite.length;
+    const uint8_t type = Friends.list[self->num].conference_invite.type;
 
     if (!Friends.list[self->num].conference_invite.pending) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
@@ -273,9 +273,9 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     self_nick[nick_len] = '\0';
 
     Tox_Err_Group_Invite_Accept err;
-    uint32_t groupnumber = tox_group_invite_accept(tox, self->num, Friends.list[self->num].group_invite.data,
-                           Friends.list[self->num].group_invite.length, (const uint8_t *) self_nick, nick_len,
-                           (const uint8_t *) passwd, passwd_len, &err);
+    const uint32_t groupnumber = tox_group_invite_accept(tox, self->num, Friends.list[self->num].group_invite.data,
+                                 Friends.list[self->num].group_invite.length, (const uint8_t *) self_nick, nick_len,
+                                 (const uint8_t *) passwd, passwd_len, &err);
 
     if (err != TOX_ERR_GROUP_INVITE_ACCEPT_OK) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to join group (error %d).", err);
@@ -303,7 +303,7 @@ void cmd_group_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
         return;
     }
 
-    int groupnumber = atoi(argv[1]);
+    const int groupnumber = atoi(argv[1]);
 
     if (groupnumber == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
@@ -339,9 +339,9 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     }
 
     GameType type = Friends.list[self->num].game_invite.type;
-    uint32_t id = Friends.list[self->num].game_invite.id;
+    const uint32_t id = Friends.list[self->num].game_invite.id;
     uint8_t *data = Friends.list[self->num].game_invite.data;
-    size_t length = Friends.list[self->num].game_invite.data_length;
+    const size_t length = Friends.list[self->num].game_invite.data_length;
 
     const int ret = game_initialize(self, toxic, type, id, data, length, false);
 
@@ -389,7 +389,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         return;
     }
 
-    long int idx = strtol(argv[1], NULL, 10);
+    const long int idx = strtol(argv[1], NULL, 10);
 
     if ((idx == 0 && strcmp(argv[1], "0")) || idx < 0 || idx >= MAX_FILES) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld", idx);
@@ -480,7 +480,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
 
     char path[MAX_STR_SIZE];
     snprintf(path, sizeof(path), "%s", argv[1]);
-    int path_len = strlen(path);
+    const int path_len = strlen(path);
 
     if (path_len >= MAX_STR_SIZE) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");
@@ -494,7 +494,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         return;
     }
 
-    off_t filesize = file_size(path);
+    const off_t filesize = file_size(path);
 
     if (filesize <= 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid file.");
@@ -503,11 +503,17 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
     }
 
     char file_name[TOX_MAX_FILENAME_LENGTH];
-    size_t namelen = get_file_name(file_name, sizeof(file_name), path);
+    const int namelen = get_file_name(file_name, sizeof(file_name), path);
+
+    if (namelen < 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch file name (OOM)");
+        fclose(file_to_send);
+        return;
+    }
 
     Tox_Err_File_Send err;
-    uint32_t filenum = tox_file_send(tox, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
-                                     (uint8_t *) file_name, namelen, &err);
+    const uint32_t filenum = tox_file_send(tox, self->num, TOX_FILE_KIND_DATA, (uint64_t) filesize, NULL,
+                                           (uint8_t *) file_name, namelen, &err);
 
     if (err != TOX_ERR_FILE_SEND_OK) {
         goto on_send_error;
@@ -543,7 +549,7 @@ on_send_error:
         }
 
         case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED: {
-            int queue_idx = file_send_queue_add(self->num, path, path_len);
+            const int queue_idx = file_send_queue_add(self->num, path, path_len);
 
             char msg[MAX_STR_SIZE];
 

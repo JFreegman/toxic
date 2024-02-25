@@ -102,7 +102,13 @@ bool init_call(Call *call);
 void place_call(ToxWindow *self, Toxic *toxic);
 void stop_current_call(ToxWindow *self, Toxic *toxic);
 
-void init_friend_AV(uint32_t index);
+/*
+ * Initializes the call structure for a given friend. Called when a friend is added
+ * to the friends list. Index must be equivalent to the friend's friendlist index.
+ *
+ * Returns true on success.
+ */
+bool init_friend_AV(uint32_t index);
 void del_friend_AV(uint32_t index);
 
 #endif /* AUDIO_CALL_H */

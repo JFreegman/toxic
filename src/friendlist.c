@@ -597,7 +597,11 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
         }
 
 #ifdef AUDIO
-        init_friend_AV(i);
+
+        if (!init_friend_AV(i)) {
+            fprintf(stderr, "Failed to init AV for friend %u\n", i);
+        }
+
 #endif
 
         return;
@@ -635,7 +639,11 @@ static void friendlist_add_blocked(const Client_Config *c_config, uint32_t fnum,
         sort_friendlist_index();
 
 #ifdef AUDIO
-        init_friend_AV(i);
+
+        if (!init_friend_AV(i)) {
+            fprintf(stderr, "Failed to init AV for friend %d\n", i);
+        }
+
 #endif
         return;
     }
