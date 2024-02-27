@@ -1,0 +1,177 @@
+// TUI Test Snapshot v1
+
+exports[`global help window works 1`] = String.raw`
+╭──────────────────────────────────────────────────────────────────────────────────────────╮
+│┌──────────────────────────────────────────────────────────────────────────────┐          │
+││Global Commands:                                                              │          │
+││ /add <addr> <msg>          : Add contact with optional message               │          │
+││ /accept <id>               : Accept friend request                           │          │
+││ /avatar <path>             : Set an avatar (leave path empty to unset)       │          │
+││ /color <color>             : Change the colour of the focused window's name  │          │
+││ /conference <type>         : Create a conference where type: text | audio    │          │
+││ /connect <ip> <port> <key> : Manually connect to a DHT node                  │          │
+││ /decline <id>              : Decline friend request                          │          │
+││ /requests                  : List pending friend requests                    │          │
+││ /status <type>             : Set status (Online, Busy, Away)                 │          │
+││ /note <msg>                : Set a personal note                             │          │
+││ /nick <name>               : Set your global name (doesn't affect groups)    │          │
+││ /nospam <value>            : Change part of your Tox ID to stop spam         │          │
+││ /log <on>|<off>            : Enable/disable logging                          │          │
+││ /myid                      : Print your Tox ID                               │          │
+││ /group <name>              : Create a new group chat                         │          │
+││ /join <chatid>             : Join a public groupchat using a Chat ID         │          │
+││ /game <name>               : Play a game                                     │          │
+││ /clear                     : Clear window history                            │          │
+││ /close                     : Close the current chat window                   │          │
+││ /quit or /exit             : Exit Toxic                                      │          │
+││                                                                              │          │
+││ main menu | exit                                                             │          │
+│└──────────────────────────────────────────────────────────────────────────────┘          │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+`;
+
+exports[`help window can be exited 1`] = String.raw`
+╭──────────────────────────────────────────────────────────────────────────────────────────╮
+│ [Offline] Toxic User                                                                     │
+│    _____ _____  _____ ____                                                               │
+│   |_   _/ _ \ \/ /_ _/ ___|                                                              │
+│     | || | | \  / | | |                                                                  │
+│     | || |_| /  \ | | |___                                                               │
+│     |_| \___/_/\_\___\____| v.0.14.1                                                     │
+│                                                                                          │
+│Welcome to Toxic, a free, open source Tox-based instant messaging client.                 │
+│Type "/help" for assistance. Further help may be found via the man page.                  │
+│                                                                                          │
+│Avatar has been unset.                                                                    │
+│$ /help                                                                                   │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│  [Home] [Contacts]                                                                       │
+│                                                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+`;
+
+exports[`help window works 1`] = String.raw`
+╭──────────────────────────────────────────────────────────────────────────────────────────╮
+│ [Offline] Toxic User                                                                     │
+│    _____ _____  _____ ____                                                               │
+│   |_   _/ _ \ \/ /_ _/ ___|                                                              │
+│   ┌────────────────────────┐                                                             │
+│   │       Help Menu        │                                                             │
+│   │global commands         │v.0.14.1                                                     │
+│   │chat commands           │                                                             │
+│Wel│conference commands     │n source Tox-based instant messaging client.                 │
+│Typ│groupchat commands      │Further help may be found via the man page.                  │
+│   │friendlist controls     │                                                             │
+│Ava│key bindings            │                                                             │
+│$ /└────────────────────────┘                                                             │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│  [Home] [Contacts]                                                                       │
+│                                                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+`;
+
+exports[`terminal resize works 1`] = String.raw`
+╭────────────────────────────────────────────────────────────╮
+│ [Offline] Toxic User                                       │
+│    _____ _____  _____ ____                                 │
+│   |_   _/ _ \ \/ /_ _/ ___|                                │
+│   ┌────────────────────────┐                               │
+│   │       Help Menu        │                               │
+│   │global commands         │v.0.14.1                       │
+│   │chat commands           │                               │
+│Wel│conference commands     │n source Tox-based instant     │
+│mes│groupchat commands      │                               │
+│Typ│friendlist controls     │Further help may be found via  │
+│the│key bindings            │                               │
+│   └────────────────────────┘                               │
+│Avatar has been unset.                                      │
+│$ /help                                                     │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│  [Home] [Contacts]                                         │
+│                                                            │
+╰────────────────────────────────────────────────────────────╯
+`;
+
+exports[`toxic --help shows usage message 1`] = String.raw`
+╭──────────────────────────────────────────────────────────────────────────────────────────╮
+│> toxic --help                                                                            │
+│usage: toxic [OPTION] [FILE ...]                                                          │
+│  -4, --ipv4               Force IPv4 connection                                          │
+│  -b, --debug              Enable stderr for debugging                                    │
+│  -c, --config             Use specified config file                                      │
+│  -d, --default-locale     Use default POSIX locale                                       │
+│  -e, --encrypt-data       Encrypt an unencrypted data file                               │
+│  -f, --file               Use specified data file                                        │
+│  -h, --help               Show this message and exit                                     │
+│  -l, --logging            Enable toxcore logging: Requires [log_path | stderr]           │
+│  -L, --no-lan             Disable local discovery                                        │
+│  -n, --nodes              Use specified DHTnodes file                                    │
+│  -o, --noconnect          Do not connect to the DHT network                              │
+│  -p, --SOCKS5-proxy       Use SOCKS5 proxy: Requires [IP] [port]                         │
+│  -P, --HTTP-proxy         Use HTTP proxy: Requires [IP] [port]                           │
+│  -r, --namelist           Use specified name lookup server list                          │
+│  -t, --force-tcp          Force toxic to use a TCP connection (use with proxies)         │
+│  -T, --tcp-server         Act as a TCP relay server: Requires [port]                     │
+│  -u, --unencrypt-data     Unencrypt an encrypted data file                               │
+│  -v, --version            Print the version                                              │
+│>                                                                                         │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+`;
+
+exports[`toxic shows intro message 1`] = String.raw`
+╭──────────────────────────────────────────────────────────────────────────────────────────╮
+│ [Offline] Toxic User | Toxing on Toxic                                                   │
+│    _____ _____  _____ ____                                                               │
+│   |_   _/ _ \ \/ /_ _/ ___|                                                              │
+│     | || | | \  / | | |                                                                  │
+│     | || |_| /  \ | | |___                                                               │
+│     |_| \___/_/\_\___\____| v.0.14.1                                                     │
+│                                                                                          │
+│Welcome to Toxic, a free, open source Tox-based instant messaging client.                 │
+│Type "/help" for assistance. Further help may be found via the man page.                  │
+│                                                                                          │
+│Avatar has been unset.                                                                    │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│  [Home] [Contacts]                                                                       │
+│                                                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+`;
+

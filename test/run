@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eux
+
+docker build -t toxchat/toxic:test -f test/Dockerfile .
+if [ -t 1 ]; then
+  docker run \
+    --volume "$PWD/test:/build/toxic/test" \
+    --tmpfs /build/toxic/test/.tui-test \
+    --rm \
+    -it \
+    toxchat/toxic:test "$@"
+else
+  docker run \
+    --volume "$PWD/test:/build/toxic/test" \
+    --tmpfs /build/toxic/test/.tui-test \
+    --rm \
+    toxchat/toxic:test "$@"
+fi

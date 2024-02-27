@@ -7,3 +7,4 @@ restylers:
       include:
         - "**/*.cc"
         - "**/*.hh"
+  - prettier
