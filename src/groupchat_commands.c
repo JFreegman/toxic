@@ -1075,7 +1075,7 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
             peer_id = peer->peer_id;
         }
 
-        int peer_index = get_peer_index(self->num, peer_id);
+        const int peer_index = get_peer_index(self->num, peer_id);
 
         if (peer_index < 0) {
             continue;
@@ -1101,9 +1101,16 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
             role_str = "Observer";
         }
 
+
         char last_seen_str[128];
-        get_elapsed_time_str_alt(last_seen_str, sizeof(last_seen_str),
-                                 get_unix_time() - peer->last_active);
+        const bool is_self = peer_id == tox_group_self_get_peer_id(tox, self->num, NULL);
+
+        if (is_self) {
+            last_seen_str[0] = '-';
+            last_seen_str[1] = '\0';
+        } else {
+            get_elapsed_time_str_alt(last_seen_str, sizeof(last_seen_str), get_unix_time() - peer->last_active);
+        }
 
         char pk_string[TOX_GROUP_PEER_PUBLIC_KEY_SIZE * 2 + 1] = {0};
 
@@ -1151,4 +1158,3 @@ void cmd_whois(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Last active: %s", last_seen_str);
     }
 }
-

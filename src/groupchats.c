@@ -720,7 +720,7 @@ static void groupchat_update_last_seen(uint32_t groupnumber, uint32_t peer_id)
         return;
     }
 
-    int peer_index = get_peer_index(groupnumber, peer_id);
+    const int peer_index = get_peer_index(groupnumber, peer_id);
 
     if (peer_index >= 0) {
         chat->peer_list[peer_index].last_active = get_unix_time();
