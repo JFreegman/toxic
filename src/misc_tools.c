@@ -112,40 +112,40 @@ void get_time_str(char *buf, size_t bufsize, const char *format_string)
     buf[0] = '\0';
 }
 
-/* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(char *buf, int bufsize, time_t secs)
+void get_elapsed_time_str(char *buf, int bufsize, uint64_t elapsed_seconds)
 {
-    if (!secs) {
+    if (elapsed_seconds == 0) {
+        snprintf(buf, bufsize, "<Invalid time format>");
         return;
     }
 
-    long int seconds = secs % 60;
-    long int minutes = (secs % 3600) / 60;
-    long int hours = secs / 3600;
+    long int seconds = elapsed_seconds % 60;
+    long int minutes = (elapsed_seconds % 3600) / 60;
+    long int hours = elapsed_seconds / 3600;
 
-    if (!minutes && !hours) {
+    if (minutes == 0 && hours == 0) {
         snprintf(buf, bufsize, "%.2ld", seconds);
-    } else if (!hours) {
+    } else if (hours == 0) {
         snprintf(buf, bufsize, "%ld:%.2ld", minutes, seconds);
     } else {
         snprintf(buf, bufsize, "%ld:%.2ld:%.2ld", hours, minutes, seconds);
     }
 }
 
-/* Converts seconds to string in format H hours, m minutes, s seconds */
-void get_elapsed_time_str_alt(char *buf, int bufsize, uint64_t secs)
+void get_elapsed_time_str_alt(char *buf, int bufsize, uint64_t elapsed_seconds)
 {
-    if (!secs) {
+    if (elapsed_seconds == 0) {
+        snprintf(buf, bufsize, "<Invalid time format>");
         return;
     }
 
-    long int seconds = secs % 60;
-    long int minutes = (secs % 3600) / 60;
-    long int hours = secs / 3600;
+    long int seconds = elapsed_seconds % 60;
+    long int minutes = (elapsed_seconds % 3600) / 60;
+    long int hours = elapsed_seconds / 3600;
 
-    if (!minutes && !hours) {
+    if (minutes == 0 && hours == 0) {
         snprintf(buf, bufsize, "%ld seconds", seconds);
-    } else if (!hours) {
+    } else if (hours == 0) {
         snprintf(buf, bufsize, "%ld minutes, %ld seconds", minutes, seconds);
     } else {
         snprintf(buf, bufsize, "%ld hours, %ld minutes, %ld seconds", hours, minutes, seconds);

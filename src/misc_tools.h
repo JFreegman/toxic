@@ -106,11 +106,19 @@ time_t get_unix_time(void);
  */
 void get_time_str(char *buf, size_t bufsize, const char *format_string);
 
-/* Converts seconds to string in format H hours, m minutes, s seconds */
-void get_elapsed_time_str_alt(char *buf, int bufsize, uint64_t secs);
+/* Converts `elapsed_seconds` to string in format "H hours, m minutes, s seconds" and puts the resulting
+ * string in `buf`.
+ *
+ * If `elapsed_seconds` is zero, an error message is placed in `buf`.
+ */
+void get_elapsed_time_str_alt(char *buf, int bufsize, uint64_t elapsed_seconds);
 
-/* Converts seconds to string in format HH:mm:ss; truncates hours and minutes when necessary */
-void get_elapsed_time_str(char *buf, int bufsize, time_t secs);
+/* Converts `elapsed_seconds` to string in format "HH:mm:ss"; truncates hours and minutes when necessary.
+ * Puts the resulting string in `buf.
+ *
+ * If `elapsed_seconds` is zero, an error message is placed in `buf`.
+ */
+void get_elapsed_time_str(char *buf, int bufsize, uint64_t elapsed_seconds);
 
 /* get the current local time (not thread safe) */
 struct tm *get_time(void);
