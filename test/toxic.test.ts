@@ -62,4 +62,23 @@ test.describe("toxic", () => {
     await expect(terminal.getByText("[Contacts]")).toBeVisible(fast);
     await expect(terminal).toMatchSnapshot();
   });
+
+  test("last message is shown when terminal gets smaller", async ({ terminal }) => {
+    await startToxic(terminal);
+    // Add a friend.
+    terminal.write("/add 13117C65771C5A05409F532A7809D238E38E94312C870FE7970C5B65B1215E20CEF40A1D48B7\r");
+    await expect(terminal.getByText("Friend request sent.")).toBeVisible(fast);
+    terminal.write(String.fromCharCode(16));
+    await expect(terminal.getByText("Press the h key")).toBeVisible(fast);
+    terminal.write("\r");
+    await expect(terminal.getByText("[Offline]")).toBeVisible(fast);
+    for (let i = 1; i <= 10; ++i) {
+        terminal.write(`we're (${i}) writing some pretty long message here, this is message ${i}\r`);
+    }
+    await expect(terminal.getByText("message 10")).toBeVisible(fast);
+    terminal.resize(60, 20);
+    // slow, because resize can take a while
+    // TODO(JFreegman): Make this "message 10" when it's fixed.
+    await expect(terminal.getByText("message 7")).toBeVisible(slow);
+  });
 });
