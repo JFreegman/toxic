@@ -1053,6 +1053,11 @@ void on_window_resize(Windows *windows)
 
         scrollok(w->chatwin->history, 0);
         wmove(w->window, y2 - CURS_Y_OFFSET, 0);
+
+        if (!w->scroll_pause) {
+            ChatContext *ctx = w->chatwin;
+            line_info_reset_start(w, ctx->hst);
+        }
     }
 }
 
