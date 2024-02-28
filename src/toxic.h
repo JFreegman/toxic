@@ -73,6 +73,11 @@ typedef struct Windows {
     uint16_t   active_index;
 } Windows;
 
+typedef struct Init_Queue {
+    char     **messages;
+    uint16_t count;
+} Init_Queue;
+
 typedef struct Toxic {
     Tox   *tox;
 #ifdef AUDIO
@@ -94,6 +99,16 @@ typedef struct Toxic {
 void lock_status(void);
 void unlock_status(void);
 
+/* Puts `message` in the init queue.
+ *
+ * print_init_queue() prints all messages in the queue to the home window.
+ * free_init_queue() must be called after use.
+ *
+ * If `init_q` is NULL this function has no effect.
+ */
+__attribute__((format(printf, 2, 3)))
+void queue_init_message(Init_Queue *init_q, const char *message, ...);
+
 void flag_interface_refresh(void);
 
 /* Sets ncurses refresh rate. Lower values make it refresh more often. */
@@ -104,7 +119,7 @@ void exit_toxic_err(int errcode, const char *errmsg, ...) __attribute__((__noret
 
 int store_data(const Toxic *toxic);
 
-void init_term(const Client_Config *c_config, bool use_default_locale);
+void init_term(const Client_Config *c_config, Init_Queue *init_q, bool use_default_locale);
 
 /* callbacks */
 void on_friend_request(Tox *tox, const uint8_t *public_key, const uint8_t *data, size_t length, void *userdata);

@@ -1034,6 +1034,6 @@ void settings_reload(Toxic *toxic)
     }
 
     endwin();
-    init_term(c_config, run_opts->default_locale);
+    init_term(c_config, NULL, run_opts->default_locale);
     refresh_window_names(toxic);
 }

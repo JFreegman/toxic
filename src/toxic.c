@@ -86,7 +86,38 @@
 
 struct Winthread Winthread;
 
-static void queue_init_message(const char *msg, ...);
+void queue_init_message(Init_Queue *init_q, const char *message, ...)
+{
+    if (init_q == NULL) {
+        return;
+    }
+
+    char format_message[MAX_STR_SIZE] = {0};
+
+    va_list args;
+    va_start(args, message);
+    vsnprintf(format_message, sizeof(format_message), message, args);
+    va_end(args);
+
+    const uint16_t i = init_q->count;
+
+    char **temp_messages = realloc(init_q->messages, sizeof(char *) * (i + 1));
+
+    if (temp_messages == NULL) {
+        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
+    }
+
+    temp_messages[i] = malloc(MAX_STR_SIZE);
+
+    if (temp_messages[i] == NULL) {
+        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
+    }
+
+    snprintf(temp_messages[i], MAX_STR_SIZE, "%s", format_message);
+
+    init_q->messages = temp_messages;
+    ++init_q->count;
+}
 
 static void kill_toxic(Toxic *toxic)
 {
@@ -104,15 +135,11 @@ static void kill_toxic(Toxic *toxic)
     free(toxic);
 }
 
-static void cleanup_init_messages(void);
-
 void exit_toxic_success(Toxic *toxic)
 {
     if (toxic == NULL) {
         exit(EXIT_FAILURE);
     }
-
-    cleanup_init_messages();
 
     store_data(toxic);
 
@@ -291,7 +318,7 @@ static void get_custom_toxic_colours(const Client_Config *c_config, short *bar_b
     }
 }
 
-void init_term(const Client_Config *c_config, bool use_default_locale)
+void init_term(const Client_Config *c_config, Init_Queue *init_q, bool use_default_locale)
 {
 #if HAVE_WIDECHAR
 
@@ -312,7 +339,7 @@ void init_term(const Client_Config *c_config, bool use_default_locale)
     set_window_refresh_rate(NCURSES_DEFAULT_REFRESH_RATE);
 
     if (!has_colors()) {
-        queue_init_message("This terminal does not support colors.");
+        queue_init_message(init_q, "This terminal does not support colors.");
         refresh();
         return;
     }
@@ -324,7 +351,7 @@ void init_term(const Client_Config *c_config, bool use_default_locale)
     short bar_notify_color = COLOR_YELLOW;
 
     if (start_color() != 0) {
-        queue_init_message("Failed to initialize ncurses colors.");
+        queue_init_message(init_q, "Failed to initialize ncurses colors.");
         // let's try anyways
     }
 
@@ -378,62 +405,11 @@ void init_term(const Client_Config *c_config, bool use_default_locale)
         init_pair(PINK_BAR_FG, CUSTOM_COLOUR_PINK, bar_bg_color);
         init_pair(BROWN_BAR_FG, CUSTOM_COLOUR_BROWN, bar_bg_color);
     } else {
-        queue_init_message("This terminal does not support 256-colors. Certain non-default colors may not be "
-                           "displayed properly as a result.");
+        queue_init_message(init_q, "This terminal does not support 256-colors. Certain non-default colors may "
+                           "not be displayed properly as a result.");
     }
 
     refresh();
-}
-
-static struct _init_messages {
-    char **msgs;
-    int num;
-} init_messages;
-
-/* One-time queue for messages created during init. Do not use after program init. */
-__attribute__((format(printf, 1, 2)))
-static void queue_init_message(const char *msg, ...)
-{
-    char frmt_msg[MAX_STR_SIZE] = {0};
-
-    va_list args;
-    va_start(args, msg);
-    vsnprintf(frmt_msg, sizeof(frmt_msg), msg, args);
-    va_end(args);
-
-    const int i = init_messages.num;
-    ++init_messages.num;
-
-    char **new_msgs = realloc(init_messages.msgs, sizeof(char *) * init_messages.num);
-
-    if (new_msgs == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
-    }
-
-    new_msgs[i] = malloc(MAX_STR_SIZE);
-
-    if (new_msgs[i] == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
-    }
-
-    snprintf(new_msgs[i], MAX_STR_SIZE, "%s", frmt_msg);
-    init_messages.msgs = new_msgs;
-}
-
-/* called on exit */
-static void cleanup_init_messages(void)
-{
-    if (init_messages.num <= 0) {
-        return;
-    }
-
-    for (int i = 0; i < init_messages.num; ++i) {
-        free(init_messages.msgs[i]);
-    }
-
-    free(init_messages.msgs);
-    init_messages.msgs = NULL;
-    init_messages.num = 0;
 }
 
 /* Store Tox profile data to path.
