@@ -30,6 +30,7 @@ struct chatlog {
     time_t lastwrite;
     char path[MAX_STR_SIZE];
     bool log_on;    /* specific to current chat window */
+    uint32_t bytes_written;
 };
 
 typedef enum Log_Type {
@@ -75,14 +76,19 @@ int log_init(struct chatlog *log, const Client_Config *c_config, const char *nam
 int write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
                  bool is_event, Log_Hint log_hint);
 
-/* enables logging for specified log.
+/* Enables logging for specified log.
+ *
+ * Calling this function on a log that's already enabled has no effect.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
 int log_enable(struct chatlog *log);
 
-/* disables logging for specified log and closes file */
+/* Disables logging for specified log and closes file.
+ *
+ * Calling this function on a log that's already disabled has no effect.
+ */
 void log_disable(struct chatlog *log);
 
 /* Loads chat log history and prints it to `self` window.

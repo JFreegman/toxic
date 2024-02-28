@@ -124,7 +124,13 @@ static int init_logging_session(const Client_Config *c_config, const char *name,
     return 0;
 }
 
-#define LOG_FLUSH_LIMIT 1  /* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
+/* limits calls to fflush to a max of one per LOG_FLUSH_LIMIT seconds */
+#define LOG_FLUSH_LIMIT 1
+
+/* We stop writing to the log after we've written at least this many bytes during the current session.
+ * A new session is started with `log_enable()`, and ended with `log_disable()`.
+ */
+#define LOG_BYTES_THRESHOLD ((1024 << 10) * 100)  // 100 MiB
 
 int write_to_log(struct chatlog *log, const Client_Config *c_config, const char *msg, const char *name,
                  bool is_event, Log_Hint log_hint)
@@ -142,6 +148,11 @@ int write_to_log(struct chatlog *log, const Client_Config *c_config, const char 
         return -1;
     }
 
+    if (log->bytes_written >= LOG_BYTES_THRESHOLD) {
+        fprintf(stderr, "Warning: Log file is full (%u bytes written)\n", log->bytes_written);
+        return -1;
+    }
+
     char name_frmt[TOXIC_MAX_NAME_LENGTH + 3];
 
     if (name != NULL) {
@@ -156,15 +167,21 @@ int write_to_log(struct chatlog *log, const Client_Config *c_config, const char 
     char s[MAX_STR_SIZE];
     get_time_str(s, sizeof(s), t);
 
+    int bytes_written;
+
     if (name == NULL) {
-        fprintf(log->file, "{%d} %s %s\n", log_hint, s, msg);
+        bytes_written = fprintf(log->file, "{%d} %s %s\n", log_hint, s, msg);
     } else {
-        fprintf(log->file, "{%d} %s %s %s\n", log_hint, s, name_frmt, msg);
+        bytes_written = fprintf(log->file, "{%d} %s %s %s\n", log_hint, s, name_frmt, msg);
     }
 
     if (timed_out(log->lastwrite, LOG_FLUSH_LIMIT)) {
         fflush(log->file);
         log->lastwrite = get_unix_time();
+    }
+
+    if (bytes_written > 0) {
+        log->bytes_written += bytes_written;
     }
 
     return 0;
@@ -183,6 +200,7 @@ void log_disable(struct chatlog *log)
 
     log->lastwrite = 0;
     log->log_on = false;
+    log->bytes_written = 0;
 }
 
 int log_enable(struct chatlog *log)
