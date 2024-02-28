@@ -54,6 +54,7 @@ void on_friend_request(Tox *tox, const uint8_t *public_key, const uint8_t *data,
 
     char msg[MAX_STR_SIZE + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) data, length);
+    filter_string(msg, length, false);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];
@@ -136,7 +137,7 @@ void on_friend_name(Tox *tox, uint32_t friendnumber, const uint8_t *string, size
 
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(nick, sizeof(nick), (const char *) string, length);
-    filter_str(nick, length);
+    filter_string(nick, length, true);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];
@@ -159,7 +160,7 @@ void on_friend_status_message(Tox *tox, uint32_t friendnumber, const uint8_t *st
 
     char msg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1];
     length = copy_tox_str(msg, sizeof(msg), (const char *) string, length);
-    filter_str(msg, length);
+    filter_string(msg, length, false);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];
@@ -266,7 +267,7 @@ void on_conference_peer_name(Tox *tox, uint32_t conferencenumber, uint32_t peern
 
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(nick, sizeof(nick), (const char *) name, length);
-    filter_str(nick, length);
+    filter_string(nick, length, true);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];
@@ -286,6 +287,7 @@ void on_conference_title(Tox *tox, uint32_t conferencenumber, uint32_t peernumbe
 
     char data[MAX_STR_SIZE + 1];
     length = copy_tox_str(data, sizeof(data), (const char *) title, length);
+    filter_string(data, length, false);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];
@@ -570,12 +572,14 @@ void on_group_peer_exit(Tox *tox, uint32_t groupnumber, uint32_t peer_id, Tox_Gr
 
     char toxic_nick[TOXIC_MAX_NAME_LENGTH + 1];
     nick_len = copy_tox_str(toxic_nick, sizeof(toxic_nick), (const char *) nick, nick_len);
+    filter_string(toxic_nick, nick_len, true);
 
     char buf[MAX_STR_SIZE + 1] = {0};
     size_t buf_len = 0;
 
     if (part_message) {
         buf_len = copy_tox_str(buf, sizeof(buf), (const char *) part_message, length);
+        filter_string(buf, buf_len, false);
     }
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -597,6 +601,7 @@ void on_group_topic_change(Tox *tox, uint32_t groupnumber, uint32_t peer_id, con
 
     char data[MAX_STR_SIZE + 1];
     length = copy_tox_str(data, sizeof(data), (const char *) topic, length);
+    filter_string(data, length, false);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];
@@ -681,7 +686,7 @@ void on_group_nick_change(Tox *tox, uint32_t groupnumber, uint32_t peer_id, cons
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     length = copy_tox_str(name, sizeof(name), (const char *) newname, length);
-    filter_str(name, length);
+    filter_string(name, length, true);
 
     for (uint16_t i = 0; i < windows->count; ++i) {
         ToxWindow *w = windows->list[i];

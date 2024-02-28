@@ -305,19 +305,19 @@ int qsort_ptr_char_array_helper(const void *str1, const void *str2)
     return strcasecmp(*(const char *const *)str1, *(const char *const *)str2);
 }
 
-static const char invalid_chars[] = {'/', '\n', '\t', '\v', '\r', '\0'};
+/* List of characters we don't allow in nicks. */
+static const char invalid_nick_chars[] = {':', '/', '\0', '\a', '\b', '\f', '\n', '\r', '\t', '\v'};
+
+/* List of characters we don't allow in single-line strings. */
+static const char invalid_string_chars[] = {'\0', '\a', '\b', '\f', '\n', '\r', '\t', '\v'};
 
 /*
- * Helper function for `valid_nick()`.
- *
- * Returns true if `ch` is not in the `invalid_chars` array.
+ * Returns true if the character `ch` is not in the supplied `invalid_chars` array.
  */
-static bool is_valid_char(char ch)
+static bool is_valid_char(char ch, const char *const invalid_chars, size_t list_length)
 {
-    char tmp;
-
-    for (size_t i = 0; (tmp = invalid_chars[i]); ++i) {
-        if (tmp == ch) {
+    for (size_t i = 0; i < list_length; ++i) {
+        if (invalid_chars[i] == ch) {
             return false;
         }
     }
@@ -325,25 +325,17 @@ static bool is_valid_char(char ch)
     return true;
 }
 
-/* Returns true if nick is valid.
- *
- * A valid toxic nick:
- * - cannot be empty
- * - cannot start with a space
- * - must not contain a forward slash (for logfile naming purposes)
- * - must not contain contiguous spaces
- * - must not contain a newline or tab seqeunce
- */
 bool valid_nick(const char *nick)
 {
     if (!nick[0] || nick[0] == ' ') {
         return false;
     }
 
-    for (size_t i = 0; nick[i]; ++i) {
+    for (size_t i = 0; nick[i] != '\0'; ++i) {
         char ch = nick[i];
 
-        if ((ch == ' ' && nick[i + 1] == ' ') || !is_valid_char(ch)) {
+        if ((ch == ' ' && nick[i + 1] == ' ')
+                || !is_valid_char(ch, invalid_nick_chars, sizeof(invalid_nick_chars))) {
             return false;
         }
     }
@@ -351,13 +343,15 @@ bool valid_nick(const char *nick)
     return true;
 }
 
-/* Converts all newline/tab chars to spaces (use for strings that should be contained to a single line) */
-void filter_str(char *str, size_t len)
+void filter_string(char *str, size_t len, bool is_nick)
 {
+    const char *const invalid_chars = is_nick ? invalid_nick_chars : invalid_string_chars;
+    const size_t list_length = is_nick ? sizeof(invalid_nick_chars) : sizeof(invalid_string_chars);
+
     for (size_t i = 0; i < len; ++i) {
         char ch = str[i];
 
-        if (!is_valid_char(ch) || str[i] == '\0') {
+        if (!is_valid_char(ch, invalid_chars, list_length)) {
             str[i] = ' ';
         }
     }
@@ -450,7 +444,7 @@ size_t get_nick_truncate(Tox *tox, char *buf, uint16_t buf_size, uint32_t friend
 
     len = MIN(len, buf_size - 1);
     buf[len] = '\0';
-    filter_str(buf, len);
+    filter_string(buf, len, false);
 
     return len;
 
@@ -475,7 +469,7 @@ int get_conference_nick_truncate(Tox *tox, char *buf, uint32_t peernum, uint32_t
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
-    filter_str(buf, len);
+    filter_string(buf, len, true);
     return len;
 
 on_error:
@@ -507,7 +501,7 @@ size_t get_group_nick_truncate(Tox *tox, char *buf, uint32_t peer_id, uint32_t g
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
 
-    filter_str(buf, len);
+    filter_string(buf, len, true);
 
     return len;
 }
@@ -531,9 +525,9 @@ size_t get_group_self_nick_truncate(Tox *tox, char *buf, uint32_t groupnum)
     }
 
     len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
-    buf[len] = 0;
+    buf[len] = '\0';
 
-    filter_str(buf, len);
+    filter_string(buf, len, true);
 
     return len;
 }

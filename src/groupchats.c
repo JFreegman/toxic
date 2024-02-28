@@ -451,7 +451,7 @@ void groupchat_update_statusbar_topic(ToxWindow *self, const Tox *tox)
 
     tox_group_get_topic(tox, self->num, (uint8_t *)topic, NULL);
     topic[t_len] = '\0';
-    filter_str(topic, t_len);
+    filter_string(topic, t_len, false);
     snprintf(statusbar->topic, sizeof(statusbar->topic), "%s", topic);
     statusbar->topic_len = strlen(statusbar->topic);
 }

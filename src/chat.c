@@ -1578,7 +1578,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
         tox_friend_get_status_message(toxic->tox, self->num, (uint8_t *) statusmsg, NULL);
         const size_t s_len = tox_friend_get_status_message_size(toxic->tox, self->num, NULL);
 
-        filter_str(statusmsg, s_len);
+        filter_string(statusmsg, s_len, false);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
         statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 
@@ -1738,7 +1738,7 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
         char statusmsg[TOX_MAX_STATUS_MESSAGE_LENGTH + 1] = {0};
         tox_friend_get_status_message(tox, self->num, (uint8_t *) statusmsg, NULL);
         statusmsg[s_len] = '\0';
-        filter_str(statusmsg, s_len);
+        filter_string(statusmsg, s_len, false);
         snprintf(statusbar->statusmsg, sizeof(statusbar->statusmsg), "%s", statusmsg);
     }
 

@@ -162,16 +162,22 @@ int qsort_ptr_char_array_helper(const void *str1, const void *str2);
  * A valid toxic nick:
  * - cannot be empty
  * - cannot start with a space
- * - must not contain a forward slash (for logfile naming purposes)
- * - must not contain contiguous spaces
- * - must not contain a newline or tab seqeunce
+ * - cannot contain contiguous spaces
+ * - cannot contain forward slash (for log file naming purposes)
+ * - cannot contain any characters in the `invalid_nick_chars` array that
+ *   resides in misc_tools.c.
  */
 bool valid_nick(const char *nick);
 
-/* Converts all newline/tab chars to spaces
- * (use for strings that should be contained to a single line)
+/* Converts all invalid single-line string characters to spaces (newlines,
+ * tabs, nul etc.).
+ *
+ * If `is_nick` is true, additional characters specific to nicks are filtered.
+ *
+ * This function is used for strings that should be human-readable, and contained
+ * to a single line, such as status messages, nicks, and group topics.
  */
-void filter_str(char *str, size_t len);
+void filter_string(char *str, size_t len, bool is_nick);
 
 /* gets base file name from path or original file name if no path is supplied */
 size_t get_file_name(char *namebuf, size_t bufsize, const char *pathname);

@@ -1301,7 +1301,7 @@ static void friendlist_onDraw(ToxWindow *self, Toxic *toxic)
 
                     statusmsg[s_len] = '\0';
 
-                    filter_str(statusmsg, s_len);
+                    filter_string(statusmsg, s_len, false);
 
                     pthread_mutex_lock(&Winthread.lock);
                     snprintf(Friends.list[f].statusmsg, sizeof(Friends.list[f].statusmsg), "%s", statusmsg);
@@ -1796,7 +1796,7 @@ bool friend_config_set_alias(const char *public_key, const char *alias, uint16_t
 
     char tmp[TOXIC_MAX_NAME_LENGTH + 1];
     const uint16_t tmp_len = copy_tox_str(tmp, sizeof(tmp), alias, length);
-    filter_str(tmp, tmp_len);
+    filter_string(tmp, tmp_len, true);
 
     if (tmp_len == 0 || tmp_len > TOXIC_MAX_NAME_LENGTH) {
         return false;
