@@ -109,9 +109,16 @@ static void read_video_device_callback(Toxic *toxic, int16_t width, int16_t heig
     }
 
     const Client_Config *c_config = toxic->c_config;
+
     ToxWindow *home_window = toxic->home_window;
 
     uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
+
+    if (friend_number >= CallControl.max_calls) {
+        line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid call index.");
+        return;
+    }
+
     Call *this_call = &CallControl.calls[friend_number];
     Toxav_Err_Send_Frame error;
 
@@ -216,6 +223,10 @@ void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rat
     UNUSED_VAR(av);
     UNUSED_VAR(user_data);
 
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *call = &CallControl.calls[friend_number];
     call->video_bit_rate = video_bit_rate;
 
@@ -227,6 +238,10 @@ void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rat
 
 void callback_recv_video_starting(uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *this_call = &CallControl.calls[friend_number];
 
     if (this_call->status != cs_Active || this_call->vout_idx != -1) {
@@ -237,6 +252,10 @@ void callback_recv_video_starting(uint32_t friend_number)
 }
 void callback_recv_video_end(uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *this_call = &CallControl.calls[friend_number];
 
     if (this_call->status != cs_Active || this_call->vout_idx == -1) {
@@ -248,6 +267,10 @@ void callback_recv_video_end(uint32_t friend_number)
 }
 static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     Call *this_call = &CallControl.calls[friend_number];
 
     Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
@@ -271,6 +294,10 @@ static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
 }
 void callback_video_end(uint32_t friend_number)
 {
+    if (friend_number >= CallControl.max_calls) {
+        return;
+    }
+
     stop_video_transmission(&CallControl.calls[friend_number], friend_number);
 }
 /*
@@ -308,6 +335,11 @@ void cmd_vcall(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         return;
     }
 
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
+
     Call *call = &CallControl.calls[self->num];
 
     if (call->status != cs_None) {
@@ -332,6 +364,11 @@ void cmd_video(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
     }
 
     const Client_Config *c_config = toxic->c_config;
+
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
 
     Call *this_call = &CallControl.calls[self->num];
 
@@ -372,6 +409,11 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     }
 
     const Client_Config *c_config = toxic->c_config;
+
+    if (self->num >= CallControl.max_calls) {
+        print_err(self, c_config, "Invalid call index.");
+        return;
+    }
 
     Call *call = &CallControl.calls[self->num];
 
