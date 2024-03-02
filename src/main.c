@@ -55,6 +55,7 @@
 #include "file_transfers.h"
 #include "friendlist.h"
 #include "groupchats.h"
+#include "init_queue.h"
 #include "line_info.h"
 #include "log.h"
 #include "message_queue.h"
@@ -179,27 +180,10 @@ static void cb_toxcore_logger(Tox *tox, TOX_LOG_LEVEL level, const char *file, u
 
     format_time_str(timestamp, sizeof(timestamp), "%F %T", &tmp);
 
-    fprintf(fp, "%c %s.%06ld %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, tv.tv_usec, file, line, func,
-            message);
+    fprintf(fp, "%c %s.%06ld %s:%u(%s) - %s\n", tox_log_level_show(level)[0], timestamp, tv.tv_usec, file,
+            line, func, message);
 
     fflush(fp);
-}
-
-static void free_init_queue(Init_Queue *init_q)
-{
-    for (uint16_t i = 0; i < init_q->count; ++i) {
-        free(init_q->messages[i]);
-    }
-
-    free(init_q->messages);
-    free(init_q);
-}
-
-static void print_init_queue(const Init_Queue *init_q, ToxWindow *home_window, const Client_Config *c_config)
-{
-    for (uint16_t i = 0; i < init_q->count; ++i) {
-        line_info_add(home_window, c_config, NULL, NULL, NULL, SYS_MSG, 0, 0, "%s", init_q->messages[i]);
-    }
 }
 
 static void load_friendlist(Toxic *toxic)
@@ -450,7 +434,7 @@ static void first_time_encrypt(Client_Data *client_data, Init_Queue *init_q, con
             valid_password = true;
         }
 
-        queue_init_message(init_q, "Data file '%s' is encrypted", client_data->data_path);
+        init_queue_add(init_q, "Data file '%s' is encrypted", client_data->data_path);
         memset(passconfirm, 0, sizeof(passconfirm));
         client_data->is_encrypted = true;
     }
@@ -517,11 +501,11 @@ static void init_tox_options(const Run_Options *run_opts, Init_Queue *init_q, st
     }
 
     if (!tox_options_get_ipv6_enabled(tox_opts)) {
-        queue_init_message(init_q, "Forcing IPv4 connection");
+        init_queue_add(init_q, "Forcing IPv4 connection");
     }
 
     if (tox_options_get_tcp_port(tox_opts)) {
-        queue_init_message(init_q, "TCP relaying enabled on port %d", tox_options_get_tcp_port(tox_opts));
+        init_queue_add(init_q, "TCP relaying enabled on port %d", tox_options_get_tcp_port(tox_opts));
     }
 
     if (tox_options_get_proxy_type(tox_opts) != TOX_PROXY_TYPE_NONE) {
@@ -531,16 +515,16 @@ static void init_tox_options(const Run_Options *run_opts, Init_Queue *init_q, st
 
         char tmp[sizeof(run_opts->proxy_address) + MAX_STR_SIZE];
         snprintf(tmp, sizeof(tmp), "Using %s proxy %s : %d", ps, run_opts->proxy_address, run_opts->proxy_port);
-        queue_init_message(init_q, "%s", tmp);
+        init_queue_add(init_q, "%s", tmp);
     }
 
     if (!tox_options_get_udp_enabled(tox_opts)) {
-        queue_init_message(init_q, "UDP disabled");
+        init_queue_add(init_q, "UDP disabled");
     } else if (tox_options_get_proxy_type(tox_opts) != TOX_PROXY_TYPE_NONE) {
         const char *msg = "WARNING: Using a proxy without disabling UDP may leak your real IP address.";
-        queue_init_message(init_q, "%s", msg);
+        init_queue_add(init_q, "%s", msg);
         msg = "Use the -t option to disable UDP.";
-        queue_init_message(init_q, "%s", msg);
+        init_queue_add(init_q, "%s", msg);
     }
 }
 
@@ -588,10 +572,10 @@ static bool load_tox(Toxic *toxic, struct Tox_Options *tox_opts, Init_Queue *ini
         Client_Data *client_data = &toxic->client_data;
 
         if (run_opts->unencrypt_data && is_encrypted) {
-            queue_init_message(init_q, "Data file '%s' has been unencrypted", client_data->data_path);
+            init_queue_add(init_q, "Data file '%s' has been unencrypted", client_data->data_path);
         } else if (run_opts->unencrypt_data) {
-            queue_init_message(init_q, "Warning: passed --unencrypt-data option with unencrypted data file '%s'",
-                               client_data->data_path);
+            init_queue_add(init_q, "Warning: passed --unencrypt-data option with unencrypted data file '%s'",
+                           client_data->data_path);
         }
 
         if (is_encrypted) {
@@ -728,7 +712,7 @@ static bool load_toxic(Toxic *toxic, Init_Queue *init_q)
     }
 
     if (new_err == TOX_ERR_NEW_PORT_ALLOC && tox_options_get_ipv6_enabled(tox_opts)) {
-        queue_init_message(init_q, "Falling back to ipv4");
+        init_queue_add(init_q, "Falling back to ipv4");
         tox_options_set_ipv6_enabled(tox_opts, false);
 
         if (!load_tox(toxic, tox_opts, init_q, &new_err)) {
@@ -741,14 +725,14 @@ static bool load_toxic(Toxic *toxic, Init_Queue *init_q)
     }
 
     if (new_err != TOX_ERR_NEW_OK) {
-        queue_init_message(init_q, "tox_new returned non-fatal error %d", new_err);
+        init_queue_add(init_q, "tox_new returned non-fatal error %d", new_err);
     }
 
     init_tox_callbacks(toxic->tox);
     load_friendlist(toxic);
 
     if (load_blocklist(toxic->client_data.block_path) == -1) {
-        queue_init_message(init_q, "Failed to load block list");
+        init_queue_add(init_q, "Failed to load block list");
     }
 
     if (tox_self_get_name_size(toxic->tox) == 0) {
@@ -942,26 +926,26 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'b': {
                 run_opts->debug = true;
-                queue_init_message(init_q, "stderr enabled");
+                init_queue_add(init_q, "stderr enabled");
                 break;
             }
 
             case 'c': {
                 if (optarg == NULL) {
-                    queue_init_message(init_q, "Invalid argument for option: %d", opt);
+                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
                     break;
                 }
 
                 snprintf(run_opts->config_path, sizeof(run_opts->config_path), "%s", optarg);
                 run_opts->use_custom_config_file = true;
 
-                queue_init_message(init_q, "Using '%s' custom config file", run_opts->config_path);
+                init_queue_add(init_q, "Using '%s' custom config file", run_opts->config_path);
                 break;
             }
 
             case 'd': {
                 run_opts->default_locale = true;
-                queue_init_message(init_q, "Using default POSIX locale");
+                init_queue_add(init_q, "Using default POSIX locale");
                 break;
             }
 
@@ -972,7 +956,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'f': {
                 if (optarg == NULL) {
-                    queue_init_message(init_q, "Invalid argument for option: %d", opt);
+                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
                     break;
                 }
 
@@ -1007,7 +991,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
                 strcpy(client_data->block_path, optarg);
                 strcat(client_data->block_path, "-blocklist");
 
-                queue_init_message(init_q, "Using '%s' tox profile", client_data->data_path);
+                init_queue_add(init_q, "Using '%s' tox profile", client_data->data_path);
 
                 break;
             }
@@ -1020,14 +1004,14 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
                         run_opts->log_fp = fopen(optarg, "w");
 
                         if (run_opts->log_fp != NULL) {
-                            queue_init_message(init_q, "Toxcore logging enabled to %s", optarg);
+                            init_queue_add(init_q, "Toxcore logging enabled to %s", optarg);
                         } else {
                             run_opts->debug = true;
-                            queue_init_message(init_q, "Failed to open log file %s. Falling back to stderr.", optarg);
+                            init_queue_add(init_q, "Failed to open log file %s. Falling back to stderr.", optarg);
                         }
                     } else {
                         run_opts->debug = true;
-                        queue_init_message(init_q, "Toxcore logging enabled to stderr");
+                        init_queue_add(init_q, "Toxcore logging enabled to stderr");
                     }
                 }
 
@@ -1036,13 +1020,13 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'L': {
                 run_opts->disable_local_discovery = true;
-                queue_init_message(init_q, "Local discovery disabled");
+                init_queue_add(init_q, "Local discovery disabled");
                 break;
             }
 
             case 'n': {
                 if (optarg == NULL) {
-                    queue_init_message(init_q, "Invalid argument for option: %d", opt);
+                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
                     break;
                 }
 
@@ -1052,7 +1036,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'o': {
                 run_opts->no_connect = true;
-                queue_init_message(init_q, "DHT disabled");
+                init_queue_add(init_q, "DHT disabled");
                 break;
             }
 
@@ -1064,7 +1048,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'P': {
                 if (optarg == NULL) {
-                    queue_init_message(init_q, "Invalid argument for option: %d", opt);
+                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
                     run_opts->proxy_type = TOX_PROXY_TYPE_NONE;
                     break;
                 }
@@ -1091,14 +1075,14 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'r': {
                 if (optarg == NULL) {
-                    queue_init_message(init_q, "Invalid argument for option: %d", opt);
+                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
                     break;
                 }
 
                 snprintf(run_opts->nameserver_path, sizeof(run_opts->nameserver_path), "%s", optarg);
 
                 if (!file_exists(run_opts->nameserver_path)) {
-                    queue_init_message(init_q, "nameserver list not found");
+                    init_queue_add(init_q, "nameserver list not found");
                 }
 
                 break;
@@ -1111,7 +1095,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
             case 'T': {
                 if (optarg == NULL) {
-                    queue_init_message(init_q, "Invalid argument for option: %d", opt);
+                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
                     break;
                 }
 
@@ -1243,7 +1227,7 @@ int main(int argc, char **argv)
         exit_toxic_err(FATALERR_TOXIC_INIT, "failed in main");
     }
 
-    Init_Queue *init_q = (Init_Queue *) calloc(1, sizeof(Init_Queue));
+    Init_Queue *init_q = init_queue_new();
 
     if (init_q == NULL) {
         exit_toxic_err(FATALERR_MEMORY, "failed in main");
@@ -1265,8 +1249,8 @@ int main(int argc, char **argv)
     if (run_opts->encrypt_data && run_opts->unencrypt_data) {
         run_opts->encrypt_data = 0;
         run_opts->unencrypt_data = 0;
-        queue_init_message(init_q,
-                           "Warning: Using --unencrypt-data and --encrypt-data simultaneously has no effect");
+        init_queue_add(init_q,
+                       "Warning: Using --unencrypt-data and --encrypt-data simultaneously has no effect");
     }
 
     if (!run_opts->use_custom_data) {
@@ -1283,26 +1267,26 @@ int main(int argc, char **argv)
     }
 
     if (!settings_load_config_file(run_opts, toxic->client_data.data_path)) {
-        queue_init_message(init_q, "Failed to load config file");
+        init_queue_add(init_q, "Failed to load config file");
     }
 
     const int ms_ret = settings_load_main(toxic->c_config, run_opts);
 
     if (ms_ret < 0) {
-        queue_init_message(init_q, "Failed to load user settings: error %d", ms_ret);
+        init_queue_add(init_q, "Failed to load user settings: error %d", ms_ret);
     }
 
     if (!run_opts->use_custom_config_file && run_opts->use_custom_data) {
-        queue_init_message(init_q, "Using '%s' config file", run_opts->config_path);
+        init_queue_add(init_q, "Using '%s' config file", run_opts->config_path);
     }
 
     const int curl_init = curl_global_init(CURL_GLOBAL_ALL);
     const int nameserver_ret = name_lookup_init(run_opts->nameserver_path, curl_init);
 
     if (nameserver_ret == -1) {
-        queue_init_message(init_q, "curl failed to initialize; name lookup service is disabled.");
+        init_queue_add(init_q, "curl failed to initialize; name lookup service is disabled.");
     } else if (nameserver_ret == -2) {
-        queue_init_message(init_q, "Name lookup server list could not be found.");
+        init_queue_add(init_q, "Name lookup server list could not be found.");
     } else if (nameserver_ret == -3) {
         fprintf(stderr, "Name lookup server list does not contain any valid entries\n");
     }
@@ -1310,7 +1294,7 @@ int main(int argc, char **argv)
 #ifdef X11
 
     if (init_x11focus(&toxic->x11_focus) == -1) {
-        queue_init_message(init_q, "X failed to initialize");
+        init_queue_add(init_q, "X failed to initialize");
     }
 
 #endif /* X11 */
@@ -1336,19 +1320,19 @@ int main(int argc, char **argv)
     const int fs_ret = settings_load_friends(run_opts);
 
     if (fs_ret != 0) {
-        queue_init_message(init_q, "Failed to load friend config settings: error %d", fs_ret);
+        init_queue_add(init_q, "Failed to load friend config settings: error %d", fs_ret);
     }
 
     const int gs_ret = settings_load_groups(windows, run_opts);
 
     if (gs_ret != 0) {
-        queue_init_message(init_q, "Failed to load groupchat config settings: error %d", gs_ret);
+        init_queue_add(init_q, "Failed to load groupchat config settings: error %d", gs_ret);
     }
 
     const int cs_ret = settings_load_conferences(windows, run_opts);
 
     if (cs_ret != 0) {
-        queue_init_message(init_q, "Failed to load conference config settings: error %d", cs_ret);
+        init_queue_add(init_q, "Failed to load conference config settings: error %d", cs_ret);
     }
 
     set_active_window_by_type(windows, WINDOW_TYPE_PROMPT);
@@ -1362,14 +1346,14 @@ int main(int argc, char **argv)
     toxic->av = init_audio(toxic);
 
     if (toxic->av == NULL) {
-        queue_init_message(init_q, "Failed to init audio");
+        init_queue_add(init_q, "Failed to init audio");
     }
 
 #ifdef VIDEO
     init_video(toxic);
 
     if (toxic->av == NULL) {
-        queue_init_message(init_q, "Failed to init video");
+        init_queue_add(init_q, "Failed to init video");
     }
 
 #endif /* VIDEO */
@@ -1385,7 +1369,7 @@ int main(int argc, char **argv)
 #elif SOUND_NOTIFY
 
     if (init_devices() == de_InternalError) {
-        queue_init_message(init_q, "Failed to init audio devices");
+        init_queue_add(init_q, "Failed to init audio devices");
     }
 
 #endif /* AUDIO */
@@ -1411,27 +1395,27 @@ int main(int argc, char **argv)
 
     /* screen/tmux auto-away timer */
     if (init_mplex_away_timer(toxic) == -1) {
-        queue_init_message(init_q, "Failed to init mplex auto-away.");
+        init_queue_add(init_q, "Failed to init mplex auto-away.");
     }
 
     const int nodeslist_ret = load_DHT_nodeslist(toxic);
 
     if (nodeslist_ret != 0) {
-        queue_init_message(init_q, "DHT nodeslist failed to load (error %d)", nodeslist_ret);
+        init_queue_add(init_q, "DHT nodeslist failed to load (error %d)", nodeslist_ret);
     }
 
     pthread_mutex_lock(&Winthread.lock);
-    print_init_queue(init_q, toxic->home_window, c_config);
+    init_queue_print(init_q, toxic->home_window, c_config);
     flag_interface_refresh();
     pthread_mutex_unlock(&Winthread.lock);
+
+    init_queue_free(init_q);
+    init_q = NULL;
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
     char avatarstr[PATH_MAX + 11];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", c_config->avatar_path);
     execute(home_window->chatwin->history, home_window, toxic, avatarstr, GLOBAL_COMMAND_MODE);
-
-    free_init_queue(init_q);
-    init_q = NULL;
 
     time_t last_save = get_unix_time();
 

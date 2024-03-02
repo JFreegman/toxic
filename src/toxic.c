@@ -55,6 +55,7 @@
 #include "file_transfers.h"
 #include "friendlist.h"
 #include "groupchats.h"
+#include "init_queue.h"
 #include "line_info.h"
 #include "log.h"
 #include "message_queue.h"
@@ -85,39 +86,6 @@
 #endif
 
 struct Winthread Winthread;
-
-void queue_init_message(Init_Queue *init_q, const char *message, ...)
-{
-    if (init_q == NULL) {
-        return;
-    }
-
-    char format_message[MAX_STR_SIZE] = {0};
-
-    va_list args;
-    va_start(args, message);
-    vsnprintf(format_message, sizeof(format_message), message, args);
-    va_end(args);
-
-    const uint16_t i = init_q->count;
-
-    char **temp_messages = realloc(init_q->messages, sizeof(char *) * (i + 1));
-
-    if (temp_messages == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
-    }
-
-    temp_messages[i] = malloc(MAX_STR_SIZE);
-
-    if (temp_messages[i] == NULL) {
-        exit_toxic_err(FATALERR_MEMORY, "Failed in queue_init_message");
-    }
-
-    snprintf(temp_messages[i], MAX_STR_SIZE, "%s", format_message);
-
-    init_q->messages = temp_messages;
-    ++init_q->count;
-}
 
 static void kill_toxic(Toxic *toxic)
 {
@@ -339,7 +307,7 @@ void init_term(const Client_Config *c_config, Init_Queue *init_q, bool use_defau
     set_window_refresh_rate(NCURSES_DEFAULT_REFRESH_RATE);
 
     if (!has_colors()) {
-        queue_init_message(init_q, "This terminal does not support colors.");
+        init_queue_add(init_q, "This terminal does not support colors.");
         refresh();
         return;
     }
@@ -351,7 +319,7 @@ void init_term(const Client_Config *c_config, Init_Queue *init_q, bool use_defau
     short bar_notify_color = COLOR_YELLOW;
 
     if (start_color() != 0) {
-        queue_init_message(init_q, "Failed to initialize ncurses colors.");
+        init_queue_add(init_q, "Failed to initialize ncurses colors.");
         // let's try anyways
     }
 
@@ -405,8 +373,8 @@ void init_term(const Client_Config *c_config, Init_Queue *init_q, bool use_defau
         init_pair(PINK_BAR_FG, CUSTOM_COLOUR_PINK, bar_bg_color);
         init_pair(BROWN_BAR_FG, CUSTOM_COLOUR_BROWN, bar_bg_color);
     } else {
-        queue_init_message(init_q, "This terminal does not support 256-colors. Certain non-default colors may "
-                           "not be displayed properly as a result.");
+        init_queue_add(init_q, "This terminal does not support 256-colors. Certain non-default colors may "
+                       "not be displayed properly as a result.");
     }
 
     refresh();
