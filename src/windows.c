@@ -470,7 +470,7 @@ void on_group_invite(Tox *tox, uint32_t friendnumber, const uint8_t *invite_data
 }
 
 void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type,
-                      const uint8_t *message, size_t length, uint32_t message_id, void *userdata)
+                      const uint8_t *message, size_t length, Tox_Group_Message_Id message_id, void *userdata)
 {
     UNUSED_VAR(message_id);
     UNUSED_VAR(tox);
@@ -491,10 +491,12 @@ void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESS
 }
 
 void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type,
-                              const uint8_t *message,
-                              size_t length, void *userdata)
+                              const uint8_t *message, size_t length, Tox_Group_Message_Id message_id,
+                              void *userdata)
 {
     UNUSED_VAR(tox);
+    UNUSED_VAR(type);
+    UNUSED_VAR(message_id);
 
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
