@@ -6,6 +6,7 @@ bazel-opt_task:
     memory: 2G
   configure_script:
     - /src/workspace/tools/inject-repo toxic
+    - sed -i -e 's/build --config=remote/#&/' /src/workspace/.bazelrc.local
   test_all_script:
     - cd /src/workspace && bazel test -k
         //toxic/...
