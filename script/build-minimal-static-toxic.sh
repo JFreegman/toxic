@@ -180,20 +180,57 @@ cmake --build _build --target install
 # location with SSL_CERT_FILE env variable.
 cd "$BUILD_DIR"
 
-CURL_VERSION="8.5.0"
-CURL_HASH="05fc17ff25b793a437a0906e0484b82172a9f4de02be5ed447e0cab8c3475add"
-CURL_FILENAME="curl-$CURL_VERSION.tar.gz"
+CURL_VERSION="8.7.1"
+CURL_HASH="6fea2aac6a4610fbd0400afb0bcddbe7258a64c63f1f68e5855ebc0c659710cd"
+CURL_FILENAME="curl-$CURL_VERSION.tar.xz"
 
 wget --timeout=10 -O "$CURL_FILENAME" "https://curl.haxx.se/download/$CURL_FILENAME"
 check_sha256 "$CURL_HASH" "$CURL_FILENAME"
-tar -xf curl*.tar.gz
-rm curl*.tar.gz
+tar -xf "$CURL_FILENAME"
+rm "$CURL_FILENAME"
 cd curl*
 
+# TODO(nurupo): backport of https://github.com/curl/curl/commit/4b42cda3df85419328ba8c9160a3e8306605d094
+#               remove once that commit makes it into a curl release
+sed -i 's/man_MANS = $(MANPAGE)/@BUILD_DOCS_TRUE@man_MANS = $(MANPAGE)/g' docs/cmdline-opts/Makefile.in
 ./configure \
   --prefix="$BUILD_DIR/prefix-curl" \
   --disable-shared \
   --enable-static \
+  --disable-ftp \
+  --disable-file \
+  --disable-ldap \
+  --disable-ldaps \
+  --disable-rtsp \
+  --disable-proxy \
+  --disable-dict \
+  --disable-telnet \
+  --disable-tftp \
+  --disable-pop3 \
+  --disable-imap \
+  --disable-smb \
+  --disable-smtp \
+  --disable-gopher \
+  --disable-mqtt \
+  --disable-docs \
+  --disable-manual \
+  --disable-libcurl-option \
+  --disable-sspi \
+  --disable-basic-auth \
+  --disable-bearer-auth \
+  --disable-digest-auth \
+  --disable-kerberos-auth \
+  --disable-negotiate-auth \
+  --disable-aws \
+  --disable-ntlm \
+  --disable-ntlm-wb \
+  --disable-tls-srp \
+  --disable-unix-sockets \
+  --disable-cookies \
+  --disable-http-auth \
+  --disable-bindlocal \
+  --disable-netrc \
+  --disable-websockets \
   --without-ca-bundle \
   --without-ca-path \
   --with-ca-fallback \
