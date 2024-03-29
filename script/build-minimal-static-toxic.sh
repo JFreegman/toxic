@@ -87,6 +87,9 @@ set -x
 # Use all cores for building
 MAKEFLAGS=j$(nproc)
 export MAKEFLAGS
+# TODO(nurupo): Once GCC 14 comes out, switch to using the new -fhardened
+CFLAGS="-ftrivial-auto-var-init=zero -fPIE -pie -Wl,-z,relro,-z,now -fstack-protector-strong -fstack-clash-protection -fcf-protection=full"
+export CFLAGS
 
 check_sha256()
 {
@@ -266,7 +269,7 @@ fi
 sed -i 's|pkg-config|pkg-config --static|' cfg/global_vars.mk
 sed -i 's|<limits.h|<linux/limits.h|' src/*
 
-CFLAGS="-static" PKG_CONFIG_PATH="$BUILD_DIR/prefix-toxcore/lib64/pkgconfig:$BUILD_DIR/prefix-toxcore/lib/pkgconfig:$BUILD_DIR/prefix-curl/lib/pkgconfig" PREFIX="$BUILD_DIR/prefix-toxic" make \
+CFLAGS="$CFLAGS -static" PKG_CONFIG_PATH="$BUILD_DIR/prefix-toxcore/lib64/pkgconfig:$BUILD_DIR/prefix-toxcore/lib/pkgconfig:$BUILD_DIR/prefix-curl/lib/pkgconfig" PREFIX="$BUILD_DIR/prefix-toxic" make \
   DISABLE_X11=1 \
   DISABLE_AV=1 \
   DISABLE_SOUND_NOTIFY=1 \
