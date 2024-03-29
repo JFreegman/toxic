@@ -88,7 +88,11 @@ set -x
 MAKEFLAGS=j$(nproc)
 export MAKEFLAGS
 # TODO(nurupo): Once GCC 14 comes out, switch to using the new -fhardened
-CFLAGS="-ftrivial-auto-var-init=zero -fPIE -pie -Wl,-z,relro,-z,now -fstack-protector-strong -fstack-clash-protection -fcf-protection=full"
+CFLAGS="-ftrivial-auto-var-init=zero -fPIE -pie -Wl,-z,relro,-z,now -fstack-protector-strong -fstack-clash-protection"
+if [ "$(uname -m)" == "x86_64" ]
+then
+  CFLAGS="$CFLAGS -fcf-protection=full"
+fi
 export CFLAGS
 
 check_sha256()
