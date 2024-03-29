@@ -247,7 +247,10 @@ cd "$BUILD_DIR"
 cp -a "$TOXIC_SRC_DIR" toxic
 cd toxic
 
-if [ -z "$(git describe --tags --exact-match HEAD)" ]
+git config --global --add safe.directory "$PWD"
+
+TOXIC_TAG="$(git describe --tags --exact-match HEAD || true)"
+if [ -z "$TOXIC_TAG" ]
 then
   set +x
   echo "Didn't find a git tag on the HEAD commit. You seem to be building an in-development release of Toxic rather than a release version." | fold -sw 80
@@ -288,12 +291,20 @@ mv "$PREPARE_ARTIFACT_DIR/toxic.conf.example" "$PREPARE_ARTIFACT_DIR/toxic.conf"
 
 cp -aL /usr/share/terminfo "$PREPARE_ARTIFACT_DIR"
 
+TOXIC_COMMIT="$(git -C "$BUILD_DIR/toxic" rev-parse HEAD)"
+if [ -z "$TOXIC_TAG" ]
+then
+  TOXIC_VERSION="$TOXIC_COMMIT"
+else
+  TOXIC_VERSION="$TOXIC_TAG ($TOXIC_COMMIT)"
+fi
+
 echo "A minimal statically compiled Toxic.
 Doesn't support X11 integration, video/audio calls, desktop & sound
 notifications, QR codes and Python scripting.
 However, it is rather portable.
 
-Toxic $(git -C "$BUILD_DIR/toxic" describe --tags --exact-match HEAD) ($(git -C "$BUILD_DIR/toxic" rev-parse HEAD))
+Toxic $TOXIC_VERSION
 
 Build date time: $(TZ=UTC date +"%Y-%m-%dT%H:%M:%S%z")
 
