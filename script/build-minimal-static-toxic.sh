@@ -252,8 +252,7 @@ cd toxic
 
 git config --global --add safe.directory "$PWD"
 
-TOXIC_TAG="$(git describe --tags --exact-match HEAD || true)"
-if [ -z "$TOXIC_TAG" ]
+if [ -z "$(git describe --tags --exact-match HEAD)" ]
 then
   set +x
   echo "Didn't find a git tag on the HEAD commit. You seem to be building an in-development release of Toxic rather than a release version." | fold -sw 80
@@ -294,13 +293,16 @@ mv "$PREPARE_ARTIFACT_DIR/toxic.conf.example" "$PREPARE_ARTIFACT_DIR/toxic.conf"
 
 cp -aL /usr/share/terminfo "$PREPARE_ARTIFACT_DIR"
 
-TOXIC_COMMIT="$(git -C "$BUILD_DIR/toxic" rev-parse HEAD)"
-if [ -z "$TOXIC_TAG" ]
+TOXIC_GIT_TAG="$(git -C "$BUILD_DIR/toxic" describe --tags --abbrev=0 || true)"
+# GitHub PRs do shallow clones without tags
+if [ -z "$TOXIC_GIT_TAG" ]
 then
-  TOXIC_VERSION="$TOXIC_COMMIT"
-else
-  TOXIC_VERSION="$TOXIC_TAG ($TOXIC_COMMIT)"
+  git -C "$BUILD_DIR/toxic" fetch origin --unshallow
+  TOXIC_GIT_TAG="$(git -C "$BUILD_DIR/toxic" describe --tags --abbrev=0)"
 fi
+TOXIC_GIT_COMMIT="$(git -C "$BUILD_DIR/toxic" rev-parse HEAD)"
+TOXIC_GIT_REV="$(git -C "$BUILD_DIR/toxic" rev-list HEAD --count)"
+TOXIC_VERSION="${TOXIC_GIT_TAG}_r${TOXIC_GIT_REV} ($TOXIC_GIT_COMMIT)"
 
 echo "A minimal statically compiled Toxic.
 Doesn't support X11 integration, video/audio calls, desktop & sound
