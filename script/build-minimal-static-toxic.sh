@@ -304,10 +304,9 @@ TOXIC_GIT_COMMIT="$(git -C "$BUILD_DIR/toxic" rev-parse HEAD)"
 TOXIC_GIT_REV="$(git -C "$BUILD_DIR/toxic" rev-list HEAD --count)"
 TOXIC_VERSION="${TOXIC_GIT_TAG}_r${TOXIC_GIT_REV} ($TOXIC_GIT_COMMIT)"
 
-echo "A minimal statically compiled Toxic.
-Doesn't support X11 integration, video/audio calls, desktop & sound
-notifications, QR codes and Python scripting.
-However, it is rather portable.
+echo "A minimal statically compiled Toxic. Doesn't support X11 integration,
+video/audio calls, desktop & sound notifications, QR codes and Python
+scripting. However, it is rather portable.
 
 Toxic $TOXIC_VERSION
 
