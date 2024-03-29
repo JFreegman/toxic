@@ -306,9 +306,10 @@ However, it is rather portable.
 
 Toxic $TOXIC_VERSION
 
-Build date time: $(TZ=UTC date +"%Y-%m-%dT%H:%M:%S%z")
+Build date-time: $(TZ=UTC date +"%Y-%m-%dT%H:%M:%S%z")
 
 OS:
+$ cat /etc/os-release
 $(cat /etc/os-release)
 
 List of self-built software statically compiled into Toxic:
@@ -316,9 +317,11 @@ libcurl $CURL_VERSION
 libtoxcore $TOXCORE_VERSION
 
 List of OS-packaged software statically compiled into Toxic:
+$ apk list -I | grep 'static' | sort -i
 $(apk list -I | grep 'static' | sort -i)
 
 List of all packages installed during the build:
+$ apk list -I | sort -i
 $(apk list -I | sort -i)" > "$PREPARE_ARTIFACT_DIR/build_info"
 
 echo '#!/usr/bin/env sh
