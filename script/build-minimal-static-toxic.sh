@@ -28,7 +28,7 @@
 #
 # Run as:
 #
-#    sudo docker run -it --rm \
+#    sudo docker run -it --rm --pull=always \
 #         -v /tmp/artifact:/artifact \
 #         -v /home/jfreegman/git/toxic:/toxic \
 #         amd64/alpine:latest \
