@@ -321,6 +321,10 @@ static int key_parse(const char **bind)
         }
     }
 
+    if (strncasecmp(*bind, "alt", 3) == 0) {
+            return 0x300+toupper(bind[0][4]) - 'A' + 1;
+    }
+
     if (strncasecmp(*bind, "tab", 3) == 0) {
         return T_KEY_TAB;
     }
