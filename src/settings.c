@@ -329,6 +329,22 @@ static int key_parse(const char **bind)
         return T_KEY_TAB;
     }
 
+    if (strncasecmp(*bind, "up", 2) == 0) {
+        return KEY_UP;
+    }
+
+    if (strncasecmp(*bind, "down", 4) == 0) {
+        return KEY_DOWN;
+    }
+
+    if (strncasecmp(*bind, "right", 5) == 0) {
+        return KEY_RIGHT;
+    }
+
+    if (strncasecmp(*bind, "left", 4) == 0) {
+        return KEY_LEFT;
+    }
+
     if (strncasecmp(*bind, "page", 4) == 0) {
         return len == 6 ? KEY_PPAGE : KEY_NPAGE;
     }
