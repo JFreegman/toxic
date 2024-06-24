@@ -1067,7 +1067,6 @@ static bool conference_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
 
 static void draw_peer(ToxWindow *self, Toxic *toxic, ChatContext *ctx, uint32_t i)
 {
-    pthread_mutex_lock(&Winthread.lock);
     const uint32_t peer_idx = i + conferences[self->num].side_pos;
     const uint32_t peernum = conferences[self->num].name_list[peer_idx].peernum;
     const bool is_self = tox_conference_peer_number_is_ours(toxic->tox, self->num, peernum, NULL);
@@ -1083,7 +1082,6 @@ static void draw_peer(ToxWindow *self, Toxic *toxic, ChatContext *ctx, uint32_t 
                           (is_self
                            ? device_is_muted(input, conferences[self->num].audio_in_idx)
                            : peer != NULL && device_is_muted(output, peer->audio_out_idx));
-        pthread_mutex_unlock(&Winthread.lock);
 
         const int aud_attr = A_BOLD | COLOR_PAIR(audio_active && !mute ? GREEN : RED);
         wattron(ctx->sidebar, aud_attr);
@@ -1091,18 +1089,13 @@ static void draw_peer(ToxWindow *self, Toxic *toxic, ChatContext *ctx, uint32_t 
         wattroff(ctx->sidebar, aud_attr);
         waddch(ctx->sidebar, ' ');
 #endif
-    } else {
-        pthread_mutex_unlock(&Winthread.lock);
     }
 
     /* truncate nick to fit in side panel without modifying list */
     char tmpnick[TOX_MAX_NAME_LENGTH];
     const int maxlen = SIDEBAR_WIDTH - 2 - 2 * audio;
 
-    pthread_mutex_lock(&Winthread.lock);
     memcpy(tmpnick, &conferences[self->num].name_list[peer_idx].name, maxlen);
-    pthread_mutex_unlock(&Winthread.lock);
-
     tmpnick[maxlen] = '\0';
 
     if (is_self) {
@@ -1159,7 +1152,6 @@ static void conference_onDraw(ToxWindow *self, Toxic *toxic)
         wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
 
         pthread_mutex_lock(&Winthread.lock);
-        const uint32_t num_peers = chat->num_peers;
         const bool audio = chat->audio_enabled;
         const int header_lines = sidebar_offset(self->num);
         pthread_mutex_unlock(&Winthread.lock);
@@ -1210,6 +1202,10 @@ static void conference_onDraw(ToxWindow *self, Toxic *toxic)
 #endif  // AUDIO
         }
 
+        pthread_mutex_lock(&Winthread.lock);
+        const uint32_t num_peers = chat->num_peers;
+        pthread_mutex_unlock(&Winthread.lock);
+
         wmove(ctx->sidebar, line, 1);
         wattron(ctx->sidebar, A_BOLD);
         wprintw(ctx->sidebar, "Peers: %"PRIu32"\n", num_peers);
@@ -1221,12 +1217,14 @@ static void conference_onDraw(ToxWindow *self, Toxic *toxic)
         mvwhline(ctx->sidebar, line, 1, ACS_HLINE, SIDEBAR_WIDTH - 1);
         wattroff(ctx->sidebar, COLOR_PAIR(PEERLIST_LINE));
 
-        for (uint32_t i = 0;
-                i < num_peers && i < y2 - header_lines - CHATBOX_HEIGHT;
-                ++i) {
+        pthread_mutex_lock(&Winthread.lock);
+
+        for (uint32_t i = 0; i < chat->num_peers && i < y2 - header_lines - CHATBOX_HEIGHT; ++i) {
             wmove(ctx->sidebar, i + header_lines, 1);
             draw_peer(self, toxic, ctx, i);
         }
+
+        pthread_mutex_unlock(&Winthread.lock);
     }
 
     int y, x;

@@ -2145,15 +2145,9 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
         uint32_t offset = 0;
 
         pthread_mutex_lock(&Winthread.lock);
-        const uint32_t max_idx = chat->max_idx;
-        const uint32_t start = chat->side_pos;
-        pthread_mutex_unlock(&Winthread.lock);
 
-        for (uint32_t i = start; i < max_idx && offset < maxlines; ++i) {
-            pthread_mutex_lock(&Winthread.lock);
-
+        for (uint32_t i = chat->side_pos; i < chat->max_idx && offset < maxlines; ++i) {
             if (!chat->peer_list[i].active) {
-                pthread_mutex_unlock(&Winthread.lock);
                 continue;
             }
 
@@ -2194,8 +2188,6 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
                 rolecolour = MAGENTA;
             }
 
-            pthread_mutex_unlock(&Winthread.lock);
-
             if (is_ignored) {
                 wattron(ctx->sidebar, COLOR_PAIR(RED) | A_BOLD);
                 wprintw(ctx->sidebar, "#");
@@ -2212,6 +2204,8 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
 
             ++offset;
         }
+
+        pthread_mutex_unlock(&Winthread.lock);
     }
 
     int y;
