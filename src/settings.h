@@ -48,6 +48,7 @@ typedef struct Client_Config {
     int nodeslist_update_freq;  /* <= 0 to disable updates */
     int autosave_freq; /* <= 0 to disable autosave */
 
+    bool line_padding;
     char line_join[LINE_HINT_MAX + 1];
     char line_quit[LINE_HINT_MAX + 1];
     char line_alert[LINE_HINT_MAX + 1];

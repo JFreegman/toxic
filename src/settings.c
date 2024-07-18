@@ -65,6 +65,7 @@ static struct ui_strings {
     const char *nodeslist_update_freq;
     const char *autosave_freq;
 
+    const char *line_padding;
     const char *line_join;
     const char *line_quit;
     const char *line_alert;
@@ -102,6 +103,7 @@ static struct ui_strings {
     "show_group_connection_msg",
     "nodeslist_update_freq",
     "autosave_freq",
+    "line_padding",
     "line_join",
     "line_quit",
     "line_alert",
@@ -141,6 +143,7 @@ static void ui_defaults(Client_Config *settings)
     settings->nodeslist_update_freq = 1;
     settings->autosave_freq = 600;
 
+    settings->line_padding = true;
     snprintf(settings->line_join, LINE_HINT_MAX + 1, "%s", LINE_JOIN);
     snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
     snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
@@ -747,6 +750,10 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
         config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
         config_setting_lookup_int(setting, ui_strings.nodeslist_update_freq, &s->nodeslist_update_freq);
         config_setting_lookup_int(setting, ui_strings.autosave_freq, &s->autosave_freq);
+
+        if (config_setting_lookup_bool(setting, ui_strings.line_padding, &bool_val)) {
+            s->line_padding = bool_val != 0;
+        }
 
         if (config_setting_lookup_string(setting, ui_strings.line_join, &str)) {
             snprintf(s->line_join, sizeof(s->line_join), "%s", str);

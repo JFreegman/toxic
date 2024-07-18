@@ -82,6 +82,10 @@ ui = {
   // time in milliseconds to display a notification
   notification_timeout=6000;
 
+  // true to pad every wrapped line of a message with enough spaces to
+  // align it to the beginning of the first line
+  line_padding=true;
+
   // Indicator for display when someone connects or joins a group
   line_join="-->";
 
