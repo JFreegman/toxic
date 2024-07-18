@@ -227,7 +227,7 @@ static unsigned int newline_count(const wchar_t *s)
  * Return 0 on success.
  * Return -1 if not all characters in line's message were printed to screen.
  */
-static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
+static int print_wrap(WINDOW *win, struct line_info *line, const Client_Config *c_config, int max_x, int max_y)
 {
     const wchar_t *msg = line->msg;
     uint16_t length = line->msg_width;
@@ -300,6 +300,10 @@ static int print_wrap(WINDOW *win, struct line_info *line, int max_x, int max_y)
             msg += x_limit;
             length -= x_limit;
         }
+
+		if (c_config && !c_config->line_padding) {
+			x_limit = max_x; // stop adding column padding for rest of message
+		}
 
         // Add padding to the start of the next line
         if (win && x_limit < max_x) {
@@ -374,7 +378,7 @@ static void line_info_init_line(ToxWindow *self, struct line_info *line)
     const int max_y = y2 - CHATBOX_HEIGHT - WINDOW_BAR_HEIGHT;
     const int max_x = self->show_peerlist ? x2 - 1 - SIDEBAR_WIDTH : x2;
 
-    print_wrap(NULL, line, max_x, max_y);
+    print_wrap(NULL, line, NULL, max_x, max_y);
 }
 
 /*
@@ -681,7 +685,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                     wattron(win, COLOR_PAIR(RED));
                 }
 
-                print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, c_config, max_x, max_y);
 
                 if (line->msg[0] == L'>') {
                     wattroff(win, COLOR_PAIR(GREEN));
@@ -714,7 +718,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                     wattron(win, COLOR_PAIR(RED));
                 }
 
-                print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, c_config, max_x, max_y);
 
                 if (line->msg[0] == '>') {
                     wattroff(win, COLOR_PAIR(GREEN));
@@ -739,7 +743,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
 
                 wattron(win, COLOR_PAIR(YELLOW));
                 wprintw(win, "%s %s ", c_config->line_normal, line->name1);
-                print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, c_config, max_x, max_y);
                 wattroff(win, COLOR_PAIR(YELLOW));
 
                 waddch(win, '\n');
@@ -761,7 +765,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                     wattron(win, COLOR_PAIR(line->colour));
                 }
 
-                print_wrap(win, line, max_x, max_y);
+                print_wrap(win, line, c_config, max_x, max_y);
                 waddch(win, '\n');
 
                 if (line->bold) {
@@ -781,7 +785,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                 wattroff(win, COLOR_PAIR(GREEN));
 
                 if (line->msg[0] != L'\0') {
-                    print_wrap(win, line, max_x, max_y);
+					print_wrap(win, line, c_config, max_x, max_y);
                 }
 
                 waddch(win, '\n');
@@ -800,7 +804,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                 wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_wrap(win, line, max_x, max_y);
+				print_wrap(win, line, c_config, max_x, max_y);
                 waddch(win, '\n');
 
                 wattroff(win, COLOR_PAIR(line->colour));
@@ -820,7 +824,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                 wprintw(win, "%s ", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_wrap(win, line, max_x, max_y);
+				print_wrap(win, line, c_config, max_x, max_y);
                 waddch(win, '\n');
 
                 wattroff(win, COLOR_PAIR(line->colour));
@@ -839,7 +843,7 @@ void line_info_print(ToxWindow *self, const Client_Config *c_config)
                 wprintw(win, "%s", line->name1);
                 wattroff(win, A_BOLD);
 
-                print_wrap(win, line, max_x, max_y);
+				print_wrap(win, line, c_config, max_x, max_y);
 
                 wattron(win, A_BOLD);
                 wprintw(win, "%s\n", line->name2);
