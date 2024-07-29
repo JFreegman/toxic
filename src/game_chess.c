@@ -500,12 +500,12 @@ static bool chess_path_diagonal_clear(Board *board, const Tile *from, const Tile
     bool left_diag = (from->chess_coords.N > to->chess_coords.N && from->chess_coords.L < to->chess_coords.L)
                      || (from->chess_coords.N < to->chess_coords.N && from->chess_coords.L > to->chess_coords.L);
 
-    size_t from_l_idx = chess_get_letter_index(from->chess_coords.L);
-    size_t to_l_idx = chess_get_letter_index(to->chess_coords.L);
-    size_t start_l_idx = left_diag ? MAX(from_l_idx, to_l_idx) - 1 : MIN(from_l_idx, to_l_idx) + 1;
+    const int from_l_idx = chess_get_letter_index(from->chess_coords.L);
+    const int to_l_idx = chess_get_letter_index(to->chess_coords.L);
+    int start_l_idx = left_diag ? MAX(from_l_idx, to_l_idx) - 1 : MIN(from_l_idx, to_l_idx) + 1;
 
-    if (start_l_idx == -1) {
-        return -1;
+    if (start_l_idx < 0) {
+        return false;
     }
 
     ChessCoords chess_coords;
@@ -513,7 +513,7 @@ static bool chess_path_diagonal_clear(Board *board, const Tile *from, const Tile
     for (size_t i = start; i < end; ++i) {
         chess_coords.N = i;
 
-        if (start_l_idx >= CHESS_NUM_BOARD_LETTERS) {
+        if (start_l_idx >= CHESS_NUM_BOARD_LETTERS || start_l_idx < 0) {
             return false;
         }
 
