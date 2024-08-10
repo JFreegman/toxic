@@ -332,9 +332,9 @@ static void help_draw_keys(ToxWindow *self)
     wprintw(win, "  Ctrl+up and Ctrl+down     : Scroll groupchat/conference peer list\n");
     wprintw(win, "  Ctrl+B                    : Toggle groupchat/conference peer list\n");
     wprintw(win, "  Ctrl+J                    : Insert new line\n");
-    wprintw(win, "  Ctrl+T                    : Toggle paste mode\n\n");
+    wprintw(win, "  Ctrl+T                    : Toggle paste mode\n");
     wprintw(win, "  Ctrl+R                    : Reload the Toxic config file\n\n");
-    wprintw(win, "  (Note: Custom keybindings override these defaults.)\n\n");
+    wprintw(win, "  (Note: Custom keybindings override these defaults.)\n");
 
     help_draw_bottom_menu(win);
 
@@ -477,7 +477,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'k':
-            help_init_window(self, 15, 80);
+            help_init_window(self, 16, 80);
             self->help->type = HELP_KEYS;
             break;
 
