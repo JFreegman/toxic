@@ -1,0 +1,12 @@
+name: release
+
+on:
+  push:
+    branches: [master]
+  pull_request_target:
+    branches: [master]
+    types: [opened, reopened, synchronize]
+
+jobs:
+  release:
+    uses: TokTok/ci-tools/.github/workflows/release-drafter.yml@master
