@@ -143,10 +143,10 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # The git hash of the c-toxcore version we're using
-TOXCORE_VERSION="v0.2.19"
+TOXCORE_VERSION="v0.2.20"
 
 # The sha256sum of the c-toxcore tarball for TOXCORE_VERSION
-TOXCORE_HASH="b770206a5ce59734279ac79f533bebcc8c8ff1d452cdd6628289a49b9200f428"
+TOXCORE_HASH="5c1bc37d24a1e37fc6c03580e2602019a09393cd2e8ae1f58e338438f14d5871"
 
 TOXCORE_FILENAME="c-toxcore-$TOXCORE_VERSION.tar.gz"
 
@@ -187,8 +187,8 @@ cmake --build _build --target install
 # location with SSL_CERT_FILE env variable.
 cd "$BUILD_DIR"
 
-CURL_VERSION="8.7.1"
-CURL_HASH="6fea2aac6a4610fbd0400afb0bcddbe7258a64c63f1f68e5855ebc0c659710cd"
+CURL_VERSION="8.11.0"
+CURL_HASH="db59cf0d671ca6e7f5c2c5ec177084a33a79e04c97e71cf183a5cdea235054eb"
 CURL_FILENAME="curl-$CURL_VERSION.tar.xz"
 
 wget --timeout=10 -O "$CURL_FILENAME" "https://curl.haxx.se/download/$CURL_FILENAME"
@@ -197,9 +197,6 @@ tar -xf "$CURL_FILENAME"
 rm "$CURL_FILENAME"
 cd curl*
 
-# TODO(nurupo): backport of https://github.com/curl/curl/commit/4b42cda3df85419328ba8c9160a3e8306605d094
-#               remove once that commit makes it into a curl release
-sed -i 's/man_MANS = $(MANPAGE)/@BUILD_DOCS_TRUE@man_MANS = $(MANPAGE)/g' docs/cmdline-opts/Makefile.in
 ./configure \
   --prefix="$BUILD_DIR/prefix-curl" \
   --disable-shared \
@@ -240,6 +237,7 @@ sed -i 's/man_MANS = $(MANPAGE)/@BUILD_DOCS_TRUE@man_MANS = $(MANPAGE)/g' docs/c
   --disable-websockets \
   --without-ca-bundle \
   --without-ca-path \
+  --without-libpsl \
   --with-ca-fallback \
   --with-nghttp2 \
   --with-brotli \
