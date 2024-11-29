@@ -16,9 +16,10 @@
 --align-reference=name
 
 # Formatting Options
---add-brackets
+--add-braces
 --convert-tabs
 --max-code-length=120
+--attach-return-type
 
 # Other Options
 --preserve-date
