@@ -36,7 +36,9 @@ cc_library(
         "//tools/config:linux-x86_64": glob(AV_SRCS),
         "//conditions:default": [],
     }),
+    hdrs = glob(["src/*.h"]),
     copts = COPTS,
+    tags = ["no-windows"],
     deps = [
         "//c-toxcore",
         "@curl",
@@ -49,6 +51,7 @@ cc_library(
             "@openal",
             "@python3//:python",
             "@x11",
+            "@xproto",
         ],
         "//conditions:default": [],
     }),
@@ -58,6 +61,7 @@ cc_binary(
     name = "toxic",
     srcs = ["src/main.c"],
     copts = COPTS,
+    tags = ["no-windows"],
     deps = [
         ":libtoxic",
         "//c-toxcore",
@@ -81,12 +85,14 @@ sh_test(
     size = "small",
     srcs = [":toxic"],
     args = ["--help"],
+    tags = ["no-windows"],
 )
 
 cc_test(
     name = "line_info_test",
     size = "small",
     srcs = ["src/line_info_test.cc"],
+    tags = ["no-windows"],
     deps = [
         ":libtoxic",
         "@com_google_googletest//:gtest",
@@ -98,6 +104,7 @@ cc_test(
     name = "misc_tools_test",
     size = "small",
     srcs = ["src/misc_tools_test.cc"],
+    tags = ["no-windows"],
     deps = [
         ":libtoxic",
         "@com_google_googletest//:gtest",
