@@ -39,6 +39,7 @@ static const char *const glob_cmd_list[] = {
     "/accept",
     "/add",
     "/avatar",
+    "/cinvite",
     "/clear",
     "/color",
     "/connect",
@@ -50,6 +51,7 @@ static const char *const glob_cmd_list[] = {
     "/game",
 #endif
     "/help",
+    "/invite",
     "/join",
     "/log",
     "/myid",

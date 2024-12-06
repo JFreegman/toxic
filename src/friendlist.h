@@ -163,6 +163,13 @@ bool friend_get_auto_accept_files(uint32_t friendnumber);
 uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber);
 
 /*
+ * Returns the friend number associated with `nick`.
+ * Returns -1 if `nick` does not designate a friend in the friend list.
+ * Returns -2 if `nick` matches more than one friend in the friend list.
+ */
+int64_t get_friend_number(const char *nick);
+
+/*
  * Puts a friend's public key in `pk`, which must have room for at least
  * TOX_PUBLIC_KEY_SIZE bytes.
  *

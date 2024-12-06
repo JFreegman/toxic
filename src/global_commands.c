@@ -300,6 +300,56 @@ void cmd_color(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
     self->colour = colour_val;
 }
 
+void cmd_conference_invite_g(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
+
+    if (argc < 2) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Conference number and name required.");
+        return;
+    }
+
+    const long int conferencenum = strtol(argv[1], NULL, 10);
+
+    if ((conferencenum == 0 && strcmp(argv[1], "0")) || conferencenum < 0 || conferencenum == LONG_MAX) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid conference number.");
+        return;
+    }
+
+    const char *nick = argv[2];
+    int64_t friend_number = get_friend_number(nick);
+
+    if (friend_number == -1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Friend '%s' not found (this command is case-sensitive)", nick);
+        return;
+    }
+
+    if (friend_number == -2) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "There are multiple friends in your friend list with this name. To invite this friend, navigate to their chat window and try again");
+        return;
+    }
+
+    Tox_Err_Conference_Invite err;
+
+    if (!tox_conference_invite(tox, (uint32_t)friend_number, conferencenum, &err)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to invite contact to conference (error %d)", err);
+        return;
+    }
+
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Conference %ld.",
+                  conferencenum);
+}
+
 void cmd_connect(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -604,6 +654,53 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     }
 }
 
+void cmd_group_invite_g(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
+
+    if (argc < 2) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Group number and name required.");
+        return;
+    }
+
+    const int groupnumber = atoi(argv[1]);
+
+    if (groupnumber == 0 && strcmp(argv[1], "0")) {    /* atoi returns 0 value on invalid input */
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid group number.");
+        return;
+    }
+
+    const char *nick = argv[2];
+    int64_t friend_number = get_friend_number(nick);
+
+    if (friend_number == -1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Friend '%s' not found (this command is case-sensitive)", nick);
+        return;
+    }
+
+    if (friend_number == -2) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "There are multiple friends in your friend list with this name. To invite this friend, navigate to their chat window and try again");
+        return;
+    }
+
+    Tox_Err_Group_Invite_Friend err;
+
+    if (!tox_group_invite_friend(tox, groupnumber, (uint32_t)friend_number, &err)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to invite contact to group (error %d).",
+                      err);
+        return;
+    }
+
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invited contact to Group %d.", groupnumber);
+}
+
 void cmd_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (toxic == NULL || self == NULL) {
@@ -860,6 +957,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
 
     free(dir);
 }
+
 #endif /* QRCODE */
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

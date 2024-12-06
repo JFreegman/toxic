@@ -18,9 +18,11 @@ void cmd_avatar(WINDOW *window, ToxWindow *, Toxic *, int argc, char (*argv)[MAX
 void cmd_clear(WINDOW *, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_color(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_conference(WINDOW *, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_conference_invite_g(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_connect(WINDOW *, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_decline(WINDOW *window, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_groupchat(WINDOW *, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
+void cmd_group_invite_g(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_join(WINDOW *window, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_log(WINDOW *, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);
 void cmd_myid(WINDOW *, ToxWindow *, Toxic *, int argc, char (*argv)[MAX_STR_SIZE]);

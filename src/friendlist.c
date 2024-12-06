@@ -1455,6 +1455,7 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
         set_active_window_by_id(toxic->windows, window_id);
     }
 }
+
 #endif /* AUDIO */
 
 /* Returns a friend's status */
@@ -1475,6 +1476,25 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber)
     }
 
     return Friends.list[friendnumber].connection_status;
+}
+
+int64_t get_friend_number(const char *name)
+{
+    int64_t num = -1;
+    size_t count = 0;
+
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
+        if (memcmp(name, Friends.list[i].name, Friends.list[i].namelength) == 0) {
+            num = Friends.list[i].num;
+            ++count;
+        }
+    }
+
+    if (count > 1) {
+        return -2;
+    }
+
+    return num;
 }
 
 /*

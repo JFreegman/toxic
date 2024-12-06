@@ -67,6 +67,7 @@ static const char *const conference_cmd_list[] = {
 #endif
     "/avatar",
     "/chatid",
+    "/cinvite",
     "/clear",
     "/close",
     "/color",
@@ -79,6 +80,7 @@ static const char *const conference_cmd_list[] = {
     "/game",
 #endif
     "/help",
+    "/invite",
     "/join",
     "/log",
 #ifdef AUDIO
@@ -662,6 +664,7 @@ static void set_peer_audio_position(Tox *tox, uint32_t conferencenum, uint32_t p
     const float angle = asinf(peer_posn - (float)(num_posns - 1) / 2);
     set_source_position(peer->audio_out_idx, sinf(angle), cosf(angle), 0);
 }
+
 #endif // AUDIO
 
 
@@ -1602,4 +1605,5 @@ float conference_get_VAD_threshold(uint32_t conferencenum)
 
     return device_get_VAD_threshold(chat->audio_in_idx);
 }
+
 #endif  // AUDIO

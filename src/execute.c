@@ -41,6 +41,8 @@ static struct cmd_func global_commands[] = {
     { "/game",      cmd_game          },
 #endif
     { "/help",      cmd_prompt_help   },
+    { "/invite",    cmd_group_invite_g},
+    { "/cinvite",   cmd_conference_invite_g },
     { "/join",      cmd_join          },
     { "/log",       cmd_log           },
     { "/myid",      cmd_myid          },
