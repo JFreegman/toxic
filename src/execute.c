@@ -145,6 +145,7 @@ static const char special_commands[][MAX_CMDNAME_SIZE] = {
     "/nick",
     "/note",
     "/passwd",
+    "/rejoin",
     "/silence",
     "/topic",
     "/unignore",

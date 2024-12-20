@@ -140,13 +140,7 @@ GroupChat *get_groupchat(uint32_t groupnumber)
     return NULL;
 }
 
-/*
- * Return the groupnumber associated with `public_key`.
- * Return -1 if public_key does not designate a valid group.
- *
- * `public_key` must be a string of at least TOX_PUBLIC_KEY_SIZE * 2 chars in length.
- */
-static int get_groupnumber_by_public_key_string(const char *public_key)
+int get_groupnumber_by_public_key_string(const char *public_key)
 {
     char pk_bin[TOX_PUBLIC_KEY_SIZE];
 

@@ -71,6 +71,14 @@ void groupchat_onGroupModeration(ToxWindow *self, Toxic *toxic, uint32_t groupnu
 
 void groupchat_rejoin(ToxWindow *self, Toxic *toxic);
 
+/*
+ * Return the groupnumber associated with `public_key`.
+ * Return -1 if public_key does not designate a valid group.
+ *
+ * `public_key` must be a string of at least TOX_PUBLIC_KEY_SIZE * 2 chars in length.
+ */
+int get_groupnumber_by_public_key_string(const char *public_key);
+
 /* Updates the groupchat topic in the top statusbar. */
 void groupchat_update_statusbar_topic(ToxWindow *self, const Tox *tox);
 

@@ -296,10 +296,10 @@ static void help_draw_groupchats(ToxWindow *self)
     wprintw(win, "  /locktopic                : Set the topic lock: on | off\n");
     wprintw(win, "  /mod <name>|<key>         : Promote a peer to moderator\n");
     wprintw(win, "  /nick <name>              : Set your name (for this group only)\n");
-    wprintw(win, "  /passwd <s>               : Set a password to join the group\n");
+    wprintw(win, "  /passwd <password>        : Set a password to join the group\n");
     wprintw(win, "  /peerlimit <n>            : Set the maximum number of peers that can join\n");
     wprintw(win, "  /privacy <state>          : Set the privacy state: private | public\n");
-    wprintw(win, "  /rejoin                   : Reconnect to the group\n");
+    wprintw(win, "  /rejoin <password>        : Reconnect to the group (password is optional)\n");
     wprintw(win, "  /silence <name>|<key>     : Silence a peer for the entire group\n");
     wprintw(win, "  /unsilence <name>|<key>   : Unsilence a silenced peer\n");
     wprintw(win, "  /status <type>            : Set your status (client-wide)\n");
@@ -389,6 +389,7 @@ static void help_draw_plugin(ToxWindow *self)
     box(win, ACS_VLINE, ACS_HLINE);
     wnoutrefresh(win);
 }
+
 #endif /* PYTHON */
 
 static void help_draw_contacts(ToxWindow *self)

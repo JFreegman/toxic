@@ -867,12 +867,42 @@ void cmd_rejoin(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
+    Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
-    Tox_Err_Group_Reconnect err;
+    char chat_id[TOX_GROUP_CHAT_ID_SIZE];
+    Tox_Err_Group_State_Query chatid_err;
 
-    if (!tox_group_reconnect(toxic->tox, self->num, &err)) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to rejoin group (error %d).", err);
+    if (!tox_group_get_chat_id(tox, self->num, (uint8_t *) chat_id, &chatid_err)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Failed to retrieve the Chat ID (error %d).", chatid_err);
+        return;
+    }
+
+    char nick[TOX_MAX_NAME_LENGTH + 1];
+    const size_t nick_length = get_group_self_nick_truncate(tox, nick, self->num);
+
+    const char *password = NULL;
+    uint16_t password_length = 0;
+
+    if (argc == 1) {
+        password_length = (uint16_t) strlen(argv[1]);
+
+        if (password_length <= TOX_GROUP_MAX_PASSWORD_SIZE) {
+            password = argv[1];
+        } else {
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Password length cannot exceed %d.",
+                          TOX_GROUP_MAX_PASSWORD_SIZE);
+            password_length = 0;
+        }
+    }
+
+    Tox_Err_Group_Join join_err;
+    tox_group_join(tox, (uint8_t *) chat_id, (const uint8_t *) nick, nick_length, (const uint8_t *) password,
+                   (uint16_t) password_length, &join_err);
+
+    if (join_err != TOX_ERR_GROUP_JOIN_OK) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to rejoin group (error %d).", join_err);
         return;
     }
 

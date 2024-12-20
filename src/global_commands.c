@@ -566,8 +566,8 @@ void cmd_groupchat(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
     self_nick[nick_length] = '\0';
 
     Tox_Err_Group_New err;
-    uint32_t groupnumber = tox_group_new(tox, TOX_GROUP_PRIVACY_STATE_PUBLIC, (const uint8_t *) name, len,
-                                         (const uint8_t *) self_nick, nick_length, &err);
+    const uint32_t groupnumber = tox_group_new(tox, TOX_GROUP_PRIVACY_STATE_PUBLIC, (const uint8_t *) name, len,
+                                 (const uint8_t *) self_nick, nick_length, &err);
 
     if (err != TOX_ERR_GROUP_NEW_OK) {
         switch (err) {
@@ -622,6 +622,11 @@ void cmd_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
 
     if (strlen(chat_id) != TOX_GROUP_CHAT_ID_SIZE * 2) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid chat ID");
+        return;
+    }
+
+    if (get_groupnumber_by_public_key_string(chat_id) != -1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "You are already in this group.");
         return;
     }
 
@@ -860,6 +865,7 @@ void cmd_myqr(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
 
     free(dir);
 }
+
 #endif /* QRCODE */
 
 void cmd_nick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
