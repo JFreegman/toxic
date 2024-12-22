@@ -37,6 +37,7 @@
 #include "autocomplete.h"
 #include "conference.h"
 #include "execute.h"
+#include "friendlist.h"
 #include "help.h"
 #include "input.h"
 #include "line_info.h"
@@ -67,14 +68,15 @@ static const char *const conference_cmd_list[] = {
 #endif
     "/avatar",
     "/chatid",
+    "/cinvite",
     "/clear",
     "/close",
     "/color",
+    "/conference",
     "/connect",
     "/decline",
     "/exit",
     "/group",
-    "/conference",
 #ifdef GAMES
     "/game",
 #endif
@@ -662,6 +664,7 @@ static void set_peer_audio_position(Tox *tox, uint32_t conferencenum, uint32_t p
     const float angle = asinf(peer_posn - (float)(num_posns - 1) / 2);
     set_source_position(peer->audio_out_idx, sinf(angle), cosf(angle), 0);
 }
+
 #endif // AUDIO
 
 
@@ -965,6 +968,19 @@ static bool conference_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
                 }
             } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
                 diff = dir_match(self, toxic, ctx->line, L"/avatar");
+            } else if (wcsncmp(ctx->line, L"/cinvite ", wcslen(L"/cinvite ")) == 0) {
+                size_t num_friends = friendlist_get_count();
+                char **friend_names = (char **) malloc_ptr_array(num_friends, TOX_MAX_NAME_LENGTH);
+
+                if (friend_names != NULL) {
+                    friendlist_get_names(friend_names, num_friends, TOX_MAX_NAME_LENGTH);
+                    diff = complete_line(self, toxic, (const char *const *) friend_names, num_friends);
+                    free_ptr_array((void **) friend_names);
+                } else {
+                    diff = -1;
+                    num_friends = 0;
+                    fprintf(stderr, "Failed to allocate memory for friends name list\n");
+                }
             }
 
 #ifdef PYTHON
@@ -1602,4 +1618,5 @@ float conference_get_VAD_threshold(uint32_t conferencenum)
 
     return device_get_VAD_threshold(chat->audio_in_idx);
 }
+
 #endif  // AUDIO

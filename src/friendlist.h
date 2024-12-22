@@ -125,6 +125,19 @@ Tox_User_Status get_friend_status(uint32_t friendnumber);
 Tox_Connection get_friend_connection_status(uint32_t friendnumber);
 
 /*
+ * Returns the number of friends in the friend list.
+ */
+size_t friendlist_get_count(void);
+
+/*
+ * Copies names from the friends list into the `names` array.
+ *
+ * @max_names The maximum number of names to copy.
+ * @max_name_size The maximum number of bytes to copy per name.
+ */
+void friendlist_get_names(char **names, size_t max_names, size_t max_name_size);
+
+/*
  * Loads the list of blocked peers from `path`.
  *
  * Returns 0 on success or if the file doesn't exist (a file will only exist if
@@ -161,6 +174,16 @@ bool friend_get_auto_accept_files(uint32_t friendnumber);
  * Returns the length of the name.
  */
 uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber);
+
+/*
+ * Returns the friend number associated with `name`.
+ *
+ * @length The length of the name.
+ *
+ * Returns -1 if `name` does not designate a friend in the friend list.
+ * Returns -2 if `name` matches more than one friend in the friend list.
+ */
+int64_t get_friend_number_name(const char *name, uint16_t length);
 
 /*
  * Puts a friend's public key in `pk`, which must have room for at least

@@ -234,9 +234,9 @@ static void help_draw_chat(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
     wprintw(win, "  /autoaccept <on>|<off>     : Toggle auto-accepting file transfers\n");
-    wprintw(win, "  /cinvite <n>               : Invite contact to a conference \n");
+    wprintw(win, "  /cinvite <conference num>  : Invite contact to a conference \n");
     wprintw(win, "  /cjoin                     : Join a pending conference\n");
-    wprintw(win, "  /invite <n>                : Invite contact to a groupchat \n");
+    wprintw(win, "  /invite <group num>        : Invite contact to a groupchat \n");
     wprintw(win, "  /gaccept <password>        : Accept a pending groupchat invite\n");
     wprintw(win, "  /sendfile <path>           : Send a file\n");
     wprintw(win, "  /savefile <id>             : Receive a file\n");
@@ -291,6 +291,7 @@ static void help_draw_groupchats(ToxWindow *self)
     wprintw(win, "  /disconnect               : Disconnect from the group (credentials retained)\n");
     wprintw(win, "  /ignore <name>|<key>      : Ignore a peer\n");
     wprintw(win, "  /unignore <name>|<key>    : Unignore a peer\n");
+    wprintw(win, "  /invite <name>            : Invite a friend to the group\n");
     wprintw(win, "  /kick <name>|<key>        : Remove a peer from the group\n");
     wprintw(win, "  /list                     : Print a list of peers currently in the group\n");
     wprintw(win, "  /locktopic                : Set the topic lock: on | off\n");
@@ -353,6 +354,7 @@ static void help_draw_conference(ToxWindow *self)
     wattroff(win, A_BOLD | COLOR_PAIR(RED));
 
     wprintw(win, "  /chatid                 : Print this conference's ID\n");
+    wprintw(win, "  /cinvite                : Invite a friend to this conference\n");
     wprintw(win, "  /title <msg>            : Show/set conference title\n");
 #ifdef AUDIO
     wattron(win, A_BOLD);
@@ -456,7 +458,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'o':
-            height = 7;
+            height = 8;
 #ifdef AUDIO
             height += 7;
 #endif
@@ -488,7 +490,7 @@ void help_onKey(ToxWindow *self, wint_t key)
             break;
 
         case L'r':
-            help_init_window(self, 27, 80);
+            help_init_window(self, 28, 80);
             self->help->type = HELP_GROUP;
             break;
     }

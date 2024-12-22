@@ -11,12 +11,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "friendlist.h"
+#include "groupchats.h"
+#include "line_info.h"
+#include "log.h"
+#include "misc_tools.h"
 #include "toxic.h"
 #include "windows.h"
-#include "line_info.h"
-#include "misc_tools.h"
-#include "log.h"
-#include "groupchats.h"
 
 extern GroupChat groupchats[MAX_GROUPCHAT_NUM];
 
@@ -166,6 +167,62 @@ void cmd_ignore(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 1, BLUE, "-!- Ignoring %s", nick);
 
     group_toggle_peer_ignore(self->num, peer_id, true);
+}
+
+void cmd_group_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
+
+    if (argc != 1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend name required.");
+        return;
+    }
+
+    const char *nick = argv[1];
+    const int64_t friend_number = get_friend_number_name(nick, strlen(nick));
+
+    if (friend_number == -1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Friend '%s' not found (names are case-sensitive)", nick);
+        return;
+    }
+
+    if (friend_number == -2) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "There are multiple friends in your friend list with this name. To invite this friend, navigate to their chat window and try again");
+        return;
+    }
+
+    const int groupnumber = self->num;
+
+    Tox_Err_Group_Invite_Friend err;
+
+    if (!tox_group_invite_friend(tox, groupnumber, (uint32_t)friend_number, &err)) {
+        switch (err) {
+            case TOX_ERR_GROUP_INVITE_FRIEND_FRIEND_NOT_FOUND: {
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend not found.");
+                return;
+            }
+
+            case TOX_ERR_GROUP_INVITE_FRIEND_INVITE_FAIL: {
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend is offline.");
+                return;
+            }
+
+            default: {
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invite failed (error %d)", err);
+                return;
+            }
+
+        }
+    }
+
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invited %s to the group.", nick);
 }
 
 void cmd_kick(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])

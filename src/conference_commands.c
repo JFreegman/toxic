@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "conference.h"
+#include "friendlist.h"
 #include "line_info.h"
 #include "log.h"
 #include "misc_tools.h"
@@ -49,6 +50,63 @@ void cmd_conference_chatid(WINDOW *window, ToxWindow *self, Toxic *toxic, int ar
     }
 
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", id_string);
+}
+
+void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+{
+    UNUSED_VAR(window);
+
+    if (toxic == NULL || self == NULL) {
+        return;
+    }
+
+    Tox *tox = toxic->tox;
+    const Client_Config *c_config = toxic->c_config;
+
+    if (argc != 1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend name required.");
+        return;
+    }
+
+    const char *nick = argv[1];
+    const int64_t friend_number = get_friend_number_name(nick, strlen(nick));
+
+    if (friend_number == -1) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "Friend '%s' not found (names are case-sensitive)", nick);
+        return;
+    }
+
+    if (friend_number == -2) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
+                      "There are multiple friends in your friend list with this name. To invite this friend, navigate to their chat window and try again");
+        return;
+    }
+
+    const long int conferencenum = self->num;
+
+    Tox_Err_Conference_Invite err;
+
+    if (!tox_conference_invite(tox, (uint32_t)friend_number, conferencenum, &err)) {
+        switch (err) {
+            case TOX_ERR_GROUP_INVITE_FRIEND_FRIEND_NOT_FOUND: {
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s is not in your friends list.", nick);
+                return;
+            }
+
+            case TOX_ERR_GROUP_INVITE_FRIEND_INVITE_FAIL: {
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend is offline.");
+                return;
+            }
+
+            default: {
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invite failed (error %d)", err);
+                return;
+            }
+        }
+    }
+
+    line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invited %s to the conference.", nick);
 }
 
 void cmd_conference_set_title(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
@@ -248,4 +306,5 @@ void cmd_conference_push_to_talk(WINDOW *window, ToxWindow *self, Toxic *toxic, 
 
     print_err(self, c_config, enable ? "Push-To-Talk is enabled. Push F2 to activate" : "Push-To-Talk is disabled");
 }
+
 #endif /* AUDIO */

@@ -119,7 +119,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
     close_file_transfer(self, toxic, ft, TOX_FILE_CONTROL_CANCEL, msg, silent);
 }
 
-void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_invite_to_conference(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
 
@@ -275,7 +275,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     }
 }
 
-void cmd_group_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
+void cmd_invite_to_group(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     if (toxic == NULL || self == NULL) {
         return;

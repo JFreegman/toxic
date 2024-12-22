@@ -71,10 +71,10 @@ static struct cmd_func global_commands[] = {
 static struct cmd_func chat_commands[] = {
     { "/autoaccept", cmd_autoaccept_files  },
     { "/cancel",    cmd_cancelfile        },
-    { "/cinvite",   cmd_conference_invite },
+    { "/cinvite",   cmd_invite_to_conference },
     { "/cjoin",     cmd_conference_join   },
     { "/gaccept",   cmd_group_accept      },
-    { "/invite",    cmd_group_invite      },
+    { "/invite",    cmd_invite_to_group   },
 #ifdef GAMES
     { "/play",      cmd_game_join         },
 #endif
@@ -99,6 +99,7 @@ static struct cmd_func chat_commands[] = {
 
 static struct cmd_func conference_commands[] = {
     { "/chatid",    cmd_conference_chatid    },
+    { "/cinvite",   cmd_conference_invite    },
     { "/title",     cmd_conference_set_title },
 
 #ifdef AUDIO
@@ -112,8 +113,9 @@ static struct cmd_func conference_commands[] = {
 
 static struct cmd_func groupchat_commands[] = {
     { "/chatid",    cmd_chatid         },
-    { "/disconnect", cmd_disconnect     },
+    { "/disconnect", cmd_disconnect    },
     { "/ignore",    cmd_ignore         },
+    { "/invite",    cmd_group_invite   },
     { "/kick",      cmd_kick           },
     { "/list",      cmd_list           },
     { "/locktopic", cmd_set_topic_lock },
@@ -137,9 +139,11 @@ static struct cmd_func groupchat_commands[] = {
 static const char special_commands[][MAX_CMDNAME_SIZE] = {
     "/add",
     "/avatar",
+    "/cinvite",
     "/gaccept",
     "/group",
     "/ignore",
+    "/invite",
     "/kick",
     "/mod",
     "/nick",

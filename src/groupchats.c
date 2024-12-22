@@ -37,6 +37,7 @@
 #include "execute.h"
 #include "misc_tools.h"
 #include "groupchats.h"
+#include "friendlist.h"
 #include "toxic_strings.h"
 #include "log.h"
 #include "line_info.h"
@@ -73,6 +74,7 @@ static const char *const group_cmd_list[] = {
     "/group",
     "/help",
     "/ignore",
+    "/invite",
     "/join",
     "/kick",
     "/list",
@@ -1932,14 +1934,28 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
     if (key == L'\t') {  /* TAB key: auto-completes peer name or command */
         input_ret = true;
 
+        /* TODO: make this not suck */
         if (ctx->len > 0) {
             int diff;
 
-            /* TODO: make this not suck */
-            if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {
-                diff = complete_line(self, toxic, (const char *const *) chat->name_list, chat->num_peers);
-            } else if (wcsncmp(ctx->line, L"/avatar \"", wcslen(L"/avatar \"")) == 0) {
+            if (wcsncmp(ctx->line, L"/invite ", wcslen(L"/invite ")) == 0) {
+                size_t num_friends = friendlist_get_count();
+                char **friend_names = (char **) malloc_ptr_array(num_friends, TOX_MAX_NAME_LENGTH);
+
+                if (friend_names != NULL) {
+                    friendlist_get_names(friend_names, num_friends, TOX_MAX_NAME_LENGTH);
+                    diff = complete_line(self, toxic, (const char *const *) friend_names, num_friends);
+                    free_ptr_array((void **) friend_names);
+                } else {
+                    diff = -1;
+                    num_friends = 0;
+                    fprintf(stderr, "Failed to allocate memory for friends name list\n");
+                }
+
+            } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
                 diff = dir_match(self, toxic, ctx->line, L"/avatar");
+            } else if (ctx->line[0] != L'/' || wcschr(ctx->line, L' ') != NULL) {
+                diff = complete_line(self, toxic, (const char *const *) chat->name_list, chat->num_peers);
             } else {
                 diff = complete_line(self, toxic, group_cmd_list, sizeof(group_cmd_list) / sizeof(char *));
             }

@@ -1424,6 +1424,24 @@ void disable_friend_window(uint32_t f_num)
     Friends.list[f_num].window_id = -1;
 }
 
+size_t friendlist_get_count(void)
+{
+    return Friends.num_friends;
+}
+
+void friendlist_get_names(char **names, size_t max_names, size_t max_name_size)
+{
+    if (Friends.num_friends == 0) {
+        return;
+    }
+
+    const size_t bytes_to_copy = MIN(sizeof(Friends.list[0].name), max_name_size);
+
+    for (size_t i = 0; i < max_names && i < Friends.num_friends; ++i) {
+        snprintf(names[i], bytes_to_copy, "%s", Friends.list[i].name);
+    }
+}
+
 #ifdef AUDIO
 static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_number, int state)
 {
@@ -1455,6 +1473,7 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
         set_active_window_by_id(toxic->windows, window_id);
     }
 }
+
 #endif /* AUDIO */
 
 /* Returns a friend's status */
@@ -1475,6 +1494,29 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber)
     }
 
     return Friends.list[friendnumber].connection_status;
+}
+
+int64_t get_friend_number_name(const char *name, uint16_t length)
+{
+    int64_t num = -1;
+    bool match_found = false;
+
+    for (size_t i = 0; i < Friends.max_idx; ++i) {
+        if (length != Friends.list[i].namelength) {
+            continue;
+        }
+
+        if (memcmp(name, Friends.list[i].name, length) == 0) {
+            if (match_found) {
+                return -2;
+            }
+
+            num = Friends.list[i].num;
+            match_found = true;
+        }
+    }
+
+    return num;
 }
 
 /*
