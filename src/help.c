@@ -18,9 +18,9 @@
 #endif /* PYTHON */
 
 #ifdef PYTHON
-#define HELP_MENU_HEIGHT 10
+#define HELP_MENU_HEIGHT 11
 #else
-#define HELP_MENU_HEIGHT 9
+#define HELP_MENU_HEIGHT 10
 #endif /* PYTHON */
 #define HELP_MENU_WIDTH 26
 

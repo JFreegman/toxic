@@ -2228,7 +2228,7 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
 
     draw_window_bar(self, toxic->windows);
 
-    wrefresh(self->window);
+    wnoutrefresh(self->window);
 
     if (self->help->active) {
         help_draw_main(self);
