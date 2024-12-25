@@ -83,6 +83,7 @@ static void kill_toxic(Toxic *toxic)
 
     free(client_data->data_path);
     free(client_data->block_path);
+    free_ptr_array((void **) client_data->blocked_words);
     free(toxic->c_config);
     free(toxic->run_opts);
     free(toxic->windows);

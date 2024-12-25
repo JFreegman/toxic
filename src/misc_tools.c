@@ -6,6 +6,10 @@
  *  under the GNU General Public License 3.0.
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE    /* needed for strcasestr() */
+#endif
+
 #include <assert.h>
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -679,7 +683,7 @@ void free_ptr_array(void **arr)
 
     void **tmp = arr;
 
-    while (*arr) {
+    while (*arr != NULL) {
         free(*arr);
         ++arr;
     }
@@ -788,4 +792,15 @@ size_t format_time_str(char *s, size_t max, const char *format, const struct tm 
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
     return strftime(s, max, format, tm);
 #pragma GCC diagnostic pop
+}
+
+bool string_contains_blocked_word(const char *line, const Client_Data *client_data)
+{
+    for (size_t i = 0; i < client_data->num_blocked_words; ++i) {
+        if (strcasestr(line, client_data->blocked_words[i]) != NULL) {
+            return true;
+        }
+    }
+
+    return false;
 }

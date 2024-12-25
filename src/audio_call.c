@@ -449,6 +449,7 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -466,6 +467,7 @@ void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -484,6 +486,7 @@ void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_call_started(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -502,6 +505,7 @@ void callback_call_started(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -519,6 +523,7 @@ void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -536,6 +541,7 @@ void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_call_ended(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {

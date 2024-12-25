@@ -2,12 +2,12 @@
 .\"     Title: toxic.conf
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 2024-02-09
+.\"      Date: 2024-12-23
 .\"    Manual: Toxic Manual
 .\"    Source: toxic __VERSION__
 .\"  Language: English
 .\"
-.TH "TOXIC\&.CONF" "5" "2024\-02\-09" "toxic __VERSION__" "Toxic Manual"
+.TH "TOXIC\&.CONF" "5" "2024\-12\-23" "toxic __VERSION__" "Toxic Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -366,6 +366,11 @@ Enable or disable autologging\&. true or false
 .RS 4
 The colour of the conferences\(cqs tab window name\&. (black, white, gray, brown, red, green, blue, cyan, yellow, magenta, orange, pink)
 .RE
+.RE
+.PP
+\fBblocked_words\fR
+.RS 4
+A list of case\-insensitive words that cannot be sent in messages\&. String value\&. Must be enclosed in double quotes and must be ⇐ 256 characters\&.
 .RE
 .PP
 \fBsounds\fR

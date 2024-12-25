@@ -219,4 +219,5 @@ void invoke_autoruns(ToxWindow *self, const char *autorun_path)
 
     closedir(d);
 }
+
 #endif /* PYTHON */

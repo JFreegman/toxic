@@ -1394,16 +1394,19 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         input_ret = true;
         rm_trailing_spaces_buf(ctx);
 
-        if (!wstring_is_empty(ctx->line)) {
+        wstrsubst(ctx->line, L'¶', L'\n');
+
+        char line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            memset(line, 0, sizeof(line));
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+        }
+
+        const bool contains_blocked_word = string_contains_blocked_word(line, &toxic->client_data);
+
+        if (line[0] != '\0' && !contains_blocked_word) {
             add_line_to_hist(ctx);
-
-            wstrsubst(ctx->line, L'¶', L'\n');
-
-            char line[MAX_STR_SIZE];
-
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                memset(line, 0, sizeof(line));
-            }
 
             if (line[0] == '/') {
                 if (strcmp(line, "/close") == 0) {
@@ -1414,7 +1417,7 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                 } else {
                     execute(ctx->history, self, toxic, line, CHAT_COMMAND_MODE);
                 }
-            } else if (line[0]) {
+            } else {
                 char selfname[TOX_MAX_NAME_LENGTH + 1];
                 tox_self_get_name(tox, (uint8_t *) selfname);
 
@@ -1423,14 +1426,16 @@ static bool chat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
 
                 const int id = line_info_add(self, c_config, true, selfname, NULL, OUT_MSG, 0, 0, "%s", line);
                 cqueue_add(ctx->cqueue, line, strlen(line), OUT_MSG, id);
-            } else {
-                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
             }
         }
 
-        wclear(ctx->linewin);
-        wmove(self->window, y2, 0);
-        reset_buf(ctx);
+        if (!contains_blocked_word) {
+            wclear(ctx->linewin);
+            wmove(self->window, y2, 0);
+            reset_buf(ctx);
+        } else {
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "* Message contains blocked word");
+        }
     }
 
     if (ctx->len <= 0 && ctx->self_is_typing) {

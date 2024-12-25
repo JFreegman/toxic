@@ -200,7 +200,7 @@ void get_al_device_names(void)
 
         if (stringed_device_list != NULL) {
             audio_state->default_al_device_name[type] = alcGetString(NULL,
-                    type == input ? ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER : ALC_DEFAULT_DEVICE_SPECIFIER);
+                type == input ? ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER : ALC_DEFAULT_DEVICE_SPECIFIER);
 
             for (; *stringed_device_list != '\0'
                     && audio_state->num_al_devices[type] < MAX_OPENAL_DEVICES; ++audio_state->num_al_devices[type]) {
@@ -341,7 +341,7 @@ static DeviceError open_al_device(DeviceType type, FrameInfo frame_info)
 {
     audio_state->al_device[type] = type == input
                                    ? alcCaptureOpenDevice(audio_state->current_al_device_name[type],
-                                           frame_info.sample_rate, sound_mode(frame_info.stereo), frame_info.samples_per_frame * 2)
+                                       frame_info.sample_rate, sound_mode(frame_info.stereo), frame_info.samples_per_frame * 2)
                                    : alcOpenDevice(audio_state->current_al_device_name[type]);
 
     if (audio_state->al_device[type] == NULL) {
@@ -754,6 +754,7 @@ static void *poll_input(void *arg)
 
     pthread_exit(NULL);
 }
+
 #endif
 
 float get_input_volume(void)

@@ -22,6 +22,7 @@
 #define PASSWORD_EVAL_MAX 512
 
 typedef struct Toxic Toxic;
+typedef struct Client_Data Client_Data;
 
 /* Holds user setting values defined in the toxic config file. */
 typedef struct Client_Config {
@@ -166,6 +167,17 @@ int settings_load_groups(Windows *windows, const Run_Options *run_opts);
  * This function will have no effect on conference instances that are created in the future.
  */
 int settings_load_conferences(Windows *windows, const Run_Options *run_opts);
+
+/*
+ * Loads the blocked words list from the toxic config file pointed to by `patharg`.
+ * If `patharg` is null, the default config path is used.
+ *
+ * Return 0 on success (or if no list exists in the config file).
+ * Return -1 if we fail to open the file path.
+ * Return -2 if libconfig fails to read the config file.
+ * Return -3 if memory allocation fails.
+ */
+int settings_load_blocked_words(Client_Data *client_data, const Run_Options *run_opts);
 
 /*
  * Reloads config settings.

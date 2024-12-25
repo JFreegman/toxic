@@ -182,6 +182,7 @@ int stop_video_transmission(Call *call, int friend_number)
 
     return 0;
 }
+
 /*
  * End of transmission
  */
@@ -236,6 +237,7 @@ void callback_recv_video_starting(uint32_t friend_number)
 
     open_primary_video_device(vdt_output, &this_call->vout_idx, NULL, NULL);
 }
+
 void callback_recv_video_end(uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -251,6 +253,7 @@ void callback_recv_video_end(uint32_t friend_number)
     close_video_device(vdt_output, this_call->vout_idx);
     this_call->vout_idx = -1;
 }
+
 static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -278,6 +281,7 @@ static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
         }
     }
 }
+
 void callback_video_end(uint32_t friend_number)
 {
     if (friend_number >= CallControl.max_calls) {
@@ -286,6 +290,7 @@ void callback_video_end(uint32_t friend_number)
 
     stop_video_transmission(&CallControl.calls[friend_number], friend_number);
 }
+
 /*
  * End of Callbacks
  */

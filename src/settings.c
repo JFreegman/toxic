@@ -81,6 +81,7 @@ static struct ui_strings {
     const char *color_bar_accent;
     const char *color_bar_notify;
 } ui_strings = {
+
     "ui",
     "timestamps",
     "time_format",
@@ -167,6 +168,7 @@ static const struct keys_strings {
     const char *toggle_pastemode;
     const char *reload_config;
 } key_strings = {
+
     "keys",
     "next_tab",
     "prev_tab",
@@ -203,6 +205,7 @@ static const struct tox_strings {
     const char *autorun_path;
     const char *password_eval;
 } tox_strings = {
+
     "tox",
     "download_path",
     "chatlogs_path",
@@ -230,6 +233,7 @@ static const struct audio_strings {
     const char *chat_audio_channels;
     const char *push_to_talk;
 } audio_strings = {
+
     "audio",
     "input_device",
     "output_device",
@@ -248,6 +252,7 @@ static void audio_defaults(Client_Config *settings)
     settings->chat_audio_channels = 2;
     settings->push_to_talk = 0;
 }
+
 #endif
 
 #ifdef SOUND_NOTIFY
@@ -264,6 +269,7 @@ static const struct sound_strings {
     const char *transfer_pending;
     const char *transfer_completed;
 } sound_strings = {
+
     "sounds",
     "notif_error",
     "self_log_in",
@@ -286,6 +292,7 @@ static const struct friend_strings {
     const char *show_connection_msg;
     const char *tab_name_color;
 } friend_strings = {
+
     "friends",
     "alias",
     "auto_accept_files",
@@ -299,6 +306,7 @@ static const struct groupchat_strings {
     const char *tab_name_color;
     const char *autolog;
 } groupchat_strings = {
+
     "groupchats",
     "tab_name_color",
     "autolog",
@@ -309,9 +317,17 @@ static const struct conference_strings {
     const char *tab_name_color;
     const char *autolog;
 } conference_strings = {
+
     "conferences",
     "tab_name_color",
     "autolog",
+};
+
+static const struct blocked_words {
+    const char *self;
+} blocked_words = {
+
+    "blocked_words",
 };
 
 static int key_parse(const char **bind)
@@ -623,6 +639,64 @@ int settings_load_friends(const Run_Options *run_opts)
             }
         }
     }
+
+    config_destroy(cfg);
+
+    return 0;
+}
+
+int settings_load_blocked_words(Client_Data *client_data, const Run_Options *run_opts)
+{
+    config_t cfg[1];
+    config_init(cfg);
+
+    const int c_ret = settings_init_config(cfg, run_opts);
+
+    if (c_ret < 0) {
+        config_destroy(cfg);
+        return c_ret;
+    }
+
+    const config_setting_t *setting = config_lookup(cfg, blocked_words.self);
+
+    if (setting == NULL) {
+        config_destroy(cfg);
+        return 0;
+    }
+
+    const int list_size = config_setting_length(setting);
+
+    if (list_size <= 0) {
+        return 0;
+    }
+
+    const size_t size_of_list_item = MAX_BLOCKED_WORD_LENGTH + 1;
+    char **words_list = (char **) malloc_ptr_array(list_size, size_of_list_item);
+
+    if (words_list == NULL) {
+        fprintf(stderr, "config error: failed to allocate memory for blocked words list.\n");
+        return -3;
+    }
+
+    size_t num_blocked_words = 0;
+
+    for (int i = 0; i < list_size; ++i) {
+        const char *word = config_setting_get_string_elem(setting, i);
+
+        if (word == NULL) {
+            continue;
+        }
+
+        if (strlen(word) > MAX_BLOCKED_WORD_LENGTH) {
+            fprintf(stderr, "Warning: blocked word '%s' exceeds maximum length\n", word);
+        }
+
+        snprintf(words_list[num_blocked_words], size_of_list_item, "%s", word);
+        ++num_blocked_words;
+    }
+
+    client_data->blocked_words = words_list;
+    client_data->num_blocked_words = num_blocked_words;
 
     config_destroy(cfg);
 
@@ -1024,6 +1098,13 @@ void settings_reload(Toxic *toxic)
 
     if (ret < 0) {
         fprintf(stderr, "Failed to reload group settings (error %d)\n", ret);
+    }
+
+
+    ret = settings_load_blocked_words(&toxic->client_data, run_opts);
+
+    if (ret < 0) {
+        fprintf(stderr, "Failed to reload blocked words list (error %d)\n", ret);
     }
 
     endwin();

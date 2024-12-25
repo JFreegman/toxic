@@ -293,8 +293,14 @@ int colour_string_to_int(const char *colour);
  */
 size_t format_time_str(char *s, size_t max, const char *format, const struct tm *tm);
 
+/*
+ * Returns true if `line` contains a word that's in the client's blocked words list.
+ */
+bool string_contains_blocked_word(const char *line, const Client_Data *client_data);
+
 #ifdef __cplusplus
 } /* extern "C" */
+
 #endif /* __cplusplus */
 
 #endif /* MISC_TOOLS_H */

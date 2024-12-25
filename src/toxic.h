@@ -54,6 +54,8 @@ typedef struct Client_Data {
     int  pass_len;
     char *data_path;
     char *block_path;
+    char **blocked_words;
+    size_t num_blocked_words;
 } Client_Data;
 
 typedef struct ToxAV ToxAV;

@@ -1329,6 +1329,12 @@ int main(int argc, char **argv)
         init_queue_add(init_q, "Failed to load conference config settings: error %d", cs_ret);
     }
 
+    const int bl_ret = settings_load_blocked_words(&toxic->client_data, run_opts);
+
+    if (bl_ret != 0) {
+        init_queue_add(init_q, "Failed to load blocked words list: error %d", bl_ret);
+    }
+
     set_active_window_by_type(windows, WINDOW_TYPE_PROMPT);
 
     if (pthread_mutex_init(&Winthread.lock, NULL) != 0) {

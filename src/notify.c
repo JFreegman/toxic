@@ -90,6 +90,7 @@ static struct _ActiveNotifications {
     time_t n_timeout;
 #endif /* BOX_NOTIFY */
 } actives[ACTIVE_NOTIFS_MAX];
+
 /**********************************************************************************/
 /**********************************************************************************/
 /**********************************************************************************/
@@ -582,6 +583,7 @@ void stop_sound(int id)
         clear_actives_index(id);
     }
 }
+
 #endif /* SOUND_NOTIFY */
 
 static int m_play_sound(const Client_Config *c_config, Notification notif, uint64_t flags)

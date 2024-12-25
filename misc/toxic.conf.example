@@ -206,6 +206,15 @@ conferences = {
 // };
 };
 
+// A list of case-insensitive words that cannot be sent in messages. If you attempt to send
+// a message that contains a word in this list to a group, friend, etc., the message will not
+// send and an error will be displayed. Words must be enclosed in double quotes and must not
+// be longer than 256 characters.
+blocked_words = [
+  // "hunter2",
+  // "certainly!"
+];
+
 // To disable a sound set the path to "silent"
 sounds = {
   error="__DATADIR__/sounds/ToxicError.wav";

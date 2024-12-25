@@ -1326,7 +1326,8 @@ void draw_active_window(Toxic *toxic)
             return;
         }
 
-        // if an unprintable key code is unrecognized by input handler we attempt to manually decode char sequence
+        // if an unprintable key code is unrecognized by input handler we attempt to
+        // manually decode char sequence
         wint_t tmp = get_input_sequence_code();
 
         if (tmp != (wint_t) -1) {

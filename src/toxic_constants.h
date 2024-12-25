@@ -43,6 +43,8 @@
 #define MIN_PASSWORD_LEN 6
 #define MAX_PASSWORD_LEN 64
 
+#define MAX_BLOCKED_WORD_LENGTH 256  /* Max length of words in the blocked words list */
+
 /* Fixes text color problem on some terminals.
    Uncomment if necessary */
 /* #define URXVT_FIX */

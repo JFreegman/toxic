@@ -1986,16 +1986,19 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
         input_ret = true;
         rm_trailing_spaces_buf(ctx);
 
-        if (!wstring_is_empty(ctx->line)) {
+        wstrsubst(ctx->line, L'¶', L'\n');
+
+        char line[MAX_STR_SIZE];
+
+        if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
+            memset(line, 0, sizeof(line));
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+        }
+
+        const bool contains_blocked_word = string_contains_blocked_word(line, &toxic->client_data);
+
+        if (line[0] != '\0' && !contains_blocked_word) {
             add_line_to_hist(ctx);
-
-            wstrsubst(ctx->line, L'¶', L'\n');
-
-            char line[MAX_STR_SIZE];
-
-            if (wcs_to_mbs_buf(line, ctx->line, MAX_STR_SIZE) == -1) {
-                memset(line, 0, sizeof(line));
-            }
 
             if (line[0] == '/') {
                 if (strncmp(line, "/close", strlen("/close")) == 0) {
@@ -2023,15 +2026,17 @@ static bool groupchat_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr)
                 } else {
                     execute(ctx->history, self, toxic, line, GROUPCHAT_COMMAND_MODE);
                 }
-            } else if (line[0]) {
-                send_group_message(self, toxic, self->num, line, TOX_MESSAGE_TYPE_NORMAL);
             } else {
-                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, " * Failed to parse message.");
+                send_group_message(self, toxic, self->num, line, TOX_MESSAGE_TYPE_NORMAL);
             }
+        }
 
+        if (!contains_blocked_word) {
             wclear(ctx->linewin);
             wmove(self->window, y2, 0);
             reset_buf(ctx);
+        } else {
+            line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED, "* Message contains blocked word");
         }
     }
 

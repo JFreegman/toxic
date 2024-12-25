@@ -352,4 +352,5 @@ void python_draw_handler_help(WINDOW *win)
         }
     }
 }
+
 #endif /* PYTHON */
