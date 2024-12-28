@@ -7,7 +7,6 @@
  */
 
 #include <assert.h>
-#include <ctype.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -469,7 +468,7 @@ void on_group_invite(Tox *tox, uint32_t friendnumber, const uint8_t *invite_data
     }
 }
 
-void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type,
+void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, Tox_Message_Type type,
                       const uint8_t *message, size_t length, Tox_Group_Message_Id message_id, void *userdata)
 {
     UNUSED_VAR(message_id);
@@ -490,7 +489,7 @@ void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESS
     }
 }
 
-void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_MESSAGE_TYPE type,
+void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, Tox_Message_Type type,
                               const uint8_t *message, size_t length, Tox_Group_Message_Id message_id,
                               void *userdata)
 {
@@ -513,7 +512,7 @@ void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peer_id, 
     }
 }
 
-void on_group_status_change(Tox *tox, uint32_t groupnumber, uint32_t peer_id, TOX_USER_STATUS status, void *userdata)
+void on_group_status_change(Tox *tox, uint32_t groupnumber, uint32_t peer_id, Tox_User_Status status, void *userdata)
 {
     UNUSED_VAR(tox);
 
@@ -1192,6 +1191,7 @@ static struct key_sequence_codes {
     wchar_t *code;
     wint_t   key;
 } Keys[] = {
+
     { L"[1;5A", T_KEY_C_UP    },
     { L"[1;5B", T_KEY_C_DOWN  },
     { L"[1;5C", T_KEY_C_RIGHT },

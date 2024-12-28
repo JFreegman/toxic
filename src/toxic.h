@@ -131,11 +131,10 @@ void on_friend_typing(Tox *tox, uint32_t friendnumber, bool is_typing, void *use
 void on_friend_read_receipt(Tox *tox, uint32_t friendnumber, uint32_t receipt, void *userdata);
 void on_lossless_custom_packet(Tox *tox, uint32_t friendnumber, const uint8_t *data, size_t length, void *userdata);
 void on_group_invite(Tox *tox, uint32_t friendnumber, const uint8_t *invite_data, size_t length,
-                     const uint8_t *group_name,
-                     size_t group_name_length, void *userdata);
-void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+                     const uint8_t *group_name, size_t group_name_length, void *userdata);
+void on_group_message(Tox *tox, uint32_t groupnumber, uint32_t peernumber, Tox_Message_Type type,
                       const uint8_t *message, size_t length, Tox_Group_Message_Id message_id, void *userdata);
-void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peernumber, TOX_MESSAGE_TYPE type,
+void on_group_private_message(Tox *tox, uint32_t groupnumber, uint32_t peernumber, Tox_Message_Type type,
                               const uint8_t *message, size_t length, Tox_Group_Message_Id message_id, void *userdata);
 void on_group_peer_join(Tox *tox, uint32_t groupnumber, uint32_t peernumber, void *userdata);
 void on_group_peer_exit(Tox *tox, uint32_t groupnumber, uint32_t peer_id, Tox_Group_Exit_Type exit_type,
@@ -149,7 +148,7 @@ void on_group_topic_lock(Tox *tox, uint32_t groupnumber, Tox_Group_Topic_Lock to
 void on_group_password(Tox *tox, uint32_t groupnumber, const uint8_t *password, size_t length, void *userdata);
 void on_group_nick_change(Tox *tox, uint32_t groupnumber, uint32_t peernumber, const uint8_t *newname, size_t length,
                           void *userdata);
-void on_group_status_change(Tox *tox, uint32_t groupnumber, uint32_t peernumber, TOX_USER_STATUS status,
+void on_group_status_change(Tox *tox, uint32_t groupnumber, uint32_t peernumber, Tox_User_Status status,
                             void *userdata);
 void on_group_self_join(Tox *tox, uint32_t groupnumber, void *userdata);
 void on_group_rejected(Tox *tox, uint32_t groupnumber, Tox_Group_Join_Fail type, void *userdata);

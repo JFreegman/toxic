@@ -143,7 +143,7 @@ static const char *tox_log_level_show(Tox_Log_Level level)
     return "<invalid>";
 }
 
-static void cb_toxcore_logger(Tox *tox, TOX_LOG_LEVEL level, const char *file, uint32_t line, const char *func,
+static void cb_toxcore_logger(Tox *tox, Tox_Log_Level level, const char *file, uint32_t line, const char *func,
                               const char *message, void *user_data)
 {
     UNUSED_VAR(tox);

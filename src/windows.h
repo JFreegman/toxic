@@ -172,14 +172,13 @@ struct ToxWindow {
 #endif // GAMES
 
     void(*onGroupInvite)(ToxWindow *, Toxic *, uint32_t, const char *, size_t, const char *, size_t);
-    void(*onGroupMessage)(ToxWindow *, Toxic *, uint32_t, uint32_t, TOX_MESSAGE_TYPE, const char *, size_t);
+    void(*onGroupMessage)(ToxWindow *, Toxic *, uint32_t, uint32_t, Tox_Message_Type, const char *, size_t);
     void(*onGroupPrivateMessage)(ToxWindow *, Toxic *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupPeerJoin)(ToxWindow *, Toxic *, uint32_t, uint32_t);
     void(*onGroupPeerExit)(ToxWindow *, Toxic *, uint32_t, uint32_t, Tox_Group_Exit_Type, const char *, size_t,
-                           const char *,
-                           size_t);
+                           const char *, size_t);
     void(*onGroupNickChange)(ToxWindow *, Toxic *, uint32_t, uint32_t, const char *, size_t);
-    void(*onGroupStatusChange)(ToxWindow *, Toxic *, uint32_t, uint32_t, TOX_USER_STATUS);
+    void(*onGroupStatusChange)(ToxWindow *, Toxic *, uint32_t, uint32_t, Tox_User_Status);
     void(*onGroupTopicChange)(ToxWindow *, Toxic *, uint32_t, uint32_t, const char *, size_t);
     void(*onGroupPeerLimit)(ToxWindow *, Toxic *, uint32_t, uint32_t);
     void(*onGroupPrivacyState)(ToxWindow *, Toxic *, uint32_t, Tox_Group_Privacy_State);
@@ -267,6 +266,7 @@ struct infobox {
 
     WINDOW *win;
 };
+
 #endif /* AUDIO */
 
 #define MAX_LINE_HIST 128

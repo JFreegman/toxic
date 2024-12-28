@@ -16,7 +16,6 @@
 #include <time.h>
 #include <wchar.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #ifdef AUDIO
 #ifdef __APPLE__
@@ -46,7 +45,6 @@
 #include "help.h"
 #include "notify.h"
 #include "autocomplete.h"
-#include "audio_device.h"
 
 extern char *DATA_FILE;
 static int max_groupchat_index = 0;
@@ -118,7 +116,7 @@ static int realloc_peer_list(uint32_t groupnumber, uint32_t n);
 static void groupchat_onGroupNickChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
                                         const char *new_nick, size_t len);
 static void groupchat_onGroupStatusChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
-        TOX_USER_STATUS status);
+        Tox_User_Status status);
 static void groupchat_onGroupSelfNickChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *old_nick,
         size_t old_length, const char *new_nick, size_t length);
 static void ignore_list_cleanup(GroupChat *chat);
@@ -526,8 +524,8 @@ void set_status_all_groups(Toxic *toxic, uint8_t status)
                 continue;
             }
 
-            if (tox_group_self_set_status(toxic->tox, self->num, (TOX_USER_STATUS) status, NULL)) {
-                groupchat_onGroupStatusChange(self, toxic, self->num, self_peer_id, (TOX_USER_STATUS) status);
+            if (tox_group_self_set_status(toxic->tox, self->num, (Tox_User_Status) status, NULL)) {
+                groupchat_onGroupStatusChange(self, toxic, self->num, self_peer_id, (Tox_User_Status) status);
             }
         }
     }
@@ -973,7 +971,7 @@ static void group_onAction(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, 
 }
 
 static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
-                                     TOX_MESSAGE_TYPE type, const char *msg, size_t len)
+                                     Tox_Message_Type type, const char *msg, size_t len)
 {
     if (toxic == NULL || self == NULL) {
         return;
@@ -1719,7 +1717,7 @@ static void groupchat_onGroupNickChange(ToxWindow *self, Toxic *toxic, uint32_t 
 }
 
 static void groupchat_onGroupStatusChange(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, uint32_t peer_id,
-        TOX_USER_STATUS status)
+        Tox_User_Status status)
 {
     UNUSED_VAR(toxic);
 
@@ -1748,7 +1746,7 @@ static void groupchat_onGroupStatusChange(ToxWindow *self, Toxic *toxic, uint32_
 }
 
 static void send_group_message(ToxWindow *self, Toxic *toxic, uint32_t groupnumber, const char *msg,
-                               TOX_MESSAGE_TYPE type)
+                               Tox_Message_Type type)
 {
     if (toxic == NULL || self == NULL) {
         return;

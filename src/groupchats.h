@@ -31,7 +31,7 @@ typedef struct GroupPeer {
     char             prev_name[TOX_MAX_NAME_LENGTH];
     uint32_t         peer_id;
     uint8_t          public_key[TOX_GROUP_PEER_PUBLIC_KEY_SIZE];
-    TOX_USER_STATUS  status;
+    Tox_User_Status  status;
     Tox_Group_Role   role;
     bool             is_ignored;
     uint64_t         last_active;
