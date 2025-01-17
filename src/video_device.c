@@ -172,8 +172,8 @@ VideoDeviceError init_video_devices(Toxic *toxic)
 
     for (; c_size[vdt_input] <= MAX_DEVICES; ++c_size[vdt_input]) {
         int fd;
-        char device_address[] = "/dev/videoXX";
-        snprintf(device_address + 10, sizeof(char) * strlen(device_address) - 10, "%i", c_size[vdt_input]);
+        char device_address[MAX_STR_SIZE];
+        snprintf(device_address, sizeof(device_address), "/dev/video%i", c_size[vdt_input]);
 
         fd = open(device_address, O_RDWR | O_NONBLOCK, 0);
 
@@ -375,8 +375,8 @@ VideoDeviceError open_video_device(VideoDeviceType type, int32_t selection, uint
 
 #else /* not __OSX__ || __APPLE__ */
         /* Open selected device */
-        char device_address[] = "/dev/videoXX";
-        snprintf(device_address + 10, sizeof(device_address) - 10, "%i", selection);
+        char device_address[MAX_STR_SIZE];
+        snprintf(device_address, sizeof(device_address), "/dev/video%i", selection);
 
         device->fd = open(device_address, O_RDWR);
 

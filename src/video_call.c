@@ -159,6 +159,7 @@ int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call)
     }
 
     Toxav_Err_Bit_Rate_Set err;
+
     if (!toxav_video_set_bit_rate(toxic->av, self->num, call->video_bit_rate, &err)) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate: error %d", err);
         return -1;
