@@ -158,8 +158,9 @@ int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call)
         return -1;
     }
 
-    if (!toxav_video_set_bit_rate(toxic->av, self->num, call->video_bit_rate, NULL)) {
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate");
+    Toxav_Err_Bit_Rate_Set err;
+    if (!toxav_video_set_bit_rate(toxic->av, self->num, call->video_bit_rate, &err)) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to set video bit rate: error %d", err);
         return -1;
     }
 
@@ -271,7 +272,7 @@ static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
         for (uint16_t i = 0; i < windows->count; ++i) {
             ToxWindow *window = windows->list[i];
 
-            if (window->is_call && window->num != friend_number) {
+            if (!window->is_call || window->num != friend_number) {
                 continue;
             }
 
