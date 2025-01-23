@@ -900,17 +900,17 @@ static void chat_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t friendnum
     memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
     Friends.list[friendnumber].group_invite.length = length;
 
-    sound_notify(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, NULL);
-
     char name[TOXIC_MAX_NAME_LENGTH + 1];
     get_friend_name(name, sizeof(name), friendnumber);
 
+    const uint64_t flags = NT_WNDALERT_2 | c_config->bell_on_invite;
+
     if (self->active_box != -1) {
-        box_silent_notify2(self, toxic, NT_WNDALERT_2 | NT_NOFOCUS, self->active_box,
-                           "invites you to join group chat");
+        box_notify2(self, toxic, generic_message, flags, self->active_box,
+                    "You have been invited to a group chat.");
     } else {
-        box_silent_notify(self, toxic, NT_WNDALERT_2 | NT_NOFOCUS, &self->active_box, name,
-                          "invites you to join group chat");
+        box_notify(self, toxic, generic_message, flags, &self->active_box, name,
+                   "You have been invited to a group chat.");
     }
 
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s has invited you to join group chat \"%s\"",
@@ -1022,14 +1022,17 @@ static void chat_onInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_number,
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                   "Incoming audio call! Type: \"/answer\" or \"/reject\"");
 
+    uint64_t box_flags = NT_NOFOCUS | NT_WNDALERT_0;
+
     if (self->ringing_sound == -1) {
         sound_notify(self, toxic, call_incoming, NT_LOOP | c_config->bell_on_invite, &self->ringing_sound);
+        box_flags |= NT_NO_INCREMENT;
     }
 
     if (self->active_box != -1) {
-        box_silent_notify2(self, toxic, NT_NOFOCUS | NT_WNDALERT_0, self->active_box, "Incoming audio call!");
+        box_silent_notify2(self, toxic, box_flags, self->active_box, "Incoming audio call!");
     } else {
-        box_silent_notify(self, toxic, NT_NOFOCUS | NT_WNDALERT_0, &self->active_box, self->name, "Incoming audio call!");
+        box_silent_notify(self, toxic, box_flags, &self->active_box, self->name, "Incoming audio call!");
     }
 }
 

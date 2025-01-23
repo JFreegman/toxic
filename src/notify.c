@@ -123,7 +123,9 @@ static void tab_notify(ToxWindow *self, uint64_t flags)
         self->alert = WINDOW_ALERT_2;
     }
 
-    ++self->pending_messages;
+    if (!(flags & NT_NO_INCREMENT)) {
+        ++self->pending_messages;
+    }
 }
 
 static bool notifications_are_disabled(const Toxic *toxic, uint64_t flags)

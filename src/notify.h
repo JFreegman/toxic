@@ -43,6 +43,8 @@ typedef enum _Flags {
     NT_WNDALERT_2 = 1 << 7, /* Alert toxic */
 
     NT_ALWAYS = 1 << 8,     /* Force sound to play */
+
+    NT_NO_INCREMENT = 1 << 9, /* Prevents notification from incrementing pending message counter in window's tab */
 } Flags;
 
 int init_notify(int login_cooldown, int notification_timeout);

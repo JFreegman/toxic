@@ -1003,12 +1003,12 @@ static void groupchat_onGroupMessage(ToxWindow *self, Toxic *toxic, uint32_t gro
 
     /* Only play sound if mentioned by someone else */
     if (strcasestr(msg, self_nick) && strcmp(self_nick, nick)) {
-        sound_notify(self, toxic, generic_message, NT_WNDALERT_0 | c_config->bell_on_message, NULL);
-
         if (self->active_box != -1) {
-            box_silent_notify2(self, toxic, NT_NOFOCUS, self->active_box, "%s %s", nick, msg);
+            box_notify2(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
+                        c_config->bell_on_message, self->active_box, "%s: %s", nick, msg);
         } else {
-            box_silent_notify(self, toxic, NT_NOFOCUS, &self->active_box, self->name, "%s %s", nick, msg);
+            box_notify(self, toxic, generic_message, NT_WNDALERT_0 | NT_NOFOCUS |
+                       c_config->bell_on_message, &self->active_box, self->name, "%s: %s", nick, msg);
         }
 
         nick_clr = RED;
