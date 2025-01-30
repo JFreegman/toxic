@@ -1071,6 +1071,7 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
 void settings_reload(Toxic *toxic)
 {
     Client_Config *c_config = toxic->c_config;
+    Client_Data *client_data = &toxic->client_data;
     const Run_Options *run_opts = toxic->run_opts;
     Windows *windows = toxic->windows;
 
@@ -1100,8 +1101,9 @@ void settings_reload(Toxic *toxic)
         fprintf(stderr, "Failed to reload group settings (error %d)\n", ret);
     }
 
+    free_ptr_array((void **) client_data->blocked_words);
 
-    ret = settings_load_blocked_words(&toxic->client_data, run_opts);
+    ret = settings_load_blocked_words(client_data, run_opts);
 
     if (ret < 0) {
         fprintf(stderr, "Failed to reload blocked words list (error %d)\n", ret);
