@@ -1,11 +1,11 @@
----
-bazel-opt_task:
-  container:
-    image: toxchat/toktok-stack:latest-release
-    cpu: 2
-    memory: 2G
-  configure_script:
-    - /src/workspace/tools/inject-repo toxic
-  test_all_script:
-    - cd /src/workspace && bazel test -k
-        //toxic/...
+# ---
+# bazel-opt_task:
+#   container:
+#     image: toxchat/toktok-stack:latest-release
+#     cpu: 2
+#     memory: 2G
+#   configure_script:
+#     - /src/workspace/tools/inject-repo toxic
+#   test_all_script:
+#     - cd /src/workspace && bazel test -k
+#         //toxic/...

@@ -1,0 +1,19 @@
+---
+version: 2
+
+workflows:
+  version: 2
+  circleci:
+    jobs:
+      - bazel-opt
+
+jobs:
+  bazel-opt:
+    working_directory: /tmp/cirrus-ci-build
+    docker:
+      - image: toxchat/toktok-stack:latest-release
+
+    steps:
+      - checkout
+      - run: /src/workspace/tools/inject-repo toxic
+      - run: cd /src/workspace && bazel test -k //toxic/...
