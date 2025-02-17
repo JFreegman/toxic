@@ -1,4 +1,4 @@
-name: release
+name: draft
 
 on:
   push:
@@ -6,6 +6,11 @@ on:
   pull_request_target:
     branches: [master]
     types: [opened, reopened, synchronize]
+
+# Cancel old builds when pushing new commits.
+concurrency:
+  group: draft-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   release:
