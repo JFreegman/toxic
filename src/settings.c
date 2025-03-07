@@ -1102,6 +1102,7 @@ void settings_reload(Toxic *toxic)
     }
 
     free_ptr_array((void **) client_data->blocked_words);
+    client_data->blocked_words = NULL;
 
     ret = settings_load_blocked_words(client_data, run_opts);
 
