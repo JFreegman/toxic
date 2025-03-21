@@ -1159,6 +1159,12 @@ static void conference_onDraw(ToxWindow *self, Toxic *toxic)
 
     curs_set(1);
 
+    if (self->x != x2 && !self->scroll_pause) {
+        line_info_reset_start(self, ctx->hst);
+    }
+
+    self->x = x2;
+
     if (ctx->len > 0) {
         mvwprintw(ctx->linewin, 0, 0, "%ls", &ctx->line[ctx->start]);
     }

@@ -2116,6 +2116,10 @@ static void groupchat_onDraw(ToxWindow *self, Toxic *toxic)
 
     if (self->x != x2) {
         groupchat_update_statusbar_topic(self, toxic->tox);
+
+        if (!self->scroll_pause) {
+            line_info_reset_start(self, ctx->hst);
+        }
     }
 
     draw_groupchat_top_bar(self, toxic, x2);
