@@ -17,6 +17,7 @@
 #include "friendlist.h"
 #include "groupchats.h"
 #include "misc_tools.h"
+#include "term_mplex.h"
 #include "notify.h"
 #include "toxic.h"
 #include "windows.h"
@@ -667,6 +668,7 @@ int settings_load_blocked_words(Client_Data *client_data, const Run_Options *run
     const int list_size = config_setting_length(setting);
 
     if (list_size <= 0) {
+        config_destroy(cfg);
         return 0;
     }
 
@@ -675,6 +677,7 @@ int settings_load_blocked_words(Client_Data *client_data, const Run_Options *run
 
     if (words_list == NULL) {
         fprintf(stderr, "config error: failed to allocate memory for blocked words list.\n");
+        config_destroy(cfg);
         return -3;
     }
 
@@ -1108,6 +1111,10 @@ void settings_reload(Toxic *toxic)
 
     if (ret < 0) {
         fprintf(stderr, "Failed to reload blocked words list (error %d)\n", ret);
+    }
+
+    if (init_mplex_away_timer(toxic) == -1) {
+        fprintf(stderr, "Failed to initialize mplex auto-away.\n");
     }
 
     endwin();

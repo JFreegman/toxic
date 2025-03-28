@@ -56,6 +56,7 @@ typedef struct Client_Data {
     char *block_path;
     char **blocked_words;
     size_t num_blocked_words;
+    bool mplex_auto_away_initialized;
 } Client_Data;
 
 typedef struct ToxAV ToxAV;
