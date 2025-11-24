@@ -66,8 +66,8 @@ void sleep_thread(long int usec)
     struct timespec req;
     struct timespec rem;
 
-    req.tv_sec = 0;
-    req.tv_nsec = usec * 1000L;
+    req.tv_sec = usec / (1000L * 1000L);
+    req.tv_nsec = (usec - (req.tv_sec * 1000L * 1000L)) * 1000L;
 
     if (nanosleep(&req, &rem) == -1) {
         if (nanosleep(&rem, NULL) == -1) {
