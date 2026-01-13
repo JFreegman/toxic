@@ -32,7 +32,6 @@
 extern struct Winthread Winthread;
 
 extern FriendsList Friends;
-FriendRequests FrndRequests;
 
 /* Array of global command names used for tab completion. */
 static const char *const glob_cmd_list[] = {
@@ -167,23 +166,23 @@ Tox_Connection prompt_selfConnectionStatus(Toxic *toxic)
 
 /* Adds friend request to pending friend requests.
    Returns request number on success, -1 if queue is full. */
-static int add_friend_request(const char *public_key, const char *data)
+static int add_friend_request(Toxic *toxic, const char *public_key, const char *data)
 {
-    if (FrndRequests.max_idx >= MAX_FRIEND_REQUESTS) {
+    if (toxic->frnd_requests.max_idx >= MAX_FRIEND_REQUESTS) {
         return -1;
     }
 
-    for (int i = 0; i <= FrndRequests.max_idx; ++i) {
-        if (!FrndRequests.request[i].active) {
-            FrndRequests.request[i].active = true;
-            memcpy(FrndRequests.request[i].key, public_key, TOX_PUBLIC_KEY_SIZE);
-            snprintf(FrndRequests.request[i].msg, sizeof(FrndRequests.request[i].msg), "%s", data);
+    for (int i = 0; i <= toxic->frnd_requests.max_idx; ++i) {
+        if (!toxic->frnd_requests.request[i].active) {
+            toxic->frnd_requests.request[i].active = true;
+            memcpy(toxic->frnd_requests.request[i].key, public_key, TOX_PUBLIC_KEY_SIZE);
+            snprintf(toxic->frnd_requests.request[i].msg, sizeof(toxic->frnd_requests.request[i].msg), "%s", data);
 
-            if (i == FrndRequests.max_idx) {
-                ++FrndRequests.max_idx;
+            if (i == toxic->frnd_requests.max_idx) {
+                ++toxic->frnd_requests.max_idx;
             }
 
-            ++FrndRequests.num_requests;
+            ++toxic->frnd_requests.num_requests;
 
             return i;
         }
@@ -574,7 +573,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
                       "in your list. This may be an impersonation attempt, or it may have occurred by chance.");
     }
 
-    const int n = add_friend_request(key, data);
+    const int n = add_friend_request(toxic, key, data);
 
     if (n == -1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend request queue is full. Discarding request.");

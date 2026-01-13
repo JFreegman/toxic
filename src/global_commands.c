@@ -55,13 +55,13 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    if (!FrndRequests.request[req].active) {
+    if (!toxic->frnd_requests.request[req].active) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
 
     Tox_Err_Friend_Add err;
-    uint32_t friendnum = tox_friend_add_norequest(tox, FrndRequests.request[req].key, &err);
+    uint32_t friendnum = tox_friend_add_norequest(tox, toxic->frnd_requests.request[req].key, &err);
 
     if (err != TOX_ERR_FRIEND_ADD_OK) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to add friend (error %d\n)", err);
@@ -71,20 +71,20 @@ void cmd_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         on_friend_added(toxic, friendnum, true);
     }
 
-    FrndRequests.request[req] = (struct friend_request) {
+    toxic->frnd_requests.request[req] = (struct friend_request) {
         0
     };
 
     int i;
 
-    for (i = FrndRequests.max_idx; i > 0; --i) {
-        if (FrndRequests.request[i - 1].active) {
+    for (i = toxic->frnd_requests.max_idx; i > 0; --i) {
+        if (toxic->frnd_requests.request[i - 1].active) {
             break;
         }
     }
 
-    FrndRequests.max_idx = i;
-    --FrndRequests.num_requests;
+    toxic->frnd_requests.max_idx = i;
+    --toxic->frnd_requests.num_requests;
 }
 
 void cmd_add_helper(ToxWindow *self, Toxic *toxic, const char *id_bin, const char *msg)
@@ -378,25 +378,25 @@ void cmd_decline(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (
         return;
     }
 
-    if (!FrndRequests.request[req].active) {
+    if (!toxic->frnd_requests.request[req].active) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending friend request with that ID.");
         return;
     }
 
-    FrndRequests.request[req] = (struct friend_request) {
+    toxic->frnd_requests.request[req] = (struct friend_request) {
         0
     };
 
     int i;
 
-    for (i = FrndRequests.max_idx; i > 0; --i) {
-        if (FrndRequests.request[i - 1].active) {
+    for (i = toxic->frnd_requests.max_idx; i > 0; --i) {
+        if (toxic->frnd_requests.request[i - 1].active) {
             break;
         }
     }
 
-    FrndRequests.max_idx = i;
-    --FrndRequests.num_requests;
+    toxic->frnd_requests.max_idx = i;
+    --toxic->frnd_requests.num_requests;
 }
 
 #ifdef GAMES
@@ -986,7 +986,7 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
 
     const Client_Config *c_config = toxic->c_config;
 
-    if (FrndRequests.num_requests == 0) {
+    if (toxic->frnd_requests.num_requests == 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending friend requests.");
         return;
     }
@@ -995,8 +995,8 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
     int j;
     int count = 0;
 
-    for (i = 0; i < FrndRequests.max_idx; ++i) {
-        if (!FrndRequests.request[i].active) {
+    for (i = 0; i < toxic->frnd_requests.max_idx; ++i) {
+        if (!toxic->frnd_requests.request[i].active) {
             continue;
         }
 
@@ -1004,14 +1004,14 @@ void cmd_requests(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
 
         for (j = 0; j < TOX_PUBLIC_KEY_SIZE; ++j) {
             char d[3];
-            snprintf(d, sizeof(d), "%02X", FrndRequests.request[i].key[j] & 0xff);
+            snprintf(d, sizeof(d), "%02X", toxic->frnd_requests.request[i].key[j] & 0xff);
             strcat(id, d);
         }
 
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%d : %s", i, id);
-        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", FrndRequests.request[i].msg);
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", toxic->frnd_requests.request[i].msg);
 
-        if (++count < FrndRequests.num_requests) {
+        if (++count < toxic->frnd_requests.num_requests) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, " ");
         }
     }

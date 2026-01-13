@@ -63,6 +63,20 @@ typedef struct ToxAV ToxAV;
 typedef struct ToxWindow ToxWindow;
 typedef struct Run_Options Run_Options;
 
+#define MAX_FRIEND_REQUESTS 20
+
+struct friend_request {
+    bool active;
+    char msg[TOX_MAX_FRIEND_REQUEST_LENGTH + 1];
+    uint8_t key[TOX_PUBLIC_KEY_SIZE];
+};
+
+typedef struct FriendRequests {
+    int max_idx;
+    int num_requests;
+    struct friend_request request[MAX_FRIEND_REQUESTS];
+} FriendRequests;
+
 typedef struct Windows {
     ToxWindow  **list;
     uint16_t   count;
@@ -85,6 +99,8 @@ typedef struct Toxic {
 
     ToxWindow     *home_window;
     Windows       *windows;
+
+    FriendRequests frnd_requests;
 } Toxic;
 
 typedef struct Init_Queue Init_Queue;
