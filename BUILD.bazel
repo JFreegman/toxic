@@ -20,6 +20,7 @@ COPTS = [
         "-DAUDIO",
         "-DVIDEO",
         "-DPYTHON",
+        "-DTOX_EXPERIMENTAL",
     ],
     "//conditions:default": [],
 })

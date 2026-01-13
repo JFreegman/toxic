@@ -1,6 +1,6 @@
 /*  line_info.h
  *
- *  Copyright (C) 2014-2024 Toxic All Rights Reserved.
+ *  Copyright (C) 2014-2026 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic. Toxic is free software licensed
  *  under the GNU General Public License 3.0.
@@ -128,6 +128,7 @@ uint16_t line_info_add_msg(wchar_t *buf, size_t buf_size, const char *msg);
 
 #ifdef __cplusplus
 } /* extern "C" */
+
 #endif /* __cplusplus */
 
 #endif /* LINE_INFO_H */

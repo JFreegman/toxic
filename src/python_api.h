@@ -1,7 +1,7 @@
 /*  python_api.h
  *
  *  Copyright (C) 2017 Jakob Kreuze <jakob@memeware.net>
- *  Copyright (C) 2017-2024 Toxic All Rights Reserved.
+ *  Copyright (C) 2017-2026 Toxic All Rights Reserved.
  *
  *  This file is part of Toxic. Toxic is free software licensed
  *  under the GNU General Public License 3.0.

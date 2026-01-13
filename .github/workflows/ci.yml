@@ -31,13 +31,13 @@ jobs:
             pkg-config &&
           git clone --depth=1 --recursive https://github.com/TokTok/c-toxcore &&
           cd c-toxcore &&
-          cmake . -B_build -DBOOTSTRAP_DAEMON=OFF &&
+          cmake . -B_build -DBOOTSTRAP_DAEMON=OFF -DEXPERIMENTAL_API=ON &&
           cd _build &&
           make -j4 &&
           sudo make install
 
       - name: Build toxic
-        run: USER_CFLAGS=-Werror make -j4
+        run: USER_CFLAGS=-Werror make -j4 ENABLE_TOX_EXPERIMENTAL=1
 
   build-static:
     runs-on: ubuntu-latest
