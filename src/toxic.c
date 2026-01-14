@@ -141,14 +141,14 @@ void exit_toxic_err(int errcode, const char *errmsg, ...)
 {
     endwin();
 
-    if (freopen("/dev/tty", "w", stderr)) {
-        va_list args;
-        va_start(args, errmsg);
-        vfprintf(stderr, errmsg, args);
-        va_end(args);
+    freopen("/dev/tty", "w", stderr);
 
-        fprintf(stderr, "; toxic session aborted with error code %d\n", errcode);
-    }
+    va_list args;
+    va_start(args, errmsg);
+    vfprintf(stderr, errmsg, args);
+    va_end(args);
+
+    fprintf(stderr, "; toxic session aborted with error code %d\n", errcode);
 
     exit(EXIT_FAILURE);
 }
