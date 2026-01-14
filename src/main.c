@@ -959,15 +959,11 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 
                 Client_Data *client_data = &toxic->client_data;
 
-                if (client_data->data_path) {
-                    free(client_data->data_path);
-                    client_data->data_path = NULL;
-                }
+                free(client_data->data_path);
+                client_data->data_path = NULL;
 
-                if (client_data->block_path) {
-                    free(client_data->block_path);
-                    client_data->block_path = NULL;
-                }
+                free(client_data->block_path);
+                client_data->block_path = NULL;
 
                 client_data->data_path = malloc(strlen(optarg) + 1);
 

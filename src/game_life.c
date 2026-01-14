@@ -533,9 +533,7 @@ static void life_free_cells(LifeState *state)
     }
 
     for (int i = 0; i < state->num_rows; ++i) {
-        if (state->cells[i]) {
-            free(state->cells[i]);
-        }
+        free(state->cells[i]);
     }
 
     free(state->cells);

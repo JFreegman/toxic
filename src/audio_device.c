@@ -171,9 +171,7 @@ DeviceError terminate_devices(void)
             return de_InternalError;
         }
 
-        if (audio_state->current_al_device_name[type] != NULL) {
-            free(audio_state->current_al_device_name[type]);
-        }
+        free(audio_state->current_al_device_name[type]);
     }
 
     free(audio_state);
@@ -431,9 +429,7 @@ DeviceError set_al_device(DeviceType type, int32_t selection)
 
     char **cur_name = &audio_state->current_al_device_name[type];
 
-    if (*cur_name != NULL) {
-        free(*cur_name);
-    }
+    free(*cur_name);
 
     *cur_name = malloc(strlen(name) + 1);
 

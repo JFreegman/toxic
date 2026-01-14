@@ -777,9 +777,7 @@ static bool ignore_list_add_key(GroupChat *chat, const uint8_t *key)
 static void ignore_list_cleanup(GroupChat *chat)
 {
     for (uint16_t i = 0; i < chat->num_ignored; ++i) {
-        if (chat->ignored_list[i] != NULL) {
-            free(chat->ignored_list[i]);
-        }
+        free(chat->ignored_list[i]);
     }
 
     free(chat->ignored_list);

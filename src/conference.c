@@ -536,9 +536,7 @@ static void conference_update_name_list(uint32_t conferencenum)
         return;
     }
 
-    if (chat->name_list) {
-        free(chat->name_list);
-    }
+    free(chat->name_list);
 
     chat->name_list = malloc(chat->num_peers * sizeof(NameListEntry));
 

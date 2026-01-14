@@ -83,9 +83,7 @@ void line_info_cleanup(struct history *hst)
     }
 
     for (size_t i = 0; i < hst->queue_size; ++i) {
-        if (hst->queue[i]) {
-            free(hst->queue[i]);
-        }
+        free(hst->queue[i]);
     }
 
     free(hst);

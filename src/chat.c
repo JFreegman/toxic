@@ -840,9 +840,7 @@ static void chat_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t frien
         return;
     }
 
-    if (toxic->friends->list[friendnumber].conference_invite.key != NULL) {
-        free(toxic->friends->list[friendnumber].conference_invite.key);
-    }
+    free(toxic->friends->list[friendnumber].conference_invite.key);
 
     char *k = malloc(length * sizeof(char));
 
@@ -890,9 +888,7 @@ static void chat_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t friendnum
         return;
     }
 
-    if (toxic->friends->list[friendnumber].group_invite.data) {
-        free(toxic->friends->list[friendnumber].group_invite.data);
-    }
+    free(toxic->friends->list[friendnumber].group_invite.data);
 
     toxic->friends->list[friendnumber].group_invite.data = malloc(length * sizeof(char));
 

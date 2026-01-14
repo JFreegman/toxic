@@ -252,9 +252,7 @@ PyMODINIT_FUNC PyInit_toxic_api(void)
 
 void terminate_python(void)
 {
-    if (python_commands.name != NULL) {
-        free(python_commands.name);
-    }
+    free(python_commands.name);
 
     struct python_registered_func *cur = NULL;
 

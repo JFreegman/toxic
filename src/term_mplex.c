@@ -203,13 +203,8 @@ nomplex:
         pclose(session_info_stream);
     }
 
-    if (dyn_buffer) {
-        free(dyn_buffer);
-    }
-
-    if (socket_path) {
-        free(socket_path);
-    }
+    free(dyn_buffer);
+    free(socket_path);
 
     return 0;
 }
@@ -337,13 +332,8 @@ fail:
         pclose(session_info_stream);
     }
 
-    if (dyn_buffer) {
-        free(dyn_buffer);
-    }
-
-    if (search_str) {
-        free(search_str);
-    }
+    free(dyn_buffer);
+    free(search_str);
 
     return 0;
 }

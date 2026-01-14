@@ -151,9 +151,7 @@ void kill_friendlist(ToxWindow *self, FriendsList *friends, BlockedList *blocked
 #endif
         }
 
-        if (friends->list[i].group_invite.data != NULL) {
-            free(friends->list[i].group_invite.data);
-        }
+        free(friends->list[i].group_invite.data);
     }
 
     realloc_blocklist(blocked, 0);
@@ -848,9 +846,7 @@ static void delete_friend(Toxic *toxic, uint32_t f_num)
         }
     }
 
-    if (friends->list[f_num].conference_invite.key != NULL) {
-        free(friends->list[f_num].conference_invite.key);
-    }
+    free(friends->list[f_num].conference_invite.key);
 
     clear_friendlist_index(friends, f_num);
 
