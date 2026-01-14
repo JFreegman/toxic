@@ -659,7 +659,7 @@ static void prompt_init_log(Toxic *toxic)
     char myid[TOX_ADDRESS_SIZE];
     tox_self_get_address(toxic->tox, (uint8_t *) myid);
 
-    if (log_init(ctx->log, toxic->c_config, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
+    if (log_init(ctx->log, toxic->c_config, toxic->paths, self->name, myid, NULL, LOG_TYPE_PROMPT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }

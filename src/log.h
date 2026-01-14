@@ -9,6 +9,7 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include "paths.h"
 #include "settings.h"
 
 struct chatlog {
@@ -44,9 +45,8 @@ typedef enum Log_Hint {
  * Return 0 on success.
  * Return -1 on failure.
  */
-int log_init(struct chatlog *log, const Client_Config *c_config, const char *name, const char *selfkey,
-             const char *otherkey,
-             Log_Type type);
+int log_init(struct chatlog *log, const Client_Config *c_config, const Paths *paths, const char *name,
+             const char *selfkey, const char *otherkey, Log_Type type);
 
 /* Writes a message to the log.
  *
@@ -88,7 +88,7 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
  * Return 0 on success or if no log exists.
  * Return -1 on failure.
  */
-int rename_logfile(Windows *windows, const Client_Config *c_config, const char *src, const char *dest,
-                   const char *selfkey, const char *otherkey, uint16_t window_id);
+int rename_logfile(Windows *windows, const Client_Config *c_config, const Paths *paths, const char *src,
+                   const char *dest, const char *selfkey, const char *otherkey, uint16_t window_id);
 
 #endif /* LOG_H */

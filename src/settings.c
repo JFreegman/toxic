@@ -361,7 +361,7 @@ static void set_key_binding(int *key, const char **bind)
     }
 }
 
-bool settings_load_config_file(Run_Options *run_opts, const char *data_path)
+bool settings_load_config_file(Run_Options *run_opts, const Paths *paths, const char *data_path)
 {
     char tmp_path[MAX_STR_SIZE] = {0};
 
@@ -384,7 +384,7 @@ bool settings_load_config_file(Run_Options *run_opts, const char *data_path)
 
         snprintf(tmp_path, sizeof(tmp_path), "%s%s", tmp_data, TOXIC_CONF_FILE_EXT);
     } else {
-        char *user_config_dir = get_user_config_dir();
+        char *user_config_dir = get_user_config_dir(paths);
         snprintf(tmp_path, sizeof(tmp_path), "%s%stoxic%s", user_config_dir, CONFIGDIR, TOXIC_CONF_FILE_EXT);
         free(user_config_dir);
     }

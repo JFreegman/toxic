@@ -344,13 +344,13 @@ static int update_DHT_nodeslist(const Run_Options *run_opts, const char *nodes_p
     return 1;
 }
 
-static void get_nodeslist_path(const Run_Options *run_opts, char *buf, size_t buf_size)
+static void get_nodeslist_path(const Run_Options *run_opts, const Paths *paths, char *buf, size_t buf_size)
 {
     char *config_dir = NULL;
 
     if (!string_is_empty(run_opts->nodes_path)) {
         snprintf(buf, buf_size, "%s", run_opts->nodes_path);
-    } else if ((config_dir = get_user_config_dir()) != NULL) {
+    } else if ((config_dir = get_user_config_dir(paths)) != NULL) {
         snprintf(buf, buf_size, "%s%s%s", config_dir, CONFIGDIR, DEFAULT_NODES_FILENAME);
         free(config_dir);
     } else {
@@ -508,7 +508,7 @@ static void *load_nodeslist_thread(void *data)
     }
 
     char nodes_path[PATH_MAX];
-    get_nodeslist_path(toxic->run_opts, nodes_path, sizeof(nodes_path));
+    get_nodeslist_path(toxic->run_opts, toxic->paths, nodes_path, sizeof(nodes_path));
 
     FILE *fp = NULL;
 

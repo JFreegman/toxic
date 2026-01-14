@@ -331,12 +331,13 @@ static int complete_path(ToxWindow *self, Toxic *toxic, const char *const *list,
 }
 
 /* Transforms a tab complete starting with the shorthand "~" into the full home directory. */
-static void complete_home_dir(ToxWindow *self, char *path, int pathsize, const char *cmd, int cmdlen)
+static void complete_home_dir(ToxWindow *self, const Paths *paths, char *path, int pathsize,
+                              const char *cmd, int cmdlen)
 {
     ChatContext *ctx = self->chatwin;
 
     char homedir[MAX_STR_SIZE] = {0};
-    get_home_dir(homedir, sizeof(homedir));
+    get_home_dir(paths, homedir, sizeof(homedir));
 
     char newline[MAX_STR_SIZE + 1];
     snprintf(newline, sizeof(newline), "%s %s%s", cmd, homedir, path + 1);
@@ -394,7 +395,7 @@ int dir_match(ToxWindow *self, Toxic *toxic, const wchar_t *line, const wchar_t 
     }
 
     if (b_path[0] == '~') {
-        complete_home_dir(self, b_path, sizeof(b_path) - 1, b_cmd, strlen(b_cmd) + 2);
+        complete_home_dir(self, toxic->paths, b_path, sizeof(b_path) - 1, b_cmd, strlen(b_cmd) + 2);
     }
 
     int si = char_rfind(b_path, '/', strlen(b_path));

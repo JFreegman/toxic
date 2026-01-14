@@ -20,6 +20,7 @@
 #include <tox/tox.h>
 
 #include "execute.h"
+#include "paths.h"
 #include "settings.h"
 #include "term_mplex.h"
 #include "toxic.h"
@@ -147,13 +148,13 @@ static char *extract_socket_path(const char *info)
     return strcpy(path, pos);
 }
 
-static int detect_gnu_screen(void)
+static int detect_gnu_screen(const Paths *paths)
 {
     FILE *session_info_stream = NULL;
     char *socket_name = NULL, *socket_path = NULL;
     char *dyn_buffer = NULL;
 
-    socket_name = getenv("STY");
+    socket_name = paths ? paths->screen_socket : NULL;
 
     if (!socket_name) {
         goto nomplex;
@@ -213,9 +214,9 @@ nomplex:
     return 0;
 }
 
-static int detect_tmux(void)
+static int detect_tmux(const Paths *paths)
 {
-    char *tmux_env = getenv("TMUX"), *pos;
+    char *tmux_env = paths ? paths->tmux_socket : NULL, *pos;
 
     if (!tmux_env) {
         return 0;
@@ -242,10 +243,10 @@ static int detect_tmux(void)
    Returns 1 if present, 0 otherwise. This value can be used to determine
    whether an auto-away detection timer is needed.
  */
-static int detect_mplex(void)
+static int detect_mplex(const Paths *paths)
 {
     /* try screen, and if fails try tmux */
-    return detect_gnu_screen() || detect_tmux();
+    return detect_gnu_screen(paths) || detect_tmux(paths);
 }
 
 /* Detects gnu screen session attached/detached by examining permissions of
@@ -437,12 +438,12 @@ _Noreturn static void *mplex_timer_thread(void *data)
 
 int init_mplex_away_timer(Toxic *toxic)
 {
-    if (!detect_mplex()) {
-        return 0;
-    }
-
     if (toxic == NULL) {
         return -1;
+    }
+
+    if (!detect_mplex(toxic->paths)) {
+        return 0;
     }
 
     if (toxic->client_data.mplex_auto_away_initialized) {

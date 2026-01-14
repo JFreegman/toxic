@@ -336,7 +336,7 @@ static void chat_onNickRefresh(ToxWindow *self, Toxic *toxic)
     char other_key[TOX_PUBLIC_KEY_SIZE];
 
     if (get_friend_public_key(other_key, self->num)) {
-        if (rename_logfile(toxic->windows, toxic->c_config, statusbar->nick, new_name, self_key, other_key,
+        if (rename_logfile(toxic->windows, toxic->c_config, toxic->paths, statusbar->nick, new_name, self_key, other_key,
                            self->id) != 0) {
             fprintf(stderr, "failed to rename logfile\n");
         }
@@ -1678,7 +1678,7 @@ static void chat_init_log(ToxWindow *self, Toxic *toxic, const char *self_nick)
     char myid[TOX_ADDRESS_SIZE];
     tox_self_get_address(tox, (uint8_t *) myid);
 
-    if (log_init(ctx->log, c_config, self_nick, myid, Friends.list[self->num].pub_key, LOG_TYPE_CHAT) != 0) {
+    if (log_init(ctx->log, c_config, toxic->paths, self_nick, myid, Friends.list[self->num].pub_key, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to initialize chat log.");
         return;
     }

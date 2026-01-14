@@ -62,6 +62,7 @@ typedef struct Client_Data {
 typedef struct ToxAV ToxAV;
 typedef struct ToxWindow ToxWindow;
 typedef struct Run_Options Run_Options;
+typedef struct Paths Paths;
 
 #define MAX_FRIEND_REQUESTS 20
 
@@ -101,6 +102,7 @@ typedef struct Toxic {
     Windows       *windows;
 
     FriendRequests frnd_requests;
+    Paths         *paths;
 } Toxic;
 
 typedef struct Init_Queue Init_Queue;

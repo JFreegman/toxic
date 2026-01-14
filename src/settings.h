@@ -13,6 +13,7 @@
 
 #include <tox/tox.h>
 
+#include "paths.h"
 #include "run_options.h"
 #include "toxic_constants.h"
 
@@ -121,7 +122,7 @@ typedef struct Windows Windows;
  *
  * Returns true if config file is successfully loaded.
  */
-bool settings_load_config_file(Run_Options *run_opts, const char *data_path);
+bool settings_load_config_file(Run_Options *run_opts, const Paths *paths, const char *data_path);
 
 /*
  * Loads general toxic settings from the toxic config file pointed to by `patharg'.

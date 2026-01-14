@@ -31,8 +31,8 @@
  * Return path length on success.
  * Return -1 if the path is too long.
  */
-static int create_log_path(const Client_Config *c_config, char *dest, int destsize, const char *name,
-                           const char *selfkey, const char *otherkey)
+static int create_log_path(const Client_Config *c_config, const Paths *paths, char *dest, int destsize,
+                           const char *name, const char *selfkey, const char *otherkey)
 {
     if (!valid_nick(name)) {
         name = UNKNOWN_NAME;
@@ -41,7 +41,7 @@ static int create_log_path(const Client_Config *c_config, char *dest, int destsi
     const char *namedash = otherkey ? "-" : "";
     const char *set_path = c_config->chatlogs_path;
 
-    char *user_config_dir = get_user_config_dir();
+    char *user_config_dir = get_user_config_dir(paths);
     int path_len = strlen(name) + strlen(".log") + strlen("-") + strlen(namedash);
     path_len += strlen(set_path) ? *set_path : strlen(user_config_dir) + strlen(LOGDIR);
 
@@ -85,8 +85,8 @@ static int create_log_path(const Client_Config *c_config, char *dest, int destsi
  * Return 0 on success.
  * Return -1 on failure.
  */
-static int init_logging_session(const Client_Config *c_config, const char *name, const char *selfkey,
-                                const char *otherkey, struct chatlog *log, Log_Type type)
+static int init_logging_session(const Client_Config *c_config, const Paths *paths, const char *name,
+                                const char *selfkey, const char *otherkey, struct chatlog *log, Log_Type type)
 {
     if (log == NULL) {
         return -1;
@@ -98,7 +98,7 @@ static int init_logging_session(const Client_Config *c_config, const char *name,
 
     char log_path[MAX_STR_SIZE];
 
-    const int path_len = create_log_path(c_config, log_path, sizeof(log_path), name, selfkey, otherkey);
+    const int path_len = create_log_path(c_config, paths, log_path, sizeof(log_path), name, selfkey, otherkey);
 
     if (path_len == -1 || path_len >= sizeof(log->path)) {
         return -1;
@@ -219,8 +219,8 @@ int log_enable(struct chatlog *log)
  * Return 0 on success.
  * Return -1 on failure.
  */
-int log_init(struct chatlog *log, const Client_Config *c_config, const char *name, const char *selfkey,
-             const char *otherkey, Log_Type type)
+int log_init(struct chatlog *log, const Client_Config *c_config, const Paths *paths, const char *name,
+             const char *selfkey, const char *otherkey, Log_Type type)
 {
     if (log == NULL) {
         return -1;
@@ -231,7 +231,7 @@ int log_init(struct chatlog *log, const Client_Config *c_config, const char *nam
         return -1;
     }
 
-    if (init_logging_session(c_config, name, selfkey, otherkey, log, type) == -1) {
+    if (init_logging_session(c_config, paths, name, selfkey, otherkey, log, type) == -1) {
         return -1;
     }
 
@@ -625,8 +625,8 @@ int load_chat_history(struct chatlog *log, ToxWindow *self, const Client_Config 
  * Return 0 on success or if no log exists.
  * Return -1 on failure.
  */
-int rename_logfile(Windows *windows, const Client_Config *c_config, const char *src, const char *dest,
-                   const char *selfkey, const char *otherkey, uint16_t window_id)
+int rename_logfile(Windows *windows, const Client_Config *c_config, const Paths *paths, const char *src,
+                   const char *dest, const char *selfkey, const char *otherkey, uint16_t window_id)
 {
     ToxWindow *toxwin = get_window_pointer_by_id(windows, window_id);
     struct chatlog *log = NULL;
@@ -650,16 +650,16 @@ int rename_logfile(Windows *windows, const Client_Config *c_config, const char *
     char newpath[MAX_STR_SIZE];
     char oldpath[MAX_STR_SIZE];
 
-    if (create_log_path(c_config, oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
+    if (create_log_path(c_config, paths, oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
         goto on_error;
     }
 
     if (!file_exists(oldpath)) {  // still need to rename path
-        init_logging_session(c_config, dest, selfkey, otherkey, log, LOG_TYPE_CHAT);
+        init_logging_session(c_config, paths, dest, selfkey, otherkey, log, LOG_TYPE_CHAT);
         return 0;
     }
 
-    const int new_path_len = create_log_path(c_config, newpath, sizeof(newpath), dest, selfkey, otherkey);
+    const int new_path_len = create_log_path(c_config, paths, newpath, sizeof(newpath), dest, selfkey, otherkey);
 
     if (new_path_len == -1 || new_path_len >= MAX_STR_SIZE) {
         goto on_error;

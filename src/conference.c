@@ -170,7 +170,8 @@ static void init_conference_logging(ToxWindow *self, Toxic *toxic, uint32_t conf
     char conference_id[TOX_CONFERENCE_ID_SIZE];
     tox_conference_get_id(tox, conferencenum, (uint8_t *) conference_id);
 
-    if (log_init(ctx->log, c_config, conferences[self->num].title, my_id, conference_id, LOG_TYPE_CHAT) != 0) {
+    if (log_init(ctx->log, c_config, toxic->paths, conferences[self->num].title,
+                 my_id, conference_id, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }
@@ -323,7 +324,7 @@ void conference_rename_log_path(Toxic *toxic, uint32_t conferencenum, const char
     char conference_id[TOX_CONFERENCE_ID_SIZE];
     tox_conference_get_id(toxic->tox, conferencenum, (uint8_t *) conference_id);
 
-    if (rename_logfile(toxic->windows, toxic->c_config, chat->title, new_title, myid, conference_id,
+    if (rename_logfile(toxic->windows, toxic->c_config, toxic->paths, chat->title, new_title, myid, conference_id,
                        chat->window_id) != 0) {
         fprintf(stderr, "Failed to rename conference log to '%s'\n", new_title);
     }

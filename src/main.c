@@ -48,6 +48,7 @@
 #include "misc_tools.h"
 #include "name_lookup.h"
 #include "notify.h"
+#include "paths.h"
 #include "prompt.h"
 #include "run_options.h"
 #include "settings.h"
@@ -1128,9 +1129,9 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
  *
  * Exits the process with an error on failure.
  */
-static void init_default_data_files(Client_Data *client_data)
+static void init_default_data_files(Client_Data *client_data, const Paths *paths)
 {
-    char *user_config_dir = get_user_config_dir();
+    char *user_config_dir = get_user_config_dir(paths);
 
     if (user_config_dir == NULL) {
         exit_toxic_err(FATALERR_FILEOP, "failed in init_default_data_files()");
@@ -1205,6 +1206,16 @@ static Toxic *toxic_init(void)
 
     toxic->windows = tmp_windows;
 
+    toxic->paths = paths_init();
+
+    if (toxic->paths == NULL) {
+        free(toxic->c_config);
+        free(toxic->run_opts);
+        free(toxic->windows);
+        free(toxic);
+        return NULL;
+    }
+
     return toxic;
 }
 
@@ -1248,7 +1259,7 @@ int main(int argc, char **argv)
     }
 
     if (!run_opts->use_custom_data) {
-        init_default_data_files(&toxic->client_data);
+        init_default_data_files(&toxic->client_data, toxic->paths);
     }
 
     const bool datafile_exists = file_exists(toxic->client_data.data_path);
@@ -1260,7 +1271,7 @@ int main(int argc, char **argv)
         first_time_encrypt(&toxic->client_data, init_q, "Encrypt existing data file? Y/n (q to quit)");
     }
 
-    if (!settings_load_config_file(run_opts, toxic->client_data.data_path)) {
+    if (!settings_load_config_file(run_opts, toxic->paths, toxic->client_data.data_path)) {
         init_queue_add(init_q, "Failed to load config file");
     }
 

@@ -7,7 +7,6 @@
  */
 
 #include <errno.h>
-#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,29 +19,15 @@
 #include "toxic.h"
 
 /* get the user's home directory. */
-void get_home_dir(char *home, int size)
+void get_home_dir(const Paths *paths, char *home, int size)
 {
-    struct passwd pwd;
-    struct passwd *pwdbuf;
-    const char *hmstr;
-    char buf[NSS_BUFLEN_PASSWD];
-
-    int rc = getpwuid_r(getuid(), &pwd, buf, NSS_BUFLEN_PASSWD, &pwdbuf);
-
-    if (rc == 0) {
-        hmstr = pwd.pw_dir;
+    if (paths && paths->home_dir) {
+        snprintf(home, size, "%s", paths->home_dir);
     } else {
-        hmstr = getenv("HOME");
-
-        if (hmstr == NULL) {
-            return;
+        if (size > 0) {
+            home[0] = '\0';
         }
-
-        snprintf(buf, sizeof(buf), "%s", hmstr);
-        hmstr = buf;
     }
-
-    snprintf(home, size, "%s", hmstr);
 }
 
 /**
@@ -52,10 +37,10 @@ void get_home_dir(char *home, int size)
  *
  * @return The users config dir or NULL on error.
  */
-char *get_user_config_dir(void)
+char *get_user_config_dir(const Paths *paths)
 {
     char home[NSS_BUFLEN_PASSWD] = {0};
-    get_home_dir(home, sizeof(home));
+    get_home_dir(paths, home, sizeof(home));
 
     char *user_config_dir = NULL;
     size_t len = 0;
@@ -71,7 +56,7 @@ char *get_user_config_dir(void)
     snprintf(user_config_dir, len, "%s/Library/Application Support", home);
 # else /* __APPLE__ */
 
-    const char *tmp = getenv("XDG_CONFIG_HOME");
+    const char *tmp = paths ? paths->xdg_config_home : NULL;
 
     if (tmp == NULL) {
         len = strlen(home) + strlen("/.config") + 1;

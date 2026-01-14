@@ -20,17 +20,20 @@
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
 #endif
 
+#include "paths.h"
+
 /**
  * @brief Get the user's config directory.
  *
  * This is without a trailing slash. Resulting string must be freed.
  *
+ * @param paths The paths object.
  * @return The users config dir or NULL on error.
  */
-char *get_user_config_dir(void);
+char *get_user_config_dir(const Paths *paths);
 
 /* get the user's home directory. */
-void get_home_dir(char *home, int size);
+void get_home_dir(const Paths *paths, char *home, int size);
 
 /* Creates the config and chatlog directories.
  *

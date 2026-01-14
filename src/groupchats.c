@@ -328,7 +328,7 @@ static void init_groupchat_log(ToxWindow *self, Toxic *toxic, uint32_t groupnumb
         return;
     }
 
-    if (log_init(ctx->log, c_config, chat->group_name, my_id, chat_id, LOG_TYPE_CHAT) != 0) {
+    if (log_init(ctx->log, c_config, toxic->paths, chat->group_name, my_id, chat_id, LOG_TYPE_CHAT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Warning: Log failed to initialize.");
         return;
     }

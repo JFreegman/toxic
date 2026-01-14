@@ -48,6 +48,7 @@
 #include "misc_tools.h"
 #include "name_lookup.h"
 #include "notify.h"
+#include "paths.h"
 #include "prompt.h"
 #include "run_options.h"
 #include "settings.h"
@@ -87,6 +88,7 @@ static void kill_toxic(Toxic *toxic)
     free(toxic->c_config);
     free(toxic->run_opts);
     free(toxic->windows);
+    paths_free(toxic->paths);
     free(toxic);
 }
 
