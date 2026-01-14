@@ -34,11 +34,13 @@
 
 static uint8_t blocklist_view = 0;   /* 0 if we're in friendlist view, 1 if we're in blocklist view */
 
-static FriendsList Friends;
-
 void init_friendlist(Toxic *toxic)
 {
-    toxic->friends = &Friends;
+    toxic->friends = calloc(1, sizeof(FriendsList));
+
+    if (toxic->friends == NULL) {
+        exit_toxic_err(FATALERR_MEMORY, "failed in init_friendlist");
+    }
 }
 
 static struct Blocked {
@@ -350,15 +352,15 @@ int load_blocklist(char *path)
 }
 
 #define S_WEIGHT 100000
-static FriendsList *sorting_friends;
-static int index_name_cmp(const void *n1, const void *n2)
+static int index_name_cmp(const void *n1, const void *n2, void *arg)
 {
-    int res = qsort_strcasecmp_hlpr(sorting_friends->list[*(const uint32_t *) n1].name,
-                                    sorting_friends->list[*(const uint32_t *) n2].name);
+    FriendsList *friends = arg;
+    int res = qsort_strcasecmp_hlpr(friends->list[*(const uint32_t *) n1].name,
+                                    friends->list[*(const uint32_t *) n2].name);
 
     /* Use weight to make qsort always put online friends before offline */
-    res = sorting_friends->list[*(const uint32_t *) n1].connection_status ? (res - S_WEIGHT) : (res + S_WEIGHT);
-    res = sorting_friends->list[*(const uint32_t *) n2].connection_status ? (res + S_WEIGHT) : (res - S_WEIGHT);
+    res = friends->list[*(const uint32_t *) n1].connection_status ? (res - S_WEIGHT) : (res + S_WEIGHT);
+    res = friends->list[*(const uint32_t *) n2].connection_status ? (res + S_WEIGHT) : (res - S_WEIGHT);
 
     return res;
 }
@@ -376,8 +378,7 @@ void sort_friendlist_index(FriendsList *friends)
     }
 
     if (friends->num_friends > 0) {
-        sorting_friends = friends;
-        qsort(friends->index, friends->num_friends, sizeof(uint32_t), index_name_cmp);
+        toxic_qsort_r(friends->index, friends->num_friends, sizeof(uint32_t), index_name_cmp, friends);
     }
 }
 

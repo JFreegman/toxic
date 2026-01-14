@@ -295,6 +295,32 @@ int qsort_ptr_char_array_helper(const void *str1, const void *str2)
     return strcasecmp(*(const char *const *)str1, *(const char *const *)str2);
 }
 
+struct qsort_r_data {
+    void *arg;
+    int (*compar)(const void *, const void *, void *);
+};
+
+#ifdef __APPLE__
+static int qsort_r_compar_apple(void *thunk, const void *a, const void *b)
+{
+    struct qsort_r_data *data = thunk;
+    return data->compar(a, b, data->arg);
+}
+
+#endif
+
+void toxic_qsort_r(void *base, size_t nmemb, size_t size,
+                   int (*compar)(const void *, const void *, void *),
+                   void *arg)
+{
+#if defined(__APPLE__)
+    struct qsort_r_data data = { arg, compar };
+    qsort_r(base, nmemb, size, &data, qsort_r_compar_apple);
+#else
+    qsort_r(base, nmemb, size, compar, arg);
+#endif
+}
+
 /* List of characters we don't allow in nicks. */
 static const char invalid_nick_chars[] = {':', '/', '\0', '\a', '\b', '\f', '\n', '\r', '\t', '\v'};
 

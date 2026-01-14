@@ -1214,6 +1214,7 @@ static Toxic *toxic_init(void)
         free(toxic->c_config);
         free(toxic->run_opts);
         free(toxic->windows);
+        free(toxic->friends);
         free(toxic);
         return NULL;
     }

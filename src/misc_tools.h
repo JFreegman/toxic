@@ -151,6 +151,17 @@ int qsort_strcasecmp_hlpr(const void *str1, const void *str2);
 /* case-insensitive string compare function for use with qsort */
 int qsort_ptr_char_array_helper(const void *str1, const void *str2);
 
+/* Portable wrapper for qsort_r.
+ *
+ * Signature matches the GNU version:
+ * void qsort_r(void *base, size_t nmemb, size_t size,
+ *             int (*compar)(const void *, const void *, void *),
+ *             void *arg);
+ */
+void toxic_qsort_r(void *base, size_t nmemb, size_t size,
+                   int (*compar)(const void *, const void *, void *),
+                   void *arg);
+
 /* Returns true if nick is valid.
  *
  * A valid toxic nick:
