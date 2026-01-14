@@ -496,7 +496,7 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
     const Client_Config *c_config = toxic->c_config;
     ChatContext *ctx = self->chatwin;
 
-    if (!friend_config_get_show_connection_msg(friendnum)) {
+    if (!friend_config_get_show_connection_msg(toxic->friends, friendnum)) {
         return;
     }
 

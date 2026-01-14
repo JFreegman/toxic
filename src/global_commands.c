@@ -723,7 +723,7 @@ void cmd_log(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
     if (!strcmp(swch, "0") || !strcmp(swch, "off")) {
         if (self->type == WINDOW_TYPE_CHAT) {
-            friend_set_logging_enabled(self->num, false);
+            friend_set_logging_enabled(toxic->friends, self->num, false);
         }
 
         log_disable(log);

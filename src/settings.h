@@ -24,6 +24,7 @@
 
 typedef struct Toxic Toxic;
 typedef struct Client_Data Client_Data;
+typedef struct FriendsList FriendsList;
 
 /* Holds user setting values defined in the toxic config file. */
 typedef struct Client_Config {
@@ -143,7 +144,7 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts);
  *
  * This function will have no effect on friends that are added in the future.
  */
-int settings_load_friends(const Run_Options *run_opts);
+int settings_load_friends(FriendsList *friends, const Run_Options *run_opts);
 
 /*
  * Loads groupchat config settings from the toxic config file pointed to by `patharg`.

@@ -33,7 +33,7 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int arg
     const Client_Config *c_config = toxic->c_config;
 
     const char *msg;
-    const bool auto_accept_files = friend_get_auto_accept_files(self->num);
+    const bool auto_accept_files = friend_get_auto_accept_files(toxic->friends, self->num);
 
     if (argc == 0) {
         if (auto_accept_files) {
@@ -49,10 +49,10 @@ void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int arg
     const char *option = argv[1];
 
     if (!strcmp(option, "1") || !strcmp(option, "on")) {
-        friend_set_auto_file_accept(self->num, true);
+        friend_set_auto_file_accept(toxic->friends, self->num, true);
         msg = "Auto-accepting file transfers has been enabled for this friend";
     } else if (!strcmp(option, "0") || !strcmp(option, "off")) {
-        friend_set_auto_file_accept(self->num, false);
+        friend_set_auto_file_accept(toxic->friends, self->num, false);
         msg = "Auto-accepting file transfers has been disabled for this friend";
     } else {
         msg = "Invalid option. Use \"/autoaccept on\" and \"/autoaccept off\" to toggle auto-file accept";
@@ -408,7 +408,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
     line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Saving file [%ld] as: '%s'", idx,
                   ft->file_path);
 
-    const bool auto_accept_files = friend_get_auto_accept_files(self->num);
+    const bool auto_accept_files = friend_get_auto_accept_files(toxic->friends, self->num);
     const uint32_t line_skip = auto_accept_files ? 4 : 2;
 
     char progline[MAX_STR_SIZE];

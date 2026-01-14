@@ -276,7 +276,7 @@ int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32
             return -3;
         }
 
-        if (get_friend_connection_status(parent->num) == TOX_CONNECTION_NONE) {
+        if (get_friend_connection_status(toxic->friends, parent->num) == TOX_CONNECTION_NONE) {
             game_init_abort(parent, self, toxic->windows, c_config);
             return -2;
         }

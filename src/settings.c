@@ -567,7 +567,7 @@ int settings_load_groups(Windows *windows, const Run_Options *run_opts)
     return 0;
 }
 
-int settings_load_friends(const Run_Options *run_opts)
+int settings_load_friends(FriendsList *friends, const Run_Options *run_opts)
 {
     config_t cfg[1];
     config_init(cfg);
@@ -600,7 +600,7 @@ int settings_load_friends(const Run_Options *run_opts)
         }
 
         if (config_setting_lookup_string(keys, friend_strings.tab_name_color, &str)) {
-            if (!friend_config_set_tab_name_colour(public_key, str)) {
+            if (!friend_config_set_tab_name_colour(friends, public_key, str)) {
                 fprintf(stderr, "config error: failed to set friend tab name color for %s: (color: %s)\n",
                         public_key, str);
             }
@@ -609,7 +609,7 @@ int settings_load_friends(const Run_Options *run_opts)
         int autolog_enabled;
 
         if (config_setting_lookup_bool(keys, friend_strings.autolog, &autolog_enabled)) {
-            if (!friend_config_set_autolog(public_key, autolog_enabled != 0)) {
+            if (!friend_config_set_autolog(friends, public_key, autolog_enabled != 0)) {
                 fprintf(stderr, "config error: failed to apply friend autolog setting for: %s\n", public_key);
             }
         }
@@ -617,7 +617,7 @@ int settings_load_friends(const Run_Options *run_opts)
         int auto_accept_files;
 
         if (config_setting_lookup_bool(keys, friend_strings.auto_accept_files, &auto_accept_files)) {
-            if (!friend_config_set_auto_accept_files(public_key, auto_accept_files != 0)) {
+            if (!friend_config_set_auto_accept_files(friends, public_key, auto_accept_files != 0)) {
                 fprintf(stderr,
                         "config error: failed to apply friend auto-accept filetransfers setting for: %s\n",
                         public_key);
@@ -627,7 +627,7 @@ int settings_load_friends(const Run_Options *run_opts)
         int show_connection_msg;
 
         if (config_setting_lookup_bool(keys, friend_strings.show_connection_msg, &show_connection_msg)) {
-            if (!friend_config_set_show_connection_msg(public_key, show_connection_msg != 0)) {
+            if (!friend_config_set_show_connection_msg(friends, public_key, show_connection_msg != 0)) {
                 fprintf(stderr,
                         "config error: failed to apply friend show connection message setting for: %s\n",
                         public_key);
@@ -635,7 +635,7 @@ int settings_load_friends(const Run_Options *run_opts)
         }
 
         if (config_setting_lookup_string(keys, friend_strings.alias, &str)) {
-            if (!friend_config_set_alias(public_key, str, strlen(str))) {
+            if (!friend_config_set_alias(friends, public_key, str, strlen(str))) {
                 fprintf(stderr, "config error: failed to apply alias '%s' for: %s\n", str, public_key);
             }
         }
@@ -1084,9 +1084,9 @@ void settings_reload(Toxic *toxic)
         fprintf(stderr, "Failed to reload global settings (error %d)\n", ret);
     }
 
-    friend_reset_default_config_settings(c_config);
+    friend_reset_default_config_settings(toxic->friends, c_config);
 
-    ret = settings_load_friends(run_opts);
+    ret = settings_load_friends(toxic->friends, run_opts);
 
     if (ret < 0) {
         fprintf(stderr, "Failed to reload friend settings (error %d)\n", ret);

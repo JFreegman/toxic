@@ -116,7 +116,7 @@ void on_friend_name(Tox *tox, uint32_t friendnumber, const uint8_t *string, size
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
 
-    if (friend_config_alias_is_set(friendnumber)) {
+    if (friend_config_alias_is_set(toxic->friends, friendnumber)) {
         return;
     }
 
@@ -151,7 +151,7 @@ void on_friend_status_message(Tox *tox, uint32_t friendnumber, const uint8_t *st
         ToxWindow *w = windows->list[i];
 
         if (w->onStatusMessageChange != NULL) {
-            w->onStatusMessageChange(w, friendnumber, msg, length);
+            w->onStatusMessageChange(w, toxic, friendnumber, msg, length);
         }
     }
 
@@ -1514,7 +1514,7 @@ void kill_all_windows(Toxic *toxic)
             }
 
             case WINDOW_TYPE_FRIEND_LIST: {
-                kill_friendlist(w, windows, c_config);
+                kill_friendlist(w, toxic->friends, windows, c_config);
                 break;
             }
 

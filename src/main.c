@@ -181,7 +181,7 @@ static void load_friendlist(Toxic *toxic)
         friendlist_onFriendAdded(NULL, toxic, i, false);
     }
 
-    sort_friendlist_index();
+    sort_friendlist_index(toxic->friends);
 }
 
 static void load_groups(Toxic *toxic)
@@ -819,7 +819,7 @@ _Noreturn static void *thread_cqueue(void *data)
             if (w->type == WINDOW_TYPE_CHAT) {
                 cqueue_check_unread(w);
 
-                if (get_friend_connection_status(w->num) != TOX_CONNECTION_NONE) {
+                if (get_friend_connection_status(toxic->friends, w->num) != TOX_CONNECTION_NONE) {
                     cqueue_try_send(w, toxic->tox);
                 }
             }
@@ -1324,7 +1324,7 @@ int main(int argc, char **argv)
     load_groups(toxic);
     load_conferences(toxic);
 
-    const int fs_ret = settings_load_friends(run_opts);
+    const int fs_ret = settings_load_friends(toxic->friends, run_opts);
 
     if (fs_ret != 0) {
         init_queue_add(init_q, "Failed to load friend config settings: error %d", fs_ret);

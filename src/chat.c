@@ -161,7 +161,7 @@ void kill_chat_window(ToxWindow *self, Toxic *toxic)
     free(self->help);
     free(statusbar);
 
-    disable_friend_window(self->num);
+    disable_friend_window(toxic->friends, self->num);
     kill_notifs(self->active_box);
     del_window(self, toxic->windows, toxic->c_config);
 }
@@ -335,7 +335,7 @@ static void chat_onNickRefresh(ToxWindow *self, Toxic *toxic)
 
     char other_key[TOX_PUBLIC_KEY_SIZE];
 
-    if (get_friend_public_key(other_key, self->num)) {
+    if (get_friend_public_key(toxic->friends, other_key, self->num)) {
         if (rename_logfile(toxic->windows, toxic->c_config, toxic->paths, statusbar->nick, new_name, self_key, other_key,
                            self->id) != 0) {
             fprintf(stderr, "failed to rename logfile\n");
@@ -361,8 +361,10 @@ static void chat_onStatusChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox
     statusbar->status = status;
 }
 
-static void chat_onStatusMessageChange(ToxWindow *self, uint32_t num, const char *status, size_t length)
+static void chat_onStatusMessageChange(ToxWindow *self, Toxic *toxic, uint32_t num, const char *status,
+                                       size_t length)
 {
+    UNUSED_VAR(toxic);
     UNUSED_VAR(length);
 
     if (self == NULL) {
@@ -810,7 +812,7 @@ static void chat_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t friendnum, u
                    &self->active_box, self->name, "Incoming file: %s", filename);
     }
 
-    const bool auto_accept_files = friend_get_auto_accept_files(friendnum);
+    const bool auto_accept_files = friend_get_auto_accept_files(toxic->friends, friendnum);
 
     if (auto_accept_files) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Auto-accepting file transfer %zu", ft->index);
@@ -1689,7 +1691,7 @@ static void chat_init_log(ToxWindow *self, Toxic *toxic, const char *self_nick)
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to load chat history.");
     }
 
-    if (friend_get_logging_enabled(self->num)) {
+    if (friend_get_logging_enabled(toxic->friends, self->num)) {
         if (log_enable(ctx->log) != 0) {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to enable chat log.");
         }
@@ -1719,8 +1721,8 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     /* Init statusbar info */
     StatusBar *statusbar = self->stb;
 
-    statusbar->status = get_friend_status(self->num);
-    statusbar->connection = get_friend_connection_status(self->num);
+    statusbar->status = get_friend_status(toxic->friends, self->num);
+    statusbar->connection = get_friend_connection_status(toxic->friends, self->num);
 
     const size_t s_len = tox_friend_get_status_message_size(tox, self->num, NULL);
 
@@ -1758,11 +1760,11 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
 
     line_info_init(ctx->hst);
 
-    const int tab_name_colour = friend_config_get_tab_name_colour(self->num);
+    const int tab_name_colour = friend_config_get_tab_name_colour(toxic->friends, self->num);
     self->colour = tab_name_colour > 0 ? tab_name_colour : WHITE_BAR_FG;
 
-    friend_set_logging_enabled(self->num, friend_config_get_autolog(self->num));
-    friend_set_auto_file_accept(self->num, friend_config_get_auto_accept_files(self->num));
+    friend_set_logging_enabled(toxic->friends, self->num, friend_config_get_autolog(toxic->friends, self->num));
+    friend_set_auto_file_accept(toxic->friends, self->num, friend_config_get_auto_accept_files(toxic->friends, self->num));
 
     chat_init_log(self, toxic, name);
 

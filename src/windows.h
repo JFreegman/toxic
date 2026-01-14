@@ -153,7 +153,7 @@ struct ToxWindow {
     void(*onMessage)(ToxWindow *, Toxic *, uint32_t, Tox_Message_Type, const char *, size_t);
     void(*onNickChange)(ToxWindow *, Toxic *, uint32_t, const char *, size_t);
     void(*onStatusChange)(ToxWindow *, Toxic *, uint32_t, Tox_User_Status);
-    void(*onStatusMessageChange)(ToxWindow *, uint32_t, const char *, size_t);
+    void(*onStatusMessageChange)(ToxWindow *, Toxic *, uint32_t, const char *, size_t);
     void(*onConferenceMessage)(ToxWindow *, Toxic *, uint32_t, uint32_t, Tox_Message_Type, const char *, size_t);
     void(*onConferenceInvite)(ToxWindow *, Toxic *, int32_t, uint8_t, const char *, uint16_t);
     void(*onConferenceNameListChange)(ToxWindow *, Toxic *, uint32_t);

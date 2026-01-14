@@ -117,12 +117,12 @@ void init_friendlist(Toxic *toxic);
 
 ToxWindow *new_friendlist(void);
 void friendlist_onInit(ToxWindow *self, Toxic *toxic);
-void disable_friend_window(uint32_t f_num);
+void disable_friend_window(FriendsList *friends, uint32_t f_num);
 int get_friendnum(uint8_t *name);
-void kill_friendlist(ToxWindow *self, Windows *windows, const Client_Config *c_config);
+void kill_friendlist(ToxWindow *self, FriendsList *friends, Windows *windows, const Client_Config *c_config);
 void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool sort);
-Tox_User_Status get_friend_status(uint32_t friendnumber);
-Tox_Connection get_friend_connection_status(uint32_t friendnumber);
+Tox_User_Status get_friend_status(const FriendsList *friends, uint32_t friendnumber);
+Tox_Connection get_friend_connection_status(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Returns the number of friends in the friend list.
@@ -147,7 +147,7 @@ void friendlist_get_names(const FriendsList *friends, char **names, size_t max_n
 int load_blocklist(char *path);
 
 /* sorts friendlist_index first by connection status then alphabetically */
-void sort_friendlist_index(void);
+void sort_friendlist_index(FriendsList *friends);
 
 /*
  * Returns true if friend associated with `public_key` is in the block list.
@@ -159,12 +159,12 @@ bool friend_is_blocked(const char *public_key);
 /*
  * Enable or disable auto-accepting file transfers for this friend.
  */
-void friend_set_auto_file_accept(uint32_t friendnumber, bool auto_accept);
+void friend_set_auto_file_accept(FriendsList *friends, uint32_t friendnumber, bool auto_accept);
 
 /*
  * Return true if auto-accepting file transfers is enabled for this friend.
  */
-bool friend_get_auto_accept_files(uint32_t friendnumber);
+bool friend_get_auto_accept_files(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Puts a NUL-terminated string representing a friend's name in `buf`. If
@@ -191,17 +191,17 @@ int64_t get_friend_number_name(const FriendsList *friends, const char *name, uin
  *
  * Returns true on success.
  */
-bool get_friend_public_key(char *pk, uint32_t friendnumber);
+bool get_friend_public_key(const FriendsList *friends, char *pk, uint32_t friendnumber);
 
 /*
  * Enable or disable logging for this friend.
  */
-void friend_set_logging_enabled(uint32_t friendnumber, bool enable_log);
+void friend_set_logging_enabled(FriendsList *friends, uint32_t friendnumber, bool enable_log);
 
 /*
  * Return true if logging is currently enabled for this friend.
  */
-bool friend_get_logging_enabled(uint32_t friendnumber);
+bool friend_get_logging_enabled(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Sets the show connection message config option for the friend associated
@@ -209,32 +209,32 @@ bool friend_get_logging_enabled(uint32_t friendnumber);
  *
  * Return true on success.
  */
-bool friend_config_set_show_connection_msg(const char *public_key, bool show_connection_msg);
+bool friend_config_set_show_connection_msg(FriendsList *friends, const char *public_key, bool show_connection_msg);
 
 /*
  * Returns the friend's config setting for showing connection messages.
  */
-bool friend_config_get_show_connection_msg(uint32_t friendnumber);
+bool friend_config_get_show_connection_msg(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Sets the tab name colour config option for the friend associated with `public_key` to `colour`.
  *
  * Return true on success.
  */
-bool friend_config_set_tab_name_colour(const char *public_key, const char *colour);
+bool friend_config_set_tab_name_colour(FriendsList *friends, const char *public_key, const char *colour);
 
 /*
  * Returns a friend's tab name colour.
  * Returns -1 on error.
  */
-int friend_config_get_tab_name_colour(uint32_t friendnumber);
+int friend_config_get_tab_name_colour(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Sets the autolog config option for the friend associated with `public_key`.
  *
  * Return true on success.
  */
-bool friend_config_set_autolog(const char *public_key, bool autolog_enabled);
+bool friend_config_set_autolog(FriendsList *friends, const char *public_key, bool autolog_enabled);
 
 /*
  * Returns the friend's config setting for autologging.
@@ -242,7 +242,7 @@ bool friend_config_set_autolog(const char *public_key, bool autolog_enabled);
  * Note: To determine if logging for a friend is currently enabled,
  * use `friend_get_logging_enabled()`.
  */
-bool friend_config_get_autolog(uint32_t friendnumber);
+bool friend_config_get_autolog(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Sets the auto-accept file transfers config option for the friend associated with
@@ -250,7 +250,7 @@ bool friend_config_get_autolog(uint32_t friendnumber);
  *
  * Return true on success.
  */
-bool friend_config_set_auto_accept_files(const char *public_key, bool autoaccept_files);
+bool friend_config_set_auto_accept_files(FriendsList *friends, const char *public_key, bool autoaccept_files);
 
 /*
  * Returns the friend's config setting for auto-accept file transfers.
@@ -258,19 +258,19 @@ bool friend_config_set_auto_accept_files(const char *public_key, bool autoaccept
  * Note: To determine if auto-accepting files for a friend is currently enabled,
  * use `friend_get_auto_accept_files()`.
  */
-bool friend_config_get_auto_accept_files(uint32_t friendnumber);
+bool friend_config_get_auto_accept_files(const FriendsList *friends, uint32_t friendnumber);
 
 /*
  * Sets the friend's alias.
  *
  * Return true on success.
  */
-bool friend_config_set_alias(const char *public_key, const char *alias, uint16_t length);
+bool friend_config_set_alias(FriendsList *friends, const char *public_key, const char *alias, uint16_t length);
 
 /* Return true if the friend has an alias. */
-bool friend_config_alias_is_set(uint32_t friendnumber);
+bool friend_config_alias_is_set(const FriendsList *friends, uint32_t friendnumber);
 
 /* Sets config settings to global defaults for all friends, ignoring friend-specific settings. */
-void friend_reset_default_config_settings(const Client_Config *c_config);
+void friend_reset_default_config_settings(FriendsList *friends, const Client_Config *c_config);
 
 #endif /* end of include guard: FRIENDLIST_H */
