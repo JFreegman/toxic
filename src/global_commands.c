@@ -204,7 +204,7 @@ void cmd_add(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         id_bin[i] = (char) x;
     }
 
-    if (friend_is_blocked(id_bin)) {
+    if (friend_is_blocked(toxic->blocked, id_bin)) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Friend is in your block list.");
         return;
     }

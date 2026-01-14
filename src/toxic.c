@@ -89,6 +89,7 @@ static void kill_toxic(Toxic *toxic)
     free(toxic->run_opts);
     free(toxic->windows);
     free(toxic->friends);
+    free(toxic->blocked);
     paths_free(toxic->paths);
     free(toxic);
 }

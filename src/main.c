@@ -725,8 +725,8 @@ static bool load_toxic(Toxic *toxic, Init_Queue *init_q)
     init_tox_callbacks(toxic->tox);
     load_friendlist(toxic);
 
-    if (load_blocklist(toxic->client_data.block_path) == -1) {
-        init_queue_add(init_q, "Failed to load block list");
+    if (load_blocklist(toxic->client_data.block_path, toxic->blocked) == -1) {
+        init_queue_add(init_q, "Failed to load block list.");
     }
 
     if (tox_self_get_name_size(toxic->tox) == 0) {
@@ -1215,6 +1215,7 @@ static Toxic *toxic_init(void)
         free(toxic->run_opts);
         free(toxic->windows);
         free(toxic->friends);
+        free(toxic->blocked);
         free(toxic);
         return NULL;
     }

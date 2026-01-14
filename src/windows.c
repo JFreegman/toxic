@@ -1514,7 +1514,7 @@ void kill_all_windows(Toxic *toxic)
             }
 
             case WINDOW_TYPE_FRIEND_LIST: {
-                kill_friendlist(w, toxic->friends, windows, c_config);
+                kill_friendlist(w, toxic->friends, toxic->blocked, windows, c_config);
                 break;
             }
 

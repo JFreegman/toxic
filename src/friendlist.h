@@ -113,13 +113,16 @@ typedef struct FriendsList {
     ToxicFriend *list;
 } FriendsList;
 
+typedef struct BlockedList BlockedList;
+
 void init_friendlist(Toxic *toxic);
 
 ToxWindow *new_friendlist(void);
 void friendlist_onInit(ToxWindow *self, Toxic *toxic);
 void disable_friend_window(FriendsList *friends, uint32_t f_num);
 int get_friendnum(uint8_t *name);
-void kill_friendlist(ToxWindow *self, FriendsList *friends, Windows *windows, const Client_Config *c_config);
+void kill_friendlist(ToxWindow *self, FriendsList *friends, BlockedList *blocked, Windows *windows,
+                     const Client_Config *c_config);
 void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool sort);
 Tox_User_Status get_friend_status(const FriendsList *friends, uint32_t friendnumber);
 Tox_Connection get_friend_connection_status(const FriendsList *friends, uint32_t friendnumber);
@@ -144,7 +147,7 @@ void friendlist_get_names(const FriendsList *friends, char **names, size_t max_n
  *   the client has actually blocked someone).
  * Returns -1 on failure.
  */
-int load_blocklist(char *path);
+int load_blocklist(const char *path, BlockedList *blocked);
 
 /* sorts friendlist_index first by connection status then alphabetically */
 void sort_friendlist_index(FriendsList *friends);
@@ -154,7 +157,7 @@ void sort_friendlist_index(FriendsList *friends);
  *
  * `public_key` must be at least TOX_PUBLIC_KEY_SIZE bytes.
  */
-bool friend_is_blocked(const char *public_key);
+bool friend_is_blocked(const BlockedList *blocked, const char *public_key);
 
 /*
  * Enable or disable auto-accepting file transfers for this friend.

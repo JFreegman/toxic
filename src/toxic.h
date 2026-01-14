@@ -87,6 +87,8 @@ typedef struct Windows {
 
 typedef struct Toxic {
     struct FriendsList *friends;
+    struct BlockedList *blocked;
+    uint8_t blocklist_view;   /* 0 if we're in friendlist view, 1 if we're in blocklist view */
     Tox   *tox;
 #ifdef AUDIO
     ToxAV *av;
