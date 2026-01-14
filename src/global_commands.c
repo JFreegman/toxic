@@ -224,7 +224,7 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     const Client_Config *c_config = toxic->c_config;
 
     if (argc != 1 || strlen(argv[1]) < 3) {
-        avatar_unset(tox);
+        avatar_unset(toxic->friends, tox);
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Avatar has been unset.");
         return;
     }
@@ -246,7 +246,7 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    if (avatar_set(tox, path, len) == -1) {
+    if (avatar_set(toxic->friends, tox, path, len) == -1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                       "Failed to set avatar. Avatars must be in PNG format and may not exceed %d bytes.",
                       MAX_AVATAR_FILE_SIZE);

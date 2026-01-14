@@ -34,7 +34,12 @@
 
 static uint8_t blocklist_view = 0;   /* 0 if we're in friendlist view, 1 if we're in blocklist view */
 
-FriendsList Friends;
+static FriendsList Friends;
+
+void init_friendlist(Toxic *toxic)
+{
+    toxic->friends = &Friends;
+}
 
 static struct Blocked {
     int num_selected;
@@ -409,8 +414,6 @@ static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, To
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     if (num >= Friends.max_idx) {
         return;
     }
@@ -419,7 +422,7 @@ static void friendlist_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, To
         return;
     }
 
-    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[num].num));
 
     if (window_id < 0) {
         fprintf(stderr, "Failed to create new chat window in friendlist_onMessage\n");
@@ -446,7 +449,7 @@ static void friendlist_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_
     } else if (Friends.list[num].connection_status == TOX_CONNECTION_NONE) {
         ++Friends.num_online;
 
-        if (avatar_send(toxic->tox, num) == -1) {
+        if (avatar_send(toxic->friends, toxic->tox, num) == -1) {
             fprintf(stderr, "avatar_send failed for friend %u\n", num);
         }
     }
@@ -648,8 +651,6 @@ static void friendlist_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t frie
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     if (friend_number >= Friends.max_idx) {
         return;
     }
@@ -658,7 +659,7 @@ static void friendlist_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t frie
         return;
     }
 
-    const int window_id = add_window(toxic, new_chat(tox, Friends.list[friend_number].num));
+    const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[friend_number].num));
 
     if (window_id < 0) {
         fprintf(stderr, "Failed to create new chat window in friendlist_onGameInvite\n");
@@ -678,8 +679,6 @@ static void friendlist_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t num, u
     UNUSED_VAR(filename);
     UNUSED_VAR(name_length);
 
-    Tox *tox = toxic->tox;
-
     if (num >= Friends.max_idx) {
         return;
     }
@@ -688,7 +687,7 @@ static void friendlist_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t num, u
         return;
     }
 
-    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[num].num));
 
     if (window_id < 0) {
         fprintf(stderr, "Failed to create new chat window in friendlist_onFileRecv\n");
@@ -711,8 +710,6 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     if (num >= Friends.max_idx) {
         return;
     }
@@ -721,7 +718,7 @@ static void friendlist_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t
         return;
     }
 
-    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[num].num));
 
     if (window_id < 0) {
         fprintf(stderr, "Failed to create new chat window in friendlist_onConferenceInvite\n");
@@ -742,8 +739,6 @@ static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     if (num >= Friends.max_idx) {
         return;
     }
@@ -752,7 +747,7 @@ static void friendlist_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t num
         return;
     }
 
-    const int window_id = add_window(toxic, new_chat(tox, Friends.list[num].num));
+    const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[num].num));
 
     if (window_id < 0) {
         fprintf(stderr, "Failed to create new chat window in friendlist_onGroupInvite\n");
@@ -995,8 +990,6 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
         return false;
     }
 
-    Tox *tox = toxic->tox;
-
     if (self->help->active) {
         help_onKey(self, key);
         return true;
@@ -1044,7 +1037,7 @@ static bool friendlist_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
 
             /* Jump to chat window if already open */
             if (Friends.list[f].window_id < 0) {
-                const int window_id = add_window(toxic, new_chat(tox, Friends.list[f].num));
+                const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[f].num));
 
                 if (window_id < 0) {
                     fprintf(stderr, "Failed to create new chat window in friendlist_onKey\n");
@@ -1424,21 +1417,25 @@ void disable_friend_window(uint32_t f_num)
     Friends.list[f_num].window_id = -1;
 }
 
-size_t friendlist_get_count(void)
+size_t friendlist_get_count(const FriendsList *friends)
 {
-    return Friends.num_friends;
+    if (friends == NULL) {
+        return 0;
+    }
+
+    return friends->num_friends;
 }
 
-void friendlist_get_names(char **names, size_t max_names, size_t max_name_size)
+void friendlist_get_names(const FriendsList *friends, char **names, size_t max_names, size_t max_name_size)
 {
-    if (Friends.num_friends == 0) {
+    if (friends == NULL || friends->num_friends == 0) {
         return;
     }
 
-    const size_t bytes_to_copy = MIN(sizeof(Friends.list[0].name), max_name_size);
+    const size_t bytes_to_copy = MIN(sizeof(friends->list[0].name), max_name_size);
 
-    for (size_t i = 0; i < max_names && i < Friends.num_friends; ++i) {
-        snprintf(names[i], bytes_to_copy, "%s", Friends.list[i].name);
+    for (size_t i = 0; i < max_names && i < friends->num_friends; ++i) {
+        snprintf(names[i], bytes_to_copy, "%s", friends->list[i].name);
     }
 }
 
@@ -1455,14 +1452,12 @@ static void friendlist_onAV(ToxWindow *self, Toxic *toxic, uint32_t friend_numbe
         return;
     }
 
-    Tox *tox = toxic->tox;
-
     if (Friends.list[friend_number].window_id >= 0) {
         return;
     }
 
     if (state != TOXAV_FRIEND_CALL_STATE_FINISHED) {
-        const int window_id = add_window(toxic, new_chat(tox, Friends.list[friend_number].num));
+        const int window_id = add_window(toxic, new_chat(toxic->friends, Friends.list[friend_number].num));
 
         if (window_id < 0) {
             fprintf(stderr, "Failed to create new chat window in friendlist_onAV");
@@ -1496,22 +1491,26 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber)
     return Friends.list[friendnumber].connection_status;
 }
 
-int64_t get_friend_number_name(const char *name, uint16_t length)
+int64_t get_friend_number_name(const FriendsList *friends, const char *name, uint16_t length)
 {
+    if (friends == NULL) {
+        return -1;
+    }
+
     int64_t num = -1;
     bool match_found = false;
 
-    for (size_t i = 0; i < Friends.max_idx; ++i) {
-        if (length != Friends.list[i].namelength) {
+    for (size_t i = 0; i < friends->max_idx; ++i) {
+        if (length != friends->list[i].namelength) {
             continue;
         }
 
-        if (memcmp(name, Friends.list[i].name, length) == 0) {
+        if (memcmp(name, friends->list[i].name, length) == 0) {
             if (match_found) {
                 return -2;
             }
 
-            num = Friends.list[i].num;
+            num = friends->list[i].num;
             match_found = true;
         }
     }
@@ -1615,13 +1614,17 @@ bool get_friend_public_key(char *pk, uint32_t friendnumber)
     return true;
 }
 
-uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber)
+uint16_t get_friend_name(const FriendsList *friends, char *buf, size_t buf_size, uint32_t friendnumber)
 {
-    if (friendnumber >= Friends.max_idx) {
+    if (friends == NULL) {
         goto on_error;
     }
 
-    const ToxicFriend *friend = &Friends.list[friendnumber];
+    if (friendnumber >= friends->max_idx) {
+        goto on_error;
+    }
+
+    const ToxicFriend *friend = &friends->list[friendnumber];
 
     if (!friend->active) {
         goto on_error;

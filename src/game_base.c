@@ -53,7 +53,7 @@ extern struct Winthread Winthread;
                                                  && ((max_x) >= (GAME_MAX_RECT_X_LARGE)))
 
 
-static ToxWindow *game_new_window(Tox *tox, GameType type, uint32_t friendnumber);
+static ToxWindow *game_new_window(FriendsList *friends, GameType type, uint32_t friendnumber);
 
 struct GameList {
     const char *name;
@@ -252,7 +252,7 @@ int game_initialize(const ToxWindow *parent, Toxic *toxic, GameType type, uint32
 
     max_y -= (CHATBOX_HEIGHT + WINDOW_BAR_HEIGHT);
 
-    ToxWindow *self = game_new_window(toxic->tox, type, parent->num);
+    ToxWindow *self = game_new_window(toxic->friends, type, parent->num);
 
     if (self == NULL) {
         return -4;
@@ -886,7 +886,7 @@ static void game_onPacket(ToxWindow *self, Toxic *toxic, uint32_t friendnumber, 
     }
 }
 
-static ToxWindow *game_new_window(Tox *tox, GameType type, uint32_t friendnumber)
+static ToxWindow *game_new_window(FriendsList *friends, GameType type, uint32_t friendnumber)
 {
     const char *window_name = game_get_name_string(type);
 
@@ -919,7 +919,7 @@ static ToxWindow *game_new_window(Tox *tox, GameType type, uint32_t friendnumber
 
     if (game_type_is_multi_only(type)) {
         char name[TOXIC_MAX_NAME_LENGTH + 1];
-        get_friend_name(name, sizeof(name), friendnumber);
+        get_friend_name(friends, name, sizeof(name), friendnumber);
 
         char buf[sizeof(name) + sizeof(ret->name) + 4];
         snprintf(buf, sizeof(buf), "%s (%s)", window_name, name);

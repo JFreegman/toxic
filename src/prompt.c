@@ -31,8 +31,6 @@
 
 extern struct Winthread Winthread;
 
-extern FriendsList Friends;
-
 /* Array of global command names used for tab completion. */
 static const char *const glob_cmd_list[] = {
     "/accept",
@@ -503,11 +501,12 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
     }
 
     char nick[TOXIC_MAX_NAME_LENGTH + 1];
-    get_friend_name(nick, sizeof(nick), friendnum);
+    get_friend_name(toxic->friends, nick, sizeof(nick), friendnum);
 
     const char *msg;
 
-    if (connection_status != TOX_CONNECTION_NONE && Friends.list[friendnum].connection_status == TOX_CONNECTION_NONE) {
+    if (connection_status != TOX_CONNECTION_NONE
+            && toxic->friends->list[friendnum].connection_status == TOX_CONNECTION_NONE) {
         msg = "has come online";
         line_info_add(self, c_config, true, nick, NULL, CONNECTION, 0, GREEN, "%s", msg);
         write_to_log(ctx->log, c_config, msg, nick, LOG_HINT_CONNECT);
@@ -537,10 +536,14 @@ static void prompt_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t fr
 /**
  * Return true is the first 3 bytes of `key` are identical to any other contact in the contact list.
  */
-static bool key_is_similar(const char *key)
+static bool key_is_similar(const FriendsList *friends, const char *key)
 {
-    for (size_t i = 0; i < Friends.max_idx; ++i) {
-        const ToxicFriend *friend = &Friends.list[i];
+    if (friends == NULL) {
+        return false;
+    }
+
+    for (size_t i = 0; i < friends->max_idx; ++i) {
+        const ToxicFriend *friend = &friends->list[i];
 
         if (!friend->active) {
             continue;
@@ -566,7 +569,7 @@ static void prompt_onFriendRequest(ToxWindow *self, Toxic *toxic, const char *ke
 
     line_info_add(self, c_config, true, NULL, NULL, SYS_MSG, 0, 0, "Friend request with the message '%s'", data);
 
-    if (key_is_similar(key)) {
+    if (key_is_similar(toxic->friends, key)) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED,
                       "WARNING: This contact's public key is suspiciously similar to that of another contact ");
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, RED,

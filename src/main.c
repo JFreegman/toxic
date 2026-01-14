@@ -1206,6 +1206,8 @@ static Toxic *toxic_init(void)
 
     toxic->windows = tmp_windows;
 
+    init_friendlist(toxic);
+
     toxic->paths = paths_init();
 
     if (toxic->paths == NULL) {

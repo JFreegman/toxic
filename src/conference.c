@@ -970,11 +970,11 @@ static bool conference_onKey(ToxWindow *self, Toxic *toxic, wint_t key, bool ltr
             } else if (wcsncmp(ctx->line, L"/avatar ", wcslen(L"/avatar ")) == 0) {
                 diff = dir_match(self, toxic, ctx->line, L"/avatar");
             } else if (wcsncmp(ctx->line, L"/cinvite ", wcslen(L"/cinvite ")) == 0) {
-                size_t num_friends = friendlist_get_count();
+                size_t num_friends = friendlist_get_count(toxic->friends);
                 char **friend_names = (char **) malloc_ptr_array(num_friends, TOX_MAX_NAME_LENGTH);
 
                 if (friend_names != NULL) {
-                    friendlist_get_names(friend_names, num_friends, TOX_MAX_NAME_LENGTH);
+                    friendlist_get_names(toxic->friends, friend_names, num_friends, TOX_MAX_NAME_LENGTH);
                     diff = complete_line(self, toxic, (const char *const *) friend_names, num_friends);
                     free_ptr_array((void **) friend_names);
                 } else {

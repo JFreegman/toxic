@@ -419,7 +419,7 @@ void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_b
 
 void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= Friends.max_idx) {
+    if (toxic == NULL || friend_number >= toxic->friends->max_idx) {
         return;
     }
 
@@ -427,15 +427,15 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
         return;
     }
 
-    if (Friends.list[friend_number].window_id == -1) {
-        const int window_id = add_window(toxic, new_chat(toxic->tox, Friends.list[friend_number].num));
+    if (toxic->friends->list[friend_number].window_id == -1) {
+        const int window_id = add_window(toxic, new_chat(toxic->friends, toxic->friends->list[friend_number].num));
 
         if (window_id < 0) {
             fprintf(stderr, "Failed to create new chat window in callback_recv_invite()\n");
             return;
         }
 
-        Friends.list[friend_number].window_id = window_id;
+        toxic->friends->list[friend_number].window_id = window_id;
     }
 
     const Call *call = &CallControl.calls[friend_number];

@@ -45,7 +45,13 @@ void api_display(const char *const msg)
 
 FriendsList api_get_friendslist(void)
 {
-    return Friends;
+    if (user_toxic == NULL || user_toxic->friends == NULL) {
+        return (FriendsList) {
+            0
+        };
+    }
+
+    return *user_toxic->friends;
 }
 
 char *api_get_nick(void)

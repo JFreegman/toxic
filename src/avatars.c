@@ -15,8 +15,6 @@
 #include "friendlist.h"
 #include "misc_tools.h"
 
-extern FriendsList Friends;
-
 static struct Avatar {
     char name[TOX_MAX_FILENAME_LENGTH + 1];
     size_t name_len;
@@ -69,7 +67,7 @@ static void avatar_clear(void)
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_send(Tox *tox, uint32_t friendnumber)
+int avatar_send(FriendsList *friends, Tox *tox, uint32_t friendnumber)
 {
     Tox_Err_File_Send err;
     uint32_t filenumber = tox_file_send(tox, friendnumber, TOX_FILE_KIND_AVATAR, (size_t) Avatar.size,
@@ -84,7 +82,8 @@ int avatar_send(Tox *tox, uint32_t friendnumber)
         return -1;
     }
 
-    struct FileTransfer *ft = new_file_transfer(NULL, friendnumber, filenumber, FILE_TRANSFER_SEND, TOX_FILE_KIND_AVATAR);
+    struct FileTransfer *ft = new_file_transfer(friends, NULL, friendnumber, filenumber, FILE_TRANSFER_SEND,
+                              TOX_FILE_KIND_AVATAR);
 
     if (!ft) {
         return -1;
@@ -103,11 +102,15 @@ int avatar_send(Tox *tox, uint32_t friendnumber)
 }
 
 /* Sends avatar to all friends */
-static void avatar_send_all(Tox *tox)
+static void avatar_send_all(FriendsList *friends, Tox *tox)
 {
-    for (size_t i = 0; i < Friends.max_idx; ++i) {
-        if (Friends.list[i].connection_status != TOX_CONNECTION_NONE) {
-            avatar_send(tox, Friends.list[i].num);
+    if (friends == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < friends->max_idx; ++i) {
+        if (friends->list[i].connection_status != TOX_CONNECTION_NONE) {
+            avatar_send(friends, tox, friends->list[i].num);
         }
     }
 }
@@ -117,7 +120,7 @@ static void avatar_send_all(Tox *tox)
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_set(Tox *tox, const char *path, size_t path_len)
+int avatar_set(FriendsList *friends, Tox *tox, const char *path, size_t path_len)
 {
     if (path_len == 0 || path_len >= sizeof(Avatar.path)) {
         return -1;
@@ -153,7 +156,7 @@ int avatar_set(Tox *tox, const char *path, size_t path_len)
     Avatar.path_len = path_len;
     Avatar.size = size;
 
-    avatar_send_all(tox);
+    avatar_send_all(friends, tox);
 
     return 0;
 }
@@ -163,10 +166,10 @@ int avatar_set(Tox *tox, const char *path, size_t path_len)
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-void avatar_unset(Tox *tox)
+void avatar_unset(FriendsList *friends, Tox *tox)
 {
     avatar_clear();
-    avatar_send_all(tox);
+    avatar_send_all(friends, tox);
 }
 
 void on_avatar_friend_connection_status(Toxic *toxic, uint32_t friendnumber, Tox_Connection connection_status)

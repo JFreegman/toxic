@@ -20,6 +20,8 @@
 #define MiB (uint32_t) (1024 << 10)  /* 1024^2 */
 #define GiB (uint32_t) (1024 << 20)  /* 1024^3 */
 
+typedef struct FriendsList FriendsList;
+
 #define MAX_FILES 32
 
 typedef enum FILE_TRANSFER_STATE {
@@ -71,24 +73,25 @@ void print_progress_bar(ToxWindow *self, double pct_done, double bps, uint32_t l
  *
  * Return true if there is at least one active file transfer in either direction.
  */
-bool refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnumber);
+bool refresh_file_transfer_progress(FriendsList *friends, ToxWindow *self, uint32_t friendnumber);
 
 /* Returns a pointer to friendnumber's FileTransfer struct associated with filenumber.
  * Returns NULL if filenumber is invalid.
  */
-struct FileTransfer *get_file_transfer_struct(uint32_t friendnumber, uint32_t filenumber);
+struct FileTransfer *get_file_transfer_struct(FriendsList *friends, uint32_t friendnumber, uint32_t filenumber);
 
 
 /* Returns a pointer to the FileTransfer struct associated with index with the direction specified.
  * Returns NULL on failure.
  */
-struct FileTransfer *get_file_transfer_struct_index(uint32_t friendnumber, uint32_t index,
+struct FileTransfer *get_file_transfer_struct_index(FriendsList *friends, uint32_t friendnumber, uint32_t index,
         FILE_TRANSFER_DIRECTION direction);
 
 /* Initializes an unused file transfer and returns its pointer.
  * Returns NULL on failure.
  */
-struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnumber, uint32_t filenumber,
+struct FileTransfer *new_file_transfer(FriendsList *friends, ToxWindow *window, uint32_t friendnumber,
+                                       uint32_t filenumber,
                                        FILE_TRANSFER_DIRECTION direction, uint8_t type);
 
 /* Adds a file designated by `file_path` of length `length` to the file transfer queue.
@@ -104,7 +107,7 @@ struct FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnumber,
  * Return -1 if the length is invalid.
  * Return -2 if the send queue is full.
  */
-int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t length);
+int file_send_queue_add(FriendsList *friends, uint32_t friendnumber, const char *file_path, size_t length);
 
 /* Initiates all file transfers from the file send queue for friend designated by `friendnumber`. */
 void file_send_queue_check(ToxWindow *self, Toxic *toxic, uint32_t friendnumber);
@@ -114,7 +117,7 @@ void file_send_queue_check(ToxWindow *self, Toxic *toxic, uint32_t friendnumber)
  * Return 0 if a pending transfer was successfully removed
  * Return -1 if index does not designate a pending file transfer.
  */
-int file_send_queue_remove(uint32_t friendnumber, size_t index);
+int file_send_queue_remove(FriendsList *friends, uint32_t friendnumber, size_t index);
 
 /* Closes file transfer ft.
  *
@@ -133,6 +136,6 @@ void kill_all_file_transfers_friend(Toxic *toxic, uint32_t friendnumber);
 void kill_all_file_transfers(Toxic *toxic);
 
 /* Return true if any pending or active file receiver has the path `path`. */
-bool file_transfer_recv_path_exists(const char *path);
+bool file_transfer_recv_path_exists(const FriendsList *friends, const char *path);
 
 #endif /* FILE_TRANSFERS_H */

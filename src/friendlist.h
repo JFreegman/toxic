@@ -104,7 +104,7 @@ typedef struct {
     uint64_t last_on;
 } BlockedFriend;
 
-typedef struct {
+typedef struct FriendsList {
     int num_selected;
     size_t num_friends;
     size_t num_online;
@@ -113,7 +113,7 @@ typedef struct {
     ToxicFriend *list;
 } FriendsList;
 
-extern FriendsList Friends;
+void init_friendlist(Toxic *toxic);
 
 ToxWindow *new_friendlist(void);
 void friendlist_onInit(ToxWindow *self, Toxic *toxic);
@@ -127,7 +127,7 @@ Tox_Connection get_friend_connection_status(uint32_t friendnumber);
 /*
  * Returns the number of friends in the friend list.
  */
-size_t friendlist_get_count(void);
+size_t friendlist_get_count(const FriendsList *friends);
 
 /*
  * Copies names from the friends list into the `names` array.
@@ -135,7 +135,7 @@ size_t friendlist_get_count(void);
  * @max_names The maximum number of names to copy.
  * @max_name_size The maximum number of bytes to copy per name.
  */
-void friendlist_get_names(char **names, size_t max_names, size_t max_name_size);
+void friendlist_get_names(const FriendsList *friends, char **names, size_t max_names, size_t max_name_size);
 
 /*
  * Loads the list of blocked peers from `path`.
@@ -173,7 +173,7 @@ bool friend_get_auto_accept_files(uint32_t friendnumber);
  *
  * Returns the length of the name.
  */
-uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber);
+uint16_t get_friend_name(const FriendsList *friends, char *buf, size_t buf_size, uint32_t friendnumber);
 
 /*
  * Returns the friend number associated with `name`.
@@ -183,7 +183,7 @@ uint16_t get_friend_name(char *buf, size_t buf_size, uint32_t friendnumber);
  * Returns -1 if `name` does not designate a friend in the friend list.
  * Returns -2 if `name` matches more than one friend in the friend list.
  */
-int64_t get_friend_number_name(const char *name, uint16_t length);
+int64_t get_friend_number_name(const FriendsList *friends, const char *name, uint16_t length);
 
 /*
  * Puts a friend's public key in `pk`, which must have room for at least

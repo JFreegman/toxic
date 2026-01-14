@@ -69,7 +69,7 @@ void cmd_conference_invite(WINDOW *window, ToxWindow *self, Toxic *toxic, int ar
     }
 
     const char *nick = argv[1];
-    const int64_t friend_number = get_friend_number_name(nick, strlen(nick));
+    const int64_t friend_number = get_friend_number_name(toxic->friends, nick, strlen(nick));
 
     if (friend_number == -1) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,

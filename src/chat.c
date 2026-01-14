@@ -215,7 +215,7 @@ static void chat_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Mess
     }
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    get_friend_name(name, sizeof(name), num);
+    get_friend_name(toxic->friends, name, sizeof(name), num);
 
     if (type == TOX_MESSAGE_TYPE_NORMAL) {
         recv_message_helper(self, toxic, msg, name);
@@ -228,7 +228,7 @@ static void chat_onMessage(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Mess
     }
 }
 
-static void chat_pause_file_transfers(uint32_t friendnum);
+static void chat_pause_file_transfers(FriendsList *friends, uint32_t friendnum);
 static void chat_resume_file_senders(ToxWindow *self, const Toxic *toxic, uint32_t fnum);
 
 static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num, Tox_Connection connection_status)
@@ -248,7 +248,7 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
     const char *msg;
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    get_friend_name(name, sizeof(name), num);
+    get_friend_name(toxic->friends, name, sizeof(name), num);
 
     Tox_Connection prev_status = statusbar->connection;
     statusbar->connection = connection_status;
@@ -263,13 +263,13 @@ static void chat_onConnectionChange(ToxWindow *self, Toxic *toxic, uint32_t num,
             write_to_log(ctx->log, c_config, msg, name, LOG_HINT_CONNECT);
         }
     } else if (connection_status == TOX_CONNECTION_NONE) {
-        Friends.list[num].is_typing = false;
+        toxic->friends->list[num].is_typing = false;
 
         if (self->chatwin->self_is_typing) {
             set_self_typingstatus(self, toxic, false);
         }
 
-        chat_pause_file_transfers(num);
+        chat_pause_file_transfers(toxic->friends, num);
 
         if (c_config->show_connection_msg) {
             msg = "has gone offline";
@@ -291,7 +291,7 @@ static void chat_onTypingChange(ToxWindow *self, Toxic *toxic, uint32_t num, boo
         return;
     }
 
-    Friends.list[num].is_typing = is_typing;
+    toxic->friends->list[num].is_typing = is_typing;
 }
 
 static void chat_onNickChange(ToxWindow *self, Toxic *toxic, uint32_t num, const char *nick, size_t length)
@@ -324,7 +324,7 @@ static void chat_onNickRefresh(ToxWindow *self, Toxic *toxic)
     StatusBar *statusbar = self->stb;
 
     char new_name[TOXIC_MAX_NAME_LENGTH + 1];
-    const uint16_t n_len = get_friend_name(new_name, sizeof(new_name), self->num);
+    const uint16_t n_len = get_friend_name(toxic->friends, new_name, sizeof(new_name), self->num);
 
     if (strcmp(new_name, statusbar->nick) == 0) {
         return;
@@ -395,9 +395,9 @@ static void chat_onReadReceipt(ToxWindow *self, Toxic *toxic, uint32_t num, uint
 }
 
 /* Stops active file transfers for this friend. Called when a friend goes offline */
-static void chat_pause_file_transfers(uint32_t friendnum)
+static void chat_pause_file_transfers(FriendsList *friends, uint32_t friendnum)
 {
-    ToxicFriend *friend = &Friends.list[friendnum];
+    ToxicFriend *friend = &friends->list[friendnum];
 
     for (size_t i = 0; i < MAX_FILES; ++i) {
         struct FileTransfer *fts = &friend->file_sender[i];
@@ -418,7 +418,7 @@ static void chat_pause_file_transfers(uint32_t friendnum)
 static void chat_resume_file_senders(ToxWindow *self, const Toxic *toxic, uint32_t friendnum)
 {
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        struct FileTransfer *ft = &Friends.list[friendnum].file_sender[i];
+        struct FileTransfer *ft = &toxic->friends->list[friendnum].file_sender[i];
 
         if (ft->state != FILE_TRANSFER_PAUSED || ft->file_type != TOX_FILE_KIND_DATA) {
             continue;
@@ -451,7 +451,7 @@ static void chat_onFileChunkRequest(ToxWindow *self, Toxic *toxic, uint32_t frie
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
+    struct FileTransfer *ft = get_file_transfer_struct(toxic->friends, friendnum, filenumber);
 
     if (ft == NULL) {
         return;
@@ -530,7 +530,7 @@ static void chat_onFileRecvChunk(ToxWindow *self, Toxic *toxic, uint32_t friendn
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
+    struct FileTransfer *ft = get_file_transfer_struct(toxic->friends, friendnum, filenumber);
 
     if (ft == NULL) {
         return;
@@ -578,7 +578,7 @@ static void chat_onFileControl(ToxWindow *self, Toxic *toxic, uint32_t friendnum
         return;
     }
 
-    struct FileTransfer *ft = get_file_transfer_struct(friendnum, filenumber);
+    struct FileTransfer *ft = get_file_transfer_struct(toxic->friends, friendnum, filenumber);
 
     if (!ft) {
         return;
@@ -636,7 +636,7 @@ static bool chat_resume_broken_ft(ToxWindow *self, Toxic *toxic, uint32_t friend
     size_t i;
 
     for (i = 0; i < MAX_FILES; ++i) {
-        ft = &Friends.list[friendnum].file_receiver[i];
+        ft = &toxic->friends->list[friendnum].file_receiver[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
             continue;
@@ -721,7 +721,8 @@ static void chat_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t friendnum, u
         return;
     }
 
-    struct FileTransfer *ft = new_file_transfer(self, friendnum, filenumber, FILE_TRANSFER_RECV, TOX_FILE_KIND_DATA);
+    struct FileTransfer *ft = new_file_transfer(toxic->friends, self, friendnum, filenumber, FILE_TRANSFER_RECV,
+                              TOX_FILE_KIND_DATA);
 
     if (ft == NULL) {
         tox_file_control(tox, friendnum, filenumber, TOX_FILE_CONTROL_CANCEL, NULL);
@@ -768,7 +769,7 @@ static void chat_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t friendnum, u
     FILE *filecheck = NULL;
     int count = 1;
 
-    while ((filecheck = fopen(file_path, "r")) || file_transfer_recv_path_exists(file_path)) {
+    while ((filecheck = fopen(file_path, "r")) || file_transfer_recv_path_exists(toxic->friends, file_path)) {
         if (filecheck) {
             fclose(filecheck);
         }
@@ -837,8 +838,8 @@ static void chat_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t frien
         return;
     }
 
-    if (Friends.list[friendnumber].conference_invite.key != NULL) {
-        free(Friends.list[friendnumber].conference_invite.key);
+    if (toxic->friends->list[friendnumber].conference_invite.key != NULL) {
+        free(toxic->friends->list[friendnumber].conference_invite.key);
     }
 
     char *k = malloc(length * sizeof(char));
@@ -849,13 +850,13 @@ static void chat_onConferenceInvite(ToxWindow *self, Toxic *toxic, int32_t frien
     }
 
     memcpy(k, conference_pub_key, length);
-    Friends.list[friendnumber].conference_invite.key = k;
-    Friends.list[friendnumber].conference_invite.pending = true;
-    Friends.list[friendnumber].conference_invite.length = length;
-    Friends.list[friendnumber].conference_invite.type = type;
+    toxic->friends->list[friendnumber].conference_invite.key = k;
+    toxic->friends->list[friendnumber].conference_invite.pending = true;
+    toxic->friends->list[friendnumber].conference_invite.length = length;
+    toxic->friends->list[friendnumber].conference_invite.type = type;
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    get_friend_name(name, sizeof(name), friendnumber);
+    get_friend_name(toxic->friends, name, sizeof(name), friendnumber);
 
     const char *description = type == TOX_CONFERENCE_TYPE_AV ? "an audio conference" : "a conference";
 
@@ -887,21 +888,21 @@ static void chat_onGroupInvite(ToxWindow *self, Toxic *toxic, uint32_t friendnum
         return;
     }
 
-    if (Friends.list[friendnumber].group_invite.data) {
-        free(Friends.list[friendnumber].group_invite.data);
+    if (toxic->friends->list[friendnumber].group_invite.data) {
+        free(toxic->friends->list[friendnumber].group_invite.data);
     }
 
-    Friends.list[friendnumber].group_invite.data = malloc(length * sizeof(char));
+    toxic->friends->list[friendnumber].group_invite.data = malloc(length * sizeof(char));
 
-    if (Friends.list[friendnumber].group_invite.data == NULL) {
+    if (toxic->friends->list[friendnumber].group_invite.data == NULL) {
         return;
     }
 
-    memcpy(Friends.list[friendnumber].group_invite.data, invite_data, length);
-    Friends.list[friendnumber].group_invite.length = length;
+    memcpy(toxic->friends->list[friendnumber].group_invite.data, invite_data, length);
+    toxic->friends->list[friendnumber].group_invite.length = length;
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    get_friend_name(name, sizeof(name), friendnumber);
+    get_friend_name(toxic->friends, name, sizeof(name), friendnumber);
 
     const uint64_t flags = NT_WNDALERT_2 | c_config->bell_on_invite;
 
@@ -962,7 +963,7 @@ static void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_num
     uint32_t data_length = length - GAME_PACKET_HEADER_SIZE;
 
     if (data_length > 0) {
-        free(Friends.list[friend_number].game_invite.data);
+        free(toxic->friends->list[friend_number].game_invite.data);
 
         uint8_t *buf = calloc(1, data_length);
 
@@ -971,16 +972,16 @@ static void chat_onGameInvite(ToxWindow *self, Toxic *toxic, uint32_t friend_num
         }
 
         memcpy(buf, data + GAME_PACKET_HEADER_SIZE, data_length);
-        Friends.list[friend_number].game_invite.data = buf;
+        toxic->friends->list[friend_number].game_invite.data = buf;
     }
 
-    Friends.list[friend_number].game_invite.type = type;
-    Friends.list[friend_number].game_invite.id = id;
-    Friends.list[friend_number].game_invite.pending = true;
-    Friends.list[friend_number].game_invite.data_length = data_length;
+    toxic->friends->list[friend_number].game_invite.type = type;
+    toxic->friends->list[friend_number].game_invite.id = id;
+    toxic->friends->list[friend_number].game_invite.pending = true;
+    toxic->friends->list[friend_number].game_invite.data_length = data_length;
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    get_friend_name(name, sizeof(name), friend_number);
+    get_friend_name(toxic->friends, name, sizeof(name), friend_number);
 
     if (self->active_box != -1) {
         box_notify2(self, toxic, generic_message, NT_WNDALERT_2 | c_config->bell_on_invite, self->active_box,
@@ -1472,7 +1473,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
 
     Tox_Connection connection = statusbar->connection;
     Tox_User_Status status = statusbar->status;
-    const bool is_typing = Friends.list[self->num].is_typing;
+    const bool is_typing = toxic->friends->list[self->num].is_typing;
 
     pthread_mutex_unlock(&Winthread.lock);
 
@@ -1625,7 +1626,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
     wattron(statusbar->topline, COLOR_PAIR(BAR_TEXT));
 
     for (size_t i = 0; i < KEY_IDENT_BYTES / 2; ++i) {
-        wprintw(statusbar->topline, "%02X", Friends.list[self->num].pub_key[i] & 0xff);
+        wprintw(statusbar->topline, "%02X", toxic->friends->list[self->num].pub_key[i] & 0xff);
     }
 
     wattroff(statusbar->topline, COLOR_PAIR(BAR_TEXT));
@@ -1661,7 +1662,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
 
     pthread_mutex_lock(&Winthread.lock);
 
-    if (refresh_file_transfer_progress(self, self->num)) {
+    if (refresh_file_transfer_progress(toxic->friends, self, self->num)) {
         flag_interface_refresh();
     }
 
@@ -1678,7 +1679,8 @@ static void chat_init_log(ToxWindow *self, Toxic *toxic, const char *self_nick)
     char myid[TOX_ADDRESS_SIZE];
     tox_self_get_address(tox, (uint8_t *) myid);
 
-    if (log_init(ctx->log, c_config, toxic->paths, self_nick, myid, Friends.list[self->num].pub_key, LOG_TYPE_CHAT) != 0) {
+    if (log_init(ctx->log, c_config, toxic->paths, self_nick, myid, toxic->friends->list[self->num].pub_key,
+                 LOG_TYPE_CHAT) != 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to initialize chat log.");
         return;
     }
@@ -1733,7 +1735,7 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     statusbar->statusmsg_len = strlen(statusbar->statusmsg);
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    const uint16_t n_len = get_friend_name(name, sizeof(name), self->num);
+    const uint16_t n_len = get_friend_name(toxic->friends, name, sizeof(name), self->num);
 
     snprintf(statusbar->nick, sizeof(statusbar->nick), "%s", name);
     statusbar->nick_len = n_len;
@@ -1772,7 +1774,7 @@ static void chat_onInit(ToxWindow *self, Toxic *toxic)
     line_info_print(self, toxic->c_config);
 }
 
-ToxWindow *new_chat(Tox *tox, uint32_t friendnum)
+ToxWindow *new_chat(FriendsList *friends, uint32_t friendnum)
 {
     ToxWindow *ret = calloc(1, sizeof(ToxWindow));
 
@@ -1821,7 +1823,7 @@ ToxWindow *new_chat(Tox *tox, uint32_t friendnum)
     ret->active_box = -1;
 
     char name[TOXIC_MAX_NAME_LENGTH + 1];
-    const uint16_t n_len = get_friend_name(name, sizeof(name), friendnum);
+    const uint16_t n_len = get_friend_name(friends, name, sizeof(name), friendnum);
 
     set_window_title(ret, name, n_len);
 

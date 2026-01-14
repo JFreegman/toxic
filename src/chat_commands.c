@@ -22,8 +22,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern FriendsList Friends;
-
 void cmd_autoaccept_files(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*argv)[MAX_STR_SIZE])
 {
     UNUSED_VAR(window);
@@ -88,7 +86,7 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
     }
 
     // first check transfer queue
-    if (file_send_queue_remove(self->num, idx) == 0) {
+    if (file_send_queue_remove(toxic->friends, self->num, idx) == 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Pending file transfer removed from queue");
         return;
     }
@@ -97,9 +95,9 @@ void cmd_cancelfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, cha
 
     /* cancel an incoming file transfer */
     if (strcasecmp(inoutstr, "in") == 0) {
-        ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
+        ft = get_file_transfer_struct_index(toxic->friends, self->num, idx, FILE_TRANSFER_RECV);
     } else if (strcasecmp(inoutstr, "out") == 0) {
-        ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_SEND);
+        ft = get_file_transfer_struct_index(toxic->friends, self->num, idx, FILE_TRANSFER_SEND);
     } else {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Type must be 'in' or 'out'.");
         return;
@@ -167,11 +165,11 @@ void cmd_conference_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
-    const char *conferencekey = Friends.list[self->num].conference_invite.key;
-    const uint16_t length = Friends.list[self->num].conference_invite.length;
-    const uint8_t type = Friends.list[self->num].conference_invite.type;
+    const char *conferencekey = toxic->friends->list[self->num].conference_invite.key;
+    const uint16_t length = toxic->friends->list[self->num].conference_invite.length;
+    const uint8_t type = toxic->friends->list[self->num].conference_invite.type;
 
-    if (!Friends.list[self->num].conference_invite.pending) {
+    if (!toxic->friends->list[self->num].conference_invite.pending) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending conference invite.");
         return;
     }
@@ -235,7 +233,7 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     Tox *tox = toxic->tox;
     const Client_Config *c_config = toxic->c_config;
 
-    if (Friends.list[self->num].group_invite.length == 0) {
+    if (toxic->friends->list[self->num].group_invite.length == 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending group invite");
         return;
     }
@@ -259,8 +257,8 @@ void cmd_group_accept(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, c
     self_nick[nick_len] = '\0';
 
     Tox_Err_Group_Invite_Accept err;
-    const uint32_t groupnumber = tox_group_invite_accept(tox, self->num, Friends.list[self->num].group_invite.data,
-                                 Friends.list[self->num].group_invite.length, (const uint8_t *) self_nick, nick_len,
+    const uint32_t groupnumber = tox_group_invite_accept(tox, self->num, toxic->friends->list[self->num].group_invite.data,
+                                 toxic->friends->list[self->num].group_invite.length, (const uint8_t *) self_nick, nick_len,
                                  (const uint8_t *) passwd, passwd_len, &err);
 
     if (err != TOX_ERR_GROUP_INVITE_ACCEPT_OK) {
@@ -319,23 +317,23 @@ void cmd_game_join(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char
 
     const Client_Config *c_config = toxic->c_config;
 
-    if (!Friends.list[self->num].game_invite.pending) {
+    if (!toxic->friends->list[self->num].game_invite.pending) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending game invite.");
         return;
     }
 
-    GameType type = Friends.list[self->num].game_invite.type;
-    const uint32_t id = Friends.list[self->num].game_invite.id;
-    uint8_t *data = Friends.list[self->num].game_invite.data;
-    const size_t length = Friends.list[self->num].game_invite.data_length;
+    GameType type = toxic->friends->list[self->num].game_invite.type;
+    const uint32_t id = toxic->friends->list[self->num].game_invite.id;
+    uint8_t *data = toxic->friends->list[self->num].game_invite.data;
+    const size_t length = toxic->friends->list[self->num].game_invite.data_length;
 
     const int ret = game_initialize(self, toxic, type, id, data, length, false);
 
     switch (ret) {
         case 0: {
             free(data);
-            Friends.list[self->num].game_invite.data = NULL;
-            Friends.list[self->num].game_invite.pending = false;
+            toxic->friends->list[self->num].game_invite.data = NULL;
+            toxic->friends->list[self->num].game_invite.pending = false;
             break;
         }
 
@@ -382,7 +380,7 @@ void cmd_savefile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         return;
     }
 
-    FileTransfer *ft = get_file_transfer_struct_index(self->num, idx, FILE_TRANSFER_RECV);
+    FileTransfer *ft = get_file_transfer_struct_index(toxic->friends, self->num, idx, FILE_TRANSFER_RECV);
 
     if (ft == NULL) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "No pending file transfers with ID %ld.", idx);
@@ -505,7 +503,7 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         goto on_send_error;
     }
 
-    FileTransfer *ft = new_file_transfer(self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
+    FileTransfer *ft = new_file_transfer(toxic->friends, self, self->num, filenum, FILE_TRANSFER_SEND, TOX_FILE_KIND_DATA);
 
     if (ft == NULL) {
         err = TOX_ERR_FILE_SEND_TOO_MANY;
@@ -535,7 +533,7 @@ on_send_error:
         }
 
         case TOX_ERR_FILE_SEND_FRIEND_NOT_CONNECTED: {
-            const int queue_idx = file_send_queue_add(self->num, path, path_len);
+            const int queue_idx = file_send_queue_add(toxic->friends, self->num, path, path_len);
 
             char msg[MAX_STR_SIZE];
 

@@ -11,6 +11,8 @@
 
 #include "file_transfers.h"
 
+typedef struct FriendsList FriendsList;
+
 #define MAX_AVATAR_FILE_SIZE 65536
 
 /* Sends avatar to friendnum.
@@ -18,21 +20,21 @@
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_send(Tox *tox, uint32_t friendnum);
+int avatar_send(FriendsList *friends, Tox *tox, uint32_t friendnum);
 
 /* Sets avatar to path and sends it to all online contacts.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-int avatar_set(Tox *tox, const char *path, size_t length);
+int avatar_set(FriendsList *friends, Tox *tox, const char *path, size_t length);
 
 /* Unsets avatar and sends to all online contacts.
  *
  * Returns 0 on success.
  * Returns -1 on failure.
  */
-void avatar_unset(Tox *tox);
+void avatar_unset(FriendsList *friends, Tox *tox);
 
 void on_avatar_chunk_request(Toxic *toxic, struct FileTransfer *ft, uint64_t position, size_t length);
 void on_avatar_file_control(Toxic *toxic, struct FileTransfer *ft, Tox_File_Control control);

@@ -290,7 +290,7 @@ void on_file_chunk_request(Tox *tox, uint32_t friendnumber, uint32_t filenumber,
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
 
-    FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+    FileTransfer *ft = get_file_transfer_struct(toxic->friends, friendnumber, filenumber);
 
     if (ft == NULL) {
         return;
@@ -317,7 +317,7 @@ void on_file_recv_chunk(Tox *tox, uint32_t friendnumber, uint32_t filenumber, ui
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
 
-    const FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+    const FileTransfer *ft = get_file_transfer_struct(toxic->friends, friendnumber, filenumber);
 
     if (ft == NULL) {
         return;
@@ -339,7 +339,7 @@ void on_file_recv_control(Tox *tox, uint32_t friendnumber, uint32_t filenumber, 
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
 
-    FileTransfer *ft = get_file_transfer_struct(friendnumber, filenumber);
+    FileTransfer *ft = get_file_transfer_struct(toxic->friends, friendnumber, filenumber);
 
     if (ft == NULL) {
         return;

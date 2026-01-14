@@ -20,8 +20,6 @@
 #include "toxic.h"
 #include "windows.h"
 
-extern FriendsList Friends;
-
 /* number of "#"'s in file transfer progress bar. Keep well below MAX_STR_SIZE */
 #define NUM_PROG_MARKS 50
 #define STR_BUF_SIZE 30
@@ -107,13 +105,17 @@ static void refresh_progress_helper(ToxWindow *self, FileTransfer *ft)
  *
  * Return true if there is at least one active file transfer in either direction.
  */
-bool refresh_file_transfer_progress(ToxWindow *self, uint32_t friendnumber)
+bool refresh_file_transfer_progress(FriendsList *friends, ToxWindow *self, uint32_t friendnumber)
 {
     bool active = false;
 
+    if (friends == NULL) {
+        return false;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        FileTransfer *ft_r = &Friends.list[friendnumber].file_receiver[i];
-        FileTransfer *ft_s = &Friends.list[friendnumber].file_sender[i];
+        FileTransfer *ft_r = &friends->list[friendnumber].file_receiver[i];
+        FileTransfer *ft_s = &friends->list[friendnumber].file_sender[i];
 
         refresh_progress_helper(self, ft_r);
         refresh_progress_helper(self, ft_s);
@@ -136,16 +138,20 @@ static void clear_file_transfer(FileTransfer *ft)
 /* Returns a pointer to friendnumber's FileTransfer struct associated with filenumber.
  * Returns NULL if filenumber is invalid.
  */
-FileTransfer *get_file_transfer_struct(uint32_t friendnumber, uint32_t filenumber)
+FileTransfer *get_file_transfer_struct(FriendsList *friends, uint32_t friendnumber, uint32_t filenumber)
 {
+    if (friends == NULL) {
+        return NULL;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        FileTransfer *ft_send = &Friends.list[friendnumber].file_sender[i];
+        FileTransfer *ft_send = &friends->list[friendnumber].file_sender[i];
 
         if (ft_send->state != FILE_TRANSFER_INACTIVE && ft_send->filenumber == filenumber) {
             return ft_send;
         }
 
-        FileTransfer *ft_recv = &Friends.list[friendnumber].file_receiver[i];
+        FileTransfer *ft_recv = &friends->list[friendnumber].file_receiver[i];
 
         if (ft_recv->state != FILE_TRANSFER_INACTIVE && ft_recv->filenumber == filenumber) {
             return ft_recv;
@@ -158,17 +164,21 @@ FileTransfer *get_file_transfer_struct(uint32_t friendnumber, uint32_t filenumbe
 /* Returns a pointer to the FileTransfer struct associated with index with the direction specified.
  * Returns NULL on failure.
  */
-FileTransfer *get_file_transfer_struct_index(uint32_t friendnumber, uint32_t index,
+FileTransfer *get_file_transfer_struct_index(FriendsList *friends, uint32_t friendnumber, uint32_t index,
         FILE_TRANSFER_DIRECTION direction)
 {
     if (direction != FILE_TRANSFER_RECV && direction != FILE_TRANSFER_SEND) {
         return NULL;
     }
 
+    if (friends == NULL) {
+        return NULL;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
         FileTransfer *ft = direction == FILE_TRANSFER_SEND ?
-                           &Friends.list[friendnumber].file_sender[i] :
-                           &Friends.list[friendnumber].file_receiver[i];
+                           &friends->list[friendnumber].file_sender[i] :
+                           &friends->list[friendnumber].file_receiver[i];
 
         if (ft->state != FILE_TRANSFER_INACTIVE && ft->index == index) {
             return ft;
@@ -181,10 +191,15 @@ FileTransfer *get_file_transfer_struct_index(uint32_t friendnumber, uint32_t ind
 /* Returns a pointer to an unused file sender.
  * Returns NULL if all file senders are in use.
  */
-static FileTransfer *new_file_sender(ToxWindow *window, uint32_t friendnumber, uint32_t filenumber, uint8_t type)
+static FileTransfer *new_file_sender(FriendsList *friends, ToxWindow *window, uint32_t friendnumber,
+                                     uint32_t filenumber, uint8_t type)
 {
+    if (friends == NULL) {
+        return NULL;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        FileTransfer *ft = &Friends.list[friendnumber].file_sender[i];
+        FileTransfer *ft = &friends->list[friendnumber].file_sender[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
             clear_file_transfer(ft);
@@ -204,11 +219,16 @@ static FileTransfer *new_file_sender(ToxWindow *window, uint32_t friendnumber, u
 /* Returns a pointer to an unused file receiver.
  * Returns NULL if all file receivers are in use.
  */
-static FileTransfer *new_file_receiver(ToxWindow *window, uint32_t friendnumber, uint32_t filenumber,
+static FileTransfer *new_file_receiver(FriendsList *friends, ToxWindow *window, uint32_t friendnumber,
+                                       uint32_t filenumber,
                                        uint8_t type)
 {
+    if (friends == NULL) {
+        return NULL;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        FileTransfer *ft = &Friends.list[friendnumber].file_receiver[i];
+        FileTransfer *ft = &friends->list[friendnumber].file_receiver[i];
 
         if (ft->state == FILE_TRANSFER_INACTIVE) {
             clear_file_transfer(ft);
@@ -228,23 +248,23 @@ static FileTransfer *new_file_receiver(ToxWindow *window, uint32_t friendnumber,
 /* Initializes an unused file transfer and returns its pointer.
  * Returns NULL on failure.
  */
-FileTransfer *new_file_transfer(ToxWindow *window, uint32_t friendnumber, uint32_t filenumber,
+FileTransfer *new_file_transfer(FriendsList *friends, ToxWindow *window, uint32_t friendnumber, uint32_t filenumber,
                                 FILE_TRANSFER_DIRECTION direction, uint8_t type)
 {
     if (direction == FILE_TRANSFER_RECV) {
-        return new_file_receiver(window, friendnumber, filenumber, type);
+        return new_file_receiver(friends, window, friendnumber, filenumber, type);
     }
 
     if (direction == FILE_TRANSFER_SEND) {
-        return new_file_sender(window, friendnumber, filenumber, type);
+        return new_file_sender(friends, window, friendnumber, filenumber, type);
     }
 
     return NULL;
 }
 
-int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t length)
+int file_send_queue_add(FriendsList *friends, uint32_t friendnumber, const char *file_path, size_t length)
 {
-    if (length == 0 || file_path == NULL) {
+    if (friends == NULL || length == 0 || file_path == NULL) {
         return -1;
     }
 
@@ -253,7 +273,7 @@ int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t len
     }
 
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        PendingFileTransfer *pending_slot = &Friends.list[friendnumber].file_send_queue[i];
+        PendingFileTransfer *pending_slot = &friends->list[friendnumber].file_send_queue[i];
 
         if (pending_slot->pending) {
             continue;
@@ -276,8 +296,12 @@ int file_send_queue_add(uint32_t friendnumber, const char *file_path, size_t len
 
 void file_send_queue_check(ToxWindow *self, Toxic *toxic, uint32_t friendnumber)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        PendingFileTransfer *pending_slot = &Friends.list[friendnumber].file_send_queue[i];
+        PendingFileTransfer *pending_slot = &toxic->friends->list[friendnumber].file_send_queue[i];
 
         if (!pending_slot->pending) {
             continue;
@@ -294,13 +318,13 @@ void file_send_queue_check(ToxWindow *self, Toxic *toxic, uint32_t friendnumber)
     }
 }
 
-int file_send_queue_remove(uint32_t friendnumber, size_t index)
+int file_send_queue_remove(FriendsList *friends, uint32_t friendnumber, size_t index)
 {
-    if (index >= MAX_FILES) {
+    if (friends == NULL || index >= MAX_FILES) {
         return -1;
     }
 
-    PendingFileTransfer *pending_slot = &Friends.list[friendnumber].file_send_queue[index];
+    PendingFileTransfer *pending_slot = &friends->list[friendnumber].file_send_queue[index];
 
     if (!pending_slot->pending) {
         return -1;
@@ -357,8 +381,12 @@ void close_file_transfer(ToxWindow *self, const Toxic *toxic, FileTransfer *ft, 
 /* Kills active outgoing avatar file transfers for friendnumber */
 void kill_avatar_file_transfers_friend(Toxic *toxic, uint32_t friendnumber)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        FileTransfer *ft = &Friends.list[friendnumber].file_sender[i];
+        FileTransfer *ft = &toxic->friends->list[friendnumber].file_sender[i];
 
         if (ft->file_type == TOX_FILE_KIND_AVATAR) {
             close_file_transfer(NULL, toxic, ft, TOX_FILE_CONTROL_CANCEL, NULL, silent);
@@ -369,29 +397,43 @@ void kill_avatar_file_transfers_friend(Toxic *toxic, uint32_t friendnumber)
 /* Kills all active file transfers for friendnumber */
 void kill_all_file_transfers_friend(Toxic *toxic, uint32_t friendnumber)
 {
+    if (toxic == NULL) {
+        return;
+    }
+
     for (size_t i = 0; i < MAX_FILES; ++i) {
-        close_file_transfer(NULL, toxic, &Friends.list[friendnumber].file_sender[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
-        close_file_transfer(NULL, toxic, &Friends.list[friendnumber].file_receiver[i], TOX_FILE_CONTROL_CANCEL, NULL, silent);
-        file_send_queue_remove(friendnumber, i);
+        close_file_transfer(NULL, toxic, &toxic->friends->list[friendnumber].file_sender[i], TOX_FILE_CONTROL_CANCEL, NULL,
+                            silent);
+        close_file_transfer(NULL, toxic, &toxic->friends->list[friendnumber].file_receiver[i], TOX_FILE_CONTROL_CANCEL, NULL,
+                            silent);
+        file_send_queue_remove(toxic->friends, friendnumber, i);
     }
 }
 
 void kill_all_file_transfers(Toxic *toxic)
 {
-    for (size_t i = 0; i < Friends.max_idx; ++i) {
-        kill_all_file_transfers_friend(toxic, Friends.list[i].num);
+    if (toxic == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < toxic->friends->max_idx; ++i) {
+        kill_all_file_transfers_friend(toxic, toxic->friends->list[i].num);
     }
 }
 
-bool file_transfer_recv_path_exists(const char *path)
+bool file_transfer_recv_path_exists(const FriendsList *friends, const char *path)
 {
-    for (size_t friendnumber = 0; friendnumber < Friends.max_idx; ++friendnumber) {
-        if (!Friends.list[friendnumber].active) {
+    if (friends == NULL) {
+        return false;
+    }
+
+    for (size_t friendnumber = 0; friendnumber < friends->max_idx; ++friendnumber) {
+        if (!friends->list[friendnumber].active) {
             continue;
         }
 
         for (size_t i = 0; i < MAX_FILES; ++i) {
-            FileTransfer *ft = &Friends.list[friendnumber].file_receiver[i];
+            FileTransfer *ft = &friends->list[friendnumber].file_receiver[i];
 
             if (ft->state == FILE_TRANSFER_INACTIVE) {
                 continue;
