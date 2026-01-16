@@ -121,6 +121,7 @@ jobs:
             -DQRCODE
             -DSOUND_NOTIFY
             -DVIDEO
+            -DENABLE_TOX_EXPERIMENTAL
       - name: Print log
         run:
           cat /__w/toxic/toxic/infer-out/report.txt
