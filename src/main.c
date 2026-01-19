@@ -885,6 +885,101 @@ static void set_default_run_options(Run_Options *run_opts)
     run_opts->proxy_type = (uint8_t) TOX_PROXY_TYPE_NONE;
 }
 
+static void handle_opt_config_file(Run_Options *run_opts, Init_Queue *init_q, const char *arg_str)
+{
+    snprintf(run_opts->config_path, sizeof(run_opts->config_path), "%s", arg_str);
+    run_opts->use_custom_config_file = true;
+
+    init_queue_add(init_q, "Using '%s' custom config file", run_opts->config_path);
+}
+
+static void handle_opt_data_file(Toxic *toxic, Run_Options *run_opts, Init_Queue *init_q, const char *arg_str)
+{
+    run_opts->use_custom_data = true;
+
+    Client_Data *client_data = &toxic->client_data;
+
+    free(client_data->data_path);
+    client_data->data_path = NULL;
+
+    free(client_data->block_path);
+    client_data->block_path = NULL;
+
+    client_data->data_path = strdup(arg_str);
+
+    if (client_data->data_path == NULL) {
+        exit_toxic_err(FATALERR_MEMORY, "failed in parse_args");
+    }
+
+    size_t block_path_len = strlen(arg_str) + strlen("-blocklist") + 1;
+    client_data->block_path = malloc(block_path_len);
+
+    if (client_data->block_path == NULL) {
+        exit_toxic_err(FATALERR_MEMORY, "failed in parse_args");
+    }
+
+    snprintf(client_data->block_path, block_path_len, "%s-blocklist", arg_str);
+
+    init_queue_add(init_q, "Using '%s' tox profile", client_data->data_path);
+}
+
+static void handle_opt_logging(Run_Options *run_opts, Init_Queue *init_q, const char *arg_str)
+{
+    run_opts->logging = true;
+
+    if (strcmp(arg_str, "stderr") != 0) {
+        run_opts->log_fp = fopen(arg_str, "w");
+
+        if (run_opts->log_fp != NULL) {
+            init_queue_add(init_q, "Toxcore logging enabled to %s", arg_str);
+        } else {
+            run_opts->debug = true;
+            init_queue_add(init_q, "Failed to open log file %s. Falling back to stderr.", arg_str);
+        }
+    } else {
+        run_opts->debug = true;
+        init_queue_add(init_q, "Toxcore logging enabled to stderr");
+    }
+}
+
+static void handle_opt_proxy(Run_Options *run_opts, Init_Queue *init_q, const char *arg_str, int *opt_idx, int argc,
+                             char *argv[])
+{
+    if (run_opts->proxy_type == TOX_PROXY_TYPE_NONE) {
+        run_opts->proxy_type = TOX_PROXY_TYPE_HTTP;
+    }
+
+    snprintf(run_opts->proxy_address, sizeof(run_opts->proxy_address), "%s", arg_str);
+
+    if (++(*opt_idx) > argc || argv[*opt_idx - 1][0] == '-') {
+        exit_toxic_err(FATALERR_PROXY, "Proxy error");
+    }
+
+    const long int port = strtol(argv[*opt_idx - 1], NULL, 10);
+
+    if (port <= 0 || port > MAX_PORT_RANGE) {
+        exit_toxic_err(FATALERR_PROXY, "Proxy error");
+    }
+
+    run_opts->proxy_port = port;
+}
+
+#ifdef TOX_EXPERIMENTAL
+static void handle_opt_netstats(Run_Options *run_opts, Init_Queue *init_q, const char *arg_str)
+{
+    run_opts->netprof_fp = fopen(arg_str, "w");
+
+    if (run_opts->netprof_fp != NULL) {
+        init_queue_add(init_q, "Network profile logging enabled. Logging to file: '%s'", arg_str);
+        run_opts->netprof_log_dump = true;
+        run_opts->netprof_start_time = time(NULL);
+    } else {
+        init_queue_add(init_q, "Failed to open file '%s' for network profile logging.", arg_str);
+    }
+}
+
+#endif
+
 static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
 {
     Run_Options *run_opts = toxic->run_opts;
@@ -937,15 +1032,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
             }
 
             case 'c': {
-                if (optarg == NULL) {
-                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
-                    break;
-                }
-
-                snprintf(run_opts->config_path, sizeof(run_opts->config_path), "%s", optarg);
-                run_opts->use_custom_config_file = true;
-
-                init_queue_add(init_q, "Using '%s' custom config file", run_opts->config_path);
+                handle_opt_config_file(run_opts, init_q, optarg);
                 break;
             }
 
@@ -961,60 +1048,13 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
             }
 
             case 'f': {
-                if (optarg == NULL) {
-                    init_queue_add(init_q, "Invalid argument for option: %d", opt);
-                    break;
-                }
-
-                run_opts->use_custom_data = true;
-
-                Client_Data *client_data = &toxic->client_data;
-
-                free(client_data->data_path);
-                client_data->data_path = NULL;
-
-                free(client_data->block_path);
-                client_data->block_path = NULL;
-
-                client_data->data_path = malloc(strlen(optarg) + 1);
-
-                if (client_data->data_path == NULL) {
-                    exit_toxic_err(FATALERR_MEMORY, "failed in parse_args");
-                }
-
-                strcpy(client_data->data_path, optarg);
-
-                client_data->block_path = malloc(strlen(optarg) + strlen("-blocklist") + 1);
-
-                if (client_data->block_path == NULL) {
-                    exit_toxic_err(FATALERR_MEMORY, "failed in parse_args");
-                }
-
-                strcpy(client_data->block_path, optarg);
-                strcat(client_data->block_path, "-blocklist");
-
-                init_queue_add(init_q, "Using '%s' tox profile", client_data->data_path);
-
+                handle_opt_data_file(toxic, run_opts, init_q, optarg);
                 break;
             }
 
             case 'l': {
                 if (optarg) {
-                    run_opts->logging = true;
-
-                    if (strcmp(optarg, "stderr") != 0) {
-                        run_opts->log_fp = fopen(optarg, "w");
-
-                        if (run_opts->log_fp != NULL) {
-                            init_queue_add(init_q, "Toxcore logging enabled to %s", optarg);
-                        } else {
-                            run_opts->debug = true;
-                            init_queue_add(init_q, "Failed to open log file %s. Falling back to stderr.", optarg);
-                        }
-                    } else {
-                        run_opts->debug = true;
-                        init_queue_add(init_q, "Toxcore logging enabled to stderr");
-                    }
+                    handle_opt_logging(run_opts, init_q, optarg);
                 }
 
                 break;
@@ -1055,23 +1095,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
                     break;
                 }
 
-                if (run_opts->proxy_type == TOX_PROXY_TYPE_NONE) {
-                    run_opts->proxy_type = TOX_PROXY_TYPE_HTTP;
-                }
-
-                snprintf(run_opts->proxy_address, sizeof(run_opts->proxy_address), "%s", optarg);
-
-                if (++optind > argc || argv[optind - 1][0] == '-') {
-                    exit_toxic_err(FATALERR_PROXY, "Proxy error");
-                }
-
-                const long int port = strtol(argv[optind - 1], NULL, 10);
-
-                if (port <= 0 || port > MAX_PORT_RANGE) {
-                    exit_toxic_err(FATALERR_PROXY, "Proxy error");
-                }
-
-                run_opts->proxy_port = port;
+                handle_opt_proxy(run_opts, init_q, optarg, &optind, argc, argv);
                 break;
             }
 
@@ -1119,16 +1143,7 @@ static void parse_args(Toxic *toxic, Init_Queue *init_q, int argc, char *argv[])
                     break;
                 }
 
-                run_opts->netprof_fp = fopen(optarg, "w");
-
-                if (run_opts->netprof_fp != NULL) {
-                    init_queue_add(init_q, "Network profile logging enabled. Logging to file: '%s'", optarg);
-                    run_opts->netprof_log_dump = true;
-                    run_opts->netprof_start_time = time(NULL);
-                } else {
-                    init_queue_add(init_q, "Failed to open file '%s' for network profile logging.", optarg);
-                }
-
+                handle_opt_netstats(run_opts, init_q, optarg);
                 break;
             }
 
