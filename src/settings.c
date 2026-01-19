@@ -709,303 +709,306 @@ int settings_load_blocked_words(Client_Data *client_data, const Run_Options *run
     return 0;
 }
 
-int settings_load_main(Client_Config *s, const Run_Options *run_opts)
+static void settings_load_ui(config_t *cfg, Client_Config *s)
 {
-    config_t cfg[1];
-    config_init(cfg);
-
-    config_setting_t *setting = NULL;
-
-    /* Load default settings */
-    ui_defaults(s);
-    tox_defaults(s);
-    key_defaults(s);
-
-#ifdef AUDIO
-    audio_defaults(s);
-#endif
-
-    const int c_ret = settings_init_config(cfg, run_opts);
-
-    if (c_ret < 0) {
-        config_destroy(cfg);
-        return c_ret;
-    }
-
+    config_setting_t *setting = config_lookup(cfg, ui_strings.self);
     const char *str = NULL;
     int bool_val;
 
-    /* ui */
-    if ((setting = config_lookup(cfg, ui_strings.self)) != NULL) {
-        if (config_setting_lookup_bool(setting, ui_strings.timestamps, &bool_val)) {
-            s->show_timestamps = bool_val != 0;
-        }
+    if (setting == NULL) {
+        return;
+    }
 
-        int time = 24;
+    if (config_setting_lookup_bool(setting, ui_strings.timestamps, &bool_val)) {
+        s->show_timestamps = bool_val != 0;
+    }
 
-        if (config_setting_lookup_int(setting, ui_strings.time_format, &time)) {
-            if (time == 12) {
-                snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M %p");
-                snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M %p]");
-            }
-        }
+    int time = 24;
 
-        if (config_setting_lookup_string(setting, ui_strings.timestamp_format, &str)) {
-            snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.color_bar_bg, &str)) {
-            snprintf(s->color_bar_bg, sizeof(s->color_bar_bg), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.color_bar_fg, &str)) {
-            snprintf(s->color_bar_fg, sizeof(s->color_bar_fg), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.color_bar_accent, &str)) {
-            snprintf(s->color_bar_accent, sizeof(s->color_bar_accent), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.color_bar_notify, &str)) {
-            snprintf(s->color_bar_notify, sizeof(s->color_bar_notify), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.log_timestamp_format, &str)) {
-            snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", str);
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.alerts, &bool_val)) {
-            s->alerts = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_notification_content, &bool_val)) {
-            s->show_notification_content = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_message, &bool_val)) {
-            s->bell_on_message = bool_val != 0 ? NT_BEEP : 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans, &bool_val)) {
-            s->bell_on_filetrans = bool_val != 0 ? NT_BEEP : 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans_accept, &bool_val)) {
-            s->bell_on_filetrans_accept = bool_val != 0 ? NT_BEEP : 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.bell_on_invite, &bool_val)) {
-            s->bell_on_invite = bool_val != 0 ? NT_BEEP : 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.autolog, &bool_val)) {
-            s->autolog = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.native_colors, &bool_val)) {
-            s->native_colors = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_typing_self, &bool_val)) {
-            s->show_typing_self = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_typing_other, &bool_val)) {
-            s->show_typing_other = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &bool_val)) {
-            s->show_welcome_msg = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &bool_val)) {
-            s->show_connection_msg = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_group_connection_msg, &bool_val)) {
-            s->show_group_connection_msg = bool_val != 0;
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.show_network_info, &bool_val)) {
-            s->show_network_info = bool_val != 0;
-        }
-
-        config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
-        config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
-        config_setting_lookup_int(setting, ui_strings.nodeslist_update_freq, &s->nodeslist_update_freq);
-        config_setting_lookup_int(setting, ui_strings.autosave_freq, &s->autosave_freq);
-
-        if (config_setting_lookup_bool(setting, ui_strings.line_padding, &bool_val)) {
-            s->line_padding = bool_val != 0;
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.line_join, &str)) {
-            snprintf(s->line_join, sizeof(s->line_join), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.line_quit, &str)) {
-            snprintf(s->line_quit, sizeof(s->line_quit), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.line_alert, &str)) {
-            snprintf(s->line_alert, sizeof(s->line_alert), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.line_normal, &str)) {
-            snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.line_special, &str)) {
-            snprintf(s->line_special, sizeof(s->line_special), "%s", str);
-        }
-
-        if (config_setting_lookup_bool(setting, ui_strings.mplex_away, &bool_val)) {
-            s->mplex_away = bool_val != 0;
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.mplex_away_note, &str)) {
-            snprintf(s->mplex_away_note, sizeof(s->mplex_away_note), "%s", str);
-        }
-
-        if (config_setting_lookup_string(setting, ui_strings.group_part_message, &str)) {
-            snprintf(s->group_part_message, sizeof(s->group_part_message), "%s", str);
+    if (config_setting_lookup_int(setting, ui_strings.time_format, &time)) {
+        if (time == 12) {
+            snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", "%I:%M %p");
+            snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", "%Y/%m/%d [%I:%M %p]");
         }
     }
 
-    /* paths */
-    if ((setting = config_lookup(cfg, tox_strings.self)) != NULL) {
-        if (config_setting_lookup_string(setting, tox_strings.download_path, &str)) {
-            snprintf(s->download_path, sizeof(s->download_path), "%s", str);
-            const size_t len = strlen(s->download_path);
+    if (config_setting_lookup_string(setting, ui_strings.timestamp_format, &str)) {
+        snprintf(s->timestamp_format, sizeof(s->timestamp_format), "%s", str);
+    }
 
-            /* make sure path ends with a '/' */
-            if (len >= sizeof(s->download_path) - 2) {
-                s->download_path[0] = '\0';
-            } else if (len > 0 && s->download_path[len - 1] != '/') {
-                strcat(&s->download_path[len - 1], "/");
-            }
+    if (config_setting_lookup_string(setting, ui_strings.color_bar_bg, &str)) {
+        snprintf(s->color_bar_bg, sizeof(s->color_bar_bg), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.color_bar_fg, &str)) {
+        snprintf(s->color_bar_fg, sizeof(s->color_bar_fg), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.color_bar_accent, &str)) {
+        snprintf(s->color_bar_accent, sizeof(s->color_bar_accent), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.color_bar_notify, &str)) {
+        snprintf(s->color_bar_notify, sizeof(s->color_bar_notify), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.log_timestamp_format, &str)) {
+        snprintf(s->log_timestamp_format, sizeof(s->log_timestamp_format), "%s", str);
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.alerts, &bool_val)) {
+        s->alerts = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_notification_content, &bool_val)) {
+        s->show_notification_content = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.bell_on_message, &bool_val)) {
+        s->bell_on_message = bool_val != 0 ? NT_BEEP : 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans, &bool_val)) {
+        s->bell_on_filetrans = bool_val != 0 ? NT_BEEP : 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.bell_on_filetrans_accept, &bool_val)) {
+        s->bell_on_filetrans_accept = bool_val != 0 ? NT_BEEP : 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.bell_on_invite, &bool_val)) {
+        s->bell_on_invite = bool_val != 0 ? NT_BEEP : 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.autolog, &bool_val)) {
+        s->autolog = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.native_colors, &bool_val)) {
+        s->native_colors = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_typing_self, &bool_val)) {
+        s->show_typing_self = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_typing_other, &bool_val)) {
+        s->show_typing_other = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_welcome_msg, &bool_val)) {
+        s->show_welcome_msg = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_connection_msg, &bool_val)) {
+        s->show_connection_msg = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_group_connection_msg, &bool_val)) {
+        s->show_group_connection_msg = bool_val != 0;
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.show_network_info, &bool_val)) {
+        s->show_network_info = bool_val != 0;
+    }
+
+    config_setting_lookup_int(setting, ui_strings.history_size, &s->history_size);
+    config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
+    config_setting_lookup_int(setting, ui_strings.nodeslist_update_freq, &s->nodeslist_update_freq);
+    config_setting_lookup_int(setting, ui_strings.autosave_freq, &s->autosave_freq);
+
+    if (config_setting_lookup_bool(setting, ui_strings.line_padding, &bool_val)) {
+        s->line_padding = bool_val != 0;
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.line_join, &str)) {
+        snprintf(s->line_join, sizeof(s->line_join), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.line_quit, &str)) {
+        snprintf(s->line_quit, sizeof(s->line_quit), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.line_alert, &str)) {
+        snprintf(s->line_alert, sizeof(s->line_alert), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.line_normal, &str)) {
+        snprintf(s->line_normal, sizeof(s->line_normal), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.line_special, &str)) {
+        snprintf(s->line_special, sizeof(s->line_special), "%s", str);
+    }
+
+    if (config_setting_lookup_bool(setting, ui_strings.mplex_away, &bool_val)) {
+        s->mplex_away = bool_val != 0;
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.mplex_away_note, &str)) {
+        snprintf(s->mplex_away_note, sizeof(s->mplex_away_note), "%s", str);
+    }
+
+    if (config_setting_lookup_string(setting, ui_strings.group_part_message, &str)) {
+        snprintf(s->group_part_message, sizeof(s->group_part_message), "%s", str);
+    }
+}
+
+static void settings_load_paths(config_t *cfg, Client_Config *s)
+{
+    config_setting_t *setting = config_lookup(cfg, tox_strings.self);
+    const char *str = NULL;
+
+    if (setting == NULL) {
+        return;
+    }
+
+    if (config_setting_lookup_string(setting, tox_strings.download_path, &str)) {
+        snprintf(s->download_path, sizeof(s->download_path), "%s", str);
+        const size_t len = strlen(s->download_path);
+
+        /* make sure path ends with a '/' */
+        if (len >= sizeof(s->download_path) - 2) {
+            s->download_path[0] = '\0';
+        } else if (len > 0 && s->download_path[len - 1] != '/') {
+            strcat(&s->download_path[len - 1], "/");
         }
+    }
 
-        if (config_setting_lookup_string(setting, tox_strings.chatlogs_path, &str)) {
-            snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
-            const size_t len = strlen(s->chatlogs_path);
+    if (config_setting_lookup_string(setting, tox_strings.chatlogs_path, &str)) {
+        snprintf(s->chatlogs_path, sizeof(s->chatlogs_path), "%s", str);
+        const size_t len = strlen(s->chatlogs_path);
 
-            if (len >= sizeof(s->chatlogs_path) - 2) {
-                s->chatlogs_path[0] = '\0';
-            } else if (len > 0 && s->chatlogs_path[len - 1] != '/') {
-                strcat(&s->chatlogs_path[len - 1], "/");
-            }
+        if (len >= sizeof(s->chatlogs_path) - 2) {
+            s->chatlogs_path[0] = '\0';
+        } else if (len > 0 && s->chatlogs_path[len - 1] != '/') {
+            strcat(&s->chatlogs_path[len - 1], "/");
         }
+    }
 
-        if (config_setting_lookup_string(setting, tox_strings.avatar_path, &str)) {
-            snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
-            const size_t len = strlen(str);
+    if (config_setting_lookup_string(setting, tox_strings.avatar_path, &str)) {
+        snprintf(s->avatar_path, sizeof(s->avatar_path), "%s", str);
+        const size_t len = strlen(str);
 
-            if (len >= sizeof(s->avatar_path)) {
-                s->avatar_path[0] = '\0';
-            }
+        if (len >= sizeof(s->avatar_path)) {
+            s->avatar_path[0] = '\0';
         }
+    }
 
 #ifdef PYTHON
 
-        if (config_setting_lookup_string(setting, tox_strings.autorun_path, &str)) {
-            snprintf(s->autorun_path, sizeof(s->autorun_path), "%s", str);
-            const size_t len = strlen(str);
+    if (config_setting_lookup_string(setting, tox_strings.autorun_path, &str)) {
+        snprintf(s->autorun_path, sizeof(s->autorun_path), "%s", str);
+        const size_t len = strlen(str);
 
-            if (len >= sizeof(s->autorun_path) - 2) {
-                s->autorun_path[0] = '\0';
-            } else if (len > 0 && s->autorun_path[len - 1] != '/') {
-                strcat(&s->autorun_path[len - 1], "/");
-            }
+        if (len >= sizeof(s->autorun_path) - 2) {
+            s->autorun_path[0] = '\0';
+        } else if (len > 0 && s->autorun_path[len - 1] != '/') {
+            strcat(&s->autorun_path[len - 1], "/");
         }
+    }
 
 #endif
 
-        if (config_setting_lookup_string(setting, tox_strings.password_eval, &str)) {
-            snprintf(s->password_eval, sizeof(s->password_eval), "%s", str);
-            const size_t len = strlen(str);
+    if (config_setting_lookup_string(setting, tox_strings.password_eval, &str)) {
+        snprintf(s->password_eval, sizeof(s->password_eval), "%s", str);
+        const size_t len = strlen(str);
 
-            if (len >= sizeof(s->password_eval)) {
-                s->password_eval[0] = '\0';
-            }
+        if (len >= sizeof(s->password_eval)) {
+            s->password_eval[0] = '\0';
         }
     }
+}
 
-    /* keys */
-    if ((setting = config_lookup(cfg, key_strings.self)) != NULL) {
-        const char *tmp = NULL;
+static void settings_load_keys(config_t *cfg, Client_Config *s)
+{
+    config_setting_t *setting = config_lookup(cfg, key_strings.self);
+    const char *tmp = NULL;
 
-        if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) {
-            set_key_binding(&s->key_next_tab, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) {
-            set_key_binding(&s->key_prev_tab, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) {
-            set_key_binding(&s->key_scroll_line_up, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) {
-            set_key_binding(&s->key_scroll_line_down, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) {
-            set_key_binding(&s->key_half_page_up, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) {
-            set_key_binding(&s->key_half_page_down, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) {
-            set_key_binding(&s->key_page_bottom, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp)) {
-            set_key_binding(&s->key_toggle_peerlist, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp)) {
-            set_key_binding(&s->key_toggle_pastemode, &tmp);
-        }
-
-        if (config_setting_lookup_string(setting, key_strings.reload_config, &tmp)) {
-            set_key_binding(&s->key_reload_config, &tmp);
-        }
+    if (setting == NULL) {
+        return;
     }
+
+    if (config_setting_lookup_string(setting, key_strings.next_tab, &tmp)) {
+        set_key_binding(&s->key_next_tab, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.prev_tab, &tmp)) {
+        set_key_binding(&s->key_prev_tab, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.scroll_line_up, &tmp)) {
+        set_key_binding(&s->key_scroll_line_up, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.scroll_line_down, &tmp)) {
+        set_key_binding(&s->key_scroll_line_down, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.half_page_up, &tmp)) {
+        set_key_binding(&s->key_half_page_up, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.half_page_down, &tmp)) {
+        set_key_binding(&s->key_half_page_down, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.page_bottom, &tmp)) {
+        set_key_binding(&s->key_page_bottom, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.toggle_peerlist, &tmp)) {
+        set_key_binding(&s->key_toggle_peerlist, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.toggle_pastemode, &tmp)) {
+        set_key_binding(&s->key_toggle_pastemode, &tmp);
+    }
+
+    if (config_setting_lookup_string(setting, key_strings.reload_config, &tmp)) {
+        set_key_binding(&s->key_reload_config, &tmp);
+    }
+}
 
 #ifdef AUDIO
+static void settings_load_audio(config_t *cfg, Client_Config *s)
+{
+    config_setting_t *setting = config_lookup(cfg, audio_strings.self);
+    int bool_val;
 
-    /* Audio */
-    if ((setting = config_lookup(cfg, audio_strings.self)) != NULL) {
-        config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
-        s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
-
-        config_setting_lookup_int(setting, audio_strings.output_device, &s->audio_out_dev);
-        s->audio_out_dev = s->audio_out_dev < 0 || s->audio_out_dev > MAX_DEVICES ? 0 : s->audio_out_dev;
-
-        config_setting_lookup_float(setting, audio_strings.VAD_threshold, &s->VAD_threshold);
-
-        config_setting_lookup_int(setting, audio_strings.conference_audio_channels, &s->conference_audio_channels);
-        s->conference_audio_channels = s->conference_audio_channels <= 0
-                                       || s->conference_audio_channels > 2 ? 1 : s->conference_audio_channels;
-
-        config_setting_lookup_int(setting, audio_strings.chat_audio_channels, &s->chat_audio_channels);
-        s->chat_audio_channels = s->chat_audio_channels <= 0 || s->chat_audio_channels > 2 ? 2 : s->chat_audio_channels;
-
-        if (config_setting_lookup_bool(setting, audio_strings.push_to_talk, &bool_val)) {
-            s->push_to_talk = bool_val != 0;
-        }
+    if (setting == NULL) {
+        return;
     }
+
+    config_setting_lookup_int(setting, audio_strings.input_device, &s->audio_in_dev);
+    s->audio_in_dev = s->audio_in_dev < 0 || s->audio_in_dev > MAX_DEVICES ? 0 : s->audio_in_dev;
+
+    config_setting_lookup_int(setting, audio_strings.output_device, &s->audio_out_dev);
+    s->audio_out_dev = s->audio_out_dev < 0 || s->audio_out_dev > MAX_DEVICES ? 0 : s->audio_out_dev;
+
+    config_setting_lookup_float(setting, audio_strings.VAD_threshold, &s->VAD_threshold);
+
+    config_setting_lookup_int(setting, audio_strings.conference_audio_channels, &s->conference_audio_channels);
+    s->conference_audio_channels = s->conference_audio_channels <= 0
+                                   || s->conference_audio_channels > 2 ? 1 : s->conference_audio_channels;
+
+    config_setting_lookup_int(setting, audio_strings.chat_audio_channels, &s->chat_audio_channels);
+    s->chat_audio_channels = s->chat_audio_channels <= 0 || s->chat_audio_channels > 2 ? 2 : s->chat_audio_channels;
+
+    if (config_setting_lookup_bool(setting, audio_strings.push_to_talk, &bool_val)) {
+        s->push_to_talk = bool_val != 0;
+    }
+}
 
 #endif
 
 #ifdef SOUND_NOTIFY
+static void settings_load_sounds(config_t *cfg, Client_Config *s)
+{
+    config_setting_t *setting = config_lookup(cfg, sound_strings.self);
+    const char *str = NULL;
 
-    /* Sound notifications */
-    if ((setting = config_lookup(cfg, sound_strings.self)) != NULL) {
+    if (setting != NULL) {
         if ((config_setting_lookup_string(setting, sound_strings.notif_error, &str) != CONFIG_TRUE) ||
                 !set_sound(notif_error, str)) {
             if (str && strcasecmp(str, NO_SOUND) != 0) {
@@ -1071,7 +1074,41 @@ int settings_load_main(Client_Config *s, const Run_Options *run_opts)
         set_sound(transfer_pending, PACKAGE_DATADIR "/sounds/ToxicTransferStart.wav");
         set_sound(transfer_completed, PACKAGE_DATADIR "/sounds/ToxicTransferComplete.wav");
     }
+}
 
+#endif
+
+int settings_load_main(Client_Config *s, const Run_Options *run_opts)
+{
+    config_t cfg[1];
+    config_init(cfg);
+
+    /* Load default settings */
+    ui_defaults(s);
+    tox_defaults(s);
+    key_defaults(s);
+
+#ifdef AUDIO
+    audio_defaults(s);
+#endif
+
+    const int c_ret = settings_init_config(cfg, run_opts);
+
+    if (c_ret < 0) {
+        config_destroy(cfg);
+        return c_ret;
+    }
+
+    settings_load_ui(cfg, s);
+    settings_load_paths(cfg, s);
+    settings_load_keys(cfg, s);
+
+#ifdef AUDIO
+    settings_load_audio(cfg, s);
+#endif
+
+#ifdef SOUND_NOTIFY
+    settings_load_sounds(cfg, s);
 #endif
 
     config_destroy(cfg);
