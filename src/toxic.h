@@ -107,6 +107,7 @@ typedef struct Toxic {
 
     FriendRequests frnd_requests;
     Paths         *paths;
+    time_t        last_bootstrap_time;
 } Toxic;
 
 typedef struct Init_Queue Init_Queue;

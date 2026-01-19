@@ -667,11 +667,10 @@ void do_tox_connection(Toxic *toxic)
         return;
     }
 
-    static time_t last_bootstrap_time = 0;  // TODO: Put this in Toxic
     const bool connected = prompt_selfConnectionStatus(toxic) != TOX_CONNECTION_NONE;
 
-    if (!connected && timed_out(last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL)) {
+    if (!connected && timed_out(toxic->last_bootstrap_time, TRY_BOOTSTRAP_INTERVAL)) {
         DHT_bootstrap(toxic->tox);
-        last_bootstrap_time = get_unix_time();
+        toxic->last_bootstrap_time = get_unix_time();
     }
 }
