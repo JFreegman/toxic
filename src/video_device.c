@@ -185,28 +185,25 @@ VideoDeviceError init_video_devices(Toxic *toxic)
 
             /* Query V4L for capture capabilities */
             if (-1 != ioctl(fd, VIDIOC_QUERYCAP, &cap)) {
-                video_input_name = (char *)malloc(strlen((const char *)cap.card) + strlen(device_address) + 4);
+                size_t video_input_name_len = strlen((const char *)cap.card) + strlen(device_address) + 4;
+                video_input_name = malloc(video_input_name_len);
 
                 if (video_input_name == NULL) {
                     close(fd);
                     return vde_InternalError;
                 }
 
-                strcpy(video_input_name, (char *)cap.card);
-                strcat(video_input_name, " (");
-                strcat(video_input_name, (char *)device_address);
-                strcat(video_input_name, ")");
+                snprintf(video_input_name, video_input_name_len, "%s (%s)", (char *)cap.card, device_address);
             } else {
-                video_input_name = (char *)malloc(strlen(device_address) + 3);
+                size_t video_input_name_len = strlen(device_address) + 3;
+                video_input_name = malloc(video_input_name_len);
 
                 if (video_input_name == NULL) {
                     close(fd);
                     return vde_InternalError;
                 }
 
-                strcpy(video_input_name, "(");
-                strcat(video_input_name, device_address);
-                strcat(video_input_name, ")");
+                snprintf(video_input_name, video_input_name_len, "(%s)", device_address);
             }
 
             video_devices_names[vdt_input][c_size[vdt_input]] = video_input_name;

@@ -375,38 +375,37 @@ void filter_string(char *str, size_t len, bool is_nick)
 
 int get_file_name(char *namebuf, size_t bufsize, const char *pathname)
 {
-    int len = strlen(pathname) - 1;
-    char *path = strdup(pathname);
-
-    if (path == NULL) {
+    if (!pathname || bufsize == 0) {
         return -1;
     }
 
-    while (len >= 0 && pathname[len] == '/') {
-        path[len] = '\0';
-        --len;
+    const char *end = pathname + strlen(pathname);
+
+    while (end > pathname && *(end - 1) == '/') {
+        end--;
     }
 
-    char *finalname = strdup(path);
-
-    if (finalname == NULL) {
-        free(path);
-        return -1;
+    if (end == pathname) {
+        namebuf[0] = '\0';
+        return 0;
     }
 
-    const char *basenm = strrchr(path, '/');
+    const char *start = end;
 
-    if (basenm != NULL) {
-        if (basenm[1]) {
-            strcpy(finalname, &basenm[1]);
-        }
+    while (start > pathname && *(start - 1) != '/') {
+        start--;
     }
 
-    snprintf(namebuf, bufsize, "%s", finalname);
-    free(finalname);
-    free(path);
+    size_t len = (size_t)(end - start);
 
-    return (int)strlen(namebuf);
+    if (len >= bufsize) {
+        len = bufsize - 1;
+    }
+
+    memcpy(namebuf, start, len);
+    namebuf[len] = '\0';
+
+    return (int)len;
 }
 
 /* Gets the base directory of path and puts it in dir.
@@ -449,15 +448,20 @@ size_t get_nick_truncate(Tox *tox, char *buf, uint16_t buf_size, uint32_t friend
     Tox_Err_Friend_Query err;
     size_t len = tox_friend_get_name_size(tox, friendnum, &err);
 
-    if (err != TOX_ERR_FRIEND_QUERY_OK) {
+    if (err != TOX_ERR_FRIEND_QUERY_OK || len == 0) {
         goto on_error;
     } else {
-        if (!tox_friend_get_name(tox, friendnum, (uint8_t *) buf, NULL)) {
+        uint8_t name[TOX_MAX_NAME_LENGTH];
+
+        if (len > TOX_MAX_NAME_LENGTH || !tox_friend_get_name(tox, friendnum, name, NULL)) {
             goto on_error;
         }
+
+        len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+        len = MIN(len, (size_t)buf_size - 1);
+        memcpy(buf, name, len);
     }
 
-    len = MIN(len, buf_size - 1);
     buf[len] = '\0';
     filter_string(buf, len, false);
 
@@ -469,51 +473,62 @@ on_error:
 }
 
 /* same as get_nick_truncate but for conferences */
-int get_conference_nick_truncate(Tox *tox, char *buf, uint32_t peernum, uint32_t conferencenum)
+int get_conference_nick_truncate(Tox *tox, char *buf, size_t buf_size, uint32_t peernum, uint32_t conferencenum)
 {
     Tox_Err_Conference_Peer_Query err;
     size_t len = tox_conference_peer_get_name_size(tox, conferencenum, peernum, &err);
 
-    if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK) {
+    if (err != TOX_ERR_CONFERENCE_PEER_QUERY_OK || len == 0) {
         goto on_error;
     } else {
-        if (!tox_conference_peer_get_name(tox, conferencenum, peernum, (uint8_t *) buf, NULL)) {
+        uint8_t name[TOX_MAX_NAME_LENGTH];
+
+        if (len > TOX_MAX_NAME_LENGTH || !tox_conference_peer_get_name(tox, conferencenum, peernum, name, NULL)) {
             goto on_error;
         }
+
+        len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+        len = MIN(len, buf_size - 1);
+        memcpy(buf, name, len);
     }
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
     filter_string(buf, len, true);
-    return len;
+    return (int)len;
 
 on_error:
-    strcpy(buf, UNKNOWN_NAME);
-    len = strlen(UNKNOWN_NAME);
-    buf[len] = '\0';
-
-    return len;
+    snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+    return (int)strlen(buf);
 }
 
 /* same as get_nick_truncate but for groupchats */
-size_t get_group_nick_truncate(Tox *tox, char *buf, uint32_t peer_id, uint32_t groupnum)
+size_t get_group_nick_truncate(Tox *tox, char *buf, size_t buf_size, uint32_t peer_id, uint32_t groupnum)
 {
     Tox_Err_Group_Peer_Query err;
     size_t len = tox_group_peer_get_name_size(tox, groupnum, peer_id, &err);
 
     if (err != TOX_ERR_GROUP_PEER_QUERY_OK || len == 0) {
-        strcpy(buf, UNKNOWN_NAME);
-        len = strlen(UNKNOWN_NAME);
+        snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+        len = strlen(buf);
     } else {
-        tox_group_peer_get_name(tox, groupnum, peer_id, (uint8_t *) buf, &err);
+        uint8_t name[TOX_MAX_NAME_LENGTH];
+
+        if (len > TOX_MAX_NAME_LENGTH) {
+            len = TOX_MAX_NAME_LENGTH;
+        }
+
+        tox_group_peer_get_name(tox, groupnum, peer_id, name, &err);
 
         if (err != TOX_ERR_GROUP_PEER_QUERY_OK) {
-            strcpy(buf, UNKNOWN_NAME);
-            len = strlen(UNKNOWN_NAME);
+            snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+            len = strlen(buf);
+        } else {
+            len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+            len = MIN(len, buf_size - 1);
+            memcpy(buf, name, len);
         }
     }
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
 
     filter_string(buf, len, true);
@@ -522,24 +537,33 @@ size_t get_group_nick_truncate(Tox *tox, char *buf, uint32_t peer_id, uint32_t g
 }
 
 /* same as get_group_nick_truncate() but for self. */
-size_t get_group_self_nick_truncate(Tox *tox, char *buf, uint32_t groupnum)
+size_t get_group_self_nick_truncate(Tox *tox, char *buf, size_t buf_size, uint32_t groupnum)
 {
     Tox_Err_Group_Self_Query err;
     size_t len = tox_group_self_get_name_size(tox, groupnum, &err);
 
-    if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
-        strcpy(buf, UNKNOWN_NAME);
-        len = strlen(UNKNOWN_NAME);
+    if (err != TOX_ERR_GROUP_SELF_QUERY_OK || len == 0) {
+        snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+        len = strlen(buf);
     } else {
-        tox_group_self_get_name(tox, groupnum, (uint8_t *) buf, &err);
+        uint8_t name[TOX_MAX_NAME_LENGTH];
+
+        if (len > TOX_MAX_NAME_LENGTH) {
+            len = TOX_MAX_NAME_LENGTH;
+        }
+
+        tox_group_self_get_name(tox, groupnum, name, &err);
 
         if (err != TOX_ERR_GROUP_SELF_QUERY_OK) {
-            strcpy(buf, UNKNOWN_NAME);
-            len = strlen(UNKNOWN_NAME);
+            snprintf(buf, buf_size, "%s", UNKNOWN_NAME);
+            len = strlen(buf);
+        } else {
+            len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
+            len = MIN(len, buf_size - 1);
+            memcpy(buf, name, len);
         }
     }
 
-    len = MIN(len, TOXIC_MAX_NAME_LENGTH - 1);
     buf[len] = '\0';
 
     filter_string(buf, len, true);
@@ -691,8 +715,7 @@ void set_window_title(ToxWindow *self, const char *title, int len)
     }
 
     if (len > MAX_WINDOW_NAME_LENGTH) {
-        strcpy(&cpy[MAX_WINDOW_NAME_LENGTH - 3], "...");
-        cpy[MAX_WINDOW_NAME_LENGTH] = '\0';
+        memcpy(&cpy[MAX_WINDOW_NAME_LENGTH - 3], "...", 4);
     }
 
     snprintf(self->name, sizeof(self->name), "%s", cpy);

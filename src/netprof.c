@@ -33,15 +33,15 @@ static void log_tcp_packet_id(FILE *fp, unsigned int id, uint64_t total, uint64_
         case TOX_NETPROF_PACKET_ID_TCP_DATA: {
             if (TCP_id_recv || TCP_id_sent) {
                 fprintf(fp, "0x%02x (total):     %lu (%.2f%%)\n", id, TCP_id_sent + TCP_id_recv,
-                        ((float)TCP_id_recv + TCP_id_sent) / total * 100.0);
+                        ((double)TCP_id_recv + TCP_id_sent) / total * 100.0);
             }
 
             if (TCP_id_sent) {
-                fprintf(fp, "0x%02x (sent):      %lu (%.2f%%)\n", id, TCP_id_sent, (float)TCP_id_sent / total * 100.0);
+                fprintf(fp, "0x%02x (sent):      %lu (%.2f%%)\n", id, TCP_id_sent, (double)TCP_id_sent / total * 100.0);
             }
 
             if (TCP_id_recv) {
-                fprintf(fp, "0x%02x (recv):      %lu (%.2f%%)\n", id, TCP_id_recv, (float)TCP_id_recv / total * 100.0);
+                fprintf(fp, "0x%02x (recv):      %lu (%.2f%%)\n", id, TCP_id_recv, (double)TCP_id_recv / total * 100.0);
             }
 
             break;
@@ -92,15 +92,15 @@ static void log_udp_packet_id(FILE *fp, unsigned int id, uint64_t total, uint64_
         case TOX_NETPROF_PACKET_ID_STORE_ANNOUNCE_RESPONSE: {
             if (UDP_id_recv || UDP_id_sent) {
                 fprintf(fp, "0x%02x (total):     %lu (%.2f%%)\n", id, UDP_id_sent + UDP_id_recv,
-                        ((float)UDP_id_recv + UDP_id_sent) / total * 100.0);
+                        ((double)UDP_id_recv + UDP_id_sent) / total * 100.0);
             }
 
             if (UDP_id_sent) {
-                fprintf(fp, "0x%02x (sent):      %lu (%.2f%%)\n", id, UDP_id_sent, (float)UDP_id_sent / total * 100.0);
+                fprintf(fp, "0x%02x (sent):      %lu (%.2f%%)\n", id, UDP_id_sent, (double)UDP_id_sent / total * 100.0);
             }
 
             if (UDP_id_recv) {
-                fprintf(fp, "0x%02x (recv):      %lu (%.2f%%)\n", id, UDP_id_recv, (float)UDP_id_recv / total * 100.0);
+                fprintf(fp, "0x%02x (recv):      %lu (%.2f%%)\n", id, UDP_id_recv, (double)UDP_id_recv / total * 100.0);
             }
 
             break;
@@ -169,28 +169,28 @@ static void dump_packet_count_totals(const Tox *tox, FILE *fp, uint64_t total_pa
     fprintf(fp, "Total packets:          %lu\n", total_packet_count);
 
     fprintf(fp, "Total packets sent:     %lu (%.2f%%)\n", total_packet_count_sent,
-            (float)total_packet_count_sent / total_packet_count * 100.0);
+            (double)total_packet_count_sent / total_packet_count * 100.0);
 
     fprintf(fp, "Total packets recv:     %lu (%.2f%%)\n", total_packet_count_recv,
-            (float)total_packet_count_recv / total_packet_count * 100.0);
+            (double)total_packet_count_recv / total_packet_count * 100.0);
 
     fprintf(fp, "total UDP packets:      %lu (%.2f%%)\n", total_UDP_count,
-            (float)total_UDP_count / total_packet_count * 100.0);
+            (double)total_UDP_count / total_packet_count * 100.0);
 
     fprintf(fp, "UDP packets sent:       %lu (%.2f%%)\n", UDP_count_sent,
-            (float)UDP_count_sent / total_packet_count * 100.0);
+            (double)UDP_count_sent / total_packet_count * 100.0);
 
     fprintf(fp, "UDP packets recv:       %lu (%.2f%%)\n", UDP_count_recv,
-            (float)UDP_count_recv / total_packet_count * 100.0);
+            (double)UDP_count_recv / total_packet_count * 100.0);
 
     fprintf(fp, "Total TCP packets:      %lu (%.2f%%)\n", total_TCP_count,
-            (float)total_TCP_count / total_packet_count * 100.0);
+            (double)total_TCP_count / total_packet_count * 100.0);
 
     fprintf(fp, "TCP packets sent:       %lu (%.2f%%)\n", TCP_count_sent,
-            (float)TCP_count_sent / total_packet_count * 100.0);
+            (double)TCP_count_sent / total_packet_count * 100.0);
 
     fprintf(fp, "TCP packets recv:       %lu (%.2f%%)\n", TCP_count_recv,
-            (float)TCP_count_recv / total_packet_count * 100.0);
+            (double)TCP_count_recv / total_packet_count * 100.0);
 
     fprintf(fp, "\n\n");
 }
@@ -209,28 +209,28 @@ static void dump_packet_bytes_totals(const Tox *tox, FILE *fp, const uint64_t to
     fprintf(fp, "Total bytes:            %lu\n", total_bytes);
 
     fprintf(fp, "Total bytes sent:       %lu (%.2f%%)\n", total_bytes_sent,
-            (float)total_bytes_sent / total_bytes * 100.0);
+            (double)total_bytes_sent / total_bytes * 100.0);
 
     fprintf(fp, "Total bytes recv:       %lu (%.2f%%)\n", total_bytes_recv,
-            (float)total_bytes_recv / total_bytes * 100.0);
+            (double)total_bytes_recv / total_bytes * 100.0);
 
     fprintf(fp, "Total UDP bytes:        %lu (%.2f%%)\n", total_UDP_bytes,
-            (float)total_UDP_bytes / total_bytes * 100.0);
+            (double)total_UDP_bytes / total_bytes * 100.0);
 
     fprintf(fp, "UDP bytes sent:         %lu (%.2f%%)\n", UDP_bytes_sent,
-            (float)UDP_bytes_sent / total_bytes * 100.0);
+            (double)UDP_bytes_sent / total_bytes * 100.0);
 
     fprintf(fp, "UDP bytes recv:         %lu (%.2f%%)\n", UDP_bytes_recv,
-            (float)UDP_bytes_recv / total_bytes * 100.0);
+            (double)UDP_bytes_recv / total_bytes * 100.0);
 
     fprintf(fp, "Total TCP bytes:        %lu (%.2f%%)\n", total_TCP_bytes,
-            (float)total_TCP_bytes / total_bytes * 100.0);
+            (double)total_TCP_bytes / total_bytes * 100.0);
 
     fprintf(fp, "TCP bytes sent:         %lu (%.2f%%)\n", TCP_bytes_sent,
-            (float)TCP_bytes_sent / total_bytes * 100.0);
+            (double)TCP_bytes_sent / total_bytes * 100.0);
 
     fprintf(fp, "TCP bytes recv:         %lu (%.2f%%)\n", TCP_bytes_recv,
-            (float)TCP_bytes_recv / total_bytes * 100.0);
+            (double)TCP_bytes_recv / total_bytes * 100.0);
 
     fprintf(fp, "\n\n");
 }
@@ -266,7 +266,7 @@ void netprof_log_dump(const Tox *tox, FILE *fp, time_t run_time)
     fprintf(fp, "Run time: %lu seconds\n", run_time);
 
     if (run_time && total_count && total_bytes) {
-        fprintf(fp, "Average kilobytes per second: %.2f\n", ((float)total_bytes / run_time) / 1000.0);
+        fprintf(fp, "Average kilobytes per second: %.2f\n", ((double)total_bytes / run_time) / 1000.0);
         fprintf(fp, "Average packets per second: %lu\n", total_count / run_time);
         fprintf(fp, "Average packet size: %lu bytes\n", total_bytes / total_count);
         fprintf(fp, "\n");

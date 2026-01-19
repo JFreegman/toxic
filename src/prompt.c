@@ -332,45 +332,45 @@ static void draw_network_info(const Tox *tox, StatusBar *stb)
     stb->up_bytes = up_bytes;
     stb->down_bytes = down_bytes;
 
-    float up = up_bytes;
-    float down = down_bytes;
+    double up = (double)up_bytes;
+    double down = (double)down_bytes;
     const char *up_unit = "bytes";
     const char *down_unit = "bytes";
 
     if (up_bytes > MiB) {
-        up /= (float)MiB;
+        up /= (double)MiB;
         up_unit = "MiB";
     } else if (up_bytes > KiB) {
-        up /= (float)KiB;
+        up /= (double)KiB;
         up_unit = "KiB";
     }
 
     if (down_bytes > MiB) {
-        down /= (float)MiB;
+        down /= (double)MiB;
         down_unit = "MiB";
     } else if (down_bytes > KiB) {
-        down /= (float)KiB;
+        down /= (double)KiB;
         down_unit = "KiB";
     }
 
-    float up_bps = up_delta;
-    float down_bps = down_delta;
+    double up_bps = (double)up_delta;
+    double down_bps = (double)down_delta;
     const char *up_bps_unit = "b/s";
     const char *down_bps_unit = "b/s";
 
     if (up_bps > MiB) {
-        up_bps /= (float)MiB;
+        up_bps /= (double)MiB;
         up_bps_unit = "MiB/s";
     } else if (up_bps > KiB) {
-        up_bps /= (float)KiB;
+        up_bps /= (double)KiB;
         up_bps_unit = "KiB/s";
     }
 
     if (down_bps > MiB) {
-        down_bps /= (float)MiB;
+        down_bps /= (double)MiB;
         down_bps_unit = "MiB/s";
     } else if (down_bps > KiB) {
-        down_bps /= (float)KiB;
+        down_bps /= (double)KiB;
         down_bps_unit = "KiB/s";
     }
 

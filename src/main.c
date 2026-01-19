@@ -1192,20 +1192,18 @@ static void init_default_data_files(Client_Data *client_data, const Paths *paths
             exit_toxic_err(FATALERR_MEMORY, "strdup() failed in init_default_data_files()");
         }
     } else {
-        client_data->data_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1);
-        client_data->block_path = malloc(strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1);
+        size_t data_path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(DATANAME) + 1;
+        client_data->data_path = malloc(data_path_len);
+
+        size_t block_path_len = strlen(user_config_dir) + strlen(CONFIGDIR) + strlen(BLOCKNAME) + 1;
+        client_data->block_path = malloc(block_path_len);
 
         if (client_data->data_path == NULL || client_data->block_path == NULL) {
             exit_toxic_err(FATALERR_MEMORY, "malloc() failed in init_default_data_files()");
         }
 
-        strcpy(client_data->data_path, user_config_dir);
-        strcat(client_data->data_path, CONFIGDIR);
-        strcat(client_data->data_path, DATANAME);
-
-        strcpy(client_data->block_path, user_config_dir);
-        strcat(client_data->block_path, CONFIGDIR);
-        strcat(client_data->block_path, BLOCKNAME);
+        snprintf(client_data->data_path, data_path_len, "%s%s%s", user_config_dir, CONFIGDIR, DATANAME);
+        snprintf(client_data->block_path, block_path_len, "%s%s%s", user_config_dir, CONFIGDIR, BLOCKNAME);
     }
 
     free(user_config_dir);

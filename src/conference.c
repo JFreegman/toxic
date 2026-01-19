@@ -391,7 +391,7 @@ static void conference_onConferenceMessage(ToxWindow *self, Toxic *toxic, uint32
     ChatContext *ctx = self->chatwin;
 
     char nick[TOX_MAX_NAME_LENGTH];
-    get_conference_nick_truncate(tox, nick, peernum, conferencenum);
+    get_conference_nick_truncate(tox, nick, sizeof(nick), peernum, conferencenum);
 
     char selfnick[TOX_MAX_NAME_LENGTH];
     tox_self_get_name(tox, (uint8_t *) selfnick);
@@ -456,7 +456,7 @@ static void conference_onConferenceTitleChange(ToxWindow *self, Toxic *toxic, ui
     }
 
     char nick[TOX_MAX_NAME_LENGTH];
-    get_conference_nick_truncate(tox, nick, peernum, conferencenum);
+    get_conference_nick_truncate(tox, nick, sizeof(nick), peernum, conferencenum);
 
     char tmp_event[MAX_STR_SIZE];
     snprintf(tmp_event, sizeof(tmp_event), "-!- %s set the conference title to: %s", nick, title);

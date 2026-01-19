@@ -90,24 +90,24 @@ int create_user_config_dirs(char *path)
         return -1;
     }
 
-    char *fullpath = malloc(strlen(path) + strlen(CONFIGDIR) + 1);
+    size_t path_len = strlen(path);
+    size_t fullpath_len = path_len + strlen(CONFIGDIR) + 1;
+    char *fullpath = malloc(fullpath_len);
 
     if (fullpath == NULL) {
         return -1;
     }
 
-    char *logpath = malloc(strlen(path) + strlen(LOGDIR) + 1);
+    size_t logpath_len = path_len + strlen(LOGDIR) + 1;
+    char *logpath = malloc(logpath_len);
 
     if (logpath == NULL) {
         free(fullpath);
         return -1;
     }
 
-    strcpy(fullpath, path);
-    strcat(fullpath, CONFIGDIR);
-
-    strcpy(logpath, path);
-    strcat(logpath, LOGDIR);
+    snprintf(fullpath, fullpath_len, "%s%s", path, CONFIGDIR);
+    snprintf(logpath, logpath_len, "%s%s", path, LOGDIR);
 
     mkdir_err = mkdir(fullpath, 0700);
 

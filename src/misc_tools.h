@@ -215,13 +215,13 @@ void str_to_lower(char *str);
 size_t get_nick_truncate(Tox *tox, char *buf, uint16_t buf_size, uint32_t friendnum);
 
 /* same as get_nick_truncate but for conferences */
-int get_conference_nick_truncate(Tox *tox, char *buf, uint32_t peernum, uint32_t conferencenum);
+int get_conference_nick_truncate(Tox *tox, char *buf, size_t buf_size, uint32_t peernum, uint32_t conferencenum);
 
 /* same as get_nick_truncate but for groupchats */
-size_t get_group_nick_truncate(Tox *tox, char *buf, uint32_t peer_id, uint32_t groupnum);
+size_t get_group_nick_truncate(Tox *tox, char *buf, size_t buf_size, uint32_t peer_id, uint32_t groupnum);
 
 /* same as get_group_nick_truncate() but for self. */
-size_t get_group_self_nick_truncate(Tox *tox, char *buf, uint32_t groupnum);
+size_t get_group_self_nick_truncate(Tox *tox, char *buf, size_t buf_size, uint32_t groupnum);
 
 /* Copies up to `size` bytes from the `data` string of length `length` to the `msg` buffer,
  * replacing all \t and \v bytes with spaces, and removing all \r bytes.

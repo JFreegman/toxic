@@ -150,11 +150,11 @@ static void ui_defaults(Client_Config *settings)
     settings->autosave_freq = 600;
 
     settings->line_padding = true;
-    snprintf(settings->line_join, LINE_HINT_MAX + 1, "%s", LINE_JOIN);
-    snprintf(settings->line_quit, LINE_HINT_MAX + 1, "%s", LINE_QUIT);
-    snprintf(settings->line_alert, LINE_HINT_MAX + 1, "%s", LINE_ALERT);
-    snprintf(settings->line_normal, LINE_HINT_MAX + 1, "%s", LINE_NORMAL);
-    snprintf(settings->line_special, LINE_HINT_MAX + 1, "%s", LINE_SPECIAL);
+    snprintf(settings->line_join, sizeof(settings->line_join), "%s", LINE_JOIN);
+    snprintf(settings->line_quit, sizeof(settings->line_quit), "%s", LINE_QUIT);
+    snprintf(settings->line_alert, sizeof(settings->line_alert), "%s", LINE_ALERT);
+    snprintf(settings->line_normal, sizeof(settings->line_normal), "%s", LINE_NORMAL);
+    snprintf(settings->line_special, sizeof(settings->line_special), "%s", LINE_SPECIAL);
 
     settings->mplex_away = true;
     snprintf(settings->mplex_away_note, sizeof(settings->mplex_away_note), "%s", MPLEX_AWAY_NOTE);
@@ -221,11 +221,11 @@ static const struct tox_strings {
 
 static void tox_defaults(Client_Config *settings)
 {
-    strcpy(settings->download_path, "");
-    strcpy(settings->chatlogs_path, "");
-    strcpy(settings->avatar_path, "");
-    strcpy(settings->autorun_path, "");
-    strcpy(settings->password_eval, "");
+    settings->download_path[0] = '\0';
+    settings->chatlogs_path[0] = '\0';
+    settings->avatar_path[0] = '\0';
+    settings->autorun_path[0] = '\0';
+    settings->password_eval[0] = '\0';
 }
 
 #ifdef AUDIO
@@ -872,7 +872,8 @@ static void settings_load_paths(config_t *cfg, Client_Config *s)
         if (len >= sizeof(s->download_path) - 2) {
             s->download_path[0] = '\0';
         } else if (len > 0 && s->download_path[len - 1] != '/') {
-            strcat(&s->download_path[len - 1], "/");
+            s->download_path[len] = '/';
+            s->download_path[len + 1] = '\0';
         }
     }
 
@@ -883,7 +884,8 @@ static void settings_load_paths(config_t *cfg, Client_Config *s)
         if (len >= sizeof(s->chatlogs_path) - 2) {
             s->chatlogs_path[0] = '\0';
         } else if (len > 0 && s->chatlogs_path[len - 1] != '/') {
-            strcat(&s->chatlogs_path[len - 1], "/");
+            s->chatlogs_path[len] = '/';
+            s->chatlogs_path[len + 1] = '\0';
         }
     }
 
@@ -905,7 +907,8 @@ static void settings_load_paths(config_t *cfg, Client_Config *s)
         if (len >= sizeof(s->autorun_path) - 2) {
             s->autorun_path[0] = '\0';
         } else if (len > 0 && s->autorun_path[len - 1] != '/') {
-            strcat(&s->autorun_path[len - 1], "/");
+            s->autorun_path[len] = '/';
+            s->autorun_path[len + 1] = '\0';
         }
     }
 

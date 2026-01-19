@@ -43,25 +43,21 @@ static int create_log_path(const Client_Config *c_config, const Paths *paths, ch
 
     char *user_config_dir = get_user_config_dir(paths);
     int path_len = strlen(name) + strlen(".log") + strlen("-") + strlen(namedash);
-    path_len += strlen(set_path) ? *set_path : strlen(user_config_dir) + strlen(LOGDIR);
+    path_len += strlen(set_path) ? strlen(set_path) : strlen(user_config_dir) + strlen(LOGDIR);
 
     /* first 6 bytes of selfkey */
     char self_id[32] = {0};
     path_len += KEY_IDENT_BYTES;
-    sprintf(&self_id[0], "%02X", selfkey[0] & 0xff);
-    sprintf(&self_id[2], "%02X", selfkey[1] & 0xff);
-    sprintf(&self_id[4], "%02X", selfkey[2] & 0xff);
-    self_id[KEY_IDENT_BYTES] = '\0';
+    snprintf(self_id, sizeof(self_id), "%02X%02X%02X",
+             selfkey[0] & 0xff, selfkey[1] & 0xff, selfkey[2] & 0xff);
 
     char other_id[32] = {0};
 
     if (otherkey) {
         /* first 6 bytes of otherkey */
         path_len += KEY_IDENT_BYTES;
-        sprintf(&other_id[0], "%02X", otherkey[0] & 0xff);
-        sprintf(&other_id[2], "%02X", otherkey[1] & 0xff);
-        sprintf(&other_id[4], "%02X", otherkey[2] & 0xff);
-        other_id[KEY_IDENT_BYTES] = '\0';
+        snprintf(other_id, sizeof(other_id), "%02X%02X%02X",
+                 otherkey[0] & 0xff, otherkey[1] & 0xff, otherkey[2] & 0xff);
     }
 
     if (path_len >= destsize) {

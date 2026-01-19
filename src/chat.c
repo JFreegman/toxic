@@ -1581,7 +1581,11 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
     self->x = x2;
 
     /* Truncate note if it doesn't fit in statusbar */
-    const int maxlen = x2 - getcurx(statusbar->topline) - KEY_IDENT_BYTES - 6;
+    int maxlen = x2 - getcurx(statusbar->topline) - KEY_IDENT_BYTES - 6;
+
+    if (maxlen > TOX_MAX_STATUS_MESSAGE_LENGTH) {
+        maxlen = TOX_MAX_STATUS_MESSAGE_LENGTH;
+    }
 
     pthread_mutex_lock(&Winthread.lock);
     const size_t statusmsg_len = statusbar->statusmsg_len;
@@ -1589,8 +1593,7 @@ static void chat_onDraw(ToxWindow *self, Toxic *toxic)
 
     if (statusmsg_len > maxlen && maxlen >= 3) {
         pthread_mutex_lock(&Winthread.lock);
-        statusbar->statusmsg[maxlen - 3] = '\0';
-        strcat(statusbar->statusmsg, "...");
+        memcpy(statusbar->statusmsg + maxlen - 3, "...", 4);
         statusbar->statusmsg_len = maxlen;
         pthread_mutex_unlock(&Winthread.lock);
     }

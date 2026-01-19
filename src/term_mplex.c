@@ -188,9 +188,7 @@ static int detect_gnu_screen(const Paths *paths)
         goto nomplex;
     }
 
-    strcpy(mplex_data, socket_path);
-    strcat(mplex_data, PATH_SEP_S);
-    strcat(mplex_data, socket_name);
+    snprintf(mplex_data, sizeof(mplex_data), "%s%s%s", socket_path, PATH_SEP_S, socket_name);
     free(socket_path);
     socket_path = NULL;
 
