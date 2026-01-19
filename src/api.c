@@ -180,8 +180,8 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
 void invoke_autoruns(ToxWindow *self, const char *autorun_path)
 {
-    char abspath_buf[PATH_MAX + 256];
-    char err_buf[PATH_MAX + 128];
+    char abspath_buf[TOXIC_MAX_PATH_LENGTH + 256];
+    char err_buf[TOXIC_MAX_PATH_LENGTH + 128];
 
     if (autorun_path == NULL) {
         return;

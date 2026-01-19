@@ -42,9 +42,9 @@ typedef struct Run_Options {
     bool encrypt_data;
     bool unencrypt_data;
 
-    char nameserver_path[MAX_STR_SIZE];
-    char config_path[MAX_STR_SIZE];
-    char nodes_path[MAX_STR_SIZE];
+    char nameserver_path[TOXIC_MAX_PATH_LENGTH];
+    char config_path[TOXIC_MAX_PATH_LENGTH];
+    char nodes_path[TOXIC_MAX_PATH_LENGTH];
 
     bool logging;
     FILE *log_fp;

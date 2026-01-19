@@ -336,14 +336,14 @@ static void complete_home_dir(ToxWindow *self, const Paths *paths, char *path, i
 {
     ChatContext *ctx = self->chatwin;
 
-    char homedir[MAX_STR_SIZE] = {0};
+    char homedir[TOXIC_MAX_PATH_LENGTH] = {0};
     get_home_dir(paths, homedir, sizeof(homedir));
 
-    char newline[MAX_STR_SIZE + 1];
+    char newline[MAX_STR_SIZE + TOXIC_MAX_PATH_LENGTH];
     snprintf(newline, sizeof(newline), "%s %s%s", cmd, homedir, path + 1);
     snprintf(path, pathsize, "%s", &newline[cmdlen - 1]);
 
-    wchar_t wline[MAX_STR_SIZE];
+    wchar_t wline[MAX_STR_SIZE + TOXIC_MAX_PATH_LENGTH];
 
     if (mbs_to_wcs_buf(wline, newline, sizeof(wline) / sizeof(wchar_t)) == -1) {
         return;
@@ -381,8 +381,8 @@ static bool is_partial_match(const char *s, const char *p, size_t p_len)
 #define MAX_DIRS 75
 int dir_match(ToxWindow *self, Toxic *toxic, const wchar_t *line, const wchar_t *cmd)
 {
-    char b_path[MAX_STR_SIZE + 1];
-    char b_name[MAX_STR_SIZE + 1];
+    char b_path[TOXIC_MAX_PATH_LENGTH + 1];
+    char b_name[TOXIC_MAX_PATH_LENGTH + 1];
     char b_cmd[MAX_STR_SIZE];
     const wchar_t *tmpline = &line[wcslen(cmd) + 1];   /* start after "/command " */
 

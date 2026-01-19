@@ -18,7 +18,7 @@
 static struct Avatar {
     char name[TOX_MAX_FILENAME_LENGTH + 1];
     size_t name_len;
-    char path[PATH_MAX + 1];
+    char path[TOXIC_MAX_PATH_LENGTH + 1];
     size_t path_len;
     off_t size;
 } Avatar;

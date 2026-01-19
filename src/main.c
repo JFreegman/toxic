@@ -1473,7 +1473,7 @@ int main(int argc, char **argv)
     init_q = NULL;
 
     /* set user avatar from config file. if no path is supplied tox_unset_avatar is called */
-    char avatarstr[PATH_MAX + 11];
+    char avatarstr[TOXIC_MAX_PATH_LENGTH + 11];
     snprintf(avatarstr, sizeof(avatarstr), "/avatar %s", c_config->avatar_path);
     execute(home_window->chatwin->history, home_window, toxic, avatarstr, GLOBAL_COMMAND_MODE);
 

@@ -26,6 +26,11 @@
 #define UNKNOWN_NAME "Anonymous"
 #define DEFAULT_TOX_NAME "Tox User"   /* should always be the same as toxcore's default name */
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+#define TOXIC_MAX_PATH_LENGTH PATH_MAX
+
 #define MAX_STR_SIZE TOX_MAX_MESSAGE_LENGTH    /* must be >= TOX_MAX_MESSAGE_LENGTH */
 #define MAX_CMDNAME_SIZE 64
 #define TOXIC_MAX_NAME_LENGTH 32   /* Must be <= TOX_MAX_NAME_LENGTH */

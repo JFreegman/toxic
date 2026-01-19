@@ -96,7 +96,7 @@ static int init_logging_session(const Client_Config *c_config, const Paths *path
         return -1;
     }
 
-    char log_path[MAX_STR_SIZE];
+    char log_path[TOXIC_MAX_PATH_LENGTH];
 
     const int path_len = create_log_path(c_config, paths, log_path, sizeof(log_path), name, selfkey, otherkey);
 
@@ -647,8 +647,8 @@ int rename_logfile(Windows *windows, const Client_Config *c_config, const Paths 
         log_disable(log);
     }
 
-    char newpath[MAX_STR_SIZE];
-    char oldpath[MAX_STR_SIZE];
+    char newpath[TOXIC_MAX_PATH_LENGTH];
+    char oldpath[TOXIC_MAX_PATH_LENGTH];
 
     if (create_log_path(c_config, paths, oldpath, sizeof(oldpath), src, selfkey, otherkey) == -1) {
         goto on_error;
@@ -661,7 +661,7 @@ int rename_logfile(Windows *windows, const Client_Config *c_config, const Paths 
 
     const int new_path_len = create_log_path(c_config, paths, newpath, sizeof(newpath), dest, selfkey, otherkey);
 
-    if (new_path_len == -1 || new_path_len >= MAX_STR_SIZE) {
+    if (new_path_len == -1 || new_path_len >= TOXIC_MAX_PATH_LENGTH) {
         goto on_error;
     }
 

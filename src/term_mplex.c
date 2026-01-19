@@ -6,7 +6,6 @@
  *  under the GNU General Public License 3.0.
  */
 
-#include <limits.h> /* PATH_MAX */
 #include <stdio.h>  /* fgets, popen, pclose */
 #include <stdlib.h> /* malloc, realloc, free, getenv */
 #include <string.h> /* strlen, strcpy, strstr, strchr, strrchr, strcat, strncmp */
@@ -25,11 +24,12 @@
 #include "term_mplex.h"
 #include "toxic.h"
 #include "windows.h"
+#include "toxic_constants.h"
 
 extern struct Winthread Winthread;
 
-#if defined(PATH_MAX) && PATH_MAX > 512
-#define BUFFER_SIZE PATH_MAX
+#if TOXIC_MAX_PATH_LENGTH > 512
+#define BUFFER_SIZE TOXIC_MAX_PATH_LENGTH
 #else
 #define BUFFER_SIZE 512
 #endif

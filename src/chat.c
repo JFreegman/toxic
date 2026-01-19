@@ -743,7 +743,7 @@ static void chat_onFileRecv(ToxWindow *self, Toxic *toxic, uint32_t friendnum, u
         return;
     }
 
-    size_t file_path_buf_size = PATH_MAX + name_length + 1;
+    size_t file_path_buf_size = TOXIC_MAX_PATH_LENGTH + name_length + 1;
     char *file_path = malloc(file_path_buf_size);
 
     if (file_path == NULL) {

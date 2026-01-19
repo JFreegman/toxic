@@ -462,11 +462,11 @@ void cmd_sendfile(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char 
         return;
     }
 
-    char path[MAX_STR_SIZE];
+    char path[TOXIC_MAX_PATH_LENGTH];
     snprintf(path, sizeof(path), "%s", argv[1]);
     const int path_len = strlen(path);
 
-    if (path_len >= MAX_STR_SIZE) {
+    if (path_len >= TOXIC_MAX_PATH_LENGTH) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File path exceeds character limit.");
         return;
     }

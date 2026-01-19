@@ -229,7 +229,7 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    char path[MAX_STR_SIZE];
+    char path[TOXIC_MAX_PATH_LENGTH];
     snprintf(path, sizeof(path), "%s", argv[1]);
     int len = strlen(path);
 
@@ -239,7 +239,7 @@ void cmd_avatar(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
     }
 
     path[len] = '\0';
-    char filename[MAX_STR_SIZE];
+    char filename[TOXIC_MAX_PATH_LENGTH];
 
     if (get_file_name(filename, sizeof(filename), path) < 0) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to fetch file name (OOM)");

@@ -59,10 +59,10 @@ typedef struct Client_Config {
     char line_normal[LINE_HINT_MAX + 1];
     char line_special[LINE_HINT_MAX + 1];
 
-    char download_path[PATH_MAX];
-    char chatlogs_path[PATH_MAX];
-    char avatar_path[PATH_MAX];
-    char autorun_path[PATH_MAX];
+    char download_path[TOXIC_MAX_PATH_LENGTH];
+    char chatlogs_path[TOXIC_MAX_PATH_LENGTH];
+    char avatar_path[TOXIC_MAX_PATH_LENGTH];
+    char autorun_path[TOXIC_MAX_PATH_LENGTH];
     char password_eval[PASSWORD_EVAL_MAX];
 
     bool native_colors;

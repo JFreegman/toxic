@@ -507,7 +507,7 @@ static void *load_nodeslist_thread(void *data)
         goto on_exit;
     }
 
-    char nodes_path[PATH_MAX];
+    char nodes_path[TOXIC_MAX_PATH_LENGTH];
     get_nodeslist_path(toxic->run_opts, toxic->paths, nodes_path, sizeof(nodes_path));
 
     FILE *fp = NULL;

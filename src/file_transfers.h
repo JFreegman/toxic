@@ -42,7 +42,7 @@ typedef struct FileTransfer {
     FILE_TRANSFER_STATE state;
     uint8_t file_type;
     char file_name[TOX_MAX_FILENAME_LENGTH + 1];
-    char file_path[PATH_MAX + 1];    /* Not used by senders */
+    char file_path[TOXIC_MAX_PATH_LENGTH + 1];    /* Not used by senders */
     double   bps;
     uint32_t filenumber;
     uint32_t friendnumber;
