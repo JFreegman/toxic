@@ -67,6 +67,7 @@ static struct ui_strings {
     const char *show_network_info;
     const char *nodeslist_update_freq;
     const char *autosave_freq;
+    const char *device_cooldown;
 
     const char *line_padding;
     const char *line_join;
@@ -108,6 +109,7 @@ static struct ui_strings {
     "show_network_info",
     "nodeslist_update_freq",
     "autosave_freq",
+    "device_cooldown",
     "line_padding",
     "line_join",
     "line_quit",
@@ -148,6 +150,7 @@ static void ui_defaults(Client_Config *settings)
     settings->show_network_info = false;
     settings->nodeslist_update_freq = 1;
     settings->autosave_freq = 600;
+    settings->device_cooldown = 5;
 
     settings->line_padding = true;
     snprintf(settings->line_join, sizeof(settings->line_join), "%s", LINE_JOIN);
@@ -817,6 +820,7 @@ static void settings_load_ui(config_t *cfg, Client_Config *s)
     config_setting_lookup_int(setting, ui_strings.notification_timeout, &s->notification_timeout);
     config_setting_lookup_int(setting, ui_strings.nodeslist_update_freq, &s->nodeslist_update_freq);
     config_setting_lookup_int(setting, ui_strings.autosave_freq, &s->autosave_freq);
+    config_setting_lookup_int(setting, ui_strings.device_cooldown, &s->device_cooldown);
 
     if (config_setting_lookup_bool(setting, ui_strings.line_padding, &bool_val)) {
         s->line_padding = bool_val != 0;

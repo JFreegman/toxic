@@ -49,6 +49,7 @@ typedef struct Client_Config {
 
     int history_size;      /* int between MIN_HISTORY and MAX_HISTORY */
     int notification_timeout;
+    int device_cooldown;
     int nodeslist_update_freq;  /* <= 0 to disable updates */
     int autosave_freq; /* <= 0 to disable autosave */
 

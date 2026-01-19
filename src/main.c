@@ -1449,7 +1449,7 @@ int main(int argc, char **argv)
 
 #endif /* PYTHON */
 
-    init_notify(60, c_config->notification_timeout);
+    init_notify(60, c_config->notification_timeout, c_config->device_cooldown);
 
     /* screen/tmux auto-away timer */
     if (init_mplex_away_timer(toxic) == -1) {

@@ -85,6 +85,9 @@ ui = {
   // time in milliseconds to display a notification
   notification_timeout=6000;
 
+  // time in seconds to keep the audio device open after playing a notification sound
+  device_cooldown=5;
+
   // true to pad every wrapped line of a message with enough spaces to
   // align it to the beginning of the first line
   line_padding=true;

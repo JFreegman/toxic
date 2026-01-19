@@ -47,7 +47,7 @@ typedef enum _Flags {
     NT_NO_INCREMENT = 1 << 9, /* Prevents notification from incrementing pending message counter in window's tab */
 } Flags;
 
-int init_notify(int login_cooldown, int notification_timeout);
+int init_notify(int login_cooldown, int notification_timeout, int device_cooldown);
 void terminate_notify(void);
 
 /* Kills all notifications for `id`. This must be called before freeing a ToxWindow. */
