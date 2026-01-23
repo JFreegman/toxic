@@ -45,8 +45,6 @@
 #endif /* ALC_ALL_DEVICES_SPECIFIER */
 #endif /* __APPLE__ */
 
-struct CallControl CallControl;
-
 void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
              void *user_data);
 void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user_data);
@@ -61,7 +59,8 @@ void callback_call_canceled(Toxic *toxic, uint32_t friend_number);
 void callback_call_rejected(Toxic *toxic, uint32_t friend_number);
 void callback_call_ended(Toxic *toxic, uint32_t friend_number);
 
-void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
+void write_device_callback(struct CallControl *cc, uint32_t friend_number, const int16_t *PCM, uint16_t sample_count,
+                           uint8_t channels,
                            uint32_t sample_rate);
 
 void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate, void *user_data);
@@ -79,24 +78,25 @@ ToxAV *init_audio(Toxic *toxic)
 
     ToxWindow *self = toxic->home_window;
     const Client_Config *c_config = toxic->c_config;
+    struct CallControl *cc = toxic->call_control;
 
     Toxav_Err_New error;
-    CallControl.audio_errors = ae_None;
+    cc->audio_errors = ae_None;
 
     toxic->av = toxav_new(toxic->tox, &error);
 
-    CallControl.audio_enabled = true;
-    CallControl.default_audio_bit_rate = 64;
-    CallControl.audio_sample_rate = 48000;
-    CallControl.audio_frame_duration = 20;
-    CallControl.audio_channels = c_config->chat_audio_channels;
+    cc->audio_enabled = true;
+    cc->default_audio_bit_rate = 64;
+    cc->audio_sample_rate = 48000;
+    cc->audio_frame_duration = 20;
+    cc->audio_channels = c_config->chat_audio_channels;
 
-    CallControl.video_enabled = false;
-    CallControl.default_video_bit_rate = 0;
-    CallControl.video_frame_duration = 0;
+    cc->video_enabled = false;
+    cc->default_video_bit_rate = 0;
+    cc->video_frame_duration = 0;
 
     if (toxic->av == NULL) {
-        CallControl.audio_errors |= ae_StartingCoreAudio;
+        cc->audio_errors |= ae_StartingCoreAudio;
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to init ToxAV");
         return NULL;
     }
@@ -110,10 +110,8 @@ ToxAV *init_audio(Toxic *toxic)
 
     toxav_callback_call(toxic->av, on_call, (void *) toxic);
     toxav_callback_call_state(toxic->av, on_call_state, (void *) toxic);
-    toxav_callback_audio_receive_frame(toxic->av, on_audio_receive_frame, NULL);
-    toxav_callback_audio_bit_rate(toxic->av, audio_bit_rate_callback, NULL);
-
-    CallControl.av = toxic->av;  // TODO: get rid of this
+    toxav_callback_audio_receive_frame(toxic->av, on_audio_receive_frame, (void *) toxic);
+    toxav_callback_audio_bit_rate(toxic->av, audio_bit_rate_callback, (void *) toxic);
 
     return toxic->av;
 }
@@ -123,29 +121,33 @@ static void read_device_callback(const int16_t *captured, uint32_t size, void *d
     UNUSED_VAR(size);
 
     Toxav_Err_Send_Frame error;
-    uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
-    int64_t sample_count = ((int64_t) CallControl.audio_sample_rate) * \
-                           ((int64_t) CallControl.audio_frame_duration) / 1000;
+    AudioTransmissionContext *ctx = (AudioTransmissionContext *)data;
+    int64_t sample_count = ((int64_t) ctx->audio_sample_rate) * \
+                           ((int64_t) ctx->audio_frame_duration) / 1000;
 
     if (sample_count <= 0) {
         return;
     }
 
-    toxav_audio_send_frame(CallControl.av, friend_number,
+    toxav_audio_send_frame(ctx->av, ctx->friend_number,
                            captured, sample_count,
-                           CallControl.audio_channels,
-                           CallControl.audio_sample_rate, &error);
+                           ctx->audio_channels,
+                           ctx->audio_sample_rate, &error);
 }
 
-void write_device_callback(uint32_t friend_number, const int16_t *PCM, uint16_t sample_count, uint8_t channels,
-                           uint32_t sample_rate)
+void write_device_callback(struct CallControl *cc, uint32_t friend_number, const int16_t *PCM, uint16_t sample_count,
+                           uint8_t channels, uint32_t sample_rate)
 {
-    if (CallControl.calls[friend_number].status == cs_Active) {
-        write_out(CallControl.calls[friend_number].out_idx, PCM, sample_count, channels, sample_rate);
+    if (friend_number >= cc->max_calls || !cc->calls[friend_number]) {
+        return;
+    }
+
+    if (cc->calls[friend_number]->status == cs_Active) {
+        write_out(cc->calls[friend_number]->out_idx, PCM, sample_count, channels, sample_rate);
     }
 }
 
-bool init_call(Call *call)
+bool init_call(struct CallControl *cc, Call *call, uint32_t friend_number)
 {
     if (call->status != cs_None) {
         return false;
@@ -159,13 +161,16 @@ bool init_call(Call *call)
 
     call->in_idx = -1;
     call->out_idx = -1;
-    call->audio_bit_rate = CallControl.default_audio_bit_rate;
+    call->audio_bit_rate = cc->default_audio_bit_rate;
+
+    call->audio_tx_ctx.friend_number = friend_number;
+
 #ifdef VIDEO
     call->vin_idx = -1;
     call->vout_idx = -1;
-    call->video_width = CallControl.default_video_width;
-    call->video_height = CallControl.default_video_height;
-    call->video_bit_rate = CallControl.default_video_bit_rate;
+    call->video_width = cc->default_video_width;
+    call->video_height = cc->default_video_height;
+    call->video_bit_rate = cc->default_video_bit_rate;
 #endif /* VIDEO */
 
     return true;
@@ -189,15 +194,21 @@ static int start_transmission(ToxWindow *self, Toxic *toxic, Call *call)
     }
 
     const Client_Config *c_config = toxic->c_config;
+    struct CallControl *cc = toxic->call_control;
 
     if (toxic->av == NULL) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to prepare audio transmission");
         return -1;
     }
 
-    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &self->num,
-                                          CallControl.audio_sample_rate, CallControl.audio_frame_duration,
-                                          CallControl.audio_channels, c_config->VAD_threshold);
+    call->audio_tx_ctx.av = toxic->av;
+    call->audio_tx_ctx.audio_frame_duration = cc->audio_frame_duration;
+    call->audio_tx_ctx.audio_sample_rate = cc->audio_sample_rate;
+    call->audio_tx_ctx.audio_channels = cc->audio_channels;
+
+    DeviceError error = open_input_device(&call->in_idx, read_device_callback, &call->audio_tx_ctx,
+                                          cc->audio_sample_rate, cc->audio_frame_duration,
+                                          cc->audio_channels, c_config->VAD_threshold);
 
     if (error != de_None) {
         if (error == de_FailedStart) {
@@ -211,9 +222,9 @@ static int start_transmission(ToxWindow *self, Toxic *toxic, Call *call)
     }
 
     if (open_output_device(&call->out_idx,
-                           CallControl.audio_sample_rate,
-                           CallControl.audio_frame_duration,
-                           CallControl.audio_channels,
+                           cc->audio_sample_rate,
+                           cc->audio_frame_duration,
+                           cc->audio_channels,
                            c_config->VAD_threshold) != de_None) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to open audio output device!");
     }
@@ -236,7 +247,7 @@ static void start_call(ToxWindow *self, Toxic *toxic, Call *call)
 #ifdef VIDEO
 
     if (call->state & TOXAV_FRIEND_CALL_STATE_SENDING_V) {
-        callback_recv_video_starting(self->num);
+        callback_recv_video_starting(toxic, self->num);
     }
 
     if (call->video_bit_rate) {
@@ -246,7 +257,7 @@ static void start_call(ToxWindow *self, Toxic *toxic, Call *call)
 #endif
 }
 
-static int stop_transmission(Call *call, uint32_t friend_number)
+static int stop_transmission(ToxAV *av, Call *call, uint32_t friend_number)
 {
     if (call->status != cs_Active) {
         return -1;
@@ -264,8 +275,8 @@ static int stop_transmission(Call *call, uint32_t friend_number)
 
     Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
 
-    if (call->state > TOXAV_FRIEND_CALL_STATE_FINISHED) {
-        toxav_call_control(CallControl.av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
+    if (av && call->state > TOXAV_FRIEND_CALL_STATE_FINISHED) {
+        toxav_call_control(av, friend_number, TOXAV_CALL_CONTROL_CANCEL, &error);
     }
 
     if (error != TOXAV_ERR_CALL_CONTROL_OK) {
@@ -275,10 +286,16 @@ static int stop_transmission(Call *call, uint32_t friend_number)
     return 0;
 }
 
-void terminate_audio(ToxAV *av)
+void terminate_audio(ToxAV *av, struct CallControl *cc)
 {
-    for (int i = 0; i < CallControl.max_calls; ++i) {
-        stop_transmission(&CallControl.calls[i], i);
+    if (!cc) {
+        return;
+    }
+
+    for (int i = 0; i < cc->max_calls; ++i) {
+        if (cc->calls[i]) {
+            stop_transmission(av, cc->calls[i], i);
+        }
     }
 
     if (av) {
@@ -293,25 +310,24 @@ void terminate_audio(ToxAV *av)
  */
 
 
-
-
-
 /*
  * Callbacks
  */
-void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled, void *user_data)
+void on_call(ToxAV *av, uint32_t friend_number, bool audio_enabled, bool video_enabled,
+             void *user_data)
 {
     UNUSED_VAR(av);
 
     Toxic *toxic = (Toxic *) user_data;
+    struct CallControl *cc = toxic->call_control;
 
-    if (friend_number >= CallControl.max_calls) {
+    if (!init_friend_AV(cc, friend_number)) {
         fprintf(stderr, "Failed to receive call: Insufficient memory\n");
         return;
     }
 
-    Call *call = &CallControl.calls[friend_number];
-    init_call(call);
+    Call *call = cc->calls[friend_number];
+    init_call(cc, call, friend_number);
 
     call->state = TOXAV_FRIEND_CALL_STATE_ACCEPTING_A | TOXAV_FRIEND_CALL_STATE_ACCEPTING_V;
 
@@ -334,14 +350,16 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
         return;
     }
 
+    struct CallControl *cc = toxic->call_control;
+
     UNUSED_VAR(av);
 
-    if (friend_number >= CallControl.max_calls) {
-        fprintf(stderr, "Failed to handle call state: Insufficient memory\n");
+    if (friend_number >= cc->max_calls || !cc->calls[friend_number]) {
+        fprintf(stderr, "Failed to handle call state: Invalid friend number\n");
         return;
     }
 
-    Call *call = &CallControl.calls[friend_number];
+    Call *call = cc->calls[friend_number];
 
     if (call->status == cs_None) {
         return;
@@ -363,11 +381,11 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
             } else {
 
 #ifdef VIDEO
-                callback_recv_video_end(friend_number);
-                callback_video_end(friend_number);
+                callback_recv_video_end(toxic, friend_number);
+                callback_video_end(av, toxic->call_control, friend_number);
 #endif /* VIDEO */
 
-                stop_transmission(call, friend_number);
+                stop_transmission(av, call, friend_number);
                 callback_call_ended(toxic, friend_number);
             }
 
@@ -383,9 +401,9 @@ void on_call_state(ToxAV *av, uint32_t friend_number, uint32_t state, void *user
 
             /* Handle receiving client video call states */
             if (state & TOXAV_FRIEND_CALL_STATE_SENDING_V) {
-                callback_recv_video_starting(friend_number);
+                callback_recv_video_starting(toxic, friend_number);
             } else {
-                callback_recv_video_end(friend_number);
+                callback_recv_video_end(toxic, friend_number);
             }
 
 #endif /* VIDEO */
@@ -399,20 +417,21 @@ void on_audio_receive_frame(ToxAV *av, uint32_t friend_number,
                             uint8_t channels, uint32_t sampling_rate, void *user_data)
 {
     UNUSED_VAR(av);
-    UNUSED_VAR(user_data);
+    Toxic *toxic = (Toxic *) user_data;
 
-    write_device_callback(friend_number, pcm, sample_count, channels, sampling_rate);
+    write_device_callback(toxic->call_control, friend_number, pcm, sample_count, channels, sampling_rate);
 }
 
 void audio_bit_rate_callback(ToxAV *av, uint32_t friend_number, uint32_t audio_bit_rate, void *user_data)
 {
-    UNUSED_VAR(user_data);
+    Toxic *toxic = (Toxic *) user_data;
+    struct CallControl *cc = toxic->call_control;
 
-    if (friend_number >= CallControl.max_calls) {
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *call = &CallControl.calls[friend_number];
+    Call *call = cc->calls[friend_number];
     call->audio_bit_rate = audio_bit_rate;
     toxav_audio_set_bit_rate(av, friend_number, audio_bit_rate, NULL);
 }
@@ -423,7 +442,9 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
         return;
     }
 
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
@@ -438,7 +459,7 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
         toxic->friends->list[friend_number].window_id = window_id;
     }
 
-    const Call *call = &CallControl.calls[friend_number];
+    const Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -452,11 +473,13 @@ void callback_recv_invite(Toxic *toxic, uint32_t friend_number)
 
 void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    const Call *call = &CallControl.calls[friend_number];
+    const Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -470,11 +493,13 @@ void callback_recv_ringing(Toxic *toxic, uint32_t friend_number)
 
 void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *call = &CallControl.calls[friend_number];
+    Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -489,11 +514,13 @@ void callback_recv_starting(Toxic *toxic, uint32_t friend_number)
 
 void callback_call_started(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *call = &CallControl.calls[friend_number];
+    Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -508,11 +535,13 @@ void callback_call_started(Toxic *toxic, uint32_t friend_number)
 
 void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    const Call *call = &CallControl.calls[friend_number];
+    const Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -526,11 +555,13 @@ void callback_call_canceled(Toxic *toxic, uint32_t friend_number)
 
 void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    const Call *call = &CallControl.calls[friend_number];
+    const Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -544,11 +575,13 @@ void callback_call_rejected(Toxic *toxic, uint32_t friend_number)
 
 void callback_call_ended(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    const Call *call = &CallControl.calls[friend_number];
+    const Call *call = cc->calls[friend_number];
     Windows *windows = toxic->windows;
 
     for (uint16_t i = 0; i < windows->count; ++i) {
@@ -594,19 +627,19 @@ void cmd_call(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status != cs_None) {
         print_err(self, c_config, "Already calling.");
         return;
     }
 
-    init_call(call);
+    init_call(toxic->call_control, call, self->num);
 
     place_call(self, toxic);
 }
@@ -634,12 +667,12 @@ void cmd_answer(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status != cs_Pending) {
         print_err(self, c_config, "No incoming call!");
@@ -689,12 +722,12 @@ void cmd_reject(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status != cs_Pending) {
         print_err(self, c_config, "No incoming call!");
@@ -730,12 +763,12 @@ void cmd_hangup(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status == cs_None) {
         print_err(self, c_config, "Not in a call.");
@@ -869,13 +902,13 @@ void cmd_mute(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*ar
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
     /* If call is active, use this_call values */
-    Call *this_call = &CallControl.calls[self->num];
+    Call *this_call = toxic->call_control->calls[self->num];
 
     if (this_call->status == cs_Active) {
         if (type == input) {
@@ -918,12 +951,12 @@ void cmd_sense(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    const Call *call = &CallControl.calls[self->num];
+    const Call *call = toxic->call_control->calls[self->num];
 
     /* Call must be active */
     if (call->status == cs_Active) {
@@ -944,12 +977,12 @@ void cmd_bitrate(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (
 
     const Client_Config *c_config = toxic->c_config;
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status != cs_Active) {
         print_err(self, c_config, "Must be in a call");
@@ -1003,12 +1036,12 @@ void place_call(ToxWindow *self, Toxic *toxic)
 {
     const Client_Config *c_config = toxic->c_config;
 
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status != cs_Pending) {
         print_err(self, toxic->c_config, "No pending call.");
@@ -1041,12 +1074,12 @@ void place_call(ToxWindow *self, Toxic *toxic)
 
 void stop_current_call(ToxWindow *self, Toxic *toxic)
 {
-    if (self->num >= CallControl.max_calls) {
+    if (self->num >= toxic->call_control->max_calls) {
         print_err(self, toxic->c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = toxic->call_control->calls[self->num];
 
     if (call->status == cs_Pending) {
         toxav_call_control(toxic->av, self->num, TOXAV_CALL_CONTROL_CANCEL, NULL);
@@ -1055,11 +1088,11 @@ void stop_current_call(ToxWindow *self, Toxic *toxic)
     } else {
 
 #ifdef VIDEO
-        callback_recv_video_end(self->num);
-        callback_video_end(self->num);
+        callback_recv_video_end(toxic, self->num);
+        callback_video_end(toxic->av, toxic->call_control, self->num);
 #endif /* VIDEO */
 
-        stop_transmission(call, self->num);
+        stop_transmission(toxic->av, call, self->num);
         callback_call_ended(toxic, self->num);
     }
 }
@@ -1067,40 +1100,49 @@ void stop_current_call(ToxWindow *self, Toxic *toxic)
 /**
  * Reallocates the Calls list according to n.
  */
-static bool realloc_calls(uint32_t n)
+static bool realloc_calls(struct CallControl *cc, uint32_t n)
 {
     if (n == 0) {
-        free(CallControl.calls);
-        CallControl.calls = NULL;
+        free(cc->calls);
+        cc->calls = NULL;
         return true;
     }
 
-    Call *temp = realloc(CallControl.calls, n * sizeof(Call));
+    uint32_t old_n = cc->max_calls;
+    Call **temp = realloc(cc->calls, n * sizeof(Call *));
 
     if (temp == NULL) {
         return false;
     }
 
-    CallControl.calls = temp;
+    cc->calls = temp;
+
+    if (n > old_n) {
+        memset(cc->calls + old_n, 0, (n - old_n) * sizeof(Call *));
+    }
+
     return true;
 }
 
-bool init_friend_AV(uint32_t index)
+bool init_friend_AV(struct CallControl *cc, uint32_t index)
 {
-    if (index != CallControl.max_calls) {
-        return false;
+    if (index >= cc->max_calls) {
+        if (!realloc_calls(cc, index + 1)) {
+            fprintf(stderr, "Warning: realloc_calls(%u) failed\n", index + 1);
+            return false;
+        }
+
+        cc->max_calls = index + 1;
     }
 
-    if (!realloc_calls(CallControl.max_calls + 1)) {
-        fprintf(stderr, "Warning: realloc_calls(%u) failed\n", CallControl.max_calls + 1);
-        return false;
+    if (cc->calls[index] == NULL) {
+        cc->calls[index] = calloc(1, sizeof(Call));
+
+        if (cc->calls[index] == NULL) {
+            fprintf(stderr, "Warning: calloc failed for friend %u\n", index);
+            return false;
+        }
     }
-
-    CallControl.calls[CallControl.max_calls] = (Call) {
-        0
-    };
-
-    ++CallControl.max_calls;
 
     return true;
 }
@@ -1109,14 +1151,22 @@ bool init_friend_AV(uint32_t index)
  * Deletes a call structure from the Calls list. Called when a friend is deleted from the friends list.
  * Index must be equivalent to the size of the Calls list.
  */
-void del_friend_AV(uint32_t index)
+void del_friend_AV(struct CallControl *cc, uint32_t index)
 {
-    if (!realloc_calls(index)) {
+    if (index >= cc->max_calls) {
+        return;
+    }
+
+    for (uint32_t i = index; i < cc->max_calls; ++i) {
+        free(cc->calls[i]);
+    }
+
+    if (!realloc_calls(cc, index)) {
         fprintf(stderr, "Warning: realloc_calls(%u) failed\n", index);
         return;
     }
 
-    CallControl.max_calls = index;
+    cc->max_calls = index;
 }
 
 #endif /* AUDIO */

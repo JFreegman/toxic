@@ -16,12 +16,11 @@
 #include "video_device.h"
 
 ToxAV *init_video(Toxic *toxic);
-void terminate_video(void);
+void terminate_video(ToxAV *av, struct CallControl *cc);
 int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call);
-int stop_video_transmission(Call *call, int friend_number);
+int stop_video_transmission(ToxAV *av, Call *call, int friend_number);
 
-void callback_recv_video_starting(uint32_t friend_number);
-void callback_recv_video_end(uint32_t friend_number);
-void callback_video_end(uint32_t friend_number);
-
+void callback_recv_video_starting(Toxic *toxic, uint32_t friend_number);
+void callback_recv_video_end(Toxic *toxic, uint32_t friend_number);
+void callback_video_end(ToxAV *av, struct CallControl *cc, uint32_t friend_number);
 #endif /* VIDEO_CALL_H */

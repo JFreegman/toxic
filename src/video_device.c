@@ -721,7 +721,7 @@ void *video_thread_poll(void *userdata)  // TODO: maybe use thread for every inp
 
                     /* Send frame data to friend through ToxAV */
                     if (device->cb) {
-                        device->cb(toxic, video_width, video_height, y, u, v, device->cb_data);
+                        device->cb(toxic, device->friend_number, video_width, video_height, y, u, v, device->cb_data);
                     }
 
                     /* Convert YUV420 data to BGR */

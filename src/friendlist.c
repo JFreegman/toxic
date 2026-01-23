@@ -615,7 +615,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
 
 #ifdef AUDIO
 
-        if (!init_friend_AV(i)) {
+        if (!init_friend_AV(toxic->call_control, i)) {
             fprintf(stderr, "Failed to init AV for friend %u\n", i);
         }
 
@@ -627,8 +627,7 @@ void friendlist_onFriendAdded(ToxWindow *self, Toxic *toxic, uint32_t num, bool 
 
 /* Puts blocked friend back in friendlist. fnum is new friend number, bnum is blocked number. */
 static void friendlist_add_blocked(FriendsList *friends, BlockedList *blocked, const Client_Config *c_config,
-                                   uint32_t fnum,
-                                   uint32_t bnum)
+                                   struct CallControl *cc, uint32_t fnum, uint32_t bnum)
 {
     realloc_friends(friends, friends->max_idx + 1);
     clear_friendlist_index(friends, friends->max_idx);
@@ -659,7 +658,7 @@ static void friendlist_add_blocked(FriendsList *friends, BlockedList *blocked, c
 
 #ifdef AUDIO
 
-        if (!init_friend_AV(i)) {
+        if (!init_friend_AV(cc, i)) {
             fprintf(stderr, "Failed to init AV for friend %d\n", i);
         }
 
@@ -862,7 +861,7 @@ static void delete_friend(Toxic *toxic, uint32_t f_num)
     realloc_friends(friends, i);
 
 #ifdef AUDIO
-    del_friend_AV(i);
+    del_friend_AV(toxic->call_control, i);
 #endif
 
     /* make sure num_selected stays within friends->num_friends range */
@@ -1018,7 +1017,7 @@ static void unblock_friend(Toxic *toxic, uint32_t bnum)
         return;
     }
 
-    friendlist_add_blocked(toxic->friends, toxic->blocked, toxic->c_config, friendnum, bnum);
+    friendlist_add_blocked(toxic->friends, toxic->blocked, toxic->c_config, toxic->call_control, friendnum, bnum);
     delete_blocked_friend(toxic, bnum);
     sort_blocklist_index(toxic->blocked);
     sort_friendlist_index(toxic->friends);

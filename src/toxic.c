@@ -91,6 +91,20 @@ static void kill_toxic(Toxic *toxic)
     free(toxic->windows);
     free(toxic->friends);
     free(toxic->blocked);
+
+#ifdef AUDIO
+
+    if (toxic->call_control) {
+        for (uint32_t i = 0; i < toxic->call_control->max_calls; ++i) {
+            free(toxic->call_control->calls[i]);
+        }
+
+        free(toxic->call_control->calls);
+        free(toxic->call_control);
+    }
+
+#endif
+
     paths_free(toxic->paths);
     free(toxic);
 }
@@ -120,9 +134,9 @@ void exit_toxic_success(Toxic *toxic)
 
 #ifdef AUDIO
 #ifdef VIDEO
-    terminate_video();
+    terminate_video(toxic->av, toxic->call_control);
 #endif /* VIDEO */
-    terminate_audio(toxic->av);
+    terminate_audio(toxic->av, toxic->call_control);
 #endif /* AUDIO */
 
 #ifdef PYTHON

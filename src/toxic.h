@@ -64,6 +64,7 @@ typedef struct ToxWindow ToxWindow;
 typedef struct Run_Options Run_Options;
 typedef struct Paths Paths;
 struct FriendsList;
+struct CallControl;
 
 #define MAX_FRIEND_REQUESTS 20
 
@@ -104,6 +105,8 @@ typedef struct Toxic {
 
     ToxWindow     *home_window;
     Windows       *windows;
+
+    struct CallControl *call_control;
 
     FriendRequests frnd_requests;
     Paths         *paths;

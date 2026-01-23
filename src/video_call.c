@@ -46,14 +46,15 @@ ToxAV *init_video(Toxic *toxic)
 {
     ToxWindow *home_window = toxic->home_window;
     const Client_Config *c_config = toxic->c_config;
+    struct CallControl *cc = toxic->call_control;
 
-    CallControl.video_errors = ve_None;
+    cc->video_errors = ve_None;
 
-    CallControl.video_enabled = true;
-    CallControl.default_video_bit_rate = 0;
-    CallControl.video_frame_duration = 10;
-    CallControl.default_video_height = DEFAULT_VIDEO_HEIGHT;
-    CallControl.default_video_width = DEFAULT_VIDEO_WIDTH;
+    cc->video_enabled = true;
+    cc->default_video_bit_rate = 0;
+    cc->video_frame_duration = 10;
+    cc->default_video_height = DEFAULT_VIDEO_HEIGHT;
+    cc->default_video_width = DEFAULT_VIDEO_WIDTH;
 
     if (toxic->av == NULL) {
         line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Video failed to init with ToxAV instance");
@@ -65,18 +66,26 @@ ToxAV *init_video(Toxic *toxic)
         return NULL;
     }
 
-    toxav_callback_video_receive_frame(toxic->av, on_video_receive_frame, &CallControl);
-    toxav_callback_video_bit_rate(toxic->av, on_video_bit_rate, &CallControl);
+    toxav_callback_video_receive_frame(toxic->av, on_video_receive_frame, (void *) toxic);
+    toxav_callback_video_bit_rate(toxic->av, on_video_bit_rate, (void *) toxic);
 
     return toxic->av;
 }
 
-void terminate_video(void)
+void terminate_video(ToxAV *av, struct CallControl *cc)
 {
-    for (int i = 0; i < CallControl.max_calls; ++i) {
-        Call *this_call = &CallControl.calls[i];
+    if (!cc) {
+        return;
+    }
 
-        stop_video_transmission(this_call, i);
+    for (int i = 0; i < cc->max_calls; ++i) {
+        Call *this_call = cc->calls[i];
+
+        if (!this_call) {
+            continue;
+        }
+
+        stop_video_transmission(av, this_call, i);
 
         if (this_call->status == cs_Active && this_call->vout_idx != -1) {
             close_video_device(vdt_output, this_call->vout_idx);
@@ -87,25 +96,27 @@ void terminate_video(void)
     terminate_video_devices();
 }
 
-static void read_video_device_callback(Toxic *toxic, int16_t width, int16_t height, const uint8_t *y, const uint8_t *u,
+static void read_video_device_callback(Toxic *toxic, uint32_t friend_number, int16_t width, int16_t height,
+                                       const uint8_t *y, const uint8_t *u,
                                        const uint8_t *v, void *data)
 {
     if (toxic == NULL) {
         return;
     }
 
+    UNUSED_VAR(data);
+
     const Client_Config *c_config = toxic->c_config;
+    struct CallControl *cc = toxic->call_control;
 
     ToxWindow *home_window = toxic->home_window;
 
-    uint32_t friend_number = *((uint32_t *)data); /* TODO: Or pass an array of call_idx's */
-
-    if (friend_number >= CallControl.max_calls) {
+    if (friend_number >= cc->max_calls) {
         line_info_add(home_window, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Invalid call index.");
         return;
     }
 
-    Call *this_call = &CallControl.calls[friend_number];
+    Call *this_call = cc->calls[friend_number];
     Toxav_Err_Send_Frame error;
 
     /* Drop frame if video sending is disabled */
@@ -153,7 +164,7 @@ int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call)
         return -1;
     }
 
-    if (register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, &self->num) != vde_None) {
+    if (register_video_device_callback(self->num, call->vin_idx, read_video_device_callback, NULL) != vde_None) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Failed to register input video handler!");
         return -1;
     }
@@ -168,14 +179,17 @@ int start_video_transmission(ToxWindow *self, Toxic *toxic, Call *call)
     return 0;
 }
 
-int stop_video_transmission(Call *call, int friend_number)
+int stop_video_transmission(ToxAV *av, Call *call, int friend_number)
 {
     if (call->status != cs_Active) {
         return -1;
     }
 
     call->video_bit_rate = 0;
-    toxav_video_set_bit_rate(CallControl.av, friend_number, call->video_bit_rate, NULL);
+
+    if (av) {
+        toxav_video_set_bit_rate(av, friend_number, call->video_bit_rate, NULL);
+    }
 
     if (call->vin_idx != -1) {
         close_video_device(vdt_input, call->vin_idx);
@@ -209,29 +223,31 @@ void on_video_receive_frame(ToxAV *av, uint32_t friend_number,
 
 void on_video_bit_rate(ToxAV *av, uint32_t friend_number, uint32_t video_bit_rate, void *user_data)
 {
-    UNUSED_VAR(av);
-    UNUSED_VAR(user_data);
+    Toxic *toxic = (Toxic *) user_data;
+    struct CallControl *cc = toxic->call_control;
 
-    if (friend_number >= CallControl.max_calls) {
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *call = &CallControl.calls[friend_number];
+    Call *call = cc->calls[friend_number];
     call->video_bit_rate = video_bit_rate;
 
     /* TODO: with current toxav using one-pass VP8, the value of
      * video_bit_rate has no effect, except to disable video if it is 0.
      * Automatically change resolution instead? */
-    toxav_video_set_bit_rate(CallControl.av, friend_number, call->video_bit_rate, NULL);
+    toxav_video_set_bit_rate(av, friend_number, call->video_bit_rate, NULL);
 }
 
-void callback_recv_video_starting(uint32_t friend_number)
+void callback_recv_video_starting(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *this_call = &CallControl.calls[friend_number];
+    Call *this_call = cc->calls[friend_number];
 
     if (this_call->status != cs_Active || this_call->vout_idx != -1) {
         return;
@@ -240,13 +256,15 @@ void callback_recv_video_starting(uint32_t friend_number)
     open_primary_video_device(vdt_output, &this_call->vout_idx, NULL, NULL);
 }
 
-void callback_recv_video_end(uint32_t friend_number)
+void callback_recv_video_end(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *this_call = &CallControl.calls[friend_number];
+    Call *this_call = cc->calls[friend_number];
 
     if (this_call->status != cs_Active || this_call->vout_idx == -1) {
         return;
@@ -258,11 +276,13 @@ void callback_recv_video_end(uint32_t friend_number)
 
 static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    Call *this_call = &CallControl.calls[friend_number];
+    Call *this_call = cc->calls[friend_number];
 
     Toxav_Err_Call_Control error = TOXAV_ERR_CALL_CONTROL_OK;
     toxav_call_control(toxic->av, friend_number, TOXAV_CALL_CONTROL_SHOW_VIDEO, &error);
@@ -284,13 +304,13 @@ static void callback_video_starting(Toxic *toxic, uint32_t friend_number)
     }
 }
 
-void callback_video_end(uint32_t friend_number)
+void callback_video_end(ToxAV *av, struct CallControl *cc, uint32_t friend_number)
 {
-    if (friend_number >= CallControl.max_calls) {
+    if (friend_number >= cc->max_calls) {
         return;
     }
 
-    stop_video_transmission(&CallControl.calls[friend_number], friend_number);
+    stop_video_transmission(av, cc->calls[friend_number], friend_number);
 }
 
 /*
@@ -328,19 +348,21 @@ void cmd_vcall(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         return;
     }
 
-    if (self->num >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (self->num >= cc->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = cc->calls[self->num];
 
     if (call->status != cs_None) {
         print_err(self, c_config, "Already calling.");
         return;
     }
 
-    init_call(call);
+    init_call(toxic->call_control, call, self->num);
 
     call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
 
@@ -358,12 +380,14 @@ void cmd_video(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
 
     const Client_Config *c_config = toxic->c_config;
 
-    if (self->num >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (self->num >= cc->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *this_call = &CallControl.calls[self->num];
+    Call *this_call = cc->calls[self->num];
 
     if (argc != 0) {
         print_err(self, c_config, "Unknown arguments.");
@@ -389,7 +413,7 @@ void cmd_video(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*a
         this_call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
         callback_video_starting(toxic, self->num);
     } else {
-        callback_video_end(self->num);
+        callback_video_end(toxic->av, toxic->call_control, self->num);
     }
 }
 
@@ -403,12 +427,14 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
 
     const Client_Config *c_config = toxic->c_config;
 
-    if (self->num >= CallControl.max_calls) {
+    struct CallControl *cc = toxic->call_control;
+
+    if (self->num >= cc->max_calls) {
         print_err(self, c_config, "Invalid call index.");
         return;
     }
 
-    Call *call = &CallControl.calls[self->num];
+    Call *call = cc->calls[self->num];
 
     if (argc == 0) {
         if (call->status == cs_Active && call->vin_idx != -1) {
@@ -418,7 +444,7 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         } else {
             line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0,
                           "Initial resolution for video calls: %u x %u",
-                          CallControl.default_video_width, CallControl.default_video_height);
+                          cc->default_video_width, cc->default_video_height);
         }
 
         return;
@@ -439,14 +465,14 @@ void cmd_res(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
     }
 
     if (call->status == cs_Active && call->vin_idx != -1) {
-        stop_video_transmission(call, self->num);
+        stop_video_transmission(toxic->av, call, self->num);
         call->video_width = width;
         call->video_height = height;
         call->video_bit_rate = DEFAULT_VIDEO_BIT_RATE;
         start_video_transmission(self, toxic, call);
     } else {
-        CallControl.default_video_width = width;
-        CallControl.default_video_height = height;
+        cc->default_video_width = width;
+        cc->default_video_height = height;
     }
 }
 

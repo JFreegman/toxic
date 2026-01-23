@@ -25,6 +25,10 @@
 #include "toxic.h"
 #include "windows.h"
 
+#ifdef AUDIO
+#include "audio_call.h"
+#endif
+
 #ifdef GAMES
 #include "game_base.h"
 #endif
