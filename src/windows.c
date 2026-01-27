@@ -364,10 +364,14 @@ void on_file_recv_control(Tox *tox, uint32_t friendnumber, uint32_t filenumber, 
 }
 
 void on_file_recv(Tox *tox, uint32_t friendnumber, uint32_t filenumber, uint32_t kind, uint64_t file_size,
-                  const uint8_t *filename, size_t filename_length, void *userdata)
+                  const uint8_t *string, size_t length, void *userdata)
 {
     Toxic *toxic = (Toxic *) userdata;
     Windows *windows = toxic->windows;
+
+    char filename[MAX_STR_SIZE + 1];
+    length = copy_tox_str(filename, sizeof(filename), (const char *) string, length);
+    filter_string(filename, length, false);
 
     /* We don't care about receiving avatars */
     if (kind != TOX_FILE_KIND_DATA) {
@@ -379,8 +383,7 @@ void on_file_recv(Tox *tox, uint32_t friendnumber, uint32_t filenumber, uint32_t
         ToxWindow *w = windows->list[i];
 
         if (w->onFileRecv != NULL) {
-            w->onFileRecv(w, toxic, friendnumber, filenumber, file_size, (const char *) filename,
-                          filename_length);
+            w->onFileRecv(w, toxic, friendnumber, filenumber, file_size, filename, length);
         }
     }
 }
