@@ -593,6 +593,10 @@ static void chat_onFileControl(ToxWindow *self, Toxic *toxic, uint32_t friendnum
                 line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "File transfer [%zu] for '%s' accepted.",
                               ft->index, ft->file_name);
                 sound_notify(self, toxic, silent, NT_NOFOCUS | c_config->bell_on_filetrans_accept | NT_WNDALERT_2, NULL);
+                char progline[MAX_STR_SIZE];
+                init_progress_bar(progline);
+                line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "%s", progline);
+                ft->line_id = self->chatwin->hst->line_end->id + 2;
             } else if (ft->state == FILE_TRANSFER_PAUSED) {    /* transfer is resumed */
                 ft->state = FILE_TRANSFER_STARTED;
             }
