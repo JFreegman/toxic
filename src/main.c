@@ -192,7 +192,7 @@ static void load_groups(Toxic *toxic)
 
     Tox *tox = toxic->tox;
 
-    size_t numgroups = tox_group_get_number_groups(tox);
+    size_t numgroups = tox_group_get_group_list_size(tox);
 
     for (size_t i = 0; i < numgroups; ++i) {
         if (init_groupchat_win(toxic, i, NULL, 0, Group_Join_Type_Load) != 0) {

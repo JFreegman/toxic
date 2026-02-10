@@ -20,7 +20,7 @@
 PyMODINIT_FUNC PyInit_toxic_api(void);
 void terminate_python(void);
 void init_python(Toxic *toxic);
-void run_python(FILE *fp, char *path);
+void run_python(FILE *fp, const char *path);
 int do_python_command(int num_args, char (*args)[MAX_STR_SIZE]);
 int python_num_registered_handlers(void);
 int python_help_max_width(void);

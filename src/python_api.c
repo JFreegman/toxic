@@ -291,7 +291,7 @@ void init_python(Toxic *toxic)
     PyEval_SaveThread();
 }
 
-void run_python(FILE *fp, char *path)
+void run_python(FILE *fp, const char *path)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 

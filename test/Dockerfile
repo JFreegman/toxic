@@ -19,7 +19,7 @@ RUN ["apk", "add", "--no-cache", \
  "yarn"]
 
 WORKDIR /build
-RUN yarn add --dev @microsoft/tui-test
+RUN yarn add --dev @microsoft/tui-test@0.0.1-rc.5
 ENV PATH=$PATH:/build/node_modules/.bin
 
 WORKDIR /build
