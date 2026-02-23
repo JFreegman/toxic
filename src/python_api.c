@@ -271,11 +271,16 @@ void init_python(Toxic *toxic)
     user_toxic = toxic;
     PyImport_AppendInittab("toxic_api", PyInit_toxic_api);
     Py_Initialize();
+    PyEval_SaveThread();
 }
 
 void run_python(FILE *fp, char *path)
 {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
     PyRun_SimpleFile(fp, path);
+
+    PyGILState_Release(gstate);
 }
 
 int do_python_command(int num_args, char (*args)[MAX_STR_SIZE])
