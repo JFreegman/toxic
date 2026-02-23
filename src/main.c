@@ -1463,7 +1463,7 @@ int main(int argc, char **argv)
 #ifdef PYTHON
 
     init_python(toxic);
-    invoke_autoruns(toxic->home_window, c_config->autorun_path);
+    invoke_autoruns(toxic->home_window, c_config->autorun_path, init_q);
 
 #endif /* PYTHON */
 

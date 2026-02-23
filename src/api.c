@@ -167,21 +167,34 @@ void cmd_run(WINDOW *window, ToxWindow *self, Toxic *toxic, int argc, char (*arg
         return;
     }
 
-    fp = fopen(argv[1], "r");
+    const char *path = argv[1];
+    const size_t path_len = strlen(path);
+
+    if (path_len < 3 || strcmp(path + path_len - 3, ".py") != 0) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Python script paths must end in \".py\"");
+        return;
+    }
+
+    fp = fopen(path, "r");
 
     if (fp == NULL) {
         line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Path does not exist.");
         return;
     }
 
-    run_python(fp, argv[1]);
+    if (file_type(path) != FILE_TYPE_REGULAR) {
+        line_info_add(self, c_config, false, NULL, NULL, SYS_MSG, 0, 0, "Not a regular file: %s", path);
+        fclose(fp);
+        return;
+    }
+
+    run_python(fp, path);
     fclose(fp);
 }
 
-void invoke_autoruns(ToxWindow *self, const char *autorun_path)
+void invoke_autoruns(ToxWindow *self, const char *autorun_path, Init_Queue *init_q)
 {
     char abspath_buf[TOXIC_MAX_PATH_LENGTH + 256];
-    char err_buf[TOXIC_MAX_PATH_LENGTH + 128];
 
     if (autorun_path == NULL) {
         return;
@@ -194,8 +207,7 @@ void invoke_autoruns(ToxWindow *self, const char *autorun_path)
     DIR *d = opendir(autorun_path);
 
     if (d == NULL) {
-        snprintf(err_buf, sizeof(err_buf), "Autorun path does not exist: %s", autorun_path);
-        api_display(err_buf);
+        init_queue_add(init_q, "Python API error: Autorun path does not exist: %s", autorun_path);
         return;
     }
 
@@ -213,8 +225,12 @@ void invoke_autoruns(ToxWindow *self, const char *autorun_path)
             FILE *fp = fopen(abspath_buf, "r");
 
             if (fp == NULL) {
-                snprintf(err_buf, sizeof(err_buf), "Invalid path: %s", abspath_buf);
-                api_display(err_buf);
+                init_queue_add(init_q, "Python API error: Invalid script path: %s", abspath_buf);
+                continue;
+            }
+
+            if (file_type(abspath_buf) != FILE_TYPE_REGULAR) {
+                init_queue_add(init_q, "Python API error: Not a regular file: %s", abspath_buf);
                 continue;
             }
 
