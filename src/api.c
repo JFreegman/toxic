@@ -218,9 +218,9 @@ void invoke_autoruns(ToxWindow *self, const char *autorun_path, Init_Queue *init
     self_window = self;
 
     while ((dir = readdir(d)) != NULL) {
-        size_t path_len = strlen(dir->d_name);
+        const size_t path_len = strlen(dir->d_name);
 
-        if (!strcmp(dir->d_name + path_len - 3, ".py")) {
+        if (path_len >= 3 && !strcmp(dir->d_name + path_len - 3, ".py")) {
             snprintf(abspath_buf, sizeof(abspath_buf), "%s%s", autorun_path, dir->d_name);
             FILE *fp = fopen(abspath_buf, "r");
 
