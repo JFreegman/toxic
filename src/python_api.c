@@ -285,6 +285,10 @@ void run_python(FILE *fp, char *path)
 
 int do_python_command(int num_args, char (*args)[MAX_STR_SIZE])
 {
+    if (num_args <= 0) {
+        return -1;
+    }
+
     int i;
     PyObject *callback_args, *args_strings;
     struct python_registered_func *cur;
@@ -295,6 +299,8 @@ int do_python_command(int num_args, char (*args)[MAX_STR_SIZE])
         }
 
         if (!strcmp(args[0], cur->name)) {
+            PyGILState_STATE gstate = PyGILState_Ensure();
+
             args_strings = PyList_New(0);
 
             for (i = 1; i < num_args; i++) {
@@ -306,6 +312,8 @@ int do_python_command(int num_args, char (*args)[MAX_STR_SIZE])
             if (PyObject_CallObject(cur->callback, callback_args) == NULL) {
                 api_display("Exception raised in callback function");
             }
+
+            PyGILState_Release(gstate);
 
             return 0;
         }
