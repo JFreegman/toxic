@@ -102,6 +102,7 @@ void api_send(const char *msg)
     self_window = get_active_window(user_toxic->windows);
 
     if (self_window == NULL) {
+        free(name);
         return;
     }
 
@@ -231,6 +232,7 @@ void invoke_autoruns(ToxWindow *self, const char *autorun_path, Init_Queue *init
 
             if (file_type(abspath_buf) != FILE_TYPE_REGULAR) {
                 init_queue_add(init_q, "Python API error: Not a regular file: %s", abspath_buf);
+                fclose(fp);
                 continue;
             }
 
