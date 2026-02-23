@@ -5,7 +5,11 @@ FORTUNES = [
     "A bug in the code is worth two in the documentation.",
     "A bug in the hand is better than one as yet undetected.",
     "\"A debugged program is one for which you have not yet found the "
-    "conditions that make it fail.\" -- Jerry Ogdin"
+    "conditions that make it fail.\" -- Jerry Ogdin",
+    "Premature optimization is the root of all evil.",
+    "There are two ways to write error-free programs; only the third one works.",
+    "Talk is cheap. Show me the code.",
+    "The best code is no code at all.",
 ]
 
 def send_fortune(args):
@@ -22,8 +26,8 @@ def send_fortune(args):
         toxic_api.display("Argument must be a number!")
         return
 
-    if count < 0 or count > 20:
-        toxic_api.display("Argument is too large!")
+    if count <= 0 or count > 5:
+        toxic_api.display("Value must be between 1 and 5")
         return
 
     name = toxic_api.get_nick()
