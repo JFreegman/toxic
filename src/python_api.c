@@ -221,7 +221,7 @@ static PyMethodDef ToxicApiMethods[] = {
     {"get_status",         python_api_get_status,         METH_VARARGS, "Returns the user's current status"},
     {"get_status_message", python_api_get_status_message, METH_VARARGS, "Return the user's current status message"},
     {"get_all_friends",    python_api_get_all_friends,    METH_VARARGS, "Return all of the user's friends"},
-    {"send",               python_api_send,               METH_VARARGS, "Send the message to the current user"},
+    {"send",               python_api_send,               METH_VARARGS, "Send a message to the friend of current window"},
     {"execute",            python_api_execute,            METH_VARARGS, "Execute a command like `/nick`"},
     {"register",           python_api_register,           METH_VARARGS, "Register a command like `/nick` to a Python function"},
     {NULL,                 NULL,                          0,            NULL},
@@ -241,12 +241,15 @@ PyMODINIT_FUNC PyInit_toxic_api(void)
     PyObject *global_command_const    = Py_BuildValue("i", GLOBAL_COMMAND_MODE);
     PyObject *chat_command_const      = Py_BuildValue("i", CHAT_COMMAND_MODE);
     PyObject *conference_command_const = Py_BuildValue("i", CONFERENCE_COMMAND_MODE);
+    PyObject *groupchat_command_const = Py_BuildValue("i", GROUPCHAT_COMMAND_MODE);
     PyObject_SetAttrString(m, "GLOBAL_COMMAND",    global_command_const);
     PyObject_SetAttrString(m, "CHAT_COMMAND",      chat_command_const);
     PyObject_SetAttrString(m, "CONFERENCE_COMMAND", conference_command_const);
+    PyObject_SetAttrString(m, "GROUPCHAT_COMMAND", groupchat_command_const);
     Py_DECREF(global_command_const);
     Py_DECREF(chat_command_const);
     Py_DECREF(conference_command_const);
+    Py_DECREF(groupchat_command_const);
     return m;
 }
 
