@@ -160,11 +160,12 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
     PyObject   *callback;
 
     if (!PyArg_ParseTuple(args, "ssO:register_command", &command, &help, &callback)) {
+        PyErr_SetString(PyExc_TypeError, "Failed to parse PyArg tuple");
         return NULL;
     }
 
     if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "Calback parameter must be callable");
+        PyErr_SetString(PyExc_TypeError, "Callback parameter must be callable");
         return NULL;
     }
 
@@ -207,6 +208,19 @@ static PyObject *python_api_register(PyObject *self, PyObject *args)
             strncpy(cur->next->help, help, help_len + 1);
             cur->next->callback = callback;
             cur->next->next     = NULL;
+
+            const size_t msg_len = command_len + 64;
+            char *msg = malloc(msg_len);
+
+            if (msg == NULL) {
+                break;
+            }
+
+            snprintf(msg, msg_len, "Registered command: \"%s\"", command);
+            api_display(msg);
+
+            free(msg);
+
             break;
         }
     }
