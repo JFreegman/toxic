@@ -73,7 +73,7 @@ ui = {
   // true to show network information in the UI home window
   show_network_info=true;
 
-  // How often in days to update the DHT nodes list. (0 to disable updates)
+  // How often in days to update the DHT nodes list. (0 to disable updates, 7 means update every 7 days.)
   nodeslist_update_freq=7;
 
   // How often in seconds to auto-save the Tox data file. (0 to disable periodic auto-saves)
